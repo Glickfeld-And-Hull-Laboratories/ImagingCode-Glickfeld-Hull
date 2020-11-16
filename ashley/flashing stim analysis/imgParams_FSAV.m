@@ -24,7 +24,7 @@ nVisDelayFr_target = 2;
 eyeAlpha = 0.05;
 cellGroupsAlpha = 0.05;
 tuningReliabilityThresh = 30;
-tuningReliabilityThresh_decode = 30;
+tuningReliabilityThresh_decode = 45;
 minRespThreshold = 0.002;
 minRespThreshold_decode = 0.005;
 minTrN = 5;
@@ -32,10 +32,16 @@ maxCellN = 15;
 minCellN = 7;
 minTrN_mdl = 20;
 maxPCs = 15;
-fracPCsUsed = 0.04;
+fracCellsUsed = 0.05;
+fracPCsUsed = fracCellsUsed; %0.04;
+if strcmp(ds,'FSAV_attentionV1_noAttn')
+    minTrN_firstresp = 69;
+    minTrN_latewin = 19;
+else
+    minTrN_firstresp = 110;
+    minTrN_latewin = 24;
+end
 minTrN_lateresp = 186;
-minTrN_firstresp = 110;
-minTrN_latewin = 24;
 
 pctCorrThresh = 0.55;
 %% colors

@@ -1,4 +1,4 @@
-function maxDFF = quickMaxDFF(img_stack);
+function maxDFF = quickMaxDFF(img_stack)
 
 F = mean(img_stack,3);
 dF = bsxfun(@minus, img_stack,F);

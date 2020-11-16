@@ -15,8 +15,10 @@ imgMatFile = [fName '.mat'];
 load(imgMatFile);
 
 %% get number of frames
-if ~isempty(varargin)
-    if ~isempty(varargin{1})
+if ~isempty(varargin)    
+    if isnan(varargin{1})
+        nframes = info.config.frames;
+    elseif ~isempty(varargin{1})
         nframes = varargin{1}; 
     else
         nframes = info.config.frames;

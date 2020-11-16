@@ -35,7 +35,9 @@ siBinLim = [-4 4];
 stimRespLim = [-0.01 0.05];
 avName = {'Vis','Aud'};
 
+offset_longBL = 10;
 tcStartFrame = 26;
+tcStartFrame_longBL = tcStartFrame-offset_longBL;
 tcEndFrame = 45;
 cycTCEndTimeMs = 350;
 cycTCEndFr = 45;
@@ -45,6 +47,7 @@ ttLabel_target = -1000:250:900;
 preTargetStimLabel = -700:350:0;
 nFr_long = 118;
 tt_longTC = ((tcStartFrame:nFr_long)-(nBaselineFr+nVisDelayFr)).*(1000/frameRateHz);
+tt_longTC_longBL = ((tcStartFrame_longBL:nFr_long)-(nBaselineFr+nVisDelayFr)).*(1000/frameRateHz);
 ttLabelFr_long = ((ttLabel_long./1000)*frameRateHz)+...
     ((nBaselineFr+nVisDelayFr)-tcStartFrame+1);
 ttLabelFr_cyc = ((ttLabel_cyc./1000)*frameRateHz)+...
@@ -157,9 +160,9 @@ for iexp = 1:nexp
         otherInd = 1;
     end
     % SOM neuron data
-    resp_SOM(iexp).isBx = expt_somOnly(iexp).isBx;
+    resp_SOM(iexp).isBx = expt_somExptOnly(iexp).isBx;
     resp_SOM(iexp).channel = channelColor{somInd};
-    resp_SOM(iexp).indicator = expt_somOnly(iexp).indicator;
+    resp_SOM(iexp).indicator = expt_somExptOnly(iexp).indicator;
     if ~isempty(expt_somExptOnly(iexp).tag(somInd).av(1).align(1).respTC)
         for iav = 1:2
             d = expt_somExptOnly(iexp).tag(somInd).av(iav).align(1);
@@ -484,174 +487,212 @@ title('Other')
 hline(0,'k:')
 
 print([fnout 'suppressedTC'],'-dpdf','-fillpage')
-%% plot first to late adaptation across naive an behavior expt
-iav = 1;
-late_color = [0.4 1 0.4];
-early_color = {[0 0 0],[.5 .5 .5]};
 
-setFigParams4Print('portrait')
+%% behaving versus passive - same cells
+
+bxInd = cell2mat({resp_SOM.isBx}) == 1;
+passInd = false(1,nexp);
+for iexp = 1:nexp
+    if isfield(resp_SOM(iexp),'av_pass')
+        if ~isempty(resp_SOM(iexp).av_pass)
+            passInd(iexp) = true;
+        end
+    end
+end
+
+% Each experiment
+setFigParams4Print('landscape')
+for iexp = 1:nexp
+    if bxInd(iexp) & passInd(iexp)
+        ind = cellInfo_SOM(iexp).responsive_first | ...
+            cellInfo_SOM(iexp).responsive_late | ...
+            cellInfo_SOM(iexp).responsive_lateWindow | ...
+            cellInfo_SOM(iexp).suppressed_lateWindow;
+        ind2 = cellInfo_SOM(iexp).suppressed_lateWindow(ind) == 1;
+        d_bx = mean(resp_SOM(iexp).av(visualTrials).long(:,ind,:),3);
+        d_pass = mean(resp_SOM(iexp).av_pass(visualTrials).long(:,ind,:),3);
+        
+        figure
+        suptitle({[expt_somExptOnly(iexp).expt_name '-' resp_SOM(iexp).indicator];...
+            'cells sorted same across behav & pass';
+            sprintf('n=%s active cells of %s ',...
+            num2str(sum(ind)),num2str(length(ind)))})
+        colormap(brewermap([],'*RdBu'));
+        
+        subplot 231
+        [~,sortInd] = sort(mean(d_bx(lateWinFr,:),1));
+        hm = flipud(d_bx(:,sortInd)');
+        imagesc(hm(:,tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr)))
+        hold on
+        figXAxis([],'Time from Start (ms)',[],ttLabelFr_long+offset_longBL,ttLabel_long)
+        figYAxis([],'Cell #',[])
+        figAxForm
+        colorbar
+        caxis(hmLim)
+        title(sprintf('SOM+ - Behav, n=%s',num2str(size(hm,1))))
+        
+        subplot 232
+        hm = flipud(d_pass(:,sortInd)');
+        imagesc(hm(:,tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr)))
+        hold on
+        figXAxis([],'Time from Start (ms)',[],ttLabelFr_long+offset_longBL,ttLabel_long)
+        figYAxis([],'Cell #',[])
+        figAxForm
+        colorbar
+        caxis(hmLim)
+        title(sprintf('SOM+ - Passive, n=%s',num2str(size(hm,1))))
+        
+        subplot 233
+        if any(ind2)
+            leg_lines = [];
+            leg_label = cell(1,2);
+            tc = {d_bx(:,ind2), d_pass(:,ind2)};
+            for i = 1:2
+                y = mean(tc{i}(tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr),:),2);
+                yerr = ste(tc{i}(tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr),:),2);
+                hold on
+                h = shadedErrorBar_chooseColor(tt_longTC_longBL,y,yerr,engage_colors{i});
+                leg_lines(i) = h.mainLine;
+                leg_label{i} = sprintf('%s',engage_label{i});
+            end
+            legend(leg_lines,leg_label,'location','southwest')
+            figXAxis([],'Time (ms)',[tt_longTC_longBL(1) tt_longTC_longBL(end)],ttLabel_long,ttLabel_long)
+            figYAxis([],'dF/F',[])
+            figAxForm([],0)
+            title(sprintf('Supp Cells, n=%s',num2str(sum(ind2))))
+            hline(0,'k:')
+        else
+            title('No Supp Cells')
+        end
+        
+        ind = cellInfo_Other(iexp).responsive_first | ...
+            cellInfo_Other(iexp).responsive_late | ...
+            cellInfo_Other(iexp).responsive_lateWindow | ...
+            cellInfo_Other(iexp).suppressed_lateWindow;
+        ind2 = cellInfo_Other(iexp).suppressed_lateWindow(ind) == 1;
+        d_bx = mean(resp_Other(iexp).av(visualTrials).long(:,ind,:),3);
+        d_pass = mean(resp_Other(iexp).av_pass(visualTrials).long(:,ind,:),3);
+        
+        subplot 234
+        [~,sortInd] = sort(mean(d_bx(lateWinFr,:),1));
+        hm = flipud(d_bx(:,sortInd)');
+        imagesc(hm(:,tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr)))
+        hold on
+        figXAxis([],'Time from Start (ms)',[],ttLabelFr_long+offset_longBL,ttLabel_long)
+        figYAxis([],'Cell #',[])
+        figAxForm
+        colorbar
+        caxis(hmLim)
+        title(sprintf('Other - Behav, n=%s',num2str(size(hm,1))))
+        
+        subplot 235
+        hm = flipud(d_pass(:,sortInd)');
+        imagesc(hm(:,tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr)))
+        hold on
+        figXAxis([],'Time from Start (ms)',[],ttLabelFr_long+offset_longBL,ttLabel_long)
+        figYAxis([],'Cell #',[])
+        figAxForm
+        colorbar
+        caxis(hmLim)
+        title(sprintf('Other - Passive, n=%s',num2str(size(hm,1))))
+                
+        subplot 236
+        if any(ind2)
+            leg_lines = [];
+            leg_label = cell(1,2);
+            tc = {d_bx(:,ind2); d_pass(:,ind2)};
+            for i = 1:2
+                y = mean(tc{i}(tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr),:),2);
+                yerr = ste(tc{i}(tcStartFrame_longBL:((lateCycles(end).*cycLengthFr)+nBaselineFr),:),2);
+                hold on
+                h = shadedErrorBar_chooseColor(tt_longTC_longBL,y,yerr,engage_colors{i});
+                leg_lines(i) = h.mainLine;
+                leg_label{i} = sprintf('%s',engage_label{i});
+            end
+            legend(leg_lines,leg_label,'location','southwest')
+            figXAxis([],'Time (ms)',[tt_longTC_longBL(1) tt_longTC_longBL(end)],ttLabel_long,ttLabel_long)
+            figYAxis([],'dF/F',[])
+            figAxForm([],0)
+            title(sprintf('Supp Cells, n=%s',num2str(sum(ind2))))
+            hline(0,'k:')
+        else
+            title('No Supp Cells')
+        end
+        if iexp == 20
+            print([fnout 'exExpt_hm_suppCellsTC'],'-dpdf','-fillpage')
+        end
+    end
+end
+
+% across experiments
+colors_expt = brewermap(sum(bxInd&passInd),'Dark2');
 figure
-subplot 321
-early_tc = [];
-late_tc = [];
-ind = [];
+suptitle('late window response, suppressed cells')
 for iexp = 1:nexp
-    early_tc = cat(2,early_tc,mean(resp_SOM(iexp).av(iav).first,3)-...
-        mean(mean(resp_SOM(iexp).av(iav).first(basewin_0,:,:),3)));
-    late_tc = cat(2,late_tc,mean(resp_SOM(iexp).av(iav).late,3)-...
-        mean(mean(resp_SOM(iexp).av(iav).late(basewin_0,:,:),3)));
-    ind = cat(1,ind,cellInfo_SOM(iexp).responsive_first);
-end
-y = mean(early_tc(tcStartFrame:tcEndFrame,ind==1),2);
-yerr = ste(early_tc(tcStartFrame:tcEndFrame,ind==1),2);
-hold on
-shadedErrorBar_chooseColor(tt_cycTC,y,yerr,early_color{1});
-y = mean(late_tc(tcStartFrame:tcEndFrame,ind==1),2);
-yerr = ste(late_tc(tcStartFrame:tcEndFrame,ind==1),2);
-shadedErrorBar_chooseColor(tt_cycTC,y,yerr,late_color);
-figXAxis([],'Time (ms)',[tt_cycTC(1) cycTCEndTimeMs],ttLabel_cyc,ttLabel_cyc)
-figYAxis([],'dF/F',[]) 
-hline(0,'k:')
-vline(respWinTT,'k--')
-figAxForm
-title(sprintf('All Resp. Cells (%s/%s)',...
-    num2str(sum(ind)),...
-    num2str(length(ind))))
-
-early_tc = cell(1,2);
-late_tc = cell(1,2);
-ind = cell(1,2);
-for iexp = 1:nexp
-    if resp_SOM(iexp).isBx == 1
-        bxInd = 1;
-    else
-        bxInd = 2;
+    if iexp == 1
+        exptN = 0;
     end
-    early_tc{bxInd} = cat(2,early_tc{bxInd},mean(resp_SOM(iexp).av(iav).first,3)-...
-        mean(mean(resp_SOM(iexp).av(iav).first(basewin_0,:,:),3)));
-    late_tc{bxInd} = cat(2,late_tc{bxInd},mean(resp_SOM(iexp).av(iav).late,3)-...
-        mean(mean(resp_SOM(iexp).av(iav).late(basewin_0,:,:),3)));
-    ind{bxInd} = cat(1,ind{bxInd},cellInfo_SOM(iexp).responsive_first);
+    if bxInd(iexp) & passInd(iexp)
+        exptN = exptN+1;
+        subplot 221
+        hold on
+        ind = cellInfo_SOM(iexp).suppressed_lateWindow == 1;
+        x =  mean(mean(resp_SOM(iexp).av(visualTrials).long(lateWinFr,ind,:),3),1);
+        y =  mean(mean(resp_SOM(iexp).av_pass(visualTrials).long(lateWinFr,ind,:),3),1);
+        if any(ind)
+            h = plot(x,y,'.','MarkerSize',10);
+            h.Color = colors_expt(exptN,:);
+            subplot 222
+            hold on
+            h = errorbar(1,mean(x-y),ste(x-y,2),'.','MarkerSize',20);
+            h.Color = (colors_expt(exptN,:));
+        end
+        
+        subplot 223
+        hold on
+        ind = cellInfo_Other(iexp).suppressed_lateWindow == 1;
+        x =  mean(mean(resp_Other(iexp).av(visualTrials).long(lateWinFr,ind,:),3),1);
+        y =  mean(mean(resp_Other(iexp).av_pass(visualTrials).long(lateWinFr,ind,:),3),1);
+        if any(ind)
+            h = plot(x,y,'.','MarkerSize',10);
+            h.Color = colors_expt(exptN,:);
+            subplot 224
+            hold on
+            h = errorbar(1,mean(x-y),ste(x-y,2),'.','MarkerSize',20);
+            h.Color = (colors_expt(exptN,:));
+        end
+        
+    end
 end
+plotInd = [1,3];
+suppRespLim = [-0.15 0.15];
 for i = 1:2
-    a = mean(late_tc{i}(respwin,ind{i}==1),1);
-    a(a<0) = 0;
-    b = mean(early_tc{i}(respwin,ind{i}==1),1);
-    subplot 323
-    y = [mean(b),mean(a)];
-    yerr = [ste(b,2),ste(a,2)];
-    hold on
-    if i == 1
-        h = errorbar(1:2,y,yerr,'k.-');
-    else
-        h = errorbar(1:2,y,yerr,'k.--');
-    end
-    subplot 325
-    hold on
-    if i == 1
-        h = errorbar(1,mean(a./b),ste(a./b,2),'k.','MarkerSize',20);
-    else
-        h = errorbar(1,mean(a./b),ste(a./b,2),'ko');
-    end
-end
-subplot 323
-figXAxis([],'Time Point',[0 3],1:2,{'Early','Late'})
-figYAxis([],'dF/F',[])
-figAxForm
-legend({'Behav','Naive'},'location','northeast')
-subplot 325
-figXAxis([],'',[0 2],1,{'All'})
-figYAxis([],'Norm. dF/F (Late/Early)',[])
-figAxForm
-
-early_tc = cell(1,2);
-late_tc = cell(1,2);
-ind = cell(1,2);
-for iexp = 1:nexp
-    if strcmp(resp_SOM(iexp).indicator,'GCaMP6s')
-        gcampInd = 1;
-    else
-        gcampInd = 2;
-    end
-    early_tc{gcampInd} = cat(2,early_tc{gcampInd},mean(resp_SOM(iexp).av(iav).first,3)-...
-        mean(mean(resp_SOM(iexp).av(iav).first(basewin_0,:,:),3)));
-    late_tc{gcampInd} = cat(2,late_tc{gcampInd},mean(resp_SOM(iexp).av(iav).late,3)-...
-        mean(mean(resp_SOM(iexp).av(iav).late(basewin_0,:,:),3)));
-    ind{gcampInd} = cat(1,ind{gcampInd},cellInfo_SOM(iexp).responsive_first);
-end
-for i = 1:2
-    subplot 322
-    y = mean(early_tc{i}(tcStartFrame:tcEndFrame,ind{i}==1),2);
-    yerr = ste(early_tc{i}(tcStartFrame:tcEndFrame,ind{i}==1),2);
-    hold on
-    shadedErrorBar_chooseColor(tt_cycTC,y,yerr,early_color{i});
-    
-    subplot 324
-    a = mean(late_tc{i}(respwin,ind{i}==1),1);
-    a(a<0) = 0;
-    b = mean(early_tc{i}(respwin,ind{i}==1),1);
-    y = [mean(b),mean(a)];
-    yerr = [ste(b,2),ste(a,2)];
-    hold on
-    h = errorbar(1:2,y,yerr,'.-');
-    h.Color = early_color{i};
-    
-    subplot 326
-    hold on    
-    h = errorbar(1,mean(a./b),ste(a./b,2),'k.','MarkerSize',20);
-    h.Color = early_color{i};
-end
-subplot 322
-figXAxis([],'Time (ms)',[tt_cycTC(1) cycTCEndTimeMs],ttLabel_cyc,ttLabel_cyc)
-figYAxis([],'dF/F',[]) 
-hline(0,'k:')
-vline(respWinTT,'k--')
-figAxForm
-title('Early Resp')
-subplot 324
-figXAxis([],'Time Point',[0 3],1:2,indicators)
-figYAxis([],'dF/F',[])
-figAxForm
-legend(indicators,'location','northeast')
-subplot 326
-figXAxis([],'',[0 2],1,{'All'})
-figYAxis([],'Norm. dF/F (Late/Early)',[])
-figAxForm
-
-
-print([fnout 'lateAdaptation'],'-dpdf','-fillpage')
-
-%% plot each stimulus adaptation
-iav=1;
-bxName = {'Behav','Naive'};
-hm_lim = [-0.15 0.15];
-hm_adapt = cell(1,2);
-for iexp = 1:nexp
-    if stimResp_adapt(iexp).isBx
-        hm_adapt{1} = cat(1,hm_adapt{1},cell2mat(cellfun(@(x)...
-            squeeze(mean(mean(x(respwin,cellInfo_SOM(iexp).responsive_first==1,:),1)...
-            -mean(x(basewin_0,cellInfo_SOM(iexp).responsive_first==1,:),1),3))',...
-            stimResp_adapt(iexp).av(iav).cycTC,'unif',0)));
-    else
-        hm_adapt{2} = cat(1,hm_adapt{2},cell2mat(cellfun(@(x)...
-            squeeze(mean(mean(x(respwin,cellInfo_SOM(iexp).responsive_first==1,:),1)...
-            -mean(x(basewin_0,cellInfo_SOM(iexp).responsive_first==1,:),1),3))',...
-            stimResp_adapt(iexp).av(iav).cycTC,'unif',0)));
-    end
-end
-
-hm_adapt_norm = cellfun(@(x) x./x(:,1),hm_adapt,'unif',0);
-figure
-suptitle('SOM cells, first stim responsive')
-colormap(brewermap([],'*RdBu'));
-for i = 1:2
-    subplot(2,2,i)
-    [~,sortInd] = sort(hm_adapt_norm{i}(:,8));
-    imagesc(hm_adapt_norm{i}(sortInd,:))
-    figXAxis([],'Stimulus #',[],1:maxCycles,1:maxCycles)
-    figYAxis([],'Cell #',[])
+    subplot(2,2,plotInd(i))
+    figXAxis([],'Behavior',suppRespLim)
+    figYAxis([],'Passive',suppRespLim)
     figAxForm
-    title(bxName{i})
-    colorbar
-%     clim(hm_lim)
+    plot(suppRespLim,suppRespLim,'k--')
+    if i == 1
+        title('SOM+')
+    else
+        title('Other')
+    end
 end
+plotInd = [2,4];
+suppRespLim = [-0.15 0.15];
+for i = 1:2
+    subplot(2,2,plotInd(i))
+    figXAxis([],'',[0 2],1,'Passive')
+    ax = gca;
+    ax.XTickLabelRotation = -45;
+    figYAxis([],'Behavior-Passive',[-0.04 0.01])
+    figAxForm
+    if i == 1
+        title('SOM+')
+    else
+        title('Other')
+    end
+end
+  
+print([fnout 'lateWin_BxVsPass_suppCells'],'-dpdf','-fillpage')
+    

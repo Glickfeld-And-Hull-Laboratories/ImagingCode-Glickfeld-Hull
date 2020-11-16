@@ -180,9 +180,6 @@ function mouse = createFSAVDataStruct2(datasetStr,cellsOrDendrites)
             outInd = catchReactFr < 0;
             catchOutcome(outInd) = {'failure'};
             
-            tCatchDirection = tCatchDirection(tr);
-%             catchReactMs = catchReactMs(tr);
-%             catchOutcome = catchOutcome(tr);
         end  
                 
         offset = 0;
@@ -217,6 +214,9 @@ function mouse = createFSAVDataStruct2(datasetStr,cellsOrDendrites)
         cItiStart = cItiStart(tr);
         if expt(iexp).catch
             cCatchOn = cCatchOn(tr);
+            tCatchDirection = tCatchDirection(tr);
+%             catchReactMs = catchReactMs(tr);
+%             catchOutcome = catchOutcome(tr);
         end
         
         
@@ -517,12 +517,18 @@ function mouse = createFSAVDataStruct2(datasetStr,cellsOrDendrites)
 
             removeTrials = ind_motion;
             ind = ~removeTrials & ~strcmp(catchOutcome,'failure') & trType(cInd) == 1;
+            tCycOn_catch = tCyclesOn(cInd);
+            trOut_catch = trOut(cInd);
+            amp_catch = tSoundTargetAmp(cInd);
             mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).respTC = DataDFoverF_bl(:,:,ind);
-            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).outcome = catchOutcome(ind);
+            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).outcome = trOut_catch(ind);
+            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).catchOutcome = catchOutcome(ind);
             mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).reactTime = catchReactMs(ind);
-            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).nCycles = cCyc(ind)-1;
-            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).ori = tCatchDirection(ind);
-            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).amp = [];
+            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).nCycles = tCycOn_catch(ind);            
+            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).catchCycle = cCyc(ind);            
+            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).catchOri = tCatchDirection(ind);
+            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).amp = amp_catch(ind);
+            mouse(imouse).expt(exptN(:,imouse)).av(1).align(ialign).ori = [];
             
             % 1 stim back from catch target aligned
             Data = zeros(pre_event_frames+post_event_frames,size(dataTC,2),nt);

@@ -1,10 +1,10 @@
 clear all
 close all
-ds = 'FSAV_attentionV1_noAttn';
+ds = 'FSAV_V1_naive_GCaMP6m';
 rc = behavConstsAV;
 eval(ds)
-slct_expt = 8;
-doPreviousReg = false;
+slct_expt = 9;
+doPreviousReg = true;
 %%
 iexp = slct_expt
 
@@ -170,7 +170,7 @@ figure;colormap gray; imagesc(tun_img)
 
 %**enter vals here***
 xcrop = [1:31 790:xpix];
-ycrop = [1:10 260:ypix];
+ycrop = [1:15 260:ypix];
 
 tun_crop = tun_img;
 tun_crop(:,xcrop) = 0;

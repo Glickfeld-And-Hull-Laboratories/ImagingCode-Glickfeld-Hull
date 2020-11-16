@@ -4,7 +4,7 @@ rc = behavConstsAV;
 if isempty(ds) & strcmp(rc.name,'ashle')
     dataGroup = ['awFSAVdatasets' ds];
     isFSAV = 0;
-elseif strcmp(ds(1:3),'FSA') & strcmp(rc.name,'ashle')
+elseif (strcmp(ds(1:3),'FSA')|strcmp(ds(1:3),'FSV')) & strcmp(rc.name,'ashle')
     dataGroup = ds;
     isFSAV = 1;
 elseif strcmp(rc.name,'ashle')
@@ -33,7 +33,11 @@ for iexp = 1:nexp
             try
                 data_tc_subnp = data_tun_tc_subnp;
             catch
-                data_tc_subnp = dataTC_npSub;
+                try
+                    data_tc_subnp = data_g_tc_subnp;
+                catch
+                    data_tc_subnp = dataTC_npSub;
+                end
             end
         elseif cellsOrDendrites == 2
             load(fullfile(dataPath,'timecourses_tun_dendrites.mat'))

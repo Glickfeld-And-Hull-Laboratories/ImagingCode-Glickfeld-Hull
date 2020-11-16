@@ -4,8 +4,8 @@ close all
 ds = 'FSV_V1'; %dataset info
 rc = behavConstsAV; %directories
 eval(ds)
-slct_expt = 38; %which expt from ds to analyze
-doPreviousReg = false;
+slct_expt = 30; %which expt from ds to analyze
+doPreviousReg = true;
 doGreenOnly = false;
 nRedFrames = 20000;
 % regPath = 'Z:\home\former-lab-members\carolyn\Analysis\1207\two-photon imaging\181018\data processing\regOuts&Img.mat';
@@ -50,7 +50,7 @@ for irun = 1:expt(slct_expt).nrun
     else
         if expt(slct_expt).greenredsimultaneous == 1
             data_temp_g = loadsbx_choosepmt(3,mouse,expDate,runFolder,fName);
-            data_temp_r = squeeze(data_temp_g(2,:,:,:));
+            data_temp_r = squeeze(data_temp_r(2,:,:,:));
             data_temp_g = squeeze(data_temp_g(1,:,:,:));
         else
             data_temp_g = loadsbx_choosepmt(1,mouse,expDate,runFolder,fName);
@@ -294,18 +294,22 @@ if isfield(expt,'passExpt')
         end
         writetiff(F_pass,fullfile(fnout,'FImages_pass'))
 
+        if doGreenOnly
+            data_pass_g_tc = stackGetTimeCourses(data_pass_g_reg,green_mask_cell);
+            data_pass_g_tc_subnp = getWeightedNeuropilTimeCourse(data_pass_g_reg,data_pass_g_tc,green_mask_cell,buf,np);
+        else
+            data_pass_r_tc = stackGetTimeCourses(data_pass_g_reg,red_mask_cell);
+            data_pass_r_tc_subnp = getWeightedNeuropilTimeCourse(data_pass_g_reg,data_pass_r_tc,red_mask_cell,buf,np);
 
-        data_pass_r_tc = stackGetTimeCourses(data_pass_g_reg,red_mask_cell);
-        data_pass_r_tc_subnp = getWeightedNeuropilTimeCourse(data_pass_g_reg,data_pass_r_tc,red_mask_cell,buf,np);
-
-        data_pass_g_tc = stackGetTimeCourses(data_pass_g_reg,green_mask_cell);
-        data_pass_g_tc_subnp = getWeightedNeuropilTimeCourse(data_pass_g_reg,data_pass_g_tc,green_mask_cell,buf,np);
+            data_pass_g_tc = stackGetTimeCourses(data_pass_g_reg,green_mask_cell);
+            data_pass_g_tc_subnp = getWeightedNeuropilTimeCourse(data_pass_g_reg,data_pass_g_tc,green_mask_cell,buf,np);
+        end
 
         save(fullfile(fnout,'timecourses_pass_cells.mat'),...
             'data_pass_g_tc_subnp','data_pass_g_tc',...
             'data_pass_r_tc_subnp','data_pass_r_tc','buf','np')
         
-        save(fullfile(fnout,'timecourses_pass_cells.mat'),...
-            'data_pass_g_tc_subnp','data_pass_g_tc','buf','np')
+%         save(fullfile(fnout,'timecourses_pass_cells.mat'),...
+%             'data_pass_g_tc_subnp','data_pass_g_tc','buf','np')
     end
 end

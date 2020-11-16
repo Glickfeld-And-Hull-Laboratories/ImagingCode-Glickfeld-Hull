@@ -116,9 +116,10 @@ fprintf('\n PV: %s naive mice have %s two color expts\n',...
 
 
 %% SOM analyses
-edit FSV_analysis_adaptation
+% edit FSV_analysis_adaptation
+edit FSV_analysis_visStimAlignedTCs.m
 edit FSV_analysis_anticipationOverview.m
-
-
+edit FSV_analysis_spatial.m
+edit FSV_analysis_decoding.m
 %% other analyses
 edit FSV_analysis_tuning

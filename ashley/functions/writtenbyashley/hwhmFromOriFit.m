@@ -1,4 +1,4 @@
-function hwhm = hmhmFromOriFit(f,orientations)
+function hwhm = hwhmFromOriFit(f,orientations)
 n = size(f,2);
 [peak, peakInd] = max(f);
 baseline = min(f);

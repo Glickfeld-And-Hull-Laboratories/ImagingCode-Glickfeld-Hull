@@ -1,6 +1,6 @@
 function setFigParams4Print(paperOriString)
 %% set figures to resize to 8.5x11 for printing to pdf, in either landscape or portrait orientation, as indicated by paperOriString
-
+set(gca,'fontsize',8)
 if strcmp(paperOriString,'portrait')
     set(0,'defaultfigurepaperorientation','portrait');
     set(0,'defaultfigurepapersize',[8.5 11]);

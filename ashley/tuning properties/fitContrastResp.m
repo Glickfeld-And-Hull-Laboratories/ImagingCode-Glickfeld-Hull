@@ -1,4 +1,4 @@
-function [fit,R2,c50] = fitContrastResp(avgResp,contrasts,frameRateHz)
+function [fit,R2,c50] = fitContrastResp(avgResp,contrasts)
     
     conModelH = @(coefs,cdata) coefs(1) + coefs(2)*(cdata.^coefs(4))./(cdata.^coefs(4)+coefs(3).^coefs(4));
     conRng = 0.001:0.001:1;
@@ -6,8 +6,8 @@ function [fit,R2,c50] = fitContrastResp(avgResp,contrasts,frameRateHz)
     lb = [0 0 0.1 1];
     ub = [Inf Inf 0.8 Inf];
 
-    nBaseFr = round(frameRateHz); % 1 second
-    nStimFr = round(frameRateHz); % 1 second
+%     nBaseFr = round(frameRateHz); % 1 second
+%     nStimFr = round(frameRateHz); % 1 second
     
     [nstim,nc] = size(avgResp);
     fit = nan(length(conRng),nc);

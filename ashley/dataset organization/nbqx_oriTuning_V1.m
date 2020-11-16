@@ -1,0 +1,32 @@
+%% 1225 200718
+expt(1).SubNum = '1225';
+expt(1).mouse = '1225';
+expt(1).date = '200718';
+expt(1).folder = 'two-photon imaging';
+expt(1).img_loc  = {'V1';'L2/3'};
+expt(1).z = -200;
+expt(1).obj = '16x';
+expt(1).zoom = 2;
+expt(1).frame_rate = 15;
+expt(1).regImgStartFrame = '';
+expt(1).motionThreshold = 0.05;
+expt(1).areaBorders = 0;
+expt(1).img_strct  = {'cells'};
+expt(1).indicator = {'virus';'GCaMP7f'};
+expt(1).drug = {'nbqx'};
+expt(1).drug_time = {'1210'};
+expt(1).greenredsimultaneous = 0;
+expt(1).greenChannelLabel = 'ANY';
+expt(1).redChannelLabel = '';
+expt(1).redChannelTag = '';
+expt(1).redChannelRun = nan;
+expt(1).rettuning = nan;
+expt(1).nostim_runs = {'001';'005'};
+expt(1).nostim_condition = {'saline','drug'};
+expt(1).nostim_conc_mM = {nan;0.02};
+expt(1).dirtuning_runs = {'003';'006'};
+expt(1).dirtuning_time = {'1154';'1254'};
+expt(1).dirtuning_nframes = {6900; nan};
+expt(1).dirtuning_condition = {'saline';'drug'};
+expt(1).dirtuning_conc_mM = {nan;0.02};
+

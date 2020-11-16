@@ -16,7 +16,7 @@ bwout_tag = imCellEditInteractive(tagImg);
 mask_tagged = bwlabel(bwout_tag);
 
 % iterate through each max dF/F for each direction tuning stimulus
-otherImg(bwout_tag > 0) = 0;
+otherImg(repmat(bwout_tag,[1,1,nstim]) > 0) = 0;
 % b = sum(imCellBuffer(tagImg,3),3);
 % otherImg(b > 0) = 0;
 

@@ -1,6 +1,10 @@
-function [x,y] = roiCentersXY(img)
-    img(img > 0) = 1;
-    mask = bwlabel(img);
+function [x,y] = roiCentersXY(img,isMask)
+    if isMask
+        mask = img;
+    else
+        img(img > 0) = 1;
+        mask = bwlabel(img);
+    end
     n = max(mask(:));
     
     y = nan(1,n);

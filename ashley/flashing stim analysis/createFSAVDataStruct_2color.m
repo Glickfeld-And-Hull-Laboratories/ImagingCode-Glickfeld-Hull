@@ -273,26 +273,52 @@ function mouse = createFSAVDataStruct_2color(datasetStr,cellsOrDendrites)
         mouse(imouse).expt(exptN(:,imouse)).info.audTargets = Amps;
         mouse(imouse).expt(exptN(:,imouse)).info.fsavSize = input.gratingHeightDeg;
         
-%         %load direction tuning data
-%         fnTun = fullfile(rc.ashleyAnalysis,...
-%             expt(iexp).mouse,expt(iexp).folder, expt(iexp).date, ...
-%             expt(iexp).dirtuning);
-%         if cellsOrDendrites == 1
-%             load(fullfile(fnTun, 'oriTuningAndFits.mat'));
-%         elseif cellsOrDendrites == 2
-%             load(fullfile(fnTun, 'oriTuningAndFits_den.mat'));
-%         end
 %         
 %         mouse(imouse).expt(exptN(:,imouse)).oriTuning.oriResp = avgResponseEaOri;
 %         mouse(imouse).expt(exptN(:,imouse)).oriTuning.oriRespSem = semResponseEaOri;
 %         mouse(imouse).expt(exptN(:,imouse)).oriTuning.oriFit = vonMisesFitAllCells;
 %         mouse(imouse).expt(exptN(:,imouse)).oriTuning.oriFitReliability = ...
 %             fitReliability;
+
+        
         mouse(imouse).expt(exptN(:,imouse)).tag(1).name = [expt(iexp).redChannelLabel '-'];
         mouse(imouse).expt(exptN(:,imouse)).tag(2).name = [expt(iexp).redChannelLabel '+'];
         for itag = 1:2
             mouse(imouse).expt(exptN(:,imouse)).tag(itag).av(1).name = 'visual';
             mouse(imouse).expt(exptN(:,imouse)).tag(itag).av(2).name = 'auditory';
+        end
+        
+        
+        %load direction tuning data
+        if ~isnan(expt(iexp).dirtuning)
+            fnTun = fullfile(rc.ashleyAnalysis,...
+                expt(iexp).mouse,expt(iexp).folder, expt(iexp).date, ...
+                expt(iexp).dirtuning);
+            if all(isnan(dataTC_notag(:)))
+                if cellsOrDendrites == 1
+                    load(fullfile(fnTun, 'oriTuningAndFits.mat'));
+                elseif cellsOrDendrites == 2
+                    load(fullfile(fnTun, 'oriTuningAndFits_den.mat'));
+                end
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriResp = avgResponseEaOri;
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriRespSem = semResponseEaOri;
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriFit = vonMisesFitAllCells;
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriFitReliability = ...
+                    fitReliability;
+            else
+                load(fullfile(fnTun, 'oriTuningAndFits_g.mat'));
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriResp = avgResponseEaOri_g;
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriRespSem = semResponseEaOri_g;
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriFit = vonMisesFitAllCells_g;
+                mouse(imouse).expt(exptN(:,imouse)).tag(1).oriTuning.oriFitReliability = ...
+                    fitReliability_g;
+                load(fullfile(fnTun, 'oriTuningAndFits_r.mat'));
+                mouse(imouse).expt(exptN(:,imouse)).tag(2).oriTuning.oriResp = avgResponseEaOri_r;
+                mouse(imouse).expt(exptN(:,imouse)).tag(2).oriTuning.oriRespSem = semResponseEaOri_r;
+                mouse(imouse).expt(exptN(:,imouse)).tag(2).oriTuning.oriFit = vonMisesFitAllCells_r;
+                mouse(imouse).expt(exptN(:,imouse)).tag(2).oriTuning.oriFitReliability = ...
+                    fitReliability_r;
+            end
         end
         
         for itag = 1:2

@@ -1,0 +1,30 @@
+%% 1225 200704
+expt(1).SubNum = '1225';
+expt(1).mouse = '1225';
+expt(1).date = '200704';
+expt(1).folder = 'two-photon imaging';
+expt(1).img_loc  = {'V1';'L2/3'};
+expt(1).z = -200;
+expt(1).obj = '16x';
+expt(1).zoom = 2;
+expt(1).frame_rate = 15;
+expt(1).regImgStartFrame = 3486;
+expt(1).motionThreshold = 0.05;
+expt(1).areaBorders = 0;
+expt(1).img_strct  = {'cells'};
+expt(1).indicator = {'virus';'GCaMP7f'};
+expt(1).drug = {'atropine'};
+expt(1).greenredsimultaneous = 0;
+expt(1).greenChannelLabel = 'ANY';
+expt(1).redChannelLabel = 'SOM';
+expt(1).redChannelTag = 'tdTomato';
+expt(1).redChannelRun = '006';
+expt(1).rettuning = {'001';'1006'};
+expt(1).nostim_runs = {'002';'004'};
+expt(1).nostim_condition = {'saline','drug'};
+expt(1).nostim_conc_mM = {nan;1};
+expt(1).dirtuning_runs = {'003';'005'};
+expt(1).dirtuning_time = {'1038';'1131'};
+expt(1).dirtuning_condition = {'saline';'drug'};
+expt(1).dirtuning_conc_mM = {nan;1};
+
