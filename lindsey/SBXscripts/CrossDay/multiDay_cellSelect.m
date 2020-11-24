@@ -7,7 +7,7 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 20;
+day_id = 15;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -136,7 +136,7 @@ nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingContrast,2);
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
-data_g_f = squeeze(mean(data_g_trial(:,:,1:nOff,:),3));
+data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+5:nOff+nOn,:),3));
 data_g_dfof = (data_g_on-data_g_f)./data_g_f;
 clear data_g_trial data_g_on data_g_f
@@ -151,11 +151,28 @@ tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;
 oris = unique(tOri);
 nOri = length(oris);
 data_g_ori = zeros(sz(1),sz(2), nOri);
+data_temp = zeros(sz(1),sz(2), nOri, nCon);
+[n n2] = subplotn(nOri);
+figure; movegui('center')
 for iOri = 1:nOri
-    %ind_ori = intersect(ind_con, find(tOri == oris(iOri)));
-    ind_ori = find(tOri == oris(iOri));
-    data_g_ori(:,:,iOri) = mean(data_g_dfof(:,:,ind_ori),3);
+    data_g_con = zeros(sz(1),sz(2), nCon);
+    for iCon = 1:nCon
+        ind_con = find(tCon == cons(iCon));
+        ind_ori = intersect(ind_con, find(tOri == oris(iOri)));
+        data_g_con(:,:,iCon) = mean(data_g_dfof(:,:,ind_ori),3);
+        data_temp(:,:,iOri,iCon) = mean(data_g_dfof(:,:,ind_ori),3);
+    end
+    data_g_ori(:,:,iOri) = max(data_g_con,[],3);
+    subplot(n,n2,iOri)
+    imagesc(data_g_ori(:,:,iOri))
+    title(num2str(oris(iOri)))
 end
+
+rgb(:,:,1) = squeeze(max(mean(data_temp(:,:,:,1:2),4),[],3));
+rgb(:,:,2) = squeeze(max(mean(data_temp(:,:,:,3),4),[],3));
+rgb(:,:,3) = squeeze(max(mean(data_temp(:,:,:,4:5),4),[],3));
+figure;  movegui('center'); imagesc(rgb./max(max(rgb(:,:,3)))); 
+
 data_ori_max = max(data_g_ori,[],3);
 data_dfof = cat(3, data_ori_max,data_g_ori);
 figure; imagesc(data_ori_max); movegui('center')
@@ -168,7 +185,9 @@ data_dfof = cat(3, data_dfof, corrImg);
 clear data_g_down
 
 %% load red cells
-if ~isempty(expt(day_id).redChannelRun)
+if exist(fullfile(fnout,'redImage.mat'))
+    load(fullfile(fnout,'redImage'))
+elseif ~isempty(expt(day_id).redChannelRun)
     redRun = expt(day_id).redChannelRun;
     imgMatFile = [redRun '_000_000.mat'];
     if strcmp(expt(day_id).data_loc,'lindsey')

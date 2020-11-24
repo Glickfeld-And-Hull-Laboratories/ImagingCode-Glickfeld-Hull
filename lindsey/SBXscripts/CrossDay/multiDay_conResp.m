@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
 
-day_id(2) = 19;
+day_id(2) = 15;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 nd = size(day_id,2);
 
@@ -56,7 +56,7 @@ data_dfof_match = cell(1,nd);
 data_dfof_all = cell(1,nd);
 fractTimeActive_all = cell(1,nd);
 fractTimeActive_match = cell(1,nd);
-for id = 1:nd*2
+for id = 1:nd
     nCells = size(cellTCs_match{id},2);
     nFrames = size(cellTCs_match{id},1);
     fractTimeActive_match{id} = zeros(1,nCells);
@@ -69,8 +69,6 @@ for id = 1:nd*2
     for iCell = 1:nCells
         fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd_match(1,iCell)))./nFrames;
     end
-end
-for id = 1:nd
     nCells = size(cellTCs_all{id},2);
     data_trial_all = reshape(cellTCs_all{id},[nOn+nOff nTrials nCells]);
     data_f_all = mean(data_trial_all(1:nOff,:,:),1);
@@ -84,18 +82,19 @@ for id = 1:nd
 end
 clear data_trial_all data_f_all data_trial_match data_f_match
 
+%%
 resp_win = [nOff+5:nOff+nOn];
-base_win = [1:nOff];
+base_win = [nOff/2:nOff];
 resp_cell_all = cell(nd,nOri,nCon);
-resp_cell_match = cell(nd*2,nOri,nCon);
+resp_cell_match = cell(nd,nOri,nCon);
 base_cell_all = cell(nd,nOri,nCon);
-base_cell_match = cell(nd*2,nOri,nCon);
+base_cell_match = cell(nd,nOri,nCon);
 h_all = cell(1,nd);
-h_match = cell(1,nd*2);
+h_match = cell(1,nd);
 resp_avg_all = cell(1,nd);
-resp_avg_match = cell(1,nd*2);
+resp_avg_match = cell(1,nd);
 resp_ind_all = cell(1,nd);
-resp_ind_match = cell(1,nd*2);
+resp_ind_match = cell(1,nd);
 
 for id = 1:nd
     nCells = size(data_dfof_all{id},3);
@@ -116,22 +115,20 @@ for id = 1:nd
         end
     end
     resp_ind_all{id} = find(sum(sum(h_all{id},1),2));
-end
 
-d = [1 2 1 2];
-for id = 1:nd*2
     nCells = size(data_dfof_match{id},3);
     h_match{id} = zeros(nOri,nCon,nCells);
+    p_match{id} = zeros(nOri,nCon,nCells);
     resp_avg_match{id} = zeros(nOri,nCon,nCells,2);
     for iOri = 1:nOri
-        ind_ori = find(tOri{d(id)} == oris(iOri));
+        ind_ori = find(tOri{id} == oris(iOri));
         for iCon = 1:nCon
-            ind_con = find(tCon{d(id)} == cons(iCon));
+            ind_con = find(tCon{id} == cons(iCon));
             ind = intersect(ind_ori,ind_con);
             resp_cell_match{id,iOri,iCon} = squeeze(mean(data_dfof_match{id}(resp_win,ind,:),1));
             base_cell_match{id,iOri,iCon} = squeeze(mean(data_dfof_match{id}(base_win,ind,:),1));
             for iC = 1:size(resp_cell_match{id,iOri,iCon},2)
-                h_match{id}(iOri,iCon,iC) = ttest(resp_cell_match{id,iOri,iCon}(:,iC),base_cell_match{id,iOri,iCon}(:,iC),'tail','right','alpha',0.05./((nOri.*nCon)-1));
+                [h_match{id}(iOri,iCon,iC), p_match{id}(iOri,iCon,iC)] = ttest(resp_cell_match{id,iOri,iCon}(:,iC),base_cell_match{id,iOri,iCon}(:,iC),'tail','right','alpha',0.05./(nOri-1));
             end
             resp_avg_match{id}(iOri,iCon,:,1) = mean(resp_cell_match{id,iOri,iCon},1);
             resp_avg_match{id}(iOri,iCon,:,2) = std(resp_cell_match{id,iOri,iCon},[],1)./sqrt(size(resp_cell_match{id,iOri,iCon},1));
@@ -140,24 +137,28 @@ for id = 1:nd*2
     resp_ind_match{id} = find(sum(sum(h_match{id},1),2));
 end
 
+resp_con = zeros(1,nCon);
+for i = 1:nCon
+    resp_con(i) = length(find(sum(h_match{2}(:,i,:),1)));
+end
+
 %%
-od = [4 3];
-resp_max_match = cell(1,nd*2);    
-for id = 1:nd*2
+resp_max_match = cell(1,nd);    
+for id = 1:nd
     resp_max_match{id} = squeeze(max(max(resp_avg_match{id}(:,:,:,1),[],1),[],2));
 end
 figure; 
-tit_str = {'D2->D1','D1->D2'};
 for id = 1:nd
-    subplot(2,2,id) 
-    scatter(resp_max_match{id}(resp_ind_match{id}),resp_max_match{od(id)}(resp_ind_match{id}))
+    subplot(2,2,id)
+    scatter(resp_max_match{1}(resp_ind_match{id}),resp_max_match{2}(resp_ind_match{id}))
     xlabel('D1- max dF/F')
     ylabel('D2- max dF/F')
     xlim([0 1])
     ylim([0 1])
     refline(1)
-    title(tit_str(id))
+    title(['Day ' num2str(id) ' Responsive'])
 end
+
 print(fullfile(fn_multi,'maxResp_crossDay.pdf'),'-dpdf','-bestfit')
 %%
 figure;
@@ -167,16 +168,20 @@ for id = 1:nd
 subplot(2,2,1)
 plot(id, length(intersect(find(red_ind_all{id}==0),resp_ind_all{id})),'ok')
 hold on
-plot(id, length(intersect(find(red_ind_all{id}),resp_ind_all{id})),'or')
+if find(red_ind_all{id})
+    plot(id, length(intersect(find(red_ind_all{id}),resp_ind_all{id})),'or')
+end
 ylim([0 80])
 xlim([0 3])
 ylabel('Visually responsive (n)')
 xlabel('Session')
 title('all')
 subplot(2,2,2)
-plot(id, length(intersect(find(red_ind_match{id}==0),resp_ind_match{od(id)})),'ok')
+plot(id, length(intersect(find(red_ind_match==0),resp_ind_match{id})),'ok')
 hold on
-plot(id, length(intersect(find(red_ind_match{id}==1),resp_ind_match{od(id)})),'or')
+if find(red_ind_match==1)
+    plot(id, length(intersect(find(red_ind_match==1),resp_ind_match{id})),'or')
+end
 ylim([0 80])
 xlim([0 3])
 ylabel('Visually responsive (n)')
@@ -196,9 +201,11 @@ ylabel('Fraction time active')
 xlabel('Session')
 end
 subplot(2,2,4)
-plot(repmat(1:nd, [length(find(red_ind_match{1}==0)) 1])', [fractTimeActive_match{1}(find(red_ind_match{1}==0)); fractTimeActive_match{4}(find(red_ind_match{1}==0))],'-ok')
+plot(repmat(1:nd, [length(find(red_ind_match==0)) 1])', [fractTimeActive_match{1}(find(red_ind_match==0)); fractTimeActive_match{2}(find(red_ind_match==0))],'-ok')
 hold on
-plot(repmat(1:nd, [length(find(red_ind_match{1}==1)) 1])', [fractTimeActive_match{1}(find(red_ind_match{1}==1)); fractTimeActive_match{4}(find(red_ind_match{1}==1))],'-or')
+if find(red_ind_match==1)
+    plot(repmat(1:nd, [length(find(red_ind_match==1)) 1])', [fractTimeActive_match{1}(find(red_ind_match==1)); fractTimeActive_match{2}(find(red_ind_match==1))],'-or')
+end
 ylim([0 0.05])
 xlim([0 3])
 ylabel('Fraction time active')
@@ -208,7 +215,7 @@ print(fullfile(fn_multi,'responsivity.pdf'),'-dpdf','-bestfit')
 R_str = strvcat('R-','R+');
 HT_str = strvcat('HT-','HT+');
 
-nCells_match = length(red_ind_match{1});
+nCells_match = length(red_ind_match);
 figure;
 movegui('center')
 start = 1;
@@ -233,8 +240,8 @@ for iCell = 1:nCells_match
         hold on
         ylim([-0.1 ymax])
         subplot(6,6,start+1)
-        errorbar(cons, resp_avg_match{4}(iOri,:,iCell,1), resp_avg_match{4}(iOri,:,iCell,2),'-o')
-        title(HT_str(red_ind_match{1}(iCell)+1,:))
+        errorbar(cons, resp_avg_match{2}(iOri,:,iCell,1), resp_avg_match{2}(iOri,:,iCell,2),'-o')
+        title(HT_str(red_ind_match(iCell)+1,:))
         hold on
         ylim([-0.1 ymax])
     end
@@ -242,12 +249,12 @@ for iCell = 1:nCells_match
 end
 print(fullfile(fn_multi,['conResp_crossDay' num2str(n) '.pdf']),'-dpdf','-bestfit')
 
-close all
+%close all
 figure;
 movegui('center')
 start = 1;
 n = 1;
-match_ind = find([cellImageAlign(1).cell.pass]);
+match_ind = find([cellImageAlign.pass]);
 for iCell = 1:nCells_match
     iC = match_ind(iCell);
     if start>16
@@ -257,7 +264,7 @@ for iCell = 1:nCells_match
         n = n+1;
         start = 1;
     end
-    if ~isempty(find(resp_ind_match{1} == iCell)) || ~isempty(find(resp_ind_match{4} == iCell))
+    if ~isempty(find(resp_ind_match{1} == iCell)) || ~isempty(find(resp_ind_match{2} == iCell))
         ymax = max(max(resp_avg_match{1}(:,:,iCell,1),[],1),[],2).*1.25;
         if ymax<0.2
             ymax=0.2;
@@ -267,22 +274,22 @@ for iCell = 1:nCells_match
             errorbar(oris', resp_avg_match{1}(:,iCon,iCell,1), resp_avg_match{1}(:,iCon,iCell,2),'-o')
             hold on
             ylim([-0.1 ymax])
-            title(HT_str(red_ind_match{1}(iCell)+1,:))
+            title(HT_str(red_ind_match(iCell)+1,:))
             subplot(4,4,start+1)
-            errorbar(oris', resp_avg_match{4}(:,iCon,iCell,1), resp_avg_match{4}(:,iCon,iCell,2),'-o')
+            errorbar(oris', resp_avg_match{2}(:,iCon,iCell,1), resp_avg_match{2}(:,iCon,iCell,2),'-o')
             hold on
             ylim([-0.1 ymax])
         end
-        if ~isnan(cellImageAlign(1).cell(iC).r_red)
+        if ~isnan(cellImageAlign(iC).r_red)
             subplot(4,4,start+2)
-            imagesc(cellImageAlign(1).cell(iC).d(1).red_img)
+            imagesc(cellImageAlign(iC).d(1).red_img)
             subplot(4,4,start+3)
-            imagesc(cellImageAlign(1).cell(iC).d(2).red_img)
+            imagesc(cellImageAlign(iC).d(2).red_img)
         else
             subplot(4,4,start+2)
-            imagesc(cellImageAlign(1).cell(iC).d(1).corr_img)
+            imagesc(cellImageAlign(iC).d(1).corr_img)
             subplot(4,4,start+3)
-            imagesc(cellImageAlign(1).cell(iC).d(2).corr_img)
+            imagesc(cellImageAlign(iC).d(2).corr_img)
         end
         start = start+4;
     end
@@ -332,13 +339,13 @@ for id = 1:nd
         end
     end
     subplot(2,2,3)
-    errorbar(cons, nanmean(resp_avg_match_pref{id}(:,find(red_ind_match{1}==0)),2), nanstd(resp_avg_match_pref{id}(:,find(red_ind_match{1}==0)),[],2)./sqrt(length(find(red_ind_match{1}==0))),'-o')
+    errorbar(cons, nanmean(resp_avg_match_pref{id}(:,find(red_ind_match==0)),2), nanstd(resp_avg_match_pref{id}(:,find(red_ind_match==0)),[],2)./sqrt(length(find(red_ind_match==0))),'-o')
     hold on
     title('match HT-')
     ylim([-0.05 0.3])
     subplot(2,2,4)
-    if sum(red_ind_match{1})>0
-        errorbar(cons, nanmean(resp_avg_match_pref{id}(:,find(red_ind_match{1})),2), nanstd(resp_avg_match_pref{id}(:,find(red_ind_match{1})),[],2)./sqrt(length(find(red_ind_match{1}==0))),'-o')
+    if sum(red_ind_match)>0
+        errorbar(cons, nanmean(resp_avg_match_pref{id}(:,find(red_ind_match)),2), nanstd(resp_avg_match_pref{id}(:,find(red_ind_match)),[],2)./sqrt(length(find(red_ind_match==0))),'-o')
     end
     hold on
     title('match HT+')

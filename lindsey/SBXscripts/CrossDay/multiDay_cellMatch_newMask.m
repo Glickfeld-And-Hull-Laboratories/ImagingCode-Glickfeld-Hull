@@ -8,7 +8,7 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(2) = 20;
+day_id(2) = 15;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);
@@ -36,6 +36,7 @@ align_fov = cell(1,nd);
 corrmap = cell(1,nd);
 dfmax = cell(1,nd);
 masks = cell(1,nd);
+maskNP = cell(1,nd);
 red_ind = cell(1,nd);
 cellTCs_all = cell(1,nd);
 %% load all data
@@ -84,6 +85,7 @@ for id = 1:nd
     dfmax{id} = data_dfof(:,:,1);
     corrmap{id} = data_dfof(:,:,end);
     masks{id} = mask_cell;
+    maskNP{id} = mask_np;
     red_ind{id} = mask_label;
     load(fullfile(fnout,expDate,runFolder,'TCs.mat'))
     cellTCs_all{id} = npSub_tc;
@@ -96,13 +98,17 @@ clear input
 %% manual align
 corrmap_norm{1} = uint8((corrmap{1}./max(corrmap{1}(:))).*255);
 corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
-[input_points_1, base_points_1] = cpselect(fov_red{2},fov_red{1},'Wait', true);
-[input_points_2, base_points_2] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
-[input_points_3, base_points_3] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
-input_points = [input_points_1; input_points_2; input_points_3];
-base_points = [base_points_1; base_points_2; base_points_3];
-fitGeoTAf = fitgeotrans(input_points(:,:), base_points(:,:),'affine'); 
+if exist(fullfile(fn_multi,'multiday_alignment.mat'))
+    load(fullfile(fn_multi,'multiday_alignment.mat'))
+else
+    [input_points_1, base_points_1] = cpselect(fov_red{2},fov_red{1},'Wait', true);
+    [input_points_2, base_points_2] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
+    [input_points_3, base_points_3] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
+    input_points = [input_points_1; input_points_2; input_points_3];
+    base_points = [base_points_1; base_points_2; base_points_3];
+end
 
+fitGeoTAf = fitgeotrans(input_points(:,:), base_points(:,:),'affine'); 
 data{3} = imwarp(data{2},fitGeoTAf, 'OutputView', imref2d(size(data{2}))); 
 fov_avg{3} = mean(data{3},3);
 fov_norm{3} = uint8((fov_avg{3}./max(fov_avg{3}(:))).*255);
@@ -181,7 +187,6 @@ mask_exp = zeros(size(fov_avg{1}));
 mask_all = zeros(size(fov_avg{1}));
             
 start = 1;
-figure; movegui('center');
 for icell = 1:nc
     if goodCells(icell)
         % find best shift
@@ -261,6 +266,7 @@ for icell = 1:nc
             subplot(3,2,start+5)
             imagesc(reg_max)
             title(num2str(r_max))
+            suptitle(['Cell ' num2str(icell) '/' num2str(nc)])
             prompt = 'Choose image: 1- Corr, 2- Avg/Red, 3- Max, 0- skip: ';
             x = input(prompt);
             switch x
@@ -269,36 +275,23 @@ for icell = 1:nc
                     shifts = nan;
                 case 1
                     img_select = corrmap{3};
+                    shifts = shift_corr;
                 case 2
                     if red_ind{1}(icell)
                         img_select = fov_red{3};
+                        shifts = shift_red;
                     else
                         img_select = fov_avg{3};
+                        shifts = shift_avg;
                     end
                 case 3     
                     img_select = dfmax{3};
+                    shifts = shift_max;
             end
         else
             pass = false;
             shifts = nan;
         end
-
-        cellImageAlign(icell).center_yx = [yCenter(icell),xCenter(icell)];
-        cellImageAlign(icell).d(1).avg_img = day1_cell_avg;
-        cellImageAlign(icell).d(1).corr_img = day1_cell_corr;
-        cellImageAlign(icell).d(1).red_img = day1_red_avg;
-        cellImageAlign(icell).d(1).max_img = day1_cell_max;
-        cellImageAlign(icell).d(2).avg_img = reg_avg;
-        cellImageAlign(icell).d(2).corr_img = reg_corr;
-        cellImageAlign(icell).d(2).red_img = red_reg_avg;
-        cellImageAlign(icell).d(2).max_img = reg_max;
-        cellImageAlign(icell).r_avg = r_avg;
-        cellImageAlign(icell).r_corr = r_corr;
-        cellImageAlign(icell).r_red = r_red;
-        cellImageAlign(icell).shifts = shifts;
-        cellImageAlign(icell).pass = pass;
-
-        
 
         % shift data, get tc, all days
         if pass
@@ -316,30 +309,52 @@ for icell = 1:nc
                 mask_all = mask_all+bwout_full;
                 mask_exp = imCellBuffer(mask_all,3)+mask_all;
             else
-                cellImageAlign(icell).pass = false;
+                pass = false;
             end
             
         end
         close all
+        cellImageAlign(icell).center_yx = [yCenter(icell),xCenter(icell)];
+        cellImageAlign(icell).d(1).avg_img = day1_cell_avg;
+        cellImageAlign(icell).d(1).corr_img = day1_cell_corr;
+        cellImageAlign(icell).d(1).red_img = day1_red_avg;
+        cellImageAlign(icell).d(1).max_img = day1_cell_max;
+        cellImageAlign(icell).d(2).avg_img = reg_avg;
+        cellImageAlign(icell).d(2).corr_img = reg_corr;
+        cellImageAlign(icell).d(2).red_img = red_reg_avg;
+        cellImageAlign(icell).d(2).max_img = reg_max;
+        cellImageAlign(icell).r_avg = r_avg;
+        cellImageAlign(icell).r_corr = r_corr;
+        cellImageAlign(icell).r_red = r_red;
+        cellImageAlign(icell).shifts = shifts;
+        cellImageAlign(icell).pass = pass;
     else
         cellImageAlign(icell).pass = false;
         cellImageAlign(icell).r_red = 0;
     end
+    if length(find([cellImageAlign.pass])) ~= max(max(bwlabel(mask_all)))
+        mask_all = mask_all-bwout_full;
+        mask_exp = imCellBuffer(mask_all,3)+mask_all;
+        error(['Mismatch in cell numbers- redo cell ' num2str(icell)])
+    end
 end
 mask_cell = bwlabel(mask_all);
+masks{id} = mask_cell;
 mask_np = imCellNeuropil(mask_cell, 3, 5);
-figure;
+maskNP{id} = mask_np;
+figure; movegui('center')
 subplot(2,2,1)
 imagesc(masks{1})
 title('Day 1 masks')
 subplot(2,2,2)
 imagesc(mask_cell)
 title('Day 2 masks after transform')
+print(fullfile(fn_multi,'masksAfterTransform.pdf'),'-dpdf','-fillpage')
 
 %%
 %old TCs
 match_ind = find([cellImageAlign.pass]);
-cellTCs_match{1} = npSub_tc(:,match_ind);
+cellTCs_match{1} = cellTCs_all{1}(:,match_ind);
 
 %new TCs
 data_tc = stackGetTimeCourses(data{3}, mask_cell);
@@ -371,6 +386,6 @@ red_ind_match = ismember(match_ind,find(~isnan([cellImageAlign.r_red])));
 red_ind_all = red_ind;
 
 save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_ind_all','red_ind_match','match_ind')
-save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','fov_red','dfmax','corrmap');
+save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','fov_red','dfmax','corrmap','masks','mask_np');
 
-clear data_reg_down
+clear data_reg_down data
