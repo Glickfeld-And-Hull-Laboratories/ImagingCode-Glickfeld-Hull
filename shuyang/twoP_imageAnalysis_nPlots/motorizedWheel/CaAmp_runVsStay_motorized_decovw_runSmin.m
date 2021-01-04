@@ -14,8 +14,8 @@
 %define the directory and files
 
 clear;
-sessions = {'200116_img1041','200214_img1042','200217_img1061','200225_img1049','200319_img1064','200319_img1064_2'};
-days = {'1041-200116_1','1042-200214_1','1061-200217_1','1049-200225_1','1064-200319_1','1064-200319_2'};
+sessions = {'200116_img1041','200217_img1061','200225_img1049','200319_img1064','200319_img1064_2'};
+days = {'1041-200116_1','1061-200217_1','1049-200225_1','1064-200319_1','1064-200319_2'};
 image_analysis_base = 'Z:\Analysis\motorizedWheel_Analysis\running\imaging_analysis\'; 
 color_code = {'c','r','y','g'};
 
@@ -34,8 +34,8 @@ for ii = 1: length(sessions)
     stay_vec = behav_output.stay_vec;
     
     % for each cell,find isolated events in running and stationary (no event within 650ms before that event)
-    spk_deconv_output = load([image_analysis_dest sessions{ii},'_spk_deconvolve_threshold' num2str(threshold) '.mat']);
-    spk_inx_neurons = spk_deconv_output.spk_inx_cl;
+    spk_deconv_output = load([image_analysis_dest,'deconv_wfastRunSmin\' sessions{ii}, '_spk_deconvolve_staynrun_seperate.mat']);
+    spk_inx_neurons = spk_deconv_output.spk_inx;
     
     % identify events that are isolated: 600ms = 18 frames. need to do this then see what behavioral state they're in, not the other way because
     % if you find intersect of peak index and behavioral state frame first, then the diff between the frames you find can be big if there's a different behavioral state in between.
@@ -210,7 +210,7 @@ for ii = 1: length(sessions)
 %     saveas(Caevent_run,[image_analysis_dest '\' days{ii} '_CaAmp_run']);
 %     
     % if isempty(frm_run_midpart_cell) == 0
-    save([image_analysis_dest sessions{ii} '_isoCaEvent.mat'],'isolated_inx_neurons','spk_iso_stay_neurons','spk_iso_runfast_neurons',...
+    save([image_analysis_dest,'deconv_wfastRunSmin\' sessions{ii} '_isoCaEvent.mat'],'isolated_inx_neurons','spk_iso_stay_neurons','spk_iso_runfast_neurons',...
         'spk_iso_runslow_neurons','isoevent_stay_neurons','isoevent_runfast_neurons','isoevent_runslow_neurons','dfOvF_btm_stay_isoevents',...
         'dfOvF_btm_runfast_isoevents','dfOvF_btm_runslow_isoevents',...
         'dfOvF_btm_stay_isoevents_neurons','dfOvF_btm_runfast_isoevents_neurons',...

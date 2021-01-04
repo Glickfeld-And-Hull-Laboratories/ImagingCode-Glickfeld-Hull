@@ -1,5 +1,5 @@
 % same thing as twoP_running_spk_graphs, !!! but using result of spike
-% identification by doing deconvolution
+% identification by doing deconvolution SEPARATELY
 % 2 photon: RUNNING ---- spikes
 %plot average spike rate for all cells across trials, aligned with running onset and offset
 %scatter plot running vs. still (each dot should be a cell)
@@ -11,30 +11,27 @@ days = {'1021-190429_1','1023-190430_1','1024-190507_1','1025-190603_1'};
 image_analysis_base    = 'Z:\Analysis\2P_MovingDots_Analysis\imaging_analysis\'; %stores the data on crash in the movingDots analysis folder
 color_code = {'b','r','k','c'};
 
-%% SECTION IV FR RUNNING VS. STAYTIONARY
-for i = 4
-    image_analysis_dest = [image_analysis_base, sessions{i}, '\'];
+%% SECTION IV FR RUNNING VS. STATIONARY
+for i = 1:length(sessions)
+    image_analysis_dest_deconv_sep = [image_analysis_base, sessions{i}, '\deconvolution_staywRunSmin\'];
     behav_dest = ['Z:\Analysis\2P_MovingDots_Analysis\behavioral_analysis\' days{i} '\'];
     behav_output = load([behav_dest days{i} '_behavAnalysis.mat']);
-    threshold = -4;% the threshold you used in deconvolveCa function
-    spk_deconv_output = load([image_analysis_dest sessions{i},'_spk_deconvolve_threshold' num2str(threshold) '.mat']);
-    spk_inx_cl = spk_deconv_output.spk_inx_cl; % each cell is the indexes of CS for a PC
-    FRstay_cell_cl = spk_deconv_output.FRstay_cell_cl;
+    spk_deconv_output = load([image_analysis_dest_deconv_sep sessions{i} '_spk_deconvolve_staynrun_seperate.mat']);
+    spk_inx_run = spk_deconv_output.spk_inx_run; % each cell is the indexes of CS for a PC
+    FRstay_cell = spk_deconv_output.FRstay_cell;
     frm_run_cell = behav_output.frames_run_cell;
     frm_run = cell2mat(frm_run_cell);
-    spkrun = zeros(1,size(spk_inx_cl,2));
-    for n = 1: size(spk_inx_cl,2) %for each cell
-        %count how many spikes are in the running periods: get the intersection
-        %of indices of peaks above the threshold and indices of frames for running
-        spkrun(n) = length(intersect(spk_inx_cl{n},frm_run));
-    end
     t_run = length(frm_run)/30;
-    FRrun_cells = spkrun/t_run;
-    aveFR_run = mean(FRrun_cells);
-    aveFR_stay = mean(FRstay_cell_cl);
+    FRrun_cell = zeros(1,size(spk_inx_run,2));
+    for n = 1: size(spk_inx_run,2) %for each cell
+        % FR = total n spikes/total time (in seconds)
+        FRrun_cell(n) = length(spk_inx_run{n})/t_run;
+    end
+    aveFR_run = mean(FRrun_cell);
+    aveFR_stay = mean(FRstay_cell);
     
     eg_stayvsRun = figure;
-    scatter(FRstay_cell_cl,FRrun_cells,15,'filled','MarkerEdgeColor',[0.45 0.45 0.45],'MarkerFaceColor',[0.45 0.45 0.45]); hold on;
+    scatter(FRstay_cell,FRrun_cell,15,'filled','MarkerEdgeColor',[0.45 0.45 0.45],'MarkerFaceColor',[0.45 0.45 0.45]); hold on;
     scatter(aveFR_stay, aveFR_run,15,'filled','MarkerEdgeColor',[0.8431 0.0980 0.1098],'MarkerFaceColor',[0.8431 0.0980 0.1098]);hold on;
     xlabel('stationary'); ylabel('running');
     xlim([0,1.6]); ylim([0,1.6]);
@@ -42,28 +39,26 @@ for i = 4
     line.Color = 'r';
     line.LineWidth = 1;
     axis square;
-    a = get(gca,'XTickLabel');
-    set(gca,'XTickLabel',a,'FontSize',7);
     eg_stayvsRun.Units = 'centimeters';
     eg_stayvsRun.Position = [1 1 4 4];
-    fig_name = 'eg_scatter_stayVsrun_190603_img1025';
-    path = 'Z:\Analysis\figures\figure3_2Prun_spike\';
-    orient(eg_stayvsRun,'landscape');
+    a = get(gca,'YTickLabel');
+    set(gca,'YTickLabel',a,'FontSize',7);
+    fig_name = ['eg_FRscatter_stayVsrun_' sessions{i}];
+    path = [image_analysis_dest_deconv_sep 'FR_figs\'];
+    %orient(eg_stayvsRun,'landscape');
     print(eg_stayvsRun,[path,fig_name],'-r600','-depsc');
-    
-    
-%     title([sessions{i} 'mean firing rate per second']);
-%     savefig([image_analysis_dest sessions{i} '_meanFRstayVSrun_deconvolve' num2str(threshold)]);
-%     save([image_analysis_dest sessions{i},'_spk_deconvolve_threshold' num2str(threshold) '.mat'],...
-%         'FRrun_cells','aveFR_stay','aveFR_run','-append');
+    title([sessions{i} 'mean firing rate per second']);
+    savefig([path fig_name]);   
+%     
+    save([image_analysis_dest_deconv_sep sessions{i} '_spk_deconvolve_staynrun_seperate.mat'],...
+         'FRrun_cell','aveFR_stay','aveFR_run','-append');
     
     %pause;
 end
 
 %finish
 %% SECTION V : run trigger average and run offset average--- spikes rates
-for i = 4
-    image_analysis_dest = [image_analysis_base, sessions{i}, '\'];
+for i = 1:4
     behav_dest = ['Z:\Analysis\2P_MovingDots_Analysis\behavioral_analysis\' days{i} '\'];
     behav_output = load([behav_dest days{i} '_behavAnalysis.mat']);
     frames_run_cell = behav_output.frames_run_cell;
@@ -74,12 +69,22 @@ for i = 4
     avespd_runoff_100ms = behav_output.avespd_runoff_100ms;
     stespd_runtrig_100ms = behav_output.stespd_runtrig_100ms;
     stespd_runoff_100ms = behav_output.stespd_runoff_100ms;
+    frames = behav_output.frames;
     
-    threshold = -4;
-    spk_deconv_output = load([image_analysis_dest sessions{i},'_spk_deconvolve_threshold' num2str(threshold) '.mat']);
-    spk_bi_cellmat = spk_deconv_output.spk_logic_cl;
-    spk_inx_cl = spk_deconv_output.spk_inx_cl;
+    image_analysis_dest_deconv_sep = [image_analysis_base, sessions{i}, '\deconvolution_sep\'];
+    spk_deconv_output = load([image_analysis_dest_deconv_sep sessions{i} '_spk_deconvolve_staynrun_seperate.mat']);
+    spk_inx_run = spk_deconv_output.spk_inx_run; % each cell is the indexes of CS for a PC
+    spk_inx_stay = spk_deconv_output.spk_inx_stay;
+    % use these indexes to generate a binary matrix
+    spk_bi_cellmat = zeros(length(frames),size(spk_inx_run,2)); % frames*cells
+    spk_inx_neurons = cell(1,size(spk_inx_run,2)); % indexes of spikes during both running and stationary for each cell
+    for n = 1: size(spk_inx_run,2) %for each cell
+        spk_inx_neurons{n} = sort([spk_inx_run{n},spk_inx_stay{n}]);
+        spk_inx_neurons{n} = spk_inx_neurons{n}'; % transpose this just because this way it fits with the CaAmp code.
+        spk_bi_cellmat(:,n) = (ismember(frames,spk_inx_neurons{n}))';
+    end
 
+    
     %run this script after dfOvF plot is done.
     
 %     period = 9; % # of frames before and after running
@@ -92,8 +97,8 @@ for i = 4
     
     % aligned with running onset --------------------------------------------------------------------------------------------------
     %get a matrix of 0s and 1s, frames*windows*cells
-    spk_runtrig_mat = zeros(size(frms_runTrig_mat,1),size(frms_runTrig_mat,2),size(spk_inx_cl,2));
-    for n = 1: size(spk_inx_cl,2)                                                    %for each cell
+    spk_runtrig_mat = zeros(size(frms_runTrig_mat,1),size(frms_runTrig_mat,2),size(spk_bi_cellmat,2));
+    for n = 1: size(spk_bi_cellmat,2)                                                    %for each cell
         for j = 1:size(frms_runTrig_mat,2)                                    %for each running window
             spk_runtrig_mat (:,j,n) = spk_bi_cellmat(frms_runTrig_mat(:,j),n);%spk_runtrig_mat: frame*window*cell
         end
@@ -115,7 +120,8 @@ for i = 4
         eg_spk_runtrig = figure; subplot(2,1,1);
         %shadedErrorBar(x,spk_runtrig_grand,ste_runtrig,{'color',[0.4660, 0.6740, 0.1880]}); % matlab default green
         shadedErrorBar(x,spk_runtrig_grand,ste_runtrig,{'color',[0.1922 0.6392 0.3294]});hold on;
-        ylim([-0.1,2.6]); xlim([-1.1 1.6]);hold on;
+        ylim([-0.1,max(spk_runtrig_grand)+2]); 
+        xlim([-1.1 1.6]);hold on;
         vline(0,'k'); ylabel('firing rate(Hz)'); 
         a = get(gca,'XTickLabel');
         set(gca,'XTickLabel',a,'FontSize',7);
@@ -129,17 +135,18 @@ for i = 4
         set(gca,'XTickLabel',a,'FontSize',7);
         eg_spk_runtrig.Units = 'centimeters';
         eg_spk_runtrig.Position = [1 1 5.5 5];
-        fig_name = 'eg_spk_runtrig_190603_img1025';
-        path = 'Z:\Analysis\figures\figure3_2Prun_spike\';
-        orient(eg_spk_runtrig,'landscape');
+        fig_name = ['eg_spk_runtrig_' sessions{i}];
+        path = [image_analysis_dest_deconv_sep 'FR_figs\'];
         print(eg_spk_runtrig,[path,fig_name],'-r600','-depsc');
+        title([sessions{i} 'running triggered average']);
+        savefig([path fig_name]);   
         %title([sessions ' running triggered average speed']);
         %savefig([image_analysis_dest sessions{i} '_runTrigAve_FRwSpeed_deconvolve' num2str(threshold)]);
     end
     
     % aligned with running offset ------------------------------------------------------------------------------
-    spk_runoff_mat = zeros(size(frms_runoff_mat,1),size(frms_runoff_mat,2),size(spk_inx_cl,2));
-    for n = 1: size(spk_inx_cl,2)                                                    %for each cell
+    spk_runoff_mat = zeros(size(frms_runoff_mat,1),size(frms_runoff_mat,2),size(spk_bi_cellmat,2));
+    for n = 1: size(spk_bi_cellmat,2)                                                    %for each cell
         for j = 1:size(frms_runoff_mat,2)                                    %for each running window
             spk_runoff_mat (:,j,n) = spk_bi_cellmat(frms_runoff_mat(:,j),n);%spk_runtrig_mat: frame*window*cell
         end
@@ -161,7 +168,8 @@ for i = 4
         x = (1:size(frms_runoff_mat,1))/30-1;
         eg_spk_runoff = figure; subplot(2,1,1);
         shadedErrorBar(x,spk_runoff_grand,ste_runtrig,{'color',[0.1922 0.6392 0.3294]});hold on;
-        ylim([-0.1,2.6]); xlim([-1.1 1.6]);hold on;
+        ylim([-0.1, max(spk_runoff_grand)+2]); 
+        xlim([-1.1 1.6]);hold on;
         vline(0,'k'); ylabel('firing rate(Hz)'); 
         a = get(gca,'XTickLabel');
         set(gca,'XTickLabel',a,'FontSize',7);
@@ -175,15 +183,17 @@ for i = 4
         set(gca,'XTickLabel',a,'FontSize',7);
         eg_spk_runoff.Units = 'centimeters';
         eg_spk_runoff.Position = [1 1 5.5 5];
-        fig_name = 'eg_spk_runoff_190603_img1025';
-        path = 'Z:\Analysis\figures\figure3_2Prun_spike\';
-        orient(eg_spk_runoff,'landscape');
+        fig_name = ['eg_spk_runoff_' sessions{i}];
+        path = [image_analysis_dest_deconv_sep 'FR_figs\'];
         print(eg_spk_runoff,[path,fig_name],'-r600','-depsc');
-        %savefig([image_analysis_dest sessions{i} '_runOffAve_FRwSpeed' num2str(threshold)]);
+        title([sessions{i} 'runoff average']);
+        savefig([path fig_name]);  
+   
     end
-    %pause;
-%     save([image_analysis_dest sessions{i},'_spk_deconvolve_threshold' num2str(threshold) '.mat'],...
-%         'spk_runtrig_mat','spk_runoff_mat','-append');
+    
+    save([image_analysis_dest_deconv_sep sessions{i} '_spk_deconvolve_staynrun_seperate.mat'],...
+         'spk_runtrig_mat','spk_runoff_mat','spk_inx_neurons','-append');
+   
 end
 
 

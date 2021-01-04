@@ -1,14 +1,14 @@
 %% assign document paths and experimental sessions
 clear;
 sessions = {'200116_img1041','200217_img1061','200225_img1049',...
-    '200319_img1064','200319_img1064_2'};
+    '200319_img1064','200319_img1064_2'}; %'200116_img1041'
 image_analysis_base = 'Z:\Analysis\motorizedWheel_Analysis\running\imaging_analysis\';
 % behavior analysis results
-days = {'1041-200116_1','1049-200225_1','1061-200217_1',...
-    '1064-200319_1','1064-200319_2'};
+days = {'1041-200116_1','1061-200217_1','1049-200225_1',...
+    '1064-200319_1','1064-200319_2'};%
 color_code = {'b','r','k','c'};
 
-%% df/f runtrig ave and runoffset ave and speed transit
+%% df/f runtrig ave and runoffset ave and speed transit (df/f parts are the same as when doing deconvolution together just using 4std of the whole baseline as threshold)
 dfOvF_runoff_fast_cells_allsession = []; %frame*cell
 dfOvF_runoff_slow_cells_allsession = [];
 dfOvF_runtrig_fast_cells_allsession = [];
@@ -110,7 +110,7 @@ print(dfOvF_across,[path,fig_name],'-r600','-depsc');
 
 %savefig(['Z:\Analysis\motorizedWheel_Analysis\running\across_sessions\' 'across_sessions_dfOvF.fig']);
 
-%% FR run trig ave and runoff ave
+%% FR run trig ave and runoff ave (this part is the same as before because we're not putting this in the paper)
 
 FR_runoff_fast_cells_allsession = []; %frame*cell
 FR_runoff_slow_cells_allsession = [];
@@ -320,7 +320,7 @@ set(gca,'XTickLabel',a,'FontSize',7);
 fig_name = 'across_session_fastvsSlowvsStay_FR';
 path = 'Z:\Analysis\motorizedWheel_Analysis\running\across_sessions\deconv_wRunSmin\';
 %orient(dfOvF_behavStates,'landscape');
-print(FR_fig,[path,fig_name],'-r600','-depsc');
+%print(FR_fig,[path,fig_name],'-r600','-depsc');
 
 
 

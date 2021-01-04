@@ -7,11 +7,11 @@
 
 %% paths
 clear;
-% sessions = {'200305_img1049','200319_img1064_airpuff','200319_img1064_airpuff_2'};
-% days = {'1049-200305_1','1064-200319_1','1064-200319_2'};
-sessions = '200305_img1049'; 
-days = '1049-200305_1';
-image_analysis_base = 'Z:\Analysis\motorizedWheel_Analysis\airpuff\imaging_analysis\'; 
+% sessions = {'200116_img1041','200217_img1061','200225_img1049','200319_img1064','200319_img1064_2'};
+sessions = '200319_img1064_2'; 
+%days = {'1041-200116_1','1061-200217_1','1049-200225_1','1064-200319_1','1064-200319_2'};
+days = '1064-200319_2';
+image_analysis_base = 'Z:\Analysis\motorizedWheel_Analysis\running\imaging_analysis\'; 
 color_code = {'b','r','k','c'};
 
 %% deconvolution and plot
@@ -22,13 +22,12 @@ if ~exist(deconvolutionDest)
     mkdir(deconvolutionDest);
 end
 % behavior analysis results
-behav_dest = ['Z:\Analysis\motorizedWheel_Analysis\airpuff\behavioral_analysis\' days '\'];
+behav_dest = ['Z:\Analysis\motorizedWheel_Analysis\running\behavioral_analysis\' days '\'];
 %load data
 filename = dir([image_analysis_dest 'getTC\' '*' '_TCave.mat']);
-TCave = load([image_analysis_dest 'getTC\' filename.name]);
-TCave = TCave.tc_avg;
+rawF_output = load([image_analysis_dest sessions, '_deconvolution_thresh-4_TCave_cl.mat']);
+TCave = rawF_output.TCave_cl;
 behav_output = load([behav_dest days '_behavAnalysis.mat']);
-stay_nopuff = behav_output.stay_nopuff;
 frm_stay = behav_output.stay_vec;
 frm_fastrun = behav_output.run_fast_vec;
 
@@ -71,12 +70,14 @@ aveFR = mean(FRstay_cell);
 % hist_FR = figure;
 % histogram(FRstay_cell,'BinWidth',0.1);
 % title([sessions 'deconvolution-firing rate-stationary-threshold' num2str(threshold)]);
-% saveas(hist_FR,[deconvolutionDest sessions '_histFR_deconvolution_threshold' num2str(threshold) '.fig']);
+% saveas(hist_FR,[deconvolutionFigureDest sessions '_histFR_deconvolution_threshold' num2str(threshold) '.fig']);
 
 %save variables
-save([deconvolutionDest sessions '_spk_deconvolve_staynrun_seperate.mat' ],'threshold_run',...
+save([deconvolutionDest sessions '_spk_deconvolve_staynrun_seperate.mat'],'threshold_run',...
    'smin_run', 'FRstay_cell', 'aveFR','options','spk_logic','spk','kernel','spk_peak','spk_inx');
 
+
+%% 
 %{
 % plots---------------------------------------------------------------------------------------------------------------------------
 % write a GUI with subplots: TCave with red dots and kernel
@@ -117,7 +118,7 @@ title('not return to baseline period');
 savefig([deconvolutionFigureDest sessions '_Caevent_nobase' num2str(threshold) '.fig']);
 %if the maximum not return to baseline period is bigger than n # of frames,
 %through out this cell
-nobase_thres = 1500;
+nobase_thres = 1000;
 nobase_cell = find(nobase_maxperiod > nobase_thres);
 
 baseline_btm = zeros(1, size(TCave,2));
@@ -132,75 +133,10 @@ end
 figure; plot(baseline_btm);
 title('baseline fluorescence');
 savefig([deconvolutionFigureDest sessions '_baselineF' num2str(threshold) '.fig']);
-baseline_thres = 2500;
-low_Fcell = find(baseline_btm<baseline_thres);
-%---------------------------------------------------------------------------------------------------------------------------------
-% find the ones that has super low FR (fake cells), delete those in TCave, spk_logic,spk,kernel,spk_peak,spk_inx
-%FRthres_low = 0.1; %Lisberger paper showed the lowest firing rate is 0.1
-%badPCs1 = find(FRstay_cell<FRthres_low);
-%I think I should use other features to filter out the bad cells instead of
-%simply looking at the firing rate. if using the features below, should
-%filter out the cells that are firing too much or too little (max no fire,
-%max no baseline, max fire...). These features looks through the neural
-%activity throughtout the whole time, whereas FR is just an average and a
-%lot of detials can be missing
-
-% use other criteria to sort out bad cells:
-% peak_std = zeros(1,size(spk_peak,2));
-% peak_mean = zeros(1,size(spk_peak,2));
-% for c = 1:size(spk_peak,2)                  % for each cell
-%     peak_std(c) = std(spk_peak{c});
-%     peak_mean(c) = mean(spk_peak{c});
-% end
-% peak_variation = peak_std./peak_mean; %if peak variation is too big, this cell might not be good.
-% figure; plot(peak_variation);
-% title('peak variation');
-% savefig([deconvolutionFigureDest sessions '_CaeventPeak_variation' num2str(threshold) '.fig']);
-% peak_vartoomuch = find(peak_variation>0.64);
-%peak_vartoomuch = [];
-% cannot totally through out all of the cells in here, need to go back and
-% look at each cell that has a high variation and decide.
-% but this at least gives me a good pool to look at
-% cell # 18,9,7,4,1 in session 191206_img1038 can all be sorted out using this way
-% ----------------------------------------------------------------------------------------------
-% another feature is that the deconvolved signal doesn't go back to
-% baseline for a long time: cell#88,53,91,and 101
-
-% %----------------------------------------------------------------------------------------------------
-% % doesn't fire for a long time
-% max_nofire = zeros(1,size(spk_peak,2));
-% for c = 1:size(spk_peak,2)
-%     max_nofire(c) = max(diff(spk_inx{c}));
-% end
-% figure; plot(max_nofire);
-% title('not firing');
-% savefig([deconvolutionFigureDest sessions '_Caevent_nofire' num2str(threshold) '.fig']);
-% max_nofire_thres = 7000;
-% nofire_cell = find(max_nofire > max_nofire_thres);
-% %----------------------------------------------------------------------------------------------------
-% %a third feature is that the cells are firing a lot 
-% %calculate the firing rate of a period of time and if the FR is high for a
-% %long time then through the cell out first calculate # of spikes per second
-% maxfire = zeros(1,size(spk_peak,2));
-% binwidth = 900; % number of frames
-% bins = floor(size(spk_logic,1)/binwidth);
-% for c = 1:size(spk_peak,2)
-%     nfire = []; t = 1;
-%     while t < size(spk_logic,1)-binwidth % use a band to scan through the whole session, count the number of total spikes in time length binwidth                               
-%         nfire = [nfire sum(spk_logic(t:t+binwidth-1,c)==1)]; 
-%         t = t+1;
-%     end
-%     maxfire(c) = max(nfire); % for each cell get the highest firing rate during any bindwidth
-% end
-% figure; plot(maxfire); title('firing too much');
-% savefig([deconvolutionFigureDest sessions '_Caevent_maxfire' num2str(threshold) '.fig']);
-% figure; hist(maxfire); title('histogram # of events in 900 frames');
-% savefig([deconvolutionFigureDest sessions '_Caevent_maxfire_hist' num2str(threshold) '.fig']);
-% FR_toohigh = find(maxfire>65);
-%FR_toohigh = [];
-
-% badcells2 = union(nofire_cell,nobase_cell);
-% badPCs2 = union(badcells2,FR_toohigh);
+baseline_thres = 2000;
+%baseline_thres = [];
+low_Fcell = find(baseline_btm < baseline_thres);
+%low_Fcell = [];
 
 badPCs = union(nobase_cell,low_Fcell);
 TCave_cl = TCave;TCave_cl(:,badPCs) = [];
@@ -217,8 +153,9 @@ spk_inx_cl = spk_inx; spk_inx_cl(badPCs) = [];
 save([image_analysis_dest sessions '_deconvolution_thresh', num2str(threshold), '_TCave_cl.mat'],...
     'TCave_cl','threshold','badPCs','nobase_cell','low_Fcell','nobase_thres','baseline_thres');
 save([image_analysis_dest sessions '_spk_deconvolve_threshold' num2str(threshold) '.mat' ],'FRstay_cell_cl', ...
-    'aveFR_cl','badPCs','spk_logic_cl','spk_cl','kernel_cl','spk_peak_cl','spk_inx_cl',...
-    'threshold','badPCs','nobase_cell','low_Fcell','nobase_thres','baseline_thres','-append');
+    'aveFR_cl','badPCs','spk_logic_cl','spk_cl','kernel_cl','spk_peak_cl',...
+    'spk_inx_cl','threshold','badPCs','nobase_cell','low_Fcell','nobase_thres',...
+    'baseline_thres','-append');
 
 %% make a new mask figure
 % load mask3D final
@@ -227,7 +164,7 @@ mask3D = load([image_analysis_dest 'getTC\' filename2.name]);
 mask3D = mask3D.mask3D;
 allcells = 1:size(TCave,2);
 goodcells = setdiff(allcells,badPCs);
-figure; imshow([image_analysis_dest 'getTC\' 'AVG_' sessions '_000_rgstr_tiff_1_29999_50_ref43_' 'jpeg.jpg']); hold on;
+figure; imshow([image_analysis_dest 'getTC\' 'AVG_' sessions '_000_rgstr_tiff_1_29999_50_ref50_' 'jpeg.jpg']); hold on;
 for m  = 1:length(goodcells)
     bound = cell2mat(bwboundaries(mask3D(:,:,goodcells(m))));
     randcolor = rand(1,4);

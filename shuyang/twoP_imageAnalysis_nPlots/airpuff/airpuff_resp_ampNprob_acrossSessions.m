@@ -1,6 +1,6 @@
 clear;
 %NEED TO UPDATE THIS SO IT ACCESSES SPREADSHEET INSTEAD OF JUST WRITING IN THE NAMES
-sessions = {'191114_img1040','191115_img1039','191115_img1041','191115_img1042','200316_img1064_airpuff_2'};
+sessions = {'191114_img1040','191115_img1039','191115_img1041','191115_img1042'}; % ,'200316_img1064_airpuff_2'
 image_analysis_base  = 'Z:\Analysis\Airpuff_analysis\imaging_analysis\';%stores the data on crash in the movingDots analysis folder
 color_code = {'c','r','y','g'};
 

@@ -9,8 +9,8 @@
 clear;
 % sessions = {'200305_img1049','200319_img1064_airpuff','200319_img1064_airpuff_2'};
 % days = {'1049-200305_1','1064-200319_1','1064-200319_2'};
-sessions = '200305_img1049'; 
-days = '1049-200305_1';
+sessions = '200319_img1064_airpuff_2'; 
+days = '1064-200319_2';
 image_analysis_base = 'Z:\Analysis\motorizedWheel_Analysis\airpuff\imaging_analysis\'; 
 color_code = {'b','r','k','c'};
 
@@ -25,8 +25,8 @@ end
 behav_dest = ['Z:\Analysis\motorizedWheel_Analysis\airpuff\behavioral_analysis\' days '\'];
 %load data
 filename = dir([image_analysis_dest 'getTC\' '*' '_TCave.mat']);
-TCave = load([image_analysis_dest 'getTC\' filename.name]);
-TCave = TCave.tc_avg;
+rawF_output = load([image_analysis_dest sessions, '_deconvolution_thresh-4_TCave_cl.mat']);
+TCave = rawF_output.TCave_cl;
 behav_output = load([behav_dest days '_behavAnalysis.mat']);
 stay_nopuff = behav_output.stay_nopuff;
 frm_stay = behav_output.stay_vec;
@@ -64,8 +64,8 @@ for c = 1: size(TCave,2)
     [spk_peak{c},spk_inx{c}] = findpeaks(spk(:,c));
     % spike logic
     spk_logic(:,c) = (ismember(frames,spk_inx{c}))';
-    num_spks_cell(c) = sum(spk_logic(frm_stay,c)==1);
-    FRstay_cell(c)= num_spks_cell(c)/length(frm_stay)*30; % firing rate = # of spikes/duration(s)
+    num_spks_cell(c) = sum(spk_logic(stay_nopuff,c)==1);
+    FRstay_cell(c)= num_spks_cell(c)/length(stay_nopuff)*30; % firing rate = # of spikes/duration(s)
 end
 aveFR = mean(FRstay_cell);
 % hist_FR = figure;

@@ -78,7 +78,7 @@ xlabel ('behavioral state');xlim([0.5 2.5]); axis square;
 set(gca,'XTick',x,'XTicklabel',{'stationary','running'});
 ylabel('raw F without CS');
 title('across sessions');
-savefig(['Z:\Analysis\motorizedWheel_Analysis\running\across_sessions' '_rawF_baseline.fig']);
+savefig(['Z:\Analysis\2P_MovingDots_Analysis\across_sessions\' 'across_sessions_rawF_baseline.fig']);
 
 
 

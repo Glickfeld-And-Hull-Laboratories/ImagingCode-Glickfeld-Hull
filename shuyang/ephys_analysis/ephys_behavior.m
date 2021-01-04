@@ -1,6 +1,6 @@
 clear;
 folder = 'Y:\home\nathan\DATA\S-probe\Awake\behavior\';
-sessionID =  '1050-191204';
+sessionID =  '1045-191210';
 filename = dir([folder 'data-i' '*' sessionID  '*' ]);
 file = [folder, filename.name];
 load(file);
@@ -31,3 +31,28 @@ airpuffon1 = airpuffon(~cellfun('isempty',airpuffon)); %it seems the airpuff som
 airpuffon1 = double(cell2mat(airpuffon1)); % this tells you which pulse the airpuff starts.
 lenairpuff = double(input.tactileStimulusDurationUs);
 lenairpuff = lenairpuff/1000000; % length of airpuff in seconds
+
+% get behavioral states
+frm_maxGap = 3; %300ms in between
+[frames,frames_stay_cell, frames_bf_cell, frames_run_cell, frames_move_cell] = findFrames_behavStates(speed,frm_maxGap);
+frames_stay = cell2mat(frames_stay_cell);
+frames_run = cell2mat(frames_run_cell);
+behav_dest = 'Y:\home\nathan\DATA\S-probe\Awake\useful_ephys\analysis\behavior';
+save([behav_dest '\' sessionID '_behavAnalysis.mat' ],...
+    'speed','frames','frm_maxGap','frames_stay_cell','frames_bf_cell',...
+    'frames_run_cell','frames_move_cell','frames_stay','frames_run');
+
+%%
+sessionID = '1046-191216';
+behav_dest = 'Y:\home\nathan\DATA\S-probe\Awake\useful_ephys\analysis\behavior';
+behav_struct = load([behav_dest '\' sessionID '_behavAnalysis.mat' ]);
+frames_run_cell = behav_struct.frames_run_cell;
+speed = behav_struct.speed;
+[frames_befo_run_cell,frames_aft_run_cell,frames_runTrigger_mat,...
+    frames_runoff_include,frames_runoff_mat,frames_run_mat] = findFrames_runWindows (speed,frames_run_cell);
+save([behav_dest '\' sessionID '_behavAnalysis.mat' ],...
+    'frames_befo_run_cell','frames_aft_run_cell','frames_runTrigger_mat',...
+    'frames_runoff_mat','frames_run_mat', 'frames_runoff_include','-append');
+
+
+
