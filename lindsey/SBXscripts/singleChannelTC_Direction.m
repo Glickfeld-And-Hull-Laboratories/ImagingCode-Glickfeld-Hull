@@ -2,17 +2,18 @@
 
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
+cam_fn = fullfile(fn_base, 'home\camaron');
 lg_fn = fullfile(fn_base, 'home\lindsey');
-data_fn = fullfile(lg_fn, 'Data\2P_images');
+data_fn = fullfile(cam_fn, 'Data\2P_images');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '200118';
-ImgFolder = '002';
-time = '1508';
-mouse = 'i1312';
-frame_rate = 15.5;
+date = '201209';
+ImgFolder = '003';
+time = '1226';
+mouse = 'i475';
+frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -31,7 +32,7 @@ totframes = input.counterValues{end}(end); %this is from the mworks structure- f
 fprintf(['Reading ' num2str(totframes) ' frames \r\n'])
 data = sbxread([ImgFolder '_000_000'],0,totframes); %loads the .sbx files with imaging data (path, nframes to skip, nframes to load)
 %Data is nPMT x nYpix x nXpix x nframes. 
-fprintf(['Data is ' num2str(size(data))])
+fprintf(['Data is ' num2str(size(data)) '\n'])
 %When imaging a single channel, nPMT = 1, so squeeze:
 data = squeeze(data);
 
@@ -61,7 +62,7 @@ if w == 0
     numClicked = find(axesClicked==allAxes);
     close all
 end
-fprintf(['Selected subplot ' num2str(numClicked)])
+fprintf(['Selected subplot ' num2str(numClicked) '\n'])
 %    c. Create target image
 data_avg = mean(data(:,:,1+((numClicked-1)*nskip):nframes+((numClicked-1)*nskip)),3); %average 500 frames to make target
 %2. stackRegister minimizes the difference of each frame from the target
@@ -106,15 +107,16 @@ data_df = bsxfun(@minus, double(data_tr), data_f);
 data_dfof = bsxfun(@rdivide,data_df, data_f); 
 clear data_f data_df data_tr
 %    d. Find average dF/F for each stimulus condition (this is for an experiment with changing grating direction)
-Dir = celleqel2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
-Dirs = unique(Dir);
+tDir = celleqel2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
+Dirs = unique(tDir);
 nDirs = length(Dirs);
 data_dfof_avg = zeros(sz(1),sz(2),nDirs); %create empty matrix with FOV for each direction: nYpix x nXPix x nDir
 
 nStim = nDirs;
+figure; movegui('center')
 [n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
 for idir = 1:nDirs
-    ind = find(Dir == Dirs(idir)); %find all trials with each direction
+    ind = find(tDir == Dirs(idir)); %find all trials with each direction
     data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %average all On frames and all trials
     subplot(n,n2,idir)
     imagesc(data_dfof_avg(:,:,idir))
@@ -124,7 +126,7 @@ clear data_dfof
 myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_avg_all = imfilter(data_dfof_avg,myfilter);
 data_dfof_max = max(data_dfof_avg_all,[],3); %finds all active cells by taking max projection
-
+figure; movegui('center'); imagesc(data_dfof_max);
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all', 'nStim')
 %    2. Create cell masks from active cells
 %        Concatenate images of max and all directions
@@ -162,7 +164,7 @@ clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_
 %Goal is to remove contamination from out-of-focus fluorescence
 %Extract cell timecourses
 data_tc = stackGetTimeCourses(data_reg, mask_cell); %applies mask to stack (averages all pixels in each frame for each cell) to get timecourses
-            Timecourses are nFrames x nCells
+            %Timecourses are nFrames x nCells
 fprintf(['data_tc is ' num2str(size(data_tc))]) 
 [nFrames, nCells] = size(data_tc);
 %        1.  Downsampled timecourses for neuropil subtraction- averageing decreases noise
@@ -197,3 +199,82 @@ npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 clear data_reg data_reg_down
 
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+
+%% make tuning curves
+base_win = nOff/2:nOff;
+resp_win = nOff+5:nOff+nOn;
+data_trial = reshape(npSub_tc, [nOn+nOff ntrials nCells]);
+data_f = mean(data_trial(base_win,:,:),1);
+data_dfof = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
+
+resp_cell_dir = cell(1,nDirs);
+base_cell_dir = cell(1,nDirs);
+data_dfof_dir = zeros(nCells,nDirs,2);
+h_dir = zeros(nDirs,nCells);
+p_dir = zeros(nDirs,nCells);
+for iDir = 1:nDirs
+    ind = find(tDir==Dirs(iDir));
+    resp_cell_dir{iDir} = squeeze(mean(data_dfof(resp_win,ind,:),1));
+    base_cell_dir{iDir} = squeeze(mean(data_dfof(base_win,ind,:),1));
+    [h_dir(iDir,:), p_dir(iDir,:)] = ttest(resp_cell_dir{iDir},base_cell_dir{iDir},'tail','right','alpha',0.05./(nDirs-1));
+    data_dfof_dir(:,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
+    data_dfof_dir(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
+end
+
+h_all_dir = sum(h_dir,1);
+start=1;
+n = 1;
+figure;
+movegui('center')
+for iCell = 1:nCells
+    if start>25
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+        figure;movegui('center');
+        start = 1;
+        n = n+1;
+    end
+    subplot(5,5,start)
+    errorbar(Dirs, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
+    title(['R = ' num2str(h_all_dir(iCell))])
+    start = start +1;
+end
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+
+tOri = tDir;
+tOri(find(tDir>=180)) = tOri(find(tDir>=180))-180;
+Oris = unique(tOri);
+nOri = length(Oris);
+
+resp_cell_ori = cell(1,nOri);
+base_cell_ori = cell(1,nOri);
+data_dfof_ori = zeros(nCells,nOri,2);
+h_ori = zeros(nOri,nCells);
+p_ori = zeros(nOri,nCells);
+for iOri = 1:nOri
+    ind = find(tOri==Oris(iOri));
+    resp_cell_ori{iOri} = squeeze(mean(data_dfof(resp_win,ind,:),1));
+    base_cell_ori{iOri} = squeeze(mean(data_dfof(base_win,ind,:),1));
+    [h_ori(iOri,:) p_ori(iOri,:)] = ttest(resp_cell_ori{iOri},base_cell_ori{iOri},'tail','right','alpha',0.05./(nOri-1));
+    data_dfof_ori(:,iOri,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
+    data_dfof_ori(:,iOri,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
+end
+
+h_all_ori = sum(h_ori,1);
+
+start=1;
+n = 1;
+figure;
+movegui('center')
+for iCell = 1:nCells
+    if start>25
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
+        figure;movegui('center');
+        start = 1;
+        n = n+1;
+    end
+    subplot(5,5,start)
+    errorbar(Oris, data_dfof_ori(iCell,:,1), data_dfof_ori(iCell,:,2), '-o')
+    title(['R = ' num2str(h_all_ori(iCell))])
+    start = start +1;
+end
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')

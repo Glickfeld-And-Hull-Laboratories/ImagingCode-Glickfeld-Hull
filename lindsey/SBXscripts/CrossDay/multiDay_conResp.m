@@ -128,7 +128,7 @@ for id = 1:nd
             resp_cell_match{id,iOri,iCon} = squeeze(mean(data_dfof_match{id}(resp_win,ind,:),1));
             base_cell_match{id,iOri,iCon} = squeeze(mean(data_dfof_match{id}(base_win,ind,:),1));
             for iC = 1:size(resp_cell_match{id,iOri,iCon},2)
-                [h_match{id}(iOri,iCon,iC), p_match{id}(iOri,iCon,iC)] = ttest(resp_cell_match{id,iOri,iCon}(:,iC),base_cell_match{id,iOri,iCon}(:,iC),'tail','right','alpha',0.05./(nOri-1));
+                [h_match{id}(iOri,iCon,iC), p_match{id}(iOri,iCon,iC)] = ttest(resp_cell_match{id,iOri,iCon}(:,iC),base_cell_match{id,iOri,iCon}(:,iC),'tail','right','alpha',0.05./((nOri.*nCon)-1));
             end
             resp_avg_match{id}(iOri,iCon,:,1) = mean(resp_cell_match{id,iOri,iCon},1);
             resp_avg_match{id}(iOri,iCon,:,2) = std(resp_cell_match{id,iOri,iCon},[],1)./sqrt(size(resp_cell_match{id,iOri,iCon},1));
@@ -139,7 +139,7 @@ end
 
 resp_con = zeros(1,nCon);
 for i = 1:nCon
-    resp_con(i) = length(find(sum(h_match{2}(:,i,:),1)));
+    resp_con(i) = length(find(sum(h_match{1}(:,i,:),1)));
 end
 
 %%
@@ -147,7 +147,7 @@ resp_max_match = cell(1,nd);
 for id = 1:nd
     resp_max_match{id} = squeeze(max(max(resp_avg_match{id}(:,:,:,1),[],1),[],2));
 end
-figure; 
+figure; movegui('center')
 for id = 1:nd
     subplot(2,2,id)
     scatter(resp_max_match{1}(resp_ind_match{id}),resp_max_match{2}(resp_ind_match{id}))
@@ -163,7 +163,6 @@ print(fullfile(fn_multi,'maxResp_crossDay.pdf'),'-dpdf','-bestfit')
 %%
 figure;
 movegui('center')
-od = [1 4];
 for id = 1:nd
 subplot(2,2,1)
 plot(id, length(intersect(find(red_ind_all{id}==0),resp_ind_all{id})),'ok')
@@ -171,7 +170,7 @@ hold on
 if find(red_ind_all{id})
     plot(id, length(intersect(find(red_ind_all{id}),resp_ind_all{id})),'or')
 end
-ylim([0 80])
+ylim([0 100])
 xlim([0 3])
 ylabel('Visually responsive (n)')
 xlabel('Session')
@@ -182,7 +181,7 @@ hold on
 if find(red_ind_match==1)
     plot(id, length(intersect(find(red_ind_match==1),resp_ind_match{id})),'or')
 end
-ylim([0 80])
+ylim([0 100])
 xlim([0 3])
 ylabel('Visually responsive (n)')
 xlabel('Session')
@@ -216,38 +215,6 @@ R_str = strvcat('R-','R+');
 HT_str = strvcat('HT-','HT+');
 
 nCells_match = length(red_ind_match);
-figure;
-movegui('center')
-start = 1;
-n = 1;
-for iCell = 1:nCells_match
-    if start>36
-        print(fullfile(fn_multi,['conResp_crossDay' num2str(n) '.pdf']),'-dpdf','-bestfit')
-        n = n+1;
-        start = 1;
-        figure;
-    end
-    ymax = max(max(resp_avg_match{1}(:,:,iCell,1),[],1),[],2).*1.25;
-    if ymax<0.2
-        ymax=0.2;
-    end
-    for iOri = 1:nOri
-        subplot(6,6,start)
-        errorbar(cons, resp_avg_match{1}(iOri,:,iCell,1), resp_avg_match{1}(iOri,:,iCell,2),'-o')
-        if find(resp_ind_match{1} == iCell)
-            title(R_str(2))
-        end
-        hold on
-        ylim([-0.1 ymax])
-        subplot(6,6,start+1)
-        errorbar(cons, resp_avg_match{2}(iOri,:,iCell,1), resp_avg_match{2}(iOri,:,iCell,2),'-o')
-        title(HT_str(red_ind_match(iCell)+1,:))
-        hold on
-        ylim([-0.1 ymax])
-    end
-    start = start+2;
-end
-print(fullfile(fn_multi,['conResp_crossDay' num2str(n) '.pdf']),'-dpdf','-bestfit')
 
 %close all
 figure;
@@ -355,29 +322,3 @@ legend({'D1','D2'})
 print(fullfile(fn_multi,'conResp_crossDay_Avg.pdf'),'-dpdf','-bestfit')
 
 
-
-figure;
-movegui('center')
-start = 1;
-for iC = find(red_ind_match)
-    subplot(6,7,start)
-    scatter(resp_avg_match{1}(:,end,iC,1), resp_avg_match{1}(:,end-1,iC,1))
-    hold on
-    scatter(resp_avg_match{2}(:,end,iC,1), resp_avg_match{2}(:,end-1,iC,1))
-    xlim([-.05 1])
-    ylim([-.05 1])
-    start = start+1;
-    title(HT_str(2,:))
-end
-
-for iC = find(red_ind_match==0)
-    subplot(6,7,start)
-    scatter(resp_avg_match{1}(:,end,iC,1), resp_avg_match{1}(:,end-1,iC,1))
-    hold on
-    scatter(resp_avg_match{2}(:,end,iC,1), resp_avg_match{2}(:,end-1,iC,1))
-    xlim([-.05 1])
-    ylim([-.05 1])
-    start = start+1;
-    title(HT_str(1,:))
-end
-    

@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirTwoPhase_ExptList';
-iexp = 12; 
+ds = 'CrossOriRandDir_ExptList';
+iexp = 55; 
 rc = behavConstsAV;
 eval(ds)
 
@@ -75,7 +75,7 @@ nep = floor(size(data,3)./10000);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,40001:40500),3);
+data_avg = mean(data(:,:,20001:20500),3);
 %% Register data
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -233,6 +233,9 @@ data_dfof = cat(3, data_dfof, data_dfof_max);
 if doRedChannel
     data_dfof = cat(3,data_dfof,data_red_avg);
 end
+if strcmp(expt(iexp).driver,'SOM')
+    data_dfof = cat(3,data_dfof,data_avg);
+end
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas','SF_all', 'SFs', 'nSF', 'frame_rate', 'nTrials')
 
@@ -261,7 +264,7 @@ end
 figure; movegui('center')
 imagesc(mask_cell)
 
-clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg
+clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg data_resp data_resp_dfof bwout
 %% neuropil subtraction
 mask_np = imCellNeuropil(mask_cell, 3, 5);
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')

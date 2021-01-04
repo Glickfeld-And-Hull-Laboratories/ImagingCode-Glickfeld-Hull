@@ -187,7 +187,7 @@ mask_exp = zeros(size(fov_avg{1}));
 mask_all = zeros(size(fov_avg{1}));
             
 start = 1;
-for icell = 1:nc
+for icell = 98:nc
     if goodCells(icell)
         % find best shift
         day1_cell_avg = fov_avg{1}(...

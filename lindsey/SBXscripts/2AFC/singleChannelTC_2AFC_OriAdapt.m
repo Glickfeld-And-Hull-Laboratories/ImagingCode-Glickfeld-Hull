@@ -210,6 +210,7 @@ if exist(filename = [LG_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).
     photoData = [];
     for irun = 1:nrun
         filename = [LG_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).runs(irun,:) '\' [expt(iexp).runs(irun,:) '_000_000.ephys']];
+        filename = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Data\2P_images\i475\201105\001\001_000_000.ephys';
         fileID = fopen(filename, 'r', 'ieee-le');
         if fileID == -1, error('Cannot open file: %s', filename); end
         format = 'uint32';

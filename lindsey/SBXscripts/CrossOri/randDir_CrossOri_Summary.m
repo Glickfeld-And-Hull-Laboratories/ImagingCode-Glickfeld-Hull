@@ -106,9 +106,9 @@ for iarea = 1:narea
 
         end
     end
-    save(fullfile(summaryDir,['randDir_Summary_' area '.mat']),'mouse_list','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','mouse_list')
+    save(fullfile(summaryDir,['randDir_Summary_' area '.mat']),'stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','mouse_list')
 
-
+%%
     figure;
     subplot(2,2,1)
     cdfplot(stim_OSI_all(resp_ind_all))

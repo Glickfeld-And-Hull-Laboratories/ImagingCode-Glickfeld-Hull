@@ -7,24 +7,35 @@ frame_rate = 15;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirSummary');
-str = {'all','hiSF','lowSF'};
-a =3;
-ind = find([expt.SF] == 0.05);
+str = {'hiSF','lowSF'};
 
-Zc_all = [];
-Zp_all = [];
-totCells = 0;
-resp_ind_all = [];
-resp_ind_dir_all = [];
-resp_ind_plaid_all = [];
-mouse_list = [];
-avg_resp_dir_all = [];
-plaid_corr_all = [];
-plaid_corr_rand_all = [];
-component_all = [];
-pattern_all = [];
 
-for iexp = ind
+
+area_list = strvcat('V1','LM');%,'AL','RL','PM');
+narea = length(area_list);
+
+
+for a = 1:2
+    SFs = [0.1 0.05];
+    ind = find([expt.SF] == SFs(a));
+for iA = 1:narea
+    area = area_list(iA,:);
+    Zc_all = [];
+    Zp_all = [];
+    totCells = 0;
+    resp_ind_all = [];
+    resp_ind_dir_all = [];
+    resp_ind_plaid_all = [];
+    mouse_list = [];
+    avg_resp_dir_all = [];
+    plaid_corr_all = [];
+    plaid_corr_rand_all = [];
+    component_all = [];
+    pattern_all = [];
+    
+for i = 1:length(ind)
+    iexp = ind(i);
+    if strcmp(expt(iexp).img_loc, area)
     mouse = expt(iexp).mouse;
     mouse_list = strvcat(mouse_list, mouse);
     date = expt(iexp).date;
@@ -62,8 +73,9 @@ for iexp = ind
 
     totCells = totCells+nCells;
 
+    end
 end
-save(fullfile(summaryDir,['randDirTwoPhase_Summary.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all')
+save(fullfile(summaryDir,['randDirTwoPhase_Summary_' str{a} '_' area '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all')
 
 ZcZp_diff = Zc_all-Zp_all;
 ind1 = intersect(resp_ind_all,intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)));
@@ -119,7 +131,7 @@ ylim([-4 8])
 xlim([-4 8])
 refline(1)
 suptitle(['RandDir Two Phase - ' str{a} ' cells- n = ' num2str(length(resp_ind_all))])
-print(fullfile(summaryDir, ['randDirTwoPhase_ZpZcSummary_' str{a} '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDirTwoPhase_ZpZcSummary_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
 
 
 %%
@@ -133,31 +145,6 @@ component_all_circ = cat(2,component_all_shift, component_all_shift(:,1));
 component_all_circ(find(component_all_circ<0)) = 0;
 stimDirs_circ = [stimDirs stimDirs(1)];
 
-figure;
-start = 1;
-n = 1;
-for i = 1:length(Zp_use)
-    if start>16
-        start = 1;
-        suptitle('Most pattern-like- Blue: pattern; Red: plaid 0; Yellow: plaid 90')
-        print(fullfile(summaryDir, ['randDirTwoPhase_ZpTuning' num2str(n) '_' str{a} '.pdf']),'-dpdf', '-fillpage')
-        n = n+1;
-        figure;
-    end
-    subplot(4,4,start)
-    iC = Zp_use(i);
-    r_max = max([avg_resp_dir_all_circ(iC,:,1,1,1) avg_resp_dir_all_circ(iC,:,1,2,1) avg_resp_dir_all_circ(iC,:,2,2,1) component_all_circ(iC,:)],[],2);
-    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1,1))
-    hold on
-    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,1,2,1))
-    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,2,1))
-    rlim([0 r_max])
-    title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
-    start = start+1;
-end
-suptitle('Most pattern-like- Blue: pattern; Red: plaid 0; Yellow: plaid 90')
-print(fullfile(summaryDir, ['randDirTwoPhase_ZpTuning' num2str(n) '_' str{a} '.pdf']),'-dpdf', '-fillpage')
-
 [max_val max_dir] = max(avg_resp_dir_all(:,:,1,1,1),[],2);
 align_resp_dir = zeros(totCells, nStimDir, 2, 2);
 for i = 1:totCells
@@ -166,7 +153,7 @@ end
 align_resp_dir_circ = cat(2,align_resp_dir, align_resp_dir(:,1,:,:));
 align_resp_dir_shift = circshift(align_resp_dir,2,2);
 align_resp_dir_circ_shift = cat(2,align_resp_dir_shift, align_resp_dir_shift(:,1,:,:));
-figure;
+figure; movegui('center');
 subplot(2,2,1)
 polarplot(deg2rad(stimDirs_circ),mean(align_resp_dir_circ(Zc_use,:,1,1),1))
 hold on
@@ -211,9 +198,9 @@ title('')
 % axis square
 % refline(1)
 suptitle([str{a} ' cells- n = ' num2str(length(resp_ind_all))])
-print(fullfile(summaryDir, ['randDirTwoPhase_CorrHist_allCells_' str{a} '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDirTwoPhase_CorrHist_allCells_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
 
-figure;
+figure; movegui('center');
 subplot(3,2,1)
 pie([length(ind1)+length(ind2) length(ind3)+length(ind4) length(ind5)+length(ind6)],{'Zp','Zc','Zn'})
 title([num2str(length(resp_ind_all)) ' cells'])
@@ -247,7 +234,7 @@ pie([null_ZpZp null_ZpZc null_ZpZn],{'Zp-Zp','Zc-Zp','Zp-Zn'})
 subplot(3,2,6)
 pie([null_ZcZc null_ZcZp null_ZcZn],{'Zc-Zc','Zc-Zp','Zc-Zn'})
 suptitle([str{a} ' cells'])
-print(fullfile(summaryDir, ['randDirTwoPhase_Pies_' str{a} '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDirTwoPhase_Pies_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
 
 min_val = align_resp_dir(:,1,1,1);
 DSI = (max_val-min_val)./(max_val+min_val);
@@ -257,7 +244,7 @@ min_val = align_resp_ori(:,5);
 OSI = (max_val-min_val)./(max_val+min_val);
 Zc_diff = Zc_all(1,:)-Zc_all(2,:);
 Zp_diff = Zp_all(1,:)-Zp_all(2,:);
-figure;
+figure; movegui('center');
 movegui('center')
 subplot(2,2,1)
 cdfplot(Zc_diff(intersect(resp_ind_all,find(OSI<0.5))));
@@ -296,7 +283,7 @@ xlabel('OSI')
 ylabel('Zp0-Zp90')
 ylim([-1 1])
 
-figure;
+figure; movegui('center');
 movegui('center')
 subplot(2,2,1)
 cdfplot(Zc_diff(intersect(resp_ind_all,find(DSI<0.5))));
@@ -335,6 +322,48 @@ xlabel('DSI')
 ylabel('Zp0-Zp90')
 ylim([-1 1])
 
+ZcZp_ind = unique([intersect(ind1,ind4), intersect(ind2,ind3)]);
+ZcZp_ind_Zc0 = intersect(ind3,ZcZp_ind);
+if length(ZcZp_ind_Zc0)<16
+    n = length(ZcZp_ind_Zc0);
+else
+    n = 16;
+end
+figure; movegui('center')
+for i = 1:n
+    subplot(4,4,i)
+    iC = ZcZp_ind_Zc0(i);
+    r_max = max([avg_resp_dir_all_circ(iC,:,1,1,1) avg_resp_dir_all_circ(iC,:,1,2,1) avg_resp_dir_all_circ(iC,:,2,2,1) component_all_circ(iC,:)],[],2);
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1,1))
+    hold on
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,1,2,1))
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,2,1))
+    rlim([0 r_max])
+    title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
+end
+suptitle('Zc to Zp cells- Blue: pattern; Red: plaid 0; Yellow: plaid 90')
+print(fullfile(summaryDir, ['randDirTwoPhase_ZcToZpCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+
+ZcZp_ind_Zp0 = intersect(ind1,ZcZp_ind);
+if length(ZcZp_ind_Zp0)<16
+    n = length(ZcZp_ind_Zp0);
+else
+    n = 16;
+end
+figure; movegui('center')
+for i = 1:n
+    subplot(4,4,i)
+    iC = ZcZp_ind_Zp0(i);
+    r_max = max([avg_resp_dir_all_circ(iC,:,1,1,1) avg_resp_dir_all_circ(iC,:,1,2,1) avg_resp_dir_all_circ(iC,:,2,2,1) component_all_circ(iC,:)],[],2);
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1,1))
+    hold on
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,1,2,1))
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,2,1))
+    rlim([0 r_max])
+    title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
+end
+suptitle('Zp to Zc cells- Blue: pattern; Red: plaid 0; Yellow: plaid 90')
+print(fullfile(summaryDir, ['randDirTwoPhase_ZpToZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
 
 %% population tuning
 close all
@@ -438,12 +467,14 @@ for ii = 1:2
 end
 
 figure(1)
+movegui('center')
 suptitle({['Blue- pattern; Red- component; Yellow- plaid0; Purple- plaid90'], ['Cell #s- ' num2str(ind_n)]})
-print(fullfile(summaryDir, 'randDirTwoPhase_populationTuning_errorbar.pdf'),'-dpdf','-bestfit')
+print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_errorbar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
 
 figure(2)
+movegui('center')
 suptitle({['Blue- pattern; Red- component; Yellow- plaid0; Purple- plaid90'], ['Cell #s- ' num2str(ind_n)]})
-print(fullfile(summaryDir, 'randDirTwoPhase_populationTuning_polar.pdf'),'-dpdf','-bestfit')
+print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_polar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
     
 pop_resp_dir_Zc0 = nan(nStimDir,nStimDir,nMaskPhas,2,2);
 pop_resp_dir_Zc90 = nan(nStimDir,nStimDir,nMaskPhas,2,2);
@@ -710,9 +741,14 @@ for ii = 1:2
 end
 
 figure(3)
+movegui('center')
 suptitle({['Top Row: Zc Cells- ' num2str(length(Zc_use))], ['Bottom Row: Zp Cells- ' num2str(length(Zp_use))]})
-print(fullfile(summaryDir, 'randDirTwoPhase_populationTuning_ZpZcCells_errorbar.pdf'),'-dpdf','-bestfit')
+print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_ZpZcCells_errorbar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
 
 figure(4)
+movegui('center')
 suptitle({['Top Row: Zc Cells- ' num2str(length(Zc_use))], ['Bottom Row: Zp Cells- ' num2str(length(Zp_use))]})
-print(fullfile(summaryDir, 'randDirTwoPhase_populationTuning_ZpZcCells_polar.pdf'),'-dpdf','-bestfit')
+print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_ZpZcCells_polar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
+
+end
+end
