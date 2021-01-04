@@ -27,7 +27,8 @@ frm_stay = cell2mat(frm_stay_cell);
 % input: fluorescence trace: T*1, threshold for spike size (how big the spikes are supposed to be: normal set as -3(3 sigma, 3 times bigger than noise levels)).
 % kernal: denoised trace, T*1 vector
 % spikes: all of the values in a spike(thus, you will get more than 1 values if a spike is longer than a frame. e.g.: if a spike is 120ms long, you will get 4 values back to back which all belong to a single spike)
-    
+% use foopsi instead of constrained foopsi or thresholded foopsi because: constrained foopsi uses only std of noise to determine the size of the spikes. thresholded foopsi somehow has a threshold of number of spieks being counted which is wierd.
+% Also the firing rate from foopsi is a lot more normal than the other 2.
 frames = 1:1:size(TCave,1);
 threshold = -4; %changing the threhold basically changes the identification of spikes when the peak amplitude is small (those small peaks), doesn't change anything with the bigger jittered ones. -3 or -3.5 gives a FR close to 1 during stationary
 
@@ -41,7 +42,7 @@ num_spks_cell = zeros(1,size(TCave,2));
 FRstay_cell = zeros(1,size(TCave,2));
 for c = 1: size(TCave,2)
     [kernel(:,c), spk(:,c), options] = deconvolveCa(TCave(:,c), 'optimize_pars', true, ...
-        'optimize_b', true, 'method','foopsi', 'smin', threshold);
+        'optimize_b', true, 'method','foopsi', 'smin', threshold); %since optimize baseline is true, the actuatual deconvolution takes raw data - baseline (denoised trace)
     % get only the peaks of each spike
     [spk_peak{c},spk_inx{c}] = findpeaks(spk(:,c));
     % spike logic

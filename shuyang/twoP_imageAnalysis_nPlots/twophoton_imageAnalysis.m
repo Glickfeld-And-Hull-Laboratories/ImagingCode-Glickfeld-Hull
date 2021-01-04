@@ -193,7 +193,7 @@ savefig([image_analysis_dest sessions '_' order, '_nPCA', num2str(nPCA),...
     '_mu', num2str(mu), '_nIC', num2str(nIC), '_thresh', num2str(cluster_threshold), '_mask_cell_indi.fig']);
 
 
-%% seprate overlapping masks and combine the ones that have a high correlation
+%% separate overlapping masks and combine the ones that have a high correlation
 %split individual masks, remove small masks, deal with overlapping
 mask_final = processMask(mask_cell);
 mask_raw = reshape(mask_final, npw, nph);
