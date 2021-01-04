@@ -190,7 +190,7 @@ if PLOTIT_FIT == 1
         if UN(1:3) == 'kev'
             fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_RFfits' num2str(ifig) '.pdf']);
         else
-            fn_out = fullfile(fnout, dataFolder, [mouse '_' expDate '_RFfits' num2str(ifig) '.pdf']);
+            fn_out = fullfile(fnout, datemouse, datemouserun, [datemouserun '_RFfits' num2str(ifig) '.pdf']);
         end
         print(fn_out,'-dpdf')
         figure;

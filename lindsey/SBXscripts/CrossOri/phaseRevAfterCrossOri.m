@@ -8,7 +8,7 @@ rc = behavConstsAV;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 
-iexp = 17;
+iexp = 51;
             %%
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
@@ -22,7 +22,7 @@ iexp = 17;
         run_str = catRunName(cell2mat(ImgFolder), nrun);
         co_run_str = catRunName(cell2mat(coFolder), nrun);
 
-            fprintf(['2P imaging TF analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
+            fprintf(['2P imaging Phase analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
             for irun=1:nrun
                 fprintf([ImgFolder{irun} ' - ' time{irun} '\n'])
             end
