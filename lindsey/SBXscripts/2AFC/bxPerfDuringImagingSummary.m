@@ -22,20 +22,24 @@ for i = 1:nDays
     end
     [s(i), b(i)] = selectCalc(input,trials);
 end
-figure; histogram(s,[0:.1:1]); movegui('center')
-xlabel('selectivity'); ylabel('Sessions')
-ind_pt8 = find(s>0.8);
-ind_pt9 = find(s>0.9);
-title(['N = ' num2str(length(ind_pt8)) ' > 0.8 and ' num2str(length(ind_pt9)) ' > 0.9']) 
 
-area_mat = session_list.loc;
+area_mat = session_list.area;
 areas = unique(session_list.area);
 nArea = length(areas);
 
 depth_mat = session_list.depth;
 
 area_summary = struct;
+figure; 
+[n n2] = subplotn(nArea);
 for i = 1:nArea
+    area_ind = find(strcmp(area_mat,areas(i)));
+    subplot(n,n2,i)
+    histogram(s(area_ind),[0:.1:1]); movegui('center')
+    xlabel('selectivity'); ylabel('Sessions')
+    ind_pt8 = find(s(area_ind)>0.8);
+    ind_pt9 = find(s(area_ind)>0.9);
+    title([cell2mat(areas(i)) '- N = ' num2str(length(ind_pt8)) ' > 0.8 and ' num2str(length(ind_pt9)) ' > 0.9']) 
     area_summary(i).name(1) = areas(i);
     area_summary(i).gt_pt8(1) = length(ind_pt8);
     area_summary(i).gt_pt9(1) = length(ind_pt9);
