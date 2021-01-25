@@ -5,9 +5,9 @@ write_tiff = true; do_jake_pockel = true;
 ttl =   1;
 noreg = 0;
 imgreglaseron = 0;
-sessions = '201217_img1078';% for behavior data
-mouse = '1078';
-date = '201217';
+sessions = '210119_img1083';% for behavior data
+mouse = '1083';
+date = '210119';
 run = '000';
 %time = expt(id).time(iexp,:);
 fprintf([date ' ' mouse ' ' run '\n'])
@@ -18,10 +18,19 @@ end
 
 %% load and remove laser off period
 cd(fullfile('Z:\Data\2photon\', [date '_img' mouse]));
-load([date '_img' mouse '_000_' run '.mat'])
+load([date '_img' mouse '_000_' run '.mat']);
 
-img_fn2 = sessions;
-mworks = get_bx_data_sj(bdata_source, img_fn2);
+%identify behavior file
+if strlength(sessions) < 15
+    bfile = dir([bdata_source 'data-i' mouse '-' date '*' ]);
+else
+    bfile = dir([bdata_source 'data-i' mouse '-' date sessions(end-4:end) '.mat']);
+end
+%load behavior file
+behav_dest = [bdata_source bfile.name];
+assert(length(bfile)) = 1;
+b_data = load(behav_dest);
+mworks = b_data.input;
 
 clear ttl_log
 nf= mworks.counterValues{end}(end);
@@ -121,10 +130,48 @@ savefig([analysis_out,img_fn date '_img' mouse '_' run '_raw_F_wholeview']);
 % cutting the data shouldn't influence the registration as long as you
 % didn't take the ref frame from the part you need to cut. But it will
 % influence PCA ICA, so do it before then.
-cut = 25000;
-data_cut(:,:,cut:end) = [];
-img_rgs(:,:,cut:end) = [];
-laseron(:,cut:end) = [];
+%!!!!!! if do this, also need to rewrite cTargetOn. Otherwise you'll be
+%referencing some trials with no neural data in the later analysis.
+%cut = 25000:size(data_cut,3);
+cut1 = 1;
+cut2 = 2432;
+cut = cut1:1:cut2;
+img_rgs(:,:,cut) = [];
+laseron(cut1:cut2) = [];
+
+%% generate cTargetOn_cutted (index of cTargetOn in the cutted neural data)
+cTargetOn = cell2mat(mworks.cTargetOn);
+cTargetOn(1) = nan; % get rid of the first trial because juice = 0
+cTargetOn_cutted = [];
+for i = 1:length(cTargetOn)
+    if ~isnan(cTargetOn(i))
+        cTargetOn_cutted = [cTargetOn_cutted find(laseron==cTargetOn(i))];  % find the index of cTargetOn in cutted data
+    end
+end
+
+if length(cTargetOn_cutted) < length(cTargetOn) % if there're cue presentations when there's no nice imaging data (this happens if you cut the some part of the imaging data due to z shift or other reasons)
+    %cTargetOn_wneural = [];
+    prewin_frames = round(1500./mworks.frameRateHz);
+    for i = 1:length(cTargetOn)
+        if ~isnan(cTargetOn(i))
+            if find(laseron==cTargetOn(i))  % cue was during laser on
+                ind = find(laseron==cTargetOn(i));
+            else
+                cTargetOn(i) = nan;
+                if sum(find(diff(laseron(ind-prewin_frames: ind))>1))==0 %and the time before cue is long enough
+                    %cTargetOn_wneural = [cTargetOn_wneural,cTargetOn(i)];
+                    continue;
+                else
+                    cTargetOn(i) = nan;
+                end
+            end
+        end
+    end
+    % overwrite cTargetOn with only the ones that has neural data
+    mworks.cTargetOn = cTargetOn;
+    input = mworks;
+    save(fullfile(behav_dest), 'input'); % overwrite cTargetOn
+end
 
 %% PCA
 nPCA = 200; %100 for old datasets, 500 for newer
@@ -141,14 +188,15 @@ for i = 1:196
     colormap gray
 end
 savefig([analysis_out,img_fn date '_img' mouse '_' run '_PCA', num2str(nPCA)]);
-save([analysis_out,img_fn date '_img' mouse '_' run '_PCA_variables_', num2str(nPCA),'.mat'], 'mixedsig_PCA', 'mixedfilters_PCA', 'CovEvals_PCA', 'nPCA');
+save([analysis_out,img_fn date '_img' mouse '_' run '_PCA_variables_', num2str(nPCA),'.mat'], ...
+    'mixedsig_PCA', 'mixedfilters_PCA', 'CovEvals_PCA', 'nPCA');
 
 
 %% ICA: seperates independent spatial and temporal components
 %PCuse =       1:125;
 PCuse =       1:size(mixedfilters_PCA,3);
 mu =          0.3; % weight of temporal info in spatio-teporal ICA
-nIC =         150; % cannot be bigger than nPCA. If CoEvals doesn't change in later ICs, it will not converge!
+nIC =         110; % cannot be bigger than nPCA. If CoEvals doesn't change in later ICs, it will not converge!
 ica_A_guess = []; %If this is empty than matlab will randomdize it and you can get different results, can see the random number generator in CellsortICA2P
 termtol =      1e-6;
 maxrounds =   2000;
@@ -180,7 +228,7 @@ icasig_filt = stackFilter(icasig);
 
 %set threshold a threshold for which pixels to include in a given dendrite's mask.
 nIC = size(icasig_filt, 3);
-cluster_threshold = 97; % this is using the top 3 percent of the fluorescence values, so brightest 3% is yes (1), and the rest is no (0)
+cluster_threshold = 96; % this is using the top 3 percent of the fluorescence values, so brightest 3% is yes (1), and the rest is no (0)
 %tried lower values for the threshold and turns out to have some wierd
 %masks
 mask_cell = zeros(size(icasig_filt));
@@ -226,7 +274,7 @@ savefig([analysis_out,img_fn date '_img' mouse '_' run, '_nPCA', num2str(nPCA),.
     '_mu', num2str(mu), '_nIC', num2str(nIC), '_thresh', num2str(cluster_threshold), '_mask_process.fig']);
 
 % combine highly correlated ICs to one
-threshold = 0.8; %got the same thing when threshold = 0.8 and 0.9, tried different values, doesn't seem to change things
+threshold = 0.9; %got the same thing when threshold = 0.8 and 0.9, tried different values, doesn't seem to change things
 [ ~, mask3D, ~] = finalMask_Jin(img_rgs, mask_final, threshold);
 %figure; imshow([image_analysis_dest 'AVG_' sessions '_' order '_rgstr_tiff_0_' num2str(nframes) '_50_jpeg.jpg']); hold on;
 figure; imshow([analysis_out,img_fn 'AVG_' date '_img' mouse '_' run '_rgstr_tiff_every' num2str(gap) '_ref' num2str(ref) '_jpeg.jpg']); hold on;
@@ -247,7 +295,7 @@ save([analysis_out,img_fn date '_img' mouse '_' run, '_nPCA', ...
 
 
 %% look at the masks, mananully delete the ones that don't look like dendrites
-mask3D(:,:,[]) = [51];
+mask3D(:,:,[]) = [34];
 %figure; imshow([image_analysis_dest 'AVG_' sessions '_' order '_rgstr_tiff_0_' num2str(nframes) '_50_jpeg.jpg']); hold on;
 figure; imshow([analysis_out,img_fn 'AVG_' date '_img' mouse '_' run '_rgstr_tiff_every' num2str(gap) '_ref' num2str(ref) '_jpeg.jpg']); hold on;
 for i  = 1:size(mask3D,3)
@@ -291,19 +339,10 @@ save([analysis_out,img_fn date '_img' mouse '_' run, '_nPCA', ...
     num2str(cluster_threshold), '_TCave.mat'], 'tc_avg','pockel_tc');
 
 %% make movie and revert tc_avg to inital counters by adding Nans
-cTargetOn = celleqel2mat_padded(mworks.cTargetOn);
-cTargetOn(1) = []; % get rid of the first trial because juice = 0
 
 tc_avg_all = NaN(length(pockel_tc),nmask);
 tc_avg_all(laseron,:) = tc_avg;
-cTargetOn_cutted = [];
-for i = 1:length(cTargetOn)
-    if cTargetOn(i) < laseron(end)
-        cTargetOn_cutted = [cTargetOn_cutted find(laseron==cTargetOn(i))];
-    else
-        continue;
-    end
-end
+
 fprintf('Making movie \n')
 sz = size(img_rgs);
 nTrials = length(cTargetOn_cutted)-1;
@@ -311,7 +350,7 @@ prewin_frames = round(1500./mworks.frameRateHz);
 postwin_frames = round(3000./mworks.frameRateHz);
 rgs_align = nan(sz(1),sz(2),prewin_frames+postwin_frames,nTrials);
 for itrial = 1:nTrials
-    if cTargetOn_cutted(itrial)+postwin_frames<size(img_rgs,3)
+    if cTargetOn_cutted(itrial)+postwin_frames<size(img_rgs,3) 
         rgs_align(:,:,:,itrial) = img_rgs(:,:,cTargetOn_cutted(itrial)-prewin_frames:cTargetOn_cutted(itrial)+postwin_frames-1);
     end
 end
@@ -320,5 +359,5 @@ writetiff(rgs_align_avg, fullfile([analysis_out,img_fn date '_img' mouse '_' run
 
 save([analysis_out,img_fn date '_img' mouse '_' run, '_nPCA', ...
     num2str(nPCA), '_mu', num2str(mu), '_nIC', num2str(nIC), '_thresh', ...
-    num2str(cluster_threshold), '_TCave.mat'], 'tc_avg_all','cTargetOn_cutted','laseron','-append');
+    num2str(cluster_threshold), '_TCave.mat'],'cut', 'tc_avg_all','cTargetOn_cutted','laseron','-append');
 

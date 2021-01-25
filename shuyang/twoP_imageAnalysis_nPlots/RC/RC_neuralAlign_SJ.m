@@ -27,7 +27,7 @@ for  j = 1:length(expt.ttl)
     spk_logic = spk.spk_logic_cl;
     nIC = size(spk_logic,2);
     %% fill laser off period with nans
-    all_events = spk_logic;
+    all_events = spk_logic; % frame*cell
     if expt.ttl(iexp)
         all_events_temp = nan(size(tc_avg_all,1),size(spk_logic,2));
         all_events_temp(laseron,:) = all_events;
@@ -41,19 +41,24 @@ for  j = 1:length(expt.ttl)
     img_fn2 = sessions{iexp};
     mworks = get_bx_data_sj(bdata_source, img_fn2);
     frameRateHz = double(mworks.frameRateHz);
-    cTargetOn = celleqel2mat_padded(mworks.cTargetOn);
-    cTargetOn(1) = []; % get rid of first trial
+    cTargetOn = mworks.cTargetOn;
+    if iscell(cTargetOn) % if it is a cell, it means cTargetOn wasn't being over written in extract TC. If it's not a cell, it's already over written in extract TC. can be used directly
+        cTargetOn = celleqel2mat_padded(mworks.cTargetOn);
+        cTargetOn(1) = nan; % get rid of first trial
+    end
     nTrials = length(cTargetOn);
     prewin_frames = round(1500./frameRateHz);
     postwin_frames = round(3000./frameRateHz);
     targetAlign_tc = nan(prewin_frames+postwin_frames,nIC,nTrials);
-    targetAlign_events = nan(prewin_frames+postwin_frames,nIC,nTrials);
+    targetAlign_events = nan(prewin_frames+postwin_frames,nIC,nTrials);% frame*cell*trial
     nFrames = size(tc_avg_all,1);
     
     for itrial = 1:nTrials
-        if cTargetOn(itrial)+postwin_frames-1 <= nFrames %& input.counterValues{itrial}(end)-cTargetOn(itrial) > postwin_frames
-            targetAlign_tc(:,:,itrial) = all_TCave_cl(cTargetOn(itrial)-prewin_frames:cTargetOn(itrial)+postwin_frames-1,:);
-            targetAlign_events(:,:,itrial) = all_events(cTargetOn(itrial)-prewin_frames:cTargetOn(itrial)+postwin_frames-1,:);
+        if ~isnan(cTargetOn(itrial))
+            if cTargetOn(itrial)+postwin_frames-1 <= nFrames %& input.counterValues{itrial}(end)-cTargetOn(itrial) > postwin_frames
+                targetAlign_tc(:,:,itrial) = all_TCave_cl(cTargetOn(itrial)-prewin_frames:cTargetOn(itrial)+postwin_frames-1,:);
+                targetAlign_events(:,:,itrial) = all_events(cTargetOn(itrial)-prewin_frames:cTargetOn(itrial)+postwin_frames-1,:);
+            end
         end
     end
     
@@ -130,6 +135,7 @@ for  j = 1:length(expt.ttl)
         savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_events_Hz.fig']));
         %end
     end
-    save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_targetAlign.mat']), 'targetAlign_events', 'targetAligndFoverF', 'prewin_frames', 'postwin_frames', 'tt', 'frameRateHz');
+    save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_targetAlign.mat']), 'targetAlign_events', ...
+        'targetAligndFoverF', 'prewin_frames', 'postwin_frames', 'tt', 'frameRateHz');
     
 end
