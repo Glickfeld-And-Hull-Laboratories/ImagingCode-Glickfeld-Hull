@@ -987,4 +987,34 @@ expt(69).prFolder = {'003'};
 expt(69).prTime = {'1121'};
 expt(69).saveLoc = 'lindsey';
 
+%% i1339 210125
+expt(70).mouse = 'i1339';
+expt(70).date = '210125';
+expt(70).img_loc  = {'RL'};
+expt(70).z = -200;
+expt(70).img_strct  = {'cells'};
+expt(70).driver = {'SLC'};
+expt(70).indicator = {'tg';'GCaMP6s'};
+expt(70).sf = 0.1;
+expt(70).coFolder = {'002'};
+expt(70).coTime = {'0940'};
+expt(70).prFolder = {'003'}; 
+expt(70).prTime = {'1047'};
+expt(70).saveLoc = 'lindsey';
+
+%% i1339 210129
+expt(71).mouse = 'i1339';
+expt(71).date = '210129';
+expt(71).img_loc  = {'PM'};
+expt(71).z = -200;
+expt(71).img_strct  = {'cells'};
+expt(71).driver = {'SLC'};
+expt(71).indicator = {'tg';'GCaMP6s'};
+expt(71).sf = 0.1;
+expt(71).coFolder = {'002'};
+expt(71).coTime = {'0931'};
+expt(71).prFolder = {'003'}; 
+expt(71).prTime = {'1034'};
+expt(71).saveLoc = 'lindsey';
+
 

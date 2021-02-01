@@ -13,7 +13,7 @@ area_list = ['V1'; 'LM'; 'AL'; 'PM'; 'RL'];
 driver = 'SLC';
 narea =length(area_list);
 
-for iarea = 1:narea
+for iarea = narea
     area = area_list(iarea,:);
     fprintf([area '\n'])
     stim_OSI_all = [];
@@ -25,6 +25,7 @@ for iarea = 1:narea
     k_all = [];
 %     R1_all = [];
 %     R2_all = [];
+    stim_SI_all = [];
     plaid_SI_all = [];
     totCells = 0;
     resp_ind_all = [];
@@ -49,7 +50,7 @@ for iarea = 1:narea
             %% load data
 
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
-            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'Zc', 'Zp','k1_dir', 'stim_OSI', 'stim_DSI', 'plaid_OSI', 'plaid_DSI', 'plaid_SI', 'nCells');
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'Zc', 'Zp','k1_dir', 'stim_SI', 'stim_OSI', 'stim_DSI', 'plaid_OSI', 'plaid_DSI', 'plaid_SI', 'nCells');
             if length(expt(iexp).img_loc)>1
                 i = find(strcmp(expt(iexp).img_loc,area));
                 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_splitImage.mat']))
@@ -62,10 +63,12 @@ for iarea = 1:narea
                 Zp = Zp(ind);
                 k1_dir = k1_dir(ind);
                 plaid_SI = plaid_SI(ind);
+                stim_SI = stim_SI(ind);
                 h_resp = h_resp(ind,:,:);
                 nCells = length(ind);
             end
             fprintf(['n = ' num2str(nCells) '\n'])
+            stim_SI_all = [stim_SI_all stim_SI];
             stim_OSI_all = [stim_OSI_all stim_OSI];
             plaid_OSI_all = [plaid_OSI_all plaid_OSI];
             stim_DSI_all = [stim_DSI_all stim_DSI];
@@ -106,7 +109,7 @@ for iarea = 1:narea
 
         end
     end
-    save(fullfile(summaryDir,['randDir_Summary_' area '_' driver '.mat']),'stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','mouse_list')
+    save(fullfile(summaryDir,['randDir_Summary_' area '_' driver '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','mouse_list')
 
 %%
     figure;

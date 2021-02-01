@@ -5,7 +5,7 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-for iexp = 41
+for iexp = 70
 
 frame_rate = 15;
 
@@ -177,43 +177,44 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
 
 
 
-% ind = find(Zp>1);
-% figure; 
-% movegui('center')
-% start = 1;
-% [n n2] = subplotn(length(ind));
-% for iC = 1:length(ind)
-%     iCell = ind(iC);
-%     subplot(n,n2,start) 
-%     errorbar(stimDirs, avg_resp_dir(iCell,:,1,1), avg_resp_dir(iCell,:,1,2))
-%     hold on
-%     errorbar(stimDirs, avg_resp_dir(iCell,:,2,1), avg_resp_dir(iCell,:,2,2))
-%     start = start+1;
-%     title(['Zc = ' num2str(chop(Zc(iCell),2)) '; Zp= ' num2str(chop(Zp(iCell),2))])
-% end
-% suptitle([date ' ' mouse ' Cells with Zp>1'])
-% print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuning_Zpabove1.pdf']),'-dpdf', '-fillpage')       
-% 
-% 
-% ind = find(Zc>2);
-% figure; 
-% movegui('center')
-% start = 1;
-% [n n2] = subplotn(length(ind));
-% for iC = 1:length(ind)
-%     iCell = ind(iC);
-%     subplot(n,n2,start) 
-%     errorbar(stimDirs, avg_resp_dir(iCell,:,1,1), avg_resp_dir(iCell,:,1,2))
-%     hold on
-%     errorbar(stimDirs, avg_resp_dir(iCell,:,2,1), avg_resp_dir(iCell,:,2,2))
-%     start = start+1;
-%     title(['Zc = ' num2str(chop(Zc(iCell),2)) '; Zp= ' num2str(chop(Zp(iCell),2))])
-% end
-% suptitle([date ' ' mouse ' Cells with Zc>2'])
-% print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuning_Zcabove2.pdf']),'-dpdf', '-fillpage')       
-% 
-% 
-% 
+ind = find(Zp>1);
+figure; 
+movegui('center')
+start = 1;
+[n n2] = subplotn(length(ind));
+for iC = 1:length(ind)
+    iCell = ind(iC);
+    subplot(n,n2,start) 
+    errorbar(stimDirs, avg_resp_dir(iCell,:,1,1), avg_resp_dir(iCell,:,1,2))
+    hold on
+    errorbar(stimDirs, avg_resp_dir(iCell,:,2,1), avg_resp_dir(iCell,:,2,2))
+    start = start+1;
+    title(['Zc = ' num2str(chop(Zc(iCell),2)) '; Zp= ' num2str(chop(Zp(iCell),2))])
+end
+suptitle([date ' ' mouse ' Cells with Zp>1'])
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuning_Zpabove1.pdf']),'-dpdf', '-fillpage')       
+
+
+ind = find(Zc>2);
+figure; 
+movegui('center')
+start = 1;
+[n n2] = subplotn(length(ind));
+for iC = 1:length(ind)
+    iCell = ind(iC);
+    subplot(n,n2,start) 
+    errorbar(stimDirs, avg_resp_dir(iCell,:,1,1), avg_resp_dir(iCell,:,1,2))
+    hold on
+    errorbar(stimDirs, avg_resp_dir(iCell,:,2,1), avg_resp_dir(iCell,:,2,2))
+    start = start+1;
+    title(['Zc = ' num2str(chop(Zc(iCell),2)) '; Zp= ' num2str(chop(Zp(iCell),2))])
+end
+suptitle([date ' ' mouse ' Cells with Zc>2'])
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuning_Zcabove2.pdf']),'-dpdf', '-fillpage')       
+
+
+
+stim_SI = zeros(1,nCells);
 stim_OSI = zeros(1,nCells);
 plaid_OSI = zeros(1,nCells);
 stim_DSI = zeros(1,nCells);
@@ -250,6 +251,7 @@ for iCell = 1:nCells
     plaid_val = avg_resp_dir_rect(iCell,max_ind,2,1);
     mask_val = avg_resp_dir_rect(iCell,mask_ind,1,1);
     plaid_SI(iCell) = (plaid_val-max_val-mask_val)./(plaid_val+max_val+mask_val);
+    stim_SI(iCell) = (max_val-mask_val)./(max_val+mask_val);
     resp_stim_prefDir(iCell) = max_val;
     resp_mask_prefDir(iCell) = mask_val;
     resp_plaid_prefDir(iCell) = plaid_val;
@@ -283,8 +285,7 @@ for iCell = 1:nCells
     min_val = avg_resp_ori_rect(iCell,null_ind,1,1);
     stim_OSI(iCell) = (max_val-min_val)./(max_val+min_val);
 end
-
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'component','pattern','Rp', 'Rc', 'Zp', 'Zc', 'stim_OSI', 'stim_DSI', 'plaid_OSI', 'plaid_DSI', 'plaid_SI', 'plaid_SI_45','h_plaid_SI', 'nCells','resp_stim_prefDir','resp_mask_prefDir','resp_plaid_prefDir','resp_stim_45Dir','resp_mask_45Dir','resp_plaid_45Dir', 'b_dir', 'k1_dir', 'R1_dir', 'R2_dir', 'u1_dir', 'sse_dir', 'R_square_dir', 'y_dir_fit');
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'component','pattern','Rp', 'Rc', 'Zp', 'Zc', 'stim_SI', 'stim_OSI', 'stim_DSI', 'plaid_OSI', 'plaid_DSI', 'plaid_SI', 'plaid_SI_45','h_plaid_SI', 'nCells','resp_stim_prefDir','resp_mask_prefDir','resp_plaid_prefDir','resp_stim_45Dir','resp_mask_45Dir','resp_plaid_45Dir', 'b_dir', 'k1_dir', 'R1_dir', 'R2_dir', 'u1_dir', 'sse_dir', 'R_square_dir', 'y_dir_fit');
 
 
 figure; 

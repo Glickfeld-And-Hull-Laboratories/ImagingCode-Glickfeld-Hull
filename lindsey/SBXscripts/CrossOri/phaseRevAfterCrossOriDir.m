@@ -8,7 +8,7 @@ rc = behavConstsAV;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 
-iexp = 69;
+iexp = 71;
              %%
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
