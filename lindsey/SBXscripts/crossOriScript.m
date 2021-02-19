@@ -1,11 +1,11 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDir_ExptList';
-iexp = 55; 
+ds = 'CrossOriRandPhase_ExptList';
+iexp = 9; 
 rc = behavConstsAV;
 eval(ds)
 
-frame_rate = 15;
+frame_rate = 30;
 
 %%
 mouse = expt(iexp).mouse;
@@ -75,7 +75,7 @@ nep = floor(size(data,3)./10000);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,20001:20500),3);
+data_avg = mean(data(:,:,70001:70500),3);
 %% Register data
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -233,7 +233,7 @@ data_dfof = cat(3, data_dfof, data_dfof_max);
 if doRedChannel
     data_dfof = cat(3,data_dfof,data_red_avg);
 end
-if strcmp(expt(iexp).driver,'SOM')
+if strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')
     data_dfof = cat(3,data_dfof,data_avg);
 end
 

@@ -9,9 +9,9 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '201209';
+date = '210115';
 ImgFolder = '003';
-time = '1226';
+time = '1618';
 mouse = 'i475';
 frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
