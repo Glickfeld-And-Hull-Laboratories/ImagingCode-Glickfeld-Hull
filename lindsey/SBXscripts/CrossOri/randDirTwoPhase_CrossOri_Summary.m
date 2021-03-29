@@ -11,11 +11,11 @@ str = {'hiSF','lowSF'};
 
 
 
-area_list = strvcat('V1','LM');%,'AL','RL','PM');
-narea = length(area_list);
+area_list = strvcat('V1');%,'LM');%,'AL','RL','PM');
+narea = 1;%length(area_list);
 
 
-for a = 1:2
+for a = 2
     SFs = [0.1 0.05];
     ind = find([expt.SF] == SFs(a));
 for iA = 1:narea

@@ -1,16 +1,16 @@
 clear all;
 close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDir_ExptList';
+ds = 'CrossOriRandDirRandPhase_ExptList';
 eval(ds)
+rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
-summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirSummary');
+summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary');
 
 area_list = ['V1']; % 'LM'; 'AL'; 'PM'; 'RL'];
-driver = 'PV';
-sf = 0.01;
+driver = 'SOM';
 if min(size(area_list)) == 1
     narea = 1;
 else
@@ -35,11 +35,11 @@ for iarea = narea
     resp_ind_all = [];
     resp_ind_dir_all = [];
     resp_ind_plaid_all = [];
-    f1_all = [];
-    f2_all = [];
-    f2overf1_all = [];
+    amp_all = [];
+    amp_shuf_all = [];
+    b_all = [];
     mouse_list = [];
-    for iexp = 1:nexp-1
+    for iexp = 1:nexp
         if sum(strcmp(expt(iexp).img_loc,area)) & strcmp(expt(iexp).driver,driver)
             mouse = expt(iexp).mouse;
             mouse_list = strvcat(mouse_list, mouse);
@@ -90,36 +90,31 @@ for iarea = narea
             resp_ind_dir_all = [resp_ind_dir_all resp_ind_dir'+totCells];
             resp_ind_plaid_all = [resp_ind_plaid_all resp_ind_plaid'+totCells];
 
-            if isfield(expt,'prFolder')
-                if ~isempty(expt(iexp).prFolder)
-                    ImgFolder = expt(iexp).prFolder;
-                    nrun = length(ImgFolder);
-                    run_str = catRunName(cell2mat(ImgFolder), nrun);
-                    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_f1f2.mat']))
-                    if length(expt(iexp).img_loc)>1
-                        f1 = f1(ind);
-                        f2 = f2(ind);
-                        f2overf1 = f2overf1(ind);
-                    end
-                    f1_all = [f1_all f1];
-                    f2_all = [f2_all f2];
-                    f2overf1_all = [f2overf1_all f2overf1];
-                else
-                f1_all = [f1_all nan(size(stim_OSI))];
-                f2_all = [f2_all nan(size(stim_OSI))];
-                f2overf1_all = [f2overf1_all nan(size(stim_OSI))];
+
+            ImgFolder = expt(iexp).copFolder;
+            nrun = length(ImgFolder);
+            if ~isempty(ImgFolder)
+                run_str = catRunName(cell2mat(ImgFolder), nrun);
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']))
+                if length(expt(iexp).img_loc)>1
+                    amp_all = amp_all(ind);
+                    amp_shuf_all = amp_shuf_all(ind);
+                    b_all = b_all(ind);
                 end
+                amp_all = [amp_all amp_hat_all'];
+                amp_shuf_all = [amp_shuf_all amp_hat_shuf'];
+                b_all = [b_all b_hat_all'];
             else
-                f1_all = [f1_all nan(size(stim_OSI))];
-                f2_all = [f2_all nan(size(stim_OSI))];
-                f2overf1_all = [f2overf1_all nan(size(stim_OSI))];
+                amp_all = [amp_all nan(nCells,1)'];
+                amp_shuf_all = [amp_shuf_all nan(nCells,1)'];
+                b_all = [b_all nan(nCells,1)'];
             end
 
             totCells = totCells+nCells;
 
         end
     end
-    save(fullfile(summaryDir,['randDir_Summary_' area '_' driver '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','mouse_list')
+    save(fullfile(summaryDir,['randDirRandPhase_Summary_' area '_' driver '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'k_all','amp_all', 'amp_shuf_all', 'b_all', 'mouse_list')
 
 %%
     figure;

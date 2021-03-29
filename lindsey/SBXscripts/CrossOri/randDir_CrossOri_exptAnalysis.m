@@ -5,7 +5,7 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-for iexp = 70
+for iexp = 1
 
 frame_rate = 15;
 
@@ -68,7 +68,7 @@ all_plaid = [];
 nStim = nStimDir;
 for iDir = 1:nStimDir
     ind_stimdir = find(stimDir_all == stimDirs(iDir));
-    ind_maskdir = find(maskDir_all == stimDirs(iDir));
+    ind_maskdir = find(maskDir_all == maskDirs(iDir));
     ind_diralone = [intersect(ind_stimdir, ind_stimAlone), intersect(ind_maskdir, ind_maskAlone)];
     ind_dirplaid = [intersect(ind_stimdir, ind_plaid)];
     trialsperstim(iDir,1) = length(ind_diralone);

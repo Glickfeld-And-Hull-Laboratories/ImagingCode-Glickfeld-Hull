@@ -26,6 +26,7 @@ fprintf([mouse ' ' date '\n'])
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+%%
 if doRedChannel == 0
     red_cells = [];
 end
@@ -64,7 +65,7 @@ trialInd = cell(nMaskCon,nStimCon,nMaskPhas,nSF);
 trialsperstim = zeros(nMaskCon,nStimCon,nMaskPhas,nSF);
 h_resp =zeros(nCells,nMaskCon,nStimCon,nSF);
 p_resp =zeros(nCells,nMaskCon,nStimCon,nSF);
-base_win = prewin_frames-15:prewin_frames;
+base_win = prewin_frames-ceil(frame_rate/2):prewin_frames;
 resp_win = prewin_frames+5:prewin_frames+nFramesOn;
 data_dfof_con_ph_tc_avg = nan(prewin_frames+postwin_frames, nCells, nMaskCon, nStimCon, nMaskPhas,nSF);
 
