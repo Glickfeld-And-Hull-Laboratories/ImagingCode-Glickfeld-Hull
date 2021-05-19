@@ -1,11 +1,11 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDir_ExptList';
+ds = 'CrossOriRandDirRandPhase_ExptList';
 rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-for iexp = 1
+for iexp = 32
 
 frame_rate = 15;
 

@@ -6,8 +6,9 @@ rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 nanframes = zeros(1,nexp);
+max_dist = 2;
 
-for iexp = 13:14
+for iexp = 1:nexp
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     area = expt(iexp).img_loc{1};
@@ -29,6 +30,7 @@ for iexp = 13:14
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
     
+    max_dist = 2;
     seed = rng;
     nCells = size(resp_cell{end,end,end},1);
     nTrials = size(stimCon_all,2);
@@ -68,8 +70,8 @@ for iexp = 13:14
         %less than 4 deg
         for im = 2:nMaskCon
             for it = 2:nStimCon
-                [memb ind_test] = ismember(trialInd{1,it,1},find(centroid_dist<4));
-                [memb ind_mask] = ismember(trialInd{im,1,1},find(centroid_dist<4));
+                [memb ind_test] = ismember(trialInd{1,it,1},find(centroid_dist<max_dist));
+                [memb, ind_mask] = ismember(trialInd{im,1,1},find(centroid_dist<max_dist));
                 test_avg = mean(resp_cell{1,it,1}(:,find(ind_test)),2);
                 test_avg_rect = test_avg;
                 test_avg_rect(find(test_avg<0)) = 0;
@@ -80,7 +82,7 @@ for iexp = 13:14
                 resp_all = [];
                 stim_all = [];
                 for ip = 1:nMaskPhas
-                    [memb ind] = ismember(trialInd{im,it,ip},find(centroid_dist<4));
+                    [memb ind] = ismember(trialInd{im,it,ip},find(centroid_dist<max_dist));
                     resp_all = [resp_all resp_cell{im,it,ip}(:,find(ind))];
                     stim_all = [stim_all ip.*ones(size(resp_cell{im,it,ip}(1,find(ind))))];
                     resp_avg(:,ip) = mean(resp_cell{im,it,ip}(:,find(ind)),2);
@@ -93,13 +95,13 @@ for iexp = 13:14
                 resp_avg_rect(find(resp_avg<0)) = 0;
                 SI_avg = (resp_avg_rect-(test_avg_rect+mask_avg_rect))./(resp_avg_rect+(test_avg_rect+mask_avg_rect));
                 [eye_n(im,it,:) edges bin] = histcounts(stim_all,[1:5]);
-                if sum(squeeze(eye_n(im,it,:))<4)==0
+                if sum(squeeze(eye_n(im,it,:))<max_dist)==0
                     figure;
                     start = 1;
                     n = 1;
                     for iCell = 1:nCells
                         if start>25
-                            suptitle([mouse ' ' date '- Mask ' num2str(im) ' Test ' num2str(it) '- Trials < 4 deg'])
+                            suptitle([mouse ' ' date '- Mask ' num2str(im) ' Test ' num2str(it) '- Trials < ' num2str(max_dist) '  deg'])
                             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_M' num2str(im) 'T' num2str(it) '.pdf']), '-dpdf','-fillpage')
                             figure;
                             start = 1;
@@ -126,7 +128,7 @@ for iexp = 13:14
                         end
                         start = start+1;
                     end
-                    suptitle([mouse ' ' date '- Mask ' num2str(im) ' Test ' num2str(it) '- Trials < 4 deg'])
+                    suptitle([mouse ' ' date '- Mask ' num2str(im) ' Test ' num2str(it) '- Trials < ' num2str(max_dist) '  deg'])
                     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_M' num2str(im) 'T' num2str(it) '.pdf']), '-dpdf','-fillpage')
                 end
             end
@@ -148,10 +150,22 @@ for iexp = 13:14
     resp_all = [];
     stim_all = [];
     resp_avg = cell(1,nMaskPhas);
+%     [memb ind_blank] = ismember(trialInd{1,1,1},find(centroid_dist<max_dist));
+%     [memb ind_test] = ismember(trialInd{1,end,1},find(centroid_dist<max_dist));
+%     [memb ind_mask] = ismember(trialInd{end,1,1},find(centroid_dist<max_dist));
+%     if length(find(ind_blank))>4
+%         [h_test p] = ttest2(resp_cell{1,end,1}(:,find(ind_test)), resp_cell{1,1,1}(:,find(ind_blank)),'dim',2,'tail','right');
+%         [h_mask p] = ttest2(resp_cell{end,1,1}(:,find(ind_mask)), resp_cell{1,1,1}(:,find(ind_blank)),'dim',2,'tail','right');
+%     else
+%         [h_test p] = ttest(resp_cell{1,end,1}(:,find(ind_test))');
+%         [h_mask p] = ttest(resp_cell{end,1,1}(:,find(ind_mask))');
+%     end
+%     resp_ind_phase = find(h_test+h_mask);
+    trN = zeros(1,nMaskPhas);
     for im = 2:nMaskCon
         for it = 2:nStimCon
-            [memb ind_test] = ismember(trialInd{1,it,1},find(centroid_dist<4));
-            [memb ind_mask] = ismember(trialInd{im,1,1},find(centroid_dist<4));
+            [memb ind_test] = ismember(trialInd{1,it,1},find(centroid_dist<max_dist));
+            [memb ind_mask] = ismember(trialInd{im,1,1},find(centroid_dist<max_dist));
             test_avg = mean(resp_cell{1,it,1}(:,find(ind_test)),2);
             test_avg_rect = test_avg;
             test_avg_rect(find(test_avg<0)) = 0;
@@ -159,10 +173,11 @@ for iexp = 13:14
             mask_avg_rect = mask_avg;
             mask_avg_rect(find(mask_avg<0)) = 0;
             for ip = 1:nMaskPhas
-                [memb ind] = ismember(trialInd{im,it,ip},find(centroid_dist<4));
+                [memb ind] = ismember(trialInd{im,it,ip},find(centroid_dist<max_dist));
                 resp_all = [resp_all resp_cell{im,it,ip}(:,find(ind))];
                 stim_all = [stim_all ip.*ones(size(resp_cell{im,it,ip}(1,find(ind))))];
                 resp_avg{1,ip} = [resp_avg{1,ip} resp_cell{im,it,ip}(:,find(ind))];
+                trN(ip) = length(find(ind));
             end
         end
     end
@@ -171,8 +186,11 @@ for iexp = 13:14
     resp_downsamp_rect(find(resp_all<0)) = 0;
     SI_all = (resp_downsamp_rect-(test_avg_rect+mask_avg_rect))./(resp_downsamp_rect+(test_avg_rect+mask_avg_rect));
     resp_avg_downsamp = nan(nCells,nMaskPhas);
+    SI_all_avg = nan(nCells,nMaskPhas,2);
     for ip = 1:nMaskPhas
         resp_avg_downsamp(:,ip) = mean(resp_avg{1,ip},2);
+        SI_all_avg(:,ip,1) = nanmean(SI_all(:,find(stim_all==ip)),2);
+        SI_all_avg(:,ip,2) = nanstd(SI_all(:,find(stim_all==ip)),[],2)./sqrt(length(find(stim_all==ip)));
     end
     resp_avg_rect = resp_avg_downsamp;
     resp_avg_rect(find(resp_avg_downsamp<0)) = 0;
@@ -182,9 +200,9 @@ for iexp = 13:14
     figure;
     start = 1;
     n = 1;
-    for iCell = 1:nCells
+    for iCell =1:nCells
         if start>25
-            suptitle([mouse ' ' date '- All M/T- Trials < 4 deg'])
+            suptitle([mouse ' ' date '- All M/T- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_allMT.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
@@ -211,7 +229,7 @@ for iexp = 13:14
         end
         start = start+1;
     end
-    suptitle([mouse ' ' date '- All M/T- Trials < 4 deg'])
+    suptitle([mouse ' ' date '- All M/T- Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_allMT.pdf']), '-dpdf','-fillpage')
 
     p_anova_shuf = nan(nCells,1);
@@ -230,7 +248,7 @@ for iexp = 13:14
     n = 1;
     for iCell = 1:nCells
         if start>25
-            suptitle([mouse ' ' date '- All M/T Shuffled- Trials < 4 deg'])
+            suptitle([mouse ' ' date '- All M/T Shuffled- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_allMT_shuffled.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
@@ -257,7 +275,7 @@ for iexp = 13:14
         end
         start = start+1;
     end
-    suptitle([mouse ' ' date '- All M/T- Shuffled Trials < 4 deg'])
+    suptitle([mouse ' ' date '- All M/T- Shuffled Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_allMT_shuffled.pdf']), '-dpdf','-fillpage')
 
     p_anova_downsamp = nan(nCells,1);
@@ -294,7 +312,7 @@ for iexp = 13:14
         n = 1;
         for iCell = 1:nCells
             if start>25
-                suptitle([mouse ' ' date '- All M/T- Trials < 4 deg'])
+                suptitle([mouse ' ' date '- All M/T- Trials < ' num2str(max_dist) '  deg'])
                 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_allMT_downsampled.pdf']), '-dpdf','-fillpage')
                 figure;
                 start = 1;
@@ -321,9 +339,9 @@ for iexp = 13:14
             end
             start = start+1;
         end
-        suptitle([mouse ' ' date '- All M/T- Trials < 4 deg'])
+        suptitle([mouse ' ' date '- All M/T- Trials < ' num2str(max_dist) '  deg'])
         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_allMT_downsampled.pdf']), '-dpdf','-fillpage')
     end
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'seed', 'yfit', 'b_hat', 'amp_hat', 'per_hat', 'pha_hat', 'sse', 'R_square',  'p_anova', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','yfit_downsamp', 'b_hat_downsamp', 'amp_hat_downsamp', 'per_hat_downsamp', 'pha_hat_downsamp', 'sse_downsamp', 'R_square_downsamp', 'p_anova_downsamp','trial_n', 'trialInd')
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'trN', 'seed', 'yfit', 'b_hat', 'amp_hat', 'per_hat', 'pha_hat', 'sse', 'R_square',  'p_anova', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','yfit_downsamp', 'b_hat_downsamp', 'amp_hat_downsamp', 'per_hat_downsamp', 'pha_hat_downsamp', 'sse_downsamp', 'R_square_downsamp', 'p_anova_downsamp','trial_n', 'trialInd','SI_all_avg', 'max_dist')
     close all
 end

@@ -67,7 +67,7 @@ h_resp =zeros(nCells,nMaskCon,nStimCon,nSF);
 p_resp =zeros(nCells,nMaskCon,nStimCon,nSF);
 base_win = prewin_frames-ceil(frame_rate/2):prewin_frames;
 resp_win = prewin_frames+5:prewin_frames+nFramesOn;
-data_dfof_con_ph_tc_avg = nan(prewin_frames+postwin_frames, nCells, nMaskCon, nStimCon, nMaskPhas,nSF);
+data_dfof_con_ph_tc_avg = nan(prewin_frames+postwin_frames, nCells, nMaskCon, nStimCon, nMaskPhas,nSF,2);
 
 test_resp = cell(1,nSF);
 mask_resp = cell(1,nSF);
@@ -94,7 +94,8 @@ for isf = 1:nSF
                     trialsperstim(im,it,ip,isf) = length(ind);
                     resp_cell{im,it,ip,isf} = squeeze(mean(data_dfof_tc(resp_win,:,ind),1));
                     base_cell{im,it,ip,isf} = squeeze(mean(data_dfof_tc(base_win,:,ind),1));
-                    data_dfof_con_ph_tc_avg(:,:,im,it,ip,isf) = squeeze(nanmean(data_dfof_tc(:,:,ind),3));
+                    data_dfof_con_ph_tc_avg(:,:,im,it,ip,isf,1) = squeeze(nanmean(data_dfof_tc(:,:,ind),3));
+                    data_dfof_con_ph_tc_avg(:,:,im,it,ip,isf,2) = squeeze(nanstd(data_dfof_tc(:,:,ind),[],3)./sqrt(length(ind)));
                     trialInd{im,it,ip,isf} = ind;
                 end
             elseif it>1 || im>1
@@ -102,14 +103,16 @@ for isf = 1:nSF
                 trialsperstim(im,it,1,isf) = length(ind);
                 resp_cell{im,it,1,isf} = squeeze(mean(data_dfof_tc(resp_win,:,ind),1));
                 base_cell{im,it,1,isf} = squeeze(mean(data_dfof_tc(base_win,:,ind),1));
-                data_dfof_con_ph_tc_avg(:,:,im,it,1,isf) = squeeze(nanmean(data_dfof_tc(:,:,ind),3));
+                data_dfof_con_ph_tc_avg(:,:,im,it,1,isf,1) = squeeze(nanmean(data_dfof_tc(:,:,ind),3));
+                data_dfof_con_ph_tc_avg(:,:,im,it,1,isf,2) = squeeze(nanstd(data_dfof_tc(:,:,ind),[],3)./sqrt(length(ind)));
                 trialInd{im,it,1,isf} = ind;
             elseif isf == 1
                 ind = intersect(ind_mask,ind_stim);
                 trialsperstim(im,it,1,1) = length(ind);
                 resp_cell{im,it,1,1} = squeeze(mean(data_dfof_tc(resp_win,:,ind),1));
                 base_cell{im,it,1,1} = squeeze(mean(data_dfof_tc(base_win,:,ind),1));
-                data_dfof_con_ph_tc_avg(:,:,im,it,1,1) = squeeze(nanmean(data_dfof_tc(:,:,ind),3));
+                data_dfof_con_ph_tc_avg(:,:,im,it,1,1,1) = squeeze(nanmean(data_dfof_tc(:,:,ind),3));
+                data_dfof_con_ph_tc_avg(:,:,im,it,1,1,2) = squeeze(nanstd(data_dfof_tc(:,:,ind),[],3)./sqrt(length(ind)));
                 trialInd{im,it,1,1} = ind;
             end
         end

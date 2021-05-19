@@ -1,14 +1,14 @@
 %% get path names
 close all;clear all;clc;
 
-ds = 'CrossOriRandPhase_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList';
 eval(ds)
 nexp = length(expt);
 rc = behavConstsAV;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 
-iexp = 51;
+iexp = 6;
             %%
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
@@ -270,6 +270,7 @@ iexp = 51;
 
             %% compare with suppression index
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_respData.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_phaseFits.mat']))
             resp_ind_only = intersect(resp_ind,resp_ind_phase);
             plaid_resp = mean(resp_cell{end,end,1},2);
             mask_resp =  mean(resp_cell{end,1,1},2);
@@ -297,6 +298,12 @@ iexp = 51;
             xlim([0 1])
             ylim([0 2.5])
             xlabel('Stim Pref index')
+            ylabel('F2/F1')
+            subplot(2,2,4)
+            scatter(amp_hat_all(resp_ind_only),f2overf1(resp_ind_only))
+            xlim([0 1])
+            ylim([0 2.5])
+            xlabel('Sine Amplitude')
             ylabel('F2/F1')
             suptitle([date ' ' mouse '- Phase reversal'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_SIvsF2-F1.pdf']),'-dpdf','-bestfit');

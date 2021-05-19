@@ -34,14 +34,21 @@ load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
 calib = 1/26.6; %mm per pixel
 
 % Load and combine eye tracking data
-irun =  1;
-CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
-cd(CD);
-fn = [ImgFolder{irun} '_000_000_eye.mat'];
-data = load(fn);          % should be a '*_eye.mat' file
+nrun = length(ImgFolder);
+data = [];
+for irun =  1:nrun
+    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
+    cd(CD);
+    fn = [ImgFolder{irun} '_000_000_eye.mat'];
 
-data = squeeze(data.data);      % the raw images...
+    data_temp = load(fn);          % should be a '*_eye.mat' file
+    data_temp = squeeze(data_temp.data);
 
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time{irun} '.mat'];
+    load(fName);
+    nFrames = input.counterValues{end}(end);
+    data = cat(3, data, data_temp(:,:,1:nFrames));      % the raw images...
+end
 figure;
 data_avg = mean(data,3);
 imagesc(data_avg);
@@ -74,7 +81,8 @@ end
 close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
-rad_range = [6 30];
+%%
+rad_range = [6 25];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
@@ -146,7 +154,7 @@ xlabel('Metric')
 
 x1 = find(isnan(Area));
 x2 = find(~isnan(Area));
-x3 = find(Val<0.26 & SNR<1.9);
+x3 = unique([find(Val<0.1); find(Val<0.20 & SNR<1.7)]);
 
 x = unique([x1; x3]);
 if length(x)>25
@@ -208,6 +216,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     eye_mat_start = zeros(sz(1), sz(2), prewin_frames+postwin_frames, nTrials);
    
     nframes = size(Rad_temp,1);
+    
     for itrial = 1:nTrials
         if itrial == nTrials
             crange = [double(cStimOn(itrial))-prewin_frames:nframes];

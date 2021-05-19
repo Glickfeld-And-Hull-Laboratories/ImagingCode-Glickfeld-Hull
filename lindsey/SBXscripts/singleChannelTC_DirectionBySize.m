@@ -2,18 +2,18 @@
 
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
-cam_fn = fullfile(fn_base, 'home\camaron');
+cam_fn = fullfile(fn_base, 'home\lindsey');
 lg_fn = fullfile(fn_base, 'home\lindsey');
 data_fn = fullfile(cam_fn, 'Data\2P_images');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '210427';
+date = '210208';
 ImgFolder = '002';
-time = '1533';
-mouse = 'i472';
-frame_rate = 30;
+time = '1648';
+mouse = 'i1338';
+frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -42,7 +42,7 @@ data = squeeze(data);
 %1. Find a stable target
 %    a. Plot average of 500 frames throughout stack
 nframes = 500; %nframes to average for target
-nskip = 5000; %nframes to skip for each average
+nskip = 1500; %nframes to skip for each average
 
 nep = floor(size(data,3)./nskip);
 [n, n2] = subplotn(nep); 
@@ -207,74 +207,42 @@ data_trial = reshape(npSub_tc, [nOn+nOff ntrials nCells]);
 data_f = mean(data_trial(base_win,:,:),1);
 data_dfof = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
 
-resp_cell_dir = cell(1,nDirs);
-base_cell_dir = cell(1,nDirs);
-data_dfof_dir = zeros(nCells,nDirs,2);
-h_dir = zeros(nDirs,nCells);
-p_dir = zeros(nDirs,nCells);
-for iDir = 1:nDirs
-    ind = find(tDir==Dirs(iDir));
-    resp_cell_dir{iDir} = squeeze(mean(data_dfof(resp_win,ind,:),1));
-    base_cell_dir{iDir} = squeeze(mean(data_dfof(base_win,ind,:),1));
-    [h_dir(iDir,:), p_dir(iDir,:)] = ttest(resp_cell_dir{iDir},base_cell_dir{iDir},'tail','right','alpha',0.05./(nDirs-1));
-    data_dfof_dir(:,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
-    data_dfof_dir(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-end
+sz_mat = celleqel2mat_padded(input.tGratingDiameterDeg);
+szs = unique(sz_mat);
+nSz = length(szs);
 
-h_all_dir = sum(h_dir,1);
-start=1;
-n = 1;
+resp_cell = cell(1,nDirs);
+base_cell = cell(1,nDirs);
+data_dfof_stim = zeros(nCells,nSz,nDirs,2);
+h_stim = zeros(nSz,nDirs,nCells);
+p_stim = zeros(nSz,nDirs,nCells);
+data_dfof_stim_SI = zeros(nCells,nSz);
+resp_ind = cell(1,nSz);
+[n n2] = subplotn(nSz);
 figure;
-movegui('center')
-for iCell = 1:nCells
-    if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
-        figure;movegui('center');
-        start = 1;
-        n = n+1;
+for iSz = 1:nSz
+    ind1 = find(sz_mat==szs(iSz));
+    for iDir = 1:nDirs
+        ind2 = find(tDir==Dirs(iDir));
+        ind = intersect(ind1,ind2);
+        resp_cell{iSz,iDir} = squeeze(mean(data_dfof(resp_win,ind,:),1));
+        base_cell{iSz,iDir} = squeeze(mean(data_dfof(base_win,ind,:),1));
+        [h_stim(iSz,iDir,:), p_stim(iSz,iDir,:)] = ttest(resp_cell{iSz,iDir},base_cell{iSz,iDir},'tail','right','alpha',0.05./((nDirs.*nSz)-1));
+        data_dfof_stim(:,iSz,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
+        data_dfof_stim(:,iSz,iDir,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
     end
-    subplot(5,5,start)
-    errorbar(Dirs, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
-    title(['R = ' num2str(h_all_dir(iCell))])
-    start = start +1;
+    data_dfof_stim_rect = squeeze(data_dfof_stim(:,iSz,:,1));
+    data_dfof_stim_rect(find(data_dfof_stim_rect<0)) = 0;
+    data_dfof_stim_SI(:,iSz) = abs((data_dfof_stim_rect(:,1)-data_dfof_stim_rect(:,2))./(data_dfof_stim_rect(:,1)+data_dfof_stim_rect(:,2)));
+    resp_ind{iSz} = find(sum(h_stim(iSz,:,:),2));
+    %subplot(n,n2,iSz)
+    %histogram(data_dfof_stim_SI(resp_ind{iSz},iSz),[0:0.2:1])
+    cdfplot(data_dfof_stim_SI(resp_ind{iSz},iSz))
+    hold on
 end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
-
-tOri = tDir;
-tOri(find(tDir>=180)) = tOri(find(tDir>=180))-180;
-Oris = unique(tOri);
-nOri = length(Oris);
-
-resp_cell_ori = cell(1,nOri);
-base_cell_ori = cell(1,nOri);
-data_dfof_ori = zeros(nCells,nOri,2);
-h_ori = zeros(nOri,nCells);
-p_ori = zeros(nOri,nCells);
-for iOri = 1:nOri
-    ind = find(tOri==Oris(iOri));
-    resp_cell_ori{iOri} = squeeze(mean(data_dfof(resp_win,ind,:),1));
-    base_cell_ori{iOri} = squeeze(mean(data_dfof(base_win,ind,:),1));
-    [h_ori(iOri,:) p_ori(iOri,:)] = ttest(resp_cell_ori{iOri},base_cell_ori{iOri},'tail','right','alpha',0.05./(nOri-1));
-    data_dfof_ori(:,iOri,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
-    data_dfof_ori(:,iOri,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-end
-
-h_all_ori = sum(h_ori,1);
-
-start=1;
-n = 1;
-figure;
-movegui('center')
-for iCell = 1:nCells
-    if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
-        figure;movegui('center');
-        start = 1;
-        n = n+1;
-    end
-    subplot(5,5,start)
-    errorbar(Oris, data_dfof_ori(iCell,:,1), data_dfof_ori(iCell,:,2), '-o')
-    title(['R = ' num2str(h_all_ori(iCell))])
-    start = start +1;
-end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
+legend(num2str(szs'))
+xlim([0 1])
+xlabel('Stimulus selectivity')
+title([mouse ' ' date])
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimSelectivityBySize.pdf']),'-dpdf','-bestfit')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData.mat']),'resp_cell_dir','resp_cell','h_dir','data_dfof_stim_SI','data_dfof_stim')

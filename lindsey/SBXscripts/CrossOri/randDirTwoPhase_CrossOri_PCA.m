@@ -7,7 +7,7 @@ summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirSummary');
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
-area_list = ['V1'];
+area_list = ['V1'; 'LM'; 'AL'];
 driver = 'SLC';
 narea =length(area_list);
 
@@ -38,7 +38,7 @@ for iarea = 1:narea
     start = 1;
     %%
     for iexp = 1:nexp
-        if sum(strcmp(expt(iexp).img_loc,area)) & strcmp(expt(iexp).driver,driver)& expt(iexp).SF == 0.05
+        if sum(strcmp(expt(iexp).img_loc,area)) & strcmp(expt(iexp).driver,driver) & expt(iexp).SF == 0.05
             exp_ind = [exp_ind iexp];
             mouse = expt(iexp).mouse;
             date = expt(iexp).date;
@@ -79,11 +79,12 @@ for iarea = 1:narea
             nFrames = sz(1);
             nStimDir = length(stimDirs);
             tc_dir_dfof = zeros(nOn+nOff,nCells,nStimDir,2);
+            indPhas = find(maskPhas_all==0);
             for iDir = 1:nStimDir
                 ind_stimdir = find(stimDir_all == stimDirs(iDir));
                 ind_maskdir = find(maskDir_all == stimDirs(iDir));
                 ind_diralone = [intersect(ind_stimdir, ind_stimAlone), intersect(ind_maskdir, ind_maskAlone)];
-                ind_dirplaid = [intersect(ind_stimdir, ind_plaid)];
+                ind_dirplaid = [intersect(indPhas, intersect(ind_stimdir, ind_plaid))];
                 tc_dir_dfof(:,:,iDir,1) = nanmean(data_dfof(:,:,ind_diralone),3);
                 tc_dir_dfof(:,:,iDir,2) = nanmean(data_dfof(:,:,ind_dirplaid),3);
             end
@@ -124,31 +125,21 @@ for iarea = 1:narea
 
             x = get(gca, 'ColorOrder');
             x = [x; [1 0 1]; x; [1 0 1];];
-            x = blues(70);
-            x = x(70-15:2:70,:);
             ln_mat = ['k','r'];
-%             figure;
-%             for idir = 1:nStimDir
-%                 plot3(stim_pca(:,1,idir), stim_pca(:,2,idir), stim_pca(:,3,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:))
-%                 hold on
-%             end
-%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
-%             figure;
-%             for idir = 1:nStimDir/2
-%                 plot(stim_pca(:,1,idir), stim_pca(:,2,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:), 'MarkerSize', 10)
-%                 hold on
-%             end
-%             ylim([-2.5 1.5])
-%             xlim([-2.5 1.5])
-%             axis square
-%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
+    %         figure;
+    %         for idir = 1:nStimDir
+    %             plot3(stim_pca(:,1,idir), stim_pca(:,2,idir), stim_pca(:,3,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:))
+    %             hold on
+    %         end
+    %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
+
             pca_dir = reshape(stim_pca,[nFrames.*nCells nStimDir]);
             corr_dir = corrcoef(pca_dir);
     % 
-%             figure; imagesc(corr_dir);
-%             set(gca, 'XTick', 1:2:nStimDir, 'XTickLabel', num2str(stimDirs(1:2:nStimDir)'), 'YTick', 1:2:nStimDir, 'YTickLabel', num2str(stimDirs(1:2:nStimDir)')) 
-%             xlabel('Grating Direction (deg)')
-%             ylabel('Grating Direction (deg)')
+    %         figure; imagesc(corr_dir);
+    %         set(gca, 'XTick', 1:2:nStimDir, 'XTickLabel', num2str(stimDirs(1:2:nStimDir)'), 'YTick', 1:2:nStimDir, 'YTickLabel', num2str(stimDirs(1:2:nStimDir)')) 
+    %         xlabel('Grating Direction (deg)')
+    %         ylabel('Grating Direction (deg)')
     %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_corr.pdf']),'-dpdf','-fillpage')
             corr_dir_all(:,:,start) = corr_dir;
     %         plaid_pca = zeros(nFrames,nCells,nMaskDir);
@@ -178,11 +169,11 @@ for iarea = 1:narea
             stimstim_dist_all(:,:,start) = stimstim_dist;
             stimplaid_ang_all(:,:,start) = stimplaid_ang;
             stimstim_ang_all(:,:,start) = stimstim_ang;
-%             figure; imagesc(stimplaid_dist)
-%             colorbar
-%             set(gca,'Xtick',1:2:16,'Xticklabel',num2str(stimDirs(1:2:16)'),'Ytick',1:2:16,'Yticklabel',num2str(stimDirs(1:2:16)'))
-%             ylabel('Plaid Grating Direction')
-%             xlabel('Single Grating Direction')
+    %         figure; imagesc(stimplaid_dist)
+    %         colorbar
+    %         set(gca,'Xtick',1:2:16,'Xticklabel',num2str(stimDirs(1:2:16)'),'Ytick',1:2:16,'Yticklabel',num2str(stimDirs(1:2:16)'))
+    %         ylabel('Plaid Grating Direction')
+    %         xlabel('Single Grating Direction')
     %         
 
             if nCells > 99
@@ -196,99 +187,49 @@ for iarea = 1:narea
                 stim_pca_amp_all(1:nCells,:,start) = stim_pca_amp(1:nCells,:);
                 plaid_pca_amp_all(1:nCells,:,start) = plaid_pca_amp(1:nCells,:);
             end
-%             figure;
-%             for iDir = 1:nStimDir
-%                 mDir = iDir+(nStimDir/4);
-%                 if mDir>nStimDir
-%                     mDir = mDir-nStimDir;
-%                 end
-%                 vDir = iDir+(nStimDir/8);
-%                 if vDir>nStimDir
-%                     vDir = vDir-nStimDir;
-%                 end
-%                 subplot(4,4,iDir)
-%                 plot3(stim_pca(:,1,iDir),stim_pca(:,2,iDir), stim_pca(:,3,iDir),'-o')
-%                 hold on
-%                 plot3(stim_pca(:,1,mDir),stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
-%                 plot3(stim_pca(:,1,vDir),stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
-%                 plot3(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
-%                 title(num2str(stimDirs(iDir)))
-%             end
-%             suptitle([mouse ' ' date])
-%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
-%             
-%             
-%             figure;
-%             for iDir = 1%:nStimDir
-%                 mDir = iDir+(nStimDir/4);
-%                 if mDir>nStimDir
-%                     mDir = mDir-nStimDir;
-%                 end
-%                 vDir = iDir+(nStimDir/8);
-%                 if vDir>nStimDir
-%                     vDir = vDir-nStimDir;
-%                 end
-%                 %subplot(4,4,iDir)
-%                 plot(stim_pca(:,1,iDir),stim_pca(:,2,iDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(1,:), 'MarkerSize', 10)
-%                 hold on
-%                 plot(stim_pca(:,1,mDir),stim_pca(:,2,mDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(2,:), 'MarkerSize', 10)
-%                 plot(stim_pca(:,1,vDir),stim_pca(:,2,vDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(3,:), 'MarkerSize', 10)
-%                 plot(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(4,:), 'MarkerSize', 10)
-%                 title(num2str(stimDirs(iDir)))
-%                 ylim([-2.5 1.5])
-%                 xlim([-2.5 1.5])
-%                 axis square
-%             end
-%             suptitle([mouse ' ' date])
-%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_PCAspace_2D_0deg.pdf']),'-dpdf','-fillpage')
-%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
-%             
-%             figure;
-%             hsv_map = [hsv(8); hsv(8)];
-%             for iDir = 1:nStimDir
-%                 plot3(stim_pca(:,1,iDir),stim_pca(:,2,iDir),stim_pca(:,3,iDir),'-o','Color', hsv_map(iDir,:))
-%                 hold on
-%             end
-%             legend(num2str(stimDirs(1:nStimDir/2)'),'location','southwest')
-%             xlabel('PCA 1')
-%             ylabel('PCA 2')
-%             title([mouse ' ' date '- Gratings'])
-%             
-%             figure;
-%             hsv_map = [hsv(8); hsv(8)];
-%             for iDir = 1:nStimDir
-%                 plot3(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o','Color', hsv_map(iDir,:))
-%                 hold on
-%             end
-%             legend(num2str(stimDirs(1:nStimDir/2)'),'location','southeast')
-%             xlabel('PCA 1')
-%             ylabel('PCA 2')
-%             title([mouse ' ' date '- Plaids'])
-%             
-%             
-%             
-%             figure;
-%             plot(squeeze(stim_pca(:,1,:)),squeeze(stim_pca(:,3,:)))
-%         
-%             figure;
-%             for iDir = 1:nStimDir
-%                 mDir = iDir+(nStimDir/4);
-%                 if mDir>nStimDir
-%                     mDir = mDir-nStimDir;
-%                 end
-%                 vDir = iDir+(nStimDir/8);
-%                 if vDir>nStimDir
-%                     vDir = vDir-nStimDir;
-%                 end
-%                 subplot(4,4,iDir)
-%                 plot(stim_pca(:,2,iDir),stim_pca(:,3,iDir),'-o')
-%                 hold on
-%                 plot(stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
-%                 plot(stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
-%                 plot(plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
-%                 title(num2str(stimDirs(iDir)))
-%             end
-%             suptitle([mouse ' ' date])
+    %         figure;
+    %         for iDir = 1:nStimDir
+    %             mDir = iDir+(nStimDir/4);
+    %             if mDir>nStimDir
+    %                 mDir = mDir-nStimDir;
+    %             end
+    %             vDir = iDir+(nStimDir/8);
+    %             if vDir>nStimDir
+    %                 vDir = vDir-nStimDir;
+    %             end
+    %             subplot(4,4,iDir)
+    %             plot3(stim_pca(:,1,iDir),stim_pca(:,2,iDir), stim_pca(:,3,iDir),'-o')
+    %             hold on
+    %             plot3(stim_pca(:,1,mDir),stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
+    %             plot3(stim_pca(:,1,vDir),stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
+    %             plot3(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
+    %             title(num2str(stimDirs(iDir)))
+    %         end
+    %         suptitle([mouse ' ' date])
+    %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
+    % 
+    %         figure;
+    %         plot(squeeze(stim_pca(:,1,:)),squeeze(stim_pca(:,3,:)))
+    %     
+    %         figure;
+    %         for iDir = 1:nStimDir
+    %             mDir = iDir+(nStimDir/4);
+    %             if mDir>nStimDir
+    %                 mDir = mDir-nStimDir;
+    %             end
+    %             vDir = iDir+(nStimDir/8);
+    %             if vDir>nStimDir
+    %                 vDir = vDir-nStimDir;
+    %             end
+    %             subplot(4,4,iDir)
+    %             plot(stim_pca(:,2,iDir),stim_pca(:,3,iDir),'-o')
+    %             hold on
+    %             plot(stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
+    %             plot(stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
+    %             plot(plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
+    %             title(num2str(stimDirs(iDir)))
+    %         end
+    %         suptitle([mouse ' ' date])
     %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
     %         
     %         figure; 
@@ -487,197 +428,197 @@ for iarea = 1:narea
     end
     
     %%
-    figure; 
-    subplot(2,2,1)
-    imagesc(nanmean(corr_dir_all,3))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Grating Direction (deg)')
-    title('Grating-Grating')
-    axis square
-    caxis([0 1])
-    subplot(2,2,2)
-    imagesc(nanmean(dir_corr_all,3))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title('Grating-Plaid')
-    axis square
-    caxis([0 1])
-    subplot(2,2,3)
-    norm_corr = dir_corr_all./max(dir_corr_all,[],1);
-    imagesc(nanmean(norm_corr,3));
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title({'Grating-Plaid','Normalized'})
-    axis square
-    caxis([0 1])
-    subplot(2,2,4)
-    imagesc(nanmean(dir_corr_all,3)./max(nanmean(dir_corr_all,3),[],1))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title({'Grating-Plaid','Average Normalized'})
-    axis square
-    caxis([0 1])
-    suptitle('Correlations')
-    print(fullfile(summaryDir, ['grating&plaidCorr_PCA' area '.pdf']),'-dpdf','-fillpage')
-
-    figure; 
-    subplot(2,2,1)
-    imagesc(nanmean(stimstim_dist_all,3))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Grating Direction (deg)')
-    title('Grating-Grating')
-    axis square
-    caxis([0 5])
-    subplot(2,2,2)
-    imagesc(nanmean(stimplaid_dist_all,3))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title('Grating-Plaid')
-    axis square
-    caxis([0 5])
-    subplot(2,2,3)
-    norm_dist = stimplaid_dist_all./max(stimplaid_dist_all,[],1);
-    imagesc(nanmean(norm_dist,3));
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title({'Grating-Plaid','Normalized'})
-    axis square
-    caxis([0 1])
-    subplot(2,2,4)
-    imagesc(nanmean(stimplaid_dist_all,3)./max(nanmean(stimplaid_dist_all,3),[],1))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title({'Grating-Plaid','Average Normalized'})
-    axis square
-    caxis([0 1])
-    suptitle('Distances')
-    print(fullfile(summaryDir, ['grating&plaidDist_PCA' area '.pdf']),'-dpdf','-fillpage')
-
-    figure; 
-    subplot(2,2,1)
-    imagesc(nanmean(stimstim_ang_all,3))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Grating Direction (deg)')
-    title('Grating-Grating')
-    axis square
-    caxis([0 5])
-    subplot(2,2,2)
-    imagesc(nanmean(stimplaid_ang_all,3))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title('Grating-Plaid')
-    axis square
-    caxis([0 5])
-    subplot(2,2,3)
-    norm_ang = stimplaid_ang_all./max(stimplaid_ang_all,[],1);
-    imagesc(nanmean(norm_ang,3));
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title({'Grating-Plaid','Normalized'})
-    axis square
-    caxis([0 1])
-    subplot(2,2,4)
-    imagesc(nanmean(stimplaid_ang_all,3)./max(nanmean(stimplaid_ang_all,3),[],1))
-    set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
-    xlabel('Grating Direction (deg)')
-    ylabel('Plaid Direction (deg)')
-    title({'Grating-Plaid','Average Normalized'})
-    axis square
-    caxis([0 1])
-    suptitle('Angles')
-    print(fullfile(summaryDir, ['grating&plaidAng_PCA' area '.pdf']),'-dpdf','-fillpage')
-
-    % [n edges bin]  = histcounts(rad2deg(u1_dir_all),[-11.25:22.5:371.25]);
-    % figure;
-    % for idir1 = 1:nStimDir
-    %     odir1 = idir1+nStimDir/2;
-    %     if odir1>nStimDir
-    %         odir1 = odir1-nStimDir;
-    %     end
-    %     resp_norm = avg_resp_dir_all(:,idir1,2,1)./max(avg_resp_dir_all(:,:,1,1),[],2);
-    %     for idir2 = 1:length(n)
-    %         subplot(4,4,idir1)
-    %         ind = find(bin == idir2);
-    %         errorbar(mean(rad2deg(u1_dir_all(:,ind)),2), mean(resp_norm(ind,:),1),...
-    %             std(resp_norm(ind,:),[],1)./sqrt(length(ind)), std(resp_norm(ind,:),[],1)./sqrt(length(ind)),...
-    %             std(rad2deg(u1_dir_all(:,ind)),[],2)./sqrt(length(ind)),std(rad2deg(u1_dir_all(:,ind)),[],2)./sqrt(length(ind)),'ok');
-    %         hold on
-    %     end
-    %     title(num2str(stimDirs(idir1)))
-    %     xlabel('Pref dir')
-    %     ylabel('Norm response')
-    %     vline(stimDirs([idir1 odir1]),'k')
-    %     x = stimDirs(idir1)+45;
-    %     if x>360
-    %         x = x-360;
-    %     end
-    %     vline(x,'r')
-    %     x = stimDirs([idir1 odir1])+90;
-    %     if find(x>360)
-    %         x(find(x>360)) = x(find(x>360))-360;
-    %     end
-    %     vline(x, 'g')
-    % end
-
-    % figure;
-    % errorbar(stimDirs, nanmean(nanmean(resp_norm_avg_all,1),3), nanstd(nanmean(resp_norm_avg_all,1),[],3)./sqrt(nexp),'ok');
-    % ylim([0 1])
-    % idir1 = 1;
-    % odir1 = idir1+nStimDir/2;
-    % vline(stimDirs([idir1 odir1]),'k')
-    % x = stimDirs(idir1)+45;
-    % vline(x,'r')
-    % x = stimDirs([idir1 odir1])+90;
-    % vline(x, 'g')
-    % xlabel('Direction (deg)')
-    % ylabel('Normalized response')
-    % print(fullfile(summaryDir,['popTuningAlignAvg' area '.pdf']),'-dpdf', '-bestfit')
-
-
-    figure;
-    subplot(2,2,1)
-    errorbar(1:100, nanmean(pca_exp_stim_all,2), nanstd(pca_exp_stim_all,[],2)./sqrt(nexp_area),'-o')
-    hold on
-    errorbar(1:100, nanmean(pca_exp_plaid_all,2), nanstd(pca_exp_plaid_all,[],2)./sqrt(nexp_area),'-o')
-    ylabel('Explained variance')
-    ylim([0 1])
-    xlabel('Dimensions')
-    legend({'stim','plaid'},'location','southeast')
-%     [p t s] = anova2([pca_exp_stim_all(:,exp_ind) pca_exp_plaid_all(:,exp_ind)]',length(exp_ind),'off');
-%     title(['p = ' num2str(chop(p,2))])
-    subplot(2,2,2)
-    errorbar(1:30, nanmean(pca_exp_stim_all(1:30,:,:),2), nanstd(pca_exp_stim_all(1:30,:,:),[],2)./sqrt(nexp_area),'-o')
-    hold on
-    errorbar(1:30, nanmean(pca_exp_plaid_all(1:30,:,:),2), nanstd(pca_exp_plaid_all(1:30,:,:),[],2)./sqrt(nexp_area),'-o')
-    ylabel('Explained variance')
-    ylim([0 1])
-    xlabel('Dimensions')
-    subplot(2,2,3)
-    errorbar(1:100, nanmean(nanmean(abs(stim_pca_amp_all),2),3), nanstd(nanmean(abs(stim_pca_amp_all),2),[],3)./sqrt(nexp_area),'-o')
-    hold on
-    errorbar(1:100, nanmean(nanmean(abs(plaid_pca_amp_all),2),3), nanstd(nanmean(abs(plaid_pca_amp_all),2),[],3)./sqrt(nexp_area),'-o')
-    ylabel('Amplitude')
-    xlabel('Dimensions')
-%     [p t s] = anova2([stim_pca_amp_all(:,exp_ind) plaid_pca_amp_all(:,exp_ind)]',length(exp_ind),'off');
-%     title(['p = ' num2str(chop(p,2))])
-    subplot(2,2,4)
-    errorbar(1:30, nanmean(nanmean(abs(stim_pca_amp_all(1:30,:,:)),2),3), nanstd(nanmean(abs(stim_pca_amp_all(1:30,:,:)),2),[],3)./sqrt(nexp_area),'-o')
-    hold on
-    errorbar(1:30, nanmean(nanmean(abs(plaid_pca_amp_all(1:30,:,:)),2),3), nanstd(nanmean(abs(plaid_pca_amp_all(1:30,:,:)),2),[],3)./sqrt(nexp_area),'-o')
-    ylabel('Amplitude')
-    xlabel('Dimensions')
-    print(fullfile(summaryDir,['explainedVariance&AmpPCA' area '.pdf']),'-dpdf', '-bestfit')
+%     figure; 
+%     subplot(2,2,1)
+%     imagesc(nanmean(corr_dir_all,3))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Grating Direction (deg)')
+%     title('Grating-Grating')
+%     axis square
+%     caxis([0 1])
+%     subplot(2,2,2)
+%     imagesc(nanmean(dir_corr_all,3))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title('Grating-Plaid')
+%     axis square
+%     caxis([0 1])
+%     subplot(2,2,3)
+%     norm_corr = dir_corr_all./max(dir_corr_all,[],1);
+%     imagesc(nanmean(norm_corr,3));
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title({'Grating-Plaid','Normalized'})
+%     axis square
+%     caxis([0 1])
+%     subplot(2,2,4)
+%     imagesc(nanmean(dir_corr_all,3)./max(nanmean(dir_corr_all,3),[],1))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title({'Grating-Plaid','Average Normalized'})
+%     axis square
+%     caxis([0 1])
+%     suptitle('Correlations')
+%     print(fullfile(summaryDir, ['grating&plaidCorr_PCA' area '.pdf']),'-dpdf','-fillpage')
+% 
+%     figure; 
+%     subplot(2,2,1)
+%     imagesc(nanmean(stimstim_dist_all,3))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Grating Direction (deg)')
+%     title('Grating-Grating')
+%     axis square
+%     caxis([0 5])
+%     subplot(2,2,2)
+%     imagesc(nanmean(stimplaid_dist_all,3))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title('Grating-Plaid')
+%     axis square
+%     caxis([0 5])
+%     subplot(2,2,3)
+%     norm_dist = stimplaid_dist_all./max(stimplaid_dist_all,[],1);
+%     imagesc(nanmean(norm_dist,3));
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title({'Grating-Plaid','Normalized'})
+%     axis square
+%     caxis([0 1])
+%     subplot(2,2,4)
+%     imagesc(nanmean(stimplaid_dist_all,3)./max(nanmean(stimplaid_dist_all,3),[],1))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title({'Grating-Plaid','Average Normalized'})
+%     axis square
+%     caxis([0 1])
+%     suptitle('Distances')
+%     print(fullfile(summaryDir, ['grating&plaidDist_PCA' area '.pdf']),'-dpdf','-fillpage')
+% 
+%     figure; 
+%     subplot(2,2,1)
+%     imagesc(nanmean(stimstim_ang_all,3))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Grating Direction (deg)')
+%     title('Grating-Grating')
+%     axis square
+%     caxis([0 5])
+%     subplot(2,2,2)
+%     imagesc(nanmean(stimplaid_ang_all,3))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title('Grating-Plaid')
+%     axis square
+%     caxis([0 5])
+%     subplot(2,2,3)
+%     norm_ang = stimplaid_ang_all./max(stimplaid_ang_all,[],1);
+%     imagesc(nanmean(norm_ang,3));
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title({'Grating-Plaid','Normalized'})
+%     axis square
+%     caxis([0 1])
+%     subplot(2,2,4)
+%     imagesc(nanmean(stimplaid_ang_all,3)./max(nanmean(stimplaid_ang_all,3),[],1))
+%     set(gca, 'XTick', 1:4:nStimDir, 'XTickLabel', num2str(stimDirs(1:4:nStimDir)'), 'YTick', 1:4:nStimDir, 'YTickLabel', num2str(stimDirs(1:4:nStimDir)')) 
+%     xlabel('Grating Direction (deg)')
+%     ylabel('Plaid Direction (deg)')
+%     title({'Grating-Plaid','Average Normalized'})
+%     axis square
+%     caxis([0 1])
+%     suptitle('Angles')
+%     print(fullfile(summaryDir, ['grating&plaidAng_PCA' area '.pdf']),'-dpdf','-fillpage')
+% 
+%     % [n edges bin]  = histcounts(rad2deg(u1_dir_all),[-11.25:22.5:371.25]);
+%     % figure;
+%     % for idir1 = 1:nStimDir
+%     %     odir1 = idir1+nStimDir/2;
+%     %     if odir1>nStimDir
+%     %         odir1 = odir1-nStimDir;
+%     %     end
+%     %     resp_norm = avg_resp_dir_all(:,idir1,2,1)./max(avg_resp_dir_all(:,:,1,1),[],2);
+%     %     for idir2 = 1:length(n)
+%     %         subplot(4,4,idir1)
+%     %         ind = find(bin == idir2);
+%     %         errorbar(mean(rad2deg(u1_dir_all(:,ind)),2), mean(resp_norm(ind,:),1),...
+%     %             std(resp_norm(ind,:),[],1)./sqrt(length(ind)), std(resp_norm(ind,:),[],1)./sqrt(length(ind)),...
+%     %             std(rad2deg(u1_dir_all(:,ind)),[],2)./sqrt(length(ind)),std(rad2deg(u1_dir_all(:,ind)),[],2)./sqrt(length(ind)),'ok');
+%     %         hold on
+%     %     end
+%     %     title(num2str(stimDirs(idir1)))
+%     %     xlabel('Pref dir')
+%     %     ylabel('Norm response')
+%     %     vline(stimDirs([idir1 odir1]),'k')
+%     %     x = stimDirs(idir1)+45;
+%     %     if x>360
+%     %         x = x-360;
+%     %     end
+%     %     vline(x,'r')
+%     %     x = stimDirs([idir1 odir1])+90;
+%     %     if find(x>360)
+%     %         x(find(x>360)) = x(find(x>360))-360;
+%     %     end
+%     %     vline(x, 'g')
+%     % end
+% 
+%     % figure;
+%     % errorbar(stimDirs, nanmean(nanmean(resp_norm_avg_all,1),3), nanstd(nanmean(resp_norm_avg_all,1),[],3)./sqrt(nexp),'ok');
+%     % ylim([0 1])
+%     % idir1 = 1;
+%     % odir1 = idir1+nStimDir/2;
+%     % vline(stimDirs([idir1 odir1]),'k')
+%     % x = stimDirs(idir1)+45;
+%     % vline(x,'r')
+%     % x = stimDirs([idir1 odir1])+90;
+%     % vline(x, 'g')
+%     % xlabel('Direction (deg)')
+%     % ylabel('Normalized response')
+%     % print(fullfile(summaryDir,['popTuningAlignAvg' area '.pdf']),'-dpdf', '-bestfit')
+% 
+% 
+%     figure;
+%     subplot(2,2,1)
+%     errorbar(1:100, nanmean(pca_exp_stim_all,2), nanstd(pca_exp_stim_all,[],2)./sqrt(nexp_area),'-o')
+%     hold on
+%     errorbar(1:100, nanmean(pca_exp_plaid_all,2), nanstd(pca_exp_plaid_all,[],2)./sqrt(nexp_area),'-o')
+%     ylabel('Explained variance')
+%     ylim([0 1])
+%     xlabel('Dimensions')
+%     legend({'stim','plaid'},'location','southeast')
+% %     [p t s] = anova2([pca_exp_stim_all(:,exp_ind) pca_exp_plaid_all(:,exp_ind)]',length(exp_ind),'off');
+% %     title(['p = ' num2str(chop(p,2))])
+%     subplot(2,2,2)
+%     errorbar(1:30, nanmean(pca_exp_stim_all(1:30,:,:),2), nanstd(pca_exp_stim_all(1:30,:,:),[],2)./sqrt(nexp_area),'-o')
+%     hold on
+%     errorbar(1:30, nanmean(pca_exp_plaid_all(1:30,:,:),2), nanstd(pca_exp_plaid_all(1:30,:,:),[],2)./sqrt(nexp_area),'-o')
+%     ylabel('Explained variance')
+%     ylim([0 1])
+%     xlabel('Dimensions')
+%     subplot(2,2,3)
+%     errorbar(1:100, nanmean(nanmean(abs(stim_pca_amp_all),2),3), nanstd(nanmean(abs(stim_pca_amp_all),2),[],3)./sqrt(nexp_area),'-o')
+%     hold on
+%     errorbar(1:100, nanmean(nanmean(abs(plaid_pca_amp_all),2),3), nanstd(nanmean(abs(plaid_pca_amp_all),2),[],3)./sqrt(nexp_area),'-o')
+%     ylabel('Amplitude')
+%     xlabel('Dimensions')
+% %     [p t s] = anova2([stim_pca_amp_all(:,exp_ind) plaid_pca_amp_all(:,exp_ind)]',length(exp_ind),'off');
+% %     title(['p = ' num2str(chop(p,2))])
+%     subplot(2,2,4)
+%     errorbar(1:30, nanmean(nanmean(abs(stim_pca_amp_all(1:30,:,:)),2),3), nanstd(nanmean(abs(stim_pca_amp_all(1:30,:,:)),2),[],3)./sqrt(nexp_area),'-o')
+%     hold on
+%     errorbar(1:30, nanmean(nanmean(abs(plaid_pca_amp_all(1:30,:,:)),2),3), nanstd(nanmean(abs(plaid_pca_amp_all(1:30,:,:)),2),[],3)./sqrt(nexp_area),'-o')
+%     ylabel('Amplitude')
+%     xlabel('Dimensions')
+%     print(fullfile(summaryDir,['explainedVariance&AmpPCA' area '.pdf']),'-dpdf', '-bestfit')
 
     stimplaid_corrs_comp = [{stimplaid_corrs.comp}];
     stimplaid_corrs_vect = [{stimplaid_corrs.vect}];
@@ -706,61 +647,59 @@ for iarea = 1:narea
     stimplaid_angs_opp_avg = rad2deg(cellfun(@mean,stimplaid_angs_opp));
     stimplaid_angs_all = [stimplaid_angs_comp_avg; stimplaid_angs_vect_avg; stimplaid_angs_opp_avg];
 
-    figure;
-    subplot(2,2,1) 
-    errorbar(1,nanmean(stimplaid_corrs_comp_avg),nanstd(stimplaid_corrs_comp_avg)./sqrt(sum(~isnan(stimplaid_corrs_comp_avg))),'or')
-    hold on
-    errorbar(2,nanmean(stimplaid_corrs_vect_avg),nanstd(stimplaid_corrs_vect_avg)./sqrt(sum(~isnan(stimplaid_corrs_vect_avg))),'or')
-    errorbar(3,nanmean(stimplaid_corrs_opp_avg),nanstd(stimplaid_corrs_opp_avg)./sqrt(sum(~isnan(stimplaid_corrs_opp_avg))),'or')
-    hold on; plot(stimplaid_corrs_all,'k')
-    set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
-    xlim([0 4])
-    ylim([0 1])
-    [p t s] = anova1(stimplaid_corrs_all',[],'off');
-    title(['p = ' num2str(chop(p,2))])
-    ylabel('Plaid-Stim Correlation')
-
-    subplot(2,2,2) 
-    errorbar(1,nanmean(stimplaid_dists_comp_avg),nanstd(stimplaid_dists_comp_avg)./sqrt(sum(~isnan(stimplaid_dists_comp_avg))),'or')
-    hold on
-    errorbar(2,nanmean(stimplaid_dists_vect_avg),nanstd(stimplaid_dists_vect_avg)./sqrt(sum(~isnan(stimplaid_dists_vect_avg))),'or')
-    errorbar(3,nanmean(stimplaid_dists_opp_avg),nanstd(stimplaid_dists_opp_avg)./sqrt(sum(~isnan(stimplaid_dists_opp_avg))),'or')
-    hold on; plot(stimplaid_dists_all,'k')
-    set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
-    xlim([0 4])
-    ylim([0 8])
-    [p t s] = anova1(stimplaid_dists_all',[],'off');
-    title(['p = ' num2str(chop(p,2))])
-    ylabel('Plaid-Stim Neural distance')
-
-    subplot(2,2,3) 
-    errorbar(1,nanmean(stimplaid_angs_comp_avg),nanstd(stimplaid_angs_comp_avg)./sqrt(sum(~isnan(stimplaid_angs_comp_avg))),'or')
-    hold on
-    errorbar(2,nanmean(stimplaid_angs_vect_avg),nanstd(stimplaid_angs_vect_avg)./sqrt(sum(~isnan(stimplaid_angs_vect_avg))),'or')
-    errorbar(3,nanmean(stimplaid_angs_opp_avg),nanstd(stimplaid_angs_opp_avg)./sqrt(sum(~isnan(stimplaid_angs_opp_avg))),'or')
-    hold on; plot(stimplaid_angs_all,'k')
-    set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
-    xlim([0 4])
-    ylim([0 90])
-    [p_ang t s] = anova1(stimplaid_angs_all',[],'off');
-    title(['p = ' num2str(chop(p_ang,2))])
-    ylabel('Plaid-Stim Neural angle')
-
-    subplot(2,2,4)
-    plot([ones(nexp_area,1) 2.*ones(nexp_area,1)]', [Zc_all' Zp_all']', '-ok')
-    hold on
-    errorbar([1 2], [nanmean(Zc_all,2)' nanmean(Zp_all,2)'], [nanstd(Zc_all,[],2)'./sqrt(nexp_area) nanstd(Zp_all,[],2)'./sqrt(nexp_area)],'-or')
-    set(gca,'Xtick',1:2,'XTickLabel',{'Component','Pattern'})
-    xlim([0 3])
-    ylim([0 5])
-    ylabel('Correlation with plaid')
-    [h, p_zcorr] = ttest(Zc_all,Zp_all);
-    title(['p = ' num2str(chop(p_zcorr,2))])
-    print(fullfile(summaryDir,['stimplaidDistance' area '.pdf']),'-dpdf', '-bestfit')
-    suptitle(area)
+%     figure;
+%     subplot(2,2,1) 
+%     errorbar(1,nanmean(stimplaid_corrs_comp_avg),nanstd(stimplaid_corrs_comp_avg)./sqrt(sum(~isnan(stimplaid_corrs_comp_avg))),'or')
+%     hold on
+%     errorbar(2,nanmean(stimplaid_corrs_vect_avg),nanstd(stimplaid_corrs_vect_avg)./sqrt(sum(~isnan(stimplaid_corrs_vect_avg))),'or')
+%     errorbar(3,nanmean(stimplaid_corrs_opp_avg),nanstd(stimplaid_corrs_opp_avg)./sqrt(sum(~isnan(stimplaid_corrs_opp_avg))),'or')
+%     hold on; plot(stimplaid_corrs_all,'k')
+%     set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
+%     xlim([0 4])
+%     ylim([0 1])
+%     [p t s] = anova1(stimplaid_corrs_all',[],'off');
+%     title(['p = ' num2str(chop(p,2))])
+%     ylabel('Plaid-Stim Correlation')
+% 
+%     subplot(2,2,2) 
+%     errorbar(1,nanmean(stimplaid_dists_comp_avg),nanstd(stimplaid_dists_comp_avg)./sqrt(sum(~isnan(stimplaid_dists_comp_avg))),'or')
+%     hold on
+%     errorbar(2,nanmean(stimplaid_dists_vect_avg),nanstd(stimplaid_dists_vect_avg)./sqrt(sum(~isnan(stimplaid_dists_vect_avg))),'or')
+%     errorbar(3,nanmean(stimplaid_dists_opp_avg),nanstd(stimplaid_dists_opp_avg)./sqrt(sum(~isnan(stimplaid_dists_opp_avg))),'or')
+%     hold on; plot(stimplaid_dists_all,'k')
+%     set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
+%     xlim([0 4])
+%     ylim([0 8])
+%     [p t s] = anova1(stimplaid_dists_all',[],'off');
+%     title(['p = ' num2str(chop(p,2))])
+%     ylabel('Plaid-Stim Neural distance')
+% 
+%     subplot(2,2,3) 
+%     errorbar(1,nanmean(stimplaid_angs_comp_avg),nanstd(stimplaid_angs_comp_avg)./sqrt(sum(~isnan(stimplaid_angs_comp_avg))),'or')
+%     hold on
+%     errorbar(2,nanmean(stimplaid_angs_vect_avg),nanstd(stimplaid_angs_vect_avg)./sqrt(sum(~isnan(stimplaid_angs_vect_avg))),'or')
+%     errorbar(3,nanmean(stimplaid_angs_opp_avg),nanstd(stimplaid_angs_opp_avg)./sqrt(sum(~isnan(stimplaid_angs_opp_avg))),'or')
+%     hold on; plot(stimplaid_angs_all,'k')
+%     set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
+%     xlim([0 4])
+%     ylim([0 90])
+%     [p_ang t s] = anova1(stimplaid_angs_all',[],'off');
+%     title(['p = ' num2str(chop(p_ang,2))])
+%     ylabel('Plaid-Stim Neural angle')
+% 
+%     subplot(2,2,4)
+%     plot([ones(nexp_area,1) 2.*ones(nexp_area,1)]', [Zc_all' Zp_all']', '-ok')
+%     hold on
+%     errorbar([1 2], [nanmean(Zc_all,2)' nanmean(Zp_all,2)'], [nanstd(Zc_all,[],2)'./sqrt(nexp_area) nanstd(Zp_all,[],2)'./sqrt(nexp_area)],'-or')
+%     set(gca,'Xtick',1:2,'XTickLabel',{'Component','Pattern'})
+%     xlim([0 3])
+%     ylim([0 5])
+%     ylabel('Correlation with plaid')
+%     [h, p_zcorr] = ttest(Zc_all,Zp_all);
+%     title(['p = ' num2str(chop(p_zcorr,2))])
+%     print(fullfile(summaryDir,['stimplaidDistance' area '.pdf']),'-dpdf', '-bestfit')
+%     suptitle(area)
+%     
     
-    size(Zp_all)
-    size(stimplaid_angs_all)
-    
-    save(fullfile(summaryDir,['randDir_PCA_Summary_' area '.mat']),'Zc_all','Zp_all','stimplaid_angs_all','stimplaid_corrs_all','stimplaid_dists_all')
+    save(fullfile(summaryDir,['randDirTwoPhase_PCA_Summary_' area '.mat']),'Zc_all','Zp_all','stimplaid_angs_all','stimplaid_corrs_all','stimplaid_dists_all')
 end

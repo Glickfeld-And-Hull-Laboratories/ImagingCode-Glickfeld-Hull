@@ -3,9 +3,10 @@ close all
 clc
 doRedChannel = 0;
 ds = 'CrossOriRandDir_ExptList';
-driver_list = {'SLC';'SOM'};
+driver_list = {'SLC';'SOM';'PV'};
 ndriver = length(driver_list);
 area_list = {'V1'};
+sf = 'pt05';
 narea = length(area_list);
 eval(ds)
 rc = behavConstsAV;
@@ -25,7 +26,7 @@ driver_ind = [];
 for iD = 1:ndriver
     fprintf([driver_list{iD} '\n'])
     driver = driver_list{iD};
-    load(fullfile(summaryDir,['randDir_Summary_' cell2mat(area_list) '_' driver '.mat']))
+    load(fullfile(summaryDir,['randDir_Summary_' cell2mat(area_list) '_' driver '_SF' sf '.mat']))
     driverSummary(iD).name = driver_list{iD};
     driverSummary(iD).mice = unique(mouse_list,'rows');
     driverSummary(iD).nmice = size(unique(mouse_list,'rows'),1);
@@ -132,6 +133,7 @@ for iD = 1:ndriver
     ylabel('Masking Index')
     
     figure(4)
+    if ~isempty(f1_ind)
     subplot(2,ndriver,iD)
     cdfplot(f2overf1_all(ind_l))
     hold on
@@ -150,15 +152,21 @@ for iD = 1:ndriver
     ylabel('Fraction of cells')
     xlim([0 5])
     legend(['MI<0- n =' num2str(length(ind_l))],['MI>0- n =' num2str(length(ind_h))],'location','southeast')
+    end
     
     Zc_all_all = [Zc_all_all Zc_all];
     Zp_all_all = [Zp_all_all Zp_all];
     ZcZp_all = Zc_all-Zp_all;
     ZcZp_all_all = [ZcZp_all_all ZcZp_all];
-    f2overf1_all_all = [f2overf1_all_all f2overf1_all];
     resp_ind_all_all = [resp_ind_all_all resp_ind_all+totCells];
-    f1resp_ind_all_all = [f1resp_ind_all_all f1_ind+totCells];
     driver_ind = [driver_ind iD.*ones(size(Zc_all))];
+    if ~isempty(f1_ind)
+        f2overf1_all_all = [f2overf1_all_all f2overf1_all];
+        f1resp_ind_all_all = [f1resp_ind_all_all f1_ind+totCells];
+    else
+        f2overf1_all_all = [f2overf1_all_all nan(size(Zc_all))];
+        f1resp_ind_all_all = [f1resp_ind_all_all f1_ind+totCells];
+    end
     totCells = totCells+size(Zc_all,2);
     
     figure(5)
@@ -171,9 +179,11 @@ for iD = 1:ndriver
     subplot(2,2,3)
     errorbar(iD, mean(ZcZp_all(resp_ind_all),2),std(ZcZp_all(resp_ind_all),[],2)./sqrt(length(resp_ind_all)),'ok')
     hold on
-    subplot(2,2,4)
-    errorbar(iD, mean(f2overf1_all(f1_ind),2),std(f2overf1_all(f1_ind),[],2)./sqrt(length(f1_ind)),'ok')
-    hold on
+    if ~isempty(f1_ind)
+        subplot(2,2,4)
+        errorbar(iD, mean(f2overf1_all(f1_ind),2),std(f2overf1_all(f1_ind),[],2)./sqrt(length(f1_ind)),'ok')
+        hold on
+    end
     
     figure(6)
     subplot(2,ndriver,iD)
@@ -228,7 +238,7 @@ subplot(3,3,6)
 xlabel('Zc')
 ylabel('Zp')
 xlim([-0.5 2])
-ylim([-0.4 0.4])
+ylim([-0.5 2])
 subplot(3,3,7)
 xlabel('Zc')
 xlim([-2 6])
@@ -241,9 +251,10 @@ subplot(3,3,9)
 xlabel('Zc')
 ylabel('Zp')
 xlim([-0.5 2])
-ylim([-0.4 0.4])
-print(fullfile(summaryDir, ['randDir_allDriver_summary_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage') 
+ylim([-0.5 2])
+print(fullfile(summaryDir, ['randDir_allDriver_summary_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage') 
 
+if ~isempty(f1resp_ind_all_all)
 figure(2)
 subplot(2,2,1)
 legend(leg_str{2,:},'location','southeast')
@@ -264,13 +275,14 @@ xlabel('Zp')
 ylabel('F2overF1')
 xlim([-0.4 0.4])
 ylim([0 1.25])
-print(fullfile(summaryDir, ['randDir_allDriver_summary_F2F1_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allDriver_summary_F2F1_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage')
+end
 
 figure(3)
-print(fullfile(summaryDir, ['randDir_allDriver_summary_MIbySI_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allDriver_summary_MIbySI_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage')
 
 figure(4)
-print(fullfile(summaryDir, ['randDir_allDriver_summary_F2F1byOSI_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allDriver_summary_F2F1byOSI_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage')
 
 [p_Zc table_Zc stats_Zc] = anova1(Zc_all_all(resp_ind_all_all),driver_ind(resp_ind_all_all),'off');
 post_Zc = multcompare(stats_Zc,'display','off');
@@ -278,42 +290,46 @@ post_Zc = multcompare(stats_Zc,'display','off');
 post_Zp = multcompare(stats_Zp,'display','off');
 [p_ZcZp table_ZcZp stats_ZcZp] = anova1(ZcZp_all_all(resp_ind_all_all),driver_ind(resp_ind_all_all),'off');
 post_ZcZp = multcompare(stats_ZcZp,'display','off');
-[p_f2f1 table_f2f1 stats_f2f1] = anova1(f2overf1_all_all(f1resp_ind_all_all),driver_ind(f1resp_ind_all_all),'off');
-post_f2f1 = multcompare(stats_f2f1,'display','off');
+if ~isempty(f1resp_ind_all_all)
+    [p_f2f1 table_f2f1 stats_f2f1] = anova1(f2overf1_all_all(f1resp_ind_all_all),driver_ind(f1resp_ind_all_all),'off');
+    post_f2f1 = multcompare(stats_f2f1,'display','off');
+end
 figure(5) 
 groups = mat2cell(post_Zc(:,1:2),[ones(1,size(post_Zc,1))],[2]);
 subplot(2,2,1)
 ind = find(post_Zc(:,end)<0.05);
 xlim([0 ndriver+1])
-ylim([-0.5 3])
+ylim([-0 2])
 sigstar(groups(ind),post_Zc(ind,end),1)
 set(gca,'XTick',1:ndriver,'XTickLabel',driver_list)
 ylabel('Zc')
 subplot(2,2,2)
 ind = find(post_Zp(:,end)<0.05);
 xlim([0 ndriver+1])
-ylim([-0.5 0.5])
+ylim([0 2])
 sigstar(groups(ind),post_Zp(ind,end),1)
 set(gca,'XTick',1:ndriver,'XTickLabel',driver_list)
 ylabel('Zp')
 subplot(2,2,3)
 ind = find(post_ZcZp(:,end)<0.05);
 xlim([0 ndriver+1])
-ylim([-0.5 3])
+ylim([0 2])
 sigstar(groups(ind),post_ZcZp(ind,end),1)
 set(gca,'XTick',1:ndriver,'XTickLabel',driver_list)
 ylabel('Zc-Zp')
-subplot(2,2,4)
-ind = find(post_f2f1(:,end)<0.05);
-xlim([0 ndriver+1])
-ylim([0 1])
-sigstar(groups(ind),post_f2f1(ind,end),1)
-set(gca,'XTick',1:ndriver,'XTickLabel',driver_list)
-ylabel('F2/F1')
-print(fullfile(summaryDir, ['randDir_allDriver_summary_ZcZpF2F1_withStats_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage')
+if ~isempty(f1resp_ind_all_all)
+    subplot(2,2,4)
+    ind = find(post_f2f1(:,end)<0.05);
+    xlim([0 ndriver+1])
+    ylim([0 1])
+    sigstar(groups(ind),post_f2f1(ind,end),1)
+    set(gca,'XTick',1:ndriver,'XTickLabel',driver_list)
+    ylabel('F2/F1')
+end
+print(fullfile(summaryDir, ['randDir_allDriver_summary_ZcZpF2F1_withStats_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage')
 
 figure(6)
-print(fullfile(summaryDir, ['randDir_allDriver_summary_ZcZp_scatters_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allDriver_summary_ZcZp_scatters_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage')
 
 
 

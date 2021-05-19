@@ -1,6 +1,6 @@
 clear all;
 close all;
-doRedChannel = 0;
+plotFits = 0;
 ds = 'CrossOriRandDirRandPhase_ExptList';
 eval(ds)
 rc = behavConstsAV;
@@ -10,14 +10,14 @@ LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindse
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary');
 
 area_list = ['V1']; % 'LM'; 'AL'; 'PM'; 'RL'];
-driver = 'SOM';
+driver = 'PV';
 if min(size(area_list)) == 1
     narea = 1;
 else
     narea =length(area_list);
 end
 
-for iarea = narea
+for iarea = 1:narea
     area = area_list(iarea,:);
     fprintf([area ' ' driver '\n'])
     stim_OSI_all = [];
@@ -32,13 +32,22 @@ for iarea = narea
     stim_SI_all = [];
     plaid_SI_all = [];
     totCells = 0;
-    resp_ind_all = [];
+    totExp = 0;
+    expUse = [];
+    resp_ind_all_dir = [];
+    resp_ind_all_phase = [];
     resp_ind_dir_all = [];
     resp_ind_plaid_all = [];
     amp_all = [];
     amp_shuf_all = [];
+    phase_SI_all = [];
+    phase_MI_all = [];
+    phase_MI_max_all = [];
     b_all = [];
+    anova_all = [];
     mouse_list = [];
+    respCellN = [];
+    z_all = [];
     for iexp = 1:nexp
         if sum(strcmp(expt(iexp).img_loc,area)) & strcmp(expt(iexp).driver,driver)
             mouse = expt(iexp).mouse;
@@ -46,12 +55,13 @@ for iarea = narea
             date = expt(iexp).date;
             ImgFolder = expt(iexp).coFolder;
             time = expt(iexp).coTime;
+            z_all = [z_all; expt(iexp).z];
             nrun = length(ImgFolder);
             run_str = catRunName(cell2mat(ImgFolder), nrun);
-
+            totExp = totExp+1;
             fprintf([mouse ' ' date '\n'])
 
-            %% load data
+            % load data
 
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'Zc', 'Zp','k1_dir', 'stim_SI', 'stim_OSI', 'stim_DSI', 'plaid_OSI', 'plaid_DSI', 'plaid_SI', 'nCells');
@@ -86,7 +96,7 @@ for iarea = narea
             resp_ind_dir = find(sum(h_resp(:,:,1),2));
             resp_ind_plaid = find(sum(h_resp(:,:,2),2));
 
-            resp_ind_all = [resp_ind_all resp_ind'+totCells];
+            resp_ind_all_dir = [resp_ind_all_dir resp_ind'+totCells];
             resp_ind_dir_all = [resp_ind_dir_all resp_ind_dir'+totCells];
             resp_ind_plaid_all = [resp_ind_plaid_all resp_ind_plaid'+totCells];
 
@@ -95,65 +105,135 @@ for iarea = narea
             nrun = length(ImgFolder);
             if ~isempty(ImgFolder)
                 run_str = catRunName(cell2mat(ImgFolder), nrun);
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
                 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']))
-                if length(expt(iexp).img_loc)>1
-                    amp_all = amp_all(ind);
-                    amp_shuf_all = amp_shuf_all(ind);
-                    b_all = b_all(ind);
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
+                resp_ind_temp = unique([resptest_ind; respmask_ind]);
+                resp_ind_all_phase = [resp_ind_all_phase resp_ind_temp'+totCells];
+                if isempty(find(trN<4)) & length(resp_ind_all_phase)>4
+                    test_resp = mean(resp_cell{1,end,1,1},2);
+                    test_resp_rect = test_resp;
+                    test_resp_rect(find(test_resp<0)) = 0;
+                    mask_resp = mean(resp_cell{end,1,1,1},2);
+                    mask_resp_rect = mask_resp;
+                    mask_resp_rect(find(mask_resp<0)) = 0;
+                    plaid_resp = mean(resp_cell{end,end,1,1},2);
+                    plaid_resp_rect = plaid_resp;
+                    plaid_resp_rect(find(plaid_resp<0)) = 0;
+                    if length(expt(iexp).img_loc)>1
+                        amp_hat_all = amp_hat_all(ind);
+                        amp_shuf_all = amp_shuf_all(ind);
+                        b_all = b_hat_all(ind);
+                        test_resp_rect = test_resp_rect(ind);
+                        mask_resp_rect = mask_resp_rect(ind);
+                        plaid_resp_rect = plaid_resp_rect(ind);
+                        p_anova_all = p_anova_all(ind);
+                    end
+                    anova_all = [anova_all p_anova_all'];
+                    amp_all = [amp_all amp_hat_all'];
+                    amp_shuf_all = [amp_shuf_all amp_hat_shuf'];
+                    b_all = [b_all b_hat_all'];
+                    phase_SI = abs(test_resp_rect-mask_resp_rect)./(test_resp_rect+mask_resp_rect);
+                    phase_SI_all = [phase_SI_all phase_SI'];
+                    phase_MI = (plaid_resp_rect-(test_resp_rect+mask_resp_rect))./(plaid_resp_rect+test_resp_rect+mask_resp_rect);
+                    phase_MI_all = [phase_MI_all phase_MI'];
+                    phase_MI_max = (plaid_resp_rect-max([test_resp_rect mask_resp_rect],[],2))./(plaid_resp_rect+max([test_resp_rect mask_resp_rect],[],2));
+                    phase_MI_max_all = [phase_MI_max_all phase_MI_max'];
+                    expUse(totExp) = 1;
+                    respCellN = [respCellN length(resp_ind_temp')];
+                else
+                    anova_all = [anova_all nan(nCells,1)'];
+                    amp_all = [amp_all nan(nCells,1)'];
+                    amp_shuf_all = [amp_shuf_all nan(nCells,1)'];
+                    b_all = [b_all nan(nCells,1)'];
+                    phase_SI_all = [phase_SI_all nan(nCells,1)'];
+                    phase_MI_all = [phase_MI_all nan(nCells,1)'];
+                    phase_MI_max_all = [phase_MI_max_all nan(nCells,1)'];
+                    expUse(totExp) = 0;
+                    respCellN = [respCellN 0];
                 end
-                amp_all = [amp_all amp_hat_all'];
-                amp_shuf_all = [amp_shuf_all amp_hat_shuf'];
-                b_all = [b_all b_hat_all'];
             else
+                anova_all = [anova_all nan(nCells,1)'];
                 amp_all = [amp_all nan(nCells,1)'];
                 amp_shuf_all = [amp_shuf_all nan(nCells,1)'];
                 b_all = [b_all nan(nCells,1)'];
+                phase_SI_all = [phase_SI_all nan(nCells,1)'];
+                phase_MI_all = [phase_MI_all nan(nCells,1)'];
+                phase_MI_max_all = [phase_MI_max_all nan(nCells,1)'];
+                expUse(totExp) = 0;
+                respCellN = [respCellN 0];
             end
-
+            
             totCells = totCells+nCells;
+            
+            
 
+            if plotFits & expUse(totExp)
+                [n n2] = subplotn(length(resp_ind_temp));
+                figure(totExp+1)
+                for i = 1:length(resp_ind_temp)
+                   subplot(n,n2,i)
+                   errorbar(maskPhas, SI_all_avg(i,:,1),SI_all_avg(i,:,2),'o')
+                   hold on
+                   plot(1:360,yfit_all(i,:))
+                   ylim([-1 1])
+                   title(num2str(i))
+                end
+                suptitle([mouse ' ' date])
+                print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_allCellsFitsPlusAvg.pdf']),'-dpdf','-bestfit')
+
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+                figure(1)
+                subplot(3,4,totExp)
+                imagesc(data_avg)
+                title([mouse ' ' date])
+            end
         end
     end
-    save(fullfile(summaryDir,['randDirRandPhase_Summary_' area '_' driver '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'k_all','amp_all', 'amp_shuf_all', 'b_all', 'mouse_list')
+    mouse_list(find(expUse==0),:) = [];
+    z_all(find(expUse==0),:) = [];
+    save(fullfile(summaryDir,['randDirRandPhase_Summary_' area '_' driver '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all_dir','resp_ind_all_phase','resp_ind_dir_all','resp_ind_plaid_all', 'k_all','amp_all', 'amp_shuf_all', 'b_all', 'phase_SI_all', 'phase_MI_all', 'phase_MI_max_all','anova_all', 'mouse_list', 'z_all')
 
 %%
+
     figure;
     subplot(2,2,1)
-    cdfplot(stim_OSI_all(resp_ind_all))
+    cdfplot(stim_OSI_all(resp_ind_all_dir))
     hold on
-    cdfplot(plaid_OSI_all(resp_ind_all))
+    cdfplot(plaid_OSI_all(resp_ind_all_dir))
     xlabel('OSI')
     legend({'Stim','Plaid'},'Location','southeast')
     title('')
     subplot(2,2,2)
-    cdfplot(stim_DSI_all(resp_ind_all))
+    cdfplot(stim_DSI_all(resp_ind_all_dir))
     hold on
-    cdfplot(plaid_DSI_all(resp_ind_all))
+    cdfplot(plaid_DSI_all(resp_ind_all_dir))
     xlabel('DSI')
     title('')
     legend({'Stim','Plaid'},'Location','southeast')
     subplot(2,2,3)
-    cdfplot(Zc_all(resp_ind_all))
+    cdfplot(Zc_all(resp_ind_all_dir))
     hold on
-    cdfplot(Zp_all(resp_ind_all))
+    cdfplot(Zp_all(resp_ind_all_dir))
     xlabel('Zc/Zp')
     xlim([-2 10])
     title('')
     legend({'Zc','Zp'},'Location','southeast')
     subplot(2,2,4)
-    cdfplot(plaid_SI_all(resp_ind_all))
+    cdfplot(plaid_SI_all(resp_ind_all_dir))
     hold on
-    cdfplot(plaid_SI_all(intersect(resp_ind_all,find(stim_OSI_all<0.5))))
-    cdfplot(plaid_SI_all(intersect(resp_ind_all,find(stim_DSI_all<0.5))))
+    cdfplot(plaid_SI_all(intersect(resp_ind_all_dir,find(stim_OSI_all<0.5))))
+    cdfplot(plaid_SI_all(intersect(resp_ind_all_dir,find(stim_DSI_all<0.5))))
     xlabel('Suppression Index')
     title('')
     legend({'All','stim OSI<0.5', 'stim DSI<0.5'},'Location','southeast')
-    suptitle({[area '- n = ' num2str(size(mouse_list,1)) ' expts; ' num2str(size(unique(mouse_list,'rows'),1)) ' mice'], ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
+    suptitle({[area '- n = ' num2str(size(mouse_list,1)) ' expts; ' num2str(size(unique(mouse_list,'rows'),1)) ' mice'], ['All responsive cells- n = ' num2str(length(resp_ind_all_dir))]})
     print(fullfile(summaryDir, ['randDir_OSI-DSI-Zc-Zp-SI_Summary_' area '_' driver '.pdf']),'-dpdf', '-fillpage')       
 
     figure;
     subplot(2,2,1)
-    scatter(Zc_all(resp_ind_all),Zp_all(resp_ind_all))
+    scatter(Zc_all(resp_ind_all_dir),Zp_all(resp_ind_all_dir))
     xlabel('Zc')
     ylabel('Zp')
     xlim([-5 10])
@@ -162,122 +242,122 @@ for iarea = narea
     plotZcZpBorders
     axis square
     subplot(2,2,2)
-    cdfplot(Zc_all(resp_ind_all))
+    cdfplot(Zc_all(resp_ind_all_dir))
     hold on
-    cdfplot(Zp_all(resp_ind_all))
+    cdfplot(Zp_all(resp_ind_all_dir))
     xlabel('Zc/Zp')
     xlim([-5 10])
     title('')
-    suptitle(['All responsive cells- n = ' num2str(length(resp_ind_all))])
+    suptitle(['All responsive cells- n = ' num2str(length(resp_ind_all_dir))])
     print(fullfile(summaryDir, ['randDir_Zc-Zp_Scatter_' area '_' driver '_neg45.pdf']),'-dpdf', '-fillpage') 
 
     figure;
     subplot(3,2,1)
-    cdfplot(stim_OSI_all(intersect(resp_ind_all,find(plaid_SI_all<0))))
+    cdfplot(stim_OSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all<0))))
     hold on
-    cdfplot(stim_OSI_all(intersect(resp_ind_all,find(plaid_SI_all>0))))
+    cdfplot(stim_OSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all>0))))
     xlabel('stim OSI')
     legend({'SI<0', 'SI>0'},'Location','northwest')
     title('')
     subplot(3,2,2)
-    cdfplot(plaid_OSI_all(intersect(resp_ind_all,find(plaid_SI_all<0))))
+    cdfplot(plaid_OSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all<0))))
     hold on
-    cdfplot(plaid_OSI_all(intersect(resp_ind_all,find(plaid_SI_all>0))))
+    cdfplot(plaid_OSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all>0))))
     xlabel('plaid OSI')
     title('')
     subplot(3,2,3)
-    cdfplot(stim_DSI_all(intersect(resp_ind_all,find(plaid_SI_all<0))))
+    cdfplot(stim_DSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all<0))))
     hold on
-    cdfplot(stim_DSI_all(intersect(resp_ind_all,find(plaid_SI_all>0))))
+    cdfplot(stim_DSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all>0))))
     xlabel('stim DSI')
     title('')
     subplot(3,2,4)
-    cdfplot(plaid_DSI_all(intersect(resp_ind_all,find(plaid_SI_all<0))))
+    cdfplot(plaid_DSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all<0))))
     hold on
-    cdfplot(plaid_DSI_all(intersect(resp_ind_all,find(plaid_SI_all>0))))
+    cdfplot(plaid_DSI_all(intersect(resp_ind_all_dir,find(plaid_SI_all>0))))
     xlabel('plaid DSI')
     title('')
     subplot(3,2,5)
-    cdfplot(Zc_all(intersect(resp_ind_all,find(plaid_SI_all<0))))
+    cdfplot(Zc_all(intersect(resp_ind_all_dir,find(plaid_SI_all<0))))
     hold on
-    cdfplot(Zc_all(intersect(resp_ind_all,find(plaid_SI_all>0))))
+    cdfplot(Zc_all(intersect(resp_ind_all_dir,find(plaid_SI_all>0))))
     xlabel('Zc')
     xlim([-2 10])
     title('')
     subplot(3,2,6)
-    cdfplot(Zp_all(intersect(resp_ind_all,find(plaid_SI_all<0))))
+    cdfplot(Zp_all(intersect(resp_ind_all_dir,find(plaid_SI_all<0))))
     hold on
-    cdfplot(Zp_all(intersect(resp_ind_all,find(plaid_SI_all>0))))
+    cdfplot(Zp_all(intersect(resp_ind_all_dir,find(plaid_SI_all>0))))
     xlabel('Zp')
     xlim([-2 10])
     title('')
-    suptitle({'High vs low Suppression index',['All responsive cells- n = ' num2str(length(resp_ind_all))]})
+    suptitle({'High vs low Suppression index',['All responsive cells- n = ' num2str(length(resp_ind_all_dir))]})
     print(fullfile(summaryDir, ['randDir_highVlowSI' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
 
     figure;
     subplot(2,2,1)
-    cdfplot(plaid_SI_all(intersect(resp_ind_all,find(stim_OSI_all<0.5))))
+    cdfplot(plaid_SI_all(intersect(resp_ind_all_dir,find(stim_OSI_all<0.5))))
     hold on
-    cdfplot(plaid_SI_all(intersect(resp_ind_all,find(stim_OSI_all>0.5))))
+    cdfplot(plaid_SI_all(intersect(resp_ind_all_dir,find(stim_OSI_all>0.5))))
     xlabel('Suppression index')
     legend({'OSI<0.5', 'OSI>0.5'},'Location','northwest')
     title('')
     subplot(2,2,2)
-    cdfplot(stim_DSI_all(intersect(resp_ind_all,find(stim_OSI_all<0.5))))
+    cdfplot(stim_DSI_all(intersect(resp_ind_all_dir,find(stim_OSI_all<0.5))))
     hold on
-    cdfplot(stim_DSI_all(intersect(resp_ind_all,find(stim_OSI_all>0.5))))
+    cdfplot(stim_DSI_all(intersect(resp_ind_all_dir,find(stim_OSI_all>0.5))))
     xlabel('stim DSI')
     title('')
     subplot(2,2,3)
-    cdfplot(Zc_all(intersect(resp_ind_all,find(stim_OSI_all<0.5))))
+    cdfplot(Zc_all(intersect(resp_ind_all_dir,find(stim_OSI_all<0.5))))
     hold on
-    cdfplot(Zc_all(intersect(resp_ind_all,find(stim_OSI_all>0.5))))
+    cdfplot(Zc_all(intersect(resp_ind_all_dir,find(stim_OSI_all>0.5))))
     xlabel('Zc')
     xlim([-2 10])
     title('')
     subplot(2,2,4)
-    cdfplot(Zp_all(intersect(resp_ind_all,find(stim_OSI_all<0.5))))
+    cdfplot(Zp_all(intersect(resp_ind_all_dir,find(stim_OSI_all<0.5))))
     hold on
-    cdfplot(Zp_all(intersect(resp_ind_all,find(stim_OSI_all>0.5))))
+    cdfplot(Zp_all(intersect(resp_ind_all_dir,find(stim_OSI_all>0.5))))
     xlabel('Zp')
     xlim([-2 10])
     title('')
-    suptitle({'High vs low OSI', ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
+    suptitle({'High vs low OSI', ['All responsive cells- n = ' num2str(length(resp_ind_all_dir))]})
     print(fullfile(summaryDir, ['randDir_highVlowOSI_' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
 
     figure;
     subplot(2,2,1)
-    cdfplot(plaid_SI_all(intersect(resp_ind_all,find(stim_DSI_all<0.5))))
+    cdfplot(plaid_SI_all(intersect(resp_ind_all_dir,find(stim_DSI_all<0.5))))
     hold on
-    cdfplot(plaid_SI_all(intersect(resp_ind_all,find(stim_DSI_all>0.5))))
+    cdfplot(plaid_SI_all(intersect(resp_ind_all_dir,find(stim_DSI_all>0.5))))
     xlabel('Suppression index')
     legend({'DSI<0.5', 'DSI>0.5'},'Location','northwest')
     title('')
     subplot(2,2,2)
-    cdfplot(plaid_DSI_all(intersect(resp_ind_all,find(stim_DSI_all<0.5))))
+    cdfplot(plaid_DSI_all(intersect(resp_ind_all_dir,find(stim_DSI_all<0.5))))
     hold on
-    cdfplot(plaid_DSI_all(intersect(resp_ind_all,find(stim_DSI_all>0.5))))
+    cdfplot(plaid_DSI_all(intersect(resp_ind_all_dir,find(stim_DSI_all>0.5))))
     xlabel('plaid DSI')
     title('')
     subplot(2,2,3)
-    cdfplot(Zc_all(intersect(resp_ind_all,find(stim_DSI_all<0.5))))
+    cdfplot(Zc_all(intersect(resp_ind_all_dir,find(stim_DSI_all<0.5))))
     hold on
-    cdfplot(Zc_all(intersect(resp_ind_all,find(stim_DSI_all>0.5))))
+    cdfplot(Zc_all(intersect(resp_ind_all_dir,find(stim_DSI_all>0.5))))
     xlabel('Zc')
     xlim([-2 10])
     title('')
     subplot(2,2,4)
-    cdfplot(Zp_all(intersect(resp_ind_all,find(stim_DSI_all<0.5))))
+    cdfplot(Zp_all(intersect(resp_ind_all_dir,find(stim_DSI_all<0.5))))
     hold on
-    cdfplot(Zp_all(intersect(resp_ind_all,find(stim_DSI_all>0.5))))
+    cdfplot(Zp_all(intersect(resp_ind_all_dir,find(stim_DSI_all>0.5))))
     xlabel('Zp')
     xlim([-2 10])
     title('')
-    suptitle({'High vs low DSI', ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
+    suptitle({'High vs low DSI', ['All responsive cells- n = ' num2str(length(resp_ind_all_dir))]})
     print(fullfile(summaryDir, ['randDir_highVlowDSI_' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
     
-    Zp_use = intersect(resp_ind_all, intersect(find(Zp_all>1.28), find(Zp_all-Zc_all>1.28)));
-    Zc_use = intersect(resp_ind_all, intersect(find(Zc_all>1.28), find(Zc_all-Zp_all>1.28)));
+    Zp_use = intersect(resp_ind_all_dir, intersect(find(Zp_all>1.28), find(Zp_all-Zc_all>1.28)));
+    Zc_use = intersect(resp_ind_all_dir, intersect(find(Zc_all>1.28), find(Zc_all-Zp_all>1.28)));
     figure;
     subplot(2,2,1)
     cdfplot(stim_OSI_all(Zc_use))
@@ -302,4 +382,4 @@ for iarea = narea
     title('')
     suptitle(['Tuning of Zc (n= ' num2str(length(Zc_use)) '); Zp (n = ' num2str(length(Zp_use)) ')'])
     print(fullfile(summaryDir, ['randDir_ZcZp_Tuning_' area '_' driver '.pdf']),'-dpdf', '-fillpage')
-end
+    end

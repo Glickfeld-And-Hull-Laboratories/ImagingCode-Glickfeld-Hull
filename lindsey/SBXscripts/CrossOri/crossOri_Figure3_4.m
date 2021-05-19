@@ -21,7 +21,7 @@ nexp = size(expt,2);
 expt_ind = [];
 nP_ind = [];
 resp_ind_all = [];
-respTorM_ind_all = [];
+resp_ind_all_phase = [];
 resp_tc_all = [];
 resp_avg_all = [];
 SI_avg_all = [];
@@ -29,14 +29,15 @@ amp_all = [];
 amp_shuf_all = [];
 yfit_allcells = [];
 yfit_shuf_allcells = [];
-p_anova_allcells = [];
+anova_all = [];
 pha_all = [];
 b_all = [];
 test_resp_all = [];
 mask_resp_all = [];
 plaid_resp_all = [];
-plaidSI_all = [];
-stimSI_all = [];
+phase_MI_all = [];
+phase_MI_max_all = [];
+phase_SI_all = [];
 OSI_all = [];
 DSI_all = [];
 peak_dir_all = [];
@@ -46,11 +47,13 @@ f2_all = [];
 f2overf1_all = [];
 totCells = 0;
 expUse = [];
-
+OSIexp = [];
+mouse_list = [];
 for iexp = 1:nexp
     if strcmp(expt(iexp).driver,'SLC') || strcmp(expt(iexp).driver,'EMX')
         expUse = [expUse iexp];
         mouse = expt(iexp).mouse;
+        mouse_list = strvcat(mouse_list, mouse);
         date = expt(iexp).date;
         fprintf([mouse ' ' date '\n'])
         ImgFolder = expt(iexp).coFolder;
@@ -66,7 +69,7 @@ for iexp = 1:nexp
         load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']));
 
         resp_ind_all = [resp_ind_all; resp_ind+totCells];
-        respTorM_ind_all = [respTorM_ind_all; unique([resptest_ind; respmask_ind])+totCells];
+        resp_ind_all_phase = [resp_ind_all_phase; unique([resptest_ind; respmask_ind])+totCells];
 
         nOn = frame_rate.*4;
         postwin_frames = frame_rate.*6;
@@ -138,12 +141,14 @@ for iexp = 1:nexp
         plaid_resp(find(plaid_resp<0)) = 0;
 
         stimSI = (abs(test_resp-mask_resp))./(test_resp+mask_resp);
-        stimSI_all = [stimSI_all; stimSI];
+        phase_SI_all = [phase_SI_all; stimSI];
         test_resp_all = [test_resp_all; test_resp];
         mask_resp_all = [mask_resp_all; mask_resp];
         plaid_resp_all = [plaid_resp_all; plaid_resp];
         plaidSI = (plaid_resp-(test_resp+mask_resp))./(plaid_resp+(test_resp+mask_resp));
-        plaidSI_all = [plaidSI_all; plaidSI];
+        phase_MI_all = [phase_MI_all; plaidSI];
+        phase_MI_max = (plaid_resp-(max([test_resp mask_resp],[],2)))./(plaid_resp+(max([test_resp mask_resp],[],2)));
+        phase_MI_max_all = [phase_MI_max_all; phase_MI_max];
 
         if nMaskPhas == 8
             resp_tc_all = cat(2,resp_tc_all,resp_tc);
@@ -154,7 +159,7 @@ for iexp = 1:nexp
         amp_shuf_all = [amp_shuf_all; amp_hat_shuf];
         yfit_allcells = [yfit_allcells; yfit_all];
         yfit_shuf_allcells = [yfit_shuf_allcells; yfit_shuf];
-        p_anova_allcells = [p_anova_allcells; p_anova_all];
+        anova_all = [anova_all; p_anova_all];
         pha_all = [pha_all; pha_hat_all];
         b_all = [b_all; b_hat_all];
 
@@ -168,6 +173,7 @@ for iexp = 1:nexp
             OSI_all = [OSI_all; OSI_resp];
             DSI_all = [DSI_all; DSI_resp];
             peak_dir_all = [peak_dir_all; max_ind_dir];
+            OSIexp = [OSIexp iexp];
         else
             OSI_all = [OSI_all; nan(size(amp_hat_all))];
             DSI_all = [DSI_all; nan(size(amp_hat_all))];
@@ -198,20 +204,22 @@ for iexp = 1:nexp
         expt(iexp).nP = NaN;
     end
 end
-
+stim_OSI_all = OSI_all;
+summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandPhaseSummary');
+save(fullfile(summaryDir,['randPhase_Summary_V1_SLC.mat']),'anova_all','stim_OSI_all','resp_ind_all_phase','amp_all', 'amp_shuf_all', 'b_all', 'phase_SI_all', 'phase_MI_all', 'phase_MI_max_all', 'mouse_list')
 %%
-respN = length(respTorM_ind_all);
-modN = sum(p_anova_allcells(respTorM_ind_all)<0.05);
-medAmp = median(amp_all(respTorM_ind_all));
-medShufAmp = median(amp_shuf_all(respTorM_ind_all));
-avgB = mean(b_all(respTorM_ind_all));
-semB = std(b_all(respTorM_ind_all))./sqrt(respN);
-[p_amp h_amp] = signrank(amp_all(respTorM_ind_all),amp_shuf_all(respTorM_ind_all),'tail','right');
+respN = length(resp_ind_all_phase);
+modN = sum(anova_all(resp_ind_all_phase)<0.05);
+medAmp = median(amp_all(resp_ind_all_phase));
+medShufAmp = median(amp_shuf_all(resp_ind_all_phase));
+avgB = mean(b_all(resp_ind_all_phase));
+semB = std(b_all(resp_ind_all_phase))./sqrt(respN);
+[p_amp h_amp] = signrank(amp_all(resp_ind_all_phase),amp_shuf_all(resp_ind_all_phase),'tail','right');
 figure;
 subplot(2,2,1)
-histogram(amp_all(respTorM_ind_all),[0:0.05:1])
+histogram(amp_all(resp_ind_all_phase),[0:0.05:1])
 hold on
-histogram(amp_shuf_all(respTorM_ind_all),[0:0.05:1])
+histogram(amp_shuf_all(resp_ind_all_phase),[0:0.05:1])
 xlabel('Sine amplitude')
 ylabel('Number of cells')
 xlim([0 1])
@@ -219,15 +227,15 @@ legend({'data','shuffle'},'location','northeast')
 mouse_cell = {expt.mouse};
 mice  = unique(mouse_cell{expUse});
 nmice = length(mice);
-title([num2str(nexp) ' expts; ' num2str(nmice) ' mice; ' num2str(length(respTorM_ind_all)) ' cells'])
+title([num2str(nexp) ' expts; ' num2str(nmice) ' mice; ' num2str(length(resp_ind_all_phase)) ' cells'])
 subplot(2,2,2)
-histogram(b_all(respTorM_ind_all),[-1:0.1:1])
+histogram(b_all(resp_ind_all_phase),[-1:0.1:1])
 xlabel('Sine baseline')
 ylabel('Number of cells')
 xlim([-1 1])
 subplot(2,2,3)
 pha_all_circ = wrapTo2Pi(pha_all);
-ind = intersect(respTorM_ind_all, find(p_anova_allcells<0.05));
+ind = intersect(resp_ind_all_phase, find(anova_all<0.05));
 histogram(rad2deg(pha_all_circ(ind)),[0:45:360])
 xlabel('Preferred phase (deg)')
 ylabel('Number of cells')
@@ -238,9 +246,9 @@ savefig(fullfile(summaryDir_F3, 'Figure3_ModulationSummary.fig'))
 
 figure
 subplot(2,2,1)
-histogram(amp_all(intersect(find(nP_ind==8),respTorM_ind_all)),[0:0.05:1])
+histogram(amp_all(intersect(find(nP_ind==8),resp_ind_all_phase)),[0:0.05:1])
 hold on
-histogram(amp_shuf_all(intersect(find(nP_ind==8),respTorM_ind_all)),[0:0.05:1])
+histogram(amp_shuf_all(intersect(find(nP_ind==8),resp_ind_all_phase)),[0:0.05:1])
 xlabel('Sine amplitude')
 ylabel('Number of cells')
 xlim([0 1])
@@ -248,11 +256,11 @@ allmice_8phase = mouse_cell(find(cell2mat({expt.nP})==8));
 nexp_8phase = length(allmice_8phase);
 mice_8phase  = unique(allmice_8phase);
 nmice_8phase = length(mice_8phase);
-title(['8 Phase- ' num2str(nexp_8phase) ' expts; ' num2str(nmice_8phase) ' mice; ' num2str(length(intersect(find(nP_ind==8),respTorM_ind_all))) ' cells'])
+title(['8 Phase- ' num2str(nexp_8phase) ' expts; ' num2str(nmice_8phase) ' mice; ' num2str(length(intersect(find(nP_ind==8),resp_ind_all_phase))) ' cells'])
 subplot(2,2,2)
-histogram(amp_all(intersect(find(nP_ind==4),respTorM_ind_all)),[0:0.05:1])
+histogram(amp_all(intersect(find(nP_ind==4),resp_ind_all_phase)),[0:0.05:1])
 hold on
-histogram(amp_shuf_all(intersect(find(nP_ind==4),respTorM_ind_all)),[0:0.05:1])
+histogram(amp_shuf_all(intersect(find(nP_ind==4),resp_ind_all_phase)),[0:0.05:1])
 xlabel('Sine amplitude')
 ylabel('Number of cells')
 xlim([0 1])
@@ -260,16 +268,16 @@ allmice_4phase = mouse_cell(find(cell2mat({expt.nP})==4));
 nexp_4phase = length(allmice_4phase);
 mice_4phase  = unique(allmice_4phase);
 nmice_4phase = length(mice_4phase);
-title(['4 Phase- ' num2str(nexp_4phase) ' expts; ' num2str(nmice_4phase) ' mice; ' num2str(length(intersect(find(nP_ind==4),respTorM_ind_all))) ' cells'])
+title(['4 Phase- ' num2str(nexp_4phase) ' expts; ' num2str(nmice_4phase) ' mice; ' num2str(length(intersect(find(nP_ind==4),resp_ind_all_phase))) ' cells'])
 subplot(2,2,3)
-ind = intersect(find(nP_ind==8),intersect(respTorM_ind_all, find(p_anova_allcells<0.05)));
+ind = intersect(find(nP_ind==8),intersect(resp_ind_all_phase, find(anova_all<0.05)));
 histogram(rad2deg(pha_all_circ(ind)),[0:45:360])
 ylim([0 40])
 xlabel('Preferred phase (deg)')
 ylabel('Number of cells')
 title(['n = ' num2str(length(ind)) ' cells'])
 subplot(2,2,4)
-ind = intersect(find(nP_ind==4),intersect(respTorM_ind_all, find(p_anova_allcells<0.05)));
+ind = intersect(find(nP_ind==4),intersect(resp_ind_all_phase, find(anova_all<0.05)));
 histogram(rad2deg(pha_all_circ(ind)),[0:45:360])
 ylim([0 60])
 xlabel('Preferred phase (deg)')
@@ -356,14 +364,14 @@ savefig(fullfile(summaryDir_F3, 'Figure3_ExampleCells_Tuning&Fit.fig'))
 
 figure;
 subplot(3,2,1)
-scatter(OSI_all(respTorM_ind_all), amp_all(respTorM_ind_all))
+scatter(OSI_all(resp_ind_all_phase), amp_all(resp_ind_all_phase))
 hold on
 [n edges bin] = histcounts(OSI_all,[0:0.1:1]);
 sin_avg = zeros(length(n),2);
 OSI_avg = zeros(length(n),2);
-ind_use = intersect(find(~isnan(OSI_all)),respTorM_ind_all);
+ind_use = intersect(find(~isnan(OSI_all)),resp_ind_all_phase);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     sin_avg(i,1) = nanmean(amp_all(ind),1);
     sin_avg(i,2) = nanstd(amp_all(ind),[],1)./sqrt(length(ind));
     OSI_avg(i,1) = nanmean(OSI_all(ind),1);
@@ -375,9 +383,9 @@ text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('OSI')
 ylabel('Sine amplitude')
 ylim([-1 1])
-title([num2str(sum(~isnan(OSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(OSI_all(resp_ind_all_phase)))) ' cells'])
 subplot(3,2,2)
-ind_use = intersect(find(~isnan(OSI_all)),intersect(respTorM_ind_all,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
+ind_use = intersect(find(~isnan(OSI_all)),intersect(resp_ind_all_phase,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
 scatter(OSI_all(ind_use), amp_all(ind_use))
 hold on
 sin_avg = zeros(length(n),2);
@@ -397,55 +405,55 @@ ylabel('Sine amplitude')
 ylim([-1 1])
 title([num2str(sum(~isnan(OSI_all(ind_use)))) ' cells- test/mask ori is pref'])
 subplot(3,2,3)
-scatter(OSI_all(respTorM_ind_all), plaidSI_all(respTorM_ind_all))
+scatter(OSI_all(resp_ind_all_phase), phase_MI_all(resp_ind_all_phase))
 hold on
-ind_use = intersect(find(~isnan(OSI_all)),respTorM_ind_all);
+ind_use = intersect(find(~isnan(OSI_all)),resp_ind_all_phase);
 [n edges bin] = histcounts(OSI_all,[0:0.1:1]);
 SI_avg = zeros(length(n),2);
 OSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
-    SI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    SI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
+    SI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    SI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
     OSI_avg(i,1) = nanmean(OSI_all(ind),1);
     OSI_avg(i,2) = nanstd(OSI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(OSI_avg(:,1),SI_avg(:,1),SI_avg(:,2),SI_avg(:,2),OSI_avg(:,2),OSI_avg(:,2),'-o')
-r = [ones(size(OSI_all(ind_use))) OSI_all(ind_use)]\plaidSI_all(ind_use);
+r = [ones(size(OSI_all(ind_use))) OSI_all(ind_use)]\phase_MI_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('OSI')
 ylabel('Masking Index')
 ylim([-1 1])
-title([num2str(sum(~isnan(OSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(OSI_all(resp_ind_all_phase)))) ' cells'])
 subplot(3,2,4)
-ind_use = intersect(find(~isnan(OSI_all)),intersect(respTorM_ind_all,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
-scatter(OSI_all(ind_use), plaidSI_all(ind_use))
+ind_use = intersect(find(~isnan(OSI_all)),intersect(resp_ind_all_phase,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
+scatter(OSI_all(ind_use), phase_MI_all(ind_use))
 hold on
 SI_avg = zeros(length(n),2);
 OSI_avg = zeros(length(n),2);
 for i = 1:length(n)
     ind = intersect(ind_use,find(bin == i));
-    SI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    SI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
+    SI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    SI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
     OSI_avg(i,1) = nanmean(OSI_all(ind),1);
     OSI_avg(i,2) = nanstd(OSI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(OSI_avg(:,1),SI_avg(:,1),SI_avg(:,2),SI_avg(:,2),OSI_avg(:,2),OSI_avg(:,2),'-o')
-r = [ones(size(OSI_all(ind_use))) OSI_all(ind_use)]\plaidSI_all(ind_use);
+r = [ones(size(OSI_all(ind_use))) OSI_all(ind_use)]\phase_MI_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('OSI')
 ylabel('Masking Index')
 ylim([-1 1])
 title([num2str(sum(~isnan(OSI_all(ind_use)))) ' cells- test/mask ori is pref'])
 subplot(3,2,5)
-scatter(OSI_all(respTorM_ind_all), b_all(respTorM_ind_all))
+scatter(OSI_all(resp_ind_all_phase), b_all(resp_ind_all_phase))
 hold on
-ind_use = intersect(find(~isnan(OSI_all)),respTorM_ind_all);
+ind_use = intersect(find(~isnan(OSI_all)),resp_ind_all_phase);
 [n edges bin] = histcounts(OSI_all,[0:0.1:1]);
 b_avg = zeros(length(n),2);
 OSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     b_avg(i,1) = nanmean(b_all(ind),1);
     b_avg(i,2) = nanstd(b_all(ind),[],1)./sqrt(length(ind));
     OSI_avg(i,1) = nanmean(OSI_all(ind),1);
@@ -457,9 +465,9 @@ text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('OSI')
 ylabel('Sine baseline')
 ylim([-1 1])
-title([num2str(sum(~isnan(OSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(OSI_all(resp_ind_all_phase)))) ' cells'])
 subplot(3,2,6)
-ind_use = intersect(find(~isnan(OSI_all)),intersect(respTorM_ind_all,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
+ind_use = intersect(find(~isnan(OSI_all)),intersect(resp_ind_all_phase,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
 scatter(OSI_all(ind_use), b_all(ind_use))
 hold on
 b_avg = zeros(length(n),2);
@@ -477,21 +485,21 @@ text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('OSI')
 ylabel('Sine baseline')
 ylim([-1 1])
-title([num2str(sum(~isnan(stimSI_all(ind_use)))) ' cells- test/mask ori is pref'])
+title([num2str(sum(~isnan(phase_SI_all(ind_use)))) ' cells- test/mask ori is pref'])
 print(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeOSI_Summary.pdf'),'-dpdf','-bestfit')
 savefig(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeOSI_Summary.fig'))
 
 
 figure;
 subplot(2,2,1)
-scatter(b_all(respTorM_ind_all), amp_all(respTorM_ind_all))
+scatter(b_all(resp_ind_all_phase), amp_all(resp_ind_all_phase))
 hold on
 [n edges bin] = histcounts(b_all,[-1:0.2:1]);
 sin_avg = zeros(length(n),2);
 b_avg = zeros(length(n),2);
-ind_use = intersect(find(~isnan(b_all)),respTorM_ind_all);
+ind_use = intersect(find(~isnan(b_all)),resp_ind_all_phase);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     sin_avg(i,1) = nanmean(amp_all(ind),1);
     sin_avg(i,2) = nanstd(amp_all(ind),[],1)./sqrt(length(ind));
     b_avg(i,1) = nanmean(b_all(ind),1);
@@ -504,9 +512,9 @@ xlabel('Sine baseline')
 ylabel('Sine amplitude')
 xlim([-1 0.5])
 ylim([-1 1])
-title([num2str(sum(~isnan(b_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(b_all(resp_ind_all_phase)))) ' cells'])
 subplot(2,2,2)
-ind_use = intersect(find(~isnan(b_all)),intersect(respTorM_ind_all,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
+ind_use = intersect(find(~isnan(b_all)),intersect(resp_ind_all_phase,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)])));
 scatter(b_all(ind_use), amp_all(ind_use))
 hold on
 sin_avg = zeros(length(n),2);
@@ -530,30 +538,35 @@ print(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeBaseline_Summary.pdf'),'-dpd
 savefig(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeBaseline_Summary.fig'))
 
 figure;
+scatter(phase_SI_all(resp_ind_all_phase), amp_all(resp_ind_all_phase))
+hold on
+scatter(phase_SI_all(intersect(find(nP_ind==8),resp_ind_all_phase)), amp_all(intersect(find(nP_ind==8),resp_ind_all_phase)))
+
+figure;
 subplot(3,2,1)
-scatter(stimSI_all(respTorM_ind_all), amp_all(respTorM_ind_all))
+scatter(phase_SI_all(resp_ind_all_phase), amp_all(resp_ind_all_phase))
 hold on
-[n edges bin] = histcounts(stimSI_all,[0:0.1:1]);
+[n edges bin] = histcounts(phase_SI_all,[0:0.1:1]);
 sin_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
-ind_use = respTorM_ind_all;
+ind_use = resp_ind_all_phase;
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     sin_avg(i,1) = nanmean(amp_all(ind),1);
     sin_avg(i,2) = nanstd(amp_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),sin_avg(:,1),sin_avg(:,2),sin_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
-r = [ones(size(stimSI_all(ind_use))) stimSI_all(ind_use)]\amp_all(ind_use);
+r = [ones(size(phase_SI_all(ind_use))) phase_SI_all(ind_use)]\amp_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('SI- [abs(M-T)/(M+T)]')
 ylabel('Sine amplitude')
 ylim([-1 1])
-title([num2str(sum(~isnan(stimSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(phase_SI_all(resp_ind_all_phase)))) ' cells'])
 subplot(3,2,2)
-ind_use = intersect(respTorM_ind_all,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)]));
-scatter(stimSI_all(ind_use), amp_all(ind_use))
+ind_use = intersect(resp_ind_all_phase,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)]));
+scatter(phase_SI_all(ind_use), amp_all(ind_use))
 hold on
 sin_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
@@ -561,81 +574,81 @@ for i = 1:length(n)
     ind = intersect(ind_use,find(bin == i));
     sin_avg(i,1) = nanmean(amp_all(ind),1);
     sin_avg(i,2) = nanstd(amp_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),sin_avg(:,1),sin_avg(:,2),sin_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
-r = [ones(size(stimSI_all(ind_use))) stimSI_all(ind_use)]\amp_all(ind_use);
+r = [ones(size(phase_SI_all(ind_use))) phase_SI_all(ind_use)]\amp_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('SI')
 ylabel('Sine amplitude')
 ylim([-1 1])
-title([num2str(sum(~isnan(stimSI_all(ind_use)))) ' cells- test/mask ori is pref'])
+title([num2str(sum(~isnan(phase_SI_all(ind_use)))) ' cells- test/mask ori is pref'])
 subplot(3,2,3)
-scatter(stimSI_all(respTorM_ind_all), plaidSI_all(respTorM_ind_all))
+scatter(phase_SI_all(resp_ind_all_phase), phase_MI_all(resp_ind_all_phase))
 hold on
-ind_use = respTorM_ind_all;
-[n edges bin] = histcounts(stimSI_all,[0:0.1:1]);
+ind_use = resp_ind_all_phase;
+[n edges bin] = histcounts(phase_SI_all,[0:0.1:1]);
 SI_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
-    SI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    SI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
+    SI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    SI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),SI_avg(:,1),SI_avg(:,2),SI_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
-r = [ones(size(stimSI_all(ind_use))) stimSI_all(ind_use)]\plaidSI_all(ind_use);
+r = [ones(size(phase_SI_all(ind_use))) phase_SI_all(ind_use)]\phase_MI_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('SI- [abs(M-T)/(M+T)]')
 ylabel('Masking Index')
 ylim([-1 1])
-title([num2str(sum(~isnan(stimSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(phase_SI_all(resp_ind_all_phase)))) ' cells'])
 subplot(3,2,4)
-ind_use = intersect(respTorM_ind_all,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)]));
-scatter(stimSI_all(ind_use), plaidSI_all(ind_use))
+ind_use = intersect(resp_ind_all_phase,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)]));
+scatter(phase_SI_all(ind_use), phase_MI_all(ind_use))
 hold on
 SI_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
 for i = 1:length(n)
     ind = intersect(ind_use,find(bin == i));
-    SI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    SI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    SI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    SI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),SI_avg(:,1),SI_avg(:,2),SI_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
-r = [ones(size(stimSI_all(ind_use))) stimSI_all(ind_use)]\plaidSI_all(ind_use);
+r = [ones(size(phase_SI_all(ind_use))) phase_SI_all(ind_use)]\phase_MI_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('SI')
 ylabel('Masking Index')
 ylim([-1 1])
-title([num2str(sum(~isnan(stimSI_all(ind_use)))) ' cells- test/mask ori is pref'])
+title([num2str(sum(~isnan(phase_SI_all(ind_use)))) ' cells- test/mask ori is pref'])
 subplot(3,2,5)
-scatter(stimSI_all(respTorM_ind_all), b_all(respTorM_ind_all))
+scatter(phase_SI_all(resp_ind_all_phase), b_all(resp_ind_all_phase))
 hold on
-ind_use = respTorM_ind_all;
-[n edges bin] = histcounts(stimSI_all,[0:0.1:1]);
+ind_use = resp_ind_all_phase;
+[n edges bin] = histcounts(phase_SI_all,[0:0.1:1]);
 b_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     b_avg(i,1) = nanmean(b_all(ind),1);
     b_avg(i,2) = nanstd(b_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),b_avg(:,1),b_avg(:,2),b_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
-r = [ones(size(stimSI_all(ind_use))) stimSI_all(ind_use)]\b_all(ind_use);
+r = [ones(size(phase_SI_all(ind_use))) phase_SI_all(ind_use)]\b_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('SI- [abs(M-T)/(M+T)]')
 ylabel('Sine baseline')
 ylim([-1 1])
-title([num2str(sum(~isnan(stimSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(phase_SI_all(resp_ind_all_phase)))) ' cells'])
 subplot(3,2,6)
-ind_use = intersect(respTorM_ind_all,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)]));
-scatter(stimSI_all(ind_use), b_all(ind_use))
+ind_use = intersect(resp_ind_all_phase,unique([find(max_dir_all==1); find(max_dir_all==5); find(max_dir_all==9); find(max_dir_all==13)]));
+scatter(phase_SI_all(ind_use), b_all(ind_use))
 hold on
 b_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
@@ -643,30 +656,30 @@ for i = 1:length(n)
     ind = intersect(ind_use,find(bin == i));
     b_avg(i,1) = nanmean(b_all(ind),1);
     b_avg(i,2) = nanstd(b_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),b_avg(:,1),b_avg(:,2),b_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
-r = [ones(size(stimSI_all(ind_use))) stimSI_all(ind_use)]\b_all(ind_use);
+r = [ones(size(phase_SI_all(ind_use))) phase_SI_all(ind_use)]\b_all(ind_use);
 text(0.05,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('SI')
 ylabel('Sine baseline')
 ylim([-1 1])
-title([num2str(sum(~isnan(stimSI_all(ind_use)))) ' cells- test/mask ori is pref'])
+title([num2str(sum(~isnan(phase_SI_all(ind_use)))) ' cells- test/mask ori is pref'])
 print(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeSI_Summary.pdf'),'-dpdf','-bestfit')
 savefig(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeSI_Summary.fig'))
 
 
 figure;
 subplot(2,2,1)
-scatter(f2overf1_all(respTorM_ind_all),amp_all(respTorM_ind_all))
+scatter(f2overf1_all(resp_ind_all_phase),amp_all(resp_ind_all_phase))
 hold on
 [n edges bin] = histcounts(f2overf1_all,[0:0.2:2]);
 f2f1_avg = zeros(length(n),2);
 amp_avg = zeros(length(n),2);
-ind_use = intersect(find(~isnan(f2overf1_all)),respTorM_ind_all);
+ind_use = intersect(find(~isnan(f2overf1_all)),resp_ind_all_phase);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     f2f1_avg(i,1) = nanmean(f2overf1_all(ind),1);
     f2f1_avg(i,2) = nanstd(f2overf1_all(ind),[],1)./sqrt(length(ind));
     amp_avg(i,1) = nanmean(amp_all(ind),1);
@@ -677,36 +690,36 @@ r = [ones(size(amp_all(ind_use))) amp_all(ind_use)]\f2overf1_all(ind_use);
 text(3,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('F2/F1')
 ylabel('Sine amplitude')
-title([num2str(sum(~isnan(f2overf1_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(f2overf1_all(resp_ind_all_phase)))) ' cells'])
 subplot(2,2,2)
-scatter(f2overf1_all(respTorM_ind_all),plaidSI_all(respTorM_ind_all))
+scatter(f2overf1_all(resp_ind_all_phase),phase_MI_all(resp_ind_all_phase))
 hold on
 [n edges bin] = histcounts(f2overf1_all,[0:0.2:2]);
 f2f1_avg = zeros(length(n),2);
 MI_avg = zeros(length(n),2);
-ind_use = intersect(find(~isnan(f2overf1_all)),respTorM_ind_all);
+ind_use = intersect(find(~isnan(f2overf1_all)),resp_ind_all_phase);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     f2f1_avg(i,1) = nanmean(f2overf1_all(ind),1);
     f2f1_avg(i,2) = nanstd(f2overf1_all(ind),[],1)./sqrt(length(ind));
-    MI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    MI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
+    MI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    MI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(f2f1_avg(:,1),MI_avg(:,1),MI_avg(:,2),MI_avg(:,2),f2f1_avg(:,2),f2f1_avg(:,2),'-o')
-r = [ones(size(plaidSI_all(ind_use))) plaidSI_all(ind_use)]\f2overf1_all(ind_use);
+r = [ones(size(phase_MI_all(ind_use))) phase_MI_all(ind_use)]\f2overf1_all(ind_use);
 text(3,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('F2/F1')
 ylabel('Masking Index')
-title([num2str(sum(~isnan(f2overf1_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(f2overf1_all(resp_ind_all_phase)))) ' cells'])
 subplot(2,2,3)
-scatter(f2overf1_all(respTorM_ind_all),plaidSI_all(respTorM_ind_all))
+scatter(f2overf1_all(resp_ind_all_phase),phase_MI_all(resp_ind_all_phase))
 hold on
 [n edges bin] = histcounts(f2overf1_all,[0:0.2:2]);
 f2f1_avg = zeros(length(n),2);
 b_avg = zeros(length(n),2);
-ind_use = intersect(find(~isnan(f2overf1_all)),respTorM_ind_all);
+ind_use = intersect(find(~isnan(f2overf1_all)),resp_ind_all_phase);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     f2f1_avg(i,1) = nanmean(f2overf1_all(ind),1);
     f2f1_avg(i,2) = nanstd(f2overf1_all(ind),[],1)./sqrt(length(ind));
     b_avg(i,1) = nanmean(b_all(ind),1);
@@ -717,7 +730,7 @@ r = [ones(size(b_all(ind_use))) b_all(ind_use)]\f2overf1_all(ind_use);
 text(3,0.7,['r = ' num2str(chop(r(2),2))]);
 xlabel('F2/F1')
 ylabel('Sine baseline')
-title([num2str(sum(~isnan(f2overf1_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(f2overf1_all(resp_ind_all_phase)))) ' cells'])
 print(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeF2F1_Summary.pdf'),'-dpdf','-bestfit')
 savefig(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeF2F1_Summary.fig'))
 
@@ -725,52 +738,52 @@ savefig(fullfile(summaryDir_F4, 'Figure4_SineAmplitudeF2F1_Summary.fig'))
 
 figure;
 subplot(2,3,1)
-scatter(stimSI_all(respTorM_ind_all), plaidSI_all(respTorM_ind_all))
+scatter(phase_SI_all(resp_ind_all_phase), phase_MI_all(resp_ind_all_phase))
 hold on
-[n edges bin] = histcounts(stimSI_all,[0:0.1:1]);
+[n edges bin] = histcounts(phase_SI_all,[0:0.1:1]);
 plaidSI_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
-    plaidSI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    plaidSI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
+    plaidSI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    plaidSI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),plaidSI_avg(:,1),plaidSI_avg(:,2),plaidSI_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
 xlabel('Stim Preference- [abs(M-T)/(M+T)]')
 ylabel('Selectivity Index')
-title([num2str(sum(~isnan(stimSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(phase_SI_all(resp_ind_all_phase)))) ' cells'])
 subplot(2,3,2)
-scatter(OSI_all(respTorM_ind_all), plaidSI_all(respTorM_ind_all))
+scatter(OSI_all(resp_ind_all_phase), phase_MI_all(resp_ind_all_phase))
 hold on
 [n, edges bin] = histcounts(OSI_all,[0:0.1:1]);
 plaidSI_avg = zeros(length(n),2);
 OSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
-    plaidSI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    plaidSI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
+    plaidSI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    plaidSI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
     OSI_avg(i,1) = nanmean(OSI_all(ind),1);
     OSI_avg(i,2) = nanstd(OSI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(OSI_avg(:,1),plaidSI_avg(:,1),plaidSI_avg(:,2),plaidSI_avg(:,2),OSI_avg(:,2),OSI_avg(:,2),'-o')
 xlabel('OSI')
 ylabel('Selectivity Index')
-title([num2str(sum(~isnan(OSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(OSI_all(resp_ind_all_phase)))) ' cells'])
 subplot(2,3,3)
-ind_use = intersect(respTorM_ind_all,unique([find(peak_dir_all<11.25); find(peak_dir_all>348.75);...
+ind_use = intersect(resp_ind_all_phase,unique([find(peak_dir_all<11.25); find(peak_dir_all>348.75);...
     intersect(find(peak_dir_all>78.75),find(peak_dir_all<101.25));...
     intersect(find(DSI_all<0.5), intersect(find(peak_dir_all>168.75), find(peak_dir_all<191.25)));...
     intersect(find(DSI_all<0.5), intersect(find(peak_dir_all>258.75), find(peak_dir_all<281.25)))]));
-scatter(OSI_all(ind_use), plaidSI_all(ind_use))
+scatter(OSI_all(ind_use), phase_MI_all(ind_use))
 hold on
 plaidSI_avg = zeros(length(n),2);
 OSI_avg = zeros(length(n),2);
 for i = 1:length(n)
     ind = intersect(ind_use,find(bin == i));
-    plaidSI_avg(i,1) = nanmean(plaidSI_all(ind),1);
-    plaidSI_avg(i,2) = nanstd(plaidSI_all(ind),[],1)./sqrt(length(ind));
+    plaidSI_avg(i,1) = nanmean(phase_MI_all(ind),1);
+    plaidSI_avg(i,2) = nanstd(phase_MI_all(ind),[],1)./sqrt(length(ind));
     OSI_avg(i,1) = nanmean(OSI_all(ind),1);
     OSI_avg(i,2) = nanstd(OSI_all(ind),[],1)./sqrt(length(ind));
 end
@@ -779,29 +792,29 @@ xlabel('OSI')
 ylabel('Selectivity Index')
 title([num2str(sum(~isnan(OSI_all(ind_use)))) ' cells- test/mask is pref'])
 subplot(2,3,4)
-ind1 = intersect(respTorM_ind_all,find(stimSI_all>0.5));
-cdfplot(plaidSI_all(ind1));
+ind1 = intersect(resp_ind_all_phase,find(phase_SI_all>0.5));
+cdfplot(phase_MI_all(ind1));
 hold on
-ind2 = intersect(respTorM_ind_all,find(stimSI_all<0.5));
-cdfplot(plaidSI_all(ind2));
+ind2 = intersect(resp_ind_all_phase,find(phase_SI_all<0.5));
+cdfplot(phase_MI_all(ind2));
 legend({['stimSI>0.5 - n=' num2str(length(ind1))], ['stimSI<0.5 - n=' num2str(length(ind2))]},'location','southeast')
 xlabel('Selectivity Index')
 title('')
 subplot(2,3,5)
-ind1 = intersect(respTorM_ind_all,find(OSI_all>0.5));
-cdfplot(plaidSI_all(ind1));
+ind1 = intersect(resp_ind_all_phase,find(OSI_all>0.5));
+cdfplot(phase_MI_all(ind1));
 hold on
-ind2 = intersect(respTorM_ind_all,find(OSI_all<0.5));
-cdfplot(plaidSI_all(ind2));
+ind2 = intersect(resp_ind_all_phase,find(OSI_all<0.5));
+cdfplot(phase_MI_all(ind2));
 legend({['OSI>0.5 - n=' num2str(length(ind1))], ['OSI<0.5 - n=' num2str(length(ind2))]},'location','southeast')
 xlabel('Selectivity Index')
 title('')
 subplot(2,3,6)
 ind1 = intersect(ind_use,find(OSI_all>0.5));
-cdfplot(plaidSI_all(ind1));
+cdfplot(phase_MI_all(ind1));
 hold on
 ind2 = intersect(ind_use,find(OSI_all<0.5));
-cdfplot(plaidSI_all(ind2));
+cdfplot(phase_MI_all(ind2));
 legend({['OSI>0.5 - n=' num2str(length(ind1))], ['OSI<0.5 - n=' num2str(length(ind2))]},'location','southeast')
 xlabel('Selectivity Index')
 title('')
@@ -812,13 +825,13 @@ savefig(fullfile(summaryDir_F4, 'Figure4_plaidSIOSI_Summary.fig'))
 
 figure;
 subplot(3,2,1)
-scatter(mask_resp_all(respTorM_ind_all)+test_resp_all(respTorM_ind_all), plaid_resp_all(respTorM_ind_all))
+scatter(mask_resp_all(resp_ind_all_phase)+test_resp_all(resp_ind_all_phase), plaid_resp_all(resp_ind_all_phase))
 xlim([0 3])
 ylim([0 3])
 refline(1)
 xlabel('Mask + Test dF/F')
 ylabel('Plaid dF/F')
-title({'Test or Mask responsive',['n = ' num2str(length(respTorM_ind_all))]})
+title({'Test or Mask responsive',['n = ' num2str(length(resp_ind_all_phase))]})
 subplot(3,2,2)
 scatter(mask_resp_all(ind_use)+test_resp_all(ind_use), plaid_resp_all(ind_use))
 xlim([0 3])
@@ -828,22 +841,22 @@ xlabel('Mask + Test dF/F')
 ylabel('Plaid dF/F')
 title({'Test or Mask preferring',['n = ' num2str(length(ind_use))]})
 subplot(3,2,3)
-histogram(plaidSI_all(respTorM_ind_all))
+histogram(phase_MI_all(resp_ind_all_phase))
 xlabel('Selectivity index')
 ylabel('Number of cells')
 xlim([-1 1])
 subplot(3,2,4)
-histogram(plaidSI_all(ind_use))
+histogram(phase_MI_all(ind_use))
 xlabel('Selectivity index')
 ylabel('Number of cells')
 xlim([-1 1])
 subplot(3,2,5)
-cdfplot(plaidSI_all(respTorM_ind_all))
+cdfplot(phase_MI_all(resp_ind_all_phase))
 xlabel('Selectivity index')
 ylabel('Fraction of cells')
 xlim([-1 1])
 subplot(3,2,6)
-cdfplot(plaidSI_all(ind_use))
+cdfplot(phase_MI_all(ind_use))
 xlabel('Selectivity index')
 ylabel('Fraction of cells')
 xlim([-1 1])
@@ -852,30 +865,30 @@ savefig(fullfile(summaryDir_F4, 'Figure4_allVpref_Summary.fig'))
 
 figure;
 subplot(2,3,1)
-scatter(stimSI_all(respTorM_ind_all), b_all(respTorM_ind_all))
+scatter(phase_SI_all(resp_ind_all_phase), b_all(resp_ind_all_phase))
 hold on
-[n edges bin] = histcounts(stimSI_all,[0:0.1:1]);
+[n edges bin] = histcounts(phase_SI_all,[0:0.1:1]);
 b_all_avg = zeros(length(n),2);
 stimSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     b_all_avg(i,1) = nanmean(b_all(ind),1);
     b_all_avg(i,2) = nanstd(b_all(ind),[],1)./sqrt(length(ind));
-    stimSI_avg(i,1) = nanmean(stimSI_all(ind),1);
-    stimSI_avg(i,2) = nanstd(stimSI_all(ind),[],1)./sqrt(length(ind));
+    stimSI_avg(i,1) = nanmean(phase_SI_all(ind),1);
+    stimSI_avg(i,2) = nanstd(phase_SI_all(ind),[],1)./sqrt(length(ind));
 end
 errorbar(stimSI_avg(:,1),b_all_avg(:,1),b_all_avg(:,2),b_all_avg(:,2),stimSI_avg(:,2),stimSI_avg(:,2),'-o')
 xlabel('Stim Preference- [abs(M-T)/(M+T)]')
 ylabel('Selectivity Index')
-title([num2str(sum(~isnan(stimSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(phase_SI_all(resp_ind_all_phase)))) ' cells'])
 subplot(2,3,2)
-scatter(OSI_all(respTorM_ind_all), b_all(respTorM_ind_all))
+scatter(OSI_all(resp_ind_all_phase), b_all(resp_ind_all_phase))
 hold on
 [n edges bin] = histcounts(OSI_all,[0:0.1:1]);
 b_all_avg = zeros(length(n),2);
 OSI_avg = zeros(length(n),2);
 for i = 1:length(n)
-    ind = intersect(respTorM_ind_all,find(bin == i));
+    ind = intersect(resp_ind_all_phase,find(bin == i));
     b_all_avg(i,1) = nanmean(b_all(ind),1);
     b_all_avg(i,2) = nanstd(b_all(ind),[],1)./sqrt(length(ind));
     OSI_avg(i,1) = nanmean(OSI_all(ind),1);
@@ -884,9 +897,9 @@ end
 errorbar(OSI_avg(:,1),b_all_avg(:,1),b_all_avg(:,2),b_all_avg(:,2),OSI_avg(:,2),OSI_avg(:,2),'-o')
 xlabel('OSI')
 ylabel('Selectivity Index')
-title([num2str(sum(~isnan(OSI_all(respTorM_ind_all)))) ' cells'])
+title([num2str(sum(~isnan(OSI_all(resp_ind_all_phase)))) ' cells'])
 subplot(2,3,3)
-ind_use = intersect(respTorM_ind_all,unique([find(peak_dir_all<22.5); find(peak_dir_all>337.5);...
+ind_use = intersect(resp_ind_all_phase,unique([find(peak_dir_all<22.5); find(peak_dir_all>337.5);...
     intersect(find(DSI_all<0.5), [find(peak_dir_all>157.5); find(peak_dir_all<202.5)])]));
 scatter(OSI_all(ind_use), b_all(ind_use))
 hold on
@@ -904,19 +917,19 @@ xlabel('OSI')
 ylabel('Selectivity Index')
 title([num2str(sum(~isnan(OSI_all(ind_use)))) ' cells- test is pref'])
 subplot(2,3,4)
-ind1 = intersect(respTorM_ind_all,find(stimSI_all>0.5));
+ind1 = intersect(resp_ind_all_phase,find(phase_SI_all>0.5));
 cdfplot(b_all(ind1));
 hold on
-ind2 = intersect(respTorM_ind_all,find(stimSI_all<0.5));
+ind2 = intersect(resp_ind_all_phase,find(phase_SI_all<0.5));
 cdfplot(b_all(ind2));
 legend({['stimSI>0.5 - n=' num2str(length(ind1))], ['stimSI<0.5 - n=' num2str(length(ind2))]},'location','southeast')
 xlabel('Selectivity Index')
 title('')
 subplot(2,3,5)
-ind1 = intersect(respTorM_ind_all,find(OSI_all>0.5));
+ind1 = intersect(resp_ind_all_phase,find(OSI_all>0.5));
 cdfplot(b_all(ind1));
 hold on
-ind2 = intersect(respTorM_ind_all,find(OSI_all<0.5));
+ind2 = intersect(resp_ind_all_phase,find(OSI_all<0.5));
 cdfplot(b_all(ind2));
 legend({['OSI>0.5 - n=' num2str(length(ind1))], ['OSI<0.5 - n=' num2str(length(ind2))]},'location','southeast')
 xlabel('Selectivity Index')
@@ -941,7 +954,7 @@ nexpt_pr = length(expt_pr);
 nmice_pr = length(unique(pr_mice(expt_pr)));
 
 figure;
-ind_use = intersect(respTorM_ind_all,find(f1_all>0.02));
+ind_use = intersect(resp_ind_all_phase,find(f1_all>0.02));
 subplot(2,2,1)
 scatter(log(f2overf1_all(ind_use)), amp_all(ind_use))
 hold on
@@ -1011,7 +1024,7 @@ tt= (-prewin_frames:postwin_frames-1).*(1000./frame_rate);
 resp_all = squeeze(mean(resp_tc_all(prewin_frames:prewin_frames+(4.*15),:,:,:,:,1),1));
 ind1 = find(resp_all(:,1,2,1)>resp_all(:,2,2,1));
 ind2 = find(resp_all(:,1,2,1)<resp_all(:,2,2,3));
-ind = intersect(respTorM_ind_all,intersect(ind1,ind2));
+ind = intersect(resp_ind_all_phase,intersect(ind1,ind2));
 ind = [100 235 253 335 336];
 figure;
 movegui('center')

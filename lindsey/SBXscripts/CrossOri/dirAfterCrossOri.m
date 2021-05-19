@@ -1,10 +1,10 @@
 %% get path names
 close all;clear all;clc;
 
-ds = 'CrossOriRandPhase_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList';
 eval(ds)
 nexp = length(expt);
-for iexp = 9
+for iexp = 6
 rc = behavConstsAV;
 
 %%
