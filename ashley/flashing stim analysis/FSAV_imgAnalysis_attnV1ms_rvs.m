@@ -2,10 +2,10 @@ clear all
 close all
 ds = 'FSAV_attentionV1'; % 'FSAV_V1_100ms_naive'  'FSAV_V1_naive_GCaMP6m'  'FSAV_attentionV1'   'FSAV_attentionV1_noAttn'
 cellsOrDendrites = 1;
-doLoadPreviousAnalysis = false;
-analysisDate = '200210';
-attnAnalysisDate = '191211';
-doDecoding = true;
+doLoadPreviousAnalysis = true;
+analysisDate = '201016'; % attn= '201016'  noAttn= '201016'  naive= '201021'
+attnAnalysisDate = '200527';
+doDecoding = false;
 %%
 rc = behavConstsAV;
 imgParams_FSAV
@@ -20,7 +20,7 @@ if cellsOrDendrites == 1
     load(fullfile(rc.caOutputDir,ds,...
         [mouse_str '_trOutcomeStruct_cells' ds(5:end) '.mat']));
     fnout = fullfile(rc.ashley, 'Manuscripts','Attention V1','Matlab Figs',...
-        [titleStr '_' datestr(now,'yymmdd') '_']); 
+        [titleStr '_rvs_' datestr(now,'yymmdd') '_']); 
 elseif cellsOrDendrites == 2
     load(fullfile(rc.caOutputDir,ds,...
         [mouse_str '_trOutcomeStruct_cells' ds(5:end) '.mat']));
@@ -30,7 +30,7 @@ end
 
 if strcmp(ds,'FSAV_attentionV1')
     load(fullfile(rc.ashley, 'Manuscripts','Attention V1','Matlab Figs',...
-        'V1_100ms_naive_anticipation_imgStats'))
+        'FSAV_V1_naive_GCaMP6m_rvs_imgStats'))
     imgStats_naive = imgStats;
     clear imgStats
 end
@@ -2317,6 +2317,7 @@ aurocBinID(cellInfo.lateStimAuROCTest & cellInfo.lateStimAuROC < 0.5) = 1;
 aurocBinID(cellInfo.lateStimAuROCTest & cellInfo.lateStimAuROC > 0.5) = 2;
 
 
+
 aurocBinID_aud = nan(1,length(SI));
 aurocBinID_aud(~cellInfo.audLateStimAuROCTest) = 3;
 aurocBinID_aud(cellInfo.audLateStimAuROCTest & cellInfo.audLateStimAuROC < 0.5) = 1;
@@ -2584,6 +2585,7 @@ hline(mean(antiAnalysis.lateCycSI(cellInfo.lateCycRespCells)),'r-')
 
 if strcmp(ds,'FSAV_attentionV1')||strcmp(ds,'FSAV_attentionV1_noAttn')
     load(fullfile(rc.ashley, 'Manuscripts','Attention V1','Matlab Figs','bxStats.mat'))
+    bxStats.mouseNames = {'613','614','668','750','625','670','672','682'};
     subplot 222
     ind = ismember(bxStats.mouseNames,mice);
     [~, bxDataSortInd] = sort(bxStats.mouseNames(ind));
@@ -2671,6 +2673,7 @@ legend(L,mice)
 subplot 223
 ind = cellInfo.lateCycRespCells|antiAnalysis.earlyTest';
 d = cellfun(@(x,y) x(ind==1),antiAnalysis.eaCycSI,'unif',0);
+[~,p] = cellfun(@(x) ttest(x,0,'alpha',0.05/nCycles),d);
 % d = cellfun(@(x,y) x(y==1),antiAnalysis.eaCycSI,antiAnalysis.eaCycTest,'unif',0);
 % p = anova1(cell2mat(d')',[],'off');
 y = cell2mat(cellfun(@(x) mean(x),d,'unif',0));
@@ -2680,6 +2683,13 @@ h=errorbar(1:nCycles,y,yerr,'k.','MarkerSize',10);
 figXAxis([],'Stim #',[0 nCycles+1],1:nCycles,...
     cat(2,cellfun(@num2str,num2cell(1:nCycles-1),'unif',0),[num2str(nCycles) '+']))
 figYAxis([],'SI',[-1.5 1.5])  
+for i = 1:nCycles
+    if p(i) < (0.05/nCycles)
+        text(i,1,['* ' num2str(p(i))])
+    else
+        text(i,1,sigfigString(p(i)))
+    end
+end
 hline(0,'k:')
 figAxForm
 title(sprintf('early or late resp cells, n=%s',num2str(sum(ind))))
@@ -2781,6 +2791,7 @@ if strcmp(ds,'FSAV_attentionV1')
     colormap(brewermap([],'*RdBu'));
     imagesc(flipud(hmAll(sortInd,tcStartFrame:end)))
     hold on
+    
     figXAxis([],'Time from Start (ms)',[],ttLabelFr_long,ttLabelFr_long)
     figYAxis([],'Cell #',[])
     figAxForm

@@ -16,7 +16,7 @@ oriTuning_noAttn = oriTuningExpt;
 mouseName_noAttn = {respCellsExpt.mouse};
 
 ds = 'FSAV_V1_naive_GCaMP6m';
-analysisDate = '201019';
+analysisDate = '201021';
 titleStr = ds(6:end);
 rc = behavConstsAV;
 imgParams_FSAV
@@ -797,7 +797,7 @@ print([fnout 'modelWeights_noAbs'],'-dpdf','-fillpage')
 figure(mdlWeightsSub_fig)
 print([fnout 'modelWeights_noAbs_ciSub'],'-dpdf')
 
-%% stim and choice weight correlation with bootstrap quantification
+%% weight correlation with bootstrap quantification
 nboot = 1000;
 figure
 for imod = 1:2
@@ -826,6 +826,8 @@ for imod = 1:2
         r_attn(iboot) = corr(y1_samp,y2_samp);
     end
     
+    n_attn = length(y2);
+    
     subplot(2,4,imod+2)
     y1 = cell2mat(mdl_noAttn(visualTrials).mdl(imod).weights(goodPerfInd_av_noAttn)');
     y2 = cell2mat(mdl_noAttn(auditoryTrials).mdl(imod).weights(goodPerfInd_av_noAttn)');
@@ -839,7 +841,7 @@ for imod = 1:2
     figAxForm
     hline(0,'k:')
     vline(0,'k:')
-    title({'Attn Mice';sprintf('%s Model',...
+    title({'No Attn Mice';sprintf('%s Model',...
         mdl_noAttn(iav).mdl(imod).name)})
     
     r_noAttn = nan(1,nboot);
@@ -850,6 +852,10 @@ for imod = 1:2
         y2_samp = y2(ind);
         r_noAttn(iboot) = corr(y1_samp,y2_samp);
     end
+        
+    n_noAttn = length(y1);
+    
+    test_corr = compare_correlation_coefficients(r_attn,r_noAttn,n_attn,n_noAttn);
     
     subplot(2,4,4+imod); hold on
     bar(1:2,[mean(r_attn),mean(r_noAttn)])
@@ -859,9 +865,9 @@ for imod = 1:2
     errorbar(2,mean(r_noAttn),ylerr,yuerr,'.','MarkerSize',20)
     figXAxis([],'',[0 3],1:2,{'Attn','No Attn'})
     xtickangle(-45)
-    figYAxis([],'Stim:Choice Weight Corr',[0 1])
+    figYAxis([],'Stim:Choice Weight Corr',[-0.5 1])
     figAxForm
-    title(sprintf('%s Model',mdl_noAttn(iav).mdl(imod).name))
+    title(sprintf('%s Model, p=%s',mdl_noAttn(iav).mdl(imod).name, sigfigString(test_corr)))
 end
 print([fnout 'modelWeights_bootCorr'],'-dpdf')
 %% weights from matched model
@@ -1271,279 +1277,6 @@ print([fnout 'exExpt_pcHM_choice'],'-dpdf')
 figure(weightsExPCs_fig)
 print([fnout 'exExpt_pcHM_weights'],'-dpdf')
 
-% %% catch trial performance
-% catchExptInd_attn = true(1,nexp_attn);
-% for imod = 1:2
-%     mdl_attn(visualTrials).mdl(imod).pctCorrect_inv = nan(1,nexp_attn);
-%     mdl_attn(visualTrials).mdl(imod).pctCorrect_valMatched = nan(1,nexp_attn);
-%     mdl_attn(visualTrials).mdl(imod).pctCorrect_invAudTest = nan(1,nexp_attn);
-%     mdl_attn(visualTrials).mdl(imod).pctCorrect_valMatchedAudTest = nan(1,nexp_attn);
-%     mdl_attn(visualTrials).mdl(imod).catchTrialResult_inv = cell(1,nexp_attn);
-%     mdl_attn(visualTrials).mdl(imod).catchTrialResult_valMatched = cell(1,nexp_attn);
-%     mdl_attn(visualTrials).mdl(imod).catchTrialResult_invAudTest = cell(1,nexp_attn);
-%     mdl_attn(visualTrials).mdl(imod).catchTrialResult_valMatchedAudTest = cell(1,nexp_attn);
-%     
-%     for iexp = 1:nexp_attn
-%         if isempty(dc_attn(iexp).av(visualTrials).invalidPctCorrectDetect)
-%             catchExptInd_attn(iexp) = false;
-%             continue
-%         end
-%         if imod == 1
-%             modType = 'Target';
-%         else
-%             modType = 'Detect';
-%         end
-%         mdl_attn(visualTrials).mdl(imod).pctCorrect_inv(iexp) = ...
-%             eval(['dc_attn(iexp).av(visualTrials).invalidPctCorrect' modType]);
-%         mdl_attn(visualTrials).mdl(imod).pctCorrect_valMatched(iexp) = ...
-%             eval(['dc_attn(iexp).av(visualTrials).validMatchedPctCorrect'...
-%             modType '_holdout']);            
-%         mdl_attn(visualTrials).mdl(imod).pctCorrect_invAudTest(iexp) = ...
-%             eval(['dc_attn(iexp).av(visualTrials).invalidPctCorrect'...
-%             modType '_testAudModel']);  
-%         mdl_attn(visualTrials).mdl(imod).pctCorrect_valMatchedAudTest(iexp) = ...
-%             eval(['dc_attn(iexp).av(visualTrials).validMatchedPctCorrect'...
-%             modType '_testAudModel']);  
-%         
-%         mdl_attn(visualTrials).mdl(imod).catchTrialResult_inv{iexp} = ...
-%             eval(['dc_attn(iexp).av(visualTrials).invalidCorrectTrials' modType])';
-%         mdl_attn(visualTrials).mdl(imod).catchTrialResult_valMatched{iexp} = ...
-%             eval(['dc_attn(iexp).av(visualTrials).validMatchedCorrectTrials' modType])';            
-%         mdl_attn(visualTrials).mdl(imod).catchTrialResult_invAudTest{iexp} = ...
-%             eval(['dc_attn(iexp).av(visualTrials).invalidCorrectTrials'...
-%             modType '_testAud'])';  
-%         mdl_attn(visualTrials).mdl(imod).catchTrialResult_valMatchedAudTest{iexp} = ...
-%             eval(['dc_attn(iexp).av(visualTrials).validMatchedCorrectTrials'...
-%             modType '_testAud'])';  
-%     end
-% end
-% 
-% catchExptInd_noAttn = true(1,nexp_noAttn);
-% for imod = 1:2
-%     mdl_noAttn(visualTrials).mdl(imod).pctCorrect_inv = nan(1,nexp_noAttn);
-%     mdl_noAttn(visualTrials).mdl(imod).pctCorrect_valMatched = nan(1,nexp_noAttn);
-%     mdl_noAttn(visualTrials).mdl(imod).pctCorrect_invAudTest = nan(1,nexp_noAttn);
-%     mdl_noAttn(visualTrials).mdl(imod).pctCorrect_valMatchedAudTest = nan(1,nexp_noAttn);
-%     mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_inv = cell(1,nexp_noAttn);
-%     mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_valMatched = cell(1,nexp_noAttn);
-%     mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_invAudTest = cell(1,nexp_noAttn);
-%     mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_valMatchedAudTest = cell(1,nexp_noAttn);
-%     
-%     for iexp = 1:nexp_noAttn
-%         if isempty(dc_noAttn(iexp).av(visualTrials).invalidPctCorrectDetect)
-%             catchExptInd_noAttn(iexp) = false;
-%             continue
-%         end
-%         if imod == 1
-%             modType = 'Target';
-%         else
-%             modType = 'Detect';
-%         end
-%         mdl_noAttn(visualTrials).mdl(imod).pctCorrect_inv(iexp) = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).invalidPctCorrect' modType]);
-%         mdl_noAttn(visualTrials).mdl(imod).pctCorrect_valMatched(iexp) = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).validMatchedPctCorrect'...
-%             modType '_holdout']);            
-%         mdl_noAttn(visualTrials).mdl(imod).pctCorrect_invAudTest(iexp) = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).invalidPctCorrect'...
-%             modType '_testAudModel']);  
-%         mdl_noAttn(visualTrials).mdl(imod).pctCorrect_valMatchedAudTest(iexp) = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).validMatchedPctCorrect'...
-%             modType '_testAudModel']);  
-%         
-%         mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_inv{iexp} = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).invalidCorrectTrials' modType])';
-%         mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_valMatched{iexp} = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).validMatchedCorrectTrials' modType])';            
-%         mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_invAudTest{iexp} = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).invalidCorrectTrials'...
-%             modType '_testAud'])';  
-%         mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_valMatchedAudTest{iexp} = ...
-%             eval(['dc_noAttn(iexp).av(visualTrials).validMatchedCorrectTrials'...
-%             modType '_testAud'])';  
-%     end
-% end
-% 
-% figure
-% for imod = 1:2
-%     ind = mdl_attn(visualTrials).mdl(imod).pctCorrect_valMatched > pctCorrThresh ...
-%         & catchExptInd_attn;
-%     y = cat(1,mdl_attn(visualTrials).mdl(imod).pctCorrect_valMatched(ind),...
-%         mdl_attn(visualTrials).mdl(imod).pctCorrect_inv(ind),...
-%         mdl_attn(visualTrials).mdl(imod).pctCorrect_invAudTest(ind));
-%     
-%     subplot(2,2,imod)
-%     plot(1:3,y','k.-','MarkerSize',10)
-%     hold on
-%     errorbar(1:3,mean(y',1),ste(y',1),'.','MarkerSize',20)
-%     figXAxis([],'Train-Test',[0 4],1:3,{'Vis-ValVis','Vis-InvVis','Aud-InvVis'})
-%     figYAxis([],'Pct Correct',[0 1])
-%     figAxForm
-%     title(sprintf('Attn, %s Model',modelName{imod}))
-%     hline(0.5,'k:')
-%     
-%     ind = mdl_noAttn(visualTrials).mdl(imod).pctCorrect_valMatched > pctCorrThresh ...
-%         & catchExptInd_noAttn;
-%     y = cat(1,mdl_noAttn(visualTrials).mdl(imod).pctCorrect_valMatched(ind),...
-%         mdl_noAttn(visualTrials).mdl(imod).pctCorrect_inv(ind),...
-%         mdl_noAttn(visualTrials).mdl(imod).pctCorrect_invAudTest(ind));
-%     
-%     subplot(2,2,imod+2)
-%     plot(1:3,y','k.-','MarkerSize',10)
-%     hold on
-%     errorbar(1:3,mean(y',1),ste(y',1),'.','MarkerSize',20)
-%     figXAxis([],'Train-Test',[0 4],1:3,{'Vis-ValVis','Vis-InvVis','Aud-InvVis'})
-%     figYAxis([],'Pct Correct',[0 1])
-%     figAxForm
-%     title(sprintf('No Attn, %s Model',modelName{imod}))
-%     hline(0.5,'k:')
-% end
-% print([fnout 'invalidTrialPerf'],'-dpdf','-fillpage')
-% 
-% figure
-% for imod = 1:2
-%     subplot(2,2,imod)
-%     ind = cellfun(@(x) ~isempty(x),mdl_attn(visualTrials).mdl(imod).catchTrialResult_inv) & ...
-%         mdl_attn(visualTrials).mdl(imod).pctCorr_all > pctCorrThresh;
-%     invTrialResult = cell2mat(mdl_attn(visualTrials).mdl(imod).catchTrialResult_inv(ind));
-%     [invHR,invCI] = binofit(sum(invTrialResult),length(invTrialResult));
-%     valTrialResult = cell2mat(mdl_attn(visualTrials).mdl(imod).catchTrialResult_valMatched(ind));
-%     [valHR,valCI] = binofit(sum(valTrialResult),length(valTrialResult));
-%     invTrialResult_audModel = cell2mat(mdl_attn(visualTrials).mdl(imod).catchTrialResult_invAudTest(ind));
-%     [invHR_audModel,invCI_audModel] = binofit(sum(invTrialResult_audModel),length(invTrialResult_audModel));
-%     valTrialResult_audModel = cell2mat(mdl_attn(visualTrials).mdl(imod).catchTrialResult_valMatchedAudTest(ind));
-%     [valHR_audModel,valCI_audModel] = binofit(sum(valTrialResult_audModel),length(valTrialResult_audModel));
-%     
-%     y = [valHR,invHR,valHR_audModel,invHR_audModel];
-%     y_lerr = y - [valCI(1),invCI(1),valCI_audModel(1),invCI_audModel(1)];
-%     y_uerr = [valCI(2),invCI(2),valCI_audModel(2),invCI_audModel(2)]-y;
-%     errorbar(1:4,y, y_lerr,y_uerr,'.','MarkerSize',20)
-%     figXAxis([],'Train-Test',[0 5],1:4,{'Vis-Val','Vis-Inv','Aud-Val','Aud-Inv'})
-%     figYAxis([],'Pct Correct',[0 1])
-%     figAxForm
-%     hline(0.5,'k:')
-%     title(sprintf('Attn; %s Model, Vis Trials',modelName{imod}))
-%     
-%     subplot(2,2,imod+2)
-%     ind = cellfun(@(x) ~isempty(x),mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_inv) & ...
-%         mdl_noAttn(visualTrials).mdl(imod).pctCorr_all > pctCorrThresh;
-%     invTrialResult = cell2mat(mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_inv(ind));
-%     [invHR,invCI] = binofit(sum(invTrialResult),length(invTrialResult));
-%     valTrialResult = cell2mat(mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_valMatched(ind));
-%     [valHR,valCI] = binofit(sum(valTrialResult),length(valTrialResult));
-%     invTrialResult_audModel = cell2mat(mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_invAudTest(ind));
-%     [invHR_audModel,invCI_audModel] = binofit(sum(invTrialResult_audModel),length(invTrialResult_audModel));
-%     valTrialResult_audModel = cell2mat(mdl_noAttn(visualTrials).mdl(imod).catchTrialResult_valMatchedAudTest(ind));
-%     [valHR_audModel,valCI_audModel] = binofit(sum(valTrialResult_audModel),length(valTrialResult_audModel));
-%     
-%     y = [valHR,invHR,valHR_audModel,invHR_audModel];
-%     y_lerr = y - [valCI(1),invCI(1),valCI_audModel(1),invCI_audModel(1)];
-%     y_uerr = [valCI(2),invCI(2),valCI_audModel(2),invCI_audModel(2)]-y;
-%     errorbar(1:4,y, y_lerr,y_uerr,'.','MarkerSize',20)
-%     figXAxis([],'Train-Test',[0 5],1:4,{'Vis-Val','Vis-Inv','Aud-Val','Aud-Inv'})
-%     figYAxis([],'Pct Correct',[0 1])
-%     figAxForm
-%     hline(0.5,'k:')
-%     title(sprintf('No Attn; %s Model, Vis Trials',modelName{imod}))
-% end
-% print([fnout 'invalidTrialPerf_combExpt'],'-dpdf','-fillpage')
-% 
-% figure
-% ind = goodPerfInd_attn & catchExptInd_attn;
-% x = mdl_attn(visualTrials).mdl(stimModInd).pctCorrect_valMatched(ind) -...
-%     mdl_attn(visualTrials).mdl(stimModInd).pctCorrect_inv(ind);
-% y = mdl_attn(visualTrials).mdl(choiceModInd).pctCorrect_valMatched(ind) -...
-%     mdl_attn(visualTrials).mdl(choiceModInd).pctCorrect_inv(ind);
-% subplot(2,2,1)
-% plot(x,y,'.','MarkerSize',20)
-% hold on
-% plot([-0.5 0.7],[-0.5 0.7],'k:')
-% figXAxis([],'Stim Model, Val-Inv',[-0.2 0.7])
-% figYAxis([],'Choice Model, Val-Inv',[-0.2 0.7])
-% figAxForm
-% vline(0,'k:')
-% hline(0,'k:')
-% title('No Attn')
-% 
-% valInvDiff_stim_eaMouse = nan(1,length(mice_attn));
-% valInvDiff_choice_eaMouse = nan(1,length(mice_attn));
-% for im = 1:length(mice_attn)
-%     ind = goodPerfInd_attn & catchExptInd_attn & ...
-%         strcmp(mouseName_attn,mice_attn(im));
-%     x = mdl_attn(visualTrials).mdl(stimModInd).pctCorrect_valMatched(ind) -...
-%         mdl_attn(visualTrials).mdl(stimModInd).pctCorrect_inv(ind);
-%     y = mdl_attn(visualTrials).mdl(choiceModInd).pctCorrect_valMatched(ind) -...
-%         mdl_attn(visualTrials).mdl(choiceModInd).pctCorrect_inv(ind);
-%     valInvDiff_stim_eaMouse(im) = mean(x);
-%     valInvDiff_choice_eaMouse(im) = mean(y);
-% end
-% 
-% subplot(2,2,3)
-% plot(hrDiff_attn,valInvDiff_stim_eaMouse,'.','MarkerSize',20)
-% hold on
-% figXAxis([],'HR Val-Inv',[-0 0.5])
-% figYAxis([],'Stim Model, Val-Inv',[-0.2 0.7])
-% figAxForm
-% vline(0,'k:')
-% hline(0,'k:')
-% subplot(2,2,4)
-% plot(hrDiff_attn,valInvDiff_choice_eaMouse,'.','MarkerSize',20)
-% hold on
-% figXAxis([],'HR Val-Inv',[-0 0.5])
-% figYAxis([],'Stim Model, Val-Inv',[-0.2 0.7])
-% figAxForm
-% vline(0,'k:')
-% hline(0,'k:')
-% 
-% ind = goodPerfInd_noAttn & catchExptInd_noAttn;
-% x = mdl_noAttn(visualTrials).mdl(stimModInd).pctCorrect_valMatched(ind) -...
-%     mdl_noAttn(visualTrials).mdl(stimModInd).pctCorrect_inv(ind);
-% y = mdl_noAttn(visualTrials).mdl(choiceModInd).pctCorrect_valMatched(ind) -...
-%     mdl_noAttn(visualTrials).mdl(choiceModInd).pctCorrect_inv(ind);
-% subplot(2,2,2)
-% plot(x,y,'.','MarkerSize',20)
-% hold on
-% plot([-0.5 0.7],[-0.5 0.7],'k:')
-% figXAxis([],'Stim Model, Val-Inv',[-0.2 0.7])
-% figYAxis([],'Choice Model, Val-Inv',[-0.2 0.7])
-% figAxForm
-% vline(0,'k:')
-% hline(0,'k:')
-% title('No Attn')
-% 
-% valInvDiff_stim_eaMouse = nan(1,length(mice_noAttn));
-% valInvDiff_choice_eaMouse = nan(1,length(mice_noAttn));
-% for im = 1:length(mice_noAttn)
-%     ind = goodPerfInd_noAttn & catchExptInd_noAttn & ...
-%         strcmp(mouseName_noAttn,mice_noAttn(im));
-%     x = mdl_noAttn(visualTrials).mdl(stimModInd).pctCorrect_valMatched(ind) -...
-%         mdl_noAttn(visualTrials).mdl(stimModInd).pctCorrect_inv(ind);
-%     y = mdl_noAttn(visualTrials).mdl(choiceModInd).pctCorrect_valMatched(ind) -...
-%         mdl_noAttn(visualTrials).mdl(choiceModInd).pctCorrect_inv(ind);
-%     valInvDiff_stim_eaMouse(im) = mean(x);
-%     valInvDiff_choice_eaMouse(im) = mean(y);
-% end
-% 
-% subplot(2,2,3)
-% plot(hrDiff_noAttn,valInvDiff_stim_eaMouse,'.','MarkerSize',20)
-% hold on
-% figXAxis([],'HR Val-Inv',[-0 0.5])
-% figYAxis([],'Stim Model, Val-Inv',[-0.2 0.7])
-% figAxForm
-% vline(0,'k:')
-% hline(0,'k:')
-% legend({'Attn','No Attn'})
-% subplot(2,2,4)
-% plot(hrDiff_noAttn,valInvDiff_choice_eaMouse,'.','MarkerSize',20)
-% hold on
-% figXAxis([],'HR Val-Inv',[-0 0.5])
-% figYAxis([],'Stim Model, Val-Inv',[-0.2 0.7])
-% figAxForm
-% vline(0,'k:')
-% hline(0,'k:')
-% legend({'Attn','No Attn'})
-% print([fnout 'invalidTrialPerfxBehavior'],'-dpdf','-fillpage')
-
 %% distractor only choice model performance
 for iav = 1:2
     mdl_attn(iav).mdl(choiceModInd).pctCorr_distOnly = nan(1,nexp_attn);
@@ -1910,6 +1643,83 @@ figure(mdlWeights_fig)
 print([fnout 'modelWeights_distOnly'],'-dpdf','-fillpage')
 figure(mdlWeightsSub_fig)
 print([fnout 'modelWeights_ciSub_distOnly'],'-dpdf')
+
+%%
+nboot = 1000;
+figure
+imod = 2;
+    subplot(2,4,imod)
+    y1 = cell2mat(mdl_attn(visualTrials).mdl(imod).weights_distOnly(goodPerfInd_av_distOnly_attn)');
+    y2 = cell2mat(mdl_attn(auditoryTrials).mdl(imod).weights_distOnly(goodPerfInd_av_distOnly_attn)');
+    plot(y1,y2,'k.','MarkerSize',10)
+    hold on
+    mdl_fitline = fitlm(y1,y2);
+    yfit = predict(mdl_fitline,y1);
+    plot(y1,yfit,'-')
+    figXAxis([],'Visual Weight',[weightEdges(1) weightEdges(end)])
+    figYAxis([],'Auditory Weight',[weightEdges(1) weightEdges(end)])
+    figAxForm
+    hline(0,'k:')
+    vline(0,'k:')
+    title({'Attn Mice';sprintf('%s Model',...
+        mdl_attn(iav).mdl(imod).name)})
+    
+    r_attn = nan(1,nboot);
+    for iboot = 1:nboot
+        n = length(y1);
+        ind = randsample(1:n,n,1);
+        y1_samp = y1(ind);
+        y2_samp = y2(ind);
+        r_attn(iboot) = corr(y1_samp,y2_samp);
+    end
+    
+    n_attn = length(y1);
+    
+    subplot(2,4,imod+2)
+    y1 = cell2mat(mdl_noAttn(visualTrials).mdl(imod).weights_distOnly(goodPerfInd_av_distOnly_noAttn)');
+    y2 = cell2mat(mdl_noAttn(auditoryTrials).mdl(imod).weights_distOnly(goodPerfInd_av_distOnly_noAttn)');
+    plot(y1,y2,'k.','MarkerSize',10)
+    hold on
+    mdl_fitline = fitlm(y1,y2);
+    yfit = predict(mdl_fitline,y1);
+    plot(y1,yfit,'-')
+    figXAxis([],'Visual Weight',[weightEdges(1) weightEdges(end)])
+    figYAxis([],'Auditory Weight',[weightEdges(1) weightEdges(end)])
+    figAxForm
+    hline(0,'k:')
+    vline(0,'k:')
+    title({'No Attn Mice';sprintf('%s Model',...
+        mdl_noAttn(iav).mdl(imod).name)})
+    
+    r_noAttn = nan(1,nboot);
+    for iboot = 1:nboot
+        n = length(y1);
+        ind = randsample(1:n,n,1);
+        y1_samp = y1(ind);
+        y2_samp = y2(ind);
+        r_noAttn(iboot) = corr(y1_samp,y2_samp);
+    end
+    
+    
+    n_noAttn = length(y1);
+    
+    test_corr = compare_correlation_coefficients(r_attn,r_noAttn,n_attn,n_noAttn);
+    
+    subplot(2,4,4+imod); hold on
+    bar(1:2,[mean(r_attn),mean(r_noAttn)])
+    [ylerr,yuerr] = ciFromBoot(r_attn',95);
+    errorbar(1,mean(r_attn),ylerr,yuerr,'.','MarkerSize',20)
+    [ylerr,yuerr] = ciFromBoot(r_noAttn',95);
+    errorbar(2,mean(r_noAttn),ylerr,yuerr,'.','MarkerSize',20)
+    figXAxis([],'',[0 3],1:2,{'Attn','No Attn'})
+    xtickangle(-45)
+    figYAxis([],'Stim:Choice Weight Corr',[-0.5 1])
+    figAxForm
+    title(sprintf('%s Model, p=%s',mdl_noAttn(iav).mdl(imod).name,sigfigString(test_corr)))
+
+print([fnout 'modelWeights_distOnly_bootCorr'],'-dpdf')
+
+
 
 %% compare PC weights
 weight_lim_pcs = [-5 6];
@@ -2648,7 +2458,67 @@ for iav = 1:2
 end
 
 print([fnout 'pctCorrectXrespWin'],'-dpdf','-fillpage')   
+%% bootstrap stim and choice weight correlation
+boot_low = round(.025*nboot);
+boot_high = round(.975*nboot);
 
+ind = goodPerfInd_av_attn;
+
+% vis trials - attn
+s = cell2mat(mdl_attn(visualTrials).mdl(stimModInd).weights(ind)');
+c = cell2mat(mdl_attn(visualTrials).mdl(choiceModInd).weights(ind)');
+n = length(s);
+vis_corr_boot = nan(1,nboot);
+for ib = 1:nboot
+    samp = randsample(n,n,true);
+    vis_corr_boot(ib) = corr(s(samp),c(samp));
+end
+vis_corr_sort = sort(vis_corr_boot);
+vis_ci_low_attn = vis_corr_sort(boot_low);
+vis_ci_high_attn = vis_corr_sort(boot_high);
+
+% aud trials - attn
+s = cell2mat(mdl_attn(auditoryTrials).mdl(stimModInd).weights(ind)');
+c = cell2mat(mdl_attn(auditoryTrials).mdl(choiceModInd).weights(ind)');
+n = length(s);
+aud_corr_boot = nan(1,nboot);
+for ib = 1:nboot
+    samp = randsample(n,n,true);
+    aud_corr_boot(ib) = corr(s(samp),c(samp));
+end
+aud_corr_sort = sort(aud_corr_boot);
+aud_ci_low_attn = aud_corr_sort(boot_low);
+aud_ci_high_attn = aud_corr_sort(boot_high);
+
+
+
+ind = goodPerfInd_av_noAttn;
+
+% vis trials - attn
+s = cell2mat(mdl_noAttn(visualTrials).mdl(stimModInd).weights(ind)');
+c = cell2mat(mdl_noAttn(visualTrials).mdl(choiceModInd).weights(ind)');
+n = length(s);
+vis_corr_boot = nan(1,nboot);
+for ib = 1:nboot
+    samp = randsample(n,n,true);
+    vis_corr_boot(ib) = corr(s(samp),c(samp));
+end
+vis_corr_sort = sort(vis_corr_boot);
+vis_ci_low_noAttn = vis_corr_sort(boot_low);
+vis_ci_high_noAttn = vis_corr_sort(boot_high);
+
+% aud trials - attn
+s = cell2mat(mdl_noAttn(auditoryTrials).mdl(stimModInd).weights(ind)');
+c = cell2mat(mdl_noAttn(auditoryTrials).mdl(choiceModInd).weights(ind)');
+n = length(s);
+aud_corr_boot = nan(1,nboot);
+for ib = 1:nboot
+    samp = randsample(n,n,true);
+    aud_corr_boot(ib) = corr(s(samp),c(samp));
+end
+aud_corr_sort = sort(aud_corr_boot);
+aud_ci_low_noAttn = aud_corr_sort(boot_low);
+aud_ci_high_noAttn = aud_corr_sort(boot_high);
 %% stim and choice weight correlation
 setFigParams4Print('landscape')
 figure
@@ -2691,10 +2561,10 @@ for iav = 1:2
 end
 subplot 245
 ind = goodPerfInd_av_attn;
-x = cellfun(@corr,mdl_attn(visualTrials).mdl(stimModInd).weights(ind),...
-    mdl_attn(visualTrials).mdl(choiceModInd).weights(ind));
-y = cellfun(@corr,mdl_attn(auditoryTrials).mdl(stimModInd).weights(ind),...
-    mdl_attn(auditoryTrials).mdl(choiceModInd).weights(ind));
+x = corr(cell2mat(mdl_attn(visualTrials).mdl(stimModInd).weights(ind)'),...
+    cell2mat(mdl_attn(visualTrials).mdl(choiceModInd).weights(ind)'));
+y = corr(cell2mat(mdl_attn(auditoryTrials).mdl(stimModInd).weights(ind)'),...
+    cell2mat(mdl_attn(auditoryTrials).mdl(choiceModInd).weights(ind)'));
 plot(x,y,'.','MarkerSize',20)
 hold on
 plot(0:1,0:1,'k--')
@@ -2702,23 +2572,29 @@ figXAxis([],'Vis Stim W:Choice W Corr',[0 1])
 figYAxis([],'Aud Stim W:Choice W Corr',[0 1])
 figAxForm
 title('Attn Mice')
+v_attn = x;
+a_attn = y;
+n_attn = length(cell2mat(mdl_attn(visualTrials).mdl(choiceModInd).weights(ind)'));
 
 subplot 246
-plot(1:2,[x',y'],'k-','MarkerSize',20)
+plot(1:2,[...
+    cellfun(@corr,mdl_attn(visualTrials).mdl(stimModInd).weights(ind),mdl_attn(visualTrials).mdl(choiceModInd).weights(ind))'...
+    ,cellfun(@corr,mdl_attn(auditoryTrials).mdl(stimModInd).weights(ind),mdl_attn(auditoryTrials).mdl(choiceModInd).weights(ind))'...
+    ],'k-','MarkerSize',20)
 hold on
-errorbar(1,mean(x),ste(x,2),'.','MarkerSize',20)
+errorbar(1,mean(x),mean(x)-vis_ci_low_attn,mean(x)-vis_ci_high_attn,'.','MarkerSize',20)
 % plot(ones(1,sum(ind)).*2,y(ind),'.','MarkerSize',20)
-errorbar(2,mean(y),ste(y,2),'.','MarkerSize',20)
+errorbar(2,mean(y),mean(y)-aud_ci_low_attn,mean(y)-aud_ci_high_attn,'.','MarkerSize',20)
 figXAxis([],'',[0 3],1:2,avName)
 figYAxis([],'Stim:Choice Weight Corr',[0 1])
 figAxForm
 
 subplot 247
 ind = goodPerfInd_av_noAttn;
-x = cellfun(@corr,mdl_noAttn(visualTrials).mdl(stimModInd).weights,...
-    mdl_noAttn(visualTrials).mdl(choiceModInd).weights);
-y = cellfun(@corr,mdl_noAttn(auditoryTrials).mdl(stimModInd).weights,...
-    mdl_noAttn(auditoryTrials).mdl(choiceModInd).weights);
+x = corr(cell2mat(mdl_noAttn(visualTrials).mdl(stimModInd).weights(ind)'),...
+    cell2mat(mdl_noAttn(visualTrials).mdl(choiceModInd).weights(ind)'));
+y = corr(cell2mat(mdl_noAttn(auditoryTrials).mdl(stimModInd).weights(ind)'),...
+    cell2mat(mdl_noAttn(auditoryTrials).mdl(choiceModInd).weights(ind)'));
 plot(x,y,'.','MarkerSize',20)
 hold on
 plot(0:1,0:1,'k--')
@@ -2728,13 +2604,26 @@ figAxForm
 title('No Attn Mice')
 
 subplot 248
-plot(1:2,[x(ind)',y(ind)'],'k-','MarkerSize',20)
+plot(1:2,[...
+    cellfun(@corr,mdl_noAttn(visualTrials).mdl(stimModInd).weights(ind),mdl_noAttn(visualTrials).mdl(choiceModInd).weights(ind))'...
+    ,cellfun(@corr,mdl_noAttn(auditoryTrials).mdl(stimModInd).weights(ind),mdl_noAttn(auditoryTrials).mdl(choiceModInd).weights(ind))'...
+    ],'k-','MarkerSize',20)
 hold on
-errorbar(1,mean(x(ind)),ste(x(ind),2),'.','MarkerSize',20)
-errorbar(2,mean(y(ind)),ste(y(ind),2),'.','MarkerSize',20)
+errorbar(1,mean(x),mean(x)-vis_ci_low_noAttn,mean(x)-vis_ci_high_noAttn,'.','MarkerSize',20)
+errorbar(2,mean(y),mean(y)-aud_ci_low_noAttn,mean(y)-aud_ci_high_noAttn,'.','MarkerSize',20)
 figXAxis([],'',[0 3],1:2,avName)
 figYAxis([],'Stim:Choice Weight Corr',[0 1])
 figAxForm
+v_noAttn = x;
+a_noAttn = y;
+n_noAttn = length(cell2mat(mdl_attn(visualTrials).mdl(choiceModInd).weights(ind)'));
+
+%stats 
+p_vis = compare_correlation_coefficients(v_attn,v_noAttn,n_attn,n_noAttn);
+disp(['vis: attn vs no attn, p=' sigfigString(p_vis)])
+
+p_aud = compare_correlation_coefficients(a_attn,a_noAttn,n_attn,n_noAttn);
+disp(['aud: attn vs no attn, p=' sigfigString(p_aud)])
 
 print([fnout 'stimVsChoiceWeights'],'-dpdf','-fillpage')
 
