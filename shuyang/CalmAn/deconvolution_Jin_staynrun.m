@@ -5,13 +5,14 @@
 % right now using FOOPSI method and the model is ar1 (also tried ar2: see commented bottom part),ar1 works better than ar2.
 % then SECTION II draws the GUI showing raw traces with identified events and deconvolved trace.
 % 
+% in this script, deconvolution during running and stationary are done separately
 %% assign document paths and experimental sessions
 %sessions = {'190429_img1021','190430_img1023','190507_img1024','190603_img1025'};
 %days = {'1021-190429_1','1023-190430_1','1024-190507_1','1025-190603_1'};
 
 clear;
-sessions = '190507_img1024'; 
-days = '1024-190507_1';
+sessions = '190603_img1025'; 
+days = '1025-190603_1';
 
 image_analysis_base    = 'Z:\Analysis\2P_MovingDots_Analysis\imaging_analysis\';%stores the data on crash in the movingDots analysis folder
 image_analysis_dest = [image_analysis_base, sessions, '\'];
@@ -29,8 +30,6 @@ frm_stay_cell = behav_output.frames_stay_cell;
 frm_stay = cell2mat(frm_stay_cell);
 frm_run_cell = behav_output.frames_run_cell;
 frm_run = cell2mat(frm_run_cell);
-frames_run = 1:length(frm_run);
-frames_stay = 1:length(frm_stay);
 
 
 %% SECTION I deconvolution
@@ -49,13 +48,13 @@ spk_logic_stay = zeros(length(frm_stay),size(TCave,2));
 num_spks_cell_stay = zeros(1,size(TCave,2));
 FRstay_cell = zeros(1,size(TCave,2));
 for c = 1: size(TCave,2)
-    [kernel_stay(:,c), spk_stay(:,c), options] = deconvolveCa(TCave(frames_stay,c), 'optimize_pars', true, ...
+    [kernel_stay(:,c), spk_stay(:,c), options] = deconvolveCa(TCave(frm_stay,c), 'optimize_pars', true, ...
         'optimize_b', true, 'method','foopsi', 'smin', threshold_stay);
     % get only the peaks of each spike
-    [spk_peak_stay{c},spk_inx_stay{c}] = findpeaks(spk_stay(:,c)); % the index you get here is the index in frames_stay
-    spk_inx_stay{c} = frames_stay(spk_inx_stay{c}); %now the index is back to frames from 1:end of whole experiment
+    [spk_peak_stay{c},spk_inx_stay{c}] = findpeaks(spk_stay(:,c)); % the index you get here is the index in frm_stay
+    spk_inx_stay{c} = frm_stay(spk_inx_stay{c}); %now the index is back to frames from 1:end of whole experiment
     % spike logic
-    spk_logic_stay(:,c) = (ismember(frames_stay,spk_inx_stay{c}))';
+    spk_logic_stay(:,c) = (ismember(frm_stay,spk_inx_stay{c}))';
     num_spks_cell_stay(c) = sum(spk_logic_stay(:,c)==1);
     FRstay_cell(c)= num_spks_cell_stay(c)/length(frm_stay)*30; % firing rate = # of spikes/duration(s)
 end
@@ -72,13 +71,13 @@ spk_logic_run = zeros(length(frm_run),size(TCave,2));
 num_spks_cell_run = zeros(1,size(TCave,2));
 FRrun_cell = zeros(1,size(TCave,2));
 for c = 1: size(TCave,2)
-    [kernel_run(:,c), spk_run(:,c), options] = deconvolveCa(TCave(frames_run,c), 'optimize_pars', true, ...
+    [kernel_run(:,c), spk_run(:,c), options] = deconvolveCa(TCave(frm_run,c), 'optimize_pars', true, ...
         'optimize_b', true, 'method','foopsi', 'smin', threshold_run);
     % get only the peaks of each spike
     [spk_peak_run{c},spk_inx_run{c}] = findpeaks(spk_run(:,c));
-    spk_inx_run{c} = frames_run(spk_inx_run{c});
+    spk_inx_run{c} = frm_run(spk_inx_run{c});
     % spike logic
-    spk_logic_run(:,c) = (ismember(frames_run,spk_inx_run{c}))';
+    spk_logic_run(:,c) = (ismember(frm_run,spk_inx_run{c}))';
     num_spks_cell_run(c) = sum(spk_logic_run(:,c)==1);
     FRrun_cell(c)= num_spks_cell_run(c)/length(frm_run)*30; % firing rate = # of spikes/duration(s)
 end
@@ -123,6 +122,7 @@ save([image_analysis_dest_deconv_sep sessions '_spk_deconvolve_staynrun_seperate
     'threshold_stay','threshold_run','FRstay_cell', 'aveFR_stay','aveFR_run','num_spks_cell_stay',...
     'num_spks_cell_run','options','spk_logic_stay','spk_logic_run','spk_stay',...
     'spk_run','kernel_stay','kernel_run','spk_peak_stay','spk_peak_run','spk_inx_stay','spk_inx_run');
+
 %%
 %GUI
 image_analysis_base    = 'Z:\Analysis\2P_MovingDots_Analysis\imaging_analysis\';%stores the data on crash in the movingDots analysis folder
@@ -135,10 +135,10 @@ kernel_stay = deconvolve_output.kernel_stay;
 spk_stay = deconvolve_output.spk_stay;
 threshold_stay = deconvolve_output.threshold_stay;
 
-[fig_deconvolve_run] = GUI_rawTrace_denoiseNdeconv(TCave(frames_run,:),kernel_run,spk_run,sessions,threshold_run);
+[fig_deconvolve_run] = GUI_rawTrace_denoiseNdeconv(TCave(frm_run,:),kernel_run,spk_run,sessions,threshold_run);
 savefig([image_analysis_dest_deconv_sep sessions '_GUI_TCave_deconvolution_running_threshold' num2str(threshold_run) '.fig']);
 
-[fig_deconvolve_stay] = GUI_rawTrace_denoiseNdeconv(TCave(frames_stay,:),kernel_stay,spk_stay,sessions,threshold_stay);
+[fig_deconvolve_stay] = GUI_rawTrace_denoiseNdeconv(TCave(frm_stay,:),kernel_stay,spk_stay,sessions,threshold_stay);
 savefig([image_analysis_dest_deconv_sep sessions '_GUI_TCave_deconvolution_stay_threshold' num2str(threshold_stay) '.fig']);
 
 %%

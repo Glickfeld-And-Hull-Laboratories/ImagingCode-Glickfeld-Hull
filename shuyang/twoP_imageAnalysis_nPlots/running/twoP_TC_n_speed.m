@@ -1,6 +1,6 @@
 % plot the example 2P session for paper. Don't need this script for the
 % actual analysis.
-% chosse a period of time that contains running trials and stationary
+% choose a period of time that contains running trials and stationary
 % trials, plot TC of selected cells, and plot speed with running trials shaded
 
 clear;

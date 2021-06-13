@@ -617,9 +617,6 @@ end
 subplot(2,2,1);
 errorbar(RT_across_days, RT_across_days_sem, 'b');
 title(['RT across days']);
-if b_data.doBlock2 == 1
-    hold on; errorbar(RT_across_days_b2, RT_across_days_sem_b2, 'k');
-end
 xlabel('day');
 ylabel('RT (ms)');
 xlim([0.8 length(RT_across_days)+0.2]);

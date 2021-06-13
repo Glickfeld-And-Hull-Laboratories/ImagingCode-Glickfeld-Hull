@@ -34,7 +34,6 @@ for ii = 1: length(sessions)
     stay_vec = behav_output.stay_vec;
     
     % for each cell,find isolated events in running and stationary (no event within 650ms before that event)
-    threshold = -4;
     spk_deconv_output = load([image_analysis_dest sessions{ii},'_spk_deconvolve_threshold' num2str(threshold) '.mat']);
     spk_inx_neurons = spk_deconv_output.spk_inx_cl;
     

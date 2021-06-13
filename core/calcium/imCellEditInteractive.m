@@ -76,6 +76,7 @@ cellRadius = round(cellRadius);
 
 % draw initial figure
 figH = figure;
+movegui('center')
 imH = subDrawShaded(fovImg, bwCell, zoomToAxis);
 axH = get(imH, 'Parent');
 set(axH, 'Position', [0.06 0.06 0.88 0.88])

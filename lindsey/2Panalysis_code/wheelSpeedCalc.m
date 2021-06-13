@@ -12,7 +12,15 @@ else
 end
 
 cm_per_tick = circ./(ticks.*4);
-ntrials = length(input.tGratingDirectionDeg);
+if isfield(input,'tGratingDirectionDeg')
+    ntrials = length(input.tGratingDirectionDeg);
+elseif isfield(input,'tStimOneGratingDirectionDeg')
+    ntrials = length(input.tStimOneGratingDirectionDeg);
+elseif isfield(input,'tTestStimGratingDirectionDeg')
+    ntrials = length(input.tTestStimGratingDirectionDeg);
+else
+    error('how many trials?')
+end
 counterTimes = cell2mat(input.counterTimesUs);
 counterValues = cell2mat(input.counterValues);
 wheelSpeedTimes = cell2mat(input.wheelSpeedTimesUs);
@@ -30,11 +38,15 @@ for iframe = 1:nframes-1
     if isempty(fr_time_end)
         fr_time_end = fr_time_start + mean(diff(counterTimes),2);
     end
-    ind = intersect(find(wheelSpeedTimes>=fr_time_start),find(wheelSpeedTimes<=fr_time_end));
-    if length(ind)>0
-        wheel_speed(:,iframe) = mean(wheelSpeedValues(ind),2);
+    if isempty(fr_time_end) & isempty(fr_time_start)
+        wheel_speed(:,iframe) = NaN;
     else
-        wheel_speed(:,iframe) = 0;
+        ind = intersect(find(wheelSpeedTimes>=fr_time_start),find(wheelSpeedTimes<=fr_time_end));
+        if length(ind)>0
+            wheel_speed(:,iframe) = mean(wheelSpeedValues(ind),2);
+        else
+            wheel_speed(:,iframe) = 0;
+        end
     end
 end
 wheel_speed(:,nframes) = wheel_speed(:,nframes-1);

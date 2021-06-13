@@ -1,0 +1,81 @@
+%CRP_training_days_lists
+
+%% list of variables to initialize
+RT_across_sessions = [];
+RT_across_sessions_sem = [];
+RT_across_sessions_2CS = [];
+RT_across_sessions_sem_2CS = [];
+std_of_RT_across_sessions = [];
+std_of_RT_across_sessions_2CS = [];
+RT_across_sessions_testDay = [];
+RT_across_sessions_sem_testDay = [];
+std_of_RT_across_sessions_testDay = [];
+RT_across_sessions_IL = [];
+RT_across_sessions_sem_IL = [];
+std_of_RT_across_sessions_IL = [];
+
+TFT_rates = [];
+miss_rates = [];
+TFT_rates_2CS = [];
+miss_rates_2CS = [];
+TFT_rates_testDay = [];
+miss_rates_testDay = [];
+TFT_rates_IL = [];
+miss_rates_IL = [];
+
+RT_across_mulsessions = [];
+RT_across_sessions_delay = [];
+
+sessions_divider_inx = [];
+sessions_divider_inx_delay = [];
+
+non_consecutive_inx = [];
+non_consecutive_inx_delay = [];
+
+pre_cue_lick_window_avg = [];
+pre_cue_lick_rate_sem = [];
+iti_lick_window_avg = [];
+iti_lick_rate_sem = [];
+
+% sessions = {'210112_img1082','210113_img1082','210114_img1082','210115_img1082',...
+%     '210117_img1082','210118_img1082','210121_img1082'};
+% testDay_mouse = [1082,0,0,0,0,0,0,0];
+
+sessions = {'210112_img1083','210113_img1083','210114_img1083','210115_img1083',...
+    '210117_img1083','210118_img1083','210119_img1083','210121_img1083','210122_img1083',...
+    '210124_img1083','210125_img1083','210126_img1083','210128_img1083','210129_img1083',...
+    '210131_img1083','210201_img1083','210202_img1083','210203_img1083','210204_img1083-1141',...
+    '210205_img1083-1140','210209_img1083'};
+testDay_mouse = [1083,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,2];
+
+assert(length(sessions)==length(testDay_mouse)-1);
+
+%testDay ==0: training days; testDay ==1: test day at the end of CS1+CS2
+%training, stimulus are in blocks (do 3 different sessions to test CS1, CS2, and CS1+CS2)
+% sessions = {'201113_img1078-1308','201113_img1078-1341','201114_img1078','201115_img1078',...
+%      '201116_img1078','201117_img1078','201118_img1078','201119_img1078','201120_img1078',...
+%      '201123_img1078','201124_img1078','201125_img1078','201127_img1078','201130_img1078',...
+%      '201201_img1078','201202_img1078','201203_img1078','201204_img1078','201206_img1078',...
+%      '201208_img1078','201210_img1078-1134','201211_img1078-1251','201211_img1078-1326',...
+%      '201216_img1078','201217_img1078'};
+% testDay_mouse = [1078,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,2];
+% sessions = {'201114_img1079','201115_img1079','201116_img1079','201117_img1079',...
+%     '201118_img1079','201119_img1079','201120_img1079','201123_img1079','201124_img1079',...
+%     '201125_img1079','201127_img1079','201129_img1079','201130_img1079','201201_img1079',...
+%     '201202_img1079','201206_img1079','201207_img1079','201209_img1079-1251',...
+%     '201209_img1079-1325','201210_img1079-1252','201216_img1079','201211_img1079'};
+% % 0: naive day and training days. 1: imaging day after trained with CS1+CS2
+% % 2: imaging day with interleaved trials
+% testDay_mouse = [1079,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2]; 
+
+
+%sessions = {'201107_img1073','201108_img1073','201109_img1073','201110_img1073','201111_img1073',...
+ %   '201112_img1073','201113_img1073','201116_img1073'};
+% sessions = {'201107_img1074','201108_img1074','201109_img1074','201110_img1074','201111_img1074',...
+%      '201112_img1074-1006','201112_img1074-1033','201113_img1074','201114_img1074','201115_img1074',...
+%      '201116_img1074','201117_img1074','201118_img1074','201120_img1074','201123_img1074-0952',...
+%      '201123_img1074-1021','201123_img1074-1049','201124_img1074-1003','201124_img1074-1030','201124_img1074-1105'};
+% testDay_mouse = [1074,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1];
+
+
+

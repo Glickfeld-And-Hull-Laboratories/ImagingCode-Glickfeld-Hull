@@ -59,7 +59,7 @@ for i = 1:length(sessions)
     
     %=================================================================================================================
     pairs = nchoosek((1:size(dfOvF,2)),2); %pairs of cells, pair*2
-    %raw correlation: do correlation for each pair of cells in each trial. conditions:1s before running ends, 1-2s after running ends, dfOvF --> spk
+    %raw correlation: do correlation for each pair of cells in each trial. conditions:0.5s before running ends, 1-1.5s after running ends, dfOvF --> spk
     r_dfOvF_run      = zeros(size(pairs,1),size(dfOvF_run,2)); %pairs*trials
     pval_dfOvF_run   = zeros(size(pairs,1),size(dfOvF_run,2));
     r_dfOvF_stay    = zeros(size(pairs,1),size(dfOvF_run,2));
@@ -97,7 +97,7 @@ for i = 1:length(sessions)
             for t2 = 1:size(dfOvF_run,2)
                 if t1~=t2 %for cellA trial1, corr with cellB trial2-N
                     a = a+1;
-                   
+              
                     [rshiftdfOvF_run(p,a),pshift_dfOvF_run(p,a)] = corr(dfOvF_run(:,t1,pairs(p,1)),dfOvF_run(:,t2,pairs(p,2)));
                     [rshiftdfOvF_stay(p,a),pshiftdfOvF_stay(p,a)] = corr(dfOvF_stay(:,t1,pairs(p,1)),dfOvF_stay(:,t2,pairs(p,2)));
                 end

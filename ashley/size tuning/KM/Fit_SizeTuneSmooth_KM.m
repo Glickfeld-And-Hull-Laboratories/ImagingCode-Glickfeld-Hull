@@ -136,7 +136,7 @@ end
 if PLOTIT_FIT == 1
     if start ==37
         set(gcf, 'Position', [0 0 800 1000]);
-        fn_out = fullfile(fnout, dataFolder, [mouse '_' expDate '_SizeTuneFits' num2str(ifig) '.pdf']);
+        fn_out = fullfile(fnout, datemouse, datemouserefrun, [datemouserefrun '_SizeTuneFits' num2str(ifig) '.pdf']);
         print(fn_out,'-dpdf')
         figure;
         ifig = 1+ifig;

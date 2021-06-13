@@ -8,7 +8,7 @@ if length(animal_num) <3
     animal_num = strcat('9', animal_num)  %for the behavior analysis and some others the 900s omit the first digit in the animal number so img955 would be img55
 end
 session_date = day(1:6);
-
+img_loc
 %identify behavior file
 bfile = dir([bx_source 'data-i' '*' animal_num '-' session_date '*' ]);
 

@@ -3,6 +3,7 @@ close all
 clc
 doRedChannel = 0;
 ds = 'CrossOriRandDir_ExptList';
+driver = 'SLC';
 area_list = strvcat('V1','LM','AL','RL','PM');
 narea = length(area_list);
 eval(ds)
@@ -25,7 +26,7 @@ area_ind = [];
 pca_area = [];
 for iA = 1:narea
     fprintf([area_list(iA,:) '\n'])
-    load(fullfile(summaryDir,['randDir_Summary_' area_list(iA,:) '.mat']))
+    load(fullfile(summaryDir,['randDir_Summary_' area_list(iA,:) '_' driver '.mat']))
     areaSummary(iA).name = area_list(iA,:);
     areaSummary(iA).mice = unique(mouse_list,'rows');
     areaSummary(iA).nmice = size(unique(mouse_list,'rows'),1);
@@ -179,17 +180,17 @@ for iA = 1:narea
     axis square
     plotZcZpBorders
     
-    load(fullfile(summaryDir,['randDir_PCA_Summary_' area_list(iA,:) '.mat']))
-    Zc_pca_all = [Zc_pca_all Zc_all];
-    Zp_pca_all = [Zp_pca_all Zp_all];
-    pca_area = [pca_area iA.*ones(size(Zc_all))];
-    figure(6)
-    subplot(2,1,1)
-    errorbar(iA,nanmean(Zc_all,2),nanstd(Zc_all,[],2)./sqrt(sum(~isnan(Zc_all))),'ok')
-    hold on
-    subplot(2,1,2)
-    errorbar(iA,nanmean(Zp_all,2),nanstd(Zp_all,[],2)./sqrt(sum(~isnan(Zp_all))),'ok')
-    hold on
+%     load(fullfile(summaryDir,['randDir_PCA_Summary_' area_list(iA,:) '.mat']))
+%     Zc_pca_all = [Zc_pca_all Zc_all];
+%     Zp_pca_all = [Zp_pca_all Zp_all];
+%     pca_area = [pca_area iA.*ones(size(Zc_all))];
+%     figure(6)
+%     subplot(2,1,1)
+%     errorbar(iA,nanmean(Zc_all,2),nanstd(Zc_all,[],2)./sqrt(sum(~isnan(Zc_all))),'ok')
+%     hold on
+%     subplot(2,1,2)
+%     errorbar(iA,nanmean(Zp_all,2),nanstd(Zp_all,[],2)./sqrt(sum(~isnan(Zp_all))),'ok')
+%     hold on
 end
 figure(1)
 subplot(3,3,1)
@@ -228,7 +229,7 @@ xlabel('Zc')
 ylabel('Zp')
 xlim([-0.5 2])
 ylim([-0.4 0.4])
-print(fullfile(summaryDir, ['randDir_allArea_summary.pdf']),'-dpdf', '-fillpage') 
+print(fullfile(summaryDir, ['randDir_allArea_summary_' driver '.pdf']),'-dpdf', '-fillpage') 
 
 figure(2)
 subplot(2,2,1)
@@ -250,10 +251,10 @@ xlabel('Zp')
 ylabel('F2overF1')
 xlim([-0.4 0.4])
 ylim([0 1.25])
-print(fullfile(summaryDir, ['randDir_allArea_summary_F2F1.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allArea_summary_F2F1_' driver '.pdf']),'-dpdf', '-fillpage')
 
 figure(3)
-print(fullfile(summaryDir, ['randDir_allArea_summary_SI&F2F1byOSI.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allArea_summary_SI&F2F1byOSI_' driver '.pdf']),'-dpdf', '-fillpage')
 
 [p_Zc table_Zc stats_Zc] = anova1(Zc_all_all(resp_ind_all_all),area_ind(resp_ind_all_all),'off');
 post_Zc = multcompare(stats_Zc,'display','off');
@@ -293,32 +294,32 @@ ylim([0 1])
 sigstar(groups(ind),post_f2f1(ind,end),1)
 set(gca,'XTick',1:narea,'XTickLabel',area_list)
 ylabel('F2/F1')
-print(fullfile(summaryDir, ['randDir_allArea_summary_ZcZpF2F1_withStats.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allArea_summary_ZcZpF2F1_withStats_' driver '.pdf']),'-dpdf', '-fillpage')
 
 figure(5)
-print(fullfile(summaryDir, ['randDir_allArea_summary_ZcZp_scatters.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, ['randDir_allArea_summary_ZcZp_scatters_' driver '.pdf']),'-dpdf', '-fillpage')
 
-[p_Zc_pca table_Zc_pca stats_Zc_pca] = anova1(Zc_pca_all,pca_area,'off');
-post_Zc_pca = multcompare(stats_Zc_pca,'display','off');
-[p_Zp_pca table_Zp_pca stats_Zp_pca] = anova1(Zp_pca_all,pca_area,'off');
-post_Zp_pca = multcompare(stats_Zp_pca,'display','off');
+% [p_Zc_pca table_Zc_pca stats_Zc_pca] = anova1(Zc_pca_all,pca_area,'off');
+% post_Zc_pca = multcompare(stats_Zc_pca,'display','off');
+% [p_Zp_pca table_Zp_pca stats_Zp_pca] = anova1(Zp_pca_all,pca_area,'off');
+% post_Zp_pca = multcompare(stats_Zp_pca,'display','off');
 
-figure(6)
-subplot(2,1,1)
-ind = find(post_Zc_pca(:,end)<0.05);
-xlim([0 narea+1])
-ylim([0 3.5])
-sigstar(groups(ind),post_Zc_pca(ind,end),1)
-set(gca,'XTick',1:narea,'XTickLabel',area_list)
-ylabel('PCA- Zc')
-subplot(2,1,2)
-ind = find(post_Zp_pca(:,end)<0.05);
-xlim([0 narea+1])
-ylim([0 3.5])
-sigstar(groups(ind),post_Zp_pca(ind,end),1)
-set(gca,'XTick',1:narea,'XTickLabel',area_list)
-ylabel('PCA- Zp')
-print(fullfile(summaryDir, ['randDir_allArea_summary_PCA_ZcZp.pdf']),'-dpdf', '-fillpage') 
+% figure(6)
+% subplot(2,1,1)
+% ind = find(post_Zc_pca(:,end)<0.05);
+% xlim([0 narea+1])
+% ylim([0 3.5])
+% sigstar(groups(ind),post_Zc_pca(ind,end),1)
+% set(gca,'XTick',1:narea,'XTickLabel',area_list)
+% ylabel('PCA- Zc')
+% subplot(2,1,2)
+% ind = find(post_Zp_pca(:,end)<0.05);
+% xlim([0 narea+1])
+% ylim([0 3.5])
+% sigstar(groups(ind),post_Zp_pca(ind,end),1)
+% set(gca,'XTick',1:narea,'XTickLabel',area_list)
+% ylabel('PCA- Zp')
+% print(fullfile(summaryDir, ['randDir_allArea_summary_PCA_ZcZp.pdf']),'-dpdf', '-fillpage') 
 
 
 

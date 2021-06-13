@@ -1,17 +1,17 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_ExptList';
+ds = 'CrossOriRandDirRandPhase_ExptList';
 eval(ds)
 rc = behavConstsAV;
-frame_rate = 30;
+frame_rate = 15;
 nexp = size(expt,2);
 %%
-for iexp = 7
+for iexp = 3
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
-ImgFolder = expt(iexp).coFolder;
-time = expt(iexp).coTime;
+ImgFolder = expt(iexp).copFolder;
+time = expt(iexp).copTime;
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
@@ -24,7 +24,7 @@ end
 
 %% load data
 
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
+%load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
@@ -34,14 +34,21 @@ load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
 calib = 1/26.6; %mm per pixel
 
 % Load and combine eye tracking data
-irun =  1;
-CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
-cd(CD);
-fn = [ImgFolder{irun} '_000_000_eye.mat'];
-data = load(fn);          % should be a '*_eye.mat' file
+nrun = length(ImgFolder);
+data = [];
+for irun =  1:nrun
+    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
+    cd(CD);
+    fn = [ImgFolder{irun} '_000_000_eye.mat'];
 
-data = squeeze(data.data);      % the raw images...
+    data_temp = load(fn);          % should be a '*_eye.mat' file
+    data_temp = squeeze(data_temp.data);
 
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time{irun} '.mat'];
+    load(fName);
+    nFrames = input.counterValues{end}(end);
+    data = cat(3, data, data_temp(:,:,1:nFrames));      % the raw images...
+end
 figure;
 data_avg = mean(data,3);
 imagesc(data_avg);
@@ -74,7 +81,8 @@ end
 close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
-rad_range = [3 19];
+%%
+rad_range = [6 25];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
@@ -89,14 +97,26 @@ end
 eye = struct('Centroid',A,'Area',B,'Val',C,'SNR',D);
 radii = [];
 for n = 1:size(data,3)
-    [center,radii,metric] = imfindcircles(squeeze(data(:,:,n)),rad_range,'Sensitivity',0.9);
-    [val,idx] = max(metric);          % pick the circle with best score
+    [center,radii,metric] = imfindcircles(squeeze(data(:,:,n)),rad_range,'Sensitivity',0.95);
+              % pick the circle with best score
     if(isempty(center))
         eye(n).Centroid = [NaN NaN];    % could not find anything...
         eye(n).Area = NaN;
         eye(n).Val = NaN;
         eye(n).SNR = NaN;
     else
+        snr = zeros(1,size(center,1));
+        for idx = 1:size(center,1)
+            t = double(data(:,:,n));
+            vector_of_y_values = (1:size(data,1)) - center(idx,2);
+            vector_of_x_values = (1:size(data,2)) - center(idx,1);
+            [Yg, Xg] = ndgrid(vector_of_y_values, vector_of_x_values);
+            idx1 = find(Xg.^2 + Yg.^2 < (radii(idx)/2).^2);
+            idx2 = find(Xg.^2 + Yg.^2 < (radii(idx).*2.5).^2 & Xg.^2 + Yg.^2 > (radii(idx).*1.5).^2);
+            snr(idx) = mean(t(idx1))./mean(t(idx2));
+        end
+        [v,idx] = max(snr);
+        val = metric(idx);
         t = double(data(:,:,n));
         vector_of_y_values = (1:size(data,1)) - center(idx,2);
         vector_of_x_values = (1:size(data,2)) - center(idx,1);
@@ -134,7 +154,7 @@ xlabel('Metric')
 
 x1 = find(isnan(Area));
 x2 = find(~isnan(Area));
-x3 = find(Val<0.26 & SNR<1.9);
+x3 = unique([find(Val<0.1); find(Val<0.20 & SNR<1.7)]);
 
 x = unique([x1; x3]);
 if length(x)>25
@@ -155,10 +175,15 @@ for i = 1:minx
     %title(num2str(x(frames(i))))
     start = start+1;
 end
-suptitle('No pupil detected')
+suptitle(['No pupil detected- ' num2str(length(x)) ' frames'])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_noPupil2.pdf']),'-dpdf','-fillpage');
 
 x = setdiff(x2,x3);
+if length(x)>25
+    minx = 25;
+else
+    minx = length(x);
+end
 frames = sort(randsample(length(x),minx));
 figure;
 start = 1;
@@ -191,6 +216,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     eye_mat_start = zeros(sz(1), sz(2), prewin_frames+postwin_frames, nTrials);
    
     nframes = size(Rad_temp,1);
+    
     for itrial = 1:nTrials
         if itrial == nTrials
             crange = [double(cStimOn(itrial))-prewin_frames:nframes];
@@ -250,6 +276,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     ylabel('y-pos')
     subplot(2,1,2)
     hist(centroid_dist,0:0.5:60)
+    title([num2str(sum(centroid_dist<4)) ' trials w/in 4 deg'])
     suptitle([num2str(sum(~isnan(centroid_dist))) '/' num2str(nTrials) ' measurable trials'])
     xlabel('Centroid distance from median')
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilPosDist.pdf']),'-dpdf','-fillpage');
@@ -287,7 +314,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
         end
     end    
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med', 'centroid_dist_sf', 'centroid_med_sf' );
-    close all
+    %close all
 end
 %     %% eye plots
 % trial_n = zeros(nMaskCon,nStimCon,nMaskPhas);

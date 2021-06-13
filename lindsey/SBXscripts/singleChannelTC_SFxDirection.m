@@ -97,12 +97,16 @@ ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one val
 sz = size(data_reg);
 %        Each trial has nOff frames followed by nOn frames, so can reshape stack so nYpix x nXpix x nFrames/Trial (nOn+nOff) x nTrials
 data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
-fprintf(['Size of data_tr is ' num2str(size(data_tr))])
+fprintf(['Size of data_tr is ' num2str(size(data_tr)) '\n'])
 %    b. Find baseline F from last half of off period- avoids decay of previous on trial
+fprintf('Making data_f \n')
 data_f = mean(data_tr(:,:,nOff/2:nOff,:),3); 
 %    c. Find dF/F for each trial
-data_df = bsxfun(@minus, double(data_tr), data_f); 
+fprintf('Making data_df \n')
+data_df = bsxfun(@minus, double(data_tr), data_f);
+fprintf('Making data_dfof \n')
 data_dfof = bsxfun(@rdivide,data_df, data_f); 
+fprintf('Clearing data \n')
 clear data_f data_df data_tr
 %    d. Find average dF/F for each stimulus condition (this is for an experiment with changing grating direction)
 Dir = celleqel2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
@@ -116,9 +120,11 @@ nSF = length(SFs);
 nStim = nDirs+nSF;
 data_dfof_avg = zeros(sz(1),sz(2),nStim); %create empty matrix with FOV for each direction: nYpix x nXPix x nDir
 
+fprintf('Averaging Dirs: \n')
 figure;
 [n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
 for idir = 1:nDirs
+    fprintf(num2str(idir))
     ind = find(Dir == Dirs(idir)); %find all trials with each direction
     data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %average all On frames and all trials
     subplot(n,n2,idir)
@@ -129,7 +135,9 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_allDirs.pdf']), '
 
 figure;
 [n, n2] = subplotn(nSF); %function to optimize subplot number/dimensions
+fprintf('\n Averaging SFs: \n')
 for iSF = 1:nSF
+    fprintf(num2str(iSF))
     ind = find(SF_mat == SFs(iSF)); %find all trials with each SF
     data_dfof_avg(:,:,iSF+nDirs) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %average all On frames and all trials
     subplot(n,n2,iSF)

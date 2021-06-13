@@ -9,7 +9,7 @@ clear;
 % days = {'1021-190429_1','1023-190430_1','1024-190507_1','1025-190603_1'};
 % image_analysis_base    = 'Z:\Analysis\2P_MovingDots_Analysis\imaging_analysis\'; 
 
-sessions = '190429_img1021'; 
+sessions = '190603_img1025'; 
 image_analysis_base    = 'Z:\Analysis\2P_MovingDots_Analysis\imaging_analysis\'; 
 image_analysis_dest = [image_analysis_base, sessions,'\'];
 image_analysis_dest_deriv = [image_analysis_base, sessions, '\derivative\'];
@@ -18,7 +18,7 @@ if ~exist(image_analysis_dest_deriv)
 end
 
 % behavior analysis results 
-days = '1021-190429_1';
+days = '1025-190603_1';
 behav_dest = ['Z:\Analysis\2P_MovingDots_Analysis\behavioral_analysis\' days '\'];
 color_code = {'b','r','k','c'};
 
@@ -33,7 +33,7 @@ frm_stay = cell2mat(frm_stay_cell);
 %  decide the threshold for spikes,  get average number of spikes during stationary (bestFR)
 [aveFRsWstds, best_thres,bestFR,std_best,spk_inx,FRstay_cells,...
     spk_bi_cellmat] = twoP_best_spkthreshold (deriv, frm_stay,TCave);
-savefig([image_analysis_dest_deriv sessions '_hist_stayFR_wdiffthresh']);
+%savefig([image_analysis_dest_deriv sessions '_hist_stayFR_wdiffthresh']);
 % 
 % % plot spike logic
 % figure;
@@ -52,7 +52,7 @@ savefig([image_analysis_dest_deriv sessions '_hist_stayFR_wdiffthresh']);
 % savefig([image_analysis_dest sessions '_scatter_spikeRate']);
 
 save([image_analysis_dest_deriv sessions,'_spikes.mat'],'aveFRsWstds','best_thres'...
-    ,'bestFR','std_best','spk_inx','spk_bi_cellmat');
+    ,'bestFR','std_best','spk_inx','spk_bi_cellmat','FRstay_cells');
 
 %% SECTION II plots to go back and look at the raw data
 

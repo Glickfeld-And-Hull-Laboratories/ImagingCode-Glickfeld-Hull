@@ -6,7 +6,7 @@ if length(varargin) > 1
 %     fdir = fullfile(rc.ashleyData,mouse,'two-photon imaging',expdate,imgfolder);
     fdir = varargin{2};
 else
-    fdir = fullfile('Z:\home\ashley\data', mouse, 'two-photon imaging',expdate,imgfolder);
+    fdir = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\\home\ashley\data', mouse, 'two-photon imaging',expdate,imgfolder);
 end
 cd(fdir);
 

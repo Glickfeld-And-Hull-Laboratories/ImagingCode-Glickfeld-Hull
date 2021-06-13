@@ -75,7 +75,7 @@ dfOvF_runslow_isoevents_neurons_all = [];
 
 for ii = 1: length(sessions)
     image_analysis_dest = [image_analysis_base, sessions{ii}, '\'];
-    isoCa_output = load([image_analysis_dest sessions{ii} '_isoCaEvent.mat']);
+    isoCa_output = load([image_analysis_dest,'deconv_wfastRunSmin\' sessions{ii} '_isoCaEvent.mat']);
     ave_dfOvF_stay_iso_Allsessions(ii,:) = isoCa_output.ave_dfOvF_btm_stay_iso_session;
     ave_dfOvF_runfast_iso_Allsessions(ii,:) = isoCa_output.ave_dfOvF_btm_runfast_iso_session;
     ave_dfOvF_runslow_iso_Allsessions(ii,:) = isoCa_output.ave_dfOvF_btm_runslow_iso_session;
@@ -120,14 +120,14 @@ diff2 = ave_dfOvF_runslow_iso_across(1) - ave_dfOvF_runfast_iso_across(1);
 ave_dfOvF_stay_iso_across_plot = ave_dfOvF_stay_iso_across - diff1;
 ave_dfOvF_runslow_iso_across_plot = ave_dfOvF_runslow_iso_across - diff2;
 CaAmp_dfOvF = figure;
-errorbar(x,ave_dfOvF_stay_iso_across_plot,ste_dfOvF_stay_iso_across,'.','LineStyle','-','linewidth', 1,'MarkerSize',4,'color','k'); hold on;
+errorbar(x,ave_dfOvF_stay_iso_across_plot,ste_dfOvF_stay_iso_across,'.','LineStyle','-','linewidth', 1,'MarkerSize',4,'color','k','Capsize',3); hold on;
 errorbar(x,ave_dfOvF_runfast_iso_across,ste_dfOvF_runfast_iso_across,'.',...
-    'LineStyle','-','linewidth', 1,'MarkerSize',4,'color',[0, 0.4470, 0.7410]); % matlab default color
+    'LineStyle','-','linewidth', 1,'MarkerSize',4,'color',[0, 0.4470, 0.7410],'Capsize',3); % matlab default color
 errorbar(x,ave_dfOvF_runslow_iso_across_plot,ste_dfOvF_runslow_iso_across,'.',...
-    'LineStyle','-','linewidth', 1,'MarkerSize',4,'color',[0.8500, 0.3250, 0.0980]); %matlab default color
+    'LineStyle','-','linewidth', 1,'MarkerSize',4,'color',[0.8500, 0.3250, 0.0980],'Capsize',3); %matlab default color
 
 %legend(['stationary nevents=' num2str(ntotalevents_stay)],['running nevents=' num2str(ntotalevents_run)]);
-legend('stationary', 'fast','slow'); legend boxoff;
+legend('stationary', 'fast','slow'); %legend boxoff;
 %text(0.75,0.55, ['n total PCs=' num2str(ntotalPCs)]);
 ylim([0 0.85]); xlim([0 1.1]);
 xlabel('time(s)'); ylabel('df/F');
@@ -136,7 +136,7 @@ CaAmp_dfOvF.Position = [3 3 5 5];
 a = get(gca,'XTickLabel');
 set(gca,'XTickLabel',a,'FontSize',7);
 fig_name = 'across_session_CaAmp_motorized_running';
-path = 'Z:\Analysis\figures\figure6_motorized_running\';
+path = 'Z:\Analysis\motorizedWheel_Analysis\running\across_sessions\deconv_wRunSmin\';
 %orient(CaAmp_dfOvF,'landscape')
 print(CaAmp_dfOvF,[path,fig_name],'-r600','-depsc');
 %savefig(['Z:\Analysis\motorizedWheel_Analysis\running\across_sessions\' 'across_sessions_CaAmpRunvsStay_samey.fig']);

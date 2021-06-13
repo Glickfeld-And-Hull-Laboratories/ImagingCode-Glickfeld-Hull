@@ -7,17 +7,19 @@
 
 %% paths
 clear;
-sessions = '200227_img1049'; 
-days = '1049-200227_1';
+% sessions = {'200305_img1049','200319_img1064_airpuff','200319_img1064_airpuff_2'};
+% days = {'1049-200305_1','1064-200319_1','1064-200319_2'};
+sessions = '200305_img1049'; 
+days = '1049-200305_1';
 image_analysis_base = 'Z:\Analysis\motorizedWheel_Analysis\airpuff\imaging_analysis\'; 
 color_code = {'b','r','k','c'};
 
 %% deconvolution and plot
 % paths and load data-------------------------------------------------------------------------------------------------------
 image_analysis_dest = [image_analysis_base, sessions, '\'];
-deconvolutionFigureDest = [image_analysis_dest,'deconvolution\'];
-if ~exist(deconvolutionFigureDest)
-    mkdir(deconvolutionFigureDest);
+deconvolutionDest = [image_analysis_dest,'deconv_wfastRunSmin\'];
+if ~exist(deconvolutionDest)
+    mkdir(deconvolutionDest);
 end
 % behavior analysis results
 behav_dest = ['Z:\Analysis\motorizedWheel_Analysis\airpuff\behavioral_analysis\' days '\'];
@@ -27,16 +29,27 @@ TCave = load([image_analysis_dest 'getTC\' filename.name]);
 TCave = TCave.tc_avg;
 behav_output = load([behav_dest days '_behavAnalysis.mat']);
 stay_nopuff = behav_output.stay_nopuff;
-
+frm_stay = behav_output.stay_vec;
+frm_fastrun = behav_output.run_fast_vec;
 
 %Deconvolution------------------------------------------------------------------------------------------------------------------
 % input: fluorescence trace: T*1, threshold for spike size (how big the spikes are supposed to be: normal set as -3(3 sigma, 3 times bigger than noise levels)).
 % kernal: denoised trace, T*1 vector
 % spikes: all of the values in a spike(thus, you will get more than 1 values if a spike is longer than a frame. e.g.: if a spike is 120ms long, you will get 4 values back to back which all belong to a single spike)
 
+% deconvolution on fastest speed and get smin
 frames = 1:1:size(TCave,1);
-threshold = -4; %changing the threhold basically changes the identification of spikes when the peak amplitude is small (those small peaks), doesn't change anything with the bigger jittered ones. -3 or -3.5 gives a FR close to 1 during stationary
+threshold_run = -4; %changing the threhold basically changes the identification of spikes when the peak amplitude is small (those small peaks), doesn't change anything with the bigger jittered ones. -3 or -3.5 gives a FR close to 1 during stationary
+kernel_run = zeros(length(frm_fastrun),size(TCave,2));
+spk_run = zeros(length(frm_fastrun),size(TCave,2));
+smin_run = zeros(1,size(TCave,2)); % smin is the threshold (in fluorescence values) of smallest spikes being detected
+for c = 1: size(TCave,2)
+    [kernel_run(:,c), spk_run(:,c), options] = deconvolveCa(TCave(frm_fastrun,c), 'optimize_pars', true, ...
+        'optimize_b', true, 'method','foopsi', 'smin', threshold_run);
+    smin_run(c) = options.smin;
+end
 
+% deconvolution for whole experiment
 kernel = zeros(size(TCave,1),size(TCave,2));
 spk = zeros(size(TCave,1),size(TCave,2));
 spk_peak = {};
@@ -45,25 +58,26 @@ spk_logic = zeros(size(TCave,1),size(TCave,2));
 num_spks_cell = zeros(1,size(TCave,2));
 FRstay_cell = zeros(1,size(TCave,2));
 for c = 1: size(TCave,2)
-    [kernel(:,c), spk(:,c), options] = deconvolveCa(TCave(:,c), 'optimize_pars', true, ...
-        'optimize_b', true, 'method','foopsi', 'smin', threshold);
+    [kernel(:,c), spk(:,c), options] = deconvolveCa_stay(TCave(:,c), 'optimize_pars', true, ...
+        'optimize_b', true, 'method','foopsi', 'smin', smin_run(c)); % deconvolveCa_stay is the function I modified that applies the smin of running to the whole dataset (only changed for FOOPSI model OR1)
     % get only the peaks of each spike
     [spk_peak{c},spk_inx{c}] = findpeaks(spk(:,c));
     % spike logic
     spk_logic(:,c) = (ismember(frames,spk_inx{c}))';
-    num_spks_cell(c) = sum(spk_logic(stay_nopuff,c)==1);
-    FRstay_cell(c)= num_spks_cell(c)/length(stay_nopuff)*30; % firing rate = # of spikes/duration(s)
+    num_spks_cell(c) = sum(spk_logic(frm_stay,c)==1);
+    FRstay_cell(c)= num_spks_cell(c)/length(frm_stay)*30; % firing rate = # of spikes/duration(s)
 end
 aveFR = mean(FRstay_cell);
-hist_FR = figure;
-histogram(FRstay_cell,'BinWidth',0.1);
-title([sessions 'deconvolution-firing rate-stationary-threshold' num2str(threshold)]);
-saveas(hist_FR,[deconvolutionFigureDest sessions '_histFR_deconvolution_threshold' num2str(threshold) '.fig']);
+% hist_FR = figure;
+% histogram(FRstay_cell,'BinWidth',0.1);
+% title([sessions 'deconvolution-firing rate-stationary-threshold' num2str(threshold)]);
+% saveas(hist_FR,[deconvolutionDest sessions '_histFR_deconvolution_threshold' num2str(threshold) '.fig']);
 
 %save variables
-save([image_analysis_dest sessions '_spk_deconvolve_threshold' num2str(threshold) '.mat' ],'threshold',...
-    'FRstay_cell', 'aveFR','options','spk_logic','spk','kernel','spk_peak','spk_inx');
+save([deconvolutionDest sessions '_spk_deconvolve_staynrun_seperate.mat' ],'threshold_run',...
+   'smin_run', 'FRstay_cell', 'aveFR','options','spk_logic','spk','kernel','spk_peak','spk_inx');
 
+%{
 % plots---------------------------------------------------------------------------------------------------------------------------
 % write a GUI with subplots: TCave with red dots and kernel
 [fig_deconvolve] = GUI_rawTrace_nDeconvolve(TCave,kernel,spk_logic,sessions,threshold);
@@ -265,3 +279,4 @@ savefig([image_analysis_dest sessions '_mask_wdendrites_goodcells.fig']);
 % plot(c2);
 % xlim([200,3500]);ylabel('c');xlabel('frame');
 
+%}

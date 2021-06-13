@@ -280,7 +280,7 @@ nPCs_total = 0;
 for ii = 1:length(sessions)
     %load things
     image_analysis_dest = [image_analysis_base, sessions{ii}, '\'];
-    spk_output = load([image_analysis_dest sessions{ii},'_spk_deconvolve_threshold-4.mat']);
+    spk_output = load([image_analysis_dest,'deconv_wfastRunSmin\' sessions{ii}, '_spk_deconvolve_staynrun_seperate.mat']);
     FR_fast_cells = spk_output.FR_fast_cells; %1*n cells
     FR_slow_cells = spk_output.FR_slow_cells;
     FR_stay_cells = spk_output.FR_stay_cells;
@@ -318,7 +318,7 @@ a = get(gca,'XTickLabel');
 set(gca,'XTickLabel',a,'FontSize',7);
 %set(gca,'XTickLabelRotation',45);
 fig_name = 'across_session_fastvsSlowvsStay_FR';
-path = 'Z:\Analysis\figures\figure6_motorized_running\';
+path = 'Z:\Analysis\motorizedWheel_Analysis\running\across_sessions\deconv_wRunSmin\';
 %orient(dfOvF_behavStates,'landscape');
 print(FR_fig,[path,fig_name],'-r600','-depsc');
 

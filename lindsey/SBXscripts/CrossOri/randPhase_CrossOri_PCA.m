@@ -17,12 +17,15 @@ test_amp_all = zeros(1,2,nexp);
 plaid_ang_all = zeros(8,8,2,nexp);
 mask_ang_all = zeros(8,2,nexp);
 test_ang_all = zeros(8,2,nexp);
+exp_ind = [];
 
 %%
 for iexp = 1:nexp
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     area = expt(iexp).img_loc{1};
+    if strcmp(expt(iexp).driver,'SLC')
+        exp_ind = [exp_ind iexp];
     ImgFolder = expt(iexp).dirFolder;
     time = expt(iexp).dirTime;
     nrun = length(ImgFolder);
@@ -235,6 +238,20 @@ for iexp = 1:nexp
 %     suptitle([mouse ' ' date])
 %     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_phaseResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
 %     
+     x = blues(70);
+     x = x(70-15:2:70,:);
+    figure;
+    for ip = 1:nMaskPhas
+        plot(plaid_pca(:,1,ip),plaid_pca(:,2,ip),'k','Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(ip,:), 'MarkerSize', 10)
+        hold on
+    end
+    xlim([-4 0.5])
+    ylim([-4 0.5])
+    axis square
+    suptitle([mouse ' ' date])
+    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_phaseRespOnly_PCAspace_2D.pdf']),'-dpdf','-fillpage')
+%     
+
     test_pca_avg = mean(test_pca(101:150,:),1);
     mask_pca_avg = mean(mask_pca(101:150,:),1);
     plaid_pca_avg = mean(plaid_pca(101:150,:,:),1);
@@ -335,6 +352,7 @@ for iexp = 1:nexp
     test_ang_all(:,:,iexp) = test_pca_ang;
 
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_pcaResp.mat']),'test_pca','mask_pca','plaid_pca','test_pca_amp','mask_pca_amp','plaid_pca_amp','U','S','V','pca_exp','mask_corr','test_corr','plaid_corr')
+    end
 end
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandPhaseSummary');
 % 
@@ -468,3 +486,14 @@ if i == 1
 end
 end
 print(fullfile(summaryDir, 'randPhase_PCA_DistCorrAng_summary.pdf'),'-dpdf','-fillpage')
+
+figure;
+plot([test_ang_all_avg(1,exp_ind); plaid_ang_all_avg(1,exp_ind)],'k')
+hold on
+errorbar(1,mean(test_ang_all_avg(1,exp_ind),2),std(test_ang_all_avg(1,exp_ind),[],2)./sqrt(nexp),'ok')
+errorbar(2,mean(plaid_ang_all_avg(1,exp_ind),2),std(plaid_ang_all_avg(1,exp_ind),[],2)./sqrt(nexp),'ok')
+set(gca,'Xtick',1:2,'XTickLabel',{'test','plaid'})
+xlim([0 4])
+ylim([0 90])
+print(fullfile(summaryDir, 'randPhase_PCA_TestPlaidAng_summary.pdf'),'-dpdf','-fillpage')
+

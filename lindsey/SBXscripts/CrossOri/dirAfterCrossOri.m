@@ -1,10 +1,10 @@
 %% get path names
 close all;clear all;clc;
 
-ds = 'CrossOriRandPhase_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList';
 eval(ds)
 nexp = length(expt);
-for iexp = 7
+for iexp = 6
 rc = behavConstsAV;
 
 %%
@@ -197,7 +197,7 @@ for iCell = 1:nCells
     p_diranova(iCell) = anova1(dir_resp_mat(:,iCell),dir_list,'off');
     if start>25
         suptitle([mouse ' ' date ' Dir'])
-     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuningAndFitsCells' num2str(n) '.pdf']),'-dpdf', 'bestfit')
+     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuningAndFitsCells' num2str(n) '.pdf']),'-dpdf', '-bestfit')
         figure;
         n = n+1;
         start = 1;
@@ -215,7 +215,7 @@ for iCell = 1:nCells
     start = start+1;
 end
 suptitle([mouse ' ' date ' Dir'])
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuningAndFitsCells' num2str(n) '.pdf']),'-dpdf', 'bestfit')
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuningAndFitsCells' num2str(n) '.pdf']),'-dpdf', '-bestfit')
 dirresp_ind = find(h_dir_all);
 dirtuned_ind = find(p_diranova<0.05);
 [max_val, max_ind_dir] = max(dir_resp_avg(:,:,1),[],2);

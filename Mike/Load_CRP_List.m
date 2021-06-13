@@ -1,5 +1,5 @@
 function pairings = Load_CRP_List()
-CRP_expt_list_LS_jh
+RC_expt_list_SJ;
 
 fprintf(['Experiment IDs  \n(1) Day 1 \n(2) Omission Reward \n(3) '...
     'Unexpected Reward \n(4) 1000ms Delay \n(5) Overtrained OR \n(6) Overtrained UR \n'])

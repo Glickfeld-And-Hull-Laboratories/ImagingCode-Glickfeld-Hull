@@ -287,6 +287,38 @@ print(fullfile(summaryDir, 'randPhase_compSineAmp_byRsq_SI.pdf'),'-dpdf','-fillp
 % title('')
 % legend({'Rsq<0.1','Rsq>0.1'},'location','northwest')
 % print(fullfile(summaryDir, 'randPhase_compPhaseMod_byRsq.pdf'),'-dpdf','-fillpage')
+
+figure;
+leg_str = cell(1,nSF);
+for iSF = 1:nSF
+    subplot(2,2,1)
+    cdfplot(plaidSI_all{iSF}(resp_ind_all{iSF}))
+    hold on
+    subplot(2,2,2)
+    cdfplot(testPI_all{iSF}(resp_ind_all{iSF}))
+    hold on
+    subplot(2,2,3)
+    cdfplot(amp_all_all{iSF}(resp_ind_all{iSF}))
+    hold on
+    subplot(2,2,4)
+    cdfplot(b_all_all{iSF}(resp_ind_all{iSF}))
+    hold on
+    leg_str{iSF} = [sfstr{iSF} '- n = ' num2str(length(resp_ind_all{iSF}))];
+end
+subplot(2,2,1)
+xlabel('Modulation index')
+title('')
+legend(leg_str,'location', 'southeast')
+subplot(2,2,2)
+xlabel('Stim preference index')
+title('')
+subplot(2,2,3)
+xlabel('Sine fit amplitudue')
+title('')
+subplot(2,2,4)    
+xlabel('Sine fit baseline')
+title('')
+print(fullfile(summaryDir, 'randPhase_highlowSF_comp.pdf'),'-dpdf','-fillpage')
 %%
 nCon = 4;
 stim = [];

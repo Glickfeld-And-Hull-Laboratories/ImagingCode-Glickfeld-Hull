@@ -1,13 +1,14 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDir_ExptList';
+ds = 'CrossOriRandDirTwoPhase_ExptList';
 eval(ds)
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirSummary');
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
-area_list = ['V1'; 'LM'; 'AL'; 'PM'; 'RL'];
+area_list = ['V1'];
+driver = 'SLC';
 narea =length(area_list);
 
 for iarea = 1:narea
@@ -37,7 +38,7 @@ for iarea = 1:narea
     start = 1;
     %%
     for iexp = 1:nexp
-        if sum(strcmp(expt(iexp).img_loc,area))
+        if sum(strcmp(expt(iexp).img_loc,area)) & strcmp(expt(iexp).driver,driver)& expt(iexp).SF == 0.05
             exp_ind = [exp_ind iexp];
             mouse = expt(iexp).mouse;
             date = expt(iexp).date;
@@ -76,6 +77,7 @@ for iarea = 1:narea
             sz = size(data_dfof);
             nCells = sz(2);
             nFrames = sz(1);
+            nStimDir = length(stimDirs);
             tc_dir_dfof = zeros(nOn+nOff,nCells,nStimDir,2);
             for iDir = 1:nStimDir
                 ind_stimdir = find(stimDir_all == stimDirs(iDir));
@@ -122,21 +124,31 @@ for iarea = 1:narea
 
             x = get(gca, 'ColorOrder');
             x = [x; [1 0 1]; x; [1 0 1];];
+            x = blues(70);
+            x = x(70-15:2:70,:);
             ln_mat = ['k','r'];
-    %         figure;
-    %         for idir = 1:nStimDir
-    %             plot3(stim_pca(:,1,idir), stim_pca(:,2,idir), stim_pca(:,3,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:))
-    %             hold on
-    %         end
-    %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
-
+%             figure;
+%             for idir = 1:nStimDir
+%                 plot3(stim_pca(:,1,idir), stim_pca(:,2,idir), stim_pca(:,3,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:))
+%                 hold on
+%             end
+%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
+%             figure;
+%             for idir = 1:nStimDir/2
+%                 plot(stim_pca(:,1,idir), stim_pca(:,2,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:), 'MarkerSize', 10)
+%                 hold on
+%             end
+%             ylim([-2.5 1.5])
+%             xlim([-2.5 1.5])
+%             axis square
+%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
             pca_dir = reshape(stim_pca,[nFrames.*nCells nStimDir]);
             corr_dir = corrcoef(pca_dir);
     % 
-    %         figure; imagesc(corr_dir);
-    %         set(gca, 'XTick', 1:2:nStimDir, 'XTickLabel', num2str(stimDirs(1:2:nStimDir)'), 'YTick', 1:2:nStimDir, 'YTickLabel', num2str(stimDirs(1:2:nStimDir)')) 
-    %         xlabel('Grating Direction (deg)')
-    %         ylabel('Grating Direction (deg)')
+%             figure; imagesc(corr_dir);
+%             set(gca, 'XTick', 1:2:nStimDir, 'XTickLabel', num2str(stimDirs(1:2:nStimDir)'), 'YTick', 1:2:nStimDir, 'YTickLabel', num2str(stimDirs(1:2:nStimDir)')) 
+%             xlabel('Grating Direction (deg)')
+%             ylabel('Grating Direction (deg)')
     %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_corr.pdf']),'-dpdf','-fillpage')
             corr_dir_all(:,:,start) = corr_dir;
     %         plaid_pca = zeros(nFrames,nCells,nMaskDir);
@@ -166,11 +178,11 @@ for iarea = 1:narea
             stimstim_dist_all(:,:,start) = stimstim_dist;
             stimplaid_ang_all(:,:,start) = stimplaid_ang;
             stimstim_ang_all(:,:,start) = stimstim_ang;
-    %         figure; imagesc(stimplaid_dist)
-    %         colorbar
-    %         set(gca,'Xtick',1:2:16,'Xticklabel',num2str(stimDirs(1:2:16)'),'Ytick',1:2:16,'Yticklabel',num2str(stimDirs(1:2:16)'))
-    %         ylabel('Plaid Grating Direction')
-    %         xlabel('Single Grating Direction')
+%             figure; imagesc(stimplaid_dist)
+%             colorbar
+%             set(gca,'Xtick',1:2:16,'Xticklabel',num2str(stimDirs(1:2:16)'),'Ytick',1:2:16,'Yticklabel',num2str(stimDirs(1:2:16)'))
+%             ylabel('Plaid Grating Direction')
+%             xlabel('Single Grating Direction')
     %         
 
             if nCells > 99
@@ -184,49 +196,99 @@ for iarea = 1:narea
                 stim_pca_amp_all(1:nCells,:,start) = stim_pca_amp(1:nCells,:);
                 plaid_pca_amp_all(1:nCells,:,start) = plaid_pca_amp(1:nCells,:);
             end
-    %         figure;
-    %         for iDir = 1:nStimDir
-    %             mDir = iDir+(nStimDir/4);
-    %             if mDir>nStimDir
-    %                 mDir = mDir-nStimDir;
-    %             end
-    %             vDir = iDir+(nStimDir/8);
-    %             if vDir>nStimDir
-    %                 vDir = vDir-nStimDir;
-    %             end
-    %             subplot(4,4,iDir)
-    %             plot3(stim_pca(:,1,iDir),stim_pca(:,2,iDir), stim_pca(:,3,iDir),'-o')
-    %             hold on
-    %             plot3(stim_pca(:,1,mDir),stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
-    %             plot3(stim_pca(:,1,vDir),stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
-    %             plot3(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
-    %             title(num2str(stimDirs(iDir)))
-    %         end
-    %         suptitle([mouse ' ' date])
-    %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
-    % 
-    %         figure;
-    %         plot(squeeze(stim_pca(:,1,:)),squeeze(stim_pca(:,3,:)))
-    %     
-    %         figure;
-    %         for iDir = 1:nStimDir
-    %             mDir = iDir+(nStimDir/4);
-    %             if mDir>nStimDir
-    %                 mDir = mDir-nStimDir;
-    %             end
-    %             vDir = iDir+(nStimDir/8);
-    %             if vDir>nStimDir
-    %                 vDir = vDir-nStimDir;
-    %             end
-    %             subplot(4,4,iDir)
-    %             plot(stim_pca(:,2,iDir),stim_pca(:,3,iDir),'-o')
-    %             hold on
-    %             plot(stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
-    %             plot(stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
-    %             plot(plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
-    %             title(num2str(stimDirs(iDir)))
-    %         end
-    %         suptitle([mouse ' ' date])
+%             figure;
+%             for iDir = 1:nStimDir
+%                 mDir = iDir+(nStimDir/4);
+%                 if mDir>nStimDir
+%                     mDir = mDir-nStimDir;
+%                 end
+%                 vDir = iDir+(nStimDir/8);
+%                 if vDir>nStimDir
+%                     vDir = vDir-nStimDir;
+%                 end
+%                 subplot(4,4,iDir)
+%                 plot3(stim_pca(:,1,iDir),stim_pca(:,2,iDir), stim_pca(:,3,iDir),'-o')
+%                 hold on
+%                 plot3(stim_pca(:,1,mDir),stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
+%                 plot3(stim_pca(:,1,vDir),stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
+%                 plot3(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
+%                 title(num2str(stimDirs(iDir)))
+%             end
+%             suptitle([mouse ' ' date])
+%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
+%             
+%             
+%             figure;
+%             for iDir = 1%:nStimDir
+%                 mDir = iDir+(nStimDir/4);
+%                 if mDir>nStimDir
+%                     mDir = mDir-nStimDir;
+%                 end
+%                 vDir = iDir+(nStimDir/8);
+%                 if vDir>nStimDir
+%                     vDir = vDir-nStimDir;
+%                 end
+%                 %subplot(4,4,iDir)
+%                 plot(stim_pca(:,1,iDir),stim_pca(:,2,iDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(1,:), 'MarkerSize', 10)
+%                 hold on
+%                 plot(stim_pca(:,1,mDir),stim_pca(:,2,mDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(2,:), 'MarkerSize', 10)
+%                 plot(stim_pca(:,1,vDir),stim_pca(:,2,vDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(3,:), 'MarkerSize', 10)
+%                 plot(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),ln_mat(1),'Marker','o','MarkerEdgeColor','k','MarkerFaceColor',x(4,:), 'MarkerSize', 10)
+%                 title(num2str(stimDirs(iDir)))
+%                 ylim([-2.5 1.5])
+%                 xlim([-2.5 1.5])
+%                 axis square
+%             end
+%             suptitle([mouse ' ' date])
+%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_PCAspace_2D_0deg.pdf']),'-dpdf','-fillpage')
+%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
+%             
+%             figure;
+%             hsv_map = [hsv(8); hsv(8)];
+%             for iDir = 1:nStimDir
+%                 plot3(stim_pca(:,1,iDir),stim_pca(:,2,iDir),stim_pca(:,3,iDir),'-o','Color', hsv_map(iDir,:))
+%                 hold on
+%             end
+%             legend(num2str(stimDirs(1:nStimDir/2)'),'location','southwest')
+%             xlabel('PCA 1')
+%             ylabel('PCA 2')
+%             title([mouse ' ' date '- Gratings'])
+%             
+%             figure;
+%             hsv_map = [hsv(8); hsv(8)];
+%             for iDir = 1:nStimDir
+%                 plot3(plaid_pca(:,1,iDir),plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o','Color', hsv_map(iDir,:))
+%                 hold on
+%             end
+%             legend(num2str(stimDirs(1:nStimDir/2)'),'location','southeast')
+%             xlabel('PCA 1')
+%             ylabel('PCA 2')
+%             title([mouse ' ' date '- Plaids'])
+%             
+%             
+%             
+%             figure;
+%             plot(squeeze(stim_pca(:,1,:)),squeeze(stim_pca(:,3,:)))
+%         
+%             figure;
+%             for iDir = 1:nStimDir
+%                 mDir = iDir+(nStimDir/4);
+%                 if mDir>nStimDir
+%                     mDir = mDir-nStimDir;
+%                 end
+%                 vDir = iDir+(nStimDir/8);
+%                 if vDir>nStimDir
+%                     vDir = vDir-nStimDir;
+%                 end
+%                 subplot(4,4,iDir)
+%                 plot(stim_pca(:,2,iDir),stim_pca(:,3,iDir),'-o')
+%                 hold on
+%                 plot(stim_pca(:,2,mDir),stim_pca(:,3,mDir),'-o')
+%                 plot(stim_pca(:,2,vDir),stim_pca(:,3,vDir),'-o')
+%                 plot(plaid_pca(:,2,iDir),plaid_pca(:,3,iDir),'-o')
+%                 title(num2str(stimDirs(iDir)))
+%             end
+%             suptitle([mouse ' ' date])
     %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
     %         
     %         figure; 
@@ -316,6 +378,11 @@ for iarea = 1:narea
             patt_corr = triu2vec(corrcoef(plaid_pca_long,patt_pca_long));
             comp_patt_corr = triu2vec(corrcoef(patt_pca_long,comp_pca_long));
 
+            Rp = ((patt_corr)-(comp_corr.*comp_patt_corr))./sqrt((1-comp_corr.^2).*(1-comp_patt_corr.^2));
+            Rc = ((comp_corr)-(patt_corr.*comp_patt_corr))./sqrt((1-patt_corr.^2).*(1-comp_patt_corr.^2));
+            Zp = (0.5.*log((1+Rp)./(1-Rp)))./sqrt(1./(nStimDir-3));
+            Zc = (0.5.*log((1+Rc)./(1-Rc)))./sqrt(1./(nStimDir-3));
+            
             Rp = ((patt_corr)-(comp_corr.*comp_patt_corr))./sqrt((1-comp_corr.^2).*(1-comp_patt_corr.^2));
             Rc = ((comp_corr)-(patt_corr.*comp_patt_corr))./sqrt((1-patt_corr.^2).*(1-comp_patt_corr.^2));
             Zp = (0.5.*log((1+Rp)./(1-Rp)))./sqrt(1./(nStimDir-3));
@@ -418,7 +485,7 @@ for iarea = 1:narea
     %         resp_norm_avg_all(:,:,iexp) = resp_norm_avg;
         end
     end
-    save(fullfile(summaryDir,['randDir_PCA_Summary_' area '.mat']),'Zc_all','Zp_all')
+    
     %%
     figure; 
     subplot(2,2,1)
@@ -641,10 +708,10 @@ for iarea = 1:narea
 
     figure;
     subplot(2,2,1) 
-    errorbar(1,nanmean(stimplaid_corrs_comp_avg),nanstd(stimplaid_corrs_comp_avg)./sqrt(sum(~isnan(stimplaid_corrs_comp_avg))),'ok')
+    errorbar(1,nanmean(stimplaid_corrs_comp_avg),nanstd(stimplaid_corrs_comp_avg)./sqrt(sum(~isnan(stimplaid_corrs_comp_avg))),'or')
     hold on
-    errorbar(2,nanmean(stimplaid_corrs_vect_avg),nanstd(stimplaid_corrs_vect_avg)./sqrt(sum(~isnan(stimplaid_corrs_vect_avg))),'ok')
-    errorbar(3,nanmean(stimplaid_corrs_opp_avg),nanstd(stimplaid_corrs_opp_avg)./sqrt(sum(~isnan(stimplaid_corrs_opp_avg))),'ok')
+    errorbar(2,nanmean(stimplaid_corrs_vect_avg),nanstd(stimplaid_corrs_vect_avg)./sqrt(sum(~isnan(stimplaid_corrs_vect_avg))),'or')
+    errorbar(3,nanmean(stimplaid_corrs_opp_avg),nanstd(stimplaid_corrs_opp_avg)./sqrt(sum(~isnan(stimplaid_corrs_opp_avg))),'or')
     hold on; plot(stimplaid_corrs_all,'k')
     set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
     xlim([0 4])
@@ -654,10 +721,10 @@ for iarea = 1:narea
     ylabel('Plaid-Stim Correlation')
 
     subplot(2,2,2) 
-    errorbar(1,nanmean(stimplaid_dists_comp_avg),nanstd(stimplaid_dists_comp_avg)./sqrt(sum(~isnan(stimplaid_dists_comp_avg))),'ok')
+    errorbar(1,nanmean(stimplaid_dists_comp_avg),nanstd(stimplaid_dists_comp_avg)./sqrt(sum(~isnan(stimplaid_dists_comp_avg))),'or')
     hold on
-    errorbar(2,nanmean(stimplaid_dists_vect_avg),nanstd(stimplaid_dists_vect_avg)./sqrt(sum(~isnan(stimplaid_dists_vect_avg))),'ok')
-    errorbar(3,nanmean(stimplaid_dists_opp_avg),nanstd(stimplaid_dists_opp_avg)./sqrt(sum(~isnan(stimplaid_dists_opp_avg))),'ok')
+    errorbar(2,nanmean(stimplaid_dists_vect_avg),nanstd(stimplaid_dists_vect_avg)./sqrt(sum(~isnan(stimplaid_dists_vect_avg))),'or')
+    errorbar(3,nanmean(stimplaid_dists_opp_avg),nanstd(stimplaid_dists_opp_avg)./sqrt(sum(~isnan(stimplaid_dists_opp_avg))),'or')
     hold on; plot(stimplaid_dists_all,'k')
     set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
     xlim([0 4])
@@ -667,16 +734,16 @@ for iarea = 1:narea
     ylabel('Plaid-Stim Neural distance')
 
     subplot(2,2,3) 
-    errorbar(1,nanmean(stimplaid_angs_comp_avg),nanstd(stimplaid_angs_comp_avg)./sqrt(sum(~isnan(stimplaid_angs_comp_avg))),'ok')
+    errorbar(1,nanmean(stimplaid_angs_comp_avg),nanstd(stimplaid_angs_comp_avg)./sqrt(sum(~isnan(stimplaid_angs_comp_avg))),'or')
     hold on
-    errorbar(2,nanmean(stimplaid_angs_vect_avg),nanstd(stimplaid_angs_vect_avg)./sqrt(sum(~isnan(stimplaid_angs_vect_avg))),'ok')
-    errorbar(3,nanmean(stimplaid_angs_opp_avg),nanstd(stimplaid_angs_opp_avg)./sqrt(sum(~isnan(stimplaid_angs_opp_avg))),'ok')
+    errorbar(2,nanmean(stimplaid_angs_vect_avg),nanstd(stimplaid_angs_vect_avg)./sqrt(sum(~isnan(stimplaid_angs_vect_avg))),'or')
+    errorbar(3,nanmean(stimplaid_angs_opp_avg),nanstd(stimplaid_angs_opp_avg)./sqrt(sum(~isnan(stimplaid_angs_opp_avg))),'or')
     hold on; plot(stimplaid_angs_all,'k')
     set(gca,'Xtick', 1:3, 'XTickLabels',{'Component','Vector','Opposite'})
     xlim([0 4])
     ylim([0 90])
-    [p t s] = anova1(stimplaid_angs_all',[],'off');
-    title(['p = ' num2str(chop(p,2))])
+    [p_ang t s] = anova1(stimplaid_angs_all',[],'off');
+    title(['p = ' num2str(chop(p_ang,2))])
     ylabel('Plaid-Stim Neural angle')
 
     subplot(2,2,4)
@@ -687,7 +754,13 @@ for iarea = 1:narea
     xlim([0 3])
     ylim([0 5])
     ylabel('Correlation with plaid')
-    [h, p] = ttest(Zc_all,Zp_all);
-    title(['p = ' num2str(chop(p,2))])
+    [h, p_zcorr] = ttest(Zc_all,Zp_all);
+    title(['p = ' num2str(chop(p_zcorr,2))])
     print(fullfile(summaryDir,['stimplaidDistance' area '.pdf']),'-dpdf', '-bestfit')
+    suptitle(area)
+    
+    size(Zp_all)
+    size(stimplaid_angs_all)
+    
+    save(fullfile(summaryDir,['randDir_PCA_Summary_' area '.mat']),'Zc_all','Zp_all','stimplaid_angs_all','stimplaid_corrs_all','stimplaid_dists_all')
 end

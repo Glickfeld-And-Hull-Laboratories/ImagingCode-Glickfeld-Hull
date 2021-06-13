@@ -1,10 +1,11 @@
 clear all
+clear all global
 close all
 
-date = '200715';
-mouse = 'i1324';
+date = '210504';
+mouse = 'i1345';
 ImgFolder = '001';
-time = '1015';
+time = '1040';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -29,7 +30,7 @@ for irun = 1:nrun
     load(imgMatFile);
 
     nframes = info.config.frames;
-    nframes = 4050;
+    %nframes = 4050;
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
 
@@ -64,6 +65,7 @@ for irun = 1:nrun
         
     data = cat(3,data,data_temp);
 end
+
 clear data_temp
 expt_input = concatenateDataBlocks(temp);
 
@@ -87,7 +89,7 @@ expt_input = concatenateDataBlocks(temp);
     
 %     sz = size(data);
 %     data = data(:,:,1:(nOn+nOff)*ntrials);
-    if size(data,3) < 30000
+    if size(data,3) < 10000
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
         if (nOn+nOff)*ntrials > size(data,3)
@@ -184,31 +186,21 @@ expt_input = concatenateDataBlocks(temp);
         if min(Els,[],2)<0
             Els = fliplr(Els);
         end
-        nStim = length(Azs).*length(Els);
-        Stims = [];
-        data_dfof_avg = zeros(nOn+nOff, length(Azs).*length(Els));
-        start = 1;
-        for iEl = 1:length(Els)
-            ind1 = find(El == Els(iEl));
-            for iAz = 1:length(Azs)
-                Stims = [Stims; Els(iEl) Azs(iAz)];
-                ind2 = find(Az == Azs(iAz));
-                ind = intersect(ind1,ind2);
-                %data_dfof_avg(:,start) = mean(data_dfof(:,ind),2);
-                start = start +1;
+        for i=1:length(Els)
+            for j = 1:length(Azs)
+                ind = (El==Els(i)).*(Az==Azs(j));
+                respMap(i, j) = mean(data_dfof(find(ind)));
             end
         end
-        data_dfof_avg_all = squeeze(mean(data_dfof_avg(nOff:nOff+nOn,:),1));
-        figure
-        heatmap = imagesc(fliplr(rot90(reshape(data_dfof_avg_all,length(Els),length(Azs)),3)));
-        heatmap.Parent.YTick = 1:length(Els);
-        heatmap.Parent.YTickLabel = strread(num2str(Els),'%s');    
-        heatmap.Parent.XTick = 1:length(Azs);
-        heatmap.Parent.XTickLabel = strread(num2str(Azs),'%s');
-        xlabel('Azimuth');
-        ylabel('Elevation');
-        colorbar
-        caxis([-0.1 0.1])
+        figure;
+        ax=gca;
+        imagesc(respMap);
+        ax.XTickLabel = Azs;
+        ax.YTickLabel = Els;
+        title('Total image average dF/F response map')
+        xlabel('Azimuth (deg)')
+        ylabel('Elevation (deg)')
+
     end
     
     figure; imagesc(mean(data,3));

@@ -1,11 +1,13 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirTwoPhase_ExptList';
-iexp = 12; 
+ds = 'CrossOriRandDirRandSF_ExptList';
+%ds = 'CrossOriRandPhase_15Hz_ExptList';
+iexp = 1; 
+doPhaseAfterDir = 0;
 rc = behavConstsAV;
 eval(ds)
 
-frame_rate = 15;
+frame_rate = params.frameRate;
 
 %%
 mouse = expt(iexp).mouse;
@@ -13,6 +15,12 @@ date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
 ImgFolder = expt(iexp).coFolder;
 time = expt(iexp).coTime;
+if doPhaseAfterDir
+    nrun = length(ImgFolder);
+    ref_str = catRunName(cell2mat(ImgFolder), nrun);
+    ImgFolder = expt(iexp).copFolder;
+    time = expt(iexp).copTime;
+end
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
@@ -70,14 +78,21 @@ clear data_temp
 clear temp
 toc
 
-%% Choose register interval
-nep = floor(size(data,3)./10000);
+% Choose register interval
+regIntv = 5000;
+nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
-figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); colormap gray; clim([0 3000]); end
+figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,40001:40500),3);
+data_avg = mean(data(:,:,30001:30500),3);
 %% Register data
-if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+if doPhaseAfterDir
+    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
+    [out, data_reg] = stackRegister(data,data_avg);
+    mkdir(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+elseif exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     [outs, data_reg] = stackRegister_MA(data,[],[],out);
 else
@@ -86,22 +101,22 @@ else
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
-clear data out
 
-%% test stability
-figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
+
+% test stability
+figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); end
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_byFrame.pdf']),'-dpdf', '-bestfit')
 movegui('center')
-figure; imagesq(mean(data_reg(:,:,1:10000),3)); truesize;
+figure; imagesq(mean(data_reg(:,:,1:regIntv),3)); truesize;
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
 
 i = 1;
 sz = size(data_reg);
 rg = zeros(sz(1),sz(2),3);
-first = mean(data_reg(:,:,1+((i-1)*10000):500+((i-1)*10000)),3);
+first = mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3);
 rg(:,:,1) = first./max(first(:));
 i = nep; 
-last = mean(data_reg(:,:,1+((i-1)*10000):500+((i-1)*10000)),3);
+last = mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3);
 rg(:,:,2) = last./max(last(:));
 figure; image(rg)
 movegui('center')
@@ -127,7 +142,7 @@ if doRedChannel
 end
 
 %% find activated cells
-
+clear data out
 cStimOn = celleqel2mat_padded(input.cStimOneOn);
 nTrials = length(cStimOn);
 sz = size(data_reg);
@@ -164,6 +179,19 @@ SF_all = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
 SFs = unique(SF_all);
 nSF = length(SFs);
 
+if input.doTwoStimTogether
+    maskCon_all = celleqel2mat_padded(input.tStimTwoGratingContrast);
+    maskCons = unique(maskCon_all);
+    nMaskCon = length(maskCons);
+    maskPhas_all = celleqel2mat_padded(input.tStimTwoGratingPhaseDeg);
+    maskPhas = unique(maskPhas_all);
+    nMaskPhas = length(maskPhas);
+    maskDir_all = rad2deg(wrapTo2Pi(deg2rad(celleqel2mat_padded(input.tStimTwoGratingDirectionDeg))));
+    maskDir_all(find(maskDir_all==360)) = 0;
+    maskDirs = unique(maskDir_all);
+    nMaskDir = length(maskDirs);
+end
+
 if nStimCon >= 2  || nMaskCon >=2 
     nStim1 = nStimCon*nMaskCon*nMaskPhas;
     data_dfof = nan(sz(1),sz(2),nStim1);
@@ -192,7 +220,7 @@ else
     data_dfof = [];
 end
 
-if nStimDir > 1
+if nStimDir > 1 & ~input.doTwoStimTogether
     nStim2 = nStimDir.*2;
     data_dfof = cat(3, data_dfof, zeros(sz(1),sz(2), nStim2));
     start = nStim1+1;
@@ -202,6 +230,31 @@ if nStimDir > 1
         data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,[ind_stimalone ind_maskalone]),3);
         ind_plaidstim = intersect(intersect(find(stimCon_all),find(maskCon_all)),find(stimDir_all == stimDirs(is)));
         data_dfof(:,:,start+1) = nanmean(data_resp_dfof(:,:,ind_plaidstim),3);
+        start = start+2;
+    end
+    figure; 
+    subplot(2,1,1); 
+    imagesc(mean(data_dfof(:,:,nStim1+1:2:end),3))
+    title('Grating')
+    colormap gray
+    caxis([0 1])
+    subplot(2,1,2); 
+    imagesc(mean(data_dfof(:,:,nStim1+2:2:end),3))
+    title('Plaid')
+    colormap gray
+    caxis([0 1])
+    suptitle([mouse ' ' date])
+    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GratingVsPlaid.pdf']),'-dpdf')
+elseif nStimDir > 1 & input.doTwoStimTogether
+    nStim2 = nStimDir.*2;
+    data_dfof = cat(3, data_dfof, zeros(sz(1),sz(2), nStim2));
+    start = nStim1+1;
+    for is = 1:nStimDir
+        ind_same = intersect(find(stimDir_all == stimDirs(is)), find(maskDir_all == stimDirs(is)));
+        data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_same),3);
+        ind_both = find(stimCon_all&maskCon_all);
+        ind_diff = setdiff(find(stimDir_all == stimDirs(is)), find(maskDir_all == stimDirs(is)));
+        data_dfof(:,:,start+1) = nanmean(data_resp_dfof(:,:,intersect(ind_both,ind_diff)),3);
         start = start+2;
     end
 else
@@ -233,39 +286,49 @@ data_dfof = cat(3, data_dfof, data_dfof_max);
 if doRedChannel
     data_dfof = cat(3,data_dfof,data_red_avg);
 end
+if strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')
+    data_dfof = cat(3,data_dfof,data_avg);
+end
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas','SF_all', 'SFs', 'nSF', 'frame_rate', 'nTrials')
 
 %% cell segmentation 
-mask_exp = zeros(sz(1),sz(2));
-mask_all = zeros(sz(1), sz(2));
-mask_data = data_dfof;
+if ~doPhaseAfterDir
+    mask_exp = zeros(sz(1),sz(2));
+    mask_all = zeros(sz(1), sz(2));
+    mask_data = data_dfof;
 
-for iStim = 1:size(data_dfof,3)   
-    mask_data_temp = mask_data(:,:,end+1-iStim);
-    mask_data_temp(find(mask_exp >= 1)) = 0;
-    bwout = imCellEditInteractiveLG(mask_data_temp);
-    if doRedChannel & iStim==1
-        red_mask = bwout;
+    for iStim = 1:size(data_dfof,3)   
+        mask_data_temp = mask_data(:,:,end+1-iStim);
+        mask_data_temp(find(mask_exp >= 1)) = 0;
+        bwout = imCellEditInteractiveLG(mask_data_temp);
+        if doRedChannel & iStim==1
+            red_mask = bwout;
+        end
+        mask_all = mask_all+bwout;
+        mask_exp = imCellBuffer(mask_all,3)+mask_all;
+        close all
     end
-    mask_all = mask_all+bwout;
-    mask_exp = imCellBuffer(mask_all,3)+mask_all;
-    close all
+    mask_cell= bwlabel(mask_all);
+    if doRedChannel
+        red_cells = unique(mask_cell(find(red_mask)));
+    else
+        red_cells = [];
+    end
+    figure; movegui('center')
+    imagesc(mask_cell)
 end
-mask_cell= bwlabel(mask_all);
-if doRedChannel
-    red_cells = unique(mask_cell(find(red_mask)));
-else
-    red_cells = [];
-end
-figure; movegui('center')
-imagesc(mask_cell)
+    
 
-clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg
+clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg data_resp data_resp_dfof bwout
+
 %% neuropil subtraction
-mask_np = imCellNeuropil(mask_cell, 3, 5);
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')
-
+if ~doPhaseAfterDir
+    mask_np = imCellNeuropil(mask_cell, 3, 5);
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')
+else
+    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_mask_cell.mat']))
+end
 clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_data_temp mask_exp data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
 
 
@@ -298,3 +361,5 @@ save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
 
 clear data_tc data_tc_down np_tc np_tc_down mask_np mask_cell
 
+
+ 

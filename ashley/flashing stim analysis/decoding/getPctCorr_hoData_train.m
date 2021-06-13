@@ -1,4 +1,4 @@
-function [pctCorr yhat_temp] = getPctCorr_hoData_train(X,Y,ind_sub,ind_train,dv)
+function [pctCorr yhat_temp, targetGLM] = getPctCorr_hoData_train(X,Y,ind_sub,ind_train,dv)
 %X- responses for all trials all cells
 %Y- category for all trials
 %ind_sub- set of trials to test
