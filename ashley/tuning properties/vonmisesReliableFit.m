@@ -15,7 +15,7 @@ y_fit = nan(length(theta_smooth),nboot+1,nCells);
 max_ori = nan(nboot+1,nCells);
 
 for iCell = 1:nCells
-    if all(data(iCell,:) < 0)
+    if all(data(iCell,:) < 0)  || sum(isnan(data(iCell,:)),2)==size(data,2)
         y_fit(:,1,iCell) = zeros(size(y_fit,1),1,1);
         y_fit(:,2:nboot+1,iCell) = nan(size(y_fit,1),nboot,1);
     else
