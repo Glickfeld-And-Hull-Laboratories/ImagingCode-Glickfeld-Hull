@@ -1,7 +1,6 @@
 function [avgResponseEaDir,semResponseEaDir,vonMisesFitAllCells,fitReliability,R_square,tuningTC] = ...
     getDirTuning(tc,mworks,downSampleFactor)
-basewin = 8:12;
-respwin = 13:16;
+
 nBoot = 1000;
 
 
@@ -10,6 +9,8 @@ nBoot = 1000;
 %params
 nOn = (mworks.nScansOn)./downSampleFactor;
 nOff = (mworks.nScansOff)./downSampleFactor;
+basewin = nOff/2:nOff;
+respwin = nOff+1:nOn+nOff;
 nTrials = mworks.trialSinceReset;
 if mod(nFrames,nTrials) > 0
     nframesAllTrials = nTrials*(nOn+nOff);
@@ -18,7 +19,7 @@ if mod(nFrames,nTrials) > 0
     end 
 end
 tc = tc(1:(nOn+nOff)*nTrials,:);
-tDirection = cell2mat(mworks.tGratingDirectionDeg);
+tDirection = cell2mat_padded(mworks.tGratingDirectionDeg);
 tDirection = tDirection(1:nTrials);
 [directionInd, directions] = findgroups(tDirection);
 nStim = length(directions);

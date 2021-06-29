@@ -2,22 +2,26 @@
 clear all
 clear global
 %% 
-date = '200121';
-mouse = 'i1317';
-ImgFolder = '003';
+date = '201229';
+mouse = 'i72220';
+ImgFolder = '004';
 run = '000';
 doReg = 0;
 nrun = size(ImgFolder,1);
-zoom = '2.0';
-mod = '200um';
+channel = 'red';
+gl_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\2P_Imaging';
 
 CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\2P_Imaging\' mouse '\' date '_' mouse '\' ImgFolder];
 cd(CD);
 imgMatFile = [ImgFolder '_000_' run '.mat'];
 load(imgMatFile);
 
+% if just a snapshot
+% CD = fullfile(gl_fn, [mouse '\' date '_' mouse]);
+% cd(CD);
+% imgMatFile = [date '_' mouse '_' channel '_' zoom '.mat'];
 nframes = info.config.frames;
-data = sbxread([ImgFolder '_000_' run],0,nframes);
+data = sbxread(imgMatFile,0,nframes);
 fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
 
 %Register Data, use Green PMT

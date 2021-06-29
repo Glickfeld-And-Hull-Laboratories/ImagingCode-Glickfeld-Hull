@@ -19,7 +19,7 @@ if mod(nFrames,nTrials) > 0
     end 
 end
 tc = tc(1:(nOn+nOff)*nTrials,:);
-tDirection = cell2mat(mworks.tGratingDirectionDeg);
+tDirection = cell2mat_padded(mworks.tGratingDirectionDeg);
 tDirection = tDirection(1:nTrials);
 tOrientation = tDirection;
 tOrientation(tOrientation > 179) = tOrientation(tOrientation > 179) - 180;
@@ -30,6 +30,7 @@ nStim = length(orientations);
 trialTC = reshape(tc,nOff+nOn,nTrials,nCells);
 F = mean(trialTC(basewin,:,:),1);
 dFF = bsxfun(@rdivide, bsxfun(@minus,trialTC,F),F);
+dFF(find(isnan(dFF)))=0;
 
 tuningTC = nan(nOn+nOff,nCells,nStim);
 avgResponseEaOri = nan(nCells,nStim);

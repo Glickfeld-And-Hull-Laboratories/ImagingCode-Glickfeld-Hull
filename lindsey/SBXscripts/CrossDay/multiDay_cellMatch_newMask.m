@@ -1,14 +1,18 @@
 clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori'; %dataset info
-dataStructLabels = {'contrastxori'};
+ds = '16Dir15Hz'; %dataset info
+dataStructLabels = {'16dir'};
 rc = behavConstsAV; %directories
 eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
 
+<<<<<<< Updated upstream
 day_id(2) = 15;
+=======
+day_id(2) = 2;
+>>>>>>> Stashed changes
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);

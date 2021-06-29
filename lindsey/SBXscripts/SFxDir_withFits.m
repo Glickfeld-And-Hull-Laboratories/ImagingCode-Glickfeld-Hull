@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
 lg_fn = fullfile(fn_base, 'home\lindsey');
@@ -35,6 +36,9 @@ ntrials = length(Dir);
 nCells = size(npSub_tc,2);
 
 frame_rate = 15;
+=======
+frame_rate = 15.5;
+>>>>>>> Stashed changes
 prewin_frames = nOff-10:nOff;
 postwin_frames = nOff+10:nOff+nOn;
 tt = (1-nOff:nOn).*(1/frame_rate);
@@ -45,10 +49,25 @@ data_dfof_tc = (data_tr-data_f)./data_f;
 data_dfof_resp = squeeze(mean(data_dfof_tc(postwin_frames,:,:),1));
 data_dfof_base = squeeze(mean(data_dfof_tc(prewin_frames,:,:),1));
 
+<<<<<<< Updated upstream
 data_dfof_stim_dir = zeros(nDirs,nSF,nCells);
 h_dir = zeros(nDirs,nSF,nCells);
 p_dir = zeros(nDirs,nSF,nCells);
+=======
+SF_mat = celleqel2mat_padded(input.tGratingSpatialFreqCPD);
+SFs = unique(SF_mat);
+nSF = length(SFs);
+
+Dir = celleqel2mat_padded(input.tGratingDirectionDeg); 
+Dirs = unique(Dir);
+nDirs = length(Dirs);
+
+data_dfof_stim = zeros(nDirs,nSF,nCells);
+h = zeros(nDirs,nSF,nCells);
+p = zeros(nDirs,nSF,nCells);
+>>>>>>> Stashed changes
 trialInd = cell(nDirs,nSF);
+
 for iDir = 1:nDirs
     ind_dir = find(Dir == Dirs(iDir));
     for iSF = 1:nSF

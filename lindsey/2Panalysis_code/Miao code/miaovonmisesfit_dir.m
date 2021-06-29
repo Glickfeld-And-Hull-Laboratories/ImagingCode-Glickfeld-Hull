@@ -40,7 +40,7 @@ k1_guess=0.5;
 R1_guess=b(1).*1.2;
 u1_guess=maxtheta;% try the first peak 
 orthogtheta = maxtheta+pi;
-if orthogtheta>(2.*pi)
+if orthogtheta>=(2.*pi)
     orthogtheta = orthogtheta- (2.*pi);
 end
 R2_guess = data(find(chop(thetas,4) == chop(orthogtheta,4)));

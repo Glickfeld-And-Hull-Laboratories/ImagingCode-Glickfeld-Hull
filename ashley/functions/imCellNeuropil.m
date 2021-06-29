@@ -17,6 +17,7 @@ for i = 1:(length(unique(cellmask))-1)
     cellBuffer = imdilate(tempNPcells,seBR);
     tempmask = imdilate(tempmask,seNPR) - imdilate(tempbufferring,seBR);
     tempmask = tempmask & ~cellBuffer;
+    tempmask(find(isnan(tempmask))) = 0;
     neuropil(:,:,i) = tempmask;
 end
 
@@ -26,6 +27,7 @@ for i = 1:(length(unique(cellmask))-1)
     NP(:,:,i) = neuropil(:,:,i)*i;
 end
 cellsNeuropil = unique(NP);
+cellsNeuropil(1) = [];
 
 missingcells = setdiff(cellsMaskCell,[0; cellsNeuropil]);
 
