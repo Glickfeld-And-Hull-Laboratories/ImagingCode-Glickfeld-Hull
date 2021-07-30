@@ -127,21 +127,35 @@ for iarea = 1:narea
             x = blues(70);
             x = x(70-15:2:70,:);
             ln_mat = ['k','r'];
-%             figure;
-%             for idir = 1:nStimDir
-%                 plot3(stim_pca(:,1,idir), stim_pca(:,2,idir), stim_pca(:,3,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:))
-%                 hold on
-%             end
-%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
-%             figure;
-%             for idir = 1:nStimDir/2
-%                 plot(stim_pca(:,1,idir), stim_pca(:,2,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:), 'MarkerSize', 10)
-%                 hold on
-%             end
-%             ylim([-2.5 1.5])
-%             xlim([-2.5 1.5])
-%             axis square
-%             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_2D.pdf']),'-dpdf','-fillpage')
+            figure;
+            for idir = 1:nStimDir
+                plot3(stim_pca(:,1,idir), stim_pca(:,2,idir), stim_pca(:,3,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:))
+                hold on
+            end
+            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_3D.pdf']),'-dpdf','-fillpage')
+            figure;
+            for idir = 1:nStimDir/2
+                plot(stim_pca(:,1,idir), stim_pca(:,2,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:), 'MarkerSize', 10)
+                hold on
+            end
+            ylim([-2.5 1.5])
+            xlim([-2.5 1.5])
+            axis square
+            xlabel('PC1')
+            ylabel('PC2')
+            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_2D_PC1PC2.pdf']),'-dpdf','-fillpage')
+            figure;
+            for idir = 1:nStimDir/2
+                plot(stim_pca(:,2,idir), stim_pca(:,3,idir),ln_mat(1+(idir>8)),'Marker','o','MarkerEdgeColor','k', 'MarkerFaceColor',x(idir,:), 'MarkerSize', 10)
+                hold on
+            end
+            ylim([-2.5 1.5])
+            xlim([-2.5 1.5])
+            axis square
+            xlabel('PC2')
+            ylabel('PC3')
+            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirResp_PCAspace_2D_PC2PC3.pdf']),'-dpdf','-fillpage')
+            
             pca_dir = reshape(stim_pca,[nFrames.*nCells nStimDir]);
             corr_dir = corrcoef(pca_dir);
     % 

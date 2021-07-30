@@ -1,6 +1,6 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirRandPhase_ExptList';
+ds = 'CrossOriSingleStimRandPhaseAdapt_ExptList';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
@@ -10,8 +10,8 @@ for iexp = 3
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
-ImgFolder = expt(iexp).copFolder;
-time = expt(iexp).copTime;
+ImgFolder = expt(iexp).coFolder;
+time = expt(iexp).coTime;
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
@@ -50,7 +50,7 @@ for irun =  1:nrun
     data = cat(3, data, data_temp(:,:,1:nFrames));      % the raw images...
 end
 figure;
-data_avg = mean(data,3);
+data_avg = mean(data(:,:,100),3);
 imagesc(data_avg);
 movegui('center')
 ax = gca;
@@ -82,7 +82,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [4 20];
+rad_range = [8 20];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
@@ -204,7 +204,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     
     %align eyetracking to 
      %reset frame counter    
-    cStimOn = celleqel2mat_padded(input.cStimOneOn);
+    cStimOn = celleqel2mat_padded(input.cTestOn);
     nanrun = ceil(500*(frame_rate/1000));
     Rad_temp = sqrt(Area./pi);
     Centroid_temp = Centroid;
@@ -297,23 +297,13 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
         hold on
         plot(squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,1,ind),1)), squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,2,ind),1)),'or')
         plot(squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,1,ind_i),1)), squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,2,ind_i),1)),'ok')
-        title([num2str(edges(ii)) '- ' num2str(length(find(bin== i(ii))))])
+        title([num2str(edges(ii)) ' deg- n = ' num2str(length(ind))])
     end
     suptitle('Example eye image by distance from median')
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilImgByDist.pdf']),'-dpdf','-fillpage');
 
-    
-    centroid_dist_sf = cell(1,nSF);
-    centroid_med_sf = cell(1,nSF);
-    if nSF>1
-        for isf = 1:nSF
-            ind_plaid = intersect(find(maskCon_all == maskCons(2)), find(stimCon_all == stimCons(2)));
-            ind_sf = intersect(ind_plaid,intersect(find(SF_all == SFs(isf)),find(~isnan(centroid_stim(1,:)))));
-            centroid_med_sf{isf} = findMaxNeighbors(centroid_stim(:,ind),2);
-            centroid_dist_sf{isf} = sqrt((centroid_stim(1,:)-centroid_med(1)).^2 + (centroid_stim(2,:)-centroid_med(2)).^2);
-        end
-    end    
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med', 'centroid_dist_sf', 'centroid_med_sf' );
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med' );
+    clear eye_mat_start data_temp data Eye_data
     %close all
 end
 %     %% eye plots

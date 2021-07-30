@@ -1,6 +1,6 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriSingleStimAdapt_ExptList';
+ds = 'CrossOriRandPhaseAdapt_ExptList';
 iexp = 5; 
 rc = behavConstsAV;
 eval(ds)
@@ -70,7 +70,7 @@ clear data_temp
 clear temp
 toc
 
-%% Choose register interval
+% Choose register interval
 step = 10000;
 nep = floor(size(data,3)./step);
 [n n2] = subplotn(nep);
@@ -84,9 +84,6 @@ mkdir(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
 
-clear data out
-
-%% test stability
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*step):500+((i-1)*step)),3)); title([num2str(1+((i-1)*step)) '-' num2str(500+((i-1)*step))]); end
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_byFrame.pdf']),'-dpdf', '-bestfit')
 
@@ -115,6 +112,7 @@ if doRedChannel
 end
 
 %% find activated cells
+clear data out
 cAdapt= celleqel2mat_padded(input.cAdaptStart);
 cTest = celleqel2mat_padded(input.cTestOn);
 nTrials = length(cTest);
@@ -167,22 +165,46 @@ maskCons = unique(maskCon);
 nMask = length(maskCons);
 nTest = length(testCons);
 
+% s = celleqel2mat_padded(input.tStimulusNumber);
+% t = rem(s,8);
+% maskPhase = 0 + (45.*t);
+% maskPhases = unique(maskPhase);
+% nMaskPhase = length(maskPhases);
+maskPhase = celleqel2mat_padded(input.tTestMaskGratingPhaseDeg);
+maskPhases = unique(maskPhase);
+nMaskPhase = length(maskPhases);
+
+
 start = 1;
 for it = 1:nTest
     ind_test = find(testCon == testCons(it));
     for im = 1:nMask
-        ind_mask = find(maskCon == maskCons(im));
-        %ind = intersect(ind_noadapt, intersect(ind_test,ind_mask));
-        data_test_temp(:,:,1) = nanmean(data_adapt_dfof(:,:,intersect(ind_noadapt, intersect(ind_test,ind_mask))),3);
-        data_test_temp(:,:,2) = nanmean(data_adapt_dfof(:,:,intersect(ind_contadapt, intersect(ind_test,ind_mask))),3);
-        data_test_temp(:,:,3) = nanmean(data_adapt_dfof(:,:,intersect(ind_asynadapt, intersect(ind_test,ind_mask))),3);
-        data_test_temp(:,:,4) = nanmean(data_adapt_dfof(:,:,intersect(ind_singadapt, intersect(ind_test,ind_mask))),3);
-        data_test_avg(:,:,start) = max(data_test_temp,[],3);
-        start = start+1;
+        if im>1 & it>1
+            for ip = 1:nMaskPhase
+                ind_mask = intersect(find(maskPhase == maskPhases(ip)),find(maskCon == maskCons(im)));
+                %ind = intersect(ind_noadapt, intersect(ind_test,ind_mask));
+                data_test_temp(:,:,1) = nanmean(data_adapt_dfof(:,:,intersect(ind_noadapt, intersect(ind_test,ind_mask))),3);
+                data_test_temp(:,:,2) = nanmean(data_adapt_dfof(:,:,intersect(ind_contadapt, intersect(ind_test,ind_mask))),3);
+                data_test_temp(:,:,3) = nanmean(data_adapt_dfof(:,:,intersect(ind_asynadapt, intersect(ind_test,ind_mask))),3);
+                data_test_temp(:,:,4) = nanmean(data_adapt_dfof(:,:,intersect(ind_singadapt, intersect(ind_test,ind_mask))),3);
+                data_test_avg(:,:,start) = max(data_test_temp,[],3);
+                start = start+1;
+            end
+        else
+            ind_mask = find(maskCon == maskCons(im));
+            %ind = intersect(ind_noadapt, intersect(ind_test,ind_mask));
+            data_test_temp(:,:,1) = nanmean(data_adapt_dfof(:,:,intersect(ind_noadapt, intersect(ind_test,ind_mask))),3);
+            data_test_temp(:,:,2) = nanmean(data_adapt_dfof(:,:,intersect(ind_contadapt, intersect(ind_test,ind_mask))),3);
+            data_test_temp(:,:,3) = nanmean(data_adapt_dfof(:,:,intersect(ind_asynadapt, intersect(ind_test,ind_mask))),3);
+            data_test_temp(:,:,4) = nanmean(data_adapt_dfof(:,:,intersect(ind_singadapt, intersect(ind_test,ind_mask))),3);
+            data_test_avg(:,:,start) = max(data_test_temp,[],3);
+            start = start+1;
+        end
     end
 end
 
 data_dfof = cat(3,data_adapt_avg,data_test_avg);
+%data_dfof = data_test_avg;
 myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_max = max(imfilter(data_dfof,myfilter),[],3);
 figure;
@@ -192,7 +214,7 @@ if doRedChannel
     data_dfof = cat(3,data_dfof,data_red_avg);
 end
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cTest', 'maskCon', 'testCon', 'testCons', 'maskCons', 'frame_rate', 'nTest', 'nTrials', 'ind_noadapt','ind_asynadapt','ind_contadapt')
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cTest', 'maskCon', 'testCon', 'testCons', 'maskCons', 'nMask', 'nTest', 'maskPhase', 'maskPhases', 'nMaskPhase','frame_rate', 'nTest', 'nTrials', 'ind_noadapt','ind_asynadapt','ind_contadapt','ind_singadapt')
 
 %% cell segmentation 
 mask_exp = zeros(sz(1),sz(2));
@@ -286,7 +308,7 @@ for im = 1:nMask
         trialsperstim(im,it) = length(ind);
         noadapt_resp_cell{im,it} = squeeze(mean(data_dfof_tc(prewin_frames+6:prewin_frames+21,:,ind),1));
         noadapt_resp_square(:,im,it) = mean(noadapt_resp_cell{im,it},2);
-        [h_resp(:,im,it) p_resp(:,im,it)] = ttest2(noadapt_resp_cell{im,it},noadapt_resp_cell{1,1},'dim',2,'tail','right','alpha',0.05./(nMask*nTest));
+        [h_resp(:,im,it) p_resp(:,im,it)] = ttest2(noadapt_resp_cell{im,it},noadapt_resp_cell{1,1,1},'dim',2,'tail','right','alpha',0.05./(nMask*nTest));
     end
 end
 

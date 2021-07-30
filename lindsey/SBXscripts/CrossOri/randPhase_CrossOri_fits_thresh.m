@@ -76,11 +76,11 @@ for iexp = 1:nexp
             [memb ind_test] = ismember(trialInd{1,it,1},find(centroid_dist<max_dist));
             [memb ind_mask] = ismember(trialInd{im,1,1},find(centroid_dist<max_dist));
             test_avg = mean(resp_cell{1,it,1}(:,find(ind_test)),2);
-            test_avg_rect = test_avg;
-            test_avg_rect(find(test_avg<0)) = 0;
+            test_avg_rect = test_avg.*0.75;
+            test_avg_rect(find(test_avg<0.04)) = 0;
             mask_avg = mean(resp_cell{im,1,1}(:,find(ind_mask)),2);
-            mask_avg_rect = mask_avg;
-            mask_avg_rect(find(mask_avg<0)) = 0;
+            mask_avg_rect = mask_avg.*0.75;
+            mask_avg_rect(find(mask_avg<0.04)) = 0;
             for ip = 1:nMaskPhas
                 [memb ind] = ismember(trialInd{im,it,ip},find(centroid_dist<max_dist));
                 resp_all = [resp_all resp_cell{im,it,ip}(:,find(ind))];
@@ -91,8 +91,8 @@ for iexp = 1:nexp
         end
     end
 
-    resp_downsamp_rect = resp_all;
-    resp_downsamp_rect(find(resp_all<0)) = 0;
+    resp_downsamp_rect = resp_all.*0.75;
+    resp_downsamp_rect(find(resp_all<0.04)) = 0;
     SI_all = (resp_downsamp_rect-(test_avg_rect+mask_avg_rect))./(resp_downsamp_rect+(test_avg_rect+mask_avg_rect));
     resp_avg_downsamp = nan(nCells,nMaskPhas);
     SI_all_avg = nan(nCells,nMaskPhas,2);
@@ -112,7 +112,7 @@ for iexp = 1:nexp
     for iCell =1:nCells
         if start>25
             suptitle([mouse ' ' date '- Thresh- Trials < ' num2str(max_dist) '  deg'])
-            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_thresh.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
             n = n+1;
@@ -139,7 +139,7 @@ for iexp = 1:nexp
         start = start+1;
     end
     suptitle([mouse ' ' date '- Thresh- Trials < ' num2str(max_dist) '  deg'])
-    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_thresh.pdf']), '-dpdf','-fillpage')
 
     p_anova_shuf = nan(nCells,1);
     b_hat_shuf = nan(nCells,1); 
@@ -158,7 +158,7 @@ for iexp = 1:nexp
     for iCell = 1:nCells
         if start>25
             suptitle([mouse ' ' date '- Thresh Shuffled- Trials < ' num2str(max_dist) '  deg'])
-            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
+            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_thresh_shuffled.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
             n = n+1;
@@ -185,8 +185,8 @@ for iexp = 1:nexp
         start = start+1;
     end
     suptitle([mouse ' ' date '- Thresh- Shuffled Trials < ' num2str(max_dist) '  deg'])
-    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
+    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan4degEyeMvmt' num2str(n) '_thresh_shuffled.pdf']), '-dpdf','-fillpage')
 
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'trN', 'seed', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd','SI_all_avg', 'max_dist')
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_thresh.mat']),'trN', 'seed', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd','SI_all_avg', 'max_dist')
     close all
 end
