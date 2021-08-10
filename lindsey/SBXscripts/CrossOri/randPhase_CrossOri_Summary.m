@@ -6,11 +6,11 @@ summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandPhaseSummary')
 ds = ['CrossOriRandDirRandPhase_ExptList'];
 svName = 'randDirRandPhase';
 eval(ds)
-driver = 'SLC';
+driver = 'PV';
 area = 'V1';
-con = 0.125;
-doConSave = 1;
-doPlot = 0;
+con = 0.5;
+doConSave = 0;
+doPlot = 1;
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
@@ -169,6 +169,14 @@ for iexp = 1:nexp
                 OSI_all = [OSI_all; nan(size(b_all_all))];
                 max_dir_all = [max_dir_all; nan(size(b_all_all))]; 
             end
+        elseif ~isempty(expt(iexp).coFolder)
+            ImgFolder = expt(iexp).coFolder;
+            nrun = length(ImgFolder);
+            run_str = catRunName(cell2mat(ImgFolder), nrun);
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
+            OSI_all = [OSI_all; nan(size(b_all_all))];
+            [max_val_dir, max_ind_dir] = max(avg_resp_dir(:,:,1,1),[],2);
+            max_dir_all = [max_dir_all; max_ind_dir]; 
         else
             OSI_all = [OSI_all; nan(size(b_all_all))];
             max_dir_all = [max_dir_all; nan(size(b_all_all))]; 
@@ -256,9 +264,11 @@ hold on
 Rsq_temp = R_square_shuf_all;
 Rsq_temp(find(Rsq_temp<0)) = 0;
 cdfplot(Rsq_temp(resp_ind_all,:))
+if ~isempty(R_square_downsamp_all)
 Rsq_temp = R_square_downsamp_all;
 Rsq_temp(find(Rsq_temp<0)) = 0;
 cdfplot(Rsq_temp(resp_ind_all,:))
+end
 xlabel('Rsquared')
 xlim([0 1])
 legend({['Data- n = ' num2str(n)],'Shuffled','Downsampled'},'location','southeast')
@@ -266,7 +276,9 @@ subplot(2,2,2)
 cdfplot(amp_all_all(resp_ind_all,:))
 hold on
 cdfplot(amp_shuf_all(resp_ind_all,:))
+if ~isempty(amp_downsamp_all)
 cdfplot(amp_downsamp_all(resp_ind_all,:))
+end
 xlabel('Sine Amplitude')
 xlim([0 1])
 legend({['Data- n = ' num2str(n)],'Shuffled','Downsampled'},'location','southeast')
@@ -309,7 +321,7 @@ title('')
 legend({['SI<0- n=' num2str(length(find(plaidSI_all(ind,:)<0)))] ,['SI>0- n=' num2str(length(find(plaidSI_all(ind,:)>0)))]},'location','southeast')
 print(fullfile(summaryDir, [svName '_sineAmpvsPrefIndex_8phase.pdf']),'-dpdf','-fillpage')
 
-if ~isnan(max_dir_all)
+if ~isnan(OSI_all)
 figure;
 subplot(2,2,1)
 ind = resp_ind_all;

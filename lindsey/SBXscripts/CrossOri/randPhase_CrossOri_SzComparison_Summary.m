@@ -5,7 +5,7 @@ ds_list = {'randDirRandPhase'; 'randPhaseFF'};
 svName = 'randPhase';
 nSz = 2;
 Szs = [30 1000];
-driver = {'SLC'};
+driver = {'PV'};
 area_list = {'V1'};
 narea = length(area_list);
 

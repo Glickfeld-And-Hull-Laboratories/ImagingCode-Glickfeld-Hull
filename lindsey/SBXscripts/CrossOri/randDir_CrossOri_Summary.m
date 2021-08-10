@@ -14,11 +14,11 @@ end
 
 doPlot = 0;
 area_list = ['V1']; % 'LM'; 'AL'; 'PM'; 'RL'];
-driver = 'SLC';
+driver = 'PV';
 SF = 0.05;
-con = 0.125;
+con = 0.5;
 doSFsave = 0;
-doConSave = 1;
+doConSave = 0;
 if min(size(area_list)) == 1
     narea = 1;
 else
@@ -156,13 +156,13 @@ for iarea = narea
 
         end
     end
+    sf_str = num2str(SF);
+    sf_str = ['pt' sf_str(3:end)];
+    con_str = num2str(con);
+    con_str = ['pt' con_str(3:end)];
     if doSFsave
-        sf_str = num2str(SF);
-        sf_str = ['pt' sf_str(3:end)];
         save(fullfile(summaryDir,[svName '_Summary_' area '_' driver '_SF' sf_str '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','avg_resp_dir_all','avg_resp_dir_align_all','avg_resp_plaid_align_all','norm_resp_plaid_align_all','component_all','pattern_all','stimDirs','h_resp_all','mouse_list')
     elseif doConSave
-        con_str = num2str(con);
-        con_str = ['pt' con_str(3:end)];
         save(fullfile(summaryDir,[svName '_Summary_' area '_' driver '_Con' con_str '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','avg_resp_dir_all','avg_resp_dir_align_all','avg_resp_plaid_align_all','norm_resp_plaid_align_all','component_all','pattern_all','stimDirs','h_resp_all','mouse_list')
     else
         save(fullfile(summaryDir,[svName '_Summary_' area '_' driver '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'f1_all','f2_all','f2overf1_all','k_all','avg_resp_dir_all','avg_resp_dir_align_all','avg_resp_plaid_align_all','norm_resp_plaid_align_all','component_all','pattern_all','stimDirs','h_resp_all','mouse_list')        
@@ -201,7 +201,7 @@ if doPlot
     title('')
     legend({'All','stim OSI<0.5', 'stim DSI<0.5'},'Location','southeast')
     suptitle({[area '- n = ' num2str(size(mouse_list,1)) ' expts; ' num2str(size(unique(mouse_list,'rows'),1)) ' mice'], ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
-    print(fullfile(summaryDir, [svName '_OSI-DSI-Zc-Zp-SI_Summary_' area '_' driver '_SF' sf '.pdf']),'-dpdf', '-fillpage')       
+    print(fullfile(summaryDir, [svName '_OSI-DSI-Zc-Zp-SI_Summary_' area '_' driver '_SF' sf_str '.pdf']),'-dpdf', '-fillpage')       
 
     figure;
     subplot(2,2,1)
@@ -220,7 +220,7 @@ if doPlot
     xlabel('Zc/Zp')
     xlim([-5 10])
     title('')
-    suptitle(['All responsive cells- n = ' num2str(length(resp_ind_all))])
+    sgtitle(['All responsive cells- n = ' num2str(length(resp_ind_all))])
     print(fullfile(summaryDir, [svName '_Zc-Zp_Scatter_' area '_' driver '_neg45.pdf']),'-dpdf', '-fillpage') 
 
     figure;
@@ -263,8 +263,8 @@ if doPlot
     xlabel('Zp')
     xlim([-2 10])
     title('')
-    suptitle({'High vs low Suppression index',['All responsive cells- n = ' num2str(length(resp_ind_all))]})
-    print(fullfile(summaryDir, [svName '_highVlowSI' area '_' driver '_SF' sf '.pdf']),'-dpdf', '-fillpage') 
+    sgtitle({'High vs low Suppression index',['All responsive cells- n = ' num2str(length(resp_ind_all))]})
+    print(fullfile(summaryDir, [svName '_highVlowSI' area '_' driver '_SF' sf_str '.pdf']),'-dpdf', '-fillpage') 
 
     figure;
     subplot(2,2,1)
@@ -294,8 +294,8 @@ if doPlot
     xlabel('Zp')
     xlim([-2 10])
     title('')
-    suptitle({'High vs low OSI', ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
-    print(fullfile(summaryDir, [svName '_highVlowOSI_' area '_' driver '_SF' sf '.pdf']),'-dpdf', '-fillpage') 
+    sgtitle({'High vs low OSI', ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
+    print(fullfile(summaryDir, [svName '_highVlowOSI_' area '_' driver '_SF' sf_str '.pdf']),'-dpdf', '-fillpage') 
 
     figure;
     subplot(2,2,1)
@@ -325,8 +325,8 @@ if doPlot
     xlabel('Zp')
     xlim([-2 10])
     title('')
-    suptitle({'High vs low DSI', ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
-    print(fullfile(summaryDir, [svName '_highVlowDSI_' area '_' driver '_SF' sf '.pdf']),'-dpdf', '-fillpage') 
+    sgtitle({'High vs low DSI', ['All responsive cells- n = ' num2str(length(resp_ind_all))]})
+    print(fullfile(summaryDir, [svName '_highVlowDSI_' area '_' driver '_SF' sf_str '.pdf']),'-dpdf', '-fillpage') 
     
     Zp_use = intersect(resp_ind_all, intersect(find(Zp_all>1.28), find(Zp_all-Zc_all>1.28)));
     Zc_use = intersect(resp_ind_all, intersect(find(Zc_all>1.28), find(Zc_all-Zp_all>1.28)));
@@ -352,7 +352,7 @@ if doPlot
     xlabel('Kappa')
     xlim([0 30])
     title('')
-    suptitle(['Tuning of Zc (n= ' num2str(length(Zc_use)) '); Zp (n = ' num2str(length(Zp_use)) ')'])
-    print(fullfile(summaryDir, [svName '_ZcZp_Tuning_' area '_' driver '_SF' sf '.pdf']),'-dpdf', '-fillpage')
+    sgtitle(['Tuning of Zc (n= ' num2str(length(Zc_use)) '); Zp (n = ' num2str(length(Zp_use)) ')'])
+    print(fullfile(summaryDir, [svName '_ZcZp_Tuning_' area '_' driver '_SF' sf_str '.pdf']),'-dpdf', '-fillpage')
 end
 end
