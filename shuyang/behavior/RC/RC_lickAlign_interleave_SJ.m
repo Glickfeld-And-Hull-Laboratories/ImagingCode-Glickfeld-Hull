@@ -121,23 +121,37 @@ for  j = 1:length(expt.ttl)
         end
     end
     
-    figure; %align licking data to cue
-    shadedErrorBar(tt, nanmean(lickCueAlign,2).*(1000./frameRateHz), (nanstd(lickCueAlign,[],2)./sqrt(unique(sum(~isnan(lickCueAlign),2))).*(1000./frameRateHz)));
-    hold on;
-    scatter((lickBurstStart-prewin_frames).*(1000./frameRateHz), 10.*ones(size(lickBurstStart)), 'x');
-    xlabel('Time from cue');
-    ylabel('Lick rate (Hz)');
-    title([date ' ' mouse '' run]);
-    if cue(j) == 1
-        vline(0,'b');
-    elseif cue(j) == 3
-        vline(0,'r');
-    elseif cue(j) == 2
-        vline(0,'g');
-    end
-    vline(700,'k');
-    savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlign_lickHz.fig']));
     
+    load (['Z:\behavior_analysis\RC\' date '_img' mouse '_IL_trial_inx.mat']);% this tells you what the cue is in each trial
+    figure; %align licking data to cue
+    subplot(3,1,1);
+    shadedErrorBar(tt, nanmean(lickCueAlign(:,auditrials),2).*(1000./frameRateHz), (nanstd(lickCueAlign(:,auditrials),[],2)./sqrt(unique(sum(~isnan(lickCueAlign(:,auditrials)),2))).*(1000./frameRateHz)));
+    ylim([0 15]);vline(0,'b');vline(700,'k');
+    ylabel('Lick rate (Hz)');title([date ' img' mouse ' ' run]);
+    hold on;
+    scatter((lickBurstStart(auditrials)-prewin_frames).*(1000./frameRateHz), 10.*ones(size(lickBurstStart(auditrials))), 'x'); hold off;
+    box off;
+    subplot(3,1,2);
+    shadedErrorBar(tt, nanmean(lickCueAlign(:,vistrials),2).*(1000./frameRateHz), (nanstd(lickCueAlign(:,vistrials),[],2)./sqrt(unique(sum(~isnan(lickCueAlign(:,vistrials)),2))).*(1000./frameRateHz)));
+    ylim([0 15]);vline(0,'g');vline(700,'k');
+    hold on;
+    scatter((lickBurstStart(vistrials)-prewin_frames).*(1000./frameRateHz), 10.*ones(size(lickBurstStart(vistrials))), 'x'); hold off;
+    ylabel('Lick rate (Hz)');box off;
+    subplot(3,1,3);
+    shadedErrorBar(tt, nanmean(lickCueAlign(:,avtrials),2).*(1000./frameRateHz), (nanstd(lickCueAlign(:,avtrials),[],2)./sqrt(unique(sum(~isnan(lickCueAlign(:,avtrials)),2))).*(1000./frameRateHz)));
+    ylim([0 15]);vline(0,'r');vline(700,'k');
+    hold on;
+    scatter((lickBurstStart(avtrials)-prewin_frames).*(1000./frameRateHz), 10.*ones(size(lickBurstStart(avtrials))), 'x'); hold off;
+    ylabel('Lick rate (Hz)');  
+    xlabel('Time from cue'); box off;
+    savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlign_lickHz.fig']));
+    save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']), 'firstPostRewLickFrame', ...
+        'lastPreRewLickFrame', 'firstPostRew_lickAlignEvents', 'lastPreRew_lickAlignEvents', ...
+        'lickCueAlign', 'lickBurstStart', 'lickCounterVals', 'lickSearch_frames', 'lickDelay_frames',...
+        'lickTC', 'postwin_frames', 'prewin_frames', 'frameRateHz', 'tt', ...
+        'postRew_lickAlignEvents', 'postLick_frames','postRew_lickBurstStart', 'postRew_lickAlign',...
+        'preRew_lickBurstHz','postRew_lickBurstHz'); 
+%{  
     nIC = size(targetAlign_events,2);
     if sum(~isnan(lickBurstStart))>6
         [sortlick sortlick_ind] = sort(lickBurstStart,'ascend');
@@ -304,14 +318,7 @@ for  j = 1:length(expt.ttl)
     supertitle([mouse ' ' date '- lick bursts by rate: low (blue) & high (black)']);
     hold off;
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byLickRate.fig']));
+%}    
     
-    save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']), 'firstPostRewLickFrame', ...
-        'lastPreRewLickFrame', 'tl_rew', 'firstPostRew_lickAlignEvents', 'lastPreRew_lickAlignEvents', ...
-        'lickCueAlign', 'lickBurstStart', 'lickCounterVals', 'lickSearch_frames', 'lickDelay_frames',...
-        'lickTC', 'postwin_frames', 'prewin_frames', 'frameRateHz', 'tt', 'ind_early_bst', 'ind_late_bst', ...
-        'early_bst_time', 'late_bst_time', 'pct_precue_burst', 'postRew_lickAlignEvents', 'postLick_frames', ...
-        'postRew_lickBurstStart','tl', 'ind_prerew_early_bst', 'ind_prerew_late_bst','postRew_lickAlign',...
-        'preRew_lickBurstHz','postRew_lickBurstHz','ind_low_prerew','ind_high_prerew','ind_low_postrew',...
-        'ind_high_postrew','ind_high_bst','ind_low_bst','HL_lickrate');
     
 end

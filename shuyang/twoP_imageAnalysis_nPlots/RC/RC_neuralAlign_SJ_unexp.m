@@ -20,12 +20,13 @@ for  j = 1:length(expt.ttl)
     img_fn = [date '_img' mouse '\getTC_' run '\'];
     filename = dir([analysis_out,img_fn  '*' '_TCave.mat']);
     load([analysis_out,img_fn, filename.name]);
-    threshold = -2;
+    threshold = -3;
     filename = dir([analysis_out,date '_img' mouse '\' date '_img' mouse '_' run  '*' num2str(threshold) '_TCave_cl.mat']);
     load([analysis_out,date '_img' mouse '\', filename.name]);
     spk = load([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvolve_threshold' num2str(threshold) '.mat' ]);
     spk_logic = spk.spk_logic_cl;
     nIC = size(spk_logic,2);
+    
     %% fill laser off period with nans
     all_events = spk_logic; % frame*cell
     if expt.ttl(iexp)
@@ -76,31 +77,27 @@ for  j = 1:length(expt.ttl)
     
     tt = (-prewin_frames:postwin_frames-1).*(1000./frameRateHz); %t = # of frames*frame duration
     %if exist([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_dFoverF.fig'], 'file')==0
-    if mworks.block2TrPer80Level1 > 0 %if it's an interleaved session
-        load (['Z:\behavior_analysis\RC\' date '_img' mouse '_IL_trial_inx.mat']);
+    if mworks.block2TrPer80Level1 > 0 %if it's an unexpected reward session
+        load (['Z:\behavior_analysis\RC\' date '_img' mouse '_Unexp_trial_inx.mat']);
         figure;
-        subplot(3,1,1);
-        shadedErrorBar(tt, nanmean(nanmean(targetAligndFoverF(:,:,auditrials),3),2), std(nanmean(targetAligndFoverF(:,:,auditrials),3),[],2)./sqrt(nIC));vline(0,'b');vline(700,'k');
-        ylabel('Avg dF/F');title([date ' img' mouse ' ' run]); box off;
-        subplot(3,1,2);
+        subplot(2,1,1);
         shadedErrorBar(tt, nanmean(nanmean(targetAligndFoverF(:,:,vistrials),3),2), std(nanmean(targetAligndFoverF(:,:,vistrials),3),[],2)./sqrt(nIC));vline(0,'g');vline(700,'k');
+        ylabel('Avg dF/F');title([date ' img' mouse ' ' run]); box off;
+        subplot(2,1,2);
+        shadedErrorBar(tt, nanmean(nanmean(targetAligndFoverF(:,:,unexptrials),3),2), std(nanmean(targetAligndFoverF(:,:,unexptrials),3),[],2)./sqrt(nIC));vline(0,'k');vline(700,'k');
         ylabel('Avg dF/F');box off;
-        subplot(3,1,3);
-        shadedErrorBar(tt, nanmean(nanmean(targetAligndFoverF(:,:,avtrials),3),2), std(nanmean(targetAligndFoverF(:,:,avtrials),3),[],2)./sqrt(nIC));vline(0,'r');vline(700,'k');
-        ylabel('Avg dF/F');xlabel('Time from cue'); box off;
+        xlabel('Time from cue'); box off;
         savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_dFoverF.fig']));
         
         figure;
-        subplot(3,1,1);
-        shadedErrorBar(tt, nanmean(nanmean(targetAlign_events(:,:,auditrials),3),2).*(1000/frameRateHz), (std(nanmean(targetAlign_events(:,:,auditrials),3),[],2)./sqrt(nIC)).*(1000./frameRateHz));
-        ylim([0 4.5]);vline(0,'b');vline(700,'k');ylabel('Spike rate (Hz)');title([date ' img' mouse ' ' run]);box off;
-        subplot(3,1,2);
+        subplot(2,1,1);
         shadedErrorBar(tt, nanmean(nanmean(targetAlign_events(:,:,vistrials),3),2).*(1000/frameRateHz), (std(nanmean(targetAlign_events(:,:,vistrials),3),[],2)./sqrt(nIC)).*(1000./frameRateHz));
-        ylim([0 4.5]);vline(0,'g');vline(700,'k');
+        ylim([0 4.5]);vline(0,'g');vline(700,'k');ylabel('Spike rate (Hz)');title([date ' img' mouse ' ' run]);box off;
+        subplot(2,1,2);
+        shadedErrorBar(tt, nanmean(nanmean(targetAlign_events(:,:,unexptrials),3),2).*(1000/frameRateHz), (std(nanmean(targetAlign_events(:,:,unexptrials),3),[],2)./sqrt(nIC)).*(1000./frameRateHz));
+        ylim([0 4.5]);vline(0,'k');vline(700,'k');
         ylabel('Spike rate (Hz)');box off;
-        subplot(3,1,3);
-        shadedErrorBar(tt, nanmean(nanmean(targetAlign_events(:,:,avtrials),3),2).*(1000/frameRateHz), (std(nanmean(targetAlign_events(:,:,avtrials),3),[],2)./sqrt(nIC)).*(1000./frameRateHz));
-        ylim([0 4.5]);vline(0,'r');vline(700,'k');ylabel('Spike rate (Hz)');xlabel('Time from cue (ms)');box off;
+        xlabel('Time from cue (ms)');box off;
         savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_events_Hz.fig']));   
     else
         figure;
@@ -136,6 +133,6 @@ for  j = 1:length(expt.ttl)
         %end
     end
     save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_targetAlign.mat']), 'targetAlign_events', ...
-        'targetAligndFoverF', 'prewin_frames', 'postwin_frames', 'tt', 'frameRateHz','-append');
+        'targetAligndFoverF', 'prewin_frames', 'postwin_frames', 'tt', 'frameRateHz');
     
 end

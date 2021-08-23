@@ -16,11 +16,15 @@ for  j = 1:length(expt.ttl)
     input = get_bx_data_sj(bdata_source, sessions{j});
     load(fullfile(analysis_out,img_fn, [img_fn '_' run '_targetAlign.mat']));
     
-    rewDelay_frames =  round(0.7.*frameRateHz);% there's 700ms between the cue and the reward delivery !!!!! if you change tooFastMs in the varibles in MWorks, this needs to be changed
+    if id == 4
+        rewDelay_frames =  round(1.1.*frameRateHz);
+    else
+        rewDelay_frames =  round(0.77.*frameRateHz);
+    end
     
     cTargetOn = input.cTargetOn;
     if iscell(cTargetOn) % if it is a cell, it means cTargetOn wasn't being over written in extract TC. If it's not a cell, it's already over written in extract TC. can be used directly
-        cTargetOn = double(cell2mat(input.cTargetOn));
+        cTargetOn = celleqel2mat_padded(input.cTargetOn);
         cTargetOn(1) = nan; % first trial doesn't have reward 
     end
  
@@ -34,7 +38,7 @@ for  j = 1:length(expt.ttl)
     
     postLick_frames =  round(0.5.*frameRateHz);
     lickSearchRange = prewin_frames+lickDelay_frames:size(lickCueAlign,1)-lickSearch_frames;
-    preRew_lickSearchRange_700ms = prewin_frames+lickDelay_frames:prewin_frames+lickDelay_frames+rewDelay_frames;
+    preRew_lickSearchRange_600ms = prewin_frames+lickDelay_frames:prewin_frames+lickDelay_frames+rewDelay_frames;
     lickBurstStart = nan(1,nTrials);
     postRew_lickBurstStart = nan(1,nTrials);
     lickBurstHz_all = nan(1,nTrials);
@@ -42,6 +46,8 @@ for  j = 1:length(expt.ttl)
     postRew_lickBurstHz = nan(1,nTrials);
     postRew_lickAlignEvents = nan(2.*postLick_frames,nIC,nTrials);
     postRew_lickAlign = nan(2.*postLick_frames,nTrials);
+    lastPreRew_lickAlignEvents = nan(2.*postLick_frames,nIC,nTrials);
+    firstPostRew_lickAlignEvents = nan(2.*postLick_frames,nIC,nTrials);
     lastPreRew_lickAlignEvents = nan(3.*postLick_frames,nIC,nTrials);
     firstPostRew_lickAlignEvents = nan(3.*postLick_frames,nIC,nTrials);
     lastPreRew_lickAlign = nan(3.*postLick_frames,nTrials);
@@ -49,7 +55,7 @@ for  j = 1:length(expt.ttl)
     rewAlignEvents = nan(3.*postLick_frames,nIC,nTrials);
     preRewTrials = [];
     postRewTrials = [];
-    postRew_lickSearchRange = prewin_frames+rewDelay_frames+lickDelay_frames:size(lickCueAlign,1)-lickSearch_frames-postLick_frames;% need to '-lickSearch_frames-postLick_frames' because later the inds needs to + lickSearch_frames or +postLick_frames, this is just for the following inds to be within matrix dimentions
+    postRew_lickSearchRange = prewin_frames+rewDelay_frames+lickDelay_frames:size(lickCueAlign,1)-lickSearch_frames-postLick_frames;
     lastPreRewLickFrame = nan(1,nTrials);
     firstPostRewLickFrame = nan(1,nTrials);
     for itrial = 1:nTrials
@@ -84,10 +90,10 @@ for  j = 1:length(expt.ttl)
                         break
                     end
                 end
-                ind_pre = intersect(preRew_lickSearchRange_700ms,find(lickCueAlign(:,itrial)));
+                ind_pre = intersect(preRew_lickSearchRange_600ms,find(lickCueAlign(:,itrial)));
                 ind_post = intersect(postRew_lickSearchRange,find(lickCueAlign(:,itrial)));
                 ind_all = intersect(lickSearchRange,find(lickCueAlign(:,itrial)));
-                preRew_lickBurstHz(:,itrial) = length(ind_pre)./0.7;
+                preRew_lickBurstHz(:,itrial) = length(ind_pre)./0.6;
                 postRew_lickBurstHz(:,itrial) = length(ind_post)./(length(postRew_lickSearchRange)./frameRateHz);
                 lickBurstHz_all(:,itrial) = length(ind_all)./(length(lickSearchRange)./frameRateHz);
                 ind = intersect(postRew_lickSearchRange,find(lickCueAlign(:,itrial)));
@@ -116,7 +122,7 @@ for  j = 1:length(expt.ttl)
                     firstPostRew_lickAlignEvents(:,:,itrial) = targetAlign_events(ind_post-postLick_frames+prewin_frames+rewDelay_frames:ind_post+postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
                     firstPostRew_lickAlign(:,itrial) = lickCueAlign(ind_post-postLick_frames+prewin_frames+rewDelay_frames:ind_post+postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,itrial);
                 end
-                rewAlignEvents(:,:,itrial) = targetAlign_events(-postLick_frames+prewin_frames+rewDelay_frames:postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
+                rewAlignEvents(:,:,itrial) =targetAlign_events(-postLick_frames+prewin_frames+rewDelay_frames:postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
             end
         end
     end

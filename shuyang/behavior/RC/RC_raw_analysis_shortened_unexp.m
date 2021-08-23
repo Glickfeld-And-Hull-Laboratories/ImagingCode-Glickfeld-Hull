@@ -46,24 +46,14 @@ for ii = 1:length(sessions)
     num_trials  = length(b_data.tThisTrialStartTimeMs); %gets vectors for # of trials. Includes unimaged trials.
     soundamp = b_data.soundTargetAmplitude;
     block2 = cell2mat(b_data.tBlock2TrialNumber);
-    % determine if it's interleave day
-    if b_data.block2TrPer80Level1 > 0 % if this number >0 than it's interleaved trials that day
-        auditrials = [];
-        vistrials = [];
-        avtrials = [];
-        for tri = 1:num_trials-1 %ignore the first and last trial
-            if tri ==1
-                continue; % get rid of the first trial regardless 
-            elseif block2(tri) == 1 && soundamp{tri} > 0 % only tone
-                auditrials = [auditrials, tri]; % this index is the index of the raw trial number, which includes everything
-            elseif block2(tri) == 0 && soundamp{tri} == 0 %only visual
-                vistrials = [vistrials, tri];
-            elseif block2(tri) == 0 && soundamp{tri} >0 % both tone and visual
-                avtrials = [avtrials, tri];
-            end
-        end
-        veri = (length(auditrials) + length(vistrials) + length(avtrials) == num_trials-2)
-        save([analysis_outputs_dir sessions{ii} '_IL_trial_inx.mat'],'auditrials','vistrials','avtrials');
+    % determine if it's unexpexred reward day
+    if b_data.block2TrPer80Level1 > 0  
+        unexptrials = find(double(cell2mat(b_data.tBlock2TrialNumber) == 1));
+        alltrials = 2:1:b_data.trialSinceReset;% get rid of the first trial
+        alltrials(end) = [];% get rid of the last trial
+        vistrials = setdiff(alltrials,unexptrials);
+        unexptrials = setdiff(alltrials,vistrials);% if the last trial is unexpected reward this gets rid of the last trial
+        save([analysis_outputs_dir sessions{ii} '_Unexp_trial_inx.mat'],'unexptrials','vistrials');
     elseif iscell(soundamp)
         soundamp = soundamp{end}; %changed mworks program on 11/30/2020, soundTargetAmplitude used to be persistent during the experiment and it was a single number. It will become a cell after this change. But you don't need this unless it's test day.
     end
@@ -114,10 +104,9 @@ for ii = 1:length(sessions)
 
     
     
-    if b_data.block2TrPer80Level1 > 0 % if this number >0 than it's interleaved trials that day
-        licks_by_trial_rewarded_audi = licks_by_trial(auditrials-1,:);% licks by trial doesn't have the first trial of the raw data, but auditrials is the index of the raw data
-        licks_by_trial_rewarded_vis = licks_by_trial(vistrials-1,:);
-        licks_by_trial_rewarded_av = licks_by_trial(avtrials-1,:);   
+    if b_data.block2TrPer80Level1 > 0 % if this number >0 than it has unexpected reward that day
+        licks_by_trial_rewarded_vis = licks_by_trial(vistrials-1,:);% licks by trial doesn't have the first trial of the raw data, but auditrials is the index of the raw data
+        licks_by_trial_rewarded_unexp = licks_by_trial(unexptrials-1,:);
     end
     licks_by_trial_rewarded = licks_by_trial;
     
@@ -152,16 +141,14 @@ for ii = 1:length(sessions)
     
     
     if exist([session_fig_dir, sessions{ii}, '_rew_lick_raster.fig'], 'file')==0
-        if b_data.block2TrPer80Level1 > 0 % if this number >0 than it's interleaved trials that day
-            figure;subplot(1,3,1);
-            plotSpikeRaster(logical(licks_by_trial_rewarded_audi), 'PlotType', 'vertline'); vline(time_before_ms+1,'b'); vline(time_before_ms+1 + cue_rew_int, 'k');
-            ylabel('trial # (descending)');
-            subplot(1,3,2);
+        if b_data.block2TrPer80Level1 > 0 % if this number >0 than it's interleaved unexpected reward trials that day
+            figure;subplot(1,2,1);
             plotSpikeRaster(logical(licks_by_trial_rewarded_vis), 'PlotType', 'vertline'); vline(time_before_ms+1,'g'); vline(time_before_ms+1 + cue_rew_int, 'k');
+            ylabel('trial # (descending)');
+            subplot(1,2,2);
+            plotSpikeRaster(logical(licks_by_trial_rewarded_unexp), 'PlotType', 'vertline'); vline(time_before_ms+1,'k'); vline(time_before_ms+1 + cue_rew_int, 'k');
             title(['Rewarded Trials: lick time raster img', this_mouse, ' ' this_date ' n=' num2str(size(licks_by_trial,1))]);
             xlabel('time (ms) colored=cue black=reward');
-            subplot(1,3,3);
-            plotSpikeRaster(logical(licks_by_trial_rewarded_av), 'PlotType', 'vertline'); vline(time_before_ms+1,'r'); vline(time_before_ms+1 + cue_rew_int, 'k');
             savefig([session_fig_dir, sessions{ii}, '_rew_lick_raster']);
         else
             %REWARDED trials lick raster plot
@@ -227,19 +214,17 @@ for ii = 1:length(sessions)
     
     RT_this_session_raw = RT_this_session;
     RT_this_session_raw(find(isnan(RT_this_session_raw))) = -1;
-    if b_data.block2TrPer80Level1 > 0
-        RT_raw_audi = RT_this_session_raw(auditrials-1);
+    if b_data.block2TrPer80Level1 > 0 %unexpected reward
         RT_raw_vis = RT_this_session_raw(vistrials-1);
-        RT_raw_av = RT_this_session_raw(avtrials-1);
+        RT_raw_unexp = RT_this_session_raw(unexptrials-1);
     end
     
     %plot raw RT within sessions relative to cue onset
     if exist([session_fig_dir, sessions{ii}, '_rawRT_plot.fig'], 'file')==0
         if b_data.block2TrPer80Level1 > 0
             figure;
-            subplot(1,3,1);plot(RT_raw_audi,'b');ylabel('RT (ms)');
-            subplot(1,3,2);plot(RT_raw_vis,'g');title(['RT for all individual trials within for day ' this_date, this_mouse]);xlabel('trial #');
-            subplot(1,3,3);plot(RT_raw_av,'r');
+            subplot(1,2,1);plot(RT_raw_vis,'g');ylabel('RT (ms)');
+            subplot(1,2,2);plot(RT_raw_unexp,'k');title(['RT for all individual trials within for day ' this_date, this_mouse]);xlabel('trial #');
             savefig([session_fig_dir, sessions{ii}, '_rawRT_plot']);
         else
             figure; plot(RT_this_session_raw);
@@ -274,23 +259,20 @@ for ii = 1:length(sessions)
     save(['Z:\behavior_analysis\RC\RT_data\', sessions{ii}], 'RT_this_session_raw', 'time_before_ms');%,'bad_trials');
     %trim RT data to exclude misses and FA (false alarm)s  
     if b_data.block2TrPer80Level1 > 0
-        TFT_rate_audi_this_session = length(find(RT_raw_audi<200))/(length(RT_raw_audi)-1);
         TFT_rate_vis_this_session = length(find(RT_raw_vis<200))/(length(RT_raw_vis)-1);
-        TFT_rate_av_this_session = length(find(RT_raw_av<200))/(length(RT_raw_av)-1);
-        TFT_rates_IL = [TFT_rates_IL, TFT_rate_audi_this_session,TFT_rate_vis_this_session,TFT_rate_av_this_session];
+        TFT_rate_unexp_this_session = length(find(RT_raw_unexp<200))/(length(RT_raw_unexp)-1);
+        TFT_rates_IL = [TFT_rates_IL, TFT_rate_vis_this_session,TFT_rate_unexp_this_session];
         
-        miss_rate_audi_this_session = length(find(RT_raw_audi>1200))/(length(RT_raw_audi)-1);
         miss_rate_vis_this_session = length(find(RT_raw_vis>1200))/(length(RT_raw_vis)-1);
-        miss_rate_av_this_session = length(find(RT_raw_av>1200))/(length(RT_raw_av)-1);
-        miss_rates_IL = [miss_rates_IL,miss_rate_audi_this_session,miss_rate_vis_this_session,miss_rate_av_this_session ];
+        miss_rate_unexp_this_session = length(find(RT_raw_unexp>1200))/(length(RT_raw_unexp)-1);
+        miss_rates_IL = [miss_rates_IL,miss_rate_vis_this_session,miss_rate_unexp_this_session];
         
-        RT_audi_this_session = RT_raw_audi(find(RT_raw_audi>200 & RT_raw_audi < 1200));
         RT_vis_this_session = RT_raw_vis(find(RT_raw_vis>200 & RT_raw_vis < 1200));
-        RT_av_this_session = RT_raw_av(find(RT_raw_av>200 & RT_raw_av < 1200));
-        RT_across_sessions_IL = [mean(RT_audi_this_session),mean(RT_vis_this_session),mean(RT_av_this_session)];
-        RT_across_sessions_sem_IL = [RT_across_sessions_sem_IL, std(RT_audi_this_session)/sqrt(length(RT_audi_this_session)),...
-            std(RT_vis_this_session)/sqrt(length(RT_vis_this_session)),std(RT_av_this_session)/sqrt(length(RT_av_this_session))];
-        std_of_RT_across_sessions_IL = [std_of_RT_across_sessions_IL, std(RT_audi_this_session),std(RT_vis_this_session),std(RT_av_this_session)];
+        RT_unexp_this_session = RT_raw_unexp(find(RT_raw_unexp>200 & RT_raw_unexp < 1200));
+        RT_across_sessions_IL = [mean(RT_vis_this_session),mean(RT_unexp_this_session)];
+        RT_across_sessions_sem_IL = [RT_across_sessions_sem_IL, std(RT_vis_this_session)/sqrt(length(RT_vis_this_session)),...
+            std(RT_unexp_this_session)/sqrt(length(RT_unexp_this_session))];
+        std_of_RT_across_sessions_IL = [std_of_RT_across_sessions_IL, std(RT_vis_this_session),std(RT_unexp_this_session)];
     else
         TFT_rate_this_session = length(find(RT_this_session<200))/(num_trials-1);
         if soundamp >0 && b_data.gratingSpeedDPS == 0 && testDay_mouse(ii+1)==0 % plays sounds, no visual stim

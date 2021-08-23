@@ -2,9 +2,9 @@ clear;
 %% load data and check if piezo is working that day
 analysis_out = 'Z:\2P_analysis\';
 bdata_source = 'Z:\Data\behavior\RC\';
-sessions = '210616_img1091';% for behavior data
+sessions = '210628_img1091';% for behavior data
 mouse = '1091';
-date = '210616';
+date = '210628';
 run = '000';
 cue = 1; % 1: CS1 2: CS2 3:CS1+CS2 4:interleave
 fprintf([date ' ' mouse '\n']);
@@ -128,8 +128,7 @@ savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_LickvsPiezo_abs.fig']));
 
 
 %% plot neural activity during trials of top and bottom 10/25% of movement amplitude. 
-% window for movement amplitude being considered: pre-rew: 100ms after cue to reward delivery.
-% post-rew:100ms after reward delivery - 700ms after reward delivery
+% window of movement amplitude being considered: pre-rew: 100ms after cue to reward delivery.
 
 [sortPiezoAmp sortPiezoAmp_ind] = sort(preRew_piezoAmp,'ascend');
 nnan = sum(isnan(preRew_piezoAmp));
@@ -230,8 +229,6 @@ supertitle([mouse ' ' date '- Piezo Amp by Volts: low10 (blue) & high10 (black)'
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoAmp10_abs.fig']));
 
 %% sort out trials by looking at time of big movements: 25% and 10%
-% window for time of movement being considered: when big movement starts in
-% that whole trial (1.5s before cue onset - 3s after cue onset)
 piezo_base_std = nanstd(reshape(targetAlign_piezo(1:prewin_frames,:),[prewin_frames.*nTrials 1]),[],1);
 piezo_base_avg = nanmean(reshape(targetAlign_piezo(1:prewin_frames,:),[prewin_frames.*nTrials 1]),1);
 targetAlign_piezo_thresh1 = zeros(size(targetAlign_piezo));%>1std <2std

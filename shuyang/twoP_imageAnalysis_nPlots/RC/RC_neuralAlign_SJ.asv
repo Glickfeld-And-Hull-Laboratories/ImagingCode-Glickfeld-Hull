@@ -20,7 +20,7 @@ for  j = 1:length(expt.ttl)
     img_fn = [date '_img' mouse '\getTC_' run '\'];
     filename = dir([analysis_out,img_fn  '*' '_TCave.mat']);
     load([analysis_out,img_fn, filename.name]);
-    threshold = -2;
+    threshold = -3;
     filename = dir([analysis_out,date '_img' mouse '\' date '_img' mouse '_' run  '*' num2str(threshold) '_TCave_cl.mat']);
     load([analysis_out,date '_img' mouse '\', filename.name]);
     spk = load([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvolve_threshold' num2str(threshold) '.mat' ]);

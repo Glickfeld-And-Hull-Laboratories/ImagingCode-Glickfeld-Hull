@@ -1,7 +1,7 @@
 % this script is the same as RC_lickAlign_SJ, but the window for aligning
 % the lick onset is longer. (1.5s before and 3s after instead of 0.5s before and after)
 % did this to make it the same scale as neural align, for Court's RO1 grant
-% This script should run AFTER running RC_lickAlign_SJ!!!!!!!!!!!!
+% This script should run AFTER running RC_lickAlign_SJ otherwise the data won't be saved!!!!!!!
 
 clear; 
 close all;
@@ -25,7 +25,7 @@ for  j = 1:length(expt.ttl)
     
     cTargetOn = input.cTargetOn;
     if iscell(cTargetOn) % if it is a cell, it means cTargetOn wasn't being over written in extract TC. If it's not a cell, it's already over written in extract TC. can be used directly
-        cTargetOn = cell2mat(input.cTargetOn);
+        cTargetOn = double(cell2mat(input.cTargetOn));
         cTargetOn(1) = nan; % first trial doesn't have reward 
     end
  
@@ -154,40 +154,70 @@ for  j = 1:length(expt.ttl)
         'postRew_lickAlignEvents_1500_3000ms_scale', 'postRew_lickAlign_1500_3000ms_scale',...
         'firstPostRew_lickAlignEvents_1500_3000ms_scale','firstPostRew_lickAlign_1500_3000ms_scale',...
         '-append');
-    
-    figure;
-    subplot(2,1,1); % align neural activity to lick burst onset, only burst trials are included 
-    shadedErrorBar(tt, nanmean(nanmean(postRew_lickAlignEvents_1500_3000ms_scale,3),2).*(1000./frameRateHz), (nanstd(nanmean(postRew_lickAlignEvents_1500_3000ms_scale,3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
-    hold on;
-    xlabel('Time from lick');
-    ylabel('Spike rate (Hz)');
-    vline(0,'k'); ylim([0 inf]);
-    title(['Reward (black- ' num2str(sum(~isnan(squeeze(postRew_lickAlignEvents_1500_3000ms_scale(1,1,:))))) ')']);
-    subplot(2,1,2); % align licking data to first lick burst
-    shadedErrorBar(tt, nanmean(postRew_lickAlign_1500_3000ms_scale,2).*(1000./frameRateHz), (nanstd(postRew_lickAlign_1500_3000ms_scale,[],2).*(1000./frameRateHz))./sqrt(unique(sum(~isnan(postRew_lickAlign_1500_3000ms_scale),2))),'k');
-    hold on;
-    xlabel('Time from lick');
-    ylabel('Lick rate (Hz)');
-    vline(0,'k'); ylim([0 inf]);
-    supertitle([mouse ' ' date '- post reward lick burst aligned spiking']);
+
+    % align neural activity to lick burst onset, only burst trials are included 
+    load (['Z:\behavior_analysis\RC\' date '_img' mouse '_IL_trial_inx.mat']);
+    aligntoburst = figure;
+    aligntoburst.Units = 'inches';
+    aligntoburst.Position = [1 1 9 5];
+    subplot(2,3,1);
+    shadedErrorBar(tt, nanmean(nanmean(postRew_lickAlignEvents_1500_3000ms_scale(:,:,auditrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(postRew_lickAlignEvents_1500_3000ms_scale(:,:,auditrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 4]);vline(0,'k');ylabel('spike rate (Hz)');
+    title('CS1');box off;
+    subplot(2,3,4);
+    shadedErrorBar(tt, nanmean(postRew_lickAlign_1500_3000ms_scale(:,auditrials),2).*(1000./frameRateHz), (nanstdpostRew_lickAlign_1500_3000ms_scale(:,auditrials)),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 40]);vline(0,'k');ylabel('lick rate (Hz)');xlabel('time from lick burst (ms)');
+    box off;
+    subplot(2,3,2);
+    shadedErrorBar(tt, nanmean(nanmean(postRew_lickAlignEvents_1500_3000ms_scale(:,:,avtrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(postRew_lickAlignEvents_1500_3000ms_scale(:,:,avtrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 4]);vline(0,'k');ylabel('spike rate (Hz)');
+    title('CS1+CS2');box off;
+    subplot(2,3,5);
+    shadedErrorBar(tt, nanmean(postRew_lickAlign_1500_3000ms_scale(:,avtrials),2).*(1000./frameRateHz), (nanstd(postRew_lickAlign_1500_3000ms_scale(:,avtrials),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 40]);vline(0,'k');ylabel('lick rate (Hz)');xlabel('time from lick burst (ms)');
+    box off;
+    subplot(2,3,3);
+    shadedErrorBar(tt, nanmean(nanmean(postRew_lickAlignEvents_1500_3000ms_scale(:,:,vistrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(postRew_lickAlignEvents_1500_3000ms_scale(:,:,vistrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 4]);vline(0,'k');ylabel('spike rate (Hz)');
+    title('CS2');box off;
+    subplot(2,3,6);
+    shadedErrorBar(tt, nanmean(postRew_lickAlign_1500_3000ms_scale(:,vistrials),2).*(1000./frameRateHz), (nanstd(postRew_lickAlign_1500_3000ms_scale(:,vistrials),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 40]);vline(0,'k');ylabel('lick rate (Hz)');xlabel('time from lick burst (ms)');
+    box off;
+    supertitle([mouse ' ' date ' - align to post reward lick burst']);
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_postRew_lickAlignSpiking_1500_3000ms_scale.fig']));
-    hold off;
+   
     
-    figure; % align neural and licking data to the first lick
-    subplot(2,1,1);
-    shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale,3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale,3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
-    title('First lick after reward');
-    xlabel('Time from lick (ms)');
-    ylabel('Spike rate (Hz)');
-    vline(0,'k'); ylim([0 inf]);
-    subplot(2,1,2);
-    shadedErrorBar(tt, nanmean(firstPostRew_lickAlign_1500_3000ms_scale,2).*(1000./frameRateHz), (nanstd(firstPostRew_lickAlign_1500_3000ms_scale,[],2).*(1000./frameRateHz))./sqrt(unique(sum(~isnan(firstPostRew_lickAlign_1500_3000ms_scale)))),'k');
-    xlabel('Time from lick (ms)');
-    ylabel('Lick rate (Hz)');
-    vline(0,'k'); ylim([0 inf]);
-    title(['Rew- ' num2str(length(postRewTrials))]);
-    supertitle([mouse ' ' date '- Licks relative to reward']);
-    hold off;
+    
+    % align to first lick post reward
+    aligntofirstlick = figure;
+    aligntofirstlick.Units = 'inches';
+    aligntofirstlick.Position = [1 1 9 5];
+    subplot(2,3,1);
+    shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,auditrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,auditrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 4]);vline(0,'k');ylabel('spike rate (Hz)');
+    title('CS1');box off;
+    subplot(2,3,4);
+    shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlign_1500_3000ms_scale(:,auditrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlign_1500_3000ms_scale(:,auditrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 40]);vline(0,'k');ylabel('lick rate (Hz)');xlabel('time from first lick (ms)');
+    box off;
+    subplot(2,3,2);
+    shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,avtrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,avtrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 4]);vline(0,'k');ylabel('spike rate (Hz)');
+    title('CS1+CS2');box off;
+    subplot(2,3,5);
+    shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlign_1500_3000ms_scale(:,avtrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlign_1500_3000ms_scale(:,avtrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 40]);vline(0,'k');ylabel('lick rate (Hz)');xlabel('time from first lick (ms)');
+    box off;
+    subplot(2,3,3);
+    shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,vistrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,vistrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 4]);vline(0,'k');ylabel('spike rate (Hz)');
+    title('CS2');box off;
+    subplot(2,3,6);
+    shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlign_1500_3000ms_scale(:,vistrials),3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlign_1500_3000ms_scale(:,vistrials),3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
+    ylim([0 40]);vline(0,'k');ylabel('lick rate (Hz)');xlabel('time from first lick (ms)');
+    box off;
+    supertitle([mouse ' ' date ' - align to post reward first lick']);
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_lastVsFirstLick_1500_3000ms_scale.fig']));
     
 end
