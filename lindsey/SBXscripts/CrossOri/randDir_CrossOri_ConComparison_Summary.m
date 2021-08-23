@@ -71,7 +71,13 @@ for iCon = 1:nCon
     hold on
     subplot(2,2,2)
     cdfplot(plaid_SI_all(ind))
-    hold on   
+    hold on 
+    subplot(2,2,3)
+    cdfplot(Zc_all(ind))
+    hold on
+    subplot(2,2,4)
+    cdfplot(Zp_all(ind))
+    hold on
     
     figure(4)
     subplot(3,nCon,iCon)
@@ -235,7 +241,7 @@ xlabel('Zc')
 ylabel('Zp')
 xlim([-1 3])
 ylim([-1 3])
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, ['randDir_Con_summary_' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage') 
 
 figure(3)
@@ -246,12 +252,18 @@ title('')
 subplot(2,2,2)
 xlabel('Masking Index')
 title('')
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+subplot(2,2,3)
+xlabel('Zc')
+title('')
+subplot(2,2,4)
+xlabel('Zp')
+title('')
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, ['randDir_Con_summary_SelectivityComp' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage') 
 
 figure(4)
 legend(leg_str{1,:})
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, ['randDir_Con_summary_MIbySI_' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage')
 
 [p_Zc table_Zc stats_Zc] = anova1(Zc_all_all(resp_ind_all_all),Con_ind(resp_ind_all_all),'off');
@@ -287,15 +299,15 @@ sigstar(groups(ind),post_ZcZp(ind,end),1)
 set(gca,'XTick',1:nCon,'XTickLabel',Cons)
 ylabel('Zc-Zp')
 xlabel('Con')
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, ['randDir_Con_summary_ZcZp_withStats_' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage')
 
 figure(7)
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, ['randDir_Con_summary_ZcZp_scatters_' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage')
 
 figure(8)
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, ['randDir_Con_summary_DarioFig_' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage')
 
 

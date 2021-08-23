@@ -680,6 +680,7 @@ ylabel('Adapt MI')
 refline(1)
 axis square
 [h, p_SI] = ttest(plaidSI_noadapt_all(preftest_ind_all,1),plaidSI_singadapt_all(preftest_ind_all,1));
+title(num2str(chop(p_SI,2)))
 subplot(2,2,2)
 scatter(amp_noadapt_all(preftest_ind_all),amp_singadapt_all(preftest_ind_all))
 xlabel('Control Amp')
@@ -689,6 +690,7 @@ ylim([0 1])
 refline(1)
 axis square
 [h p_amp] = ttest(amp_noadapt_all(preftest_ind_all),amp_singadapt_all(preftest_ind_all));
+title(num2str(chop(p_amp,2)))
 subplot(2,2,3)
 scatter(amp_noadapt_all(intersect(find(R_square_noadapt_all>0.1),preftest_ind_all)),amp_singadapt_all(intersect(find(R_square_noadapt_all>0.1),preftest_ind_all)))
 xlabel('Control Amp')
@@ -710,15 +712,33 @@ movegui('center')
 
 figure;
 subplot(2,2,1)
+cdfplot(testPI_noadapt_all(preftest_ind_all,:))
+n = sum(~isnan(testPI_noadapt_all(preftest_ind_all,:)));
+hold on
+cdfplot(testPI_singadapt_all(preftest_ind_all,:))
+xlabel('Test/Mask preference')
+xlim([-1 1])
+legend({'Control','Adapt'},'location','northwest')
+[h p] = ttest(testPI_noadapt_all(preftest_ind_all,:), testPI_singadapt_all(preftest_ind_all,:));
+title(['Pref test- n = ' num2str(length(preftest_ind_all)) '; p = ' num2str(chop(p,2))])
+subplot(2,2,2)
+cdfplot(plaidSI_noadapt_all(preftest_ind_all,1))
+n = sum(~isnan(plaidSI_noadapt_all(preftest_ind_all,1)));
+hold on
+cdfplot(plaidSI_singadapt_all(preftest_ind_all,1))
+xlabel('Modulation index')
+xlim([-1 1])
+[h p] = ttest(plaidSI_noadapt_all(preftest_ind_all,1), plaidSI_singadapt_all(preftest_ind_all,1));
+title(['Pref test- n = ' num2str(length(preftest_ind_all)) '; p = ' num2str(chop(p,2))])
+subplot(2,2,3)
 cdfplot(b_noadapt_all(preftest_ind_all,:))
 hold on
 cdfplot(b_singadapt_all(preftest_ind_all,:))
 xlabel('Sine Baseline')
 xlim([-1 1])
-legend({'Control','Adapt'},'location','southeast')
 [h p] = ttest(b_noadapt_all(preftest_ind_all,:), b_singadapt_all(preftest_ind_all,:));
 title(['Pref test- n = ' num2str(length(preftest_ind_all)) '; p = ' num2str(chop(p,2))])
-subplot(2,2,2)
+subplot(2,2,4)
 cdfplot(amp_noadapt_all(preftest_ind_all,:)-amp_shuf_noadapt_all(preftest_ind_all,:))
 hold on
 cdfplot(amp_singadapt_all(preftest_ind_all,:)-amp_shuf_singadapt_all(preftest_ind_all,:))
@@ -727,3 +747,31 @@ xlim([-1 1])
 [h p] = ttest(amp_noadapt_all(preftest_ind_all,:)-amp_shuf_noadapt_all(preftest_ind_all,:), amp_singadapt_all(preftest_ind_all,:)-amp_shuf_singadapt_all(preftest_ind_all,:));
 title(['Pref test- n = ' num2str(length(preftest_ind_all)) '; p = ' num2str(chop(p,2))])
 print(fullfile(summaryDir, [svName '_SineBaseAmpSummary.pdf']),'-dpdf','-fillpage')
+
+figure;
+% subplot(3,2,1)
+% scatter(testPI_noadapt_all(preftest_ind_all,:), b_noadapt_all(preftest_ind_all,:))
+% xlabel('Test/Mask preference')
+% ylabel('Baseline (control)')
+% subplot(3,2,2)
+% scatter(testPI_noadapt_all(preftest_ind_all,:), (amp_noadapt_all(preftest_ind_all,:)-amp_shuf_noadapt_all(preftest_ind_all,:)))
+% xlabel('Test/Mask preference')
+% ylabel('Amplitude (control)')
+subplot(1,2,1)
+scatter(testPI_noadapt_all(preftest_ind_all,:), b_singadapt_all(preftest_ind_all,:)-b_noadapt_all(preftest_ind_all,:))
+xlabel('Test/Mask preference')
+ylabel('Baseline: adapt-control')
+subplot(1,2,2)
+scatter(testPI_noadapt_all(preftest_ind_all,:), (amp_singadapt_all(preftest_ind_all,:)-amp_shuf_singadapt_all(preftest_ind_all,:)) - (amp_noadapt_all(preftest_ind_all,:)-amp_shuf_noadapt_all(preftest_ind_all,:)))
+xlabel('Test/Mask preference')
+ylabel('Amplitude: adapt-control')
+% subplot(3,2,5)
+% scatter(b_noadapt_all(preftest_ind_all,:), b_singadapt_all(preftest_ind_all,:)-b_noadapt_all(preftest_ind_all,:))
+% xlabel('Baseline (control)')
+% ylabel('Baseline: adapt-control')
+% subplot(3,2,6)
+% scatter((amp_noadapt_all(preftest_ind_all,:)-amp_shuf_noadapt_all(preftest_ind_all,:)), (amp_singadapt_all(preftest_ind_all,:)-amp_shuf_singadapt_all(preftest_ind_all,:)) - (amp_noadapt_all(preftest_ind_all,:)-amp_shuf_noadapt_all(preftest_ind_all,:)))
+% xlabel('Amplitude (control)')
+% ylabel('Amplitude: adapt-control')
+sgtitle(['Pref test- n = ' num2str(length(preftest_ind_all))])
+print(fullfile(summaryDir, [svName 'StimPref_BaseAmp_.pdf']),'-dpdf','-fillpage')

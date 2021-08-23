@@ -1,14 +1,14 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriSingleStimRandPhaseAdapt_ExptList';
+ds = 'CrossOriRandPhaseAdapt_ExptList';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 nanframes = zeros(1,nexp);
-max_dist = 2;
+max_dist = 5;
 
-for iexp = 1:5
+for iexp = 5:6
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     area = expt(iexp).img_loc{1};
@@ -30,7 +30,7 @@ for iexp = 1:5
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
     
-    max_dist = 2;
+    max_dist = 5;
     seed = rng;
     nCells = size(resp_cell_noadapt{end,end,end},1);
     nTrials = size(stimCon_all,2);
@@ -92,7 +92,7 @@ for iexp = 1:5
     n = 1;
     for iCell =1:nCells
         if start>25
-            suptitle([mouse ' ' date '- No Adapt- Trials < ' num2str(max_dist) '  deg'])
+            sgtitle([mouse ' ' date '- No Adapt- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_noAdapt.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
@@ -119,7 +119,7 @@ for iexp = 1:5
         end
         start = start+1;
     end
-    suptitle([mouse ' ' date '- No Adapt- Trials < ' num2str(max_dist) '  deg'])
+    sgtitle([mouse ' ' date '- No Adapt- Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_noAdapt.pdf']), '-dpdf','-fillpage')
 
     p_anova_singadapt = nan(nCells,1);
@@ -178,7 +178,7 @@ for iexp = 1:5
     n = 1;
     for iCell =1:nCells
         if start>25
-            suptitle([mouse ' ' date '- Sing Adapt - Trials < ' num2str(max_dist) '  deg'])
+            sgtitle([mouse ' ' date '- Sing Adapt - Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_singAdapt.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
@@ -205,7 +205,7 @@ for iexp = 1:5
         end
         start = start+1;
     end
-    suptitle([mouse ' ' date '- Sing Adapt- Trials < ' num2str(max_dist) '  deg'])
+    sgtitle([mouse ' ' date '- Sing Adapt- Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_singAdapt.pdf']), '-dpdf','-fillpage')
 
     p_anova_shuf_noadapt = nan(nCells,1);
@@ -224,7 +224,7 @@ for iexp = 1:5
     n = 1;
     for iCell = 1:nCells
         if start>25
-            suptitle([mouse ' ' date '- No Adapt Shuffled- Trials < ' num2str(max_dist) '  deg'])
+            sgtitle([mouse ' ' date '- No Adapt Shuffled- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_NoAdapt_shuffled.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
@@ -251,7 +251,7 @@ for iexp = 1:5
         end
         start = start+1;
     end
-    suptitle([mouse ' ' date '- No Adapt- Shuffled Trials < ' num2str(max_dist) '  deg'])
+    sgtitle([mouse ' ' date '- No Adapt- Shuffled Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_NoAdapt_shuffled.pdf']), '-dpdf','-fillpage')
 
     p_anova_shuf_singadapt = nan(nCells,1);
@@ -270,7 +270,7 @@ for iexp = 1:5
     n = 1;
     for iCell = 1:nCells
         if start>25
-            suptitle([mouse ' ' date '- Sing Adapt Shuffled- Trials < ' num2str(max_dist) '  deg'])
+            sgtitle([mouse ' ' date '- Sing Adapt Shuffled- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_SingAdapt_shuffled.pdf']), '-dpdf','-fillpage')
             figure;
             start = 1;
@@ -297,7 +297,7 @@ for iexp = 1:5
         end
         start = start+1;
     end
-    suptitle([mouse ' ' date '- Sing Adapt- Shuffled Trials < ' num2str(max_dist) '  deg'])
+    sgtitle([mouse ' ' date '- Sing Adapt- Shuffled Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_lessThan' num2str(max_dist) 'degEyeMvmt' num2str(n) '_SingAdapt_shuffled.pdf']), '-dpdf','-fillpage')
    
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_' num2str(max_dist) '_phaseFits.mat']),'trN_noadapt','trN_singadapt', 'seed', 'yfit_noadapt', 'b_hat_noadapt', 'amp_hat_noadapt', 'per_hat_noadapt', 'pha_hat_noadapt', 'sse_noadapt', 'R_square_noadapt',  'p_anova_noadapt', 'yfit_singadapt', 'b_hat_singadapt', 'amp_hat_singadapt', 'per_hat_singadapt', 'pha_hat_singadapt', 'sse_singadapt', 'R_square_singadapt', 'p_anova_singadapt', 'yfit_shuf_noadapt', 'b_hat_shuf_noadapt', 'amp_hat_shuf_noadapt', 'per_hat_shuf_noadapt', 'pha_hat_shuf_noadapt', 'sse_shuf_noadapt', 'R_square_shuf_noadapt', 'p_anova_shuf_noadapt','yfit_shuf_singadapt', 'b_hat_shuf_singadapt', 'amp_hat_shuf_singadapt', 'per_hat_shuf_singadapt', 'pha_hat_shuf_singadapt', 'sse_shuf_singadapt', 'R_square_shuf_singadapt', 'p_anova_shuf_singadapt','trialsperstim_noadapt','trialsperstim_singadapt', 'trialInd_noadapt','trialInd_singadapt','SI_all_avg', 'max_dist','resp_avg_noadapt','resp_avg_singadapt')

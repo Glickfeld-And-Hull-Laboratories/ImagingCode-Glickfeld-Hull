@@ -593,3 +593,53 @@ expt(37).coTime = {'1332'};
 expt(37).copFolder = {'003'};
 expt(37).copTime = {'1434'};
 expt(37).saveLoc = 'lindsey';
+
+%% i1339 210730
+expt(38).mouse = 'i1339';
+expt(38).date = '210730';
+expt(38).img_loc  = {'V1'};
+expt(38).z = -200;
+expt(38).img_strct  = {'cells'};
+expt(38).driver = {'SLC'};
+expt(38).indicator = {'tg';'GCaMP6s'};
+expt(38).sf = 0.05;
+expt(38).con = 0.125;
+expt(38).coFolder = {'002'};
+expt(38).coTime = {'1624'};
+expt(38).copFolder = {'003'};
+expt(38).copTime = {'1726'};
+expt(38).saveLoc = 'lindsey';
+
+%% i1350 210802
+expt(39).mouse = 'i1350';
+expt(39).date = '210802';
+expt(39).img_loc  = {'V1'};
+expt(39).z = -200;
+expt(39).img_strct  = {'cells'};
+expt(39).driver = {'SLC'};
+expt(39).indicator = {'tg';'GCaMP6s'};
+expt(39).sf = 0.05;
+expt(39).con = 0.125;
+expt(39).coFolder = {'002'};
+expt(39).coTime = {'0947'};
+expt(39).copFolder = {'003'};
+expt(39).copTime = {'1052'};
+expt(39).saveLoc = 'lindsey';
+
+%% i1351 210804
+expt(40).mouse = 'i1351';
+expt(40).date = '210804';
+expt(40).img_loc  = {'V1'};
+expt(40).z = -200;
+expt(40).img_strct  = {'cells'};
+expt(40).driver = {'SLC'};
+expt(40).indicator = {'tg';'GCaMP6s'};
+expt(40).sf = 0.05;
+expt(40).con = 0.125;
+expt(40).coFolder = {'002'};
+expt(40).coTime = {'1526'};
+expt(40).copFolder = {'003'};
+expt(40).copTime = {'1629'};
+expt(40).saveLoc = 'lindsey';
+
+

@@ -83,6 +83,7 @@ for iCon = 1:nCon
     ylabel('Fraction of cells')
     
     figure(3)
+    ind_pref = intersect(ind,[find(max_dir_all == 1); find(max_dir_all==5)]);
     subplot(2,nCon,iCon)
     ind_h = intersect(resp_ind_all,find(plaidSI_all>0));
     ind_l = intersect(resp_ind_all,find(plaidSI_all<0));
@@ -102,20 +103,53 @@ for iCon = 1:nCon
     title('')
     xlabel('Sine ampliutude')
     ylabel('Fraction of cells')
+    
+    figure(4)
+    leg_str{2,iCon} = ['Con = ' num2str(Cons(iCon)) '- ' num2str(length(ind_pref)) ' cells'];
+    subplot(2,2,1)
+    cdfplot(testPI_all(ind_pref))
+    xlabel('Selectivity index')
+    ylabel('Fraction of cells')
+    title('')
+    hold on
+    subplot(2,2,2)
+    cdfplot(plaidSI_all(ind_pref))
+    xlabel('Masking index')
+    ylabel('Fraction of cells')
+    title('')
+    hold on
+    subplot(2,2,3)
+    cdfplot(b_all_all(ind_pref))
+    xlabel('Sine baseline')
+    ylabel('Fraction of cells')
+    title('')
+    hold on
+    subplot(2,2,4)
+    cdfplot(amp_all_all(ind_pref)-amp_shuf_all(ind_pref))
+    xlabel('Sine amplitude (-shuf)')
+    ylabel('Fraction of cells')
+    title('')
+    hold on
 end
 figure(1)
 subplot(2,2,1)
 legend(leg_str{1,:})
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, [svName '_Con_summary_' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage') 
 
 figure(2)
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, [svName '_Con_summary_SelectivityComp' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage') 
 
 figure(3)
-suptitle([cell2mat(area_list) ' ' cell2mat(driver)])
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
 print(fullfile(summaryDir, [svName '_Con_summary_MaskingComp' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage') 
+
+figure(4)
+subplot(2,2,1)
+legend(leg_str{2,:})
+sgtitle([cell2mat(area_list) ' ' cell2mat(driver)])
+print(fullfile(summaryDir, [svName '_Con_PrefDir_summary_' cell2mat(area_list) '_' cell2mat(driver) '.pdf']),'-dpdf', '-fillpage') 
 
 % [p_Zc table_Zc stats_Zc] = anova1(Zc_all_all(resp_ind_all_all),Con_ind(resp_ind_all_all),'off');
 % post_Zc = multcompare(stats_Zc,'display','off');

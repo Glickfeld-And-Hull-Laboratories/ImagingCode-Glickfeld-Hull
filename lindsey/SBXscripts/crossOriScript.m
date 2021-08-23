@@ -1,8 +1,8 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirRandPhase_ExptList';
-iexp = 37; 
-doPhaseAfterDir = 0;
+ds = 'CrossOriRandPhaseFF_ExptList';
+iexp = 10; 
+doPhaseAfterDir = 1;
 rc = behavConstsAV;
 eval(ds)
 
@@ -83,7 +83,7 @@ nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,30001:30500),3);
+data_avg = mean(data(:,:,35001:35500),3);
 %% Register data
 if doPhaseAfterDir
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
@@ -249,7 +249,7 @@ if nStimDir > 1 & ~input.doTwoStimTogether
     title('Plaid')
     colormap gray
     caxis([0 1])
-    suptitle([mouse ' ' date])
+    sgtitle([mouse ' ' date])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GratingVsPlaid.pdf']),'-dpdf')
 elseif nStimDir > 1 & input.doTwoStimTogether
     nStim2 = nStimDir.*2;
@@ -303,7 +303,14 @@ if ~doPhaseAfterDir
     mask_exp = zeros(sz(1),sz(2));
     mask_all = zeros(sz(1), sz(2));
     mask_data = data_dfof;
-
+    
+    if strcmp(expt(iexp).driver{1},'SOM') || strcmp(expt(iexp).driver{1},'PV')
+        bwout = imCellEditInteractiveLG(mean(data_reg,3));
+        mask_all = mask_all+bwout;
+        mask_exp = imCellBuffer(mask_all,3)+mask_all;
+        close all
+    end
+    
     for iStim = 1:size(data_dfof,3)   
         mask_data_temp = mask_data(:,:,end+1-iStim);
         mask_data_temp(find(mask_exp >= 1)) = 0;
@@ -315,6 +322,7 @@ if ~doPhaseAfterDir
         mask_exp = imCellBuffer(mask_all,3)+mask_all;
         close all
     end
+    
     mask_cell= bwlabel(mask_all);
     if doRedChannel
         red_cells = unique(mask_cell(find(red_mask)));

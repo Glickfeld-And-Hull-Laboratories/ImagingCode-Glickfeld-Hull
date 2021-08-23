@@ -66,5 +66,29 @@ expt(4).saveLoc = 'lindsey';
 % expt(5).coTime = {'1531'};
 % expt(5).saveLoc = 'lindsey';
 
+%% i1352 210801
+expt(5).mouse = 'i1352';
+expt(5).date = '210801';
+expt(5).img_loc  = {'V1';'L2/3'};
+expt(5).inj_loc = {'V1'};
+expt(5).z = -200;
+expt(5).img_strct  = {'cells'};
+expt(5).driver = {'SLC'};
+expt(5).indicator = {'tg';'GCaMP6s'};
+expt(5).coFolder = {'002'};
+expt(5).coTime = {'1104'};
+expt(5).saveLoc = 'lindsey';
 
+%% i1353 210801 last ~20K frames of eyetracking didn't save
+expt(6).mouse = 'i1353';
+expt(6).date = '210801';
+expt(6).img_loc  = {'V1';'L2/3'};
+expt(6).inj_loc = {'V1'};
+expt(6).z = -200;
+expt(6).img_strct  = {'cells'};
+expt(6).driver = {'SLC'};
+expt(6).indicator = {'tg';'GCaMP6s'};
+expt(6).coFolder = {'002'};
+expt(6).coTime = {'1300'};
+expt(6).saveLoc = 'lindsey';
 
