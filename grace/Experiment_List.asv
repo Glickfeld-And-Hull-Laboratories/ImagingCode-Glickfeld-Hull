@@ -70,3 +70,54 @@ expt(7).driver = {'lacz'};
 expt(7).indicator = {'GCaMP7f'};
 expt(7).coFolder = {'003'};
 expt(7).saveLoc = 'grace';
+
+expt(8).mouse = 'i1802';
+expt(8).date = '210605';
+expt(8).img_loc  = {'V1'};
+expt(8).z = -200;
+expt(8).img_strct  = {'cells'};
+expt(8).driver = {'lacz'};
+expt(8).indicator = {'GCaMP7f'};
+expt(8).coFolder = {'003'};
+expt(8).saveLoc = 'grace';
+
+%% Arc 
+expt(9).mouse = 'i1803';
+expt(9).date = '210625';
+expt(9).img_loc  = {'V1'};
+expt(9).z = -200;
+expt(8).img_strct  = {'cells'};
+expt(8).driver = {'arc'};
+expt(8).indicator = {'GCaMP7f'};
+expt(8).coFolder = {'003'};
+expt(8).saveLoc = 'grace';
+
+expt(9).mouse = 'i1803';
+expt(9).date = '210629';
+expt(9).img_loc  = {'V1'};
+expt(9).z = -200;
+expt(9).img_strct  = {'cells'};
+expt(9).driver = {'arc'};
+expt(9).indicator = {'GCaMP7f'};
+expt(9).coFolder = {'003'};
+expt(9).saveLoc = 'grace';
+
+expt(10).mouse = 'i70120';
+expt(10).date = '201210';
+expt(10).img_loc  = {'V1'};
+expt(10).z = -200;
+expt(10).img_strct  = {'cells'};
+expt(10).driver = {'arc'};
+expt(10).indicator = {'GCaMP7f'};
+expt(10).coFolder = {'002'};
+expt(10).saveLoc = 'grace';
+
+expt(11).mouse = 'i70520';
+expt(11).date = '201207';
+expt(11).img_loc  = {'V1'};
+expt(11).z = -200;
+expt(11).img_strct  = {'cells'};
+expt(11).driver = {'arc'};
+expt(11).indicator = {'GCaMP7f'};
+expt(11).coFolder = {'002'};
+expt(11).saveLoc = 'grace';

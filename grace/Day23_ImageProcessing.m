@@ -1,9 +1,11 @@
+clear all;
+clear global;
 %% get path names D2
-ref_date = '210621';
-date = '210625';
+ref_date = '210802';
+date = '210806';
+time = strvcat('1425');
 alignToRef = 1;
 ImgFolder = strvcat('003');
-% time = strvcat('1204');
 mouse = 'i1803';
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
@@ -12,14 +14,196 @@ run_str = catRunName(ImgFolder, nrun);
 gl_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\2P_Imaging';
 fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\Analysis\2P';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
+%% load and register
+data = [];
+clear temp
+trial_n = [];
+offset = 0;
+for irun = 1:nrun
+    CD = fullfile(gl_fn, [mouse '\' date '_' mouse '\' ImgFolder(irun,:)]);
+    cd(CD);
+    imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
+    load(imgMatFile);
+    fName = fullfile(behav_fn, ['data-' mouse '-' date '-' time(irun,:) '.mat']);
+    load(fName);
 
-%% load files 
+    nframes = info.config.frames;
+    fprintf(['Reading run ' num2str(irun) '- ' num2str(nframes) ' frames \r\n'])
+    data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
+    
+    
+    temp(irun) = input;
+    if isfield(input, 'nScansOn')
+        nOn = temp(irun).nScansOn;
+        nOff = temp(irun).nScansOff;
+        ntrials = size(temp(irun).tGratingDirectionDeg,2);
+
+        data_temp = squeeze(data_temp);
+        if nframes>ntrials*(nOn+nOff)
+            nframes = ntrials*(nOn+nOff);
+            data_temp = data_temp(:,:,1:ntrials*(nOn+nOff));
+        elseif nframes<ntrials*(nOn+nOff)
+            temp(irun) = trialChopper(temp(irun),1:ceil(nframes./(nOn+nOff)));
+        end
+    end
+    
+    offset = offset+nframes;
+
+    data_temp = squeeze(data_temp);
+    data = cat(3,data,data_temp);
+    trial_n = [trial_n nframes];
+end
+input = concatenateDataBlocks(temp);
+clear data_temp
+clear temp
+
+ %% Choose register interval
+t = 2000;
+nep = floor(size(data,3)./t);
+[n n2] = subplotn(nep);
+figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((i-1)*t)),3)); title([num2str(1+((i-1)*t)) '-' num2str(500+((i-1)*t))]); end
+
+%% Register data
+
+data_avg = mean(data(:,:,36001:36500),3); 
+
+if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
+    load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+    save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    [outs, data_reg]=stackRegister_MA(data(:,:,:),[],[],out);
+    clear out outs
+else
+    [out, data_reg] = stackRegister(data,data_avg);
+    data_reg_avg = mean(data_reg,3);
+    reg = data_reg_avg;
+    mkdir(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
+    save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'data_reg_avg', 'out', 'data_avg')
+    save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+end
+clear data
+
+
+%% test stability
+% figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*nframes):500+((i-1)*nframes)),3)); title([num2str(1+((i-1)*nframes)) '-' num2str(500+((i-1)*nframes))]); end
+figure; imagesq(data_reg_avg); truesize;
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf','-bestfit')
+
+%% find activated cells
+%max by trial type    
+if isfield(input, 'nScansOn')
+    nOn = input.nScansOn;
+    nOff = input.nScansOff;
+    if nOn>29
+        sz = size(data_reg);
+%         make data_tr smaller for dfof images to not use all of the memory
+        data_tr = reshape(single(data_reg(:,:,1:28800)),[sz(1), sz(2), nOn+nOff, 320]);
+        data_f = mean(double(data_tr(:,:,nOff/2:nOff,:)),3);
+        data_df = bsxfun(@minus, double(data_tr), data_f); 
+        data_dfof = bsxfun(@rdivide,data_df, data_f); 
+        clear data_tr clear data_f clear data_df
+    else
+        sz = size(data_reg);
+        data_tr = zeros(sz(1),sz(2), 100, ntrials-1);
+        for itrial = 1:ntrials-1
+            data_tr(:,:,:,itrial) = data_reg(:,:,((itrial-1)*(nOn+nOff))+71:170+((itrial-1)*(nOn+nOff)));
+        end
+        data_f = mean(data_tr(:,:,1:50,:),3);
+        data_df = bsxfun(@minus, double(data_tr), data_f); 
+        data_dfof = bsxfun(@rdivide,data_df, data_f); 
+        clear data_tr clear data_f clear data_df
+    end
+end
+
+if input.doDirStim
+%     obtaining avg and max dfof images for each dir
+    Dir = cell2mat_padded(input.tGratingDirectionDeg);
+    Dir = Dir(1:ntrials);
+    Dirs = unique(Dir);
+    data_dfof_avg = zeros(sz(1),sz(2),length(Dirs));
+    nDirs = length(Dirs);
+    [n n2] = subplotn(nDirs);
+    figure;
+    for idir = 1:length(Dirs)
+        if nOn>29
+            ind = find(Dir(1:160) == Dirs(idir));
+        else
+            ind = find(Dir(1:ntrials-1) == Dirs(idir));
+        end
+        data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4);
+        subplot(n,n2,idir)
+        imagesc(data_dfof_avg(:,:,idir))
+    end
+    clear data_dfof
+    myfilter = fspecial('gaussian',[20 20], 0.5);
+    data_dfof_avg_all = imfilter(data_dfof_avg,myfilter);
+    data_dfof_max = max(data_dfof_avg_all,[],3);
+    
+%     average dfof image for each direction
+    figure; 
+    Stims = Dirs;
+    nStim = length(Dirs);
+    [n n2] = subplotn(nDirs);
+    data_dfof_avg_ori = zeros(sz(1), sz(2), nDirs/2);
+    for i = 1:nStim 
+        subplot(n,n2,i); 
+        imagesc(data_dfof_avg_all(:,:,i));
+        clim([0 max(data_dfof_avg_all(:))])
+        title(num2str(Dirs(i)))
+        colormap(gray)
+        if i<(nDirs/2)+1
+            data_dfof_avg_ori(:,:,i) = mean(data_dfof_avg_all(:,:,[i i+nDirs/2]),3);
+        end
+    end
+    print(fullfile('Z:\All_staff\home\grace\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_16Stim.pdf']), '-dpdf')
+
+%     average dfof image for each orientation
+    figure;
+    [n n2] = subplotn(nDirs/2);
+    for i = 1:nStim/2
+        subplot(n,n2,i)
+        imagesc(data_dfof_avg_ori(:,:,i));
+        clim([0 max(data_dfof_avg_ori(:))])
+        title(num2str(Dirs(i)))
+        axis off
+    end
+    subplot(n,n2,i+1)
+    imagesc(max(data_dfof_avg_ori,[],3))
+    title('dfof Max')
+    axis off
+    data_dfof = cat(3,data_dfof_avg_ori,max(data_dfof_avg_ori,[],3));
+    print(fullfile('Z:\All_staff\home\grace\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_activeCells.pdf']), '-dpdf')
+
+    figure;
+    imagesc(max(data_dfof_avg_ori,[],3))
+    title('dfof Max')
+    axis off
+    print(fullfile('Z:\All_staff\home\grace\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofMax.pdf']), '-dpdf')
+end
+
+ save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all')
+
+%% create pixel correlation image
+data_reg_3hz = stackGroupProject(data_reg,5);
+pix = getPixelCorrelationImage(data_reg_3hz);
+pix(isnan(pix))=0;
+save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pixel.mat']),'pix')
+clear data_reg_3hz
+%% rename day2 variables and load files from ref date
+fov_avg{2} = data_reg_avg;
+dfmax{2} = data_dfof_max;
+corrmap{2} = pix;
+corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
+brightnessScaleFactor = 0.5;
+fov_norm{2} = uint8((fov_avg{2}./max(fov_avg{2}(:))).*255);
+fov_norm{2}(fov_norm{2} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
+
 maskD1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_mask_cell.mat']));
 TCs_D1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_TCs.mat']));
 dfofD1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_stimActFOV.mat']));
 shiftsD1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_reg_shifts.mat']));
 pixelD1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_pixel.mat']));
 inputD1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_input.mat']));
+multiDayD1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_multiday_alignment.mat']));
 
 fov_avg{1} = shiftsD1.data_reg_avg;
 dfmax{1} = dfofD1.data_dfof_max;
@@ -27,28 +211,14 @@ cellTCs_all{1} = TCs_D1.npSub_tc;
 input_temp(1) = inputD1;
 corrmap{1} = pixelD1.pix;
 masks{1} = maskD1.mask_cell;
-
-dfofD2 = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimActFOV.mat']));
-shiftsD2 = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']));
-pixelD2 = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pixel.mat']));
-inputD2 = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']));
-
-fov_avg{2} = shiftsD2.data_reg_avg;
-dfmax{2} = dfofD2.data_dfof_max;
-input_temp(2) = inputD2;
-corrmap{2} = pixelD2.pix;
-
 corrmap_norm{1} = uint8((corrmap{1}./max(corrmap{1}(:))).*255);
-corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
-
 brightnessScaleFactor = 0.5;
 fov_norm{1} = uint8((fov_avg{1}./max(fov_avg{1}(:))).*255);
 fov_norm{1}(fov_norm{1} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
-fov_norm{2} = uint8((fov_avg{2}./max(fov_avg{2}(:))).*255);
-fov_norm{2}(fov_norm{2} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
-
+redCells = multiDayD1.redCells;
 %% red channel
-day = 2;
+
+% process the red channel from a 1000 frame run on day 2/3
 irun = 1;
 WL = '920';
 ImgFolder = strvcat('001');
@@ -64,169 +234,49 @@ mkdir(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run]));
 if size(data_temp,1)>1
 data_rg = squeeze(data_temp(1,:,:,:));
 data_rr = squeeze(data_temp(2,:,:,:));
-[out data_g_reg] = stackRegister(data_rg,fov_avg{day});
+[out data_g_reg] = stackRegister(data_rg,mean(data_rg,3));
 [out2 data_r_reg] = stackRegister_MA(data_rr,[],[],out);
 red = mean(data_r_reg,3);
 greenChImg = mean(data_g_reg,3);
 clear data_temp 
-fov_red{day} = uint8((red./max(red(:))).*255);
+fov_red{2} = uint8((red./max(red(:))).*255);
 end
 
-%% red/green cells
-if alignToRef
-load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_multiday_alignment.mat']));
-else
-% size of cell box
-clear input
-close all
-w=30;
-h=30;
-buf = 3;
-np = 5;
-% green channel
-% get cell centroids
-
-redGreenCells = struct;
-
-cellPosition = regionprops(masks{1});
-nc = length(cellPosition);
-
-xCenter = cellfun(@(a) round(a(1)),{cellPosition.Centroid});
-yCenter = cellfun(@(a) round(a(2)),{cellPosition.Centroid});
-
-% index cells NOT too close to edge and NOT in black part of transformation
-[ypix,xpix] = size(fov_avg{1});
-goodCells = xCenter>(w/2) & xCenter<xpix-(w/2) & yCenter>(h/2) & yCenter<ypix-(h/2);
-
-goodCells = goodCells & ...
-    arrayfun(@(x) sum(sum(fov_norm{1}(masks{1}==x)))>0,1:nc);
-
-    % fine register each cell    
-mask_exp = zeros(size(fov_avg{1}));
-mask_all = zeros(size(fov_avg{1}));
-
-for icell = 1:nc
-    if goodCells(icell)
-        % find best shift
-        day1_cell_avg = fov_norm{1}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-        
-        corr = corrmap_norm{1}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-        
-        day1_cell_max = dfmax{1}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-        
-        day1_red_avg = fov_red{1}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-        
-        mask = masks{1}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-
-            pass = true;
-            figure;
-            movegui('center')
-            start = 1;
-            subplot(1,4,start)
-            imagesc(day1_cell_avg);axis image
-            hold on
-            bound = cell2mat(bwboundaries(mask(:,:,1)));
-            plot(bound(:,2),bound(:,1),'-','color','r','MarkerSize',2);axis image
-            title('avg')
-            subplot(1,4,start+1)
-            imagesc(corr);axis image
-            hold on
-            plot(bound(:,2),bound(:,1),'-','color','r','MarkerSize',2);axis image
-            title('corr')
-            subplot(1,4,start+2)
-            imagesc(day1_cell_max);axis image
-            hold on
-            plot(bound(:,2),bound(:,1),'-','color','r','MarkerSize',2);
-            title('dfof')
-            subplot(1,4,start+3)
-            imagesc(day1_red_avg);axis image
-            hold on
-            plot(bound(:,2),bound(:,1),'-','color','r','MarkerSize',2);
-            title('Red')
-            
-            prompt = 'Choose one: 1- good, 2-okay, 3- none: ';
-            x = input(prompt);
-            switch x
-                case 1
-                    pass = true;
-                    faint = false;
-                case 2
-                    pass = false;
-                    faint = true;
-                case 3
-                    pass = false;
-                    faint = false;
-            end
-    if pass
-        redGreenCells(icell).pass = pass;
-        redGreenCells(icell).faint = false;  
-    elseif faint
-        redGreenCells(icell).pass = false;
-        redGreenCells(icell).faint = faint;  
-    else 
-        redGreenCells(icell).pass = false;
-        redGreenCells(icell).faint = false;  
-    end
-    close all
-    end  
-end
-
-goodCells = find([redGreenCells.pass]);
-okayCells = find([redGreenCells.faint]);
-redCells = sort([goodCells okayCells]);
-redChImg = fov_red{1};
-save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_multiday_alignment.mat']),'goodCells','okayCells','redCells','redChImg');
-end
-%% manual align
-[input_points_1, base_points_1] = cpselect(fov_avg{2},fov_avg{1},'Wait', true);
+%% align Day 2 data stack to Day 1
+[input_points_1, base_points_1] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
 [input_points_2, base_points_2] = cpselect(dfmax{2},dfmax{1},'Wait', true);
-% [input_points_3, base_points_3] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
-input_points = [input_points_1 input_points_2];
-base_points = [input_points_1 base_points_2];
-fitGeoTAf = fitgeotrans(input_points(:,:), base_points(:,:),'affine');
-% fitGeoTAf_FOV = fitgeotrans(input_points_2(:,:), base_points_2(:,:),'affine');
-% fitGeoTAf_pix = fitgeotrans(input_points_3(:,:), base_points_3(:,:),'affine');
+input_points = [input_points_1' input_points_2'];
+base_points = [base_points_1' base_points_2'];
+fitGeoTAf = fitgeotrans(input_points(:,:)', base_points(:,:)','affine');
 
+% transform data_reg and make a new D2 FOV from the avg of that
 data3 = imwarp(data_reg,fitGeoTAf, 'OutputView', imref2d(size(data_reg))); 
 fov_avg{3} = mean(data3,3);
 fov_norm{3} = uint8((fov_avg{3}./max(fov_avg{3}(:))).*255);
-
 corrmap{3} = double(imwarp(corrmap{2},fitGeoTAf, 'OutputView', imref2d(size(corrmap{2}))));
 corrmap_norm{3} = uint8((corrmap{3}./max(corrmap{3}(:))).*255);
-% red_trans = (imwarp(fov_red{2},fitGeoTAf, 'OutputView', imref2d(size(fov_red{2}))));
-% fov_red{3} = uint8(red_trans);
 dfmax{3} = imwarp(dfmax{2},fitGeoTAf, 'OutputView', imref2d(size(dfmax{2})));
 redChImg = imwarp(fov_red{2},fitGeoTAf, 'OutputView', imref2d(size(fov_red{2})));
 
-figure;
-filler = zeros(size(fov_norm{1}));
+sz = size(fov_avg{3});
+rgb = zeros(sz(1),sz(2),3);
+rgb(:,:,1) = redChImg./max(redChImg(:));
+rgb(:,:,2) = fov_avg{3}./max(fov_avg{3}(:));
+figure; image(rgb); movegui('center')
+
+figure;colormap gray
+filler = zeros(size(dfmax{1}));
+movegui('center')
+subplot 221
+imshow(cat(3,fov_norm{1},fov_norm{3},filler))
+subplot 222
+imshow(cat(3,redChImg, fov_norm{1},filler))
+subplot 223
 imshow(cat(3,dfmax{1},dfmax{3},filler))
-title('Overlay with all points')
-print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], ['FOV_alignment.pdf']),'-dpdf','-bestfit')
+title('Overlay')
+print(fullfile(fn_multi,'overlays'),'-dpdf','-fillpage')
 
-% figure;colormap gray
-% movegui('center')
-% subplot 221
-% imshow(fov_red{1}); title('Day 1 Red Channel')
-% subplot 222
-% imshow(fov_red{3}); title('Transformed Day 2 Red Channel')
-% subplot 223
-% filler = zeros(size(fov_red{1}));
-% imshow(cat(3,fov_red{1},fov_red{3},filler))
-% title('Overlay')
-% print(fullfile(fn_multi,'red channel manual alignment'),'-dpdf','-fillpage')
-
-%% cell-by-cell correlation
+%% make new cell masks for D2
 clear input
 % size of cell box
 close all
@@ -290,23 +340,9 @@ for icell = 1:nc
             xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
         [reg_corr, shift_corr] = shift_opt(day2_cell_corr,day1_cell_corr,2);
         r_corr = corr(reg_corr(:),day1_cell_corr(:));
-%         if red_ind{1}(icell)
-%             day1_red_avg = fov_red{1}(...
-%             yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-%             xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-%             day2_red_avg = fov_red{3}(...
-%             yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-%             xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-%             [red_reg_avg, shift_red] = shift_opt(double(day2_red_avg),double(day1_red_avg),2);
-%             r_red = corr(red_reg_avg(:),double(day1_red_avg(:)));
-%         else
-            day1_red_avg = nan;
-            day2_red_avg = nan;
-            red_reg_avg = nan;
-            r_red = nan;
-%         end
         
-        [max_val max_ind] = max([r_avg r_max r_corr r_red]);
+%         only use cells with with one corr coef of 0.4 or higher
+        [max_val max_ind] = max([r_avg r_max r_corr]); 
         if max_val>0.55 & (r_corr>0.4 || r_avg>0.4 || r_max>0.4)
             pass = true;
             figure;
@@ -319,21 +355,11 @@ for icell = 1:nc
             imagesc(reg_corr)
             title(num2str(r_corr))
             subplot(3,2,start+2)
-%             if red_ind{1}(icell)
-%                 imagesc(day1_red_avg)
-%                  title('Red')
-%             else
-                imagesc(day1_cell_avg)
-                title('Avg')
-%             end
+            imagesc(day1_cell_avg)
+            title('Avg')
             subplot(3,2,start+3)
-%             if red_ind{1}(icell)
-%                 imagesc(red_reg_avg)
-%                 title(num2str(r_red))
-%             else
-                imagesc(reg_avg)
-                title(num2str(r_avg))
-%             end
+            imagesc(reg_avg)
+            title(num2str(r_avg))
             subplot(3,2,start+4)
             imagesc(day1_cell_max)
             title('Max')
@@ -350,9 +376,6 @@ for icell = 1:nc
                     img_select = corrmap{3};
                     shifts = shift_corr;
                 case 2
-%                     if red_ind{1}(icell)
-%                         img_select = fov_red{3};
-%                     else
                     img_select = fov_avg{3};
                     shifts = shift_avg;
                 case 3     
@@ -367,19 +390,13 @@ for icell = 1:nc
         cellImageAlign(icell).center_yx = [yCenter(icell),xCenter(icell)];
         cellImageAlign(icell).d(1).avg_img = day1_cell_avg;
         cellImageAlign(icell).d(1).corr_img = day1_cell_corr;
-        cellImageAlign(icell).d(1).red_img = day1_red_avg;
         cellImageAlign(icell).d(1).max_img = day1_cell_max;
         cellImageAlign(icell).d(2).avg_img = reg_avg;
         cellImageAlign(icell).d(2).corr_img = reg_corr;
-        cellImageAlign(icell).d(2).red_img = red_reg_avg;
         cellImageAlign(icell).d(2).max_img = reg_max;
-%         cellImageAlign(icell).r_avg = r_avg;
-%         cellImageAlign(icell).r_corr = r_corr;
-%         cellImageAlign(icell).r_red = r_red;
         cellImageAlign(icell).shifts = shifts;
         cellImageAlign(icell).pass = pass;
 
-        
 
         % shift data, get tc, all days
         if pass
@@ -412,9 +429,8 @@ for icell = 1:nc
                 mask_exp = imCellBuffer(mask_temp,3)+mask_temp;
             end
         close all
-    else
+        else
         cellImageAlign(icell).pass = false;
-        cellImageAlign(icell).r_red = 0;
         temp_mask = zeros(size(day1_mask));
         temp_mask(find(day1_mask==icell)) = 1;
         bwout_full = zeros(size(fov_avg{1}));
@@ -462,7 +478,6 @@ for icell = 1:nc
         mask_exp = imCellBuffer(mask_temp,3)+mask_temp;
     end
 end
-%mask_cell = bwlabel(mask_all);
 mask_cell = mask_all;
 mask_np = imCellNeuropil(mask_cell, 3, 5);
 figure;
@@ -484,11 +499,6 @@ save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' m
 match = find([cellImageAlign.pass]);
 [match_ind,red_ind] = intersect(match,redCells);
 cellTCs_match{1} = cellTCs_all{1}(:,match_ind);
-
-% x = [size(cell2mat(cellTCs_all),2) length(redCells) length(match) length(match_ind)];
-% figure;bar(x)
-% cellnames = {'D1 cells','D1 red cells','D2 match cells','D2 red/match cells'};
-% set(gca,'xticklabel',cellnames,'FontSize',12)
 
 %new TCs
 data_tc = stackGetTimeCourses(data3, mask_cell);
@@ -514,14 +524,10 @@ end
 np_w = 0.01*ind;
 npSub_tc = data_tc(:,:)-bsxfun(@times,tcRemoveDC(np_tc(:,:)),np_w);
  
-% cellTCs_match{2} = cellTCs_match{2}(:,red_ind);
 cellTCs_match{2} = npSub_tc(:,:);
 
-% red_ind_match = ismember(match_ind,find(~isnan([cellImageAlign.r_red])));
-% red_ind_all = red_ind;
-
 save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']),'cellTCs_match', 'cellTCs_all','match_ind')
-save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_multiday_alignment.mat']),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','dfmax','corrmap','redChImg');
+save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_multiday_alignment.mat']),'redChImg','cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','dfmax','corrmap');
 clear data_reg_down
 
 %%
@@ -645,7 +651,7 @@ if isfield(input, 'nScansOn')
     
     good_ind = unique([find(x)'; find(sum(h_dir,2)>0); find(sum(h_ori,2)>0)]);
     print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_oriTuning.pdf']),'-dpdf')
-    save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_trialData.mat']),'data_dfof','resp_mat','max_dir','h_dir', 'h_ori', 'max_ori','good_ind')
+    save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_trialData.mat']),'data_dfof','resp_mat','max_dir','h_dir', 'h_ori', 'max_ori','good_ind','dir_resp')
 end
 
 %% ori fitting
@@ -661,13 +667,9 @@ nCells = size(npSub_tc,2);
 data_tc_down = squeeze(mean(reshape(npSub_tc, [down,nframes,nCells]),1));
 tuningDownSampFactor = down;
 
-% if mean(npSub_tc1,1) = 0
-% [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC] = 0;
-% else
 [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC] = ...
     getOriTuningLG(data_tc_down,input,tuningDownSampFactor);
     vonMisesFitAllCells = squeeze(vonMisesFitAllCellsAllBoots(:,1,:));
-% end
 
 save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_oriTuningAndFits.mat']),...
             'avgResponseEaOri','semResponseEaOri','vonMisesFitAllCellsAllBoots','fitReliability','R_square', 'tuningTC')

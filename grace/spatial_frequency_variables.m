@@ -1,4 +1,4 @@
-%% START HERE with frequency
+%% START HERE with frequency-dfof response accounting for frequency and direction
 dfof_stim = zeros(nDir,nSF,nCells1,3);
 trialInd = cell(nDir,nSF,3);
   for idir = 1:nDir
