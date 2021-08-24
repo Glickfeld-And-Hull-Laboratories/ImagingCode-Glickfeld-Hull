@@ -1,4 +1,4 @@
-function b_data = get_bx_data_sj(bdata_source, session);
+function b_data = get_bx_data_sj(bdata_source, session)
 %if statement to distinguish between 1000s, 900s, and 00s and find bx file
 
 %get animal number and session date

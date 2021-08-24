@@ -2,9 +2,9 @@ clear;
 %% load data and check if piezo is working that day
 analysis_out = 'Z:\2P_analysis\';
 bdata_source = 'Z:\Data\behavior\RC\';
-sessions = '210113_img1082';% for behavior data
-mouse = '1082';
-date = '210113';
+sessions = '210616_img1091';% for behavior data
+mouse = '1091';
+date = '210616';
 run = '000';
 cue = 1; % 1: CS1 2: CS2 3:CS1+CS2 4:interleave
 fprintf([date ' ' mouse '\n']);
@@ -13,7 +13,6 @@ img_fn = [date '_img' mouse];
 img_fn2 = sessions;
 mworks = get_bx_data_sj(bdata_source, img_fn2);
 nf = mworks.counterValues{end}(end);
-
 
 cd(fullfile('Z:\Data\2photon\', [date '_img' mouse]));
 fn_piezo = fopen([date '_img' mouse '_000_' run '.ephys']);
@@ -48,12 +47,15 @@ for iframe = 1:nf
     piezo_frames(iframe,:) = mean(piezo_data_temp(2,ind),2);
 end
 
-load(fullfile(analysis_out,img_fn, [img_fn '_' run '_targetAlign.mat']));
+load(fullfile(analysis_out, img_fn, [img_fn '_' run '_targetAlign.mat']));
+frameRateHz = double(mworks.frameRateHz);
+prewin_frames = round(1500./frameRateHz);
+postwin_frames = round(3000./frameRateHz);
 
-rewDelay_frames =  round(0.6.*frameRateHz);
+rewDelay_frames =  round(0.7.*frameRateHz);% there's 700ms between the cue and the reward delivery !!!!! if you change tooFastMs in the varibles in MWorks, this needs to be changed
 cTargetOn = mworks.cTargetOn;
 if iscell(cTargetOn) % if it is a cell, it means cTargetOn wasn't being over written in extract TC. If it's not a cell, it's already over written in extract TC. can be used directly
-    cTargetOn = celleqel2mat_padded(mworks.cTargetOn);
+    cTargetOn = double(cell2mat(mworks.cTargetOn));
     cTargetOn(1) = nan; % get rid of first trial
 end
 nTrials = length(cTargetOn);
@@ -70,6 +72,7 @@ ind_nan = find(isnan(targetAlign_piezo(1,:)));
 
 targetAlign_piezo = abs(targetAlign_piezo);
 load(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']));
+tt = (-prewin_frames:postwin_frames-1).*(1000./frameRateHz);
 figure;
 subplot(2,1,1);
 shadedErrorBar(tt,nanmean(targetAlign_piezo,2),nanstd(targetAlign_piezo,[],2)./sqrt(nTrials),'k');
@@ -98,8 +101,8 @@ vline(700,'k');
 supertitle([date ' ' mouse]);
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_avgTrialPiezo_abs.fig']));
 
-preRew_lickSearchRange = prewin_frames+lickDelay_frames:prewin_frames+lickDelay_frames+rewDelay_frames;
-postRew_lickSearchRange = prewin_frames+rewDelay_frames+lickDelay_frames:prewin_frames+rewDelay_frames+rewDelay_frames;
+preRew_lickSearchRange = prewin_frames+lickDelay_frames:prewin_frames+lickDelay_frames+rewDelay_frames; % 100ms after cue - reward delivery onset
+postRew_lickSearchRange = prewin_frames+rewDelay_frames+lickDelay_frames:prewin_frames+rewDelay_frames+rewDelay_frames; % 100ms after reward delivery - 700ms after reward delivery
 preRew_piezoAmp = mean(targetAlign_piezo(preRew_lickSearchRange,:),1);% average across frames for each trial
 postRew_piezoAmp = mean(targetAlign_piezo(postRew_lickSearchRange,:),1);
 
@@ -120,31 +123,34 @@ title('Post reward');
 xlim([0 10]);
 ylim([-0.5 0.5]);
 axis square;
-supertitle([date ' ' mouse '- Reward (black)']);
+supertitle([date ' ' mouse ]);
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_LickvsPiezo_abs.fig']));
 
 
-%% plot neural activity during trials of top and bottom 10/25% of movement amplitude
+%% plot neural activity during trials of top and bottom 10/25% of movement amplitude. 
+% window for movement amplitude being considered: pre-rew: 100ms after cue to reward delivery.
+% post-rew:100ms after reward delivery - 700ms after reward delivery
 
 [sortPiezoAmp sortPiezoAmp_ind] = sort(preRew_piezoAmp,'ascend');
 nnan = sum(isnan(preRew_piezoAmp));
-ind_low25piezo_prerew = sortPiezoAmp_ind(1:floor(nTrials/4));
-ind_high25piezo_prerew = sortPiezoAmp_ind(nTrials-floor(nTrials/4)+1:end-nnan);
+ntrials_wonan = nTrials-nnan;
+ind_low25piezo_prerew = sortPiezoAmp_ind(1:floor(ntrials_wonan/4));
+ind_high25piezo_prerew = sortPiezoAmp_ind(ntrials_wonan-floor(ntrials_wonan/4)+1:end-nnan);
 HL_piezo.low25_prerew = nanmean(preRew_piezoAmp(:,ind_low25piezo_prerew),2);
 HL_piezo.high25_prerew = nanmean(preRew_piezoAmp(:,ind_high25piezo_prerew),2);
-ind_low10piezo_prerew = sortPiezoAmp_ind(1:floor(nTrials/10));
-ind_high10piezo_prerew = sortPiezoAmp_ind(nTrials-floor(nTrials/10)+1:end-nnan);
+ind_low10piezo_prerew = sortPiezoAmp_ind(1:floor(ntrials_wonan/10));
+ind_high10piezo_prerew = sortPiezoAmp_ind(ntrials_wonan-floor(ntrials_wonan/10)+1:end-nnan);
 HL_piezo.low10_prerew = nanmean(preRew_piezoAmp(:,ind_low10piezo_prerew),2);
 HL_piezo.high10_prerew = nanmean(preRew_piezoAmp(:,ind_high10piezo_prerew),2);
 
 [sortPiezoAmp sortPiezoAmp_ind] = sort(postRew_piezoAmp,'ascend');
 nnan = sum(isnan(postRew_piezoAmp));
-ind_low25piezo_postrew = sortPiezoAmp_ind(1:floor(nTrials/4));
-ind_high25piezo_postrew = sortPiezoAmp_ind(nTrials-floor(nTrials/4)+1:end-nnan);
+ind_low25piezo_postrew = sortPiezoAmp_ind(1:floor(ntrials_wonan/4));
+ind_high25piezo_postrew = sortPiezoAmp_ind(ntrials_wonan-floor(ntrials_wonan/4)+1:end-nnan);
 HL_piezo.low25_postrew = nanmean(postRew_piezoAmp(:,ind_low25piezo_postrew),2);
 HL_piezo.high25_postrew = nanmean(postRew_piezoAmp(:,ind_high25piezo_postrew),2);
-ind_low10piezo_postrew = sortPiezoAmp_ind(1:floor(nTrials/10));
-ind_high10piezo_postrew = sortPiezoAmp_ind(nTrials -floor(nTrials/10)+1:end-nnan);
+ind_low10piezo_postrew = sortPiezoAmp_ind(1:floor(ntrials_wonan/10));
+ind_high10piezo_postrew = sortPiezoAmp_ind(ntrials_wonan - floor(ntrials_wonan/10)+1:end-nnan);
 HL_piezo.low10_postrew = nanmean(postRew_piezoAmp(:,ind_low10piezo_postrew),2);
 HL_piezo.high10_postrew = nanmean(postRew_piezoAmp(:,ind_high10piezo_postrew),2);
 
@@ -183,8 +189,8 @@ vline(700,'k');
 ylim([0 inf]);
 title(['Post- Rew: ' num2str(chop(HL_piezo.low25_postrew,2)) ' vs ' num2str(chop(HL_piezo.high25_postrew,2)) ' V']);
 hold off;
-supertitle([mouse ' ' date '- lick bursts by rate: low25 (blue) & high25 (black)'])
-savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoAmp25_abs.fig']))
+supertitle([mouse ' ' date '- Piezo Amp by Volts: low25 (blue) & high25 (black)']);
+savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoAmp25_abs.fig']));
 
 figure;
 subplot(1,2,1);
@@ -220,10 +226,12 @@ vline(700,'k');
 ylim([0 inf]);
 title(['Post- Rew: ' num2str(chop(HL_piezo.low10_postrew,2)) ' vs ' num2str(chop(HL_piezo.high10_postrew,2)) ' V']);
 hold off;
-supertitle([mouse ' ' date '- lick bursts by rate: low10 (blue) & high10 (black)']);
+supertitle([mouse ' ' date '- Piezo Amp by Volts: low10 (blue) & high10 (black)']);
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoAmp10_abs.fig']));
 
 %% sort out trials by looking at time of big movements: 25% and 10%
+% window for time of movement being considered: when big movement starts in
+% that whole trial (1.5s before cue onset - 3s after cue onset)
 piezo_base_std = nanstd(reshape(targetAlign_piezo(1:prewin_frames,:),[prewin_frames.*nTrials 1]),[],1);
 piezo_base_avg = nanmean(reshape(targetAlign_piezo(1:prewin_frames,:),[prewin_frames.*nTrials 1]),1);
 targetAlign_piezo_thresh1 = zeros(size(targetAlign_piezo));%>1std <2std
@@ -249,10 +257,10 @@ end
 nnan = sum(isnan(piezoStart));
 ind_earlypiezo_rew = sortPiezoStart_ind(1:floor((length(sortPiezoStart_ind)-nnan)/4));% top 25% of trials with early big movement
 ind_latepiezo_rew = sortPiezoStart_ind((length(sortPiezoStart_ind)-nnan)-floor((length(sortPiezoStart_ind)-nnan)/4)+1:end-nnan);
-ind_allearlypiezo25_rew = sortPiezoStart_ind(1:floor(length(sortPiezoStart_ind)/4));
-ind_alllatepiezo25_rew = sortPiezoStart_ind(length(sortPiezoStart_ind)-floor(length(sortPiezoStart_ind)/4)+1:end);
-ind_allearlypiezo10_rew = sortPiezoStart_ind(1:floor(length(sortPiezoStart_ind)/10)); % top 10% of all trials, regardless of nans. does it make sense? 
-ind_alllatepiezo10_rew = sortPiezoStart_ind(length(sortPiezoStart_ind)-floor(length(sortPiezoStart_ind)/10)+1:end);
+ind_allearlypiezo25_rew = sortPiezoStart_ind(1:floor(length(sortPiezoStart_ind)-nnan/4));
+ind_alllatepiezo25_rew = sortPiezoStart_ind((length(sortPiezoStart_ind)-nnan)-floor((length(sortPiezoStart_ind)-nnan)/4)+1:end);
+ind_allearlypiezo10_rew = sortPiezoStart_ind(1:floor((length(sortPiezoStart_ind)-nnan)/10)); % top 10% of all trials, regardless of nans. does it make sense? 
+ind_alllatepiezo10_rew = sortPiezoStart_ind((length(sortPiezoStart_ind)-nnan)-floor((length(sortPiezoStart_ind)-nnan)/10)+1:end);
 HL_piezo.early_rew = nanmean(piezoStart(:,ind_earlypiezo_rew),2);
 HL_piezo.late_rew = nanmean(piezoStart(:,ind_latepiezo_rew),2);
 
@@ -274,8 +282,8 @@ elseif cue == 2
 end
 vline(700,'k');
 ylim([0 inf]);
-title(['Rew: ' num2str(chop(HL_piezo.early_rew.*(1000./frameRateHz),2)) ' vs ' num2str(chop(HL_piezo.late_rew.*(1000./frameRateHz),2)) ' ms']);
-
+%title(['Rew: ' num2str(chop(HL_piezo.early_rew.*(1000./frameRateHz),2)) ' vs ' num2str(chop(HL_piezo.late_rew.*(1000./frameRateHz),2)) ' ms']);
+title('earliest 25% vs latest 25%');
 subplot(1,2,2);
 shadedErrorBar(tt,nanmean(nanmean(targetAlign_events(:,:,ind_allearlypiezo10_rew),3),2).*(1000./frameRateHz), (nanstd(nanmean(targetAlign_events(:,:,ind_allearlypiezo10_rew),3),[],2).*(1000./frameRateHz))./sqrt(nIC), 'b');
 hold on;
@@ -292,7 +300,7 @@ end
 vline(700,'k');
 ylim([0 inf]);
 title('earliest 10% vs latest 10%');
-supertitle([mouse ' ' date '- lick bursts by latency: early (blue) & late (black)']);
+supertitle([mouse ' ' date '- Movement by latency: early (blue) & late (black)']);
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoLatency_abs.fig']));
 
 save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignPiezo.mat']), ...

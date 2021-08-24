@@ -1,9 +1,8 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirRandSF_ExptList';
-%ds = 'CrossOriRandPhase_15Hz_ExptList';
-iexp = 1; 
-doPhaseAfterDir = 0;
+ds = 'CrossOriRandPhaseFF_ExptList';
+iexp = 10; 
+doPhaseAfterDir = 1;
 rc = behavConstsAV;
 eval(ds)
 
@@ -84,7 +83,7 @@ nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,30001:30500),3);
+data_avg = mean(data(:,:,35001:35500),3);
 %% Register data
 if doPhaseAfterDir
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
@@ -101,7 +100,6 @@ else
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
-
 
 % test stability
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); end
@@ -175,6 +173,9 @@ stimDirs = unique(stimDir_all);
 nStimDir = length(stimDirs);
 maskDirs = unique(maskDir_all);
 nMaskDir = length(maskDirs);
+maskDiff_all = celleqel2mat_padded(input.tMaskOneGratingDirectionDeg) - celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
+maskDiffs = unique(maskDiff_all);
+nMaskDiff = length(maskDiffs);
 SF_all = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
 SFs = unique(SF_all);
 nSF = length(SFs);
@@ -221,29 +222,34 @@ else
 end
 
 if nStimDir > 1 & ~input.doTwoStimTogether
-    nStim2 = nStimDir.*2;
+    nStim2 = nStimDir.*(nMaskDiff+1);
     data_dfof = cat(3, data_dfof, zeros(sz(1),sz(2), nStim2));
     start = nStim1+1;
     for is = 1:nStimDir
         ind_stimalone = intersect(intersect(find(stimCon_all),find(maskCon_all==0)),find(stimDir_all == stimDirs(is)));
-        ind_maskalone = intersect(intersect(find(stimCon_all==0),find(maskCon_all)),find(maskDir_all == stimDirs(is)));
+        ind_maskalone = intersect(intersect(find(stimCon_all==0),find(maskCon_all)),find(maskDir_all == maskDirs(is)));
+        ind_alone(is) = length([ind_stimalone ind_maskalone]);
         data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,[ind_stimalone ind_maskalone]),3);
-        ind_plaidstim = intersect(intersect(find(stimCon_all),find(maskCon_all)),find(stimDir_all == stimDirs(is)));
-        data_dfof(:,:,start+1) = nanmean(data_resp_dfof(:,:,ind_plaidstim),3);
-        start = start+2;
+        start = start+1;
+        for id = 1:nMaskDiff
+            ind_plaidstim = intersect(intersect(intersect(find(stimCon_all),find(maskCon_all)),find(stimDir_all == stimDirs(is))),find(maskDiff_all == maskDiffs(id)));
+            ind_n(is,id) = length(ind_plaidstim);
+            data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_plaidstim),3);
+            start = start+1;
+        end
     end
     figure; 
     subplot(2,1,1); 
-    imagesc(mean(data_dfof(:,:,nStim1+1:2:end),3))
+    imagesc(mean(data_dfof(:,:,nStim1+1:1+nMaskDiff:end),3))
     title('Grating')
     colormap gray
     caxis([0 1])
     subplot(2,1,2); 
-    imagesc(mean(data_dfof(:,:,nStim1+2:2:end),3))
+    imagesc(mean(data_dfof(:,:,nStim1+2:1+nMaskDiff:end),3))
     title('Plaid')
     colormap gray
     caxis([0 1])
-    suptitle([mouse ' ' date])
+    sgtitle([mouse ' ' date])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GratingVsPlaid.pdf']),'-dpdf')
 elseif nStimDir > 1 & input.doTwoStimTogether
     nStim2 = nStimDir.*2;
@@ -290,14 +296,21 @@ if strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')
     data_dfof = cat(3,data_dfof,data_avg);
 end
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas','SF_all', 'SFs', 'nSF', 'frame_rate', 'nTrials')
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas', 'maskDiff_all','maskDiffs','nMaskDiff','SF_all', 'SFs', 'nSF', 'frame_rate', 'nTrials')
 
 %% cell segmentation 
 if ~doPhaseAfterDir
     mask_exp = zeros(sz(1),sz(2));
     mask_all = zeros(sz(1), sz(2));
     mask_data = data_dfof;
-
+    
+    if strcmp(expt(iexp).driver{1},'SOM') || strcmp(expt(iexp).driver{1},'PV')
+        bwout = imCellEditInteractiveLG(mean(data_reg,3));
+        mask_all = mask_all+bwout;
+        mask_exp = imCellBuffer(mask_all,3)+mask_all;
+        close all
+    end
+    
     for iStim = 1:size(data_dfof,3)   
         mask_data_temp = mask_data(:,:,end+1-iStim);
         mask_data_temp(find(mask_exp >= 1)) = 0;
@@ -309,6 +322,7 @@ if ~doPhaseAfterDir
         mask_exp = imCellBuffer(mask_all,3)+mask_all;
         close all
     end
+    
     mask_cell= bwlabel(mask_all);
     if doRedChannel
         red_cells = unique(mask_cell(find(red_mask)));

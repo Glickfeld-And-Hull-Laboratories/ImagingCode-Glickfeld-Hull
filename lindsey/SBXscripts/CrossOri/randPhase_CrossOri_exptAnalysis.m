@@ -1,6 +1,6 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_ExptList';
+ds = 'CrossOriRandDirRandPhase_ExptList';
 
 rc = behavConstsAV;
 eval(ds)
@@ -12,8 +12,8 @@ for iexp  = 1:nexp
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
-ImgFolder = expt(iexp).coFolder;
-time = expt(iexp).coTime;
+ImgFolder = expt(iexp).copFolder;
+time = expt(iexp).copTime;
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 

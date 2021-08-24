@@ -177,7 +177,8 @@ ind_h = intersect(find(noadapt_MI_all>0),prefmask_ind_all);
 ind_l = intersect(find(noadapt_MI_all<0),prefmask_ind_all);
 ind_h_sig = intersect(intersect(find(noadapt_MI_all>0),prefmask_ind_all),respmask_ad_ind_all);
 ind_l_sig = intersect(intersect(find(noadapt_MI_all<0),prefmask_ind_all),respmask_ad_ind_all);
-
+[temp ind_h_sigsub] = intersect(ind_h,ind_h_sig);
+[temp ind_l_sigsub] = intersect(ind_l,ind_l_sig);
 
 
 for ic = 41:45;
@@ -235,6 +236,10 @@ noadapt_prefmask_posMod_resp_avg = zeros(nTest,nTest,2);
 noadapt_prefmask_negMod_resp_avg = zeros(nTest,nTest,2);
 singadapt_prefmask_posMod_resp_avg = zeros(nTest,nTest,2);
 singadapt_prefmask_negMod_resp_avg = zeros(nTest,nTest,2);
+noadapt_prefmask_sigPosMod_resp_avg = zeros(nTest,nTest,2);
+noadapt_prefmask_sigNegMod_resp_avg = zeros(nTest,nTest,2);
+singadapt_prefmask_sigPosMod_resp_avg = zeros(nTest,nTest,2);
+singadapt_prefmask_sigNegMod_resp_avg = zeros(nTest,nTest,2);
 
 nopref_ind_all = setdiff(unique([resptest_ind_all; respmask_ind_all]),unique([preftest_ind_all; prefmask_ind_all]));
 preftest_resp_all = [];
@@ -268,6 +273,14 @@ for im = 1:nTest
         singadapt_prefmask_posMod_resp_avg(im,it,2) = std(singadapt_resp_cell_all{im,it}(ind_h,:),[],1)./sqrt(length(ind_h));
         singadapt_prefmask_negMod_resp_avg(im,it,1) = mean(singadapt_resp_cell_all{im,it}(ind_l,:),1);
         singadapt_prefmask_negMod_resp_avg(im,it,2) = std(singadapt_resp_cell_all{im,it}(ind_l,:),[],1)./sqrt(length(ind_l));
+        noadapt_prefmask_sigPosMod_resp_avg(im,it,1) = mean(noadapt_resp_cell_all{im,it}(ind_h_sig,:),1);
+        noadapt_prefmask_sigPosMod_resp_avg(im,it,2) = std(noadapt_resp_cell_all{im,it}(ind_h_sig,:),[],1)./sqrt(length(ind_h_sig));
+        noadapt_prefmask_sigNegMod_resp_avg(im,it,1) = mean(noadapt_resp_cell_all{im,it}(ind_l_sig,:),1);
+        noadapt_prefmask_sigNegMod_resp_avg(im,it,2) = std(noadapt_resp_cell_all{im,it}(ind_l_sig,:),[],1)./sqrt(length(ind_l));
+        singadapt_prefmask_sigPosMod_resp_avg(im,it,1) = mean(singadapt_resp_cell_all{im,it}(ind_h_sig,:),1);
+        singadapt_prefmask_sigPosMod_resp_avg(im,it,2) = std(singadapt_resp_cell_all{im,it}(ind_h_sig,:),[],1)./sqrt(length(ind_h_sig));
+        singadapt_prefmask_sigNegMod_resp_avg(im,it,1) = mean(singadapt_resp_cell_all{im,it}(ind_l_sig,:),1);
+        singadapt_prefmask_sigNegMod_resp_avg(im,it,2) = std(singadapt_resp_cell_all{im,it}(ind_l_sig,:),[],1)./sqrt(length(ind_l_sig));
         
         n_test = length(preftest_ind_all);
         n_mask = length(prefmask_ind_all);
@@ -408,7 +421,7 @@ errorbar(testCons,noadapt_preftest_resp_avg(1,:,1),noadapt_preftest_resp_avg(1,:
 hold on
 errorbar(testCons,singadapt_preftest_resp_avg(1,:,1),singadapt_preftest_resp_avg(1,:,2),'-or')
 ylim([-0.1 0.5])
-xlabel('Contrast')
+xlabel('Adapter Contrast')
 ylabel('dF/F')
 title(['Adapter preferring- n = ' num2str(size(preftest_ind_all,1))])
 legend({'No mask','Adapt'},'location','northwest')
@@ -417,7 +430,7 @@ errorbar(testCons,noadapt_prefmask_resp_avg(:,1,1),noadapt_prefmask_resp_avg(:,1
 hold on
 errorbar(testCons,singadapt_prefmask_resp_avg(:,1,1),singadapt_prefmask_resp_avg(:,1,2),'-or')
 ylim([-0.1 0.5])
-xlabel('Contrast')
+xlabel('Ortho Contrast')
 ylabel('dF/F')
 legend({'No mask','Adapt'},'location','northwest')
 title(['Ortho preferring- n = ' num2str(size(prefmask_ind_all,1))])
@@ -426,17 +439,17 @@ errorbar(testCons,noadapt_preftest_resp_avg(end,:,1),noadapt_preftest_resp_avg(e
 hold on
 errorbar(testCons,singadapt_preftest_resp_avg(end,:,1),singadapt_preftest_resp_avg(end,:,2),'-or')
 ylim([-0.1 0.5])
-xlabel('Contrast')
+xlabel('Adapter Contrast')
 ylabel('dF/F')
-legend({['Mask = ' num2str(testCons(end))],'Adapt'},'location','northwest')
+legend({['Mask (ortho) = ' num2str(testCons(end))],'Adapt'},'location','northwest')
 subplot(2,2,4)
 errorbar(testCons,noadapt_prefmask_resp_avg(:,end,1),noadapt_prefmask_resp_avg(:,end,2),'-ok')
 hold on
 errorbar(testCons,singadapt_prefmask_resp_avg(:,end,1),singadapt_prefmask_resp_avg(:,end,2),'-or')
 ylim([-0.1 0.5])
-xlabel('Contrast')
+xlabel('Ortho Contrast')
 ylabel('dF/F')
-legend({['Mask = ' num2str(testCons(end))],'Adapt'},'location','northwest')
+legend({['Mask (adapter) = ' num2str(testCons(end))],'Adapt'},'location','northwest')
 suptitle(['Single-stim adapt- n = ' num2str(nmice) ' mice'])
 print(fullfile(summaryDir_F6, 'Figure6_avgResp_AdaptVOrthogPref.pdf'),'-dpdf','-bestfit')
 savefig(fullfile(summaryDir_F6, 'Figure6_avgResp_AdaptVOrthogPref.fig'))
@@ -488,6 +501,30 @@ suptitle(['Single-stim adapt- n = ' num2str(nmice) ' mice'])
 
 print(fullfile(summaryDir_F6, 'Figure6_avgResp_OrthogPref_PosVNegMod.pdf'),'-dpdf','-bestfit')
 savefig(fullfile(summaryDir_F6, 'Figure6_avgResp_OrthogPref_PosVNegMod.fig'))
+
+figure;
+subplot(2,2,1)
+errorbar(testCons,noadapt_prefmask_sigPosMod_resp_avg(:,end,1),noadapt_prefmask_sigPosMod_resp_avg(:,end,2),'-ok')
+hold on
+errorbar(testCons,noadapt_prefmask_sigPosMod_resp_avg(:,1,1),noadapt_prefmask_sigPosMod_resp_avg(:,1,2),'-ob')
+errorbar(testCons,singadapt_prefmask_sigPosMod_resp_avg(:,end,1),singadapt_prefmask_sigPosMod_resp_avg(:,end,2),'-or')
+ylim([-0.1 1])
+xlabel('Contrast')
+ylabel('dF/F')
+legend({['Mask = ' num2str(testCons(end))],['Mask = ' num2str(testCons(1))],'Adapt'},'location','northwest')
+title(['Sig pos mod- n = ' num2str(length(ind_h_sig))])
+subplot(2,2,2)
+errorbar(testCons,noadapt_prefmask_sigNegMod_resp_avg(:,end,1),noadapt_prefmask_sigNegMod_resp_avg(:,end,2),'-ok')
+hold on
+errorbar(testCons,noadapt_prefmask_sigNegMod_resp_avg(:,1,1),noadapt_prefmask_sigNegMod_resp_avg(:,1,2),'-ob')
+errorbar(testCons,singadapt_prefmask_sigNegMod_resp_avg(:,end,1),singadapt_prefmask_sigNegMod_resp_avg(:,end,2),'-or')
+ylim([-0.1 0.5])
+xlabel('Contrast')
+ylabel('dF/F')
+legend({['Mask = ' num2str(testCons(end))],['Mask = ' num2str(testCons(1))],'Adapt'},'location','northwest')
+title(['Sig neg mod- n = ' num2str(length(ind_l_sig))])
+
+
 
 figure;
 subplot(2,2,1)

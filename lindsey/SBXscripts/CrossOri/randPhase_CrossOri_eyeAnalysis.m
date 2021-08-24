@@ -82,7 +82,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [6 25];
+rad_range = [8 35];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
@@ -175,7 +175,7 @@ for i = 1:minx
     %title(num2str(x(frames(i))))
     start = start+1;
 end
-suptitle(['No pupil detected- ' num2str(length(x)) ' frames'])
+sgtitle(['No pupil detected- ' num2str(length(x)) ' frames'])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_noPupil2.pdf']),'-dpdf','-fillpage');
 
 x = setdiff(x2,x3);
@@ -196,7 +196,7 @@ for i = 1:minx
     %title(num2str(x(frames(i))))
     start = start+1;
 end
-suptitle('Pupil detected')
+sgtitle('Pupil detected')
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Pupil.pdf']),'-dpdf','-fillpage');
         
 
@@ -277,7 +277,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     subplot(2,1,2)
     hist(centroid_dist,0:0.5:60)
     title([num2str(sum(centroid_dist<4)) ' trials w/in 4 deg'])
-    suptitle([num2str(sum(~isnan(centroid_dist))) '/' num2str(nTrials) ' measurable trials'])
+    sgtitle([num2str(sum(~isnan(centroid_dist))) '/' num2str(nTrials) ' measurable trials'])
     xlabel('Centroid distance from median')
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilPosDist.pdf']),'-dpdf','-fillpage');
 
@@ -297,9 +297,9 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
         hold on
         plot(squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,1,ind),1)), squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,2,ind),1)),'or')
         plot(squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,1,ind_i),1)), squeeze(nanmean(centroid_mat_start(prewin_frames+1:end,2,ind_i),1)),'ok')
-        title(num2str(edges(ii)))
+        title([num2str(edges(ii)) '- ' num2str(length(find(bin== i(ii))))])
     end
-    suptitle('Example eye image by distance from median')
+    sgtitle('Example eye image by distance from median')
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilImgByDist.pdf']),'-dpdf','-fillpage');
 
     
@@ -344,7 +344,7 @@ end
 % for iC = 1:length(resp_ind)
 %     iCell = resp_ind(iC);
 %     if start > 25
-%         suptitle({['All responsive cells- Test = ' num2str(stimCons(2)) ' Mask = ' num2str(maskCons(3))], ['Trials: ' num2str(length(find(~isnan(centroid_dist)))) ' measured; ' num2str(length(find(centroid_dist<5))) ' <5 deg; ' num2str(length(find(centroid_dist<2))) ' <2 deg']})
+%         sgtitle({['All responsive cells- Test = ' num2str(stimCons(2)) ' Mask = ' num2str(maskCons(3))], ['Trials: ' num2str(length(find(~isnan(centroid_dist)))) ' measured; ' num2str(length(find(centroid_dist<5))) ' <5 deg; ' num2str(length(find(centroid_dist<2))) ' <2 deg']})
 %         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respByPhase_eyeTrack_allResp_' num2str(n) '.pdf']),'-dpdf','-fillpage');
 %         start = 1;
 %         figure;
@@ -396,7 +396,7 @@ end
 %     xlabel('Phase (deg)')
 %     start = start+1;
 % end
-% suptitle({['All responsive cells- Test = ' num2str(stimCons(2)) ' Mask = ' num2str(maskCons(3))], ['Trials: ' num2str(length(find(~isnan(centroid_dist)))) ' measured; ' num2str(length(find(centroid_dist<5))) ' <5 deg; ' num2str(length(find(centroid_dist<2))) ' <2 deg']})
+% sgtitle({['All responsive cells- Test = ' num2str(stimCons(2)) ' Mask = ' num2str(maskCons(3))], ['Trials: ' num2str(length(find(~isnan(centroid_dist)))) ' measured; ' num2str(length(find(centroid_dist<5))) ' <5 deg; ' num2str(length(find(centroid_dist<2))) ' <2 deg']})
 % print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respByPhase_eyeTrack_allResp_' num2str(n) '.pdf']),'-dpdf','-fillpage');
 % close all
 % end

@@ -555,11 +555,14 @@ nCells = size(npSub_tc,2);
 nframes = size(npSub_tc,1);
 nTrials = size(aGratingOri,2);
 data_stim = nan(50,nCells,nTrials);
+data_stim_z = nan(50,nCells,nTrials);
 data_adapt = nan(100,nCells,nTrials);
 data_dec = nan(50,nCells,nTrials);
+tc_z = npSub_tc./std(npSub_tc,[],1);
 for itrial = 1:nTrials
     if cStimOn(itrial)+29 < nframes
         data_stim(:,:,itrial) = npSub_tc(cStimOn(itrial)-20:cStimOn(itrial)+29,:);
+        data_stim_z(:,:,itrial) = tc_z(cStimOn(itrial)-20:cStimOn(itrial)+29,:);
     end
     if cAdaptOn(itrial)+79< nframes
         data_adapt(:,:,itrial) = npSub_tc(cAdaptOn(itrial)-20:cAdaptOn(itrial)+79,:);
@@ -629,6 +632,12 @@ print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' r
 
 SIx = strcmp(adapt_input.trialOutcomeCell,'success');
 MIx = strcmp(adapt_input.trialOutcomeCell,'incorrect');
+IIx = strcmp(adapt_input.trialOutcomeCell,'ignore');
+tLeftTrial = celleqel2mat_padded(adapt_input.tLeftTrial);
+tLeftResp = zeros(size(SIx));
+tLeftResp(find(tLeftTrial&SIx)) = 1;
+tLeftResp(find(~tLeftTrial&~SIx)) = 1;
+
 x = 1;
 start = 1;
 figure;
@@ -817,6 +826,54 @@ elseif strcmp(cell2mat(expt(iexp).img_strct),'cells')
     start = 1;
     for iC = 1:nCells
         if start > 49
+            suptitle('Target response by choice- Trials <20 deg')
+            print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bychoice_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+            figure;
+            start = 1;
+        end
+        subplot(n,n2,start)
+        plot(tt, mean(data_stim_dfof(:,iC,find(~tLeftResp&~IIx&abs(tGratingOri)<20)),3))
+        hold on
+        plot(tt, mean(data_stim_dfof(:,iC,find(tLeftResp&~IIx&abs(tGratingOri)<20)),3))
+        if mask_label(iC)
+            title([num2str(iC) '-' expt(iexp).driver])
+        else
+            title(num2str(iC))
+        end
+        start = start+1;
+    end
+    suptitle('Target response by choice- Trials <20 deg')
+    print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bychoice_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
+
+    
+    figure;
+    start = 1;
+    for iC = 1:nCells
+        if start > 49
+            suptitle('Target response by target- Trials <20 deg')
+            print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bytarget_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+            figure;
+            start = 1;
+        end
+        subplot(n,n2,start)
+        plot(tt, mean(data_stim_dfof(:,iC,find(~tLeftTrial&~IIx&abs(tGratingOri)<20)),3))
+        hold on
+        plot(tt, mean(data_stim_dfof(:,iC,find(tLeftTrial&~IIx&abs(tGratingOri)<20)),3))
+        if mask_label(iC)
+            title([num2str(iC) '-' expt(iexp).driver])
+        else
+            title(num2str(iC))
+        end
+        start = start+1;
+    end
+    suptitle('Target response by target- Trials <20 deg')
+    print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bytarget_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
+
+    
+    figure;
+    start = 1;
+    for iC = 1:nCells
+        if start > 49
             suptitle('Decision response- All trials')
             print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
             figure;
@@ -952,6 +1009,8 @@ print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' r
 close all
 base_win = 19:21;
 resp_win = 25:27;
+% base_win = 15:21;
+% resp_win = 25:31;
 data_adapt_base = squeeze(nanmean(data_adapt_dfof(base_win,:,:),1));
 data_adapt_resp = squeeze(nanmean(data_adapt_dfof(resp_win,:,:),1));
 ind_con = find(aGratingContrast == 1);

@@ -20,7 +20,7 @@ for  j = 1:length(expt.ttl)
     
     cTargetOn = input.cTargetOn;
     if iscell(cTargetOn) % if it is a cell, it means cTargetOn wasn't being over written in extract TC. If it's not a cell, it's already over written in extract TC. can be used directly
-        cTargetOn = celleqel2mat_padded(input.cTargetOn);
+        cTargetOn = double(cell2mat(input.cTargetOn));
         cTargetOn(1) = nan; % first trial doesn't have reward 
     end
  
@@ -116,7 +116,7 @@ for  j = 1:length(expt.ttl)
                     firstPostRew_lickAlignEvents(:,:,itrial) = targetAlign_events(ind_post-postLick_frames+prewin_frames+rewDelay_frames:ind_post+postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
                     firstPostRew_lickAlign(:,itrial) = lickCueAlign(ind_post-postLick_frames+prewin_frames+rewDelay_frames:ind_post+postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,itrial);
                 end
-                rewAlignEvents(:,:,itrial) =targetAlign_events(-postLick_frames+prewin_frames+rewDelay_frames:postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
+                rewAlignEvents(:,:,itrial) = targetAlign_events(-postLick_frames+prewin_frames+rewDelay_frames:postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
             end
         end
     end

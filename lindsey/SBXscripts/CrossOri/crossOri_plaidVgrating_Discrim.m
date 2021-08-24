@@ -18,27 +18,38 @@
 % tr_range = {444, 290,350,300,290,240};
 % useFB = 1;
 % expt = 'plaid_train';
-
+% 
 mouse = 'i485';
-date = {'210511','210512','210513','210514','210517','210518'};
-time = {'1258','1302','1258','1336','1250','1332'};
-tr_range = {270,235,328,340,235,210};
+%date = {'210511','210512','210513','210514','210517','210518','210519'};
+date = {'210520','210521','210524','210525','210526','210527','210528','210530','210601','210602','210603','210604'};
+%time = {'1258','1302','1258','1336','1250','1332','1312'};
+time = {'1318','1226','1203','1253','1144','1210','1110','1221','1130','1201','1150','1021'};
+%tr_range = {270,235,328,340,235,210,220};
+tr_range = {200,225,250,250,150,200,175,125,240,150,250,225};
 useFB = 1;
 expt = 'plaid_train';
- 
+%  
 % mouse = 'i484';
 % date = {'210513'};
 % time = {'1255'};
 % tr_range = {375};
 % useFB = 0;
 % expt = 'posttrain_plaid_test';
-
+% 
 % mouse = 'i484';
-% date = {'210517','210518'};
-% time = {'1243','1323'};
-% tr_range = {350,383};
+% date = {'210517','210518','210519','210520','210521','210524','210525'};
+% time = {'1243','1323','1259','1314','1220','1151','1246'};
+% tr_range = {350,383,200,414,325,437,310};
 % useFB = 0;
 % expt = 'SF_plaid_test';
+
+% mouse = 'i484';
+% date = {'210526','210527','210528','210530','210601','210602','210603','210604'};
+% time = {'1136','1206','1102','1218','1126','1152','1152','1017',};
+% tr_range = {250,287,125,275,225,210,240,125};
+% useFB = 1;
+% expt = 'low_SF_train';
+
 
 
 %%
@@ -46,6 +57,7 @@ nd = length(date);
 start = 0;
 clear temp
 close all
+all_plaid_pctcorr = zeros(1,nd);
 for i = 1:nd
     clear input
     if iscell(time{i})
@@ -134,7 +146,7 @@ title([date{i} ' Plaid %Corr- ' num2str(chop(pctCorr_plaid,2))])
 start = start+1;
 end
 movegui('center')
-
+all_plaid_pctcorr(1,i) = pctCorr_plaid;
 
 
 if nb<2
@@ -240,7 +252,7 @@ end
 
 
 if nb<2
-title([date{i} '- Plaid %Correct: ' num2str(chop(pctCorr_plaid,2))])
+title(['All days- Plaid %Correct: ' num2str(chop(pctCorr_plaid,2))])
 subplot(nd+1,2,1+start)
 errorbar([0 90], gratingRT(:,1), gratingRT(:,2))
 hold on
@@ -254,3 +266,48 @@ end
 
 suptitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials'])
 print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse '_GratingPlaidComp_' expt '.pdf'],'-dpdf','-fillpage');
+
+figure;
+for ib = 1:nb
+subplot(2,2,ib)
+errorbar([0 90], gratingPctLeft(:,:,ib), gratingPctLeft(:,:,ib)-gratingCI(:,1,ib), gratingCI(:,2,ib)-gratingPctLeft(:,:,ib))
+hold on
+errorbar([0 90], plaidPctLeft(:,:,ib), plaidPctLeft(:,:,ib)-plaidCI(:,1,ib), plaidCI(:,2,ib)-plaidPctLeft(:,:,ib))
+xlim([-10 100])
+ylim([0 1])
+xlabel('Direction (deg)')
+ylabel('Fraction left')
+if start==0
+legend('grating','plaid','location','southeast')
+end
+movegui('center')
+pctCorr_grating = sum(SIx(intersect(find(B2Ix==ib-1),trial_use))&~tMask(intersect(find(B2Ix==ib-1),trial_use)))./sum(~tMask(intersect(find(B2Ix==ib-1),trial_use)));
+pctCorr_plaid = sum(SIx(intersect(find(B2Ix==ib-1),trial_use))&tMask(intersect(find(B2Ix==ib-1),trial_use)))./sum(tMask(intersect(find(B2Ix==ib-1),trial_use)));
+title(['%Corr: Grating- ' num2str(chop(pctCorr_grating,2)) '; Plaid- ' num2str(chop(pctCorr_plaid,2))])
+start = start+1;
+end
+
+if nb<2
+title([date{i} '- Plaid %Correct: ' num2str(chop(pctCorr_plaid,2))])
+subplot(2,2,2)
+errorbar([0 90], gratingRT(:,1), gratingRT(:,2))
+hold on
+errorbar([0 90], plaidRT(:,1), plaidRT(:,2))
+xlim([-10 100])
+ylim([0 8000])
+xlabel('Direction (deg)')
+ylabel('RT (ms)')
+start = start+1;
+else
+    subplot(2,1,2)
+    plot(all_plaid_pctcorr)
+    xlabel('Session')
+    ylabel('Plaid %Corr')
+    ylim([0 1])
+end
+
+
+
+suptitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials'])
+print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse '_GratingPlaidComp_' expt '_allData.pdf'],'-dpdf','-fillpage');
+
