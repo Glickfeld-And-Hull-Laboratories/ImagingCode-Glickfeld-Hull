@@ -1,11 +1,10 @@
 clc; clear all; close all;
 doRedChannel = 0;
 ds = 'CrossOriRandDirRandPhase_ExptList';
-rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-for iexp = 32
+for iexp = 39
 
 frame_rate = 15;
 
@@ -120,7 +119,7 @@ n = 1;
 for iC = 1:length(resp_ind)
     iCell = resp_ind(iC);
     if start>25
-        suptitle([date ' ' mouse ' Direction Tuning'])
+        sgtitle([date ' ' mouse ' Direction Tuning'])
         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_dirTuning_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
         n = n+1;
         figure; 
@@ -142,7 +141,7 @@ for iC = 1:length(resp_ind)
         title('*')
     end
 end
-suptitle([date ' ' mouse ' Direction Tuning'])
+sgtitle([date ' ' mouse ' Direction Tuning'])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_dirTuning_' num2str(n) '.pdf']),'-dpdf', '-fillpage')       
 
 int = unique(diff(stimDirs));
@@ -172,7 +171,7 @@ ylim([-4 8])
 xlim([-4 8])
 hold on
 plotZcZpBorders
-suptitle([date ' ' mouse])
+sgtitle([date ' ' mouse])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_ZcZp.pdf']),'-dpdf', '-fillpage')       
 
 
@@ -191,7 +190,7 @@ for iC = 1:length(ind)
     start = start+1;
     title(['Zc = ' num2str(chop(Zc(iCell),2)) '; Zp= ' num2str(chop(Zp(iCell),2))])
 end
-suptitle([date ' ' mouse ' Cells with Zp>1'])
+sgtitle([date ' ' mouse ' Cells with Zp>1'])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuning_Zpabove1.pdf']),'-dpdf', '-fillpage')       
 
 
@@ -209,7 +208,7 @@ for iC = 1:length(ind)
     start = start+1;
     title(['Zc = ' num2str(chop(Zc(iCell),2)) '; Zp= ' num2str(chop(Zp(iCell),2))])
 end
-suptitle([date ' ' mouse ' Cells with Zc>2'])
+sgtitle([date ' ' mouse ' Cells with Zc>2'])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirTuning_Zcabove2.pdf']),'-dpdf', '-fillpage')       
 
 
@@ -335,7 +334,7 @@ scatter(plaid_SI(resp_ind_plaid),Rp(resp_ind_plaid))
 xlabel('SI')
 ylabel('Rp')
 ylim([-2 15])
-suptitle([date ' ' mouse])
+sgtitle([date ' ' mouse])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_DSI.pdf']),'-dpdf', '-fillpage')       
 
 figure; 
@@ -378,6 +377,6 @@ cdfplot(plaid_OSI(resp_ind_plaid))
 legend({'Stim','Plaid'})
 xlabel('OSI')
 title('')
-suptitle([date ' ' mouse])
+sgtitle([date ' ' mouse])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_OSI.pdf']),'-dpdf', '-fillpage')       
 end

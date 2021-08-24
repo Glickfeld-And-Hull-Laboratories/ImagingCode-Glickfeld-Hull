@@ -42,7 +42,7 @@ for ii = 1:length(sessions)
     this_sess = sessions{ii};
     
     trial_start = round(double(cell2mat(b_data.tThisTrialStartTimeMs)));  %finds each trial's start time in free floating MWorks time
-    trial_start(1)= [];
+    trial_start(1)= [];% get rid of first trial
     num_trials  = length(b_data.tThisTrialStartTimeMs); %gets vectors for # of trials. Includes unimaged trials.
     soundamp = b_data.soundTargetAmplitude;
     block2 = cell2mat(b_data.tBlock2TrialNumber);
@@ -69,7 +69,7 @@ for ii = 1:length(sessions)
     end
     
     % --- stores the time of the beginning of the first trial in MWorks time.
-    bx_start_MWorks_time  = trial_start(1); % get rid of first trial
+    bx_start_MWorks_time  = trial_start(1); 
     
     %use time of first frame to align licking times to start of imaging
     lickTimes=[]; % in Ms
@@ -96,7 +96,6 @@ for ii = 1:length(sessions)
     
     %isolate the time of cue onset and divide licking into trials as such
     licks_by_trial = zeros(length(cue_presentation)-1,(time_before_ms+time_after_ms+1)); %dim1=trial# dim2=ms
-    first_lick_by_trial = zeros(1, length(cue_presentation)-1);
     trials_where_licking_preceded_reward = zeros(1, length(cue_presentation)-1); % if the mice keeps licking from a time before the reward until after reward, a trial can be both trails_where_licking_preceded_reward and trails_with_licking_soon_after_reward
     trials_with_licking_soon_after_reward = zeros(1, length(cue_presentation)-1);
     for kk = 1:length(cue_presentation)-1 %look at all trials except the last one.
@@ -142,7 +141,7 @@ for ii = 1:length(sessions)
             end
             if soundamp > 0 && b_data.gratingSpeedDPS == 0 % plays sounds, no visual stim
                 vline(cue_rew_int, 'b');
-            elseif soundamp >0 && b_data.gratingSpeedDPS > 0 % play both sound and visual stim
+            elseif soundamp > 0 && b_data.gratingSpeedDPS > 0 % play both sound and visual stim
                 vline(cue_rew_int, 'r');
             elseif soundamp == 0 && b_data.gratingSpeedDPS > 0 % plays only visual stim
                 vline(time_before_ms+1, 'g');
@@ -462,7 +461,7 @@ end
 if ~isempty(RT_across_sessions_testDay)
     x3 = x2(end) +(1:1:length(RT_across_sessions_testDay));
     disp('please make sure color is correct');
-    color = {'r','g','b','r','b'};
+    color = {'r','b','g'};
     for t = 1:length(RT_across_sessions_testDay)
         errorbar(x3(t),RT_across_sessions_testDay(t),RT_across_sessions_sem_testDay(t),'.','MarkerSize',15,'Color',color{t});
     end

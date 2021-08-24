@@ -1,7 +1,24 @@
+% load TCs
+mouse = 'i1803';
+date = '210622';
+ImgFolder = strvcat('003');
+nrun = size(ImgFolder,1);
 frame_rate = 15.5;
+% if Day 1 say 1; else say 0
+ref_day = 1;
+run_str = catRunName(ImgFolder, nrun);
+load(fullfile(fnout, [day '_' mouse], [day '_' mouse '_' run_str], [day '_' mouse '_' run_str '_input.mat']));
+tGratingDir = celleqel2mat_padded(input.tGratingDirectionDeg);
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\Analysis\2P';
+TCs = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']));
+if ref_day
+npSub_tc = TCs.npSub_tc;
+else
+np = TCs.cellTCs_match;
+npSub_tc = np{2};
+end
 nCells = size(npSub_tc,2);
-ntrials = 640;
-% ntrials = size(input.tGratingDirectionDeg,2);
+ntrials = size(tGratingDir,2);
 prewin_frames = nOff-10:nOff;
 postwin_frames = nOff+10:nOff+nOn;
 tt = (1-nOff:nOn).*(1/frame_rate);

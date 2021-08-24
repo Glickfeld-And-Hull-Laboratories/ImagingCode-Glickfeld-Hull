@@ -75,7 +75,7 @@ for i = 1:length(ind)
 
     end
 end
-save(fullfile(summaryDir,['randDirTwoPhase_Summary_' str{a} '_' area '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all')
+save(fullfile(summaryDir,['randDirTwoPhase_Summary_' str{a} '_' area '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all','component_all','stimDirs')
 
 ZcZp_diff = Zc_all-Zp_all;
 ind1 = intersect(resp_ind_all,intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)));
@@ -336,12 +336,13 @@ for i = 1:n
     r_max = max([avg_resp_dir_all_circ(iC,:,1,1,1) avg_resp_dir_all_circ(iC,:,1,2,1) avg_resp_dir_all_circ(iC,:,2,2,1) component_all_circ(iC,:)],[],2);
     polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1,1))
     hold on
+    polarplot(deg2rad(stimDirs_circ),component_all_circ(iC,:,1,1,1))
     polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,1,2,1))
     polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,2,1))
     rlim([0 r_max])
     title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
 end
-suptitle('Zc to Zp cells- Blue: pattern; Red: plaid 0; Yellow: plaid 90')
+suptitle('Zc to Zp cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
 print(fullfile(summaryDir, ['randDirTwoPhase_ZcToZpCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
 
 ZcZp_ind_Zp0 = intersect(ind1,ZcZp_ind);
@@ -357,12 +358,13 @@ for i = 1:n
     r_max = max([avg_resp_dir_all_circ(iC,:,1,1,1) avg_resp_dir_all_circ(iC,:,1,2,1) avg_resp_dir_all_circ(iC,:,2,2,1) component_all_circ(iC,:)],[],2);
     polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1,1))
     hold on
+    polarplot(deg2rad(stimDirs_circ),component_all_circ(iC,:,1,1,1))
     polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,1,2,1))
     polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,2,1))
     rlim([0 r_max])
     title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
 end
-suptitle('Zp to Zc cells- Blue: pattern; Red: plaid 0; Yellow: plaid 90')
+suptitle('Zp to Zc cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
 print(fullfile(summaryDir, ['randDirTwoPhase_ZpToZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
 
 %% population tuning

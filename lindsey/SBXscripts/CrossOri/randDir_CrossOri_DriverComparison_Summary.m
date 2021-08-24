@@ -2,16 +2,13 @@ clear all
 close all
 clc
 doRedChannel = 0;
-ds = 'CrossOriRandDir_ExptList';
 driver_list = {'SLC';'SOM';'PV'};
 ndriver = length(driver_list);
 area_list = {'V1'};
 sf = 'pt05';
 narea = length(area_list);
-eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
-nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirSummary');
 leg_str = cell(4,narea);
@@ -214,6 +211,57 @@ for iD = 1:ndriver
     title([driver_list{iD} '- DSI>0.5'])
     axis square
     plotZcZpBorders
+    
+    figure(7)
+    nDir = size(avg_resp_dir_align_all,2);
+    int = 360./nDir;
+    subplot(3,ndriver,((iD-1)*ndriver)+1)
+    errorbar(0:int:360-int, mean(avg_resp_dir_align_all(ind,:),1), std(avg_resp_dir_align_all(ind,:),[],1)./sqrt(length(ind)));
+    hold on
+    errorbar(0:int:360-int, circshift(mean(avg_resp_plaid_align_all(ind,:),1),45./int), circshift(std(avg_resp_plaid_align_all(ind,:),[],1)./sqrt(length(ind)),45./int));
+    title(['All ' driver_list{iD}])
+    xlabel('Dir')
+    ylabel('dF/F')
+    subplot(3,ndriver,((iD-1)*ndriver)+2)
+    errorbar(0:int:360-int, mean(avg_resp_dir_align_all(Zc_use,:),1), std(avg_resp_dir_align_all(Zc_use,:),[],1)./sqrt(length(Zc_use)));
+    hold on
+    errorbar(0:int:360-int, circshift(mean(avg_resp_plaid_align_all(Zc_use,:),1),45./int), circshift(std(avg_resp_plaid_align_all(Zc_use,:),[],1)./sqrt(length(Zc_use)),45./int));
+    title(['Zc ' driver_list{iD}])
+    xlabel('Dir')
+    ylabel('dF/F')
+    subplot(3,ndriver,((iD-1)*ndriver)+3)
+    errorbar(0:int:360-int, mean(avg_resp_dir_align_all(Zp_use,:),1), std(avg_resp_dir_align_all(Zp_use,:),[],1)./sqrt(length(Zp_use)));
+    hold on
+    errorbar(0:int:360-int, circshift(mean(avg_resp_plaid_align_all(Zp_use,:),1),45./int), circshift(std(avg_resp_plaid_align_all(Zp_use,:),[],1)./sqrt(length(Zp_use)),45./int));
+    title(['Zp ' driver_list{iD}])
+    xlabel('Dir')
+    ylabel('dF/F')
+    
+    avg_resp_dir_all_circ = cat(2,avg_resp_dir_all, avg_resp_dir_all(:,1,:,:,:));
+    avg_resp_dir_all_circ(find(avg_resp_dir_all_circ<0)) = 0;
+    avg_resp_dir_all_shift = circshift(avg_resp_dir_all,2,2);
+    avg_resp_dir_all_circ_shift = cat(2,avg_resp_dir_all_shift, avg_resp_dir_all_shift(:,1,:,:,:));
+    avg_resp_dir_all_circ_shift(find(avg_resp_dir_all_circ_shift<0)) = 0;
+    component_all_shift = circshift(component_all,2,2);
+    component_all_circ = cat(2,component_all_shift, component_all_shift(:,1));
+    component_all_circ(find(component_all_circ<0)) = 0;
+    stimDirs_circ = [stimDirs stimDirs(1)];
+    figure;
+    ind = intersect(resp_ind_all,[find(Zc_all>1.5) find(Zp_all>1.5)]);
+    for i = 1:25
+    subplot(5,5,i)
+    iC = ind(i);
+    r_max = max([avg_resp_dir_all_circ(iC,:,1,1) avg_resp_dir_all_circ(iC,:,2,1) component_all_circ(iC,:)],[],2);
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1))
+    hold on
+    polarplot(deg2rad(stimDirs_circ),component_all_circ(iC,:))
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,1))
+    rlim([0 r_max])
+    title(['Zc=' num2str(chop(Zc_all(1,iC),2)) ' ;Zp=' num2str(chop(Zp_all(1,iC),2))])
+    end
+    suptitle([driver '- Blue: pattern; Red: component; Yellow: plaid'])
+    print(fullfile(summaryDir, ['randDir_' driver '_ExampleCells_' sf '_' area '.pdf']),'-dpdf', '-fillpage')
+    
 end
 figure(1)
 subplot(3,3,1)
@@ -331,6 +379,19 @@ print(fullfile(summaryDir, ['randDir_allDriver_summary_ZcZpF2F1_withStats_' cell
 figure(6)
 print(fullfile(summaryDir, ['randDir_allDriver_summary_ZcZp_scatters_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage')
 
-
-
+figure(7)
+for i = 1:3
+    subplot(ndriver,3,i)
+    ylim([0 0.4])
+end
+for i = 4:6
+    subplot(ndriver,3,i)
+    ylim([0 0.3])
+end
+for i = 7:9
+    subplot(ndriver,3,i)
+    ylim([0 0.2])
+end
+print(fullfile(summaryDir, ['randDir_allDriver_summary_TuningCurves_' cell2mat(area_list) '_SF' sf '.pdf']),'-dpdf', '-fillpage')
+      
 

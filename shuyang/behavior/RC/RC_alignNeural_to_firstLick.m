@@ -25,7 +25,7 @@ for  j = 1:length(expt.ttl)
     
     cTargetOn = input.cTargetOn;
     if iscell(cTargetOn) % if it is a cell, it means cTargetOn wasn't being over written in extract TC. If it's not a cell, it's already over written in extract TC. can be used directly
-        cTargetOn = celleqel2mat_padded(input.cTargetOn);
+        cTargetOn = cell2mat(input.cTargetOn);
         cTargetOn(1) = nan; % first trial doesn't have reward 
     end
  
@@ -38,7 +38,7 @@ for  j = 1:length(expt.ttl)
     nFrames = size(all_events,1);
     
     for itrial = 1:nTrials
-        if ~isnan(cTargetOn(itrial))
+        if ~isnan(cTargetOn(itrial))&&cTargetOn(itrial)>0 % don't know why but in 201114_img1079 cTargetOn(1) = 0
             if cTargetOn(itrial)+postcue-1 <= nFrames %& input.counterValues{itrial}(end)-cTargetOn(itrial) > postwin_frames
                 targetAlign_events_wholeTrial(:,:,itrial) = all_events(cTargetOn(itrial)-precue:cTargetOn(itrial)+postcue-1,:);
             end
@@ -76,7 +76,7 @@ for  j = 1:length(expt.ttl)
     lastPreRewLickFrame = nan(1,nTrials);
     firstPostRewLickFrame = nan(1,nTrials);
     for itrial = 1:nTrials
-        if ~isnan(cTargetOn(itrial))
+        if ~isnan(cTargetOn(itrial)) && cTargetOn(itrial)>0
             if cTargetOn(itrial)+postwin_frames-1 < nFrames
                 lickTimes = input.lickometerTimesUs{itrial}; 
                 counterTimes = input.counterTimesUs{itrial};
@@ -121,7 +121,7 @@ for  j = 1:length(expt.ttl)
                         if (ilick+postwin_frames-1) <= size(targetAlign_events_wholeTrial,1) % if the time period before laser is off after the first lick is long enough for this trial
                             % align data to first lick burst after reward
                             postRew_lickAlignEvents_1500_3000ms_scale(:,:,itrial) = targetAlign_events_wholeTrial(ilick-prewin_frames:ilick+postwin_frames-1,:,itrial);
-                            postRew_lickAlign_1500_3000ms_scale(:,itrial) = lickCueAlign_wholeTrial(ilick-prewin_frames:ilick+postwin_frames-1,itrial);% align licking data to first lick
+                            postRew_lickAlign_1500_3000ms_scale(:,itrial) = lickCueAlign_wholeTrial(ilick-prewin_frames:ilick+postwin_frames-1,itrial);% align licking data to first lick burst
                         break
                         end  
                     end
@@ -140,8 +140,8 @@ for  j = 1:length(expt.ttl)
                     if ind_post+postwin_frames-1+prewin_frames+rewDelay_frames <= size(targetAlign_events_wholeTrial,1) % if the time period before laser is off after the first lick is long enough for this trial
                         firstPostRewLickFrame(1,itrial) = ind_post;
                         postRewTrials = [postRewTrials itrial];
-                        firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,itrial) = targetAlign_events_wholeTrial(ind_post-prewin_frames+prewin_frames+rewDelay_frames:ind_post+postwin_frames-1+prewin_frames+rewDelay_frames,:,itrial);
-                        firstPostRew_lickAlign_1500_3000ms_scale(:,itrial) = lickCueAlign_wholeTrial(ind_post-prewin_frames+prewin_frames+rewDelay_frames:ind_post+postwin_frames-1+prewin_frames+rewDelay_frames,itrial);
+                        firstPostRew_lickAlignEvents_1500_3000ms_scale(:,:,itrial) = targetAlign_events_wholeTrial(ind_post-prewin_frames-1+prewin_frames+rewDelay_frames:ind_post+postwin_frames-2+prewin_frames+rewDelay_frames,:,itrial);
+                        firstPostRew_lickAlign_1500_3000ms_scale(:,itrial) = lickCueAlign_wholeTrial(ind_post-prewin_frames-1+prewin_frames+rewDelay_frames:ind_post+postwin_frames+prewin_frames-2+rewDelay_frames,itrial);
                     end
                 end
                 rewAlignEvents(:,:,itrial) =targetAlign_events_wholeTrial(-postLick_frames+prewin_frames+rewDelay_frames:postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
@@ -150,44 +150,44 @@ for  j = 1:length(expt.ttl)
     end
     
     tt = (-prewin_frames:postwin_frames-1).*(1000./frameRateHz);
-    %save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']), 'postRew_lickAlignEvents_1500_3000ms_scale', ...
-    %    'postRew_lickAlign_1500_3000ms_scale','-append');
+    save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']), ...
+        'postRew_lickAlignEvents_1500_3000ms_scale', 'postRew_lickAlign_1500_3000ms_scale',...
+        'firstPostRew_lickAlignEvents_1500_3000ms_scale','firstPostRew_lickAlign_1500_3000ms_scale',...
+        '-append');
     
     figure;
-    subplot(2,1,1); % align neural activity to lick onset, only burst trials are included 
+    subplot(2,1,1); % align neural activity to lick burst onset, only burst trials are included 
     shadedErrorBar(tt, nanmean(nanmean(postRew_lickAlignEvents_1500_3000ms_scale,3),2).*(1000./frameRateHz), (nanstd(nanmean(postRew_lickAlignEvents_1500_3000ms_scale,3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
     hold on;
     xlabel('Time from lick');
     ylabel('Spike rate (Hz)');
-    ylim([0 inf]);
+    vline(0,'k'); ylim([0 inf]);
     title(['Reward (black- ' num2str(sum(~isnan(squeeze(postRew_lickAlignEvents_1500_3000ms_scale(1,1,:))))) ')']);
-    subplot(2,1,2); % align licking data to first lick
+    subplot(2,1,2); % align licking data to first lick burst
     shadedErrorBar(tt, nanmean(postRew_lickAlign_1500_3000ms_scale,2).*(1000./frameRateHz), (nanstd(postRew_lickAlign_1500_3000ms_scale,[],2).*(1000./frameRateHz))./sqrt(unique(sum(~isnan(postRew_lickAlign_1500_3000ms_scale),2))),'k');
     hold on;
     xlabel('Time from lick');
     ylabel('Lick rate (Hz)');
-    ylim([0 inf]);
+    vline(0,'k'); ylim([0 inf]);
     supertitle([mouse ' ' date '- post reward lick burst aligned spiking']);
-    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_postRew_lickAlignSpiking_1500_3000ms_scale.fig']));
+    savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_postRew_lickAlignSpiking_1500_3000ms_scale.fig']));
     hold off;
     
-    figure; % align neural and licking data to the first and last lick, respectively
-  
+    figure; % align neural and licking data to the first lick
     subplot(2,1,1);
     shadedErrorBar(tt, nanmean(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale,3),2).*(1000./frameRateHz), (nanstd(nanmean(firstPostRew_lickAlignEvents_1500_3000ms_scale,3),[],2).*(1000./frameRateHz))./sqrt(nIC),'k');
     title('First lick after reward');
     xlabel('Time from lick (ms)');
     ylabel('Spike rate (Hz)');
-    ylim([0 inf]);
+    vline(0,'k'); ylim([0 inf]);
     subplot(2,1,2);
     shadedErrorBar(tt, nanmean(firstPostRew_lickAlign_1500_3000ms_scale,2).*(1000./frameRateHz), (nanstd(firstPostRew_lickAlign_1500_3000ms_scale,[],2).*(1000./frameRateHz))./sqrt(unique(sum(~isnan(firstPostRew_lickAlign_1500_3000ms_scale)))),'k');
     xlabel('Time from lick (ms)');
     ylabel('Lick rate (Hz)');
-    ylim([0 inf]);
+    vline(0,'k'); ylim([0 inf]);
     title(['Rew- ' num2str(length(postRewTrials))]);
     supertitle([mouse ' ' date '- Licks relative to reward']);
     hold off;
-    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_lastVsFirstLick.fig']));
-    
+    savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_lastVsFirstLick_1500_3000ms_scale.fig']));
     
 end

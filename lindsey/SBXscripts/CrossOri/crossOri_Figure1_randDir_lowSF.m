@@ -25,6 +25,7 @@ resp_mask_45Dir_all = [];
 resp_plaid_45Dir_all = [];
 avg_resp_dir_all = [];
 max_dir_all = [];
+h_resp_all = [];
 
 firstexp = 1;
 for i = 1:length(ind)
@@ -68,7 +69,7 @@ for i = 1:length(ind)
             if dir_mask>nStimDir
                 dir_mask = dir_mask-nStimDir;
             end
-            if sum(h_resp(iCell,[max_dir(iCell) dir_mask],1),2)
+            if sum(h_resp(iCell,[max_dir(iCell) dir_mask],1,1),2)
                 resp_ind = [resp_ind iCell];
             end
             dir_45 = max_dir(iCell)+2;
@@ -79,7 +80,7 @@ for i = 1:length(ind)
             if dir_mask_45>nStimDir
                 dir_mask_45 = dir_mask_45-nStimDir;
             end
-            if sum(h_resp(iCell,[dir_45 dir_mask_45],1),2)
+            if sum(h_resp(iCell,[dir_45 dir_mask_45],1,1),2)
                 resp_ind_45 = [resp_ind_45 iCell];
             end
         end
@@ -88,6 +89,7 @@ for i = 1:length(ind)
         resp_any_ind = [resp_any_ind resp_any+totCells];
         resp_ind_all = [resp_ind_all resp_ind+totCells];
         resp_ind_45_all = [resp_ind_45_all resp_ind_45+totCells];
+        h_resp_all = cat(1,h_resp_all,h_resp);
         
         if firstexp == 1
             prewin_frames = unique(celleqel2mat_padded(input.tItiWaitFrames))./3;
@@ -181,6 +183,113 @@ nmice = length(mice);
 suptitle([num2str(nexp_area) ' expts; ' num2str(nmice) ' mice; ' num2str(length(resp_ind_all)) ' cells'])
 print(fullfile(summaryDir_F1, 'Figure1_SI_prefV45_lowSF.pdf'),'-dpdf','-bestfit')
 savefig(fullfile(summaryDir_F1, 'Figure1_SI_prefV45_lowSF.fig'))
+
+figure;
+subplot(3,2,1)
+temp_test = avg_resp_dir_all(:,1,1,1,1);
+temp_mask = avg_resp_dir_all(:,5,1,1,1);
+temp_plaid = avg_resp_dir_all(:,1,1,2,1);
+resp_ind_1 = find(sum(h_resp_all(:,1,1,:),4)+h_resp_all(:,5,1,1));
+scatter(temp_plaid,(temp_test+temp_mask)/2,'ok')
+xlim([0 2.5])
+ylim([0 2.5])
+refline(1)
+ylabel('Average Test & Mask')
+xlabel('Plaid')
+title(['All cells- Test at 0: n = ' num2str(size(avg_resp_dir_all,1))])
+subplot(3,2,2)
+scatter(temp_plaid(resp_ind_1),(temp_test(resp_ind_1)+temp_mask(resp_ind_1))/2,'ok')
+xlim([0 2.5])
+ylim([0 2.5])
+refline(1)
+ylabel('Average Test & Mask')
+xlabel('Plaid')
+title(['Resp cells- Test at 0: n = ' num2str(length(resp_ind_1))])
+subplot(3,2,3)
+scatter(temp_plaid,(temp_test+temp_mask)/2,'ok')
+xlim([0 .3])
+ylim([0 .3])
+refline(1)
+ylabel('Average Test & Mask')
+xlabel('Plaid')
+subplot(3,2,4)
+scatter(temp_plaid(resp_ind_1),(temp_test(resp_ind_1)+temp_mask(resp_ind_1))/2,'ok')
+xlim([0 .3])
+ylim([0 .3])
+refline(1)
+ylabel('Average Test & Mask')
+xlabel('Plaid')
+[n x bin] = histcounts(temp_plaid,[0:0.01:0.5 0.6:0.2:2.2]);
+plaid_bin = zeros(length(n),2,2,2);
+for ibin = 1:length(n)
+    ind = find(bin==ibin);
+    ind2 = intersect(ind,resp_ind_1);
+    plaid_bin(ibin,1,1,1) = mean(temp_plaid(ind));
+    plaid_bin(ibin,1,1,2) = std(temp_plaid(ind))./sqrt(length(ind));
+    plaid_bin(ibin,2,1,1) = mean((temp_test(ind)+temp_mask(ind))./2);
+    plaid_bin(ibin,2,1,2) = std(temp_test(ind)+temp_mask(ind))./sqrt(length(ind));
+    plaid_bin(ibin,1,2,1) = mean(temp_plaid(ind2));
+    plaid_bin(ibin,1,2,2) = std(temp_plaid(ind2))./sqrt(length(ind2));
+    plaid_bin(ibin,2,2,1) = mean((temp_test(ind2)+temp_mask(ind2))./2);
+    plaid_bin(ibin,2,2,2) = std(temp_test(ind2)+temp_mask(ind2))./sqrt(length(ind2));
+end
+subplot(3,2,5)
+errorbar(plaid_bin(:,1,1,1),plaid_bin(:,2,1,1),plaid_bin(:,2,1,2),plaid_bin(:,2,1,2),plaid_bin(:,1,1,2),plaid_bin(:,1,1,2))
+xlim([0 0.3])
+ylim([0 0.3])
+refline(1)
+ylabel('Average Test & Mask')
+xlabel('Plaid')
+subplot(3,2,6)
+errorbar(plaid_bin(:,1,2,1),plaid_bin(:,2,2,1),plaid_bin(:,2,2,2),plaid_bin(:,2,2,2),plaid_bin(:,1,2,2),plaid_bin(:,1,2,2))
+xlim([0 0.3])
+ylim([0 0.3])
+refline(1)
+ylabel('Average Test & Mask')
+xlabel('Plaid')
+print(fullfile(summaryDir_F1, 'Figure1_DarioReviewFig.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F1, 'Figure1_DarioReviewFig.fig')) 
+
+figure;
+start = 1;
+t_all_interp = zeros(4,100,length(exp_use));
+for iexp = exp_use'
+    ind = intersect(resp_ind_1,find(exptInd==iexp));
+    t_test = temp_test(ind);
+    t_mask = temp_mask(ind);
+    t_plaid = temp_plaid(ind);
+    t_plaid_avg = (temp_test(ind)+temp_mask(ind))/2;
+    [s_fract, s_ind] = sort(t_test-t_mask);
+    %[s_fract, s_ind] = sort((t_test-t_mask)./(t_test+t_mask));
+    %[s_fract, s_ind] = sort(t_test);
+    t_all = [t_test(s_ind)'./max(t_test);t_mask(s_ind)'./max(t_mask);t_plaid(s_ind)'./max(t_plaid);t_plaid_avg(s_ind)'./max(t_plaid_avg)];
+    for i = 1:4
+        if size(t_all,2)<100
+            t_all_interp(i,:,start) = interp1(1:size(t_all,2),t_all(i,:),1:size(t_all,2)./101:size(t_all,2));
+        else
+            t_all_interp(i,:,start) = interp1(1:size(t_all,2),t_all(i,:),1:size(t_all,2)./100:size(t_all,2));
+        end
+    end
+    subplot(3,3,start)
+    imagesc(t_all)
+    start = start+1;
+    set(gca,'Ytick', 1:4, 'YTickLabel',{'0','90','Plaid','Avg'})
+    test_mask_angle_rad = max(min(dot(t_test(s_ind),t_mask(s_ind))/(norm(t_test(s_ind))*norm(t_mask(s_ind))),1),-1);
+    test_mask_angle_deg = real(acosd(test_mask_angle_rad));
+    plaid_avg_angle_rad = max(min(dot(t_plaid(s_ind),t_plaid_avg(s_ind))/(norm(t_plaid(s_ind))*norm(t_plaid_avg(s_ind))),1),-1);
+    plaid_avg_angle_deg = real(acosd(plaid_avg_angle_rad));
+    title({['Test/Mask- ' num2str(chop(test_mask_angle_deg,3))], ['Plaid/Avg- ' num2str(chop(plaid_avg_angle_deg,3))]})
+end
+subplot(3,3,start)
+imagesc(mean(t_all_interp,3))
+set(gca,'Ytick', 1:4, 'YTickLabel',{'0','90','Plaid','Avg'})
+test_mask_angle_rad = max(min(dot(mean(t_all_interp(1,:,:),3),mean(t_all_interp(2,:,:),3))/(norm(mean(t_all_interp(1,:,:),3))*norm(mean(t_all_interp(2,:,:),3))),1),-1);
+test_mask_angle_deg = real(acosd(test_mask_angle_rad));
+plaid_avg_angle_rad = max(min(dot(mean(t_all_interp(3,:,:),3),mean(t_all_interp(4,:,:),3))/(norm(mean(t_all_interp(3,:,:),3))*norm(mean(t_all_interp(4,:,:),3))),1),-1);
+plaid_avg_angle_deg = real(acosd(plaid_avg_angle_rad));
+title({['Test/Mask- ' num2str(chop(test_mask_angle_deg,3))], ['Plaid/Avg- ' num2str(chop(plaid_avg_angle_deg,3))]})
+print(fullfile(summaryDir_F1, 'Figure1_DarioReviewFig_barcodes.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F1, 'Figure1_DarioReviewFig_barcodes.fig')) 
 
 ind_SI{1} = intersect(resp_ind_all,find(plaid_SI_all>0.3));
 ind_SI{2} = intersect(resp_ind_all,find(plaid_SI_all<-0.5));
