@@ -1,3 +1,5 @@
+% basic code for doing direction analysis. Good for just getting a tuning
+% curve and fit with bootstrapping but nothing fancy.
 clear all
 clear global
 %% variables

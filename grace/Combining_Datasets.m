@@ -53,7 +53,7 @@ ngrna = size(grna_list,1);
     NR2_all = [];
     NR3_all = [];
     mouse_list = [];
-    for iexp = 9:12
+    for iexp = 9:13
 %         if sum(strcmp(expt(iexp).driver,grna))
             mouse = expt(iexp).mouse;
             mouse_list = strvcat(mouse_list, mouse);
@@ -203,38 +203,18 @@ DSI3L = DSI3_all;
 NR1_L = NR1_all;
 NR2_L = NR2_all;
 NR3_L = NR3_all;
-%% simple stuff
-Data_sd = std(NR1_L,[],1);
-X_plot  = [1:8, fliplr(1:8)];
-Y_plot  = [mean(NR1_L,1)-Data_sd, fliplr(mean(NR1_L,1)+Data_sd)];
-figure;hold on;plot(mean(NR1_L,1),'linewidth',1);
-fill(X_plot, Y_plot , 1,'facecolor','blue','edgecolor','none','facealpha', 0.3);
-Data_sd = std(NR2_L,[],1);
-X_plot  = [1:8, fliplr(1:8)];
-Y_plot  = [mean(NR2_L,1)-Data_sd, fliplr(mean(NR2_L,1)+Data_sd)];
-hold on;plot(mean(NR2_L,1),'linewidth',1);
-fill(X_plot, Y_plot , 1,'facecolor','green','edgecolor','none','facealpha', 0.3);
-Data_sd = std(NR3_L,[],1);
-X_plot  = [1:8, fliplr(1:8)];
-Y_plot  = [mean(NR3_L,1)-Data_sd, fliplr(mean(NR3_L,1)+Data_sd)];
-hold on;plot(mean(NR3_L,1),'linewidth',1);
-fill(X_plot, Y_plot , 1,'facecolor','red','edgecolor','none','facealpha', 0.3);
+%% simple figures
 
-figure;
-plot(mean(NR1_L,1));hold on;plot(mean(NR2_L,1));hold on;plot(mean(NR3_L,1));
-title('LacZ')
-figure;
-plot(mean(NR1_all,1));hold on;plot(mean(NR2_all,1));hold on;plot(mean(NR3_all,1));
-title('Arc')
-
+% average tuning curve
 figure;
 subplot(1,2,1); 
-fast_errbar(1:8,NR1_L,1);
-fix_axes(gcf,15,'Ori diff','dF/F'); axis square
+fast_errbar(1:8,NR1_L,1,'color',[0.3 0 0.5]);hold on;fast_errbar(1:8,NR2_L,1,'color',[0.5430 0 0.5430]);hold on;fast_errbar(1:8,NR3_L,1,'color',[0.8633 0.6250 0.8633]);
+fix_axes(gcf,16,'Orientation','dF/F'); axis square
 subplot(1,2,2);
-fast_errbar(1:8,NR1_L,1); 
-fix_axes(gcf,15,'Ori diff','dF/F'); axis square
+fast_errbar(1:8,NR1_all,1);hold on;fast_errbar(1:8,NR2_all,1,'color',[0.1328 0.5430 0.1328]);hold on;fast_errbar(1:8,NR3_all,1,'color',[0.5625 0.9297 0.5625]);
+fix_axes(gcf,16,'Orientation','dF/F'); axis square
 
+% DSI and OSI
 sz = 100;
 figure;scatter(OSI1L,OSI2L,sz,[0.5430 0 0.5430],'filled')
 hold on;scatter(OSI1L,OSI3L,sz,[0.8633 0.6250 0.8633],'filled')

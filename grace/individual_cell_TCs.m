@@ -1,3 +1,6 @@
+% This script was used for extracting TCs from individual cells on D2/3 by choosing the best fine
+% shift based on the best correlation coefficients. Cool idea but it still
+% uses the mask from D1, while the newest script we use creates a new mask.
 %% get path names D1
 date = '201030';
 ImgFolder = strvcat('001');

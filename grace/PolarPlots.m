@@ -1,3 +1,5 @@
+% Used to somehow make polar plots of direction tuning. I haven't really
+% fine tuned this yet, but it could be useful.
 % load and define variables
 date1 = '111419';
 date2 = '111819';

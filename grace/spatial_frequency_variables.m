@@ -1,3 +1,5 @@
+% a lot of the variables from Creating_Major_Variables that incorporate the
+% spatial freq dimension
 %% START HERE with frequency-dfof response accounting for frequency and direction
 dfof_stim = zeros(nDir,nSF,nCells1,3);
 trialInd = cell(nDir,nSF,3);

@@ -102,18 +102,19 @@ expt(10).indicator = {'GCaMP7f'};
 expt(10).coFolder = {'003'};
 expt(10).saveLoc = 'grace';
 
-expt(11).mouse = 'i70120';
-expt(11).date = '201210';
+expt(11).mouse = 'i1803';
+expt(11).date = '210806';
 expt(11).img_loc  = {'V1'};
 expt(11).z = -200;
 expt(11).img_strct  = {'cells'};
 expt(11).driver = {'arc'};
 expt(11).indicator = {'GCaMP7f'};
-expt(11).coFolder = {'002'};
+expt(11).coFolder = {'003'};
 expt(11).saveLoc = 'grace';
 
-expt(12).mouse = 'i70520';
-expt(12).date = '201207';
+% old arc datasets with just two days
+expt(12).mouse = 'i70120';
+expt(12).date = '201210';
 expt(12).img_loc  = {'V1'};
 expt(12).z = -200;
 expt(12).img_strct  = {'cells'};
@@ -121,3 +122,13 @@ expt(12).driver = {'arc'};
 expt(12).indicator = {'GCaMP7f'};
 expt(12).coFolder = {'002'};
 expt(12).saveLoc = 'grace';
+
+expt(13).mouse = 'i70520';
+expt(13).date = '201207';
+expt(13).img_loc  = {'V1'};
+expt(13).z = -200;
+expt(13).img_strct  = {'cells'};
+expt(13).driver = {'arc'};
+expt(13).indicator = {'GCaMP7f'};
+expt(13).coFolder = {'002'};
+expt(13).saveLoc = 'grace';

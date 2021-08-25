@@ -1,3 +1,8 @@
+% This is an older script used to fine register cell squares and then
+% calculate the correlation coefficients of those squares (same cell on D1,
+% D2, and D3) to determine if it is the same cell. This process has been
+% improved and included in the Day23ImageProcessing script but this is
+% useful for looking at how I created thresholds
 clear all
 clear global
 %% 

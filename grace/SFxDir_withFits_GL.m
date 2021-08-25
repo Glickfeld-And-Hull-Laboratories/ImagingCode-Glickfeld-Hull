@@ -1,3 +1,4 @@
+% This is used to process datasets with spatial frequency
 % load TCs
 mouse = 'i1803';
 date = '210622';

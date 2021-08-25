@@ -1,14 +1,14 @@
 clear all
 clear global
 %% 
-mouse = 'i70520';
-ref_date = '201205';
-day2 = '201207';
-day3 = '210629';
-ImgFolder = strvcat('002');
-ImgFolder2 = strvcat('002');
-ImgFolder3 = strvcat('002');
-ref_run = strvcat('002');
+mouse = 'i1803';
+ref_date = '210802';
+day2 = '210804';
+day3 = '210806';
+ImgFolder = strvcat('003');
+ImgFolder2 = strvcat('003');
+ImgFolder3 = strvcat('003');
+ref_run = strvcat('003');
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
 run_str3 = catRunName(ImgFolder3, nrun);
@@ -17,7 +17,7 @@ ref_str = catRunName(ref_run, size(ref_run,1));
 fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\Analysis\2P';
 % code works differently if there is a day3. Newer datasets have a day 3
 % but some older ones don't. Set day3x = 1 if there is a day3
-day3x = 0;
+day3x = 1;
 
 %% load data
 oriTuning_D1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref_str], [ref_date '_' mouse '_' ref_str '_oriTuningAndFits.mat']));
@@ -169,12 +169,12 @@ semResp_D3 = oriTuning_D3.semResponseEaOri(cell_list,:);
 vonMisesFit_D3 = oriTuning_D3.vonMisesFitAllCellsAllBoots(:,:,cell_list);
 [maxResp_D3 prefOri_D3] = max(squeeze(oriTuning_D3.vonMisesFitAllCellsAllBoots(:,1,cell_list)),[],1);
 dfof_dir3 = trialData_D3.dir_resp(cell_list,:);
+save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_prefOri.mat']),'prefOri_D1','prefOri_D2','prefOri_D3','avgResp_D1','avgResp_D2','avgResp_D3','vonMisesFit_D1','vonMisesFit_D2','vonMisesFit_D3');
 else
 prefOri_D3 = [];
 avgResp_D3 = [];
+save(fullfile(fnout, [day2 '_' mouse], [day2 '_' mouse '_' run_str2], [day2 '_' mouse '_' run_str2 '_prefOri.mat']),'prefOri_D1','prefOri_D2','prefOri_D3','avgResp_D1','avgResp_D2','avgResp_D3','vonMisesFit_D1','vonMisesFit_D2','vonMisesFit_D3');
 end
-
-% save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_prefOri.mat']),'prefOri_D1','prefOri_D2','prefOri_D3','avgResp_D1','avgResp_D2','avgResp_D3','vonMisesFit_D1','vonMisesFit_D2','vonMisesFit_D3');
 
 %% creating variables for average tuning curve
 [maxResp prefOri_ind] = max(avgResp_D1,[],2);
@@ -430,12 +430,13 @@ for iCell = 1:nCells
     ylabel(['Responses'])
     print(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], ['threshold3.pdf']),'-dpdf', '-bestfit')
 end
+save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_threshold.mat']),'t','c_pass','t2','c_pass2','t3','c_pass3','S','S2','S3');
 else
     t3 = [];
     c_pass3 = [];
     S3 = [];
+    save(fullfile(fnout, [day2 '_' mouse], [day2 '_' mouse '_' run_str2], [day2 '_' mouse '_' run_str2 '_threshold.mat']),'t','c_pass','t2','c_pass2','t3','c_pass3','S','S2','S3');
 end
-save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_threshold.mat']),'t','c_pass','t2','c_pass2','t3','c_pass3','S','S2','S3');
 
 %% ttest
 base_wind = 1+nOff1-nOn1:nOff1;
@@ -471,11 +472,12 @@ for iDir = 1:nDir
     y3 = dfof_resp(ind,:);
     [h3(iDir,:),p3(iDir,:)] = ttest(x3,y3,'dim',1,'Alpha',0.05./(nDir-1),'tail','left');
 end
+save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_ttest.mat']),'h1','h2','h3','p1','p2','p3');
 else
     h3 = [];
     p3 = []
+    save(fullfile(fnout, [day2 '_' mouse], [day2 '_' mouse '_' run_str2], [day2 '_' mouse '_' run_str2 '_ttest.mat']),'h1','h2','h3','p1','p2','p3');
 end
-save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_ttest.mat']),'h1','h2','h3','p1','p2','p3');
 %% signal correlation
 signal_corr_half1 = NaN(nCells,1);
 signal_corr_half2 = NaN(nCells,1);
@@ -556,10 +558,11 @@ for iCell = 1:nCells
         y_fit3(iCell,:) = NaN(1,length(thetafine));
     end
 end
+save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_vonmises.mat']),'k1_hat','k1_hat2','k1_hat3');
 else
     k1_hat3 = [];
+    save(fullfile(fnout, [day2 '_' mouse], [day2 '_' mouse '_' run_str2], [day2 '_' mouse '_' run_str2 '_vonmises.mat']),'k1_hat','k1_hat2','k1_hat3');
 end
-save(fullfile(fnout, [day3 '_' mouse], [day3 '_' mouse '_' run_str3], [day3 '_' mouse '_' run_str3 '_vonmises.mat']),'k1_hat','k1_hat2','k1_hat3');
 
 %% tuning curves for 3 days overlapped
 figure;

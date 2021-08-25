@@ -1,3 +1,4 @@
+% for doing a retinotopy when using multiple positions on one screen
 clear all
 clear global
 %% 
