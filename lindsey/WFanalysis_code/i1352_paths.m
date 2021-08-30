@@ -1,0 +1,9 @@
+mouse = 'i1352';
+date = '210824';
+time = {'1639'};
+rate = 2;
+data_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\celine\Data\bootcamp_2021';
+behav_folder = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
+run = {'1'};
+suffix = '_MMStack_Pos0.ome';
+anal_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\celine\Analysis\bootcamp_2021';

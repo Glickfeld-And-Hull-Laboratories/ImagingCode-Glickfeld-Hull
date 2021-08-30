@@ -278,3 +278,51 @@ for iCell = 1:nCells
     start = start +1;
 end
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
+
+%% F1/F0 analysis
+data_dfof = permute(data_dfof,[1 3 2]);
+phaseCyc = double(tf*frame_rate);
+cycPerTrial = floor(nOn/(phaseCyc));
+data_dfof_cyc = zeros(phaseCyc, nCells, ntrials, cycPerTrial-1);
+for icyc = 1:cycPerTrial-1
+    data_dfof_cyc(:,:,:,icyc) = data_dfof(nOff+phaseCyc+((icyc-1).*phaseCyc):nOff+phaseCyc+(icyc.*phaseCyc)-1,:,:);
+end
+data_dfof_cycavg = mean(data_dfof_cyc,4);
+data_dfof_cycdir = zeros(phaseCyc,nCells,nDirs);
+for iDir = 1:nDirs
+    ind = find(tDir == Dirs(iDir));
+    data_dfof_cycdir(:,:,iDir) = mean(data_dfof_cycavg(:,:,ind),3);
+end
+ 
+[max_val max_ind] = max(data_dfof_dir(:,:,1),[],2);
+ 
+f0 = zeros(1,nCells);
+f1 = zeros(1,nCells);
+for iCell = 1:nCells
+    cyc = squeeze(data_dfof_cycdir(:,iCell,max_ind(iCell)))';
+    ff = fft(cyc);
+    p2 = abs(ff/length(cyc));
+    p1 = p2(1:1+length(cyc)./2);
+    p1(2:end-1) = 2*p1(2:end-1);
+    f0(1,iCell) = p1(1);
+    f1(1,iCell) = p1(2);
+end
+f1f0 = f1./f0;
+figure; 
+subplot(2,2,1)
+hist(f0)
+xlabel('F0')
+subplot(2,2,2)
+hist(f1)
+xlabel('F1')
+subplot(2,2,3)
+scatter(f0,f1)
+ylim([0 4])
+xlim([0 4])
+xlabel('F0')
+xlabel('F1')
+subplot(2,2,4)
+hist(f1f0)
+xlabel('F1/F0')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_F1F0.pdf']),'-dpdf','-bestfit')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_dirAnalysis.mat']), 'max_ind','data_dfof_cycdir','f1','f0','f1f0')

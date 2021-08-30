@@ -7,9 +7,13 @@ function [wheel_speed] = wheelSpeedCalc(input,ticks,wheel)
 if strcmp(wheel,'red')
     diameter = 13.6;
     circ = pi.*diameter;
+elseif strcmp(wheel,'purple')
+    diameter = 14.6;
+    circ = pi.*diameter;
 else
     error('wrong color')
 end
+
 
 cm_per_tick = circ./(ticks.*4);
 if isfield(input,'tGratingDirectionDeg')
