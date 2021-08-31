@@ -42,16 +42,16 @@ nOri = length(oris);
 %%
 
 % plot cells with ID numbers to see if there are any you want to get ride of
-% cell_stats=regionprops(mask_cell);
-% figure; imagesc(mask_cell)
-% hold on
-% bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
-% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
-% for iC = 1:length(find(mask_cell))
-%     text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'white',...
-%             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
-%     
-% end
+cell_stats=regionprops(mask_cell);
+figure; imagesc(mask_cell)
+hold on
+bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
+for iC = 1:length(find(mask_cell))
+    text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'white',...
+            'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
+    
+end
 % remove cells you don't want
 % ind=73;
 % mask_cell(find(mask_cell == ind))=0;
@@ -176,7 +176,7 @@ red_nCons_all = sum(logical(squeeze(sum(h(RedAll,:,:),2))),2);
 % make table
 
 countsTable = table([nGreen; nGreenResp;mean(PC_nResp);mean(PC_nOris_all);mean(PC_nCons_all);mean(dfof_resp_green)],[nRed;nRedResp;mean(red_nResp);mean(red_nOris_all);mean(red_nCons_all);mean(dfof_resp_red)],'VariableNames',{'PCs' 'INs'}, 'RowNames',{'Total cells' 'Responsive cells','Avrg conditions resp','Avrg oris resp','Avrg cons resp','Avrg dfof of resp'})
-%writetable(countsTable,fullfile(fn,'counts.csv'),'WriteRowNames',true)
+writetable(countsTable,fullfile(fn,'counts.csv'),'WriteRowNames',true)
 % looking at time courses for all cells (responsive and non-responsive)
 % data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
 % data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
