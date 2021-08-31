@@ -8,8 +8,7 @@ eval(ds)
 
 
 day_id = 76;
-%% 
-%identifying animal and run
+%% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
 
@@ -75,7 +74,7 @@ plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
 bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
-% %print(fullfile(fn,['FOV_with_masks']),'-dpdf');
+print(fullfile(fn,['FOV_with_masks']),'-dpdf');
 
 % reshape by trials and look at responses
 %getting df/f for each trial, using a baseline window
@@ -183,13 +182,13 @@ countsTable = table([nGreen; nGreenResp;mean(PC_nResp);mean(PC_nOris_all);mean(P
 % data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %% print histogram of preferred contrasts
-pref_con_converted = cons(pref_con);
-figure
-subplot(2,1,1)
-hist(pref_con_converted(:,GreenResp))
-subplot(2,1,2)
-hist(pref_con_converted(:,RedAll))
-print(fullfile(fn,['pref_con_hist']),'-dpdf');
+% pref_con_converted = cons(pref_con);
+% figure
+% subplot(2,1,1)
+% hist(pref_con_converted(:,GreenResp))
+% subplot(2,1,2)
+% hist(pref_con_converted(:,RedAll))
+% print(fullfile(fn,['pref_con_hist']),'-dpdf');
 %%
 %narrow down to the preferred ori and preferred contrast for each cell
 tc_trial_avrg=nan(nOn+nOff,nCells);
@@ -222,7 +221,10 @@ tc_green_avrg{2}=std(tc_green,[],2);
 tc_red_avrg{1} = mean(tc_red,2); %average tc for all red cells
 tc_red_avrg{2}=std(tc_red,[],2);
 
-
+%convert to se 
+tc_green_avrg{2} = tc_green_avrg{2}/sqrt(size(GreenResp,1));
+tc_red_avrg{2} = tc_red_avrg{2}/sqrt(size(RedAll,1));
+%%
 figure;
 plot(tc_green_avrg{1}, 'LineWidth',.005,'color',[.05 .5 .05]);
 %ylim([-.04 .2]);
@@ -233,18 +235,28 @@ hold off
 print(fullfile(fn,['tc_avrgs']),'-dpdf');
 %saveas(gcf,fullfile(fn_collect,[mouse '-' date '-sup-tc_avrgs.jpg']));
 
-%%
-%convert to se 
-tc_green_avrg{2} = tc_green_avrg{2}/sqrt(size(GreenResp,1));
-tc_red_avrg{2} = tc_red_avrg{2}/sqrt(size(RedAll,1));
+
+
 %% make figure with se shaded
 
 figure
-x=1:numel(y);
+x=1:(size(tc_green,1));
 x=(x-30)/15;
 %shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'r');
 plot(x,tc_red,'r');
-%ylim([-.02 .2]);
+ylim([-.02 .35]);
+hold on
+shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
+title('responsive green and all red');
+saveas(gcf,fullfile(fn,[mouse '-' date 'tcPlot_indiv.jpg']));
+
+
+figure
+x=1:(size(tc_green,1));
+x=(x-30)/15;
+shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'lineprops','r');
+%plot(x,tc_red,'r');
+ylim([-.02 .23]);
 hold on
 shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
 title('responsive green and all red');
@@ -256,9 +268,12 @@ plot(tc_red);
 title('Timecourses for all red cells stimuli');
 legend
 %% plotting contrast and ori functions 
-keep = 
-if nCells<36
-    [n n2] = subplotn(nCells);
+keepCells=union(GreenResp,RedAll);
+nKeep=size(keepCells,1);
+[RedAll,red_ind_keep] = intersect(keepCells,RedAll,'stable');
+
+if nKeep<36
+    [n n2] = subplotn(nKeep);
     tot = n.*n2;
 else
     n = 6;
@@ -271,22 +286,31 @@ figure;
 movegui('center')
 start = 1;
 
-for iCell = 1:nCells
+for iCell = 1:nKeep
     if start>tot
         figure; movegui('center')
         start = 1;
     end
     subplot(n,n2,start)
 
-%     for iCon = 1:nCon
-%         errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-o')
-%         hold on
-%     end
-    if find(find(mask_label)==iCell)
-        title('R')
+
+    if find(find(iCell==red_ind_keep))
+          for iCon = 1:nCon
+            errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-r')
+            hold on
+            title (['Cell ' num2str(iCell)]);
+          end
+        
+    else
+         for iCon = 1:nCon
+            errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-k')
+            hold on
+            title (['Cell ' num2str(iCell)]);
+         end
     end
+    
     start= start+1;
-    ylim([-0.1 inf])
+    %ylim([-0.1 inf])
 
    
 end
@@ -309,36 +333,36 @@ end
 %     start = start+1;
 % 
 % end
-
-%% naka Rushton fit at pref ori
-nakaRush_fits = nakaRushtonFit(data_con_resp,cons);
-x=squeeze(struct2cell(nakaRush_fits));
-
-for i = 1:nCells
-   c50(i)=x{3,i}; 
-end
-c50_PCresp=c50(GreenResp)';
-c50_INresp=c50(RedAll)';
+% 
+% %% naka Rushton fit at pref ori
+% nakaRush_fits = nakaRushtonFit(data_con_resp,cons);
+% x=squeeze(struct2cell(nakaRush_fits));
+% 
+% for i = 1:nCells
+%    c50(i)=x{3,i}; 
+% end
+% c50_PCresp=c50(GreenResp)';
+% c50_INresp=c50(RedAll)';
 %save(fullfile(fn,'nakaRush_fits.mat'),'nakaRush_fits');
 %save(fullfile(fn,'nakaRush_fits_PCresp.mat'),'nakaRush_fits_PCresp');
 %save(fullfile(fn,'nakaRush_fits_ICresp.mat'),'nakaRush_fits_ICresp');
 
 %% go back to my own von M fit?
 
-%1 initial von M fit on real data/real orientations collected
-vonMises_output = nan(nCells, 6);
-
-for i = 1:nCells
-    thisCell = data_ori_resp(i,:);
-    [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,thisCell);
-    vonMises_output(i,:)=[b_hat, k1_hat, R1_hat,u1_hat,sse,R_square];
-end
-
-clear thisCell b_hat k1_hat R1_hat u1_hat sse R_square %get rid of the last iteration of these looping variables
-save(fullfile(fn,'vonM_output.mat'),'vonMises_output')
-
-PC_k = vonMises_output(GreenResp,2);
-IN_k = vonMises_output(RedAll,2);
+% %1 initial von M fit on real data/real orientations collected
+% vonMises_output = nan(nCells, 6);
+% 
+% for i = 1:nCells
+%     thisCell = data_ori_resp(i,:);
+%     [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,thisCell);
+%     vonMises_output(i,:)=[b_hat, k1_hat, R1_hat,u1_hat,sse,R_square];
+% end
+% 
+% clear thisCell b_hat k1_hat R1_hat u1_hat sse R_square %get rid of the last iteration of these looping variables
+% save(fullfile(fn,'vonM_output.mat'),'vonMises_output')
+% 
+% PC_k = vonMises_output(GreenResp,2);
+% IN_k = vonMises_output(RedAll,2);
 
 % save(fullfile(fn,'vonM_PCresp.mat'),'vonM_PCresp')
 % save(fullfile(fn,'vonM_INresp.mat'),'vonM_INresp')
@@ -361,15 +385,15 @@ IN_k = vonMises_output(RedAll,2);
 %end
 
 %determine which cells have a value less than 22.5, ie are reliable
-%% making overall output table
-PC_responses = [PC_nResp PC_nOris_all PC_nCons_all dfof_resp_green c50_PCresp PC_k];
-IN_responses = [red_nResp red_nOris_all red_nCons_all dfof_resp_red c50_INresp IN_k];
-
-PC_table=array2table(PC_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
-IN_table=array2table(IN_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
-
-writetable(PC_table,fullfile(fn,'PC_responses.csv'));
-writetable(IN_table,fullfile(fn,'IN_responses.csv'));
+% %% making overall output table
+% PC_responses = [PC_nResp PC_nOris_all PC_nCons_all dfof_resp_green c50_PCresp PC_k];
+% IN_responses = [red_nResp red_nOris_all red_nCons_all dfof_resp_red c50_INresp IN_k];
+% 
+% PC_table=array2table(PC_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
+% IN_table=array2table(IN_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
+% 
+% writetable(PC_table,fullfile(fn,'PC_responses.csv'));
+% writetable(IN_table,fullfile(fn,'IN_responses.csv'));
 
 
 %%
