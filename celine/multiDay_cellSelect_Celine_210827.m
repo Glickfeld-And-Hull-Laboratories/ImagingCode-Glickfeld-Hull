@@ -7,7 +7,7 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 91;
+day_id = 99;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -351,7 +351,7 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
-clear data_g_reg data_reg_down
+%clear data_g_reg data_reg_down
 %% reshape by trials
 %getting df/f for each trial, using a baseline window
 data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);

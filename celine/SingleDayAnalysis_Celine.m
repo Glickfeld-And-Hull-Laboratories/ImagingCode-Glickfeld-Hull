@@ -123,15 +123,24 @@ h_all = sum(sum(h,2),3);
 resp=logical(h_all);
 %
 pref_ori = zeros(1,nCells);
+orth_oir = zeros(1,nCells);
 pref_con = zeros(1,nCells);
 data_ori_resp = zeros(nCells,nOri); %at pref con
 data_con_resp = zeros(nCells,nCon); %at pref ori
+data_orth_resp=zeros(1,nCells);
+
 %I want to pull out the responses for each cell at it's preferred orientations, for
 %all contrasts, and at it's preferred contrast, for all orientations
 for iCell = 1:nCells
       [max_val, pref_ori(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
       [max_val_con, pref_con(1,iCell)] = max(squeeze(mean(data_resp(iCell,:,:,1),2))',[],2);
+      if pref_ori(1,iCell)<90
+          orth_oir(1,iCell)=pref_ori(1,iCell)+90;
+      elseif pref_ori(1,iCell)>=90
+          orth_oir(1,iCell)=pref_ori(1,iCell)-90;
+      end
       data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
+      data_orth_resp(1,iCell)=mean(data_resp(iCell,orth_ori(iCell),:,1));
       data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
 end
 
