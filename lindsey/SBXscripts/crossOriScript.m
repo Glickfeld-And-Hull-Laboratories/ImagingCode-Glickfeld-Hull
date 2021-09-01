@@ -1,8 +1,8 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhaseFF_ExptList';
-iexp = 10; 
-doPhaseAfterDir = 1;
+ds = 'CrossOriRandPhase2TF_ExptList';
+iexp = 2; 
+doPhaseAfterDir = 0;
 rc = behavConstsAV;
 eval(ds)
 
@@ -83,7 +83,7 @@ nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,35001:35500),3);
+data_avg = mean(data(:,:,30001:30500),3);
 %% Register data
 if doPhaseAfterDir
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
@@ -179,6 +179,9 @@ nMaskDiff = length(maskDiffs);
 SF_all = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
 SFs = unique(SF_all);
 nSF = length(SFs);
+TF_all = celleqel2mat_padded(input.tMaskOneGratingTemporalFreqCPS);
+TFs = unique(TF_all);
+nTF = length(TFs);
 
 if input.doTwoStimTogether
     maskCon_all = celleqel2mat_padded(input.tStimTwoGratingContrast);
@@ -280,6 +283,19 @@ else
     nStim3 = 0;
 end
 
+if nTF>1
+    nStim3 = nTF;
+    data_dfof = cat(3, data_dfof, zeros(sz(1),sz(2), nStim3));
+    start = nStim1+nStim2+1;
+    for iTF = 1:nTF
+        ind_TF = find(TF_all == TFs(iTF));
+        data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_TF),3);
+        start = start+1;
+    end
+else
+    nStim3 = 0;
+end
+
 data_dfof(:,:,isnan(mean(mean(data_dfof,1),2))) = [];
 myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_max = max(imfilter(data_dfof,myfilter),[],3);
@@ -296,7 +312,7 @@ if strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')
     data_dfof = cat(3,data_dfof,data_avg);
 end
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas', 'maskDiff_all','maskDiffs','nMaskDiff','SF_all', 'SFs', 'nSF', 'frame_rate', 'nTrials')
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas', 'maskDiff_all','maskDiffs','nMaskDiff','SF_all', 'SFs', 'nSF','TF_all', 'TFs', 'nTF', 'frame_rate', 'nTrials')
 
 %% cell segmentation 
 if ~doPhaseAfterDir
