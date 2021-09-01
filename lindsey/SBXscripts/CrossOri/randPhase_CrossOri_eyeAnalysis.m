@@ -82,7 +82,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [8 35];
+rad_range = [3 20];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
@@ -303,17 +303,28 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilImgByDist.pdf']),'-dpdf','-fillpage');
 
     
-    centroid_dist_sf = cell(1,nSF);
-    centroid_med_sf = cell(1,nSF);
-    if nSF>1
-        for isf = 1:nSF
-            ind_plaid = intersect(find(maskCon_all == maskCons(2)), find(stimCon_all == stimCons(2)));
-            ind_sf = intersect(ind_plaid,intersect(find(SF_all == SFs(isf)),find(~isnan(centroid_stim(1,:)))));
-            centroid_med_sf{isf} = findMaxNeighbors(centroid_stim(:,ind),2);
-            centroid_dist_sf{isf} = sqrt((centroid_stim(1,:)-centroid_med(1)).^2 + (centroid_stim(2,:)-centroid_med(2)).^2);
-        end
-    end    
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med', 'centroid_dist_sf', 'centroid_med_sf' );
+%     centroid_dist_sf = cell(1,nSF);
+%     centroid_med_sf = cell(1,nSF);
+%     if nSF>1
+%         for isf = 1:nSF
+%             ind_plaid = intersect(find(maskCon_all == maskCons(2)), find(stimCon_all == stimCons(2)));
+%             ind_sf = intersect(ind_plaid,intersect(find(SF_all == SFs(isf)),find(~isnan(centroid_stim(1,:)))));
+%             centroid_med_sf{isf} = findMaxNeighbors(centroid_stim(:,ind),2);
+%             centroid_dist_sf{isf} = sqrt((centroid_stim(1,:)-centroid_med(1)).^2 + (centroid_stim(2,:)-centroid_med(2)).^2);
+%         end
+%     end  
+%     centroid_dist_tf = cell(1,nTF);
+%     centroid_med_tf = cell(1,nTF);
+%     if nTF>1
+%         for itf = 1:nTF
+%             ind_plaid = intersect(find(maskCon_all == maskCons(2)), find(stimCon_all == stimCons(2)));
+%             ind_tf = intersect(ind_plaid,intersect(find(TF_all == TFs(itf)),find(~isnan(centroid_stim(1,:)))));
+%             centroid_med_tf{itf} = findMaxNeighbors(centroid_stim(:,ind_tf),2);
+%             centroid_dist_tf{itf} = sqrt((centroid_stim(1,:)-centroid_med(1)).^2 + (centroid_stim(2,:)-centroid_med(2)).^2);
+%         end
+%     end  
+%    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med', 'centroid_dist_sf', 'centroid_med_sf', 'centroid_dist_tf', 'centroid_med_tf' );
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med');
     %close all
 end
 %     %% eye plots
