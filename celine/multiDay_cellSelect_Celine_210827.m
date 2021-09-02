@@ -7,7 +7,7 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 99;
+day_id = 102;
 %% load data for day
 
 mouse = expt(day_id).mouse;

@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 76;
+day_id = 100;
 %% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -41,19 +41,19 @@ oris = unique(tOri);
 nOri = length(oris);
 %%
 
-% plot cells with ID numbers to see if there are any you want to get ride of
-cell_stats=regionprops(mask_cell);
-figure; imagesc(mask_cell)
-hold on
-bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
-for iC = 1:length(find(mask_cell))
-    text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'white',...
-            'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
-    
-end
-% remove cells you don't want
-% ind=73;
+% % % plot cells with ID numbers to see if there are any you want to get ride of
+% cell_stats=regionprops(mask_cell);
+% figure; imagesc(mask_cell)
+% hold on
+% bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
+% for iC = 1:length(find(mask_cell))
+%     text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'white',...
+%             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
+%     
+% end
+% % remove cells you don't want
+% ind=5;
 % mask_cell(find(mask_cell == ind))=0;
 % mask_cell_red(find(mask_cell_red == ind))=0;
 % 
@@ -63,7 +63,7 @@ end
 % nCells=nCells-1;
 %get average FOV with masks
 
-
+% 
 figure;
 imagesc(data_avg);
 colormap gray
@@ -123,26 +123,51 @@ h_all = sum(sum(h,2),3);
 resp=logical(h_all);
 %
 pref_ori = zeros(1,nCells);
-orth_oir = zeros(1,nCells);
+orth_ori = zeros(1,nCells);
 pref_con = zeros(1,nCells);
 data_ori_resp = zeros(nCells,nOri); %at pref con
 data_con_resp = zeros(nCells,nCon); %at pref ori
-data_orth_resp=zeros(1,nCells);
+data_orth_resp=zeros(nCells,1);
 
 %I want to pull out the responses for each cell at it's preferred orientations, for
 %all contrasts, and at it's preferred contrast, for all orientations
 for iCell = 1:nCells
       [max_val, pref_ori(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
       [max_val_con, pref_con(1,iCell)] = max(squeeze(mean(data_resp(iCell,:,:,1),2))',[],2);
-      if pref_ori(1,iCell)<90
-          orth_oir(1,iCell)=pref_ori(1,iCell)+90;
-      elseif pref_ori(1,iCell)>=90
-          orth_oir(1,iCell)=pref_ori(1,iCell)-90;
+      if pref_ori(1,iCell)<5
+          orth_ori(1,iCell)=pref_ori(1,iCell)+4;
+      elseif pref_ori(1,iCell)>=5
+          orth_ori(1,iCell)=pref_ori(1,iCell)-4;
       end
       data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
-      data_orth_resp(1,iCell)=mean(data_resp(iCell,orth_ori(iCell),:,1));
+      data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
       data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
 end
+
+%% calculating OSI
+data_prefOri_resp = mean(data_con_resp,2);
+numerator = abs(data_prefOri_resp-data_orth_resp);
+denom = abs(data_prefOri_resp+data_orth_resp);
+OSI = numerator/denom;
+
+
+orthoOri_D1 = zeros(nCells,1);
+orthoResp_D1 = zeros(nCells,1);
+orthoOri_D2 = zeros(nCells,1);
+orthoResp_D2 = zeros(nCells,1);
+orthoOri_D3 = zeros(nCells,1);
+orthoResp_D3 = zeros(nCells,1);
+[maxResp prefOri_ind] = max(avgResp_D1,[],2);
+for iCell = 1:nCells
+if prefOri_ind(iCell) <= 4
+  orthoOri_D1(iCell) = prefOri_ind(iCell) + 4;
+elseif prefOri_ind(iCell) > 4
+  orthoOri_D1(iCell) = prefOri_ind(iCell) - 4;
+end
+orthoResp_D1(iCell) = avgResp_D1(iCell,orthoOri_D1(iCell));
+end
+orthoResp_D1(find(orthoResp_D1<0)) = 0;
+OSI1 = (maxResp_D1'-orthoResp_D1)./(maxResp_D1'+orthoResp_D1);
 
 %% get basic counts
 green_inds = 1:nCells;
