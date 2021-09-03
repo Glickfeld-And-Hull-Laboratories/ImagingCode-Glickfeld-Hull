@@ -1,13 +1,14 @@
 clear all; clear global;  close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'con_ori_nonDART'
+%ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 102;
+day_id = 12;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -224,7 +225,7 @@ if exist(fullfile(fnout,'redImage.mat'))
     load(fullfile(fnout,'redImage'))
 elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find and load it
     redRun = expt(day_id).redChannelRun;
-    imgMatFile = [redRun '_000_000.mat'];
+    imgMatFile = [redRun '_000_003.mat'];
     if strcmp(expt(day_id).data_loc,'lindsey')
         cd(fullfile(root,mouse, expDate,redRun));
     elseif strcmp(expt(day_id).data_loc,'ashley')

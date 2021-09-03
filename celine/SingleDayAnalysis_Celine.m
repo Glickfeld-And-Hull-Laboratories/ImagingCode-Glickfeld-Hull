@@ -1,13 +1,13 @@
  % to perform additional analyses on already extracted timecourses
 clear all; clear global; close all; clc
-
+%ds = 'con_ori_nonDART';
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 100;
+day_id = 99;
 %% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -301,6 +301,23 @@ figure;
 plot(tc_red);
 title('Timecourses for all red cells stimuli');
 legend
+%% raw timecourses for all stimuli / all cells
+
+tc_cell_avrg_all = mean(data_dfof_trial,3);%average pver cells, one row per trial
+tc_trial_avrg_all = squeeze(mean(data_dfof_trial,2));%average over trials, one row per cell
+tc_cell_trial_avrg_all = mean(tc_cell_avrg_all,2);%average over trials and cells
+
+figure;
+plot(tc_trial_avrg_all(:,green_inds), 'LineWidth',.005,'color',[.25 .25 .25]);
+hold on;
+plot(tc_trial_avrg_all(:,RedAll), 'LineWidth',.005, 'color','r');
+hold on
+plot(tc_cell_trial_avrg_all, 'LineWidth',2, 'color','k');
+title('Timecourses all cells all stimuli');
+vline(30,'g')
+hold off
+
+
 %% plotting contrast and ori functions 
 keepCells=union(GreenResp,RedAll);
 nKeep=size(keepCells,1);
