@@ -1,13 +1,13 @@
  % to perform additional analyses on already extracted timecourses
 clear all; clear global; close all; clc
-%ds = 'con_ori_nonDART';
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'con_ori_nonDART';
+%ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 99;
+day_id = 13;
 %% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -315,6 +315,7 @@ hold on
 plot(tc_cell_trial_avrg_all, 'LineWidth',2, 'color','k');
 title('Timecourses all cells all stimuli');
 vline(30,'g')
+ylim([-.1 .3]);
 hold off
 
 
