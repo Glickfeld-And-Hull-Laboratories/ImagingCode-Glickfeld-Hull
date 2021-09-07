@@ -10,6 +10,7 @@ nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 fnout = fullfile(LG_base,'Analysis','2P');
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'PhaseRev');
+svName = 'F0F1F2';
 dirF0_all = [];
 dirF1_all = [];
 prF1_all = [];
@@ -41,12 +42,13 @@ for iexp = 1:nexp
 end
  
 resp_ind_all = find(dirF0_all>0.02 & prF1_all>0.02);
+
 figure;
 subplot(2,2,1)
 scatter(dirF1_all(resp_ind_all)./dirF0_all(resp_ind_all),prF2_all(resp_ind_all)./prF1_all(resp_ind_all))
 xlabel('F1/F0')
 ylabel('F2/F1')
-xlim([0 2])
+xlim([0 0.5])
 ylim([0 2])
 subplot(2,2,2)
 scatter(dirF1_all(resp_ind_all),prF1_all(resp_ind_all))
@@ -54,6 +56,7 @@ xlabel('drifting F1')
 ylabel('contrast rev F1')
 xlim([0 1])
 ylim([0 1])
+refline(1)
 subplot(2,2,3)
 histogram(dirF1_all(resp_ind_all)./dirF0_all(resp_ind_all),[0:0.1:2])
 xlabel('F1/F0')
@@ -62,5 +65,5 @@ subplot(2,2,4)
 histogram(prF2_all(resp_ind_all)./prF1_all(resp_ind_all),[0:0.1:2])
 xlabel('F2/F1')
 xlim([0 2])
-sgtitle(['n = ' num2str(length(resp_ind_all)) ' cells'])
-
+sgtitle(['n = ' num2str(length(resp_ind_all)) ' cells; ' num2str(size(mouse_list,1)) ' mice'])
+print(fullfile(summaryDir,[svName '_summary.pdf']),'-dpdf','-fillpage')
