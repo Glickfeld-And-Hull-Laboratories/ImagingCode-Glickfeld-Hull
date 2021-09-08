@@ -1,13 +1,13 @@
  % to perform additional analyses on already extracted timecourses
 clear all; clear global; close all; clc
-ds = 'con_ori_nonDART';
-%ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+%ds = 'con_ori_nonDART';
+ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 13;
+day_id = 101;
 %% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
