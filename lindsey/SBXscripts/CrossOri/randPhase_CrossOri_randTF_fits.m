@@ -3,10 +3,11 @@ doRedChannel = 0;
 ds = 'CrossOriRandPhase2TF_ExptList';
 eval(ds)
 rc = behavConstsAV;
-frame_rate = 30;
+frame_rate = 15;
 nexp = size(expt,2);
 seed = rng;
-for iexp = 2:nexp
+doTFTuning = 0;
+for iexp = 1:nexp
 
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
@@ -70,6 +71,7 @@ for iexp = 2:nexp
     sse_shuf = nan(nCells,nTF); 
     R_square_shuf = nan(nCells,nTF);
     yfit_shuf = nan(nCells,length(0:1:359),nTF);
+    SI_avg = nan(nCells,nMaskPhas,nTF);
             
     eye_n = nan(nTF,nMaskPhas);
     phase_range = 0:1:359;
@@ -113,7 +115,7 @@ for iexp = 2:nexp
         SI_all = (resp_all_rect-(test_avg_rect+mask_avg_rect))./(resp_all_rect+(test_avg_rect+mask_avg_rect));
         resp_avg_rect = resp_avg;
         resp_avg_rect(find(resp_avg<0)) = 0;
-        SI_avg = (resp_avg_rect-(test_avg_rect+mask_avg_rect))./(resp_avg_rect+(test_avg_rect+mask_avg_rect));
+        SI_avg(:,:,itf) = (resp_avg_rect-(test_avg_rect+mask_avg_rect))./(resp_avg_rect+(test_avg_rect+mask_avg_rect));
         [eye_n(itf,:) edges bin] = histcounts(stim_all,[1:5]);
         fprintf([num2str(TFs(itf)) ' TF Eye-n: ' num2str(eye_n(itf,:)) '\n'])
         if sum(squeeze(eye_n(itf,:))<4)==0
@@ -129,17 +131,17 @@ for iexp = 2:nexp
                     n = n+1;
                 end
                 p_anova(iCell,itf) = anova1(resp_all(iCell,:), stim_all,'off');
-                if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
+                if max(SI_avg(iCell,:,itf),[],2)>min(SI_avg(iCell,:,itf),[],2)
                     [b_hat(iCell,itf), amp_hat(iCell,itf), per_hat(iCell,itf),pha_hat(iCell,itf),sse(iCell,itf),R_square(iCell,itf)] = sinefit(deg2rad(maskPhas(stim_all)),SI_all(iCell,:));
                     subplot(5,5,start)
                     scatter(maskPhas(stim_all),SI_all(iCell,:));
                     hold on
-                    scatter(maskPhas,SI_avg(iCell,:))
+                    scatter(maskPhas,SI_avg(iCell,:,itf))
                     yfit(iCell,:,itf) = b_hat(iCell,itf)+amp_hat(iCell,itf).*(sin(2*pi*deg2rad(phase_range)./per_hat(iCell,itf) + 2.*pi/pha_hat(iCell,itf)));
                     plot(phase_range, yfit(iCell,:,itf));
                     title(['Rsq = ' num2str(chop(R_square(iCell,itf),2)) '; p = ' num2str(chop(p_anova(iCell,itf),2))])
                 else
-                    b_hat(iCell,itf) = max(SI_avg(iCell,:),[],2);
+                    b_hat(iCell,itf) = max(SI_avg(iCell,:,itf),[],2);
                     amp_hat(iCell,itf) = 0;
                     per_hat(iCell,itf) = NaN;
                     pha_hat(iCell,itf) = NaN;
@@ -165,17 +167,17 @@ for iexp = 2:nexp
                     n = n+1;
                 end
                 p_anova_shuf(iCell,itf) = anova1(resp_all(iCell,:), stim_all_shuf,'off');
-                if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
+                if max(SI_avg(iCell,:,itf),[],2)>min(SI_avg(iCell,:,itf),[],2)
                     [b_hat_shuf(iCell,itf), amp_hat_shuf(iCell,itf), per_hat_shuf(iCell,itf),pha_hat_shuf(iCell,itf),sse_shuf(iCell,itf),R_square_shuf(iCell,itf)] = sinefit(deg2rad(maskPhas(stim_all_shuf)),SI_all(iCell,:));
                     subplot(5,5,start)
                     scatter(maskPhas(stim_all_shuf),SI_all(iCell,:));
                     hold on
-                    scatter(maskPhas,SI_avg(iCell,:))
+                    scatter(maskPhas,SI_avg(iCell,:,itf))
                     yfit_shuf(iCell,:,itf) = b_hat_shuf(iCell,itf)+amp_hat_shuf(iCell,itf).*(sin(2*pi*deg2rad(phase_range)./per_hat_shuf(iCell,itf) + 2.*pi/pha_hat_shuf(iCell,itf)));
                     plot(phase_range, yfit_shuf(iCell,:,itf));
                     title(['Rsq = ' num2str(chop(R_square_shuf(iCell,itf),2)) '; p = ' num2str(chop(p_anova_shuf(iCell,itf),2))])
                 else
-                    b_hat_shuf(iCell,itf) = max(SI_avg(iCell,:),[],2);
+                    b_hat_shuf(iCell,itf) = max(SI_avg(iCell,:,itf),[],2);
                     amp_hat_shuf(iCell,itf) = 0;
                     per_hat_shuf(iCell,itf) = NaN;
                     pha_hat_shuf(iCell,itf) = NaN;
@@ -189,13 +191,13 @@ for iexp = 2:nexp
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_TF' num2str(itf) '_shuffled' num2str(n) '_LT2degEyeMvmt.pdf']), '-dpdf','-fillpage')
         end
     end
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'yfit', 'b_hat', 'amp_hat', 'per_hat', 'pha_hat', 'sse', 'R_square',  'p_anova', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd', 'eye_n')
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'SI_avg','yfit', 'b_hat', 'amp_hat', 'per_hat', 'pha_hat', 'sse', 'R_square',  'p_anova', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd', 'eye_n')
 
 
 
 %%
 
-    if nTF >1
+    if nTF >1 & doTFTuning
 
         sum(p_anova(iCell,:)<0.05,1)
 
