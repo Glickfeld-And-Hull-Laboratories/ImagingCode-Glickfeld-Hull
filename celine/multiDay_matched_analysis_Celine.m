@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
 
-day_id(2) = 60;
+day_id(2) = 84;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 nd = size(day_id,2);
 
