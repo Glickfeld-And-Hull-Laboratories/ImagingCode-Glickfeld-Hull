@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 101;
+day_id = 78;
 %% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -144,30 +144,30 @@ for iCell = 1:nCells
       data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
 end
 
-%% calculating OSI
-data_prefOri_resp = mean(data_con_resp,2);
-numerator = abs(data_prefOri_resp-data_orth_resp);
-denom = abs(data_prefOri_resp+data_orth_resp);
-OSI = numerator/denom;
-
-
-orthoOri_D1 = zeros(nCells,1);
-orthoResp_D1 = zeros(nCells,1);
-orthoOri_D2 = zeros(nCells,1);
-orthoResp_D2 = zeros(nCells,1);
-orthoOri_D3 = zeros(nCells,1);
-orthoResp_D3 = zeros(nCells,1);
-[maxResp prefOri_ind] = max(avgResp_D1,[],2);
-for iCell = 1:nCells
-if prefOri_ind(iCell) <= 4
-  orthoOri_D1(iCell) = prefOri_ind(iCell) + 4;
-elseif prefOri_ind(iCell) > 4
-  orthoOri_D1(iCell) = prefOri_ind(iCell) - 4;
-end
-orthoResp_D1(iCell) = avgResp_D1(iCell,orthoOri_D1(iCell));
-end
-orthoResp_D1(find(orthoResp_D1<0)) = 0;
-OSI1 = (maxResp_D1'-orthoResp_D1)./(maxResp_D1'+orthoResp_D1);
+% %% calculating OSI
+% data_prefOri_resp = mean(data_con_resp,2);
+% numerator = abs(data_prefOri_resp-data_orth_resp);
+% denom = abs(data_prefOri_resp+data_orth_resp);
+% OSI = numerator/denom;
+% 
+% 
+% orthoOri_D1 = zeros(nCells,1);
+% orthoResp_D1 = zeros(nCells,1);
+% orthoOri_D2 = zeros(nCells,1);
+% orthoResp_D2 = zeros(nCells,1);
+% orthoOri_D3 = zeros(nCells,1);
+% orthoResp_D3 = zeros(nCells,1);
+% [maxResp prefOri_ind] = max(avgResp_D1,[],2);
+% for iCell = 1:nCells
+% if prefOri_ind(iCell) <= 4
+%   orthoOri_D1(iCell) = prefOri_ind(iCell) + 4;
+% elseif prefOri_ind(iCell) > 4
+%   orthoOri_D1(iCell) = prefOri_ind(iCell) - 4;
+% end
+% orthoResp_D1(iCell) = avgResp_D1(iCell,orthoOri_D1(iCell));
+% end
+% orthoResp_D1(find(orthoResp_D1<0)) = 0;
+% OSI1 = (maxResp_D1'-orthoResp_D1)./(maxResp_D1'+orthoResp_D1);
 
 %% get basic counts
 green_inds = 1:nCells;
@@ -257,7 +257,7 @@ tc_red_avrg{2}=std(tc_red,[],2);
 
 %convert to se 
 tc_green_avrg{2} = tc_green_avrg{2}/sqrt(size(GreenResp,1));
-tc_red_avrg{2} = tc_red_avrg{2}/sqrt(size(RedAll,1));
+tc_red_avrg{2} = tc_red_avrg{2}/sqrt(size(RedAll,2));
 %%
 figure;
 plot(tc_green_avrg{1}, 'LineWidth',.005,'color',[.05 .5 .05]);
@@ -317,270 +317,270 @@ title('Timecourses all cells all stimuli');
 vline(30,'g')
 ylim([-.1 .3]);
 hold off
+saveas(gcf,fullfile(fn,[mouse '-' date 'raw_tc.jpg']));
 
-
-%% plotting contrast and ori functions 
-keepCells=union(GreenResp,RedAll);
-nKeep=size(keepCells,1);
-[RedAll,red_ind_keep] = intersect(keepCells,RedAll,'stable');
-
-if nKeep<36
-    [n n2] = subplotn(nKeep);
-    tot = n.*n2;
-else
-    n = 6;
-    n2 = 6;
-    tot = 36;
-end
-
-% plot ori tuning at each contrast
-figure;
-movegui('center')
-start = 1;
-
-for iCell = 1:nKeep
-    if start>tot
-        figure; movegui('center')
-        start = 1;
-    end
-    subplot(n,n2,start)
-
-
-    if find(find(iCell==red_ind_keep))
-          for iCon = 1:nCon
-            errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-r')
-            hold on
-            title (['Cell ' num2str(iCell)]);
-          end
-        
-    else
-         for iCon = 1:nCon
-            errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-k')
-            hold on
-            title (['Cell ' num2str(iCell)]);
-         end
-    end
-    
-    start= start+1;
-    %ylim([-0.1 inf])
-
-   
-end
-
-
+% %% plotting contrast and ori functions 
+% keepCells=union(GreenResp,RedAll);
+% nKeep=size(keepCells,1);
+% [RedAll,red_ind_keep] = intersect(keepCells,RedAll,'stable');
 % 
-% % plots contrast preference at preferred orientation
+% if nKeep<36
+%     [n n2] = subplotn(nKeep);
+%     tot = n.*n2;
+% else
+%     n = 6;
+%     n2 = 6;
+%     tot = 36;
+% end
+% 
+% % plot ori tuning at each contrast
 % figure;
 % movegui('center')
 % start = 1;
-% for iCell = 1:nCells
+% 
+% for iCell = 1:nKeep
 %     if start>tot
 %         figure; movegui('center')
 %         start = 1;
 %     end
 %     subplot(n,n2,start)
 % 
-%     errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
-%     ylim([-0.1 inf])
-%     start = start+1;
 % 
-% end
-% 
-% %% naka Rushton fit at pref ori
-% nakaRush_fits = nakaRushtonFit(data_con_resp,cons);
-% x=squeeze(struct2cell(nakaRush_fits));
-% 
-% for i = 1:nCells
-%    c50(i)=x{3,i}; 
-% end
-% c50_PCresp=c50(GreenResp)';
-% c50_INresp=c50(RedAll)';
-%save(fullfile(fn,'nakaRush_fits.mat'),'nakaRush_fits');
-%save(fullfile(fn,'nakaRush_fits_PCresp.mat'),'nakaRush_fits_PCresp');
-%save(fullfile(fn,'nakaRush_fits_ICresp.mat'),'nakaRush_fits_ICresp');
-
-%% go back to my own von M fit?
-
-% %1 initial von M fit on real data/real orientations collected
-% vonMises_output = nan(nCells, 6);
-% 
-% for i = 1:nCells
-%     thisCell = data_ori_resp(i,:);
-%     [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,thisCell);
-%     vonMises_output(i,:)=[b_hat, k1_hat, R1_hat,u1_hat,sse,R_square];
-% end
-% 
-% clear thisCell b_hat k1_hat R1_hat u1_hat sse R_square %get rid of the last iteration of these looping variables
-% save(fullfile(fn,'vonM_output.mat'),'vonMises_output')
-% 
-% PC_k = vonMises_output(GreenResp,2);
-% IN_k = vonMises_output(RedAll,2);
-
-% save(fullfile(fn,'vonM_PCresp.mat'),'vonM_PCresp')
-% save(fullfile(fn,'vonM_INresp.mat'),'vonM_INresp')
-
-
-%2 fit with higher resolution
-
-%3 bootstrap to find reliability
-%for each cell
-    %for each boot
-        %redo finding the average response to each orientation,still only at the preferred contrast. Feed that new dataset into 
-        %find the fit from raw data
-        %use those values to find the fit at higher resolution
-        %find the preferred ori from the step above
-        %comapre the preferred ori to the original preferred ori from 2
-        %above
-     %end
-     %sort the difference value low to high
-     %find the one in the 900th position - save this
-%end
-
-%determine which cells have a value less than 22.5, ie are reliable
-% %% making overall output table
-% PC_responses = [PC_nResp PC_nOris_all PC_nCons_all dfof_resp_green c50_PCresp PC_k];
-% IN_responses = [red_nResp red_nOris_all red_nCons_all dfof_resp_red c50_INresp IN_k];
-% 
-% PC_table=array2table(PC_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
-% IN_table=array2table(IN_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
-% 
-% writetable(PC_table,fullfile(fn,'PC_responses.csv'));
-% writetable(IN_table,fullfile(fn,'IN_responses.csv'));
-
-
-%%
-
-% %% trying LG fit
-% %for this I need the timecourses at the peferred contrast
-% [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC,sharpness]...
-%     = getOriTuningLG_CC(npSub_tc,input,5);
-% %% extracting output from vonM fits
-% % the output is in a 181 orientations X 1001 bootstraps X nCells matrix,
-% % and there is a fitReliability output that tells the 90th percentile of
-% % the difference between the bootstrapped fits and the original fit.
-% % Ultimately I probably only want to take cells that have a fitReliability
-% % value below 22.5 but right now none of them do
-% median(fitReliability,2)
-% 
-% prefOris = nan(size(vonMisesFitAllCellsAllBoots,2),nCells);
-% ogFitPref = nan(1,nCells);
-% for i = 1:nCells
-%     for fit = 2:size(vonMisesFitAllCellsAllBoots,2)
-%         prefOris(fit,i) = mean(find(vonMisesFitAllCellsAllBoots(:,fit,i)==max(vonMisesFitAllCellsAllBoots(:,fit,i))));
-%         ogFitPref(i) = mean(find(vonMisesFitAllCellsAllBoots(:,1,i)==max(vonMisesFitAllCellsAllBoots(:,1,i))));
+%     if find(find(iCell==red_ind_keep))
+%           for iCon = 1:nCon
+%             errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-r')
+%             hold on
+%             title (['Cell ' num2str(iCell)]);
+%           end
+%         
+%     else
+%          for iCon = 1:nCon
+%             errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-k')
+%             hold on
+%             title (['Cell ' num2str(iCell)]);
+%          end
 %     end
+%     
+%     start= start+1;
+%     %ylim([-0.1 inf])
+% 
+%    
 % end
-% meanPref = mean(prefOris,1);
-% %I now have meanPref which tells me the average orientation indicated by
-% %the 1000 bootstraps, and the max from the original fit. I'm not sure how
-% %to get the oringal U value, or the K value
-% vonMisesFitAllCells = squeeze(vonMisesFitAllCellsAllBoots(:,1,:)); % takes just the first of the bootstraps, which is the original fit 
-% [maxResp prefOri] = max(vonMisesFitAllCells,[],1);
 % 
-% %combine max Resp, prefOri, and fit reliability 
-% vonM_output = [maxResp; prefOri;fitReliability];
 % 
-% save(fullfile(fn,'vonM_fits.mat'),'vonMisesFitAllCells');
-% save(fullfile(fn,'vonM_output.mat'),'vonM_output');
+% % 
+% % % plots contrast preference at preferred orientation
+% % figure;
+% % movegui('center')
+% % start = 1;
+% % for iCell = 1:nCells
+% %     if start>tot
+% %         figure; movegui('center')
+% %         start = 1;
+% %     end
+% %     subplot(n,n2,start)
+% % 
+% %     errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
+% %     ylim([-0.1 inf])
+% %     start = start+1;
+% % 
+% % end
+% % 
+% % %% naka Rushton fit at pref ori
+% % nakaRush_fits = nakaRushtonFit(data_con_resp,cons);
+% % x=squeeze(struct2cell(nakaRush_fits));
+% % 
+% % for i = 1:nCells
+% %    c50(i)=x{3,i}; 
+% % end
+% % c50_PCresp=c50(GreenResp)';
+% % c50_INresp=c50(RedAll)';
+% %save(fullfile(fn,'nakaRush_fits.mat'),'nakaRush_fits');
+% %save(fullfile(fn,'nakaRush_fits_PCresp.mat'),'nakaRush_fits_PCresp');
+% %save(fullfile(fn,'nakaRush_fits_ICresp.mat'),'nakaRush_fits_ICresp');
 % 
-
-
-%% look at spontaneous actiivty - HT+ cells
-red_TCs = npSub_tc(:,RedAll);
-start=1;
-figure
-sgtitle(sprintf(['Red only']));
-d_all = red_TCs; %find the data for that day
-
-pct_events_red=cell(1,1);
-stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
-stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
-stimoff = setdiff(1:size(d_all,1),stimon);
-d_off = d_all(stimoff,:);
-dff = (d_off-mean(d_off,1))./mean(d_off,1);
-tt = (1:size(d_off,1))./frame_rate./60;
-for icell = 1:size(d_all,2)
-    if start>5
-        cell_lab = icell - 5;
-        print(fullfile(fn,['red_spontaneous_dff_cell_' num2str(cell_lab) 'to' num2str(icell)]),'-dpdf','-fillpage');
-        figure;
-        sgtitle(sprintf(['Red only']));
-        movegui('center')
-        start = 1;
-    end
-    tc = dff(:,icell);
-    subplot(5,1,start)
-    plot(tt,tc,'k-','LineWidth',1);
-    figXAxis([],'time in expt (min)',[tt(1) tt(end)],0:5:tt(end),0:5:tt(end))
-    figYAxis([],'dF/F',[-1 2])
-    figAxForm([],0)
-    title(sprintf('Cell #%s',num2str(icell)))
-    start = start+1;
-end
-
-dff_3sd = (std(dff) + mean(dff))*3;
-dff_test = dff > dff_3sd;
-pct_events_red{1}= sum(dff_test,1)./size(dff,1);
-
-
-nc = cellfun(@(x) size(x,2),pct_events_red);
-figure; 
-d = pct_events_red{1};
-histogram(d,10);
-vline(mean(d));
-xlabel('pct events');
-ylabel('# cells');
-title(['Spontaneous events'])
-print(fullfile(fn,'RedSpontaneousEvents'),'-dpdf')
-
-%% spontaneous events - HT-
-green_TCs = npSub_tc(:,green_inds);
-
-start=1;
-figure
-sgtitle(sprintf(['Green only']));
-d_all = green_TCs; %find the data for that day
-
-pct_events_green=cell(1,1);
-stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
-stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
-stimoff = setdiff(1:size(d_all,1),stimon);
-d_off = d_all(stimoff,:);
-dff = (d_off-mean(d_off,1))./mean(d_off,1);
-tt = (1:size(d_off,1))./frame_rate./60;
-for icell = 1:size(d_all,2)
-    if start>5
-        cell_lab = icell - 5;
-        print(fullfile(fn,['green_spontaneous_dff_cell_' num2str(cell_lab) 'to' num2str(icell)]),'-dpdf','-fillpage');
-        figure;
-        sgtitle(sprintf(['Green only']));
-        movegui('center')
-        start = 1;
-    end
-    tc = dff(:,icell);
-    subplot(5,1,start)
-    plot(tt,tc,'k-','LineWidth',1);
-    figXAxis([],'time in expt (min)',[tt(1) tt(end)],0:5:tt(end),0:5:tt(end))
-    figYAxis([],'dF/F',[-1 2])
-    figAxForm([],0)
-    title(sprintf('Cell #%s',num2str(icell)))
-    start = start+1;
-end
-
-dff_3sd = (std(dff) + mean(dff))*3;
-dff_test = dff > dff_3sd;
-pct_events_green{1}= sum(dff_test,1)./size(dff,1);
-
-
-nc = cellfun(@(x) size(x,2),pct_events_green);
-figure; 
-d = pct_events_green{1};
-histogram(d,10);
-vline(mean(d));
-xlabel('pct events');
-ylabel('# cells');
-title(['Spontaneous events'])
-print(fullfile(fn,'GreenSpontaneousEvents'),'-dpdf')
+% %% go back to my own von M fit?
+% 
+% % %1 initial von M fit on real data/real orientations collected
+% % vonMises_output = nan(nCells, 6);
+% % 
+% % for i = 1:nCells
+% %     thisCell = data_ori_resp(i,:);
+% %     [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,thisCell);
+% %     vonMises_output(i,:)=[b_hat, k1_hat, R1_hat,u1_hat,sse,R_square];
+% % end
+% % 
+% % clear thisCell b_hat k1_hat R1_hat u1_hat sse R_square %get rid of the last iteration of these looping variables
+% % save(fullfile(fn,'vonM_output.mat'),'vonMises_output')
+% % 
+% % PC_k = vonMises_output(GreenResp,2);
+% % IN_k = vonMises_output(RedAll,2);
+% 
+% % save(fullfile(fn,'vonM_PCresp.mat'),'vonM_PCresp')
+% % save(fullfile(fn,'vonM_INresp.mat'),'vonM_INresp')
+% 
+% 
+% %2 fit with higher resolution
+% 
+% %3 bootstrap to find reliability
+% %for each cell
+%     %for each boot
+%         %redo finding the average response to each orientation,still only at the preferred contrast. Feed that new dataset into 
+%         %find the fit from raw data
+%         %use those values to find the fit at higher resolution
+%         %find the preferred ori from the step above
+%         %comapre the preferred ori to the original preferred ori from 2
+%         %above
+%      %end
+%      %sort the difference value low to high
+%      %find the one in the 900th position - save this
+% %end
+% 
+% %determine which cells have a value less than 22.5, ie are reliable
+% % %% making overall output table
+% % PC_responses = [PC_nResp PC_nOris_all PC_nCons_all dfof_resp_green c50_PCresp PC_k];
+% % IN_responses = [red_nResp red_nOris_all red_nCons_all dfof_resp_red c50_INresp IN_k];
+% % 
+% % PC_table=array2table(PC_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
+% % IN_table=array2table(IN_responses, 'VariableNames',{'nResp' 'nOris' 'nCons' 'dfof_resp' 'c50' 'k'});
+% % 
+% % writetable(PC_table,fullfile(fn,'PC_responses.csv'));
+% % writetable(IN_table,fullfile(fn,'IN_responses.csv'));
+% 
+% 
+% %%
+% 
+% % %% trying LG fit
+% % %for this I need the timecourses at the peferred contrast
+% % [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC,sharpness]...
+% %     = getOriTuningLG_CC(npSub_tc,input,5);
+% % %% extracting output from vonM fits
+% % % the output is in a 181 orientations X 1001 bootstraps X nCells matrix,
+% % % and there is a fitReliability output that tells the 90th percentile of
+% % % the difference between the bootstrapped fits and the original fit.
+% % % Ultimately I probably only want to take cells that have a fitReliability
+% % % value below 22.5 but right now none of them do
+% % median(fitReliability,2)
+% % 
+% % prefOris = nan(size(vonMisesFitAllCellsAllBoots,2),nCells);
+% % ogFitPref = nan(1,nCells);
+% % for i = 1:nCells
+% %     for fit = 2:size(vonMisesFitAllCellsAllBoots,2)
+% %         prefOris(fit,i) = mean(find(vonMisesFitAllCellsAllBoots(:,fit,i)==max(vonMisesFitAllCellsAllBoots(:,fit,i))));
+% %         ogFitPref(i) = mean(find(vonMisesFitAllCellsAllBoots(:,1,i)==max(vonMisesFitAllCellsAllBoots(:,1,i))));
+% %     end
+% % end
+% % meanPref = mean(prefOris,1);
+% % %I now have meanPref which tells me the average orientation indicated by
+% % %the 1000 bootstraps, and the max from the original fit. I'm not sure how
+% % %to get the oringal U value, or the K value
+% % vonMisesFitAllCells = squeeze(vonMisesFitAllCellsAllBoots(:,1,:)); % takes just the first of the bootstraps, which is the original fit 
+% % [maxResp prefOri] = max(vonMisesFitAllCells,[],1);
+% % 
+% % %combine max Resp, prefOri, and fit reliability 
+% % vonM_output = [maxResp; prefOri;fitReliability];
+% % 
+% % save(fullfile(fn,'vonM_fits.mat'),'vonMisesFitAllCells');
+% % save(fullfile(fn,'vonM_output.mat'),'vonM_output');
+% % 
+% 
+% 
+% %% look at spontaneous actiivty - HT+ cells
+% red_TCs = npSub_tc(:,RedAll);
+% start=1;
+% figure
+% sgtitle(sprintf(['Red only']));
+% d_all = red_TCs; %find the data for that day
+% 
+% pct_events_red=cell(1,1);
+% stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
+% stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
+% stimoff = setdiff(1:size(d_all,1),stimon);
+% d_off = d_all(stimoff,:);
+% dff = (d_off-mean(d_off,1))./mean(d_off,1);
+% tt = (1:size(d_off,1))./frame_rate./60;
+% for icell = 1:size(d_all,2)
+%     if start>5
+%         cell_lab = icell - 5;
+%         print(fullfile(fn,['red_spontaneous_dff_cell_' num2str(cell_lab) 'to' num2str(icell)]),'-dpdf','-fillpage');
+%         figure;
+%         sgtitle(sprintf(['Red only']));
+%         movegui('center')
+%         start = 1;
+%     end
+%     tc = dff(:,icell);
+%     subplot(5,1,start)
+%     plot(tt,tc,'k-','LineWidth',1);
+%     figXAxis([],'time in expt (min)',[tt(1) tt(end)],0:5:tt(end),0:5:tt(end))
+%     figYAxis([],'dF/F',[-1 2])
+%     figAxForm([],0)
+%     title(sprintf('Cell #%s',num2str(icell)))
+%     start = start+1;
+% end
+% 
+% dff_3sd = (std(dff) + mean(dff))*3;
+% dff_test = dff > dff_3sd;
+% pct_events_red{1}= sum(dff_test,1)./size(dff,1);
+% 
+% 
+% nc = cellfun(@(x) size(x,2),pct_events_red);
+% figure; 
+% d = pct_events_red{1};
+% histogram(d,10);
+% vline(mean(d));
+% xlabel('pct events');
+% ylabel('# cells');
+% title(['Spontaneous events'])
+% print(fullfile(fn,'RedSpontaneousEvents'),'-dpdf')
+% 
+% %% spontaneous events - HT-
+% green_TCs = npSub_tc(:,green_inds);
+% 
+% start=1;
+% figure
+% sgtitle(sprintf(['Green only']));
+% d_all = green_TCs; %find the data for that day
+% 
+% pct_events_green=cell(1,1);
+% stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
+% stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
+% stimoff = setdiff(1:size(d_all,1),stimon);
+% d_off = d_all(stimoff,:);
+% dff = (d_off-mean(d_off,1))./mean(d_off,1);
+% tt = (1:size(d_off,1))./frame_rate./60;
+% for icell = 1:size(d_all,2)
+%     if start>5
+%         cell_lab = icell - 5;
+%         print(fullfile(fn,['green_spontaneous_dff_cell_' num2str(cell_lab) 'to' num2str(icell)]),'-dpdf','-fillpage');
+%         figure;
+%         sgtitle(sprintf(['Green only']));
+%         movegui('center')
+%         start = 1;
+%     end
+%     tc = dff(:,icell);
+%     subplot(5,1,start)
+%     plot(tt,tc,'k-','LineWidth',1);
+%     figXAxis([],'time in expt (min)',[tt(1) tt(end)],0:5:tt(end),0:5:tt(end))
+%     figYAxis([],'dF/F',[-1 2])
+%     figAxForm([],0)
+%     title(sprintf('Cell #%s',num2str(icell)))
+%     start = start+1;
+% end
+% 
+% dff_3sd = (std(dff) + mean(dff))*3;
+% dff_test = dff > dff_3sd;
+% pct_events_green{1}= sum(dff_test,1)./size(dff,1);
+% 
+% 
+% nc = cellfun(@(x) size(x,2),pct_events_green);
+% figure; 
+% d = pct_events_green{1};
+% histogram(d,10);
+% vline(mean(d));
+% xlabel('pct events');
+% ylabel('# cells');
+% title(['Spontaneous events'])
+% print(fullfile(fn,'GreenSpontaneousEvents'),'-dpdf')
 
 
 

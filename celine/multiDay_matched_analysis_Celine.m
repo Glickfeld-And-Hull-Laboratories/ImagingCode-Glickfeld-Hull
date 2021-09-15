@@ -150,17 +150,18 @@ end
 clear data_resp h p h_all resp pref_ori pref_con data_ori_resp data_con_resp data_dfof_trial tCon tOri tDir
 
 %% get basic counts 
+red_ind_match_list = find(red_ind_match==1);
 
 %this is a list of indices of all the green cells
 green_ind_match = 1:nCells;
-green_ind_match = setdiff(green_ind_match, find(red_ind_match));
+green_ind_match = setdiff(green_ind_match, red_ind_match_list);
 
 %convert red_inds from logical to a list
-red_ind_match = find(red_ind_match==1);
+
 
 %creating the arrays for red cells
-red_match_respd1 = intersect(red_ind_match,find(resp_match{1}==1));
-red_match_respd2 = intersect(red_ind_match,find(resp_match{2}==1));
+red_match_respd1 = intersect(red_ind_match_list,find(resp_match{1}==1));
+red_match_respd2 = intersect(red_ind_match_list,find(resp_match{2}==1));
 
 green_match_respd1 = intersect(green_ind_match,find(resp_match{1}==1));
 green_match_respd2 = intersect(green_ind_match,find(resp_match{2}==1));
@@ -169,36 +170,50 @@ green_match_respd2 = intersect(green_ind_match,find(resp_match{2}==1));
 nGreen_match = length(green_ind_match); %how many matched green cells
 nGreen_match_respd1 = length(green_match_respd1); %how many of those responded on d1
 nGreen_match_respd2 = length(green_match_respd2);%how many of those responded on d2
-nRed_match = length(red_ind_match);%how many red cells matched
+nRed_match = length(red_ind_match_list);%how many red cells matched
 nRed_match_respd1 = length(red_match_respd1); %how many of the matched red cells responded on d1
 nRed_match_respd2 = length(red_match_respd2); %how many of the matched red cells responded on d1
 
 % make table of values
 countsTable = table([nGreen_match;nRed_match],[nGreen_match_respd1;nRed_match_respd1],[nGreen_match_respd2;nRed_match_respd2],'VariableNames',{'Matched' 'Responsive day 1' 'Responsive day 2'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
-clear nGreen_match nGreen_match_respd1 nGreen_match_respd2 nRed_match nRed_match_respd1 nRed_match_respd2
+clear nGreen_match nGreen_match_respd1 nGreen_match_respd2 
 %% extract data for cells I want to keep
 
 %first narrow down to the cells in question - find the green cells that
 %were responsive on at least one day
-green_ind_match = 1:nCells;
-green_ind_match = setdiff(green_ind_match, red_ind_match);
+
 resp_green_either = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
 
 %these are the cells I will include from now on
-keep_cells = union(resp_green_either,red_ind_match);
+keep_cells = union(resp_green_either,red_ind_match_list);
 nKeep = length(keep_cells)
 
 %making a list of the day 1 indices for the cells I want to keep
-keep_d1 = match_ind(:,keep_cells);
-
-[red_ind_match,red_ind_keep] = intersect(keep_cells,red_ind_match,'stable'); %find the indices *within keep_cells* that are red
+% keep_d1 = match_ind(:,keep_cells);
+% 
+[red_ind_match_list,red_ind_keep] = intersect(keep_cells,red_ind_match_list,'stable'); %find the indices *within keep_cells* that are red
 [resp_green_either,green_ind_keep] = intersect(keep_cells,resp_green_either,'stable'); %same for green
 
 %for now I will keep both sets of indices - if the scripts runs slowly I
 %can clear these
+%% counts for keep cells
 
-%make a data structure subsets for only the keep cells
+green_match_respd1 = intersect(resp_green_either,find(resp_match{1}==1));
+green_match_respd2 = intersect(resp_green_either,find(resp_match{2}==1));
+
+
+%matched
+nGreen_match = length(resp_green_either); %how many matched green cells
+nGreen_match_respd1 = length(green_match_respd1); %how many of those responded on d1
+nGreen_match_respd2 = length(green_match_respd2);%how many of those responded on d2
+
+% make table of values
+countsTable = table([nGreen_match;nRed_match],[nGreen_match_respd1;nRed_match_respd1],[nGreen_match_respd2;nRed_match_respd2],'VariableNames',{'Matched' 'Responsive day 1' 'Responsive day 2'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
+
+clear nGreen_match nGreen_match_respd1 nGreen_match_respd2 nRed_match nRed_match_respd1 nRed_match_respd2
+
+%% make a data structure subsets for only the keep cells
 data_trial_keep=cell(1,nd);
 pref_ori_keep=cell(1,nd);
 pref_con_keep=cell(1,nd);
@@ -208,15 +223,15 @@ for id = 1:nd
     pref_ori_keep{id} = pref_ori_match{id}(:,keep_cells);
     pref_ori_keep{id}=oris(pref_ori_keep{id});
     pref_con_keep{id} = pref_con_match{id}(:,keep_cells);
-    pref_con_keep{id}=oris(pref_con_keep{id});
+    pref_con_keep{id}=cons(pref_con_keep{id});
 end
 
 %narrow down to the stimuli preferred for each cell each day - note that
 %the contrast and orientation preferred for a given cell may differ across
 %days
-tc_trial_avrg_match=cell(1,nd);
-rect_tc_trial_avrg_match=cell(1,nd);
-resp_prefStim_match=cell(1,nd);
+tc_trial_avrg_keep=cell(1,nd);
+rect_tc_trial_avrg_keep=cell(1,nd);
+resp_prefStim_keep=cell(1,nd);
 
 for id = 1:nd
     tc_trial_avrg=nan((nOn+nOff),nKeep);
@@ -237,27 +252,28 @@ for id = 1:nd
         mean_resp_temp(i) = mean(tc_trial_avrg(stimStart:stimEnd,i));
 
     end
-tc_trial_avrg_match{id}=tc_trial_avrg; %this is a cell array with one cell 
+tc_trial_avrg_keep{id}=tc_trial_avrg; %this is a cell array with one cell 
 %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
-rect_tc_trial_avrg_match{id}=rect_tc_trial_avrg; %rectified version of above
-resp_prefStim_match{id}=mean_resp_temp; %a single column array with a value for each cell that represents the mean df/f of the response window for preferred stimuli
+rect_tc_trial_avrg_keep{id}=rect_tc_trial_avrg; %rectified version of above
+resp_prefStim_keep{id}=mean_resp_temp; %a single column array with a value for each cell that represents the mean df/f of the response window for preferred stimuli
 end
 
 clear tc_trial_avrg temp_trials con_inds temp_con ori_inds temp_ori mean_resp_temp temp_TCs
-%% plot the timecourses using non-rectified values
+
+%% prepare to plot the timecourses using non-rectified values
 
 tc_green_avrg_match = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_match = cell(1,nd); %same for red
-tc_green_se_match = cell(1,nd); %this will be the std across all green cells
+tc_green_se_match = cell(1,nd); %this will be the se across all green cells
 tc_red_se_match = cell(1,nd); %same for red
 
 for id = 1:nd
-    tc_green_avrg_match{id}=mean(tc_trial_avrg_match{id}(:,green_ind_keep),2);
-    green_std=std(tc_trial_avrg_match{id}(:,green_ind_keep),[],2);
+    tc_green_avrg_match{id}=mean(tc_trial_avrg_keep{id}(:,green_ind_keep),2);
+    green_std=std(tc_trial_avrg_keep{id}(:,green_ind_keep),[],2);
     tc_green_se_match{id}=green_std/sqrt(length(green_ind_keep));
     
-    tc_red_avrg_match{id}=mean(tc_trial_avrg_match{id}(:,red_ind_keep),2);
-    red_std=std(tc_trial_avrg_match{id}(:,red_ind_keep),[],2);
+    tc_red_avrg_match{id}=mean(tc_trial_avrg_keep{id}(:,red_ind_keep),2);
+    red_std=std(tc_trial_avrg_keep{id}(:,red_ind_keep),[],2);
     tc_red_se_match{id}=red_std/sqrt(length(red_ind_keep));
     
     clear green_std red_std
@@ -267,104 +283,45 @@ end
 figure
 subplot(1,2,1) %for the first day
 
-y =tc_green_avrg_match{1}; % your mean vector;
-x=1:numel(y);
+x=1:(size(tc_green_avrg_match{1},1));
 x=(x-30)/15;
-curve1 = y + tc_green_se_match{1}; 
-curve1=curve1';
-curve2 = y - tc_green_se_match{1};
-curve2=curve2';
-plot(x,tc_green_avrg_match{1},'k', 'LineWidth',.1);
-ylim([-.02 .2]);
+shadedErrorBar(x,tc_red_avrg_match{1},tc_red_se_match{1},'lineprops','r');
+ylim([-.02 .23]);
 hold on
-plot(x, curve1, 'LineWidth', 0.0001);
-hold on;
-plot(x, curve2,  'LineWidth', 0.0001);
-x2 = [x, fliplr(x)];
-inBetween = [curve1, fliplr(curve2)];
-fill(x2, inBetween, 'k','FaceAlpha',.2);
-vline(0,':','k')
-hold on
-y =tc_red_avrg_match{1}; % your mean vector;
-x=1:numel(y);
-x=(x-30)/15;
-curve1 = y + tc_red_se_match{1}; 
-curve1=curve1';
-curve2 = y - tc_red_se_match{1};
-curve2=curve2';
-plot(x,tc_red_avrg_match{1}, 'LineWidth',.1,'color',[.7 .05 .05]);
-hold on
-plot(x, curve1, 'r', 'LineWidth', 0.0001);
-hold on;
-plot(x, curve2, 'r', 'LineWidth', 0.0001);
-x2 = [x, fliplr(x)];
-inBetween = [curve1, fliplr(curve2)];
-fill(x2, inBetween, 'r','FaceAlpha',.2);
+shadedErrorBar(x,tc_green_avrg_match{1},tc_green_se_match{1});
 title('day 1')
 
 
 
 subplot(1,2,2) %for the second day
-
-y =tc_green_avrg_match{2}; % your mean vector;
-x=1:numel(y);
-x=(x-30)/15;
-curve1 = y + tc_green_se_match{2}; 
-curve1=curve1';
-curve2 = y - tc_green_se_match{2};
-curve2=curve2';
-plot(x,tc_green_avrg_match{2},'k', 'LineWidth',.1);
-ylim([-.02 .2]);
+shadedErrorBar(x,tc_red_avrg_match{2},tc_red_se_match{2},'lineprops','r');
+ylim([-.02 .23]);
 hold on
-plot(x, curve1, 'LineWidth', 0.0001);
-hold on;
-plot(x, curve2,  'LineWidth', 0.0001);
-x2 = [x, fliplr(x)];
-inBetween = [curve1, fliplr(curve2)];
-fill(x2, inBetween, 'k','FaceAlpha',.2);
-vline(0,':','k')
-hold on
-y =tc_red_avrg_match{2}; % your mean vector;
-x=1:numel(y);
-x=(x-30)/15;
-curve1 = y + tc_red_se_match{2}; 
-curve1=curve1';
-curve2 = y - tc_red_se_match{2};
-curve2=curve2';
-plot(x,tc_red_avrg_match{2}, 'LineWidth',.1,'color',[.7 .05 .05]);
-hold on
-plot(x, curve1, 'r', 'LineWidth', 0.0001);
-hold on;
-plot(x, curve2, 'r', 'LineWidth', 0.0001);
-x2 = [x, fliplr(x)];
-inBetween = [curve1, fliplr(curve2)];
-fill(x2, inBetween, 'r','FaceAlpha',.2);
+shadedErrorBar(x,tc_green_avrg_match{2},tc_green_se_match{2});
 title('day 2')
-legend({'HT-','HT+'},'Location','northeast')
 
-clear x x2 y
 
 print(fullfile(fn_multi,['timecourses']),'-dpdf');
 %% make a plot of individual timecourses 
 figure
 subplot(2,2,1)
-plot(tc_trial_avrg_match{1}(:,green_ind_keep),'k')
-ylim([-.03 .55]);
+plot(tc_trial_avrg_keep{1}(:,green_ind_keep),'k')
+ylim([-.02 .23]);
 title('day 1')
 
 subplot(2,2,2)
-plot(tc_trial_avrg_match{1}(:,red_ind_keep),'color',[.7 .05 .05])
-ylim([-.03 .15]);
+plot(tc_trial_avrg_keep{1}(:,red_ind_keep),'color',[.7 .05 .05])
+ylim([-.02 .23]);
 title('day 1')
 
 subplot(2,2,3)
-plot(tc_trial_avrg_match{2}(:,green_ind_keep),'k')
-ylim([-.03 .55]);
+plot(tc_trial_avrg_keep{2}(:,green_ind_keep),'k')
+ylim([-.02 .23]);
 title('day 2')
 
 subplot(2,2,4)
-plot(tc_trial_avrg_match{2}(:,red_ind_keep),'color',[.7 .05 .05])
-ylim([-.02 .15]);
+plot(tc_trial_avrg_keep{2}(:,red_ind_keep),'color',[.7 .05 .05])
+ylim([-.02 .23]);
 title('day 2')
 print(fullfile(fn_multi,['indiv_timecourses']),'-dpdf');
 %% makes a scatterplot of max df/f for day 1 vs day 2, and each subplot is one day
@@ -399,7 +356,7 @@ title('Max df/f for responsive HT- and all match HT+')
 subplot(1,2,2)
 scatter(resp_max_match{1}(green_ind_match),resp_max_match{2}(green_ind_match),'k')
 hold on
-scatter(resp_max_match{1}(red_ind_match),resp_max_match{2}(red_ind_match),'MarkerEdgeColor',[.7 .05 .05])
+scatter(resp_max_match{1}(red_ind_match_list),resp_max_match{2}(red_ind_match_list),'MarkerEdgeColor',[.7 .05 .05])
 hold off
 xlabel('D1- max dF/F')
 ylabel('D2- max dF/F')
@@ -604,16 +561,24 @@ reps = 10;
 for id = 1:nd
     shuff_pref_ori = nan(nKeep,reps);
     for r = 1:reps
-        %make random sample
+        %make random sample - this will be redone every loop
         tCon = tCon_match{id}(:,1:nTrials);
-        shuff_avrg_resp = zeros(nKeep, nOri);     
-        temp_con = pref_con_keep{id}(i);%find the preferred contrast of this cell and convert to contrast value
-        con_inds=find(tCon==temp_con);
-        temp_trials = randample(con_inds, (.8*length(con_inds)),1); %randomly select 80% of the trials at this contrast
-        temp_TCs=data_trial_keep{id}(resp_win,temp_trials,i); %only pulling from dfof data of keep cells
+        shuff_avrg_resp = zeros(nKeep, nOri);
+        for i = 1:nKeep
+            temp_con = pref_con_keep{id}(i);%find the preferred contrast of this cell and convert to contrast value
+            con_inds=find(tCon==temp_con);
+            x=round(.8*length(con_inds));
+            temp_trials = randsample(con_inds, x,1); %randomly select 80% of the trials at this contrastred_ind_keep
+            temp_TCs(:,:,i)=data_trial_keep{id}(resp_win,temp_trials,i); %only pulling from dfof data of keep cells
+        end
+        %go from temp_TCs to average response for each ori
+        % trials should be in the order designated by temp_trials
         
-        
- 
+        for iOri = 1:nOri
+            x=intersect(find_ori,temp_trials);
+            ind_ori = find(ismember(temp_trials,x));
+            shuff_resp(:,iOri) = squeeze(mean(temp_TCs(:,ind_ori,:),1))';
+    end
 
         %get VonM pref oris
         for i = 1:nCells
