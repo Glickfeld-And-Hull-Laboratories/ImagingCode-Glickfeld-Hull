@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
 
-day_id(2) = 84;
+day_id(2) = 79;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 nd = size(day_id,2);
 
@@ -50,6 +50,7 @@ nOff = input(1).nScansOff;
 
 %% convert to trials
 
+%change this to use a padded array, where I add zeros at the end. test=padarray(cellTCs_match{1},30,0,'post');
 stimStart = (nOff/2)+1; %this indicates both the perdiod to trim off the start and the stim on period after trimming
 stimEnd=stimStart+nOn-1;
 
@@ -58,14 +59,17 @@ data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however ma
 
 fractTimeActive_match = cell(1,nd);
 for id = 1:nd %cycle through days
-    nTrials = length(tDir_match{id})-1; %use the list of direction by trial to figure out how many trials there are
+    nTrials = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
    %currently the way I center the stim on period requires me to cut out
    %one trial, hence the -1
    
     %for matched cell
     nCells = size(cellTCs_match{id},2);
     fractTimeActive_match{id} = zeros(1,nCells);
-    cellTCs_match{id} = cellTCs_match{id}(stimStart:size(cellTCs_match{id},1)-stimEnd,:);
+    %I will trim 30 frames of the start and add 30 frames of padding to the
+    %end (padding is zeros)
+    cellTCs_match{id} = cellTCs_match{id}(stimStart:size(cellTCs_match{id},1),:);
+    cellTCs_match{id} = padarray(cellTCs_match{id},30,0,'post');
     nFrames = size(cellTCs_match{id},1);
     data_trial_match = reshape(cellTCs_match{id},[nOn+nOff nTrials nCells]);
     data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
@@ -335,7 +339,7 @@ resp_max_keep = cell(1,nd);
 for id = 1:nd
     data_resp_keep{id}=data_resp_match{id}(keep_cells,:,:,:);
     resp_max_match{id} = squeeze(max(max(data_resp_match{id}(:,:,:,1),[],2),[],3));
-    resp_max_keep{id} = squeeze(max(max(data_resp_keep{id}(:,:,:,1),[],2),[],3));
+   resp_max_keep{id} = squeeze(max(max(data_resp_keep{id}(:,:,:,1),[],2),[],3));
 end
 
 
@@ -443,7 +447,7 @@ end
 %% plot observed pref ori 
 %the orientation that gave the strongest response in the observed data
 
-figure; movegui('center') 
+fig=figure; movegui('center') 
 scatter(pref_ori_keep{1}(green_ind_keep),pref_ori_keep{2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
 scatter(pref_ori_keep{1}(red_ind_keep),pref_ori_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
@@ -454,6 +458,7 @@ ylabel('D2- pref ori')
 % ylim([0 .4])
 refline(1)
 title('Observed pref ori')
+saveas(fig, 'obsvOri.png')
 
 
 %% extract fit orientation preference
@@ -493,13 +498,18 @@ for id = 1:nd
         k1_tmp = in(2);
         R1_tmp = in(3);
         u1_tmp = in(4);
-        y_fits(i,:) = b_tmp+R1_tmp.*exp(k1_tmp.*(cos(2.*(deg2rad(fit_oris)-u1_tmp))-1)); 
-        fit_pref_oris(i)= fit_oris(find(y_fits(i,:)==max(y_fits(i,:))));
+        y_fits(i,:) = b_tmp+R1_tmp.*exp(k1_tmp.*(cos(2.*(deg2rad(fit_oris)-u1_tmp))-1));
+        if size(fit_oris(find(y_fits(i,:)==max(y_fits(i,:)))),2)>1
+            fit_pref_oris(i)=nan;
+        else
+            fit_pref_oris(i)= fit_oris(find(y_fits(i,:)==max(y_fits(i,:))));
+        end
     end
     y_fits_keep{id}=y_fits;
     fit_pref_oris_keep{id}=fit_pref_oris;
 clear b_tmp k1_tmp R1_tmp u1_tmp y_fits fit_pref_oris   
 end
+
 %% plots observed tuning curve with von M fit curve
 
 
@@ -516,9 +526,10 @@ for iCell = 1:nKeep
         for  id = 1:nd
             plot(oris, data_ori_resp_keep{id}(iCell,:))
             hold on
+            plot(fit_oris,y_fits_keep{id}(iCell,:),':');
+            hold on
         end
-        plot_y_fit = y_fits_keep{id}(iCell,:);
-        plot(fit_oris,plot_y_fit);
+        
         if ismember(iCell,red_ind_keep)
             extra_title='HT+';
         else
@@ -531,64 +542,86 @@ for iCell = 1:nKeep
 end
 
 
-
-
-
-%%
-%3 bootstrap to find reliability
-%for each cell
-    %for each boot
-        %redo finding the average response to each orientation,still only at the preferred contrast. Feed that new dataset into 
-        %find the fit from raw data
-        %use those values to find the fit at higher resolution
-        %find the preferred ori from the step above
-        %comapre the preferred ori to the original preferred ori from 2
-        %above
-     %end
-     %sort the difference value low to high
-     %find the one in the 900th position - save this
-%end
-
-%determine which cells have a value less than 22.5, ie are reliable
-
+%% compare Von M fit pref ori across days
+fig=figure; movegui('center') 
+scatter(fit_pref_oris_keep{1}(green_ind_keep),fit_pref_oris_keep{2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+hold on
+scatter(fit_pref_oris_keep{1}(red_ind_keep),fit_pref_oris_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+hold off
+xlabel('D1- pref ori')
+ylabel('D2- pref ori')
+% xlim([0 .4])
+% ylim([0 .4])
+refline(1)
+%title('fit pref ori')
+%saveas(fig, 'fitOri.png')
 %% Von Mises bootstrap
-reps = 10;
+reps = 1000;
 
-
-
-
-
+shuff_pref_ori= cell(1, nd);
 for id = 1:nd
-    shuff_pref_ori = nan(nKeep,reps);
+    shuff_pref_ori{id} = nan(reps,nKeep);
     for r = 1:reps
         %make random sample - this will be redone every loop
         tCon = tCon_match{id}(:,1:nTrials);
-        shuff_avrg_resp = zeros(nKeep, nOri);
+        tDir = tDir_match{id}(:,1:nTrials);
         for i = 1:nKeep
-            temp_con = pref_con_keep{id}(i);%find the preferred contrast of this cell and convert to contrast value
-            con_inds=find(tCon==temp_con);
-            x=round(.8*length(con_inds));
-            temp_trials = randsample(con_inds, x,1); %randomly select 80% of the trials at this contrastred_ind_keep
-            temp_TCs(:,:,i)=data_trial_keep{id}(resp_win,temp_trials,i); %only pulling from dfof data of keep cells
-        end
-        %go from temp_TCs to average response for each ori
-        % trials should be in the order designated by temp_trials
-        
-        for iOri = 1:nOri
-            x=intersect(find_ori,temp_trials);
-            ind_ori = find(ismember(temp_trials,x));
-            shuff_resp(:,iOri) = squeeze(mean(temp_TCs(:,ind_ori,:),1))';
-    end
-
-        %get VonM pref oris
-        for i = 1:nCells
-            thisCell = shuff_avrg_resp_sub_base(i,:);
-            [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,thisCell);
+            shuff_resp=nan(1,nOri);
+            for iOri = 1:nOri
+                con_inds=find(tCon==(pref_con_keep{id}(i)));
+                ori_inds=find(tDir == oris(iOri));
+                intersect_inds=intersect(con_inds,ori_inds);
+                x=round(.8*length(intersect_inds));
+                trial_inds = randsample(intersect_inds, x,1); %randomly select 80% of the trials at this contrast and ori
+                temp_TCs=data_trial_keep{id}(resp_win,trial_inds,i); %extract the response window of these trials for this cell
+               shuff_resp(1,iOri) = mean(squeeze(mean(temp_TCs)));
+            end
+            %now I can use the shuffled response by ori data to calculate
+            %the von M fit for this cell on this rep
+            
+            [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,shuff_resp);
             this_fits = b_hat+R1_hat.*exp(k1_hat.*(cos(2.*(deg2rad(fit_oris)-u1_hat))-1));
             this_pref = fit_oris(min(find(this_fits==max(this_fits))));
-            shuff_pref_ori(i,r)=this_pref;
+            shuff_pref_ori{id}(r,i)=this_pref;
         end
-
-    end 
+    end
 end
+save(fullfile(fnout,'bootstrap_fit_ori.mat'),'shuff_pref_ori');
+clear shuff_resp this_pref this_fits b_hat k1_hat R1_hat u1_hat sse R_square x temp_TCs intersect_inds ori_inds con_inds iOri i r id 
+%% compare von M bootstraps to original fit 
+diff_pref = cell(1,nd);
+well_fit = cell(1,nd);
+for id = 1:nd
+    diff_pref{id}=sort(abs(shuff_pref_ori{id} - fit_pref_oris_keep{id}),1);
+    well_fit{id} = find(diff_pref{id}((reps*.9),:)<22.5);
+end
+%well_fit gives a list of the well-fit cell
+figure; movegui('center') 
+scatter(fit_pref_oris_keep{1}(well_fit{2}),fit_pref_oris_keep{2}(well_fit{2}),'k','jitter', 'on', 'jitterAmount', 5)
+xlabel('D1- pref ori')
+ylabel('D2- pref ori')
+refline(1)
+title('fit pref ori well-fit cells')
+
+figure; movegui('center') 
+subplot(1,2,1)
+scatter(fit_pref_oris_keep{1}(green_ind_keep),pref_ori_keep{1}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+hold on
+scatter(fit_pref_oris_keep{1}(red_ind_keep),pref_ori_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+hold off
+xlabel('fit pref ori')
+ylabel('raw pref ori')
+title('day 1')
+refline(1)
+subplot(1,2,2)
+scatter(fit_pref_oris_keep{2}(green_ind_keep),pref_ori_keep{2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+hold on
+scatter(fit_pref_oris_keep{2}(red_ind_keep),pref_ori_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+hold off
+xlabel('fit pref ori')
+ylabel('raw pref ori')
+title('day 2')
+refline(1)
 %% contrast response curves
+
+
