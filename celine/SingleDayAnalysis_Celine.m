@@ -85,23 +85,15 @@ stimEnd=stimStart+nOn-1;
 resp_win = stimStart:stimEnd;
 base_win = 1: (nOff/2);
 
-npSub_tc_new=npSub_tc(stimStart:size(npSub_tc,1)-stimEnd,:); %trimming npSub_tc to correct size( sacrifiace one trial)
-data_tc_trial = reshape(npSub_tc_new, [nOn+nOff,ntrials-1,nCells]);
+npSub_tc_new=npSub_tc(stimStart:size(npSub_tc,1),:); %trimming npSub_tc to correct size( sacrifiace one trial)
+npSub_tc_new=padarray(npSub_tc_new,30,0,'post');
+data_tc_trial = reshape(npSub_tc_new, [nOn+nOff,ntrials,nCells]);
 data_f_trial = mean(data_tc_trial(1:30,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
-ntrials = ntrials-1;
 
-%% old way
-% data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);
-% data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
-% data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
-%split into baseline and response windows, run paired t-test to see if
-%cells have a significant response (elevation in df/f comapred to baseline)
-%for any orientations/contrasts
-% resp_win = nOff+2:nOn+nOff;
-% base_win = nOff/2:nOff;
+%% split into trials
 data_resp = zeros(nCells, nOri, nCon,2);
 h = zeros(nCells, nOri, nCon);
 p = zeros(nCells, nOri, nCon);
@@ -223,8 +215,7 @@ writetable(countsTable,fullfile(fn,'counts.csv'),'WriteRowNames',true)
 % subplot(2,1,2)
 % hist(pref_con_converted(:,RedAll))
 % print(fullfile(fn,['pref_con_hist']),'-dpdf');
-%%
-%narrow down to the preferred ori and preferred contrast for each cell
+%% narrow down to the preferred ori and preferred contrast for each cell
 tc_trial_avrg=nan(nOn+nOff,nCells);
 for i=1:nCells
     temp_TCs=data_dfof_trial(:,:,i);
