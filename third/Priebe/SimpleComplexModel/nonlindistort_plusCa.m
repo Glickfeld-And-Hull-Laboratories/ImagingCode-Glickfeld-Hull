@@ -3,7 +3,7 @@ f2amp = 1;
 tau = 120;
 t = 1:120;
 g = 0.05*exp(-t/tau);
-for offset = [0 1 2 4]
+for offset = 2 %[0 1 2 4]
 cnt1 = 1;
 for f1amp = 0.05:0.05:5
 f1ph= 0;
@@ -52,7 +52,7 @@ end
 
 % Now compute the predicted F1/F0 components.  Assume F2 amp is the same as
 % F0
-vresp = f2amp + f1amp*sin((step:step:(2*pi)));
+vresp = f2amp + f1amp*sin((step:step:(2*pi)))+ offset;
 sresp = rect(vresp).^3;
 ff = fft(sresp);
 
@@ -71,8 +71,14 @@ caf0(cnt1) = caff(1)/length(caff);
 cnt1 = cnt1 + 1;
 end
 figure(100)
+subplot(2,2,1)
+plot(vvf1./vvf0,ssf1./ssf0,'x-')
+hold on
 subplot(2,2,2)
 plot(vf2comp./vf1comp,sf2comp./sf1comp,'x-')
+hold on
+subplot(2,2,3)
+plot(ssf1./ssf0,caf1./caf0,'x-')
 hold on
 subplot(2,2,4)
 plot(sf2comp./sf1comp,cf2comp./cf1comp,'x-')
@@ -83,32 +89,33 @@ hold on
 cnt1 = 1;
 end
 %pause
-subplot(2,2,1)
-plot(vvf1./vvf0,ssf1./ssf0,'x-')
-subplot(2,2,3)
-plot(ssf1./ssf0,caf1./caf0,'x-')
+
 subplot(2,2,2)
 xlabel('VF2 / VF1')
 ylabel('SF2 / SF1')
 set(gca,'XScale','log','YScale','log')
-legend('0','1','2','4')
+xlim([0.1 10])
+ylim([0.1 10])
+%legend('0','1','2','4')
 hold off
 subplot(2,2,4)
 xlabel('SF2 / SF1')
 ylabel('CF2 / CF1')
 set(gca,'XScale','log','YScale','log')
-legend('0','1','2','4')
+xlim([0.1 10])
+ylim([0.1 10])
+%legend('0','1','2','4')
 hold off
 subplot(2,2,1)
 xlabel('VF1 / VF0')
 ylabel('SF1 / SF0')
-xlim([0.02 10])
-ylim([0.02 10])
+xlim([0.1 10])
+ylim([0.1 10])
 set(gca,'XScale','log','YScale','log')
 subplot(2,2,3)
 xlabel('SF1 / SF0')
 ylabel('CF1 / CF0')
-xlim([0.02 10])
-ylim([0.02 10])
+xlim([0.1 10])
+ylim([0.1 10])
 set(gca,'XScale','log','YScale','log')
 
