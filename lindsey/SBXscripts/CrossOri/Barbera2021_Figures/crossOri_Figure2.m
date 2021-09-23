@@ -1,7 +1,7 @@
 close all; clear all; clc;
 doRedChannel = 0;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
-summaryDir_F6 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure6');
+summaryDir_F2 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure2');
 
 ds = ['CrossOriSingleStimAdapt_ExptList'];
 eval(ds);
@@ -170,8 +170,8 @@ xlabel('Masking Index')
 ylabel('Number of cells')
 title(['Adapted'])
 suptitle(['Single-stim adapt- n = ' num2str(nmice) ' mice'])
-print(fullfile(summaryDir_F6, 'Figure6_MI_histograms.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_MI_histograms.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_MI_histograms.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_MI_histograms.fig'))
 
 ind_h = intersect(find(noadapt_MI_all>0),prefmask_ind_all);
 ind_l = intersect(find(noadapt_MI_all<0),prefmask_ind_all);
@@ -193,7 +193,7 @@ for im = 1:nTest
         subplot(nTest,nTest,ii)
         shadedErrorBar(tt, noadapt_resp_tc_all(:,iC,im,it,1), noadapt_resp_tc_all(:,iC,im,it,2));
         hold on
-        shadedErrorBar(tt, singadapt_resp_tc_all(:,iC,im,it,1), singadapt_resp_tc_all(:,iC,im,it,2), {'r-','markerfacecolor','r'});
+        shadedErrorBar(tt, singadapt_resp_tc_all(:,iC,im,it,1), singadapt_resp_tc_all(:,iC,im,it,2), 'lineprops', {'r-','markerfacecolor','r'});
         ii = ii+1;
         ylim([-0.5 2])
         title(['T=' num2str(testCons(it)) '; M=' num2str(testCons(im))]) 
@@ -201,8 +201,8 @@ for im = 1:nTest
 end
 suptitle([expt(iexp).mouse ' ' expt(iexp).date '- Cell #' num2str(iC)])
 end
-print(fullfile(summaryDir_F6, 'Figure6_ExampleCell_posMod.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_ExampleCell_posMod.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_ExampleCell_posMod.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_ExampleCell_posMod.fig'))
 
 
 iC = ind_l(27); %13 is also nice
@@ -215,15 +215,15 @@ for im = 1:nTest
         subplot(nTest,nTest,ii)
         shadedErrorBar(tt, noadapt_resp_tc_all(:,iC,im,it,1), noadapt_resp_tc_all(:,iC,im,it,2));
         hold on
-        shadedErrorBar(tt, singadapt_resp_tc_all(:,iC,im,it,1), singadapt_resp_tc_all(:,iC,im,it,2), {'r-','markerfacecolor','r'});
+        shadedErrorBar(tt, singadapt_resp_tc_all(:,iC,im,it,1), singadapt_resp_tc_all(:,iC,im,it,2), 'lineprops', {'r-','markerfacecolor','r'});
         ii = ii+1;
         ylim([-0.5 2])
         title(['T=' num2str(testCons(it)) '; M=' num2str(testCons(im))]) 
     end
 end
 suptitle([expt(iexp).mouse ' ' expt(iexp).date '- Cell #' num2str(iC)])
-print(fullfile(summaryDir_F6, 'Figure6_ExampleCell_negMod.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_ExampleCell_negMod.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_ExampleCell_negMod.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_ExampleCell_negMod.fig'))
 
 noadapt_preftest_resp_avg = zeros(nTest,nTest,2);
 noadapt_prefmask_resp_avg = zeros(nTest,nTest,2);
@@ -250,6 +250,14 @@ stimCond_test = [];
 stimCond_mask = [];
 stimCond_pos = [];
 stimCond_neg = [];
+% preftest_resp_nomask_all = [];
+% prefmask_resp_nomask_all = [];
+% preftest_resp_mask_all = [];
+% prefmask_resp_mask_all = [];
+% stimCond_nomask_test = [];
+% stimCond_nomask_mask = [];
+% stimCond_mask_test = [];
+% stimCond_mask_mask = [];
 
 for im = 1:nTest
     for it = 1:nTest
@@ -288,6 +296,29 @@ for im = 1:nTest
         prefmask_resp_all = [prefmask_resp_all noadapt_resp_cell_all{im,it}(prefmask_ind_all,:)'];
         preftest_resp_all = [preftest_resp_all singadapt_resp_cell_all{im,it}(preftest_ind_all,:)'];
         prefmask_resp_all = [prefmask_resp_all singadapt_resp_cell_all{im,it}(prefmask_ind_all,:)'];
+        
+%         if it == 1
+%             preftest_resp_nomask_all = [preftest_resp_nomask_all noadapt_resp_cell_all{im,it}(preftest_ind_all,:)'];
+%             prefmask_resp_nomask_all = [prefmask_resp_nomask_all noadapt_resp_cell_all{im,it}(prefmask_ind_all,:)'];
+%             preftest_resp_nomask_all = [preftest_resp_nomask_all singadapt_resp_cell_all{im,it}(preftest_ind_all,:)'];
+%             prefmask_resp_nomask_all = [prefmask_resp_nomask_all singadapt_resp_cell_all{im,it}(prefmask_ind_all,:)'];
+%             stimCond_nomask_test = [stimCond_nomask_test; it.*ones(n_test,1) im.*ones(n_test,1) zeros(n_test,1)];
+%             stimCond_nomask_mask = [stimCond_nomask_mask; it.*ones(n_mask,1) im.*ones(n_mask,1) zeros(n_mask,1)];
+%             stimCond_nomask_test = [stimCond_nomask_test; it.*ones(n_test,1) im.*ones(n_test,1) ones(n_test,1)];
+%             stimCond_nomask_mask = [stimCond_nomask_mask; it.*ones(n_mask,1) im.*ones(n_mask,1) ones(n_mask,1)];
+%         end
+%         
+%         if it == 5
+%             preftest_resp_mask_all = [preftest_resp_mask_all noadapt_resp_cell_all{im,it}(preftest_ind_all,:)'];
+%             prefmask_resp_mask_all = [prefmask_resp_mask_all noadapt_resp_cell_all{im,it}(prefmask_ind_all,:)'];
+%             preftest_resp_mask_all = [preftest_resp_mask_all singadapt_resp_cell_all{im,it}(preftest_ind_all,:)'];
+%             prefmask_resp_mask_all = [prefmask_resp_mask_all singadapt_resp_cell_all{im,it}(prefmask_ind_all,:)'];
+%             stimCond_mask_test = [stimCond_mask_test; it.*ones(n_test,1) im.*ones(n_test,1) zeros(n_test,1)];
+%             stimCond_mask_mask = [stimCond_mask_mask; it.*ones(n_mask,1) im.*ones(n_mask,1) zeros(n_mask,1)];
+%             stimCond_mask_test = [stimCond_mask_test; it.*ones(n_test,1) im.*ones(n_test,1) ones(n_test,1)];
+%             stimCond_mask_mask = [stimCond_mask_mask; it.*ones(n_mask,1) im.*ones(n_mask,1) ones(n_mask,1)];
+%         end
+        
         stimCond_test = [stimCond_test; it.*ones(n_test,1) im.*ones(n_test,1) zeros(n_test,1)];
         stimCond_mask = [stimCond_mask; it.*ones(n_mask,1) im.*ones(n_mask,1) zeros(n_mask,1)];
         stimCond_test = [stimCond_test; it.*ones(n_test,1) im.*ones(n_test,1) ones(n_test,1)];
@@ -306,15 +337,29 @@ for im = 1:nTest
     end
 end
 
+%compare test preferring in control and adapt with no mask
 ind_test = find(stimCond_test(:,2)==1);
 test_mat = stimCond_test(ind_test,1);
 adapt_mat = stimCond_test(ind_test,3);
-[h_test, p_test, stats_test] = anovan(preftest_resp_all(ind_test)',{test_mat,adapt_mat});
+[h_test_nomask, p_test_nomask, stats_test] = anovan(preftest_resp_all(ind_test)',{test_mat,adapt_mat});
 
+%compare mask preferring in control and adapt with no mask
 ind_mask = find(stimCond_mask(:,1)==1);
 mask_mat = stimCond_mask(ind_mask,2);
 adapt_mat = stimCond_mask(ind_mask,3);
-[h_mask, p_mask, stats_mask] = anovan(prefmask_resp_all(ind_mask)',{mask_mat,adapt_mat});
+[h_mask_nomask, p_mask_nomask, stats_mask] = anovan(prefmask_resp_all(ind_mask)',{mask_mat,adapt_mat});
+
+%compare test preferring in control and adapt with mask
+ind_test = find(stimCond_test(:,2)==5);
+test_mat = stimCond_test(ind_test,1);
+adapt_mat = stimCond_test(ind_test,3);
+[h_test_mask, p_test_mask, stats_test] = anovan(preftest_resp_all(ind_test)',{test_mat,adapt_mat});
+
+%compare mask preferring in control and adapt with mask
+ind_mask = find(stimCond_mask(:,1)==5);
+mask_mat = stimCond_mask(ind_mask,2);
+adapt_mat = stimCond_mask(ind_mask,3);
+[h_mask_mask, p_mask_mask, stats_mask] = anovan(prefmask_resp_all(ind_mask)',{mask_mat,adapt_mat});
 
 ind_pos = find(stimCond_pos(:,1)==5);
 pos_mat = stimCond_pos(ind_pos,2);
@@ -412,8 +457,8 @@ xlabel('Contrast')
 ylabel('dF/F')
 title(['Ortho preferring- n = ' num2str(size(prefmask_ind_all,1))])
 suptitle(['Single-stim adapt- n = ' num2str(nmice) ' mice'])
-print(fullfile(summaryDir_F6, 'Figure6_avgResp_AllAdaptStimCombo.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_avgResp_AllAdaptStimCombo.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_avgResp_AllAdaptStimCombo.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_avgResp_AllAdaptStimCombo.fig'))
 
 figure;
 subplot(2,2,1)
@@ -451,8 +496,8 @@ xlabel('Ortho Contrast')
 ylabel('dF/F')
 legend({['Mask (adapter) = ' num2str(testCons(end))],'Adapt'},'location','northwest')
 suptitle(['Single-stim adapt- n = ' num2str(nmice) ' mice'])
-print(fullfile(summaryDir_F6, 'Figure6_avgResp_AdaptVOrthogPref.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_avgResp_AdaptVOrthogPref.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_avgResp_AdaptVOrthogPref.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_avgResp_AdaptVOrthogPref.fig'))
 
 figure;
 subplot(2,2,1)
@@ -499,8 +544,8 @@ xlim([-2 2])
 title('')
 suptitle(['Single-stim adapt- n = ' num2str(nmice) ' mice'])
 
-print(fullfile(summaryDir_F6, 'Figure6_avgResp_OrthogPref_PosVNegMod.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_avgResp_OrthogPref_PosVNegMod.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_avgResp_OrthogPref_PosVNegMod.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_avgResp_OrthogPref_PosVNegMod.fig'))
 
 figure;
 subplot(2,2,1)
@@ -564,8 +609,8 @@ vline(nanmean(singadapt_MI_all(ind_h)),'r')
 
 suptitle(['Orthogonal responsive- n = ' num2str(length([ind_l; ind_h]))])
 
-print(fullfile(summaryDir_F6, 'Figure6_ControlAdaptScatter&PDFs.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_ControlAdaptScatter&PDFs.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_ControlAdaptScatter&PDFs.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_ControlAdaptScatter&PDFs.fig'))
 
 figure;
 subplot(2,2,1)
@@ -590,7 +635,7 @@ ylim([-1 1])
 xlabel('SI- Adapt-Control')
 ylabel('MI- Adapt-Control')
 title('Suppressed- SI=0 removed')
-print(fullfile(summaryDir_F6, 'Figure6_diffSIMI_scatters.pdf'),'-dpdf','-bestfit')
+print(fullfile(summaryDir_F2, 'Figure2_diffSIMI_scatters.pdf'),'-dpdf','-bestfit')
 
 %sig only
 figure;
@@ -631,8 +676,8 @@ vline(nanmean(singadapt_MI_all(ind_h_sig)),'r')
 
 suptitle(['Orthogonal responsive- n = ' num2str(length([ind_l_sig; ind_h_sig]))])
 
-print(fullfile(summaryDir_F6, 'Figure6_ControlAdaptScatter&PDFs_sig.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_ControlAdaptScatter&PDFs_sig.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_ControlAdaptScatter&PDFs_sig.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_ControlAdaptScatter&PDFs_sig.fig'))
 
 
 figure;
@@ -660,8 +705,8 @@ xlabel('MI- Control')
 ylabel('MI- Adapt')
 title(['Resp after adapt- n = ' num2str(length([ind_l_sig; ind_h_sig]))])
 
-print(fullfile(summaryDir_F6, 'Figure6_ControlAdaptScatter_sig.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_ControlAdaptScatter_sig.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_ControlAdaptScatter_sig.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_ControlAdaptScatter_sig.fig'))
 
 [n_nol edges bin_nol] = histcounts(noadapt_MI_all(ind_l),[-1:0.2:1]);%,'Normalization','pdf');
 [n_noh edges bin_noh] = histcounts(noadapt_MI_all(ind_h),[-1:0.2:1]);%,'Normalization','pdf');
@@ -702,8 +747,8 @@ ylabel('Fraction N')
 title('Facilitated- post adapt')
 vline(nanmean(singadapt_MI_all(ind_h)))
 suptitle('All cells')
-print(fullfile(summaryDir_F6, 'Figure6_ControlAdaptHistograms.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_ControlAdaptHistograms.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_ControlAdaptHistograms.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_ControlAdaptHistograms.fig'))
 
 [n_sig_nol edges bin_sig_nol] = histcounts(noadapt_MI_all(ind_l_sig),[-1:0.2:1]);%,'Normalization','pdf');
 [n_sig_noh edges bin_sig_noh] = histcounts(noadapt_MI_all(ind_h_sig),[-1:0.2:1]);%,'Normalization','pdf');
@@ -744,5 +789,5 @@ ylabel('Fraction N')
 title('Facilitated- post adapt')
 vline(nanmean(singadapt_MI_all(ind_h_sig)))
 suptitle('Resp after adapt')
-print(fullfile(summaryDir_F6, 'Figure6_ControlAdaptHistograms_sig.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F6, 'Figure6_ControlAdaptHistograms_sig.fig'))
+print(fullfile(summaryDir_F2, 'Figure2_ControlAdaptHistograms_sig.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F2, 'Figure2_ControlAdaptHistograms_sig.fig'))
