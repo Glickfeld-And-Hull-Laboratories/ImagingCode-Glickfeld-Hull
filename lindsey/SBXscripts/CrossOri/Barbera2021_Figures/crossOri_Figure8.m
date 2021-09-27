@@ -4,7 +4,7 @@ LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindse
 CrossOri_base = fullfile('Analysis', '2P', 'CrossOri');
 PV_summaryDir = fullfile(LG_base, CrossOri_base, 'RandDirRandPhaseSummary','randDirRandPhase');
 SLC_summaryDir = fullfile(LG_base, CrossOri_base, 'RandPhaseSummary','randPhase');
-summaryDir_F7 = fullfile(LG_base, CrossOri_base, 'CrossOri_Figures', 'CrossOri_Figure7');
+summaryDir_F8 = fullfile(LG_base, CrossOri_base, 'CrossOri_Figures', 'CrossOri_Figure8');
 driver_list = {'SLC'; 'PV'};
 ndriver = length(driver_list);
 leg_str = cell(1,ndriver);
@@ -114,13 +114,13 @@ figure(1)
 subplot(2,3,1)
 legend(leg_str)
 movegui('center')
-print(fullfile(summaryDir_F7, 'Figure7_PV&SLC_PhaseSummaryCdfs.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F7, 'Figure7_PV&SLC_PhaseSummaryCdfs.fig'))
+print(fullfile(summaryDir_F8, 'Figure8_PV&SLC_PhaseSummaryCdfs.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F8, 'Figure8_PV&SLC_PhaseSummaryCdfs.fig'))
 
 figure(2)
 movegui('center')
-print(fullfile(summaryDir_F7, 'Figure7_PV&SLC_AmpBaseSummaryHists.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F7, 'Figure7_PV&SLC_AmpBaseSummaryHists.fig'))
+print(fullfile(summaryDir_F8, 'Figure8_PV&SLC_AmpBaseSummaryHists.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F8, 'Figure8_PV&SLC_AmpBaseSummaryHists.fig'))
 
 figure(3)
 title('')
@@ -128,8 +128,8 @@ ylabel('Fraction of cells')
 xlabel('OSI')
 legend(leg_str2)
 movegui('center')
-print(fullfile(summaryDir_F7, 'Figure7_PV_OSI.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F7, 'Figure7_PV_OSI.fig'))
+print(fullfile(summaryDir_F8, 'Figure8_PV_OSI.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F8, 'Figure8_PV_OSI.fig'))
 
 p_stim_OSI = ranksum(stim_OSI_driver{1},stim_OSI_driver{2});
 p_phase_SI = ranksum(phase_SI_driver{1},phase_SI_driver{2});
@@ -191,8 +191,8 @@ colormap gray
 title([mouse ' ' date])
 movegui('center')
 clim([100 1200])
-print(fullfile(summaryDir_F7, 'Figure7_PVexampleFOV.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F7, 'Figure7_PVexampleFOV.fig'))
+print(fullfile(summaryDir_F8, 'Figure8_PVexampleFOV.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F8, 'Figure8_PVexampleFOV.fig'))
 
 ex_ind = [14 20 21 24];
 %ex_ind = [19 22 36 39];
@@ -220,7 +220,7 @@ for iC = 1:length(ex_ind)
     title(['Amp- ' num2str(chop(amp_hat_all(iCell),2)) '; Base- ' num2str(chop(b_hat_all(iCell),2))])
     suptitle([mouse ' ' date ' cell #' num2str(iCell)])
     movegui('center')
-    print(fullfile(summaryDir_F7, ['Figure7_PVexamplePhaseResp_Cell' num2str(iCell) '.pdf']),'-dpdf','-bestfit')
-    savefig(fullfile(summaryDir_F7, ['Figure7_PVexamplePhaseResp_Cell' num2str(iCell) '.fig']))
+    print(fullfile(summaryDir_F8, ['Figure8_PVexamplePhaseResp_Cell' num2str(iCell) '.pdf']),'-dpdf','-bestfit')
+    savefig(fullfile(summaryDir_F8, ['Figure8_PVexamplePhaseResp_Cell' num2str(iCell) '.fig']))
 end
 

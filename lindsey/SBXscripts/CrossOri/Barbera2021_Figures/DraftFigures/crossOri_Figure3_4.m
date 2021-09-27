@@ -1,7 +1,7 @@
 close all; clear all; clc;
 doRedChannel = 0;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
-summaryDir_F3 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure3');
+summaryDir_F6 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure6');
 summaryDir_F4 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure4');
 summaryDir_GA = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_GA');
 
@@ -241,8 +241,8 @@ xlabel('Preferred phase (deg)')
 ylabel('Number of cells')
 ylim([0 100])
 title(['n = ' num2str(length(ind)) ' cells'])
-print(fullfile(summaryDir_F3, 'Figure3_ModulationSummary.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F3, 'Figure3_ModulationSummary.fig'))
+print(fullfile(summaryDir_F6, 'Figure6_ModulationSummary.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F6, 'Figure6_ModulationSummary.fig'))
 
 figure
 subplot(2,2,1)
@@ -283,8 +283,8 @@ ylim([0 60])
 xlabel('Preferred phase (deg)')
 ylabel('Number of cells')
 title(['n = ' num2str(length(ind)) ' cells'])
-print(fullfile(summaryDir_F3, 'Figure3_ModulationSummary_byDataset.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F3, 'Figure3_ModulationSummary_byDataset.fig'))
+print(fullfile(summaryDir_F6, 'Figure6_ModulationSummary_byDataset.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F6, 'Figure6_ModulationSummary_byDataset.fig'))
 
 
 ind_h = find(amp_all-amp_shuf_all > 0);
@@ -314,8 +314,8 @@ for ip = 1:nMaskPhas
 end
 iexp = expt_ind(ind_h(i));
 suptitle([expt(iexp).mouse ' ' expt(iexp).date ' - cell #' num2str(ind_h(i))])
-print(fullfile(summaryDir_F3, 'Figure3_ExampleCell_posMod.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F3, 'Figure3_ExampleCell_posMod.fig'))
+print(fullfile(summaryDir_F6, 'Figure6_ExampleCell_posMod.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F6, 'Figure6_ExampleCell_posMod.fig'))
 
 figure;
 subplot(3,3,1)
@@ -336,8 +336,8 @@ for ip = 1:nMaskPhas
 end
 iexp = expt_ind(ind_l(i));
 suptitle([expt(iexp).mouse ' ' expt(iexp).date ' - cell #' num2str(ind_l(i))])
-print(fullfile(summaryDir_F3, 'Figure3_ExampleCell_noMod.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F3, 'Figure3_ExampleCell_noMod.fig'))
+print(fullfile(summaryDir_F6, 'Figure6_ExampleCell_noMod.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F6, 'Figure6_ExampleCell_noMod.fig'))
 
 figure;
 subplot(1,2,1)
@@ -359,8 +359,8 @@ xlabel('Phase (deg)')
 ylabel('Selectivity index')
 title(['Cell #' num2str(ind_l(i)) '; Amp: ' num2str(chop(amp_all(ind_l(i)),2)) '; Base: ' num2str(chop(b_all(ind_l(i)),2))])
 suptitle([expt(iexp).mouse ' ' expt(iexp).date])
-print(fullfile(summaryDir_F3, 'Figure3_ExampleCells_Tuning&Fit.pdf'),'-dpdf','-bestfit')
-savefig(fullfile(summaryDir_F3, 'Figure3_ExampleCells_Tuning&Fit.fig'))
+print(fullfile(summaryDir_F6, 'Figure6_ExampleCells_Tuning&Fit.pdf'),'-dpdf','-bestfit')
+savefig(fullfile(summaryDir_F6, 'Figure6_ExampleCells_Tuning&Fit.fig'))
 
 figure;
 subplot(3,2,1)

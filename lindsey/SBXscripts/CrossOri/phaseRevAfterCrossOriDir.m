@@ -1,20 +1,24 @@
 %% get path names
 close all;clear all;clc;
 
-ds = 'CrossOriRandDir_ExptList';
+ds = 'F0F1F2_ExptList';
 eval(ds)
 nexp = length(expt);
 rc = behavConstsAV;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 
-iexp = 75;
+iexp = 15;
              %%
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
         area = expt(iexp).img_loc{1};
         ImgFolder = expt(iexp).prFolder;
-        coFolder = expt(iexp).coFolder;
+        if isfield(expt,'cofolder')
+            coFolder = expt(iexp).coFolder;
+        else
+            coFolder = expt(iexp).dirFolder;
+        end
         time = expt(iexp).prTime;
         nrun = length(ImgFolder);
         frameRateHz = params.frameRate;
@@ -272,6 +276,7 @@ iexp = 75;
             save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_f1f2.mat']), 'f1', 'f2', 'f2overf1', 'resp_ind_phase')
 
             %% compare with suppression index
+            if isfield(expt,'cofolder')
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_respData.mat']))
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_dirAnalysis.mat']))          
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_dataStim.mat']))          
@@ -313,35 +318,34 @@ iexp = 75;
             ylabel('F2/F1')
             suptitle([date ' ' mouse '- Phase reversal'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_SIvsF2-F1.pdf']),'-dpdf','-bestfit');
-            
-%%    
-complex_ind = intersect(resp_ind_only,find(f2overf1>1));
-simple_ind = intersect(resp_ind_only,find(f2overf1<0.5));
 
-figure;
-movegui('center')
-[n n2] = subplotn(length(complex_ind));
-for iC = 1:length(complex_ind)
-    subplot(n,n2,iC)
-    errorbar(stimDirs,avg_resp_dir(complex_ind(iC),:,1,1), avg_resp_dir(complex_ind(iC),:,1,2),'o')
-    hold on
-    errorbar(stimDirs,avg_resp_dir(complex_ind(iC),:,2,1), avg_resp_dir(complex_ind(iC),:,2,2),'o')
-    title(['Rc ' num2str(Rc(complex_ind(iC))) '; Rp ' num2str(Rp(complex_ind(iC)))])
-end
-suptitle([date ' ' mouse '- Complex Cells'])
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_complexTuning.pdf']),'-dpdf','-bestfit');
+            complex_ind = intersect(resp_ind_only,find(f2overf1>1));
+            simple_ind = intersect(resp_ind_only,find(f2overf1<0.5));
+
+            figure;
+            movegui('center')
+            [n n2] = subplotn(length(complex_ind));
+            for iC = 1:length(complex_ind)
+                subplot(n,n2,iC)
+                errorbar(stimDirs,avg_resp_dir(complex_ind(iC),:,1,1), avg_resp_dir(complex_ind(iC),:,1,2),'o')
+                hold on
+                errorbar(stimDirs,avg_resp_dir(complex_ind(iC),:,2,1), avg_resp_dir(complex_ind(iC),:,2,2),'o')
+                title(['Rc ' num2str(Rc(complex_ind(iC))) '; Rp ' num2str(Rp(complex_ind(iC)))])
+            end
+            suptitle([date ' ' mouse '- Complex Cells'])
+            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_complexTuning.pdf']),'-dpdf','-bestfit');
 
 
-figure;
-movegui('center')
-[n n2] = subplotn(length(simple_ind));
-for iC = 1:length(simple_ind)
-    subplot(n,n2,iC)
-    errorbar(stimDirs,avg_resp_dir(simple_ind(iC),:,1,1), avg_resp_dir(simple_ind(iC),:,1,2),'o')
-    hold on
-    errorbar(stimDirs,avg_resp_dir(simple_ind(iC),:,2,1), avg_resp_dir(simple_ind(iC),:,2,2),'o')
-    title(['Rc ' num2str(Rc(simple_ind(iC))) '; Rp ' num2str(Rp(simple_ind(iC)))])
-end
-suptitle([date ' ' mouse '- Simple Cells'])
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_simpleTuning.pdf']),'-dpdf','-bestfit');
-
+            figure;
+            movegui('center')
+            [n n2] = subplotn(length(simple_ind));
+            for iC = 1:length(simple_ind)
+                subplot(n,n2,iC)
+                errorbar(stimDirs,avg_resp_dir(simple_ind(iC),:,1,1), avg_resp_dir(simple_ind(iC),:,1,2),'o')
+                hold on
+                errorbar(stimDirs,avg_resp_dir(simple_ind(iC),:,2,1), avg_resp_dir(simple_ind(iC),:,2,2),'o')
+                title(['Rc ' num2str(Rc(simple_ind(iC))) '; Rp ' num2str(Rp(simple_ind(iC)))])
+            end
+            suptitle([date ' ' mouse '- Simple Cells'])
+            print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_simpleTuning.pdf']),'-dpdf','-bestfit');
+            end
