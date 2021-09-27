@@ -53,8 +53,6 @@ data_tc_trial = reshape(npSub_tc_new, [nOn+nOff,ntrials,nCells]);
 data_f_trial = mean(data_tc_trial(1:stimStart,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
-
-
 %% get responses to stimuli
 data_resp = zeros(nCells, nOri, nCon,2);
 h = zeros(nCells, nOri, nCon);
@@ -75,50 +73,26 @@ end
 h_all = sum(sum(h,2),3);
 
 resp=logical(h_all);
-%
-pref_ori = zeros(1,nCells);
-orth_ori = zeros(1,nCells);
-pref_con = zeros(1,nCells);
-data_ori_resp = zeros(nCells,nOri); %at pref con
-data_con_resp = zeros(nCells,nCon); %at pref ori
-data_orth_resp=zeros(nCells,1);
 
-%I want to pull out the responses for each cell at it's preferred orientations, for
-%all contrasts, and at it's preferred contrast, for all orientations
-for iCell = 1:nCells
-      [max_val, pref_ori(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
-      [max_val_con, pref_con(1,iCell)] = max(squeeze(mean(data_resp(iCell,:,:,1),2))',[],2);
-      if pref_ori(1,iCell)<5
-          orth_ori(1,iCell)=pref_ori(1,iCell)+4;
-      elseif pref_ori(1,iCell)>=5
-          orth_ori(1,iCell)=pref_ori(1,iCell)-4;
-      end
-      data_ori_resp(iCell,:)=squeeze(data_resp(iCell,:,pref_con(iCell),1));
-      data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
-      data_con_resp(iCell,:)=squeeze(data_resp(iCell,pref_ori(iCell),:,1));
-end
+
 %% identify cells I want to analyze
 green_inds = 1:nCells;
 green_inds = setdiff(green_inds, find(mask_label));
 RedAll =find(mask_label);
-
 nGreen = length(green_inds)
 GreenResp = intersect(green_inds,find(resp));
 nGreenResp = length(GreenResp)
 
-%% narrow down to the preferred ori and preferred contrast for each cell
+%% narrow down to verticle stimuli but keep all contrasts
 tc_trial_conAvg = nan(nOn+nOff,nCells,length(cons));
 tc_trial_avrg=nan(nOn+nOff,nCells);
 for i=1:nCells
     temp_TCs=data_dfof_trial(:,:,i);
-    %identify the trials where ori = pref ori
-    temp_ori = oris(pref_ori(i)); %find the preferred ori of this cell and convert to degrees
-    ori_inds = find(tDir==temp_ori); %these are the trials at that ori
-    %temp_con = cons(pref_con(i));
-    %con_inds=find(tCon==temp_con);
-    %temp_trials = intersect(ori_inds, con_inds);
+    ori_inds = find(tDir==0); %these are the trials with verticle orientation
     %all contrasts
     tc_trial_avrg(:,i)=mean(temp_TCs(:,ori_inds),2);
+    %to get a mean for each contrast, if there's more than one
+    %I can later add this for size too
     for iCon=1:length(cons)
         con_inds=find(tCon==cons(iCon));
         temp_trials = intersect(ori_inds, con_inds);
