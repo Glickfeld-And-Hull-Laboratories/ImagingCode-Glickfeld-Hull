@@ -11,8 +11,8 @@ LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindse
 fnout = fullfile(LG_base,'Analysis','2P');
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'PhaseRev');
 svName = 'F0F1F2';
-area = 'LM';
-driver = 'SLC';
+area = 'V1';
+driver = 'SOM';
 all_area = 0;
 con = 1;
 dirF0_all = [];
@@ -55,39 +55,39 @@ for iexp = 1:nexp
         prF1_all = [prF1_all prdata.f1];
         prF2_all = [prF2_all prdata.f2];
 
-%         dirTCs = load(fullfile(fnout, datemouse, datemousedirrun, [datemousedirrun '_TCs.mat']));
-%         load(fullfile(fnout, datemouse, datemousedirrun, [datemousedirrun '_input.mat']));
-%         dir_input = input;
-%         nOff = dir_input.nScansOff;
-%         nOn = dir_input.nScansOn;
-%         tDir = celleqel2mat_padded(dir_input.tGratingDirectionDeg);
-%         dirs = unique(tDir);
-%         if find(dirs>=360)
-%             tDir(find(tDir>=360)) = tDir(find(tDir>=360))-360;
-%             dirs = unique(tDir);
-%         end
-%         nDir = length(dirs);
-%         nTrials = length(tDir);
-%         nCells = size(dirTCs.npSub_tc,2);
-%         trial_tc = nan(nOn+nOff,nCells,nTrials);
-%         for it = 1:nTrials-1
-%             trial_tc(:,:,it) = dirTCs.npSub_tc(1+nOff/2+((it-1).*(nOn+nOff)):nOff/2+(it.*(nOn+nOff)),:);
-%         end
-%         trial_f = mean(trial_tc(1:nOff/2,:,:),1);
-%         trial_df = bsxfun(@minus,trial_tc,trial_f);
-%         trial_dfof = bsxfun(@rdivide,trial_df,trial_f);
-%         dfof_dir_avg = nan(nOn+nOff,nCells,nDir,2);
-%         for iDir = 1:nDir
-%             ind = find(tDir==dirs(iDir));
-%             dfof_dir_avg(:,:,iDir,1) = nanmean(trial_dfof(:,:,ind),3);
-%             dfof_dir_avg(:,:,iDir,2) = nanstd(trial_dfof(:,:,ind),[],3);
-%         end
-%         dfof_dir_avg_all = cat(2, dfof_dir_avg_all,dfof_dir_avg);
-%         max_ind_dir = [max_ind_dir; dirdata.max_ind];
-% 
-%         prTCs = load(fullfile(fnout, datemouse, datemouseprrun, [datemouseprrun '_dfofData.mat']));
-%         dfof_pr_avg_all = cat(2,dfof_pr_avg_all,prTCs.data_dfof_phasedir);
-%         max_ind_pr = [max_ind_pr; prTCs.max_ind];
+        dirTCs = load(fullfile(fnout, datemouse, datemousedirrun, [datemousedirrun '_TCs.mat']));
+        load(fullfile(fnout, datemouse, datemousedirrun, [datemousedirrun '_input.mat']));
+        dir_input = input;
+        nOff = dir_input.nScansOff;
+        nOn = dir_input.nScansOn;
+        tDir = celleqel2mat_padded(dir_input.tGratingDirectionDeg);
+        dirs = unique(tDir);
+        if find(dirs>=360)
+            tDir(find(tDir>=360)) = tDir(find(tDir>=360))-360;
+            dirs = unique(tDir);
+        end
+        nDir = length(dirs);
+        nTrials = length(tDir);
+        nCells = size(dirTCs.npSub_tc,2);
+        trial_tc = nan(nOn+nOff,nCells,nTrials);
+        for it = 1:nTrials-1
+            trial_tc(:,:,it) = dirTCs.npSub_tc(1+nOff/2+((it-1).*(nOn+nOff)):nOff/2+(it.*(nOn+nOff)),:);
+        end
+        trial_f = mean(trial_tc(1:nOff/2,:,:),1);
+        trial_df = bsxfun(@minus,trial_tc,trial_f);
+        trial_dfof = bsxfun(@rdivide,trial_df,trial_f);
+        dfof_dir_avg = nan(nOn+nOff,nCells,nDir,2);
+        for iDir = 1:nDir
+            ind = find(tDir==dirs(iDir));
+            dfof_dir_avg(:,:,iDir,1) = nanmean(trial_dfof(:,:,ind),3);
+            dfof_dir_avg(:,:,iDir,2) = nanstd(trial_dfof(:,:,ind),[],3);
+        end
+        dfof_dir_avg_all = cat(2, dfof_dir_avg_all,dfof_dir_avg);
+        max_ind_dir = [max_ind_dir; dirdata.max_ind];
+
+        prTCs = load(fullfile(fnout, datemouse, datemouseprrun, [datemouseprrun '_dfofData.mat']));
+        dfof_pr_avg_all = cat(2,dfof_pr_avg_all,prTCs.data_dfof_phasedir);
+        max_ind_pr = [max_ind_pr; prTCs.max_ind];
         
         load(fullfile(fnout, datemouse, datemousedirrun, [datemousedirrun '_oriResp.mat']));
         k1_all = [k1_all k1_ori];
@@ -261,8 +261,9 @@ end
 % print(fullfile(summaryDir,[svName '_Con' num2str(con) '_' driver '_ExHighF1F0HighF2F1Cells.pdf']),'-dpdf','-fillpage')
 
 %%
-driver_list = {'SCN', 'SLC', 'SLC'};
-area_list = {'V1', 'V1', 'LM'};
+driver_list = {'SCN', 'SLC','SOM','SLC'};
+area_list = {'V1', 'V1', 'V1','LM'};
+label_list = {'L4','L2/3','SOM','LM'};
 con = 1;
 f1f0_all = [];
 f2f1_all = [];
@@ -285,27 +286,28 @@ end
 [p_f1f0 t_f1f0 s_f1f0] = anova1(f1f0_all,cond,'off');
 figure;
 post_f1f0 = multcompare(s_f1f0);
-set(gca,'YTickLabels',{'L4','L2/3','LM'},'XLabel','F1/F0')
+set(gca,'YTickLabels',label_list,'XLabel','F1/F0')
 [p_f2f1 t_f2f1 s_f2f1] = anova1(f2f1_all,cond,'off');
 figure;
 post_f2f1 = multcompare(s_f2f1);
-set(gca,'YTickLabels',{'L4','L2/3','LM'},'XLabel','F2/F1')
+set(gca,'YTickLabels',label_list,'XLabel','F2/F1')
 
 figure;
-subplot(2,1,1)
+narea = length(area_list);
+subplot(3,2,1)
 errorbar(1:length(driver_list),f1f0(:,1),f1f0(:,2),'o')
-set(gca,'XTick',1:length(driver_list),'XTickLabels',{'L4','L2/3','LM'})
+set(gca,'XTick',1:length(driver_list),'XTickLabels',label_list)
 ylabel('F1/F0');
-xlim([0 4])
-ylim([0 0.5])
+xlim([0 narea+1])
+ylim([0 0.4])
 hold on
-sigstar(mat2cell(post_f1f0(:,1:2),[1 1 1]),post_f1f0(:,end))
-subplot(2,1,2)
+sigstar(mat2cell(post_f1f0(:,1:2),ones([1 size(post_f1f0,1)])),post_f1f0(:,end))
+subplot(3,2,2)
 errorbar(1:length(driver_list),f2f1(:,1),f2f1(:,2),'o')
-set(gca,'XTick',1:length(driver_list),'XTickLabels',{'L4','L2/3','LM'})
+set(gca,'XTick',1:length(driver_list),'XTickLabels',label_list)
 ylabel('F2/F1');
-xlim([0 4])
-ylim([0 0.5])
+xlim([0 narea+1])
+ylim([0 0.75])
 hold on
-sigstar(mat2cell(post_f2f1(:,1:2),[1 1 1]),post_f2f1(:,end))
+sigstar(mat2cell(post_f2f1(:,1:2),ones([1 size(post_f1f0,1)])),post_f2f1(:,end))
 print(fullfile(summaryDir,[svName '_Con' num2str(con) '_allExptSummary.pdf']),'-dpdf','-fillpage')
