@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 109;
+day_id = 89;
 %% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -92,21 +92,23 @@ data_f_trial = mean(data_tc_trial(1:30,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 
-
 %% split into trials
 data_resp = zeros(nCells, nOri, nCon,2);
 h = zeros(nCells, nOri, nCon);
 p = zeros(nCells, nOri, nCon);
 tCon = tCon(:,1:ntrials);
 tOri = tOri(:,1:ntrials);
+rect_dfof_trial=data_dfof_trial;
+rect_dfof_trial(find(rect_dfof_trial<0))=0;
+
 for iOri = 1:nOri
     ind_ori = find(tOri == oris(iOri));
     for iCon = 1:nCon
         ind_con = find(tCon == cons(iCon));
         ind = intersect(ind_ori,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
-        data_resp(:,iOri,iCon,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
-        data_resp(:,iOri,iCon,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-        [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri.*3-1));
+        data_resp(:,iOri,iCon,1) = squeeze(mean(mean(rect_dfof_trial(resp_win,ind,:),1),2));
+        data_resp(:,iOri,iCon,2) = squeeze(std(mean(rect_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
+        [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(mean(rect_dfof_trial(resp_win,ind,:),1), mean(rect_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri.*3-1));
     end
 end
 
@@ -114,8 +116,8 @@ h_all = sum(sum(h,2),3);
 
 resp=logical(h_all);
 %
-pref_ori = zeros(1,nCells);
-orth_ori = zeros(1,nCells);
+%pref_ori = zeros(1,nCells);
+%orth_ori = zeros(1,nCells);
 pref_con = zeros(1,nCells);
 data_ori_resp = zeros(nCells,nOri); %at pref con
 data_con_resp = zeros(nCells,nCon); %at pref ori
@@ -123,43 +125,25 @@ data_orth_resp=zeros(nCells,1);
 
 %I want to pull out the responses for each cell at it's preferred orientations, for
 %all contrasts, and at it's preferred contrast, for all orientations
-for iCell = 1:nCells
-      [max_val, pref_ori(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
+ [max_val, pref_ori] = max(mean(data_resp(:,:,:,1),3),[],2);
+ for iCell = 1:nCells
+      
       [max_val_con, pref_con(1,iCell)] = max(squeeze(mean(data_resp(iCell,:,:,1),2))',[],2);
-      if pref_ori(1,iCell)<5
-          orth_ori(1,iCell)=pref_ori(1,iCell)+4;
-      elseif pref_ori(1,iCell)>=5
-          orth_ori(1,iCell)=pref_ori(1,iCell)-4;
+      if pref_ori(iCell)<= 4
+          orth_ori(iCell)=pref_ori(iCell)+4;
+      elseif pref_ori(iCell)>4
+          orth_ori(iCell)=pref_ori(iCell)-4;
       end
       data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
       data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
       data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
 end
 
-% %% calculating OSI
-% data_prefOri_resp = mean(data_con_resp,2);
-% numerator = abs(data_prefOri_resp-data_orth_resp);
-% denom = abs(data_prefOri_resp+data_orth_resp);
-% OSI = numerator/denom;
-% 
-% 
-% orthoOri_D1 = zeros(nCells,1);
-% orthoResp_D1 = zeros(nCells,1);
-% orthoOri_D2 = zeros(nCells,1);
-% orthoResp_D2 = zeros(nCells,1);
-% orthoOri_D3 = zeros(nCells,1);
-% orthoResp_D3 = zeros(nCells,1);
-% [maxResp prefOri_ind] = max(avgResp_D1,[],2);
-% for iCell = 1:nCells
-% if prefOri_ind(iCell) <= 4
-%   orthoOri_D1(iCell) = prefOri_ind(iCell) + 4;
-% elseif prefOri_ind(iCell) > 4
-%   orthoOri_D1(iCell) = prefOri_ind(iCell) - 4;
-% end
-% orthoResp_D1(iCell) = avgResp_D1(iCell,orthoOri_D1(iCell));
-% end
-% orthoResp_D1(find(orthoResp_D1<0)) = 0;
-% OSI1 = (maxResp_D1'-orthoResp_D1)./(maxResp_D1'+orthoResp_D1);
+%% calculating OSI 
+%OSI only seems to work on rectified dfof
+OSI1 = (max_val-data_orth_resp)./(max_val+data_orth_resp);
+movegui('center')
+hist(OSI1,20)
 
 %% get basic counts
 green_inds = 1:nCells;
@@ -310,55 +294,54 @@ ylim([-.1 .3]);
 hold off
 saveas(gcf,fullfile(fn,[mouse '-' date 'raw_tc.jpg']));
 
-% %% plotting contrast and ori functions 
-% keepCells=union(GreenResp,RedAll);
-% nKeep=size(keepCells,1);
-% [RedAll,red_ind_keep] = intersect(keepCells,RedAll,'stable');
-% 
-% if nKeep<36
-%     [n n2] = subplotn(nKeep);
-%     tot = n.*n2;
-% else
-%     n = 6;
-%     n2 = 6;
-%     tot = 36;
-% end
-% 
-% % plot ori tuning at each contrast
-% figure;
-% movegui('center')
-% start = 1;
-% 
-% for iCell = 1:nKeep
-%     if start>tot
-%         figure; movegui('center')
-%         start = 1;
-%     end
-%     subplot(n,n2,start)
-% 
-% 
-%     if find(find(iCell==red_ind_keep))
-%           for iCon = 1:nCon
-%             errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-r')
-%             hold on
-%             title (['Cell ' num2str(iCell)]);
-%           end
-%         
-%     else
-%          for iCon = 1:nCon
-%             errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-k')
-%             hold on
-%             title (['Cell ' num2str(iCell)]);
-%          end
-%     end
-%     
-%     start= start+1;
-%     %ylim([-0.1 inf])
-% 
-%    
-% end
-% 
-% 
+%% plotting contrast and ori functions 
+keepCells=union(GreenResp,RedAll);
+nKeep=size(keepCells,1);
+[RedAll,red_ind_keep] = intersect(keepCells,RedAll,'stable');
+
+if nKeep<36
+    [n n2] = subplotn(nKeep);
+    tot = n.*n2;
+else
+    n = 6;
+    n2 = 6;
+    tot = 36;
+end
+
+% plot ori tuning at each contrast
+figure;
+movegui('center')
+start = 1;
+
+for iCell = 1:nKeep
+    if start>tot
+        figure; movegui('center')
+        start = 1;
+    end
+    subplot(n,n2,start)
+
+
+    if find(find(iCell==red_ind_keep))
+          for iCon = 1:nCon
+            errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-r')
+            hold on
+            title (['Cell ' num2str(iCell)]);
+          end
+        
+    else
+         for iCon = 1:nCon
+            errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-k')
+            hold on
+            title (['Cell ' num2str(iCell)]);
+         end
+    end
+    start= start+1;
+    %ylim([-0.1 inf])
+
+   
+end
+
+
 % % 
 % % % plots contrast preference at preferred orientation
 % % figure;

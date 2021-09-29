@@ -100,7 +100,8 @@ pref_con_match = cell(1,nd);
 data_ori_resp_match = cell(1,nd);
 data_con_resp_match = cell(1,nd);
 
-
+rect_dfof_trial=data_dfof_trial_match;
+%rect_dfof_trial(find(rect_dfof_trial<0))=0;
 % for each day
 for id = 1:nd
     data_resp = zeros(nCells, nOri, nCon,2);
@@ -109,7 +110,7 @@ for id = 1:nd
     tCon = tCon_match{id}(:,1:nTrials);
     tOri = tOri_match{id}(:,1:nTrials);
     tDir = tDir_match{id}(:,1:nTrials);
-    data_dfof_trial = data_dfof_trial_match{id};
+    data_dfof_trial = rect_dfof_trial{id}; %will use rectified data
 
     for iOri = 1:nOri
         ind_ori = find(tOri == oris(iOri));
@@ -130,6 +131,7 @@ for id = 1:nd
     pref_con = zeros(1,nCells);
     data_ori_resp = zeros(nCells,nOri); %at pref con
     data_con_resp = zeros(nCells,nCon); %at pref ori
+    data_orth_resp=zeros(nCells,1);
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
     for iCell = 1:nCells
@@ -137,6 +139,13 @@ for id = 1:nd
           [max_val_con, pref_con(1,iCell)] = max(squeeze(mean(data_resp(iCell,:,:,1),2))',[],2);
           data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
           data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
+          
+      if pref_ori(iCell)<= 4
+          orth_ori(iCell)=pref_ori(iCell)+4;
+      elseif pref_ori(iCell)>4
+          orth_ori(iCell)=pref_ori(iCell)-4;
+      end
+    data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
     end
 
  %then put into a cell matrix for the two days
@@ -149,10 +158,11 @@ pref_ori_match{id} = pref_ori;
 pref_con_match{id} = pref_con;
 data_ori_resp_match{id} = data_ori_resp;
 data_con_resp_match{id} = data_con_resp;
+data_orth_resp_match{id}=data_orth_resp;
  
 end
-clear data_resp h p h_all resp pref_ori pref_con data_ori_resp data_con_resp data_dfof_trial tCon tOri tDir
-
+clear data_resp h p h_all resp pref_ori pref_con data_ori_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp
+ 
 %% get basic counts 
 red_ind_match_list = find(red_ind_match==1);
 
@@ -264,7 +274,7 @@ end
 
 clear tc_trial_avrg temp_trials con_inds temp_con ori_inds temp_ori mean_resp_temp temp_TCs
 
-%% prepare to plot the timecourses using non-rectified values
+%% prepare to plot the timecourses 
 
 tc_green_avrg_match = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_match = cell(1,nd); %same for red
@@ -470,7 +480,7 @@ for id = 1:nd
     vonMises_output_temp=nan(nKeep, 6);
     for i = 1:nKeep
         thisCell = data_ori_resp_keep{id}(i,:);
-        [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,thisCell);
+        [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(deg2rad(oris),thisCell);
         vonMises_output_temp(i,:)=[b_hat, k1_hat, R1_hat,u1_hat,sse,R_square];
     end
     vonMises_output{id}=vonMises_output_temp;
@@ -553,8 +563,9 @@ ylabel('D2- pref ori')
 % xlim([0 .4])
 % ylim([0 .4])
 refline(1)
-%title('fit pref ori')
+title('fit pref ori')
 %saveas(fig, 'fitOri.png')
+
 %% Von Mises bootstrap
 reps = 1000;
 
@@ -579,7 +590,7 @@ for id = 1:nd
             %now I can use the shuffled response by ori data to calculate
             %the von M fit for this cell on this rep
             
-            [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(oris,shuff_resp);
+            [b_hat, k1_hat, R1_hat,u1_hat,sse,R_square] = miaovonmisesfit_ori(deg2rad(oris),shuff_resp);
             this_fits = b_hat+R1_hat.*exp(k1_hat.*(cos(2.*(deg2rad(fit_oris)-u1_hat))-1));
             this_pref = fit_oris(min(find(this_fits==max(this_fits))));
             shuff_pref_ori{id}(r,i)=this_pref;
