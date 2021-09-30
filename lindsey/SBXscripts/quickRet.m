@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '210504';
-mouse = 'i1345';
-ImgFolder = '001';
-time = '1040';
+date = '210929';
+mouse = 'i2015';
+ImgFolder = '007';
+time = '1520';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -21,6 +21,8 @@ clear temp
 for irun = 1:nrun
     if strcmp(rc.name,'ashle')
     CD = ['Z:\home\ashley\data\' mouse '\two-photon imaging\' date '\' ImgFolder(irun,:)];
+    elseif strcmp(rc.name,'celine')
+    CD = ['Z:\home\celine\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
     else
     CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' mouse '\' date '\' ImgFolder(irun,:)];
     %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' [date '_' mouse] '\' ImgFolder(irun,:)];
@@ -41,8 +43,10 @@ for irun = 1:nrun
     
     if strcmp(rc.name,'ashle')        
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
+    elseif strcmp(rc.name,'celine')
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' subnum '-' date '-' time(irun,:) '.mat'];
     else
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse  date '-' time(irun,:) '.mat'];
     end
     load(fName);
     expt_input = input;
