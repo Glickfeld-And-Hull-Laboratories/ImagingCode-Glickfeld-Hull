@@ -107,6 +107,7 @@ for iexp = 1:nexp
     [eye_n edges bin] = histcounts(stim_all,[1:5]);
    
     figure;
+    movegui('center')
     start = 1;
     n = 1;
     for iCell =1:nCells
@@ -114,6 +115,7 @@ for iexp = 1:nexp
             sgtitle([mouse ' ' date '- Thresh- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
             figure;
+            movegui('center')
             start = 1;
             n = n+1;
         end
@@ -153,6 +155,7 @@ for iexp = 1:nexp
     rng(seed);
     stim_all_shuf = stim_all(randperm(length(stim_all)));
     figure;
+    movegui('center')
     start = 1;
     n = 1;
     for iCell = 1:nCells
@@ -160,6 +163,7 @@ for iexp = 1:nexp
             sgtitle([mouse ' ' date '- Thresh Shuffled- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
             figure;
+            movegui('center')
             start = 1;
             n = n+1;
         end

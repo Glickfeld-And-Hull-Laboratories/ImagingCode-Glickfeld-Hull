@@ -1,8 +1,8 @@
 clc; clear all; close all;
-doRedChannel = 0;
-ds = 'CrossOriRandPhase2TF_ExptList';
-iexp = 2; 
-doPhaseAfterDir = 0;
+doRedChannel = 1;
+ds = 'CrossOriRandDirRandPhase_ExptList';
+iexp = 42; 
+doPhaseAfterDir = 1;
 rc = behavConstsAV;
 eval(ds)
 
@@ -83,7 +83,7 @@ nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,30001:30500),3);
+data_avg = mean(data(:,:,20001:20500),3);
 %% Register data
 if doPhaseAfterDir
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
@@ -120,12 +120,12 @@ figure; image(rg)
 movegui('center')
 %% if red channel data
 if doRedChannel
-    CD = [LG_base '\Data\2P_images\' date '_' mouse '\' ImgFolderRed(irun,:)];
+    ImgFolderRed = expt(iexp).redImg;
+    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];
     cd(CD);
-    imgMatFile = [ImgFolderRed(irun,:) '_000_000.mat'];
+    imgMatFile = [ImgFolderRed{1} '_000_000.mat'];
     load(imgMatFile);
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
-    load(fName);
+
     nframes = info.config.frames;
     fprintf(['Reading red data- ' num2str(nframes) ' frames \r\n'])
     data_red = sbxread(imgMatFile(1,1:11),0,nframes);
@@ -308,7 +308,7 @@ data_dfof = cat(3, data_dfof, data_dfof_max);
 if doRedChannel
     data_dfof = cat(3,data_dfof,data_red_avg);
 end
-if strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')
+if (strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')) & ~doRedChannel
     data_dfof = cat(3,data_dfof,data_avg);
 end
 
@@ -321,10 +321,12 @@ if ~doPhaseAfterDir
     mask_data = data_dfof;
     
     if strcmp(expt(iexp).driver{1},'SOM') || strcmp(expt(iexp).driver{1},'PV')
-        bwout = imCellEditInteractiveLG(mean(data_reg,3));
-        mask_all = mask_all+bwout;
-        mask_exp = imCellBuffer(mask_all,3)+mask_all;
-        close all
+        if ~doRedChannel
+            bwout = imCellEditInteractiveLG(mean(data_reg,3));
+            mask_all = mask_all+bwout;
+            mask_exp = imCellBuffer(mask_all,3)+mask_all;
+            close all
+        end
     end
     
     for iStim = 1:size(data_dfof,3)   
@@ -352,7 +354,7 @@ end
 
 clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg data_resp data_resp_dfof bwout
 
-%% neuropil subtraction
+ %% neuropil subtraction
 if ~doPhaseAfterDir
     mask_np = imCellNeuropil(mask_cell, 3, 5);
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')

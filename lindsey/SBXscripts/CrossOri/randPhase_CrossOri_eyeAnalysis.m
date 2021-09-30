@@ -82,7 +82,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [3 20];
+rad_range = [5 18];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
@@ -151,6 +151,7 @@ xlabel('SNR')
 subplot(2,2,3)
 hist(Val);
 xlabel('Metric')
+movegui('center')
 
 x1 = find(isnan(Area));
 x2 = find(~isnan(Area));
@@ -175,6 +176,7 @@ for i = 1:minx
     %title(num2str(x(frames(i))))
     start = start+1;
 end
+movegui('center')
 sgtitle(['No pupil detected- ' num2str(length(x)) ' frames'])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_noPupil2.pdf']),'-dpdf','-fillpage');
 
@@ -196,6 +198,7 @@ for i = 1:minx
     %title(num2str(x(frames(i))))
     start = start+1;
 end
+movegui('center')
 sgtitle('Pupil detected')
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Pupil.pdf']),'-dpdf','-fillpage');
         
@@ -280,7 +283,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     sgtitle([num2str(sum(~isnan(centroid_dist))) '/' num2str(nTrials) ' measurable trials'])
     xlabel('Centroid distance from median')
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilPosDist.pdf']),'-dpdf','-fillpage');
-
+    movegui('center')
         
     [n edges bin] = histcounts(centroid_dist,[0:2:30]);
     
@@ -301,7 +304,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     end
     sgtitle('Example eye image by distance from median')
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilImgByDist.pdf']),'-dpdf','-fillpage');
-
+    movegui('center')
     
 %     centroid_dist_sf = cell(1,nSF);
 %     centroid_med_sf = cell(1,nSF);

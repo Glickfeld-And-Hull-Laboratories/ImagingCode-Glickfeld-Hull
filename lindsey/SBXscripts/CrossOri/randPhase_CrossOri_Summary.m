@@ -6,7 +6,7 @@ summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandPhaseSummary')
 ds = ['CrossOriRandDirRandPhase_ExptList'];
 svName = 'randDirRandPhase';
 eval(ds)
-driver = 'PV';
+driver = 'SCN';
 area = 'V1';
 con = 0.5;
 doConSave = 0;
