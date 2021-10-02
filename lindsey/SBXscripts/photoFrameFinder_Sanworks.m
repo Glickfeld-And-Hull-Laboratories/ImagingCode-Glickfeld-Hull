@@ -1,6 +1,6 @@
 function [stimOnFrames stimOffFrames] = photoFrameFinder_Sanworks(events);
 %new code for Sanworks photodiode
-%events is info.frames from scanbox .mat file
+%events is info.frame from scanbox .mat file
     %fix discontinuity
     if find(diff(events)<0)
         events(find(diff(events)<0)+1:end) = events(find(diff(events)<0)+1:end)+2^16;
