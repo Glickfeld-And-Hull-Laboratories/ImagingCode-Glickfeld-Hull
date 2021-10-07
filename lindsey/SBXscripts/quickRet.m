@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '210929';
+date = '211004';
 mouse = 'i2015';
-ImgFolder = '007';
-time = '1520';
+ImgFolder = '001';
+time = '1400';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -93,7 +93,7 @@ expt_input = concatenateDataBlocks(temp);
     
 %     sz = size(data);
 %     data = data(:,:,1:(nOn+nOff)*ntrials);
-    if size(data,3) < 10000
+    if size(data,3) < 100000
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
         if (nOn+nOff)*ntrials > size(data,3)

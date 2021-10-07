@@ -2,9 +2,9 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '211001';
-imgFolder = '005';
-time = '1608';
+date = '211004';
+imgFolder = '002';
+time = '1442';
 mouse = 'i2015';
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
@@ -49,9 +49,8 @@ end
 
 fprintf(['Loaded ' num2str(nFrames) ' frames \r\n']);
    
-behData = input;
 
-clear beh_prefix input
+clear beh_prefix 
 %% register the green data
 if exist(fullfile(fnOut,'regOuts&Img.mat')) %check if there is already registration info for this data
     load(fullfile(fnOut,'regOuts&Img.mat'))
@@ -59,22 +58,22 @@ if exist(fullfile(fnOut,'regOuts&Img.mat')) %check if there is already registrat
     data_avg = mean(data_g_reg,3);
     figure;imagesc(data_avg);colormap gray
     save(fullfile(fnOut,'regOuts&Img.mat'),'outs','regImg','data_avg')    
-    save(fullfile(fnOut,'input.mat'),'behData')
+    save(fullfile(fnOut,'input.mat'),'input')
     clear data_g input
     
 else %if not, must register. Start by showing average for each of four 500-frame bins so user can choose one
-    nep = floor(size(data_g,3)./10000);
+    nep = floor(size(data_g,3)./1000);
     [n n2] = subplotn(nep);
     figure; 
     movegui('center')
     for i = 1:nep 
         subplot(n,n2,i); 
-        imagesc(mean(data_g(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); 
-        title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); 
+        imagesc(mean(data_g(:,:,1+((i-1)*1000):500+((i-1)*1000)),3)); 
+        title([num2str(1+((i-1)*1000)) '-' num2str(500+((i-1)*1000))]); 
         colormap gray; 
         %clim([0 3000]); 
     end
-    
+    beh_struct = input; clear input
     regImgStartFrame = input('Enter Registration Image Start Frame:');
     regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
     [outs,data_g_reg] = stackRegister(data_g,regImg);
@@ -83,6 +82,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
     print(fullfile(fnOut,'avgFOV.pdf'),'-dpdf','-bestfit')
     clear data_g
     save(fullfile(fnOut,'regOuts&Img.mat'),'outs','regImg','data_avg')
+    input = beh_struct;
 end
 
 
@@ -95,109 +95,76 @@ if info.config.pmt1_gain > 0.5
     clear data_r clear data_r_reg
 end
 
-%% will add something to register the red cells
 
 %% find activated cells
-%find number of frames per trial and temporarily reshape data into trials
-%overal goal here is to get green data in terms of df/f
-nOn = behData.nScansOn;
-nOff = behData.nScansOff;
-ntrials = size(behData.tGratingDirectionDeg,2); %this is a cell array with one value per trial, so length = ntrials
+
+
+%find the relevant parameters from the input structure
+ntrials = size(input.tThisTrialStartTimeMs,2); %this is a cell array with one value per trial, so length = ntrials
 %dimension of each frame in pixels, and number of frames
 sz = size(data_g_reg);
-data_tr = reshape(data_g_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
-%The trial data frame is in x and y pixels per frmae, then n frames per
-%trial then ntrials
-fprintf(['Size of data_tr is ' num2str(size(data_tr))])
-%find baseline fluorescence, using the second half of the stim off period
-%select the frames for the second half of the baseline, then average over
-%those frames
-data_f = mean(data_tr(:,:,nOff/2:nOff,:),3); 
-% subtract baseline fluorescence frrom raw
-data_df = bsxfun(@minus, double(data_tr), data_f); 
-%normalize to the baseline fluorescence
-data_dfof = bsxfun(@rdivide,data_df, data_f); 
-% clear the intermediate data frames
 
-%all the dfof data will be from the green channel, so maybe it doesn't make
-%
-clear data_f data_df data_tr
+%right now I'm only doing one contrast
+stimOneContrast = celleqel2mat_padded(input.tStimOneGratingContrast);
+stimOneCons = unique(stimOneContrast);
 
-%find the stimulus directions
-tDir = celleqel2mat_padded(behData.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
-Dirs = unique(tDir);
-nDirs = length(Dirs);
+%right now I'm only doing one orientation
+ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
+oris = unique(ori_mat);
+nOri = length(oris);
+
+stimOneTime = celleqel2mat_padded(input.tStimOneGratingOnTimeMs); %duration for each trial
+stimOneTimes = unique(stimOneTime); %list of durations used
+nTime = length(stimOneTimes); %how many different durations were used
+nTrials = length(cStimOne);
+
+%empty data frames that are the size of the FOV by the number of trials
+data_f = nan(sz(1),sz(2),nTrials); 
+data_one = nan(sz(1),sz(2),nTrials);
+%loop through each trial
+for itrial = 1:nTrials
+    if (cStimOne(itrial)+30)<sz(3) %make sure trials isn't too close to the end
+        data_f(:,:,itrial) = mean(data_g_reg(:,:,cStimOne(itrial)-20:cStimOne(itrial)-1),3); %baseline F is the 20 frames before the stim
+        data_one(:,:,itrial) = mean(data_g_reg(:,:,cStimOne(itrial):cStimOne(itrial)+round(stimOneTime(itrial)*(double(input.frameRateHz)/1000))),3); %response F is the stimulus duration
+    end
+end
+data_one_dfof = (data_one-data_f)./data_f;
+
+
+if input.doRandStimOnTime
+    data_dfof_stim = zeros(sz(1),sz(2),nTime+1);
+    [n n2] = subplotn(nTime+1);
+    figure;
+    for it = 1:nTime %loop through the stim durations
+        ind = find(stimOneTime == stimOneTimes(it)); %finr trials with that duration
+        data_dfof_stim(:,:,it) = nanmean(data_one_dfof(:,:,ind),3); %average dfof for each duration
+        subplot(n,n2,it)
+        imagesc(data_dfof_stim(:,:,it))
+        title(num2str(stimOneTimes(it)))
+    end
+end
+
+data_dfof = cat(3,data_dfof_stim, mean(data_g_reg,3),double(max(data_g_reg,[],3)));
+
+
 %% segmenting green cells
-%create empty matrix with FOV for each direction: nYpix x nXPix x nDir
-%we will find the average dfof for each of the directions
-data_dfof_avg = zeros(sz(1),sz(2),nDirs); 
-%images for segmentation will go through the different stimuli
-figure; movegui('center')
-[n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
-for idir = 1:nDirs
-    ind = find(tDir == Dirs(idir)); %find all trials with each direction
-    %average all On frames and all trials
-    data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4);
-    subplot(n,n2,idir)
-    imagesc(data_dfof_avg(:,:,idir))
-end
-% this plot is not very informative, but I will use the average dfof for
-% each stimulus condition in the next step
 
-%make a gaussian filter an apply it to the data, which shoould smooth it
-%not sure how to optimize this filter
-myfilter = fspecial('gaussian',[20 20], 0.5); %maybe filter less?
-data_dfof_avg_filtered = imfilter(data_dfof_avg,myfilter);
-figure; movegui('center')
-[n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
-for idir = 1:nDirs
-    ind = find(tDir == Dirs(idir)); %find all trials with each direction
-    %average all On frames and all trials
-    
-    subplot(n,n2,idir)
-    imagesc(data_dfof_avg_filtered(:,:,idir))
-end
-%the plots don't look very different, so I'm not sure what are good filter
-%settings
-%take the max projection - this give a single "frame" that is the maximum
-%value for each pixel, which should amount to the maximum response for each
-%cell to any stimulus condition
-data_dfof_max = max(data_dfof_avg_filtered,[],3); 
-
-data_reg_avg = mean(data_g_reg,3);
-% -->I could also do a pixel correlation and use that for segmenting, too
-
-%tack max projection onto the front of the set of averages
-data_dfof_for_masks = cat(3,data_dfof_max, data_dfof_avg_filtered,data_reg_avg);
-%find the size of this data frame in order to make mask data frames of the
-%same dimensions
-sz = size(data_dfof_for_masks);
-%make empty 2D dataframes to hold mask data moving forward
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
+mask_data = data_dfof;
 
-%loop through the max projection and then the average for each stim
-%condition and show that image, using theimCellEditInteractiveLG function
-%to select cells
-
-for iStim = 1:size(data_dfof_for_masks,3)    
-    mask_data_temp = data_dfof_for_masks(:,:,iStim);
-    mask_data_temp(find(mask_exp >= 1)) = 0; %blacks out old cells
-    bwout = imCellEditInteractiveLG(mask_data_temp); %selection GUI
-    mask_all = mask_all+bwout; %adds new cells to old cells
-    mask_exp = imCellBuffer(mask_all,3)+mask_all; %creates buffer around cells to avoid fusing.
-    %this buffer is carried over to the next iteration of the loop
+for iStim = 1:size(data_dfof,3)
+    mask_data_temp = mask_data(:,:,end+1-iStim);
+    mask_data_temp(find(mask_exp >= 1)) = 0;
+    bwout = imCellEditInteractiveLG(mask_data_temp);
+    mask_all = mask_all+bwout;
+    mask_exp = imCellBuffer(mask_all,3)+mask_all;
     close all
 end
-%masks are 0/1, so mask all is a ypix by x pix array of 0/1 values.
-mask_cell = bwlabel(mask_all); 
-%turns logical into numbered cells, numbered from upper left to lower rihgt?
-figure;
-%shows all the cells, color graded by cell number
-imagesc(mask_cell)
+mask_cell= bwlabel(mask_all);
+figure; imagesc(mask_cell)
 
-
-% extract timecourses before np subtracktion using stackGetTimeCourses
+%% extract timecourses before np subtracktion using stackGetTimeCourses
 data_tc = stackGetTimeCourses(data_g_reg, mask_cell); %applies mask to stack (averages all pixels in each frame for each cell) to get timecourses
 
 nCells =  max(max(mask_cell));
@@ -212,8 +179,8 @@ mask_np = imCellNeuropil(mask_cell,nBuffPix,nMaskPix);
 run_str = catRunName(imgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
-save(fullfile(fnOut, [datemouserun '_mask_cell.mat']), 'data_dfof_max', 'mask_cell', 'mask_np')
-clear mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all  data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
+save(fullfile(fnOut, [datemouserun '_mask_cell.mat']), 'mask_cell', 'mask_np')
+clear mask_data mask_all
 
 %% remove the neuropil
 
@@ -257,24 +224,73 @@ clear data_reg data_reg_down
 save(fullfile(fnOut, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
 
 %% Now we have timecourses for each cell with the neuropil removed, can start analyzing them
-% looking at time courses
-data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);
-data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
-data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
-%looking at data with np subtracted
-tc_cell_avrg = mean(data_dfof_trial,3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(mean(data_dfof_trial,2));%average over trials, one row per cell
-tc_cell_trial_avrg = mean(tc_cell_avrg,2);%average over trials and cells
+%split into trials using maximum length
+nOnMax = max(stimOneTime)*(frame_rate/1000); %find the maximum number of frames for the on period
+nFrameTrial = nOnMax+3*frame_rate; %to add one second on either side
 
+data_tc_trial = nan(nFrameTrial,nTrials,nCells); %make empty datafrmae
+for iTrial = 1:nTrials
+    if cStimOne(iTrial)+nOnMax+frame_rate < nFrames %to remove trials too close to the end
+        tempF =  mean(data_tc(cStimOne(iTrial)-20 :cStimOne(iTrial)-1,:),1);
+        data_tc_trial_temp = data_tc(cStimOne(iTrial)-frame_rate+1 : cStimOne(iTrial)+nOnMax+(2*frame_rate),:);
+        data_tc_trial(:,iTrial,:) = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial_temp, tempF), tempF);
+     end
+end
+
+save(fullfile(fnOut, [datemouserun '_trial_TCs.mat']), 'data_tc_trial')
+
+
+
+%% identifying visually responsive cells
+%for now, I will use the number of frames corresponding to the min duration
+nOnMin =  round(min(stimOneTimes)*frame_rate/1000);
+resp_win = frame_rate+1:frame_rate+nOnMin;
+base_win = frame_rate/2 : frame_rate;%half second before the stim
+
+data_resp = zeros(nCells,nTime,2);
+h = zeros(nCells, nTime);
+p = zeros(nCells, nTime);
+
+for  it = 1:nTime
+   inds = find(stimOneTime == stimOneTimes(it));
+   data_resp(:,it,1) =squeeze(nanmean(nanmean(data_tc_trial(resp_win,inds,:)),2));
+   data_resp(:,it,2) =squeeze(std(nanmean(data_tc_trial(resp_win,inds,:)),[],2))./sqrt(length(inds));
+   
+   [h(:,it), p(:,it)] = ttest(squeeze(nanmean(data_tc_trial(resp_win,inds,:),1)), squeeze(nanmean(data_tc_trial(base_win,inds,:),1)),'dim',1,'tail','right','alpha',0.05./(nOri.*3-1));
+    
+end
+
+h_all = sum(h,2);
+resp=logical(h_all);
+
+%% looking at time courses
+t = 1:(size(data_tc_trial,1));
+t=(t-(frame_rate))/frame_rate;
+
+[n n2] = subplotn(nTime);
 figure;
-plot(tc_trial_avrg, 'LineWidth',.005,'color',[.25 .25 .25]);
-hold on;
-plot(tc_cell_trial_avrg, 'LineWidth',2, 'color','k');
-hold on;
-vline(nOff,'g')
-title('Timecourses');
-hold off
-
+    for it = 1:nTime %loop through the stim durations
+        inds = find(stimOneTime == stimOneTimes(it)); %find trials with that duration
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,resp),2));
+        subplot(n,n2,it)
+        plot(t,temp_trials)
+        hold on
+        plot(t,mean(squeeze(nanmean(data_tc_trial(:,inds,resp),2)),2),'k');
+        title(num2str(stimOneTimes(it)))
+    end
 print(fullfile(fnOut, [datemouserun 'timecourses']),'-dpdf');
 
+
+figure;
+    for it = 1:nTime %loop through the stim durations
+        inds = find(stimOneTime == stimOneTimes(it)); %find trials with that duration
+        temp_mean = mean(squeeze(nanmean(data_tc_trial(:,inds,resp),2)),2);
+        temp_se= std(squeeze(nanmean(data_tc_trial(:,inds,resp),2)),[],2)/sqrt(sum(resp));
+        subplot(n,n2,it)
+        shadedErrorBar(t,temp_mean,temp_se);
+%         vline(frame_rate+1)
+%         vline(frame_rate + 1+(stimOneTimes(it)*frame_rate/1000))
+        title(num2str(stimOneTimes(it)))
+    end
+print(fullfile(fnOut, [datemouserun 'shadedEB_timecourses']),'-dpdf');
