@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 1;
-ds = 'CrossOriRandDirRandPhase_ExptList';
-iexp = 42; 
+ds = 'i484_passive_ExptList';
+iexp = 7; 
 doPhaseAfterDir = 1;
 rc = behavConstsAV;
 eval(ds)
@@ -83,8 +83,8 @@ nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
-data_avg = mean(data(:,:,20001:20500),3);
 %% Register data
+data_avg = mean(data(:,:,30001:30500),3);
 if doPhaseAfterDir
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);
@@ -119,7 +119,7 @@ rg(:,:,2) = last./max(last(:));
 figure; image(rg)
 movegui('center')
 %% if red channel data
-if doRedChannel
+if doRedChannel & ~doPhaseAfterDir
     ImgFolderRed = expt(iexp).redImg;
     CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];
     cd(CD);
@@ -137,6 +137,63 @@ if doRedChannel
 
     data_red_avg = mean(rr_reg,3);
     figure; imagesc(data_red_avg);
+    
+    ImgFolderRed = expt(iexp).redImg;
+    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];        
+    cd(CD);
+    imgMatFile = [expt(iexp).redImg{1} '_000_000.mat'];
+    load(imgMatFile);
+    nframes = info.config.frames;
+    fprintf(['Reading run ' expt(iexp).redImg{1} '- ' num2str(min(nframes)) ' frames \r\n'])
+    data = sbxread(imgMatFile(1,1:11),0,nframes);
+    if size(data,1) == 2
+        red_data = squeeze(data(2,:,:,:));
+        green_data = squeeze(data(1,:,:,:));
+        [out, green_data_reg] = stackRegister(green_data,data_avg);
+        [out2, red_data_reg] = stackRegister_MA(red_data,[],[],out);
+        red_data_avg = mean(red_data_reg,3);
+        figure; imagesc(red_data_avg)
+        title('Red')
+        green_data_avg = mean(green_data_reg,3);
+        figure; imagesc(green_data_avg)
+        title('Green')
+        if size(expt(iexp).redImg,2) == 2
+            CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{2}];                  
+            cd(CD);
+            imgMatFile = [expt(iexp).redImg{2} '_000_000.mat'];
+            load(imgMatFile);
+            nframes = info.config.frames;
+            fprintf(['Reading run ' expt(iexp).redImg{2} '- ' num2str(min(nframes)) ' frames \r\n'])
+            data = sbxread(imgMatFile(1,1:11),0,nframes);
+            red_data = squeeze(data(2,:,:,:));
+            green_data = squeeze(data(1,:,:,:));
+            [out, green_data_reg] = stackRegister(green_data,green_data_avg);
+            [outs, red_data_reg] = stackRegister_MA(red_data,[],[],out);
+            red_data_avg = mean(red_data_reg,3);
+            figure; imagesc(red_data_avg)
+            title('Red')
+        end
+        save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_redData.mat']), 'green_data_avg', 'red_data_avg')
+    end
+
+    data_avg = mean(data_reg(:,:,size(data_reg,3)-10000:end),3);
+    figure; 
+    subplot(2,2,1)
+    sz = size(data_avg);
+    rgb = zeros(sz(1),sz(2),3);
+    rgb(:,:,1) = red_data_avg./max(red_data_avg(:));
+    imagesc(red_data_avg);
+    colormap gray
+    subplot(2,2,2)
+    rgb(:,:,2) = data_avg./max(data_avg(:));
+    imagesc(rgb);
+    if size(expt(iexp).redImg,2) == 2
+        title('Red at 1040; Green at 920')
+    else
+        title('Red at 920; Green at 920')
+    end
+    print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
+
 end
 
 %% find activated cells
@@ -305,8 +362,8 @@ imagesc(data_dfof_max)
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_maxdfof.pdf']),'-dpdf')
 
 data_dfof = cat(3, data_dfof, data_dfof_max);
-if doRedChannel
-    data_dfof = cat(3,data_dfof,data_red_avg);
+if doRedChannel & ~doPhaseAfterDir
+    data_dfof = cat(3,data_dfof,red_data_avg);
 end
 if (strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')) & ~doRedChannel
     data_dfof = cat(3,data_dfof,data_avg);

@@ -2,6 +2,7 @@ close all; clear all; clc;
 doRedChannel = 0;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir_F2 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure2');
+manuscriptDir = fullfile(LG_base, 'Manuscripts','2021','Barbera2021','FigureDataAndCode');
 
 ds = ['CrossOriSingleStimAdapt_ExptList'];
 eval(ds);
@@ -120,6 +121,10 @@ for iexp = 1:nexp
     
     totCells = totCells+size(noadapt_resp_cell{1,1},1); 
 end
+save(fullfile(manuscriptDir, 'Figure2_CalciumImaging_data.mat'), 'resptest_ind_all','respmask_ind_all','respplaid_ind_all','preftest_ind_all',...
+    'prefmask_ind_all','respmask_ad_ind_all','noadapt_resp_tc_all','singadapt_resp_tc_all','noadapt_resp_cell_all','singadapt_resp_cell_all',...
+    'expt_ind','h_MI_all','p_MI_all','h_MI_ad_all','p_MI_ad_all','expt','tt','testCons');
+
 %%
 
 nmice = length([{expt.mouse}]);

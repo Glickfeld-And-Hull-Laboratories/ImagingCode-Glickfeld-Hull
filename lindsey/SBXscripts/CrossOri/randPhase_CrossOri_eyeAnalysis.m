@@ -82,7 +82,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [5 18];
+rad_range = [5 25];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);

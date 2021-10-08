@@ -4,6 +4,7 @@ LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindse
 summaryDir_F6 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure6');
 summaryDir_F7 = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure7');
 summaryDir_GA = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_GA');
+manuscriptDir = fullfile(LG_base, 'Manuscripts','2021','Barbera2021','FigureDataAndCode');
 
 %all experiments SF = 0.05
 ds = ['CrossOriRandPhase_ExptList'];
@@ -203,10 +204,12 @@ for iexp = 1:nexp
     else
         expt(iexp).nP = NaN;
     end
+    tt= (-prewin_frames:postwin_frames-1).*(1000./frame_rate);
 end
 stim_OSI_all = OSI_all;
-summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandPhaseSummary');
-save(fullfile(summaryDir,['randPhase_Summary_V1_SLC.mat']),'anova_all','stim_OSI_all','resp_ind_all_phase','amp_all', 'amp_shuf_all', 'b_all', 'phase_SI_all', 'phase_MI_all', 'phase_MI_max_all', 'mouse_list')
+save(fullfile(manuscriptDir, 'Figures6&7_CalciumImaging_data.mat'),'anova_all','stim_OSI_all','resp_ind_all_phase','amp_all','pha_all',...
+    'amp_shuf_all', 'b_all', 'phase_SI_all', 'phase_MI_all', 'phase_MI_max_all', 'mouse_list','expt','expUse','resp_tc_all','tt','expt_ind',...
+    'SI_avg_all','yfit_allcells','max_dir_all')
 %%
 respN = length(resp_ind_all_phase);
 modN = sum(anova_all(resp_ind_all_phase)<0.05);

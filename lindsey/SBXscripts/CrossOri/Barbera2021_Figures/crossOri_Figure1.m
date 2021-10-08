@@ -2,6 +2,7 @@ close all; clear all; clc;
 doRedChannel = 0;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir_F1= fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'CrossOri_Figures', 'CrossOri_Figure1');
+manuscriptDir = fullfile(LG_base, 'Manuscripts','2021','Barbera2021','FigureDataAndCode');
 
 ds = ['CrossOriRandDirTwoPhase_ExptList'];
 eval(ds);
@@ -130,6 +131,11 @@ for i = 1:length(ind)
         firstexp = 0;
      end
 end
+
+save(fullfile(manuscriptDir, 'Figure1_CalciumImaging_data.mat'),'exptInd','resp_ind_all','resp_ind_45_all','plaid_SI_all','plaid_SI_45_all','resp_stim_prefDir_all',...
+    'resp_mask_prefDir_all','resp_plaid_prefDir_all','resp_stim_45Dir_all','resp_mask_45Dir_all','resp_plaid_45Dir_all','avg_resp_dir_all',...
+    'max_dir_all','h_resp_all','expt','tt','data_avg','resp_tc_blank','resp_tc_cell');
+
 %%
 plaid_SI_avg = mean(plaid_SI_all(resp_ind_all));
 plaid_SI_sem = std(plaid_SI_all(resp_ind_all),[],2)./sqrt(length(resp_ind_all));
