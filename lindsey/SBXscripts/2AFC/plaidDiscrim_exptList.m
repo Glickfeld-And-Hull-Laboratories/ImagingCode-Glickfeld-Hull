@@ -10,11 +10,113 @@ expt(1).driver = 'SOM';
 expt(1).time_mat = ['1030'];
 expt(1).runs = ['001'];
 expt(1).nrun = size(expt(1).runs,1);
-expt(1).frame_rate = 30;
 expt(1).folder = 'camaron';
 expt(1).z = 500;
 expt(1).obj = '16x';
 expt(1).zoom = 2.4;
 expt(1).redImg = {'002','003'};
 expt(1).eyeData = 1;
+
+%% i484 210930 maybe some vis responses?
+expt(2).mouse = 'i484';
+expt(2).date = '210930';
+expt(2).img_loc  = {'V1';'L5'};
+expt(2).img_strct  = {'cells'};
+expt(2).indicator = {'AAV';'GCaMP7f'};
+expt(2).driver = 'SOM';
+expt(2).time_mat = ['1213'];
+expt(2).runs = ['001'];
+expt(2).nrun = size(expt(2).runs,1);
+expt(2).folder = 'camaron';
+expt(2).z = 500;
+expt(2).obj = '16x';
+expt(2).zoom = 2;
+expt(2).redImg = {'002','003'};
+expt(2).eyeData = 1;
+
+%% i484 211001 only short run collected
+expt(3).mouse = 'i484';
+expt(3).date = '211001';
+expt(3).img_loc  = {'V1';'L5'};
+expt(3).img_strct  = {'cells'};
+expt(3).indicator = {'AAV';'GCaMP7f'};
+expt(3).driver = 'SOM';
+expt(3).time_mat = ['1229'];
+expt(3).runs = ['001'];
+expt(3).nrun = size(expt(3).runs,1);
+expt(3).folder = 'camaron';
+expt(3).z = 525;
+expt(3).obj = '16x';
+expt(3).zoom = 2;
+expt(3).redImg = {'002','003'};
+expt(3).eyeData = 1;
+
+%% i484 211004
+expt(4).mouse = 'i484';
+expt(4).date = '211004';
+expt(4).img_loc  = {'V1';'L5'};
+expt(4).img_strct  = {'cells'};
+expt(4).indicator = {'AAV';'GCaMP7f'};
+expt(4).driver = 'SOM';
+expt(4).time_mat = ['0915'];
+expt(4).runs = ['001'];
+expt(4).nrun = size(expt(4).runs,1);
+expt(4).folder = 'camaron';
+expt(4).z = 525;
+expt(4).obj = '16x';
+expt(4).zoom = 2;
+expt(4).redImg = {'002','003'};
+expt(4).eyeData = 1;
+
+%% i484 211005
+expt(5).mouse = 'i484';
+expt(5).date = '211005';
+expt(5).img_loc  = {'V1';'L2/3'};
+expt(5).img_strct  = {'cells'};
+expt(5).indicator = {'AAV';'GCaMP7f'};
+expt(5).driver = 'SOM';
+expt(5).time_mat = ['1120'];
+expt(5).runs = ['001'];
+expt(5).nrun = size(expt(5).runs,1);
+expt(5).folder = 'camaron';
+expt(5).z = 215;
+expt(5).obj = '16x';
+expt(5).zoom = 2;
+expt(5).redImg = {'002','003'};
+expt(5).eyeData = 1;
+
+%% i484 211006
+expt(6).mouse = 'i484';
+expt(6).date = '211006';
+expt(6).img_loc  = {'V1';'L2/3'};
+expt(6).img_strct  = {'cells'};
+expt(6).indicator = {'AAV';'GCaMP7f'};
+expt(6).driver = 'SOM';
+expt(6).time_mat = ['1047'];
+expt(6).runs = ['001'];
+expt(6).nrun = size(expt(6).runs,1);
+expt(6).folder = 'camaron';
+expt(6).z = 250;
+expt(6).obj = '16x';
+expt(6).zoom = 2;
+expt(6).redImg = {'002','003'};
+expt(6).eyeData = 1;
+
+%% i484 211007
+expt(7).mouse = 'i484';
+expt(7).date = '211007';
+expt(7).img_loc  = {'V1';'L2/3'};
+expt(7).img_strct  = {'cells'};
+expt(7).indicator = {'AAV';'GCaMP7f'};
+expt(7).driver = 'SOM';
+expt(7).time_mat = ['1135'];
+expt(7).runs = ['001'];
+expt(7).nrun = size(expt(7).runs,1);
+expt(7).folder = 'camaron';
+expt(7).z = 275;
+expt(7).obj = '16x';
+expt(7).zoom = 2;
+expt(7).redImg = {'002','003'};
+expt(7).eyeData = 1;
+
 

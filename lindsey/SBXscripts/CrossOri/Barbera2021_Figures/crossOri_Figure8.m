@@ -5,6 +5,8 @@ CrossOri_base = fullfile('Analysis', '2P', 'CrossOri');
 PV_summaryDir = fullfile(LG_base, CrossOri_base, 'RandDirRandPhaseSummary','randDirRandPhase');
 SLC_summaryDir = fullfile(LG_base, CrossOri_base, 'RandPhaseSummary','randPhase');
 summaryDir_F8 = fullfile(LG_base, CrossOri_base, 'CrossOri_Figures', 'CrossOri_Figure8');
+manuscriptDir = fullfile(LG_base, 'Manuscripts','2021','Barbera2021','FigureDataAndCode');
+
 driver_list = {'SLC'; 'PV'};
 ndriver = length(driver_list);
 leg_str = cell(1,ndriver);
@@ -13,7 +15,7 @@ area ='V1';
 for iD = 1:length(driver_list)
     driver = driver_list{iD};
     summaryDir = eval([driver_list{iD} '_summaryDir']);
-    load([summaryDir '_Summary_' area '_' driver '.mat'])
+    load([summaryDir '_Summary_' area '_' driver '.mat']);
     driverSummary(iD).name = driver_list{iD};
     driverSummary(iD).mice = unique(mouse_list,'rows');
     driverSummary(iD).nmice = size(unique(mouse_list,'rows'),1);
@@ -224,3 +226,4 @@ for iC = 1:length(ex_ind)
     savefig(fullfile(summaryDir_F8, ['Figure8_PVexamplePhaseResp_Cell' num2str(iCell) '.fig']))
 end
 
+save(fullfile(manuscriptDir, 'Figure8_CalciumImaging_data.mat'),'PV_data','SLC_data','driver_list','data_avg','resp_tc','tt')
