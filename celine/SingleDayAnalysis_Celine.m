@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 89;
+day_id = 112;
 %% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -39,6 +39,9 @@ tOri = tDir;
 tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;
 oris = unique(tOri);
 nOri = length(oris);
+ntrials = 160;
+tCon = tCon(1:160);
+tDir = tDir(1:160);
 %%
 
 % % % plot cells with ID numbers to see if there are any you want to get ride of
@@ -253,7 +256,8 @@ x=1:(size(tc_green,1));
 x=(x-30)/15;
 %shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'r');
 plot(x,tc_red,'r');
-ylim([-.02 .35]);
+%ylim([-.02 .35]);
+ylim([-.05 .3]);
 hold on
 shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
 title('responsive green and all red');
@@ -263,9 +267,9 @@ saveas(gcf,fullfile(fn,[mouse '-' date 'tcPlot_indiv.jpg']));
 figure
 x=1:(size(tc_green,1));
 x=(x-30)/15;
-shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'lineprops','r');
+shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'r');
 %plot(x,tc_red,'r');
-ylim([-.02 .23]);
+ylim([-.05 .3]);
 hold on
 shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
 title('responsive green and all red');

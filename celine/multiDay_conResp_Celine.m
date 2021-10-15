@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
 
-day_id(2) = 79;
+day_id(2) = 113;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 nd = size(day_id,2);
 
@@ -65,7 +65,7 @@ data_dfof_all = cell(1,nd);
 fractTimeActive_all = cell(1,nd);
 fractTimeActive_match = cell(1,nd);
 for id = 1:nd %cycle through days
-    nTrials = length(tDir{id})-1; %use the list of direction by trial to figure out how many trials there are
+    nTrials = 160%length(tDir{id})-1; %use the list of direction by trial to figure out how many trials there are
    %currently the way I center the stim on period requires me to cut out
    %one trial, hence the -1
    

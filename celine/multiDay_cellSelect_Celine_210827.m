@@ -8,7 +8,7 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 109;
+day_id = 116;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -58,7 +58,7 @@ for irun = 1:nruns
     elseif strcmp(expt(day_id).data_loc,'ACh')
         root = rc.achData;
         CD = fullfile(root,'2p_data', mouse, expDate, runFolder);
-        dat = 'data-i''';
+        dat = 'data-';
     end
     cd(CD);
 
@@ -66,7 +66,7 @@ for irun = 1:nruns
     load(imgMatFile);
 %    if username == 'celine'
     if username == 'cc735'
-        fName = ['Z:\Behavior\Data\' dat mouse '''-' expDate '-' times{irun} '.mat'];
+        fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
         
     else
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
@@ -159,7 +159,7 @@ nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingContrast,2);
-%ntrials = 720;
+%ntrials = 160;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
@@ -168,12 +168,12 @@ clear data_g_trial data_g_on data_g_f
 
 %find the different contrasts and orientations
 tCon = celleqel2mat_padded(input.tGratingContrast);
-%tCon = tCon(1:720);
+%tCon = tCon(1:160);
 cons = unique(tCon);
 nCon = length(cons);
 ind_con = find(tCon == max(cons(:)));
 tDir = celleqel2mat_padded(input.tGratingDirectionDeg);
-%tDir = tDir(1:720);
+%tDir = tDir(1:160);
 tOri = tDir;
 tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;
 oris = unique(tOri);
@@ -261,8 +261,8 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
         [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2);
         
     else %if there is no green channel in this run
-        
-        [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out);
+        redAvg = mean(data_rr,3);
+        [out, data_rr_reg] = stackRegister(data_rr,redAvg);
         redChImgTemp = mean(data_rr_reg,3);
         [~,redChImg] = stackRegister(redChImgTemp,data_avg);
     end
@@ -291,7 +291,7 @@ mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
 %comes up
 if ~isempty(expt(day_id).redChannelRun)
-    bwout = imCellEditInteractiveLG(redChImg);
+    bwout = imCellEditInteractiveCC(redChImg);
     mask_all = mask_all+bwout;
     mask_exp = imCellBuffer(mask_all,3)+mask_all;
     close all

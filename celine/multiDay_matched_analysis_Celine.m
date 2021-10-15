@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
 
-day_id(2) = 79;
+day_id(2) = 26
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 nd = size(day_id,2);
 
@@ -35,9 +35,9 @@ tOri_match = cell(1,nd);
 
 %find the contrasts, directions and orientations for each day
 for id = 1:nd
-    tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast);
-    tDir_match{id} = celleqel2mat_padded(input(id).tGratingDirectionDeg);
-    tOri_match{id} = tDir_match{id};
+    tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:720));
+    tDir_match{id} = celleqel2mat_padded(input(id).tGratingDirectionDeg(1:720));
+    tOri_match{id} = tDir_match{id}(1:720);
     tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
 end
 oris = unique(tOri_match{1});
@@ -59,7 +59,8 @@ data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however ma
 
 fractTimeActive_match = cell(1,nd);
 for id = 1:nd %cycle through days
-    nTrials = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
+    nTrials=720;
+    %nTrials = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
    %currently the way I center the stim on period requires me to cut out
    %one trial, hence the -1
    
@@ -299,8 +300,8 @@ subplot(1,2,1) %for the first day
 
 x=1:(size(tc_green_avrg_match{1},1));
 x=(x-30)/15;
-shadedErrorBar(x,tc_red_avrg_match{1},tc_red_se_match{1},'lineprops','r');
-ylim([-.02 .23]);
+shadedErrorBar(x,tc_red_avrg_match{1},tc_red_se_match{1},'r');
+ylim([-.02 .35]);
 hold on
 shadedErrorBar(x,tc_green_avrg_match{1},tc_green_se_match{1});
 title('day 1')
@@ -308,8 +309,8 @@ title('day 1')
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(x,tc_red_avrg_match{2},tc_red_se_match{2},'lineprops','r');
-ylim([-.02 .23]);
+shadedErrorBar(x,tc_red_avrg_match{2},tc_red_se_match{2},'r');
+ylim([-.02 .35]);
 hold on
 shadedErrorBar(x,tc_green_avrg_match{2},tc_green_se_match{2});
 title('day 2')
@@ -320,22 +321,22 @@ print(fullfile(fn_multi,['timecourses']),'-dpdf');
 figure
 subplot(2,2,1)
 plot(tc_trial_avrg_keep{1}(:,green_ind_keep),'k')
-ylim([-.02 .23]);
+ylim([-.1 .5]);
 title('day 1')
 
 subplot(2,2,2)
 plot(tc_trial_avrg_keep{1}(:,red_ind_keep),'color',[.7 .05 .05])
-ylim([-.02 .23]);
+ylim([-.1 .5]);
 title('day 1')
 
 subplot(2,2,3)
 plot(tc_trial_avrg_keep{2}(:,green_ind_keep),'k')
-ylim([-.02 .23]);
+ylim([-.1 .5]);
 title('day 2')
 
 subplot(2,2,4)
 plot(tc_trial_avrg_keep{2}(:,red_ind_keep),'color',[.7 .05 .05])
-ylim([-.02 .23]);
+ylim([-.1 .5]);
 title('day 2')
 print(fullfile(fn_multi,['indiv_timecourses']),'-dpdf');
 %% makes a scatterplot of max df/f for day 1 vs day 2, and each subplot is one day
@@ -356,34 +357,49 @@ end
 figure; movegui('center') 
 subplot(1,2,1)
 scatter(resp_max_keep{1}(green_ind_keep),resp_max_keep{2}(green_ind_keep),'k')
-hold on
-scatter(resp_max_keep{1}(red_ind_keep),resp_max_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
-hold off
+% hold on
+% scatter(resp_max_keep{1}(red_ind_keep),resp_max_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
+% hold off
 xlabel('D1- max dF/F')
 ylabel('D2- max dF/F')
 xlim([0 .5])
 ylim([0 .5])
 refline(1)
-title('Max df/f for responsive HT- and all match HT+')
+title('Max df/f for responsive HT- ')
 
 
 subplot(1,2,2)
-scatter(resp_max_match{1}(green_ind_match),resp_max_match{2}(green_ind_match),'k')
-hold on
-scatter(resp_max_match{1}(red_ind_match_list),resp_max_match{2}(red_ind_match_list),'MarkerEdgeColor',[.7 .05 .05])
-hold off
+scatter(resp_max_keep{1}(red_ind_keep),resp_max_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
+% hold on
+% scatter(resp_max_match{1}(red_ind_match_list),resp_max_match{2}(red_ind_match_list),'MarkerEdgeColor',[.7 .05 .05])
+% hold off
 xlabel('D1- max dF/F')
 ylabel('D2- max dF/F')
 xlim([0 .5])
 ylim([0 .5])
 refline(1)
-title('Max df/f for responsive all matched cells')
+title('Max df/f HT+')
 
 print(fullfile(fn_multi,'maxResp_crossDay.pdf'),'-dpdf','-bestfit')
 
 % extract the max df/f values for analysis
+%% looking at change in dfof
+dfof_max_diff = resp_max_keep{1}-resp_max_keep{2};
+figure
+x = [mean(dfof_max_diff(green_ind_keep)), mean(dfof_max_diff(red_ind_keep))];
+y = [(std(dfof_max_diff(green_ind_keep)))/sqrt(length(green_ind_keep)), (std(dfof_max_diff(red_ind_keep)))/sqrt(length(red_ind_keep))];
+%y = [std(dfof_max_diff(green_ind_keep)), std(dfof_max_diff(red_ind_keep))]
+labs =categorical({'HT-','HT+'})
+bar(labs,x)                
+hold on
+er = errorbar(labs,x,-y,y);    
+er.Color = [0 0 0];                            
+er.LineStyle = 'none';  
+ylim([0 .2])
+hold off
+title('change in max dfof')
 
-
+print(fullfile(fn_multi,'change_max_resp.pdf'),'-dpdf','-bestfit')
 %% plotting  ori response 
 if nKeep<36
     [n n2] = subplotn(nKeep);
