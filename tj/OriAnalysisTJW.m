@@ -19,11 +19,11 @@ clear global
 %% 
 % Load TC data
 
-load('Z:\All_Staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_TCs.mat')
-load('Z:\All_Staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_input.mat')
-load('Z:\All_Staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_mask_cell.mat')
-load('Z:\All_Staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_reg_shifts.mat')
-load('Z:\All_Staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_stimActFOV.mat')
+load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_TCs.mat')
+load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_input.mat')
+load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_mask_cell.mat')
+load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_reg_shifts.mat')
+load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_stimActFOV.mat')
 %% 
 % Get nOn, nOff, nFramesPerTrial, nTrials, and nCells for reshaping
 
@@ -194,19 +194,19 @@ end
 
 clear b r
 %%
-Ori_rads = deg2rad(Oris_list)
-k1 = zeros(1,nCells)
-u1 = zeros(1,nCells)
-sse = zeros(1,nCells)
-rsquare = zeros(1,nCells)
-b = zeros(1,nCells)
-r = zeros(1,nCells)
+Ori_rads = deg2rad(Oris_list);
+k1 = zeros(1,nCells);
+u1 = zeros(1,nCells);
+sse = zeros(1,nCells);
+rsquare = zeros(1,nCells);
+b = zeros(1,nCells);
+r = zeros(1,nCells);
 %%
 %[b k1 r u1 sse rsquare] = miaovonmisesfit_ori(Ori_rads,avg_resp_ori(:,1))
 
 
 for i = 1:nCells
-    [b(i) k1(i) r(i) u1(i) sse(i) rsquare(i)] = miaovonmisesfit_ori(Ori_rads,avg_resp_ori(:,i))
+    [b(i) k1(i) r(i) u1(i) sse(i) rsquare(i)] = miaovonmisesfit_ori(Ori_rads,avg_resp_ori(:,i));
 end
 
 
@@ -218,10 +218,11 @@ for i = 1:nCells
     R1_tmp = r(i);
     k1_tmp = k1(i);
     u1_tmp = u1(i);
-    y_fits(:,i) = b_tmp+R1_tmp.*exp(k1_tmp.*(cos(2.*(new_oris-u1_tmp))-1))
+    y_fits(:,i) = b_tmp+R1_tmp.*exp(k1_tmp.*(cos(2.*(new_oris-u1_tmp))-1));
 end    
 
 %% preferred orientation (in degrees)
+<<<<<<< Updated upstream
 pref_ori = rad2deg(u1)
 %% plotting the fits
 
@@ -234,6 +235,9 @@ for i = 1:nCells
     title(['# Sig Oris = ', num2str(sig_ori(i))])
 end
 
+=======
+pref_ori = rad2deg(u1);
+>>>>>>> Stashed changes
 
 %% 
 %%bootstrap
