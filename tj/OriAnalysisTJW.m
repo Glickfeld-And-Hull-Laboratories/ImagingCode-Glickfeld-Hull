@@ -149,7 +149,7 @@ n_sig_ori = sum(sig_ori>=1)
 % How many are significant without Bonferroni?
 
 %75 are sig without it
-%% 
+%%
 % ----------------------------------------------------------------------------------
 % 
 % PART 3
@@ -223,6 +223,17 @@ end
 
 %% preferred orientation (in degrees)
 pref_ori = rad2deg(u1)
+%% plotting the fits
+
+[n n2] = subplotn(nCells)
+for i = 1:nCells 
+    subplot(n,n2,i)
+    hold on
+    errorbar(Oris_list,avg_resp_ori(:,i),std_err_ori(:,i))
+    plot(y_fits(:,i))
+    title(['# Sig Oris = ', num2str(sig_ori(i))])
+end
+
 
 %% 
 %%bootstrap
