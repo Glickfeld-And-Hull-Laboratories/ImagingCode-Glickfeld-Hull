@@ -4,7 +4,7 @@ clear all
 clc
 dataset = 'plaidDiscrim_exptList';
 eval(dataset);
-iexp = 7;
+iexp = 15;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 if strcmp(expt(iexp).folder,'lindsey')
     data_base = LG_base;
@@ -114,7 +114,7 @@ clear data
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
 figure; imagesq(mean(data_reg(:,:,1:10000),3)); truesize;
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
-%%
+%% red image
 if ~isempty(expt(iexp).redImg)
     if exist(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_redData.mat']))
         load(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_redData.mat']))
@@ -274,10 +274,6 @@ for iDir = 1:nDir
     end
 end
 
-data_reg_3hz = stackGroupProject(data_reg,10);
-pix = getPixelCorrelationImage(data_reg_3hz);
-pix(isnan(pix))=0;
-save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pixel.mat']),'pix')
 
 data_dfof_max = max(data_dfof,[],3);
 data_dfof_all = mean(data_targ_dfof,3);
@@ -285,7 +281,11 @@ data_dfof_neg = mean(((-data_targ+data_f)./data_targ),3);
 figure; imagesc(data_dfof_max)
 data_dfof = cat(3,data_dfof_max,data_dfof);
 data_dfof = cat(3,data_dfof,data_dfof_all);
-data_dfof = cat(3,data_dfof,pix);
+% data_reg_3hz = stackGroupProject(data_reg,10);
+% pix = getPixelCorrelationImage(data_reg_3hz);
+% pix(isnan(pix))=0;
+% save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pixel.mat']),'pix')
+% data_dfof = cat(3,data_dfof,pix);
 data_dfof = cat(3,data_dfof,data_dfof_neg);
 
 %% cell segmentation  
@@ -447,7 +447,8 @@ subplot(1,2,2)
 plot(tt,nanmean(mean(data_dec_dfof,2),3));
 title('Decision')
 
-
+tDoFB = celleqel2mat_padded(input.tDoFeedbackMotion);
+tDir(find(tDoFB)) = NaN;
 figure;
 for iDir = 1:nDir
     ind = intersect(find(tMaskTrial == 0), find(tDir == dirs(iDir)));
@@ -469,7 +470,7 @@ IIx = strcmp(input.trialOutcomeCell,'ignore');
 tLeftTrial = celleqel2mat_padded(input.tLeftTrial);
 tLeftResp = zeros(size(SIx));
 tLeftResp(find(tLeftTrial&SIx)) = 1;
-tLeftResp(find(~tLeftTrial&~SIx)) = 1;
+tLeftResp(find(~tLeftTrial&~MIx)) = 1;
 
 figure;
 for iDir = 1:nDir
@@ -653,7 +654,7 @@ for iDir = 1:nDir
 end
 xlabel('Time from target grating (ms)')
 ylim([-0.02 0.15])
-title(['Pyr: n = ' num2str(sum(mask_label))])
+title(['Pyr: n = ' num2str(sum(~mask_label))])
 subplot(3,2,3) 
 for iDir = 1:nDir
     ind_dir = find(tMaskTrial & tDir == dirs(iDir));
@@ -689,46 +690,6 @@ ylim([-0.02 0.15])
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_allCells.pdf']), '-dpdf','-bestfit')
 
 %%
-resp_win = frameRateHz+5:frameRateHz*2;
-base_win = 1:frameRateHz;
-data_stim_resp = squeeze(mean(data_stim_dfof(resp_win,:,:),1));
-data_stim_base = squeeze(mean(data_stim_dfof(base_win,:,:),1));
-[h p] = ttest(data_stim_resp,data_stim_base,'tail','right','dim',2);
-stim_resp_dir = zeros(nCells,nDir,2,2);
-for iDir = 1:nDir
-    ind_dir = find(tDir == dirs(iDir) & tMaskTrial==0);
-    stim_resp_dir(:,iDir,1,1) = nanmean(data_stim_resp(:,ind_dir),2);
-    stim_resp_dir(:,iDir,1,2) = nanstd(data_stim_resp(:,ind_dir),[],2)./sqrt(length(ind_dir));
-    ind_dir = find(tDir == dirs(iDir) & tMaskTrial);
-    stim_resp_dir(:,iDir,2,1) = nanmean(data_stim_resp(:,ind_dir),2);
-    stim_resp_dir(:,iDir,2,2) = nanstd(data_stim_resp(:,ind_dir),[],2)./sqrt(length(ind_dir));
-end
-
-figure;
-start = 1;
-for iC = 1:nCells
-    if start > 49
-        suptitle('Target response- All trials')
-        print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespTuning_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-        figure;
-        start = 1;
-    end
-    subplot(n,n2,start)
-    errorbar(dirs, stim_resp_dir(iC,:,1,1),stim_resp_dir(iC,:,1,2),'-o')
-    hold on
-    errorbar(dirs, stim_resp_dir(iC,:,2,1),stim_resp_dir(iC,:,2,2),'-o')
-    ylim([-0.05 0.4])
-    if mask_label(iC)
-        title([num2str(iC) '-' expt(iexp).driver])
-    else
-        title(num2str(iC))
-    end
-    start = start+1;
-end
-suptitle('Target response- All trials')
-print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespTuning_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-
-%%
 tDecisionTime = celleqel2mat_padded(input.tDecisionTimeMs);
 ind_short = find(tDecisionTime<1000);
 ind_med = find(tDecisionTime>1000 & tDecisionTime<1800);
@@ -758,3 +719,91 @@ for iC = 1:nCells
 end
 suptitle('Decision align: Blue- fast; red- med; yellow- slow')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decisionAlignByRespTime.pdf']), '-dpdf','-bestfit')
+
+%% Zc/Zp
+resp_win = frameRateHz+5:frameRateHz*2;
+base_win = 1:frameRateHz;
+data_stim_resp = squeeze(mean(data_stim_dfof(resp_win,:,:),1));
+data_stim_base = squeeze(mean(data_stim_dfof(base_win,:,:),1));
+[h p] = ttest(data_stim_resp,data_stim_base,'tail','right','dim',2);
+stim_resp_dir = zeros(nCells,nDir,2,2);
+h_dir = zeros(nCells,nDir,2);
+p_dir = zeros(nCells,nDir,2);
+for iDir = 1:nDir
+    ind_dir = find(tDir == dirs(iDir) & tMaskTrial==0);
+    stim_resp_dir(:,iDir,1,1) = nanmean(data_stim_resp(:,ind_dir),2);
+    stim_resp_dir(:,iDir,1,2) = nanstd(data_stim_resp(:,ind_dir),[],2)./sqrt(length(ind_dir));
+    [h_dir(:,iDir,1) p_dir(:,iDir,1)] = ttest(data_stim_resp(:,ind_dir),data_stim_base(:,ind_dir),'tail','right','dim',2,'alpha',0.05./length(dirs));
+    ind_dir = find(tDir == dirs(iDir) & tMaskTrial);
+    stim_resp_dir(:,iDir,2,1) = nanmean(data_stim_resp(:,ind_dir),2);
+    stim_resp_dir(:,iDir,2,2) = nanstd(data_stim_resp(:,ind_dir),[],2)./sqrt(length(ind_dir));
+    [h_dir(:,iDir,2) p_dir(:,iDir,2)] = ttest(data_stim_resp(:,ind_dir),data_stim_base(:,ind_dir),'tail','right','dim',2,'alpha',0.05./length(dirs));
+end
+
+resp_ind = find(h+sum(sum(h_dir,2),3));
+
+int = 5;
+stim_resp_dir_interp = zeros(nCells,length(dirs(1):int:359));
+plaid_resp_dir_interp = zeros(nCells,length(dirs(1):int:359));
+for iC = 1:nCells
+    stim_resp_dir_interp(iC,1:length(dirs(1):int:dirs(end))) = interp1(dirs,stim_resp_dir(iC,:,1,1),dirs(1):int:dirs(end));
+    plaid_resp_dir_interp(iC,1:length(dirs(1):int:dirs(end))) = interp1(dirs,stim_resp_dir(iC,:,2,1),dirs(1):int:dirs(end));
+end
+
+component = circshift(stim_resp_dir_interp,-45./int,2)+circshift(stim_resp_dir_interp,45./int,2);
+pattern = stim_resp_dir_interp;
+comp_ind = find(component(1,:)+plaid_resp_dir_interp(1,:));
+patt_ind = find(pattern(1,:)+plaid_resp_dir_interp(1,:));
+comp_patt_ind = find(pattern(1,:)+component(1,:));
+comp_corr = zeros(1,nCells);
+patt_corr = zeros(1,nCells);
+comp_patt_corr = zeros(1,nCells);
+
+for iCell = 1:nCells
+    comp_corr(iCell) = triu2vec(corrcoef(plaid_resp_dir_interp(iCell,comp_ind),component(iCell,comp_ind)));
+    patt_corr(iCell) = triu2vec(corrcoef(plaid_resp_dir_interp(iCell,patt_ind),pattern(iCell,patt_ind)));
+    comp_patt_corr(iCell) = triu2vec(corrcoef(component(iCell,comp_patt_ind),pattern(iCell,comp_patt_ind)));
+end
+Rp = ((patt_corr)-(comp_corr.*comp_patt_corr))./sqrt((1-comp_corr.^2).*(1-comp_patt_corr.^2));
+Rc = ((comp_corr)-(patt_corr.*comp_patt_corr))./sqrt((1-patt_corr.^2).*(1-comp_patt_corr.^2));
+Zp = (0.5.*log((1+Rp)./(1-Rp)))./sqrt(1./(length(patt_ind)-3));
+Zc = (0.5.*log((1+Rc)./(1-Rc)))./sqrt(1./(length(comp_ind)-3));
+
+figure; 
+movegui('center')
+scatter(Zc(resp_ind), Zp(resp_ind))
+xlabel('Zc')
+ylabel('Zp')
+ylim([-4 8])
+xlim([-4 8])
+hold on
+plotZcZpBorders
+sgtitle([date ' ' mouse])
+print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_ZcZpScatter.pdf']), '-dpdf','-bestfit')
+
+
+figure;
+start = 1;
+for iCell = 1:length(resp_ind)
+    iC = resp_ind(iCell);
+    if start > 25
+        suptitle('Target response- All trials')
+        print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespTuning_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+        figure;
+        start = 1;
+    end
+    subplot(5,5,start)
+    errorbar(dirs, stim_resp_dir(iC,:,1,1),stim_resp_dir(iC,:,1,2),'-o')
+    hold on
+    errorbar(dirs, stim_resp_dir(iC,:,2,1),stim_resp_dir(iC,:,2,2),'-o')
+    plot(dirs(1):int:dirs(end), component(iC,1:90/int + 1),'-')
+    %ylim([-0.4 1])
+    if mask_label(iC)
+        title([num2str(iC) '- Zc: ' num2str(chop(Zc(iC),2)) '; Zp: ' num2str(chop(Zp(iC),2))],'Color','red')
+    else
+        title([num2str(iC) '- Zc: ' num2str(chop(Zc(iC),2)) '; Zp: ' num2str(chop(Zp(iC),2))])
+    end
+    start = start+1;
+end
+suptitle('Target response- All trials')
+print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespTuning_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')

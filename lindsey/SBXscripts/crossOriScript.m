@@ -1,8 +1,8 @@
 clc; clear all; close all;
 doRedChannel = 1;
 ds = 'i484_passive_ExptList';
-iexp = 7; 
-doPhaseAfterDir = 1;
+iexp = 9; 
+doPhaseAfterDir = 0;
 rc = behavConstsAV;
 eval(ds)
 
@@ -84,7 +84,7 @@ nep = floor(size(data,3)./regIntv);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,30001:30500),3);
+data_avg = mean(data(:,:,35001:35500),3);
 if doPhaseAfterDir
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);
@@ -167,10 +167,13 @@ if doRedChannel & ~doPhaseAfterDir
             data = sbxread(imgMatFile(1,1:11),0,nframes);
             red_data = squeeze(data(2,:,:,:));
             green_data = squeeze(data(1,:,:,:));
+%             [out, green_data_reg] = stackRegister(mean(green_dat,3),green_data_avg);
+%             [outs, red_data_reg] = stackRegister_MA(mean(red_data,3),[],[],out);
+%             red_data_avg = red_data_reg;
             [out, green_data_reg] = stackRegister(green_data,green_data_avg);
             [outs, red_data_reg] = stackRegister_MA(red_data,[],[],out);
             red_data_avg = mean(red_data_reg,3);
-            figure; imagesc(red_data_avg)
+            figure; imagesc(red_data_avg); movegui('center')
             title('Red')
         end
         save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_redData.mat']), 'green_data_avg', 'red_data_avg')
