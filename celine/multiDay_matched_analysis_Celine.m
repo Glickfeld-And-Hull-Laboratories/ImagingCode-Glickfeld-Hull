@@ -5,9 +5,10 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
 
-day_id(2) = 26
+day_id(2) = 123;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 nd = size(day_id,2);
+day_id
 
 mouse = expt(day_id(1)).mouse;
 
@@ -21,10 +22,42 @@ end
 
 fn_multi = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
 
-
+cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
 load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
+
+%% finding red fluorescent level
+ 
+red_fluor_all = cell(1,nd);
+
+for i = 1:nd
+mouse = expt(day_id(i)).mouse;
+date = expt(day_id(i)).date;
+
+imgFolder = expt(day_id(i)).contrastxori_runs{1};
+fn = fullfile(rc.celineAnalysis,mouse,date,imgFolder);
+cd(fn);
+load('redImage.mat');  
+load('mask_cell.mat');
+    
+    
+% cell_stats=regionprops(mask_cell_red);
+% figure; imagesc(redChImg), colormap gray; caxis([200 1000]);
+% hold on
+% bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
+% for iC = 1:max(max(mask_cell_red))
+%     text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'red',...
+%             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
+%     
+% end
+
+red_fluor_all{i} = stackGetTimeCourses(redChImg, mask_cell);
+end
+red_fluor_match_d1=red_fluor_all{1}(:,match_ind);
+z_red_fluor_d1=zscore(red_fluor_match_d1);
+
 
 %% stimulus props
 
@@ -35,9 +68,9 @@ tOri_match = cell(1,nd);
 
 %find the contrasts, directions and orientations for each day
 for id = 1:nd
-    tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:720));
-    tDir_match{id} = celleqel2mat_padded(input(id).tGratingDirectionDeg(1:720));
-    tOri_match{id} = tDir_match{id}(1:720);
+    tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast);
+    tDir_match{id} = celleqel2mat_padded(input(id).tGratingDirectionDeg);
+    tOri_match{id} = tDir_match{id};
     tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
 end
 oris = unique(tOri_match{1});
@@ -59,8 +92,8 @@ data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however ma
 
 fractTimeActive_match = cell(1,nd);
 for id = 1:nd %cycle through days
-    nTrials=720;
-    %nTrials = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
+    
+   nTrials = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
    %currently the way I center the stim on period requires me to cut out
    %one trial, hence the -1
    
@@ -168,31 +201,25 @@ clear data_resp h p h_all resp pref_ori pref_con data_ori_resp data_con_resp dat
 red_ind_match_list = find(red_ind_match==1);
 
 %this is a list of indices of all the green cells
-green_ind_match = 1:nCells;
-green_ind_match = setdiff(green_ind_match, red_ind_match_list);
-
-%convert red_inds from logical to a list
+green_ind_match = ~(red_ind_match);
+green_ind_match_list = find(green_ind_match);
 
 
 %creating the arrays for red cells
 red_match_respd1 = intersect(red_ind_match_list,find(resp_match{1}==1));
 red_match_respd2 = intersect(red_ind_match_list,find(resp_match{2}==1));
 
-green_match_respd1 = intersect(green_ind_match,find(resp_match{1}==1));
-green_match_respd2 = intersect(green_ind_match,find(resp_match{2}==1));
+green_match_respd1 = intersect(green_ind_match_list,find(resp_match{1}==1));
+green_match_respd2 = intersect(green_ind_match_list,find(resp_match{2}==1));
 
 %matched
-nGreen_match = length(green_ind_match); %how many matched green cells
+nGreen_match = length(green_ind_match_list); %how many matched green cells
 nGreen_match_respd1 = length(green_match_respd1); %how many of those responded on d1
 nGreen_match_respd2 = length(green_match_respd2);%how many of those responded on d2
 nRed_match = length(red_ind_match_list);%how many red cells matched
 nRed_match_respd1 = length(red_match_respd1); %how many of the matched red cells responded on d1
 nRed_match_respd2 = length(red_match_respd2); %how many of the matched red cells responded on d1
 
-% make table of values
-countsTable = table([nGreen_match;nRed_match],[nGreen_match_respd1;nRed_match_respd1],[nGreen_match_respd2;nRed_match_respd2],'VariableNames',{'Matched' 'Responsive day 1' 'Responsive day 2'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
-writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
-clear nGreen_match nGreen_match_respd1 nGreen_match_respd2 
 %% extract data for cells I want to keep
 
 %first narrow down to the cells in question - find the green cells that
@@ -200,8 +227,10 @@ clear nGreen_match nGreen_match_respd1 nGreen_match_respd2
 
 resp_green_either = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
 
+
 %these are the cells I will include from now on
 keep_cells = union(resp_green_either,red_ind_match_list);
+
 nKeep = length(keep_cells)
 
 %making a list of the day 1 indices for the cells I want to keep
@@ -212,6 +241,8 @@ nKeep = length(keep_cells)
 
 %for now I will keep both sets of indices - if the scripts runs slowly I
 %can clear these
+
+
 %% counts for keep cells
 
 green_match_respd1 = intersect(resp_green_either,find(resp_match{1}==1));
@@ -224,8 +255,8 @@ nGreen_match_respd1 = length(green_match_respd1); %how many of those responded o
 nGreen_match_respd2 = length(green_match_respd2);%how many of those responded on d2
 
 % make table of values
-countsTable = table([nGreen_match;nRed_match],[nGreen_match_respd1;nRed_match_respd1],[nGreen_match_respd2;nRed_match_respd2],'VariableNames',{'Matched' 'Responsive day 1' 'Responsive day 2'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
-
+countsTable = table([nGreen_match;nRed_match],[nGreen_match_respd1;nRed_match_respd1],[nGreen_match_respd2;nRed_match_respd2],'VariableNames',{'Keep' 'Responsive day 1' 'Responsive day 2'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
+writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
 clear nGreen_match nGreen_match_respd1 nGreen_match_respd2 nRed_match nRed_match_respd1 nRed_match_respd2
 
 %% make a data structure subsets for only the keep cells
@@ -274,7 +305,15 @@ resp_prefStim_keep{id}=mean_resp_temp; %a single column array with a value for e
 end
 
 clear tc_trial_avrg temp_trials con_inds temp_con ori_inds temp_ori mean_resp_temp temp_TCs
+red_keep_logical = zeros(1,nKeep);
+for i = 1:length(red_ind_keep)
+   red_keep_logical(red_ind_keep(i))=1;
+end
+green_keep_logical = ~red_keep_logical;
 
+z_red_fluor_keep = z_red_fluor_d1(keep_cells);
+
+save(fullfile(fn_multi,'tc_keep.mat'),'tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical')
 %% prepare to plot the timecourses 
 
 tc_green_avrg_match = cell(1,nd); %this will be the average across all green cells - a single line
@@ -317,6 +356,7 @@ title('day 2')
 
 
 print(fullfile(fn_multi,['timecourses']),'-dpdf');
+saveas(gcf,fullfile(fn_multi,[mouse '-' date 'tcPlot.jpg']));
 %% make a plot of individual timecourses 
 figure
 subplot(2,2,1)
@@ -362,8 +402,8 @@ scatter(resp_max_keep{1}(green_ind_keep),resp_max_keep{2}(green_ind_keep),'k')
 % hold off
 xlabel('D1- max dF/F')
 ylabel('D2- max dF/F')
-xlim([0 .5])
-ylim([0 .5])
+xlim([-.10 .5])
+ylim([-.10 .5])
 refline(1)
 title('Max df/f for responsive HT- ')
 
@@ -375,16 +415,19 @@ scatter(resp_max_keep{1}(red_ind_keep),resp_max_keep{2}(red_ind_keep),'MarkerEdg
 % hold off
 xlabel('D1- max dF/F')
 ylabel('D2- max dF/F')
-xlim([0 .5])
-ylim([0 .5])
+xlim([-.10 .5])
+ylim([-.10 .5])
 refline(1)
 title('Max df/f HT+')
 
 print(fullfile(fn_multi,'maxResp_crossDay.pdf'),'-dpdf','-bestfit')
-
+save(fullfile(fn_multi,'resp_keep.mat'),'data_resp_keep','resp_max_keep')
 % extract the max df/f values for analysis
 %% looking at change in dfof
-dfof_max_diff = resp_max_keep{1}-resp_max_keep{2};
+for i = 1:nKeep
+    dfof_max_diff(i) = (resp_max_keep{1}(i)-resp_max_keep{2}(i))/resp_max_keep{1}(i);
+end
+
 figure
 x = [mean(dfof_max_diff(green_ind_keep)), mean(dfof_max_diff(red_ind_keep))];
 y = [(std(dfof_max_diff(green_ind_keep)))/sqrt(length(green_ind_keep)), (std(dfof_max_diff(red_ind_keep)))/sqrt(length(red_ind_keep))];
@@ -395,11 +438,47 @@ hold on
 er = errorbar(labs,x,-y,y);    
 er.Color = [0 0 0];                            
 er.LineStyle = 'none';  
-ylim([0 .2])
+%ylim([0 .2])
 hold off
 title('change in max dfof')
 
 print(fullfile(fn_multi,'change_max_resp.pdf'),'-dpdf','-bestfit')
+
+
+%% plot fractional change in max dfof vs. z-score of red fluorescence
+wIn_red_z = zscore(red_fluor_match_d1(red_ind_keep));
+
+figure
+subplot(1,2,1)
+scatter(z_red_fluor_keep(red_ind_keep),dfof_max_diff(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
+hold on
+scatter(z_red_fluor_keep(green_ind_keep),dfof_max_diff(green_ind_keep),'k')
+hold on
+x=z_red_fluor_keep;
+y=dfof_max_diff;
+p = polyfit(x, y, 1);
+px = [min(x) max(x)];
+py = polyval(p, px);
+plot(px, py, 'LineWidth', 2);
+clear x y p px py
+xlabel('red fluorescence z-score')
+ylabel('fractional change max dfof')
+
+subplot(1,2,2)
+scatter(wIn_red_z,dfof_max_diff(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
+hold on
+x=wIn_red_z;
+y=dfof_max_diff(red_ind_keep);
+p = polyfit(x, y, 1);
+px = [min(x) max(x)];
+py = polyval(p, px);
+plot(px, py, 'LineWidth', 2);
+clear x y p px py
+xlabel('red fluorescence z-score within red cells')
+ylabel('fractional change max dfof')
+hold off
+
+print(fullfile(fn_multi,'frac_change_vs_red.pdf'),'-dpdf','-bestfit')
 %% plotting  ori response 
 if nKeep<36
     [n n2] = subplotn(nKeep);
@@ -650,5 +729,6 @@ ylabel('raw pref ori')
 title('day 2')
 refline(1)
 %% contrast response curves
+
 
 
