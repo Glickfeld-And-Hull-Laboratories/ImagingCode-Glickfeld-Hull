@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '211013';
-mouse = 'tj_081721';
-ImgFolder = '002';
-time = '1557';
+date = '211025';
+mouse = 'i497';
+ImgFolder = '004';
+time = '1442';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -27,8 +27,8 @@ for irun = 1:nrun
     elseif strcmp(rc.name,'tw299')
     CD = ['Z:\All_Staff\home\tj\2p_Imaging\' mouse '\' datemouse '\' ImgFolder(irun,:)];
     else
-    CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' mouse '\' date '\' ImgFolder(irun,:)];
-    %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' [date '_' mouse] '\' ImgFolder(irun,:)];
+    %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' mouse '\' date '\' ImgFolder(irun,:)];
+    CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' [date '_' mouse] '\' ImgFolder(irun,:)];
     end
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];

@@ -2,10 +2,10 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '211004';
-imgFolder = '002';
-time = '1442';
-mouse = 'i2015';
+date = '211103';
+imgFolder = '001';
+time = '1742';
+mouse = 'i81721';
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
 %setting my paths
@@ -62,14 +62,14 @@ if exist(fullfile(fnOut,'regOuts&Img.mat')) %check if there is already registrat
     clear data_g input
     
 else %if not, must register. Start by showing average for each of four 500-frame bins so user can choose one
-    nep = floor(size(data_g,3)./1000);
+    nep = floor(size(data_g,3)./5000);
     [n n2] = subplotn(nep);
     figure; 
     movegui('center')
     for i = 1:nep 
         subplot(n,n2,i); 
-        imagesc(mean(data_g(:,:,1+((i-1)*1000):500+((i-1)*1000)),3)); 
-        title([num2str(1+((i-1)*1000)) '-' num2str(500+((i-1)*1000))]); 
+        imagesc(mean(data_g(:,:,1+((i-1)*5000):500+((i-1)*5000)),3)); 
+        title([num2str(1+((i-1)*5000)) '-' num2str(500+((i-1)*5000))]); 
         colormap gray; 
         %clim([0 3000]); 
     end
@@ -97,26 +97,26 @@ end
 
 
 %% find activated cells
-
+%loop through different directions
 
 %find the relevant parameters from the input structure
-ntrials = size(input.tThisTrialStartTimeMs,2); %this is a cell array with one value per trial, so length = ntrials
-%dimension of each frame in pixels, and number of frames
+beh_prefix = strcat('Z:\Behavior\Data\data-');
+beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
+load(beh_file); %load the mworks behavioral file
+
+
 sz = size(data_g_reg);
 
 %right now I'm only doing one contrast
 stimOneContrast = celleqel2mat_padded(input.tStimOneGratingContrast);
 stimOneCons = unique(stimOneContrast);
 
-%right now I'm only doing one orientation
-ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
-oris = unique(ori_mat);
-nOri = length(oris);
 
+cStimOne = cell2mat(input.cStimOneOn);   
 stimOneTime = celleqel2mat_padded(input.tStimOneGratingOnTimeMs); %duration for each trial
 stimOneTimes = unique(stimOneTime); %list of durations used
 nTime = length(stimOneTimes); %how many different durations were used
-nTrials = length(cStimOne);
+nTrials = length(cStimOne); %can't find cStimOne now
 
 %empty data frames that are the size of the FOV by the number of trials
 data_f = nan(sz(1),sz(2),nTrials); 
@@ -129,22 +129,34 @@ for itrial = 1:nTrials
     end
 end
 data_one_dfof = (data_one-data_f)./data_f;
-
+%%
+tOri = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
+oris = unique(tOri);
+nOri = length(oris);
 
 if input.doRandStimOnTime
-    data_dfof_stim = zeros(sz(1),sz(2),nTime+1);
-    [n n2] = subplotn(nTime+1);
+    data_dfof_stim = zeros(sz(1),sz(2),nOri);
+    [n n2] = subplotn(nOri+1);
     figure;
-    for it = 1:nTime %loop through the stim durations
-        ind = find(stimOneTime == stimOneTimes(it)); %finr trials with that duration
-        data_dfof_stim(:,:,it) = nanmean(data_one_dfof(:,:,ind),3); %average dfof for each duration
-        subplot(n,n2,it)
-        imagesc(data_dfof_stim(:,:,it))
-        title(num2str(stimOneTimes(it)))
+    for iOri = 1:nOri
+    ind = find(tOri ==oris(iOri));
+    data_dfof_stim(:,:,iOri) = nanmean(data_one_dfof(:,:,ind),3); %average dfof for each duration
+    subplot(n,n2,iOri)
+    imagesc(data_dfof_stim(:,:,iOri))
+    title(num2str(oris(iOri)))
     end
+    
 end
 
-data_dfof = cat(3,data_dfof_stim, mean(data_g_reg,3),double(max(data_g_reg,[],3)));
+
+
+data_g_down = stackGroupProject(data_g_reg,100);
+corrImg = getPixelCorrelationImage(data_g_down);
+figure; imagesc(corrImg); movegui('center');title('pixel correlation');
+
+clear data_g_down
+
+data_dfof = cat(3,data_dfof_stim, mean(data_g_reg,3),double(max(data_g_reg,[],3)),corrImg);
 
 
 %% segmenting green cells
@@ -154,7 +166,7 @@ mask_all = zeros(sz(1), sz(2));
 mask_data = data_dfof;
 
 for iStim = 1:size(data_dfof,3)
-    mask_data_temp = mask_data(:,:,end+1-iStim);
+    mask_data_temp = mask_data(:,:,iStim);
     mask_data_temp(find(mask_exp >= 1)) = 0;
     bwout = imCellEditInteractiveLG(mask_data_temp);
     mask_all = mask_all+bwout;
@@ -220,8 +232,10 @@ np_w = 0.01*ind;
 %use this to subtract the np timecourses at full sampling rate from the 
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 clear data_reg data_reg_down
+tc_smooth = movmean(npSub_tc,3,1); 
 
-save(fullfile(fnOut, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+
+save(fullfile(fnOut, [datemouserun '_TCs.mat']), 'data_tc', 'tc_smooth','np_tc', 'npSub_tc')
 
 %% Now we have timecourses for each cell with the neuropil removed, can start analyzing them
 
@@ -232,10 +246,10 @@ nFrameTrial = nOnMax+3*frame_rate; %to add one second on either side
 data_tc_trial = nan(nFrameTrial,nTrials,nCells); %make empty datafrmae
 for iTrial = 1:nTrials
     if cStimOne(iTrial)+nOnMax+frame_rate < nFrames %to remove trials too close to the end
-        tempF =  mean(data_tc(cStimOne(iTrial)-20 :cStimOne(iTrial)-1,:),1);
-        data_tc_trial_temp = data_tc(cStimOne(iTrial)-frame_rate+1 : cStimOne(iTrial)+nOnMax+(2*frame_rate),:);
+        tempF =  mean(npSub_tc(cStimOne(iTrial)-(frame_rate/2) :cStimOne(iTrial)-1,:),1);
+        data_tc_trial_temp = npSub_tc(cStimOne(iTrial)-frame_rate : cStimOne(iTrial)+nOnMax+(2*frame_rate)-1,:);
         data_tc_trial(:,iTrial,:) = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial_temp, tempF), tempF);
-     end
+    end 
 end
 
 save(fullfile(fnOut, [datemouserun '_trial_TCs.mat']), 'data_tc_trial')
@@ -252,45 +266,71 @@ data_resp = zeros(nCells,nTime,2);
 h = zeros(nCells, nTime);
 p = zeros(nCells, nTime);
 
-for  it = 1:nTime
-   inds = find(stimOneTime == stimOneTimes(it));
-   data_resp(:,it,1) =squeeze(nanmean(nanmean(data_tc_trial(resp_win,inds,:)),2));
-   data_resp(:,it,2) =squeeze(std(nanmean(data_tc_trial(resp_win,inds,:)),[],2))./sqrt(length(inds));
+for  iTime = 1:nTime
+   inds = find(stimOneTime == stimOneTimes(iTime));
+   data_resp(:,iTime,1) =squeeze(nanmean(nanmean(data_tc_trial(resp_win,inds,:)),2));
+   data_resp(:,iTime,2) =squeeze(std(nanmean(data_tc_trial(resp_win,inds,:)),[],2))./sqrt(length(inds));
    
-   [h(:,it), p(:,it)] = ttest(squeeze(nanmean(data_tc_trial(resp_win,inds,:),1)), squeeze(nanmean(data_tc_trial(base_win,inds,:),1)),'dim',1,'tail','right','alpha',0.05./(nOri.*3-1));
+   [h(:,iTime), p(:,iTime)] = ttest(squeeze(nanmean(data_tc_trial(resp_win,inds,:),1)), squeeze(nanmean(data_tc_trial(base_win,inds,:),1)),'dim',1,'tail','right','alpha',0.05./(nOri.*3-1));
     
 end
 
 h_all = sum(h,2);
 resp=logical(h_all);
-
+sum(resp)
 %% looking at time courses
 t = 1:(size(data_tc_trial,1));
 t=(t-(frame_rate))/frame_rate;
 
 [n n2] = subplotn(nTime);
 figure;
-    for it = 1:nTime %loop through the stim durations
-        inds = find(stimOneTime == stimOneTimes(it)); %find trials with that duration
-        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,resp),2));
-        subplot(n,n2,it)
+    for iTime = 1:nTime %loop through the stim durations
+        inds = find(stimOneTime == stimOneTimes(iTime)); %find trials with that duration
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,:),2));
+        subplot(n,n2,iTime)
         plot(t,temp_trials)
         hold on
-        plot(t,mean(squeeze(nanmean(data_tc_trial(:,inds,resp),2)),2),'k');
-        title(num2str(stimOneTimes(it)))
+        plot(t,mean(squeeze(nanmean(data_tc_trial(:,inds,:),2)),2),'k');
+        title(num2str(stimOneTimes(iTime)))
     end
 print(fullfile(fnOut, [datemouserun 'timecourses']),'-dpdf');
 
 
 figure;
-    for it = 1:nTime %loop through the stim durations
-        inds = find(stimOneTime == stimOneTimes(it)); %find trials with that duration
-        temp_mean = mean(squeeze(nanmean(data_tc_trial(:,inds,resp),2)),2);
-        temp_se= std(squeeze(nanmean(data_tc_trial(:,inds,resp),2)),[],2)/sqrt(sum(resp));
-        subplot(n,n2,it)
+    for iTime = 1:nTime %loop through the stim durations
+        inds = find(stimOneTime == stimOneTimes(iTime)); %find trials with that duration
+        temp_mean = mean(squeeze(nanmean(data_tc_trial(:,inds,:),2)),2);
+        temp_se= std(squeeze(nanmean(data_tc_trial(:,inds,:),2)),[],2)/sqrt(sum(nCells));
+        subplot(n,n2,iTime)
         shadedErrorBar(t,temp_mean,temp_se);
 %         vline(frame_rate+1)
 %         vline(frame_rate + 1+(stimOneTimes(it)*frame_rate/1000))
-        title(num2str(stimOneTimes(it)))
+        title(num2str(stimOneTimes(iTime)))
     end
 print(fullfile(fnOut, [datemouserun 'shadedEB_timecourses']),'-dpdf');
+%% 
+nTrials = length(cStimOne); %can't find cStimOne now
+sz = size(data_g_reg);
+
+data_FOV_trial = nan(nTrials,sz(1),sz(2),nFrameTrial); %make empty dataframe
+for iTrial = 1:10
+    if cStimOne(iTrial)+nOnMax+frame_rate < nFrames %to remove trials too close to the end
+        tempF =  nanmean(data_g_reg(:,:,cStimOne(iTrial)-20 :cStimOne(iTrial)-1),3);
+        data_FOV_trial_temp = double(data_g_reg(:,:,cStimOne(iTrial)-frame_rate : cStimOne(iTrial)+nOnMax+(3*frame_rate)-1));
+        %data_FOV_trial(iTrial,:,:,:) = data_FOV_trial_temp;
+        data_FOV_trial(iTrial,:,:,:) = bsxfun(@rdivide, bsxfun(@minus,data_FOV_trial_temp, tempF), tempF);
+    end 
+end
+
+%%
+inds_125=find(stimOneTime==125);
+dfof_125 = data_FOV_trial(inds_125,:,:,25:45);
+mean_125=squeeze(nanmean(dfof_125,1));
+mean_125=int32(mean_125);
+TiffWriter(mean_125,'mean_125.tif',32);
+%%
+inds_1000=find(stimOneTime==1000);
+dfof_1000 = data_FOV_trial(inds_1000,:,:,25:65);
+mean_1000=squeeze(nanmean(dfof_1000,1));
+mean_1000=int32(mean_1000);
+TiffWriter(mean_1000,'mean_1000.tif',32);

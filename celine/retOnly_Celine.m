@@ -18,7 +18,7 @@ frame_rate = 30;
 run_str = catRunName(ImgFolder, nrun);
 
 fnOut_base = 'Z:\home\Celine\Analysis\2p_analysis\';
-run_str = catRunName(imgFolder, 1);
+run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
 fnOut =fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str])
@@ -571,12 +571,13 @@ fprintf('Neuropil mask generated\n')
 %% Alternatively, load cell masks from other run
 % only run instead of cell segmentation
 
-RetImgFolder = char('002');
+RetImgFolder = char('001');
 nret = size(RetImgFolder,1);
 ret_str = catRunName(RetImgFolder, nret);
 fprintf(['Loading masks from retinotopy runs: ' ret_str '\n'])
 
 % loads 'mask_cell', 'mask_np'
+%set this up to find the run I want to use for masks 
 load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_mask_cell.mat']))
 fprintf('Cell and neuropil masks loaded\n')
 

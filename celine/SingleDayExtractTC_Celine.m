@@ -2,9 +2,9 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '211001';
-imgFolder = '005';
-time = '1608';
+date = '211004';
+imgFolder = '003';
+time = '1457';
 mouse = 'i2015';
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
@@ -110,7 +110,7 @@ data_tr = reshape(data_g_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
 %trial then ntrials
 fprintf(['Size of data_tr is ' num2str(size(data_tr))])
 %find baseline fluorescence, using the second half of the stim off period
-%select the frames for the second half of the baseline, then average over
+%select the frames for the second half of the baseline, then average over  
 %those frames
 data_f = mean(data_tr(:,:,nOff/2:nOff,:),3); 
 % subtract baseline fluorescence frrom raw
@@ -124,38 +124,49 @@ data_dfof = bsxfun(@rdivide,data_df, data_f);
 clear data_f data_df data_tr
 
 %find the stimulus directions
-tDir = celleqel2mat_padded(behData.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
-Dirs = unique(tDir);
-nDirs = length(Dirs);
+tCons = celleqel2mat_padded(behData.tGratingContrast); %transforms cell array into matrix (1 x ntrials)
+Cons = unique(tCons);
+nCons = length(Cons);
+
+tSize = celleqel2mat_padded(behData.tGratingDiameterDeg); %transforms cell array into matrix (1 x ntrials)
+Sizes = unique(tSize);
+nSizes = length(Sizes);
 %% segmenting green cells
 %create empty matrix with FOV for each direction: nYpix x nXPix x nDir
 %we will find the average dfof for each of the directions
-data_dfof_avg = zeros(sz(1),sz(2),nDirs); 
+data_dfof_avg = zeros(sz(1),sz(2),nCons+nDirs); 
 %images for segmentation will go through the different stimuli
 figure; movegui('center')
-[n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
-for idir = 1:nDirs
-    ind = find(tDir == Dirs(idir)); %find all trials with each direction
+[n, n2] = subplotn(nCons); %function to optimize subplot number/dimensions
+for iCon = 1:nCons
+    ind = find(tCons == Cons(iCon)); %find all trials with each direction
     %average all On frames and all trials
-    data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4);
-    subplot(n,n2,idir)
-    imagesc(data_dfof_avg(:,:,idir))
+    data_dfof_avg(:,:,iCon) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4);
+    subplot(n,n2,iCon)
+    imagesc(data_dfof_avg(:,:,iCon))
 end
-% this plot is not very informative, but I will use the average dfof for
-% each stimulus condition in the next step
+
+[n, n2] = subplotn(nSizes); %function to optimize subplot number/dimensions
+for iSize = 1:nSizes
+    ind = find(tSize == Sizes(iSize)); %find all trials with each direction
+    %average all On frames and all trials
+    data_dfof_avg(:,:,nCons+iSize) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4);
+    subplot(n,n2,iSize)
+    imagesc(data_dfof_avg(:,:,iSize))
+end
 
 %make a gaussian filter an apply it to the data, which shoould smooth it
 %not sure how to optimize this filter
 myfilter = fspecial('gaussian',[20 20], 0.5); %maybe filter less?
 data_dfof_avg_filtered = imfilter(data_dfof_avg,myfilter);
 figure; movegui('center')
-[n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
-for idir = 1:nDirs
-    ind = find(tDir == Dirs(idir)); %find all trials with each direction
+[n, n2] = subplotn(nCons); %function to optimize subplot number/dimensions
+for iCon = 1:nCons
+    ind = find(tCons == Cons(iCon)); %find all trials with each direction
     %average all On frames and all trials
     
-    subplot(n,n2,idir)
-    imagesc(data_dfof_avg_filtered(:,:,idir))
+    subplot(n,n2,iCon)
+    imagesc(data_dfof_avg_filtered(:,:,iCon))
 end
 %the plots don't look very different, so I'm not sure what are good filter
 %settings

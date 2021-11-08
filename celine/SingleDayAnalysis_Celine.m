@@ -7,8 +7,8 @@ rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 127;
-%% identifying animal and run
+day_id = 125;
+% identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
 
@@ -462,70 +462,73 @@ end
 % % save(fullfile(fn,'vonM_output.mat'),'vonM_output');
 % % 
 % 
-% 
-% %% look at spontaneous actiivty - HT+ cells
-% red_TCs = npSub_tc(:,RedAll);
-% start=1;
-% figure
-% sgtitle(sprintf(['Red only']));
-% d_all = red_TCs; %find the data for that day
-% 
-% pct_events_red=cell(1,1);
-% stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
-% stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
-% stimoff = setdiff(1:size(d_all,1),stimon);
-% d_off = d_all(stimoff,:);
-% dff = (d_off-mean(d_off,1))./mean(d_off,1);
-% tt = (1:size(d_off,1))./frame_rate./60;
-% for icell = 1:size(d_all,2)
-%     if start>5
-%         cell_lab = icell - 5;
-%         print(fullfile(fn,['red_spontaneous_dff_cell_' num2str(cell_lab) 'to' num2str(icell)]),'-dpdf','-fillpage');
-%         figure;
-%         sgtitle(sprintf(['Red only']));
-%         movegui('center')
-%         start = 1;
-%     end
-%     tc = dff(:,icell);
-%     subplot(5,1,start)
-%     plot(tt,tc,'k-','LineWidth',1);
-%     figXAxis([],'time in expt (min)',[tt(1) tt(end)],0:5:tt(end),0:5:tt(end))
-%     figYAxis([],'dF/F',[-1 2])
-%     figAxForm([],0)
-%     title(sprintf('Cell #%s',num2str(icell)))
-%     start = start+1;
-% end
-% 
-% dff_3sd = (std(dff) + mean(dff))*3;
-% dff_test = dff > dff_3sd;
-% pct_events_red{1}= sum(dff_test,1)./size(dff,1);
-% 
-% 
-% nc = cellfun(@(x) size(x,2),pct_events_red);
-% figure; 
-% d = pct_events_red{1};
-% histogram(d,10);
-% vline(mean(d));
-% xlabel('pct events');
-% ylabel('# cells');
-% title(['Spontaneous events'])
-% print(fullfile(fn,'RedSpontaneousEvents'),'-dpdf')
-% 
-% %% spontaneous events - HT-
-% green_TCs = npSub_tc(:,green_inds);
-% 
-% start=1;
-% figure
-% sgtitle(sprintf(['Green only']));
-% d_all = green_TCs; %find the data for that day
-% 
-% pct_events_green=cell(1,1);
-% stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
-% stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
-% stimoff = setdiff(1:size(d_all,1),stimon);
-% d_off = d_all(stimoff,:);
-% dff = (d_off-mean(d_off,1))./mean(d_off,1);
-% tt = (1:size(d_off,1))./frame_rate./60;
+
+%% look at spontaneous actiivty - HT+ cells
+RedAll =find(mask_label);
+red_TCs = npSub_tc(:,RedAll);
+start=1;
+figure
+sgtitle(sprintf(['Red only']));
+d_all = red_TCs; %find the data for that day
+
+pct_events_red=cell(1,1);
+stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
+stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
+stimoff = setdiff(1:size(d_all,1),stimon);
+d_off = d_all(stimoff,:);
+dff = (d_off-mean(d_off,1))./mean(d_off,1);
+tt = (1:size(d_off,1))./frame_rate./60;
+for icell = 1:size(d_all,2)
+    if start>5
+        cell_lab = icell - 5;
+        print(fullfile(fn,['red_spontaneous_dff_cell_' num2str(cell_lab) 'to' num2str(icell)]),'-dpdf','-fillpage');
+        figure;
+        sgtitle(sprintf(['Red only']));
+        movegui('center')
+        start = 1;
+    end
+    tc = dff(:,icell);
+    subplot(5,1,start)
+    plot(tt,tc,'k-','LineWidth',1);
+    figXAxis([],'time in expt (min)',[tt(1) tt(end)],0:5:tt(end),0:5:tt(end))
+    figYAxis([],'dF/F',[-1 2])
+    figAxForm([],0)
+    title(sprintf('Cell #%s',num2str(icell)))
+    start = start+1;
+end
+
+dff_3sd = (std(dff) + mean(dff))*3;
+dff_test = dff > dff_3sd;
+pct_events_red{1}= sum(dff_test,1)./size(dff,1);
+
+
+nc = cellfun(@(x) size(x,2),pct_events_red);
+figure; 
+d = pct_events_red{1};
+histogram(d,10);
+vline(mean(d));
+xlabel('pct events');
+ylabel('# cells');
+title(['Spontaneous events'])
+print(fullfile(fn,'RedSpontaneousEvents'),'-dpdf')
+
+% spontaneous events - HT-
+green_inds = 1:nCells;
+green_inds = setdiff(green_inds, find(mask_label));
+green_TCs = npSub_tc(:,green_inds);
+
+start=1;
+figure
+sgtitle(sprintf(['Green only']));
+d_all = green_TCs; %find the data for that day
+
+pct_events_green=cell(1,1);
+stimstart = (nOn+1):(nOn+nOff):size(d_all,1)';
+stimon = cell2mat(arrayfun(@(x) x:(x+nOn),stimstart,'unif',0));
+stimoff = setdiff(1:size(d_all,1),stimon);
+d_off = d_all(stimoff,:);
+dff = (d_off-mean(d_off,1))./mean(d_off,1);
+tt = (1:size(d_off,1))./frame_rate./60;
 % for icell = 1:size(d_all,2)
 %     if start>5
 %         cell_lab = icell - 5;
@@ -544,21 +547,21 @@ end
 %     title(sprintf('Cell #%s',num2str(icell)))
 %     start = start+1;
 % end
-% 
-% dff_3sd = (std(dff) + mean(dff))*3;
-% dff_test = dff > dff_3sd;
-% pct_events_green{1}= sum(dff_test,1)./size(dff,1);
-% 
-% 
-% nc = cellfun(@(x) size(x,2),pct_events_green);
-% figure; 
-% d = pct_events_green{1};
-% histogram(d,10);
-% vline(mean(d));
-% xlabel('pct events');
-% ylabel('# cells');
-% title(['Spontaneous events'])
-% print(fullfile(fn,'GreenSpontaneousEvents'),'-dpdf')
+
+dff_3sd = (std(dff) + mean(dff))*3;
+dff_test = dff > dff_3sd;
+pct_events_green{1}= sum(dff_test,1)./size(dff,1);
+
+
+nc = cellfun(@(x) size(x,2),pct_events_green);
+figure; 
+d = pct_events_green{1};
+histogram(d,10);
+vline(mean(d));
+xlabel('pct events');
+ylabel('# cells');
+title(['Spontaneous events'])
+print(fullfile(fn,'GreenSpontaneousEvents'),'-dpdf')
 
 
 
