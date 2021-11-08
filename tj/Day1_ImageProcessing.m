@@ -1,10 +1,10 @@
 clear all
 clear global
 %% get path names
-date = '211013';
+date = '211103';
 ImgFolder = strvcat('001');
-time = strvcat('1533');
-mouse = 'tj_081721';
+time = strvcat('1335');
+mouse = 'tj_092421';
 run = strvcat('001');
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
@@ -64,7 +64,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((
 
 %% Register data
 
-data_avg = mean(data(:,:,10001:10500),3); 
+data_avg = mean(data(:,:,4001:4500),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -95,7 +95,7 @@ if isfield(input, 'nScansOn')
     if nOn>29
         sz = size(data_reg);
 %         make data_tr smaller for dfof images to not use all of the memory
-        data_tr = reshape(single(data_reg(:,:,1:28800)),[sz(1), sz(2), nOn+nOff, 320]);
+        data_tr = reshape(single(data_reg(:,:,1:nframes)),[sz(1), sz(2), nOn+nOff, ntrials]);
         data_f = mean(double(data_tr(:,:,nOff/2:nOff,:)),3);
         data_df = bsxfun(@minus, double(data_tr), data_f); 
         data_dfof = bsxfun(@rdivide,data_df, data_f); 
