@@ -64,7 +64,7 @@ plot(avg_F_per_frame)
 %% 
 % F0 Matrix
 
-F0_matrix = mean(F_matrix(101:120,:,:))
+F0_matrix = mean(F_matrix(101:120,:,:));
 %% 
 % dF/F Matrix
 
@@ -161,7 +161,7 @@ n_sig_ori = sum(sig_ori>=1)
 % Plot average tuning curve for all cells in FoV (each cell's response to each 
 % orientation)
 
-[n n2] = subplotn(nCells)
+[n n2] = subplotn(nCells);
 for i = 1:nCells 
     subplot(n,n2,i)
     errorbar(Oris_list,avg_resp_ori(:,i),std_err_ori(:,i))
@@ -222,8 +222,7 @@ for i = 1:nCells
 end    
 
 %% preferred orientation (in degrees)
-<<<<<<< Updated upstream
-pref_ori = rad2deg(u1)
+pref_ori = rad2deg(u1);
 %% plotting the fits
 
 [n n2] = subplotn(nCells)
@@ -232,12 +231,10 @@ for i = 1:nCells
     hold on
     errorbar(Oris_list,avg_resp_ori(:,i),std_err_ori(:,i))
     plot(y_fits(:,i))
+    vline(pref_ori(i),'black')
     title(['# Sig Oris = ', num2str(sig_ori(i))])
 end
 
-=======
-pref_ori = rad2deg(u1);
->>>>>>> Stashed changes
 
 %% 
 %%bootstrap
