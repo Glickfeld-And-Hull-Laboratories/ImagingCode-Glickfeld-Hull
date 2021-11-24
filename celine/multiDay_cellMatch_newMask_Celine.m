@@ -1,4 +1,4 @@
-clear all; clear global; close all
+ clear all; clear global; close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
@@ -8,7 +8,7 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(2) = 124;
+day_id(2) = 112;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);

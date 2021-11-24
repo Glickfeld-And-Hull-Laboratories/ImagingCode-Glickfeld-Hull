@@ -2,10 +2,10 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '211103';
-imgFolder = '001';
-time = '1742';
-mouse = 'i81721';
+date = '211120';
+imgFolder = '003';
+time = '1753';
+mouse = 'WK08';
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
 %setting my paths
@@ -104,13 +104,11 @@ beh_prefix = strcat('Z:\Behavior\Data\data-');
 beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
-
 sz = size(data_g_reg);
 
 %right now I'm only doing one contrast
 stimOneContrast = celleqel2mat_padded(input.tStimOneGratingContrast);
 stimOneCons = unique(stimOneContrast);
-
 
 cStimOne = cell2mat(input.cStimOneOn);   
 stimOneTime = celleqel2mat_padded(input.tStimOneGratingOnTimeMs); %duration for each trial
@@ -149,14 +147,14 @@ if input.doRandStimOnTime
 end
 
 
-
+%for pixel correlation
 data_g_down = stackGroupProject(data_g_reg,100);
 corrImg = getPixelCorrelationImage(data_g_down);
 figure; imagesc(corrImg); movegui('center');title('pixel correlation');
 
 clear data_g_down
 
-data_dfof = cat(3,data_dfof_stim, mean(data_g_reg,3),double(max(data_g_reg,[],3)),corrImg);
+data_dfof = cat(3,max(data_one_dfof,[],3),max(data_one_dfof,[],3),data_dfof_stim, mean(data_g_reg,3),corrImg);
 
 
 %% segmenting green cells
@@ -206,7 +204,7 @@ data_tc_down = stackGetTimeCourses(data_reg_down, mask_cell);
 %make an empty matrix the size of the full data
 np_tc = zeros(nFrames,nCells);
 %make an empty matrix the size of the downsampled data
-np_tc_down = zeros(floor(nFrames./down), nCells);
+np_tc_down = zeros(size(data_reg_down,3), nCells);
 %fill in those matrices: for each cell, create a corresponding timecourse
 %for the np around that cell. Do this for the full and the downsampled data
 for i = 1:nCells
@@ -308,29 +306,3 @@ figure;
         title(num2str(stimOneTimes(iTime)))
     end
 print(fullfile(fnOut, [datemouserun 'shadedEB_timecourses']),'-dpdf');
-%% 
-nTrials = length(cStimOne); %can't find cStimOne now
-sz = size(data_g_reg);
-
-data_FOV_trial = nan(nTrials,sz(1),sz(2),nFrameTrial); %make empty dataframe
-for iTrial = 1:10
-    if cStimOne(iTrial)+nOnMax+frame_rate < nFrames %to remove trials too close to the end
-        tempF =  nanmean(data_g_reg(:,:,cStimOne(iTrial)-20 :cStimOne(iTrial)-1),3);
-        data_FOV_trial_temp = double(data_g_reg(:,:,cStimOne(iTrial)-frame_rate : cStimOne(iTrial)+nOnMax+(3*frame_rate)-1));
-        %data_FOV_trial(iTrial,:,:,:) = data_FOV_trial_temp;
-        data_FOV_trial(iTrial,:,:,:) = bsxfun(@rdivide, bsxfun(@minus,data_FOV_trial_temp, tempF), tempF);
-    end 
-end
-
-%%
-inds_125=find(stimOneTime==125);
-dfof_125 = data_FOV_trial(inds_125,:,:,25:45);
-mean_125=squeeze(nanmean(dfof_125,1));
-mean_125=int32(mean_125);
-TiffWriter(mean_125,'mean_125.tif',32);
-%%
-inds_1000=find(stimOneTime==1000);
-dfof_1000 = data_FOV_trial(inds_1000,:,:,25:65);
-mean_1000=squeeze(nanmean(dfof_1000,1));
-mean_1000=int32(mean_1000);
-TiffWriter(mean_1000,'mean_1000.tif',32);
