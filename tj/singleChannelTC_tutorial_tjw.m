@@ -3,9 +3,9 @@
 
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
 tj_fn = fullfile(fn_base, 'home\tj');
-data_fn = fullfile(tj_fn, '2P_Imaging');
+data_fn = fullfile(tj_fn, '2P_Imaging\tutorial');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
-fnout = fullfile(tj_fn, 'Analysis\2P\211020_tj_092021');
+fnout = fullfile(tj_fn, 'Analysis\2P\tutorial\211020_tj_092021');
 %% Specific experiment information
 
 date = '211020';
@@ -21,19 +21,22 @@ datemouserun = [date '_' mouse '_' run_str];
 
 fName = fullfile(mworks_fn, ['data-i' mouse '-' date '-' time '.mat']);
 load(fName);
+%fName produces input variable, which includes behavioral MWorks parameters
 %% 
 % Load 2P metadata
 
-CD = fullfile(data_fn, mouse, datemouse, ImgFolder);
+CD = fullfile(data_fn, datemouse, ImgFolder);
 cd(CD);
 imgMatFile = [ImgFolder '_000_000.mat'];
 load(imgMatFile);
+%imgMatFile produces info variable, which includes depth, frames, wavelength,
+%etc.
 %% 
 % Load 2P images
 
 totframes = input.counterValues{end}(end); %this is from the mworks structure- finds the last value clocked for frame count
 fprintf(['Reading ' num2str(totframes) ' frames \r\n'])
-data = sbxread([ImgFolder '_000_000'],0,totframes);
+data = sbxread([ImgFolder '_000_000'],0,totframes); %reads scanbox data
 %% 
 % Data is nPMT x nYpix x nXpix x nframes. 
 
@@ -52,11 +55,11 @@ data = squeeze(data);
 nframes = 500; %nframes to average
 nskip = 1500; %nframes to skip for each average
 
-nep = floor(size(data,3)./nskip);
+nep = floor(size(data,3)./nskip); %divides total number of frames by skips = 9
 [n n2] = subplotn(nep); 
 figure('units','normalized','outerposition',[0 0 1 1]);
 for i = 1:nep; 
-    subplot(n,n2,i); 
+    subplot(n,n2,i); %makes subplots based on size of nep and current iteration
     imagesc(mean(data(:,:,1+((i-1)*nskip):nframes+((i-1)*nskip)),3)); 
     title([num2str(1+((i-1)*nskip)) '-' num2str(nframes+((i-1)*nskip))]); 
 end

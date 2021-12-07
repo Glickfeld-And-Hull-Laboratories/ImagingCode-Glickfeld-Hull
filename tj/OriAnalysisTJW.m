@@ -19,11 +19,11 @@ clear global
 %% 
 % Load TC data
 
-load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_TCs.mat')
-load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_input.mat')
-load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_mask_cell.mat')
-load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_reg_shifts.mat')
-load('Z:\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_stimActFOV.mat')
+load('Z:\All_staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_TCs.mat')
+load('Z:\All_staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_input.mat')
+load('Z:\All_staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_mask_cell.mat')
+load('Z:\All_staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_reg_shifts.mat')
+load('Z:\All_staff\home\lindsey\Analysis\2P\test\200825_i1328\200825_i1328_runs-003\200825_i1328_runs-003_stimActFOV.mat')
 %% 
 % Get nOn, nOff, nFramesPerTrial, nTrials, and nCells for reshaping
 

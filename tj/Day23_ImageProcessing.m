@@ -1,18 +1,18 @@
 clear all;
 clear global;
 %% get path names D2
-ref_date = '210802';
-date = '210806';
-time = strvcat('1425');
+ref_date = '211013';
+date = '211015';
+time = strvcat('0925');
 alignToRef = 1;
-ImgFolder = strvcat('003');
-mouse = 'i1803';
+ImgFolder = strvcat('001');
+mouse = 'tj_081721';
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
 ref_str = 'runs-003';
 run_str = catRunName(ImgFolder, nrun);
-gl_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\2P_Imaging';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\Analysis\2P';
+gl_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load and register
 data = [];
@@ -24,7 +24,7 @@ for irun = 1:nrun
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
-    fName = fullfile(behav_fn, ['data-' mouse '-' date '-' time(irun,:) '.mat']);
+    fName = fullfile(behav_fn, ['data-i' mouse '-' date '-' time(irun,:) '.mat']);
     load(fName);
 
     nframes = info.config.frames;
@@ -65,7 +65,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((
 
 %% Register data
 
-data_avg = mean(data(:,:,36001:36500),3); 
+data_avg = mean(data(:,:,4001:4500),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -96,7 +96,7 @@ if isfield(input, 'nScansOn')
     if nOn>29
         sz = size(data_reg);
 %         make data_tr smaller for dfof images to not use all of the memory
-        data_tr = reshape(single(data_reg(:,:,1:28800)),[sz(1), sz(2), nOn+nOff, 320]);
+        data_tr = reshape(single(data_reg(:,:,1:nframes)),[sz(1), sz(2), nOn+nOff, 320]);
         data_f = mean(double(data_tr(:,:,nOff/2:nOff,:)),3);
         data_df = bsxfun(@minus, double(data_tr), data_f); 
         data_dfof = bsxfun(@rdivide,data_df, data_f); 
@@ -154,7 +154,7 @@ if input.doDirStim
             data_dfof_avg_ori(:,:,i) = mean(data_dfof_avg_all(:,:,[i i+nDirs/2]),3);
         end
     end
-    print(fullfile('Z:\All_staff\home\grace\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_16Stim.pdf']), '-dpdf')
+    print(fullfile('Z:\All_staff\home\tj\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_16Stim.pdf']), '-dpdf')
 
 %     average dfof image for each orientation
     figure;
@@ -171,13 +171,13 @@ if input.doDirStim
     title('dfof Max')
     axis off
     data_dfof = cat(3,data_dfof_avg_ori,max(data_dfof_avg_ori,[],3));
-    print(fullfile('Z:\All_staff\home\grace\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_activeCells.pdf']), '-dpdf')
+    print(fullfile('Z:\All_staff\home\tj\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_activeCells.pdf']), '-dpdf')
 
     figure;
     imagesc(max(data_dfof_avg_ori,[],3))
     title('dfof Max')
     axis off
-    print(fullfile('Z:\All_staff\home\grace\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofMax.pdf']), '-dpdf')
+    print(fullfile('Z:\All_staff\home\tj\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofMax.pdf']), '-dpdf')
 end
 
  save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all')
