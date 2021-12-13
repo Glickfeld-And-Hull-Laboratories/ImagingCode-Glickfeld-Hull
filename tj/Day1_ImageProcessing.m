@@ -1,10 +1,10 @@
 clear all
 clear global
 %% get path names
-date = '211103';
+date = '211117';
 ImgFolder = strvcat('001');
-time = strvcat('1335');
-mouse = 'tj_092421';
+time = strvcat('1405');
+mouse = 'tj_091421';
 run = strvcat('001');
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
@@ -23,7 +23,7 @@ for irun = 1:nrun
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
-    fName = fullfile(behav_fn, ['data-i' mouse '-' date '-' time(irun,:) '.mat']);
+    fName = fullfile(behav_fn, ['data-i' '''' mouse '''' '-' date '-' time(irun,:) '.mat']);
     load(fName);
 
     nframes = info.config.frames;
@@ -64,7 +64,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((
 
 %% Register data
 
-data_avg = mean(data(:,:,4001:4500),3); 
+data_avg = mean(data(:,:,6001:6500),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -153,7 +153,7 @@ if input.doDirStim
             data_dfof_avg_ori(:,:,i) = mean(data_dfof_avg_all(:,:,[i i+nDirs/2]),3);
         end
     end
-    print(fullfile('Z:\All_staff\home\tj\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_16Stim.pdf']), '-dpdf')
+    print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_16Stim.pdf']), '-dpdf')
 
 %     average dfof image for each orientation
     figure;
@@ -170,13 +170,13 @@ if input.doDirStim
     title('dfof Max')
     axis off
     data_dfof = cat(3,data_dfof_avg_ori,max(data_dfof_avg_ori,[],3));
-    print(fullfile('Z:\All_staff\home\tj\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_activeCells.pdf']), '-dpdf')
+    print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_activeCells.pdf']), '-dpdf')
 
     figure;
     imagesc(max(data_dfof_avg_ori,[],3))
     title('dfof Max')
     axis off
-    print(fullfile('Z:\All_staff\home\tj\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofMax.pdf']), '-dpdf')
+    print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofMax.pdf']), '-dpdf')
 end
 
  save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all')
