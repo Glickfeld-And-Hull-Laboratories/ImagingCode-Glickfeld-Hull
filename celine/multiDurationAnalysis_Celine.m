@@ -2,10 +2,10 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '211120';
-imgFolder = '003';
-time = '1753';
-mouse = 'WK08';
+date = '211124';
+imgFolder = '002';
+time = '1217';
+mouse = 'WK06';
 
 %setting my paths
 fn_base = 'Z:\home\Celine\Analysis\2p_analysis\';
@@ -143,8 +143,8 @@ thresh_all=sum(threshPass,2:3);
 thresh_resp=logical(thresh_all);
 
 
-respInds = find(h_resp);
-nonRespInds = find(~h_resp);
+respInds = find(thresh_resp);
+nonRespInds = find(~thresh_resp);
 nResp=length(respInds)
 
 countsTable = table([nCells], [sum(h_resp)],[sum(thresh_resp)],'VariableNames',{'total cells' 'responsive cells ttest' 'responsive cells threshold'})

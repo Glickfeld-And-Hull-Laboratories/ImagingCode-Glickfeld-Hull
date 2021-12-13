@@ -1,4 +1,4 @@
-%% size tuning script by kevin
+%% size tuning script by celine
 % modifying newScript.m, singleChannelTCScript.m
 % reads in Size Tuning Curves from single channel imaging data
 
@@ -7,20 +7,20 @@
 %% get path names
 clear all;clc;
 
-mouse = 'WK06';
-date = '211126';
-time = char('1308');
-ImgFolder = char('005');
-RetImgFolder = char('005');
+mouse = 'WK08';
+date = '211206';
+time = char('1442');
+ImgFolder = char('003');
+RetImgFolder = char('002');
 
 doFromRef = 1;
-ref = char('005');
+ref = char('002');
 
 nrun = size(ImgFolder,1);
-frame_rate = 15;
+frame_rate = 30;
 run_str = catRunName(ImgFolder, nrun);
 
-fprintf(['2P imaging size tuning analysis - by KM, Glickfeld Lab\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
+fprintf(['2p_analysis imaging size tuning analysis - by KM, Glickfeld Lab\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
 for irun=1:nrun
     fprintf([ImgFolder(irun,:) ' - ' time(irun,:) '\n'])
 end
@@ -32,8 +32,8 @@ trial_n = zeros(1,nrun);
 
 fprintf(['\nBegin reading ' num2str(nrun) ' runs...'])
 for irun = 1:nrun
-    % load 2p imaging data
-    %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Data\2P\' date '_' mouse '\' ImgFolder(irun,:)];
+    % load 2p_analysis imaging data
+    %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Data\2p_analysis\' date '_' mouse '\' ImgFolder(irun,:)];
     %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\ashley\data\' mouse '\two-photon imaging\' date '\' ImgFolder(irun,:)];
     CD = ['Z:\home\Celine\Data\2p_data\' mouse '\' date '\' ImgFolder];
     cd(CD);
@@ -41,9 +41,9 @@ for irun = 1:nrun
     load(imgMatFile);
     
     % load behavior/experimental data
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
-    % for mouse names without 'i' prefix but have 'i' in behavior
-    %fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-i' mouse '-' date '-' time(irun,:) '.mat'];
+     %%for mice with IDs that begin in a letter
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i''' mouse '''-' date '-' time(irun,:) '.mat'];
+    %fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
     load(fName);
     
     % read in frames with sbxread
@@ -110,12 +110,12 @@ end
 chooseInt = 2; %nep/2
 
 fprintf('\nBegin registering...\n')
-if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]), 'dir')
+if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\2p_analysis_analysis\2p_analysis', mouse, date, ImgFolder), 'dir')
     % checks if analysis already present
     % load reg_shifts.mat (out, data_avg) and save the current input file
     fprintf('Found previous analysis! Loading...\n')
     
-    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_reg_shifts.mat']))
     
     % register
     fprintf('stackRegister_MA, using shifts from previous registration\n')
@@ -124,7 +124,7 @@ if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\hom
     fprintf('Previous registration loaded...\n')
     
     % save new input
-    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_input.mat']), 'input')
     
 elseif doFromRef
     % if doFromRef specified, along with ref (ref needs to exist, no error catch)
@@ -145,9 +145,9 @@ elseif doFromRef
     
     % load from folder specified by ref_str
     fprintf(['Loading from folder: ' ref_str '\n'])
-    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
-    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_mask_cell.mat']))
-    %load(fullfile('\\CRASH.dhe.duke.edu\data\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_trialData.mat']))
+    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ref, [date '_' mouse '_' ref_str '_reg_shifts.mat']))
+    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ref, [date '_' mouse '_' ref_str '_mask_cell.mat']))
+    %load(fullfile('\\CRASH.dhe.duke.edu\data\home\celine\Analysis\2p_analysis', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_trialData.mat']))
     
     % register
     fprintf('stackRegister with reference image\n')
@@ -155,9 +155,9 @@ elseif doFromRef
     
     % save
     fprintf('Registration complete, now saving...\n')
-    mkdir(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
-    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
-    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    mkdir(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder))
+    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_input.mat']), 'input')
 else
     % else means no previous analysis present
     % use data_avg selected above (could move here?)
@@ -174,9 +174,9 @@ else
     
     % save
     fprintf('Registration complete, now saving...\n')
-    mkdir(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
-    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
-    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    mkdir(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder))
+    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
 clear data % depending on memory
 
@@ -201,7 +201,7 @@ end
 truesize;
 % print to file
 set(gcf, 'Position', [0 0 800 1000]);
-print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']))
+print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_FOV_avg.pdf']))
 
 
 %% find activated cells
@@ -225,10 +225,14 @@ if isfield(input, 'nScansOn')
     
     fprintf('Calculating dF/F...\n')
     
+    %pad the end and trim the front
+    data_reg_pad = padarray(data_reg,[0 0 30],'replicate','post');
+    data_reg_pad = data_reg_pad(:,:,31:size(data_reg_pad,3));
+    stimStart = nOff-30;
     % split into trials by reshape
-    data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
-    data_f = mean(data_tr(:,:,nOff/2:nOff,:),3);
-    data_fOn = mean(data_tr(:,:,nOff:(nOn+nOff),:),3);
+    data_tr = reshape(data_reg_pad,[sz(1), sz(2), nOn+nOff, ntrials]);
+    data_f = mean(data_tr(:,:,stimStart/2:stimStart,:),3);
+    data_fOn = mean(data_tr(:,:,stimStart:(stimStart+nOn+3),:),3);
     data_dfof = squeeze((data_fOn-data_f)./data_f);
     
     % previous code would do data_dfof for every frame
@@ -275,27 +279,32 @@ elseif input.doSizeStim
     sz_mat = celleqel2mat_padded(input.tGratingDiameterDeg);
     szs = unique(sz_mat);
     
-    nStim = length(szs);
-    fprintf([num2str(nStim) ' unique size stimuli\n'])
+    con_mat = celleqel2mat_padded(input.tGratingContrast);
+    cons = unique(con_mat);
+    
+    nSzs = length(szs);
+    fprintf([num2str(nSzs) ' unique sizes\n'])
+    nCons = length(cons);
+    fprintf([num2str(nCons) ' unique contrasts \n'])
     
     fprintf('Averaging dF/F for each size...\n')
-    data_dfof_avg = zeros(sz(1), sz(2), nStim);
-    for isz = 1:nStim
+    data_dfof_avg = zeros(sz(1), sz(2), nSzs);
+    for isz = 1:nSzs
         ind = find(sz_mat == szs(isz));
         data_dfof_avg(:,:,isz) = mean(data_dfof(:,:,ind),3);
     end
     
     % plot dF/F for all stimuli
     figure(5);clf;
-    [n, n2] = subplotn(nStim);
-    for i = 1:nStim
+    [n, n2] = subplotn(nSzs);
+    for i = 1:nSzs
         subplot(n,n2,i);
         imagesc(data_dfof_avg(:,:,i));
         clim([0 max(data_dfof_avg(:))])
         title(['Size: ' num2str(szs(i)) ' deg'])
     end
     % print to pdf
-    print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_resp_Size.pdf']), '-dpdf')
+    print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_FOV_resp_Size.pdf']), '-dpdf')
     
 elseif input.doTFStim && ~input.doMatrix
     % doTFStim + !doMatrix -> temporal frequency?
@@ -325,7 +334,7 @@ end
 title('Maximum dF/F across all stimuli')
 
 % save stimActFOV.mat containing: data_dfof_max, data_dfof_avg, nStim
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg', 'nStim')
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg')
 
 
 %% load cell masks from retinotopy runs
@@ -336,7 +345,7 @@ ret_str = catRunName(RetImgFolder, nret);
 fprintf(['Loading masks from retinotopy runs: ' ret_str '\n'])
 
 % loads 'mask_cell', 'mask_np'
-load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_mask_cell.mat']))
+load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse,date,RetImgFolder, [date '_' mouse '_' ret_str '_mask_cell.mat']))
 fprintf('Cell and neuropil masks loaded\n')
 
 % translate if necessary (should not be necessary after register with ref)
@@ -345,7 +354,7 @@ fprintf('Cell and neuropil masks loaded\n')
 
 % load ret fit data, in order to select only goodfit_ind cells
 % fprintf(['Loading fits from retinotopy runs: ' ret_str '\n'])
-% fn_out = fullfile('\\CRASH.dhe.duke.edu\data\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_lbub_fits.mat']);
+% fn_out = fullfile('\\CRASH.dhe.duke.edu\data\home\celine\Analysis\2p_analysis', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_lbub_fits.mat']);
 % load(fn_out);
 
 % [mask_cell, nCells] = bwlabel(mask_cell); % bwlabel labels all individual cells
@@ -354,8 +363,8 @@ fprintf([num2str(nCells) ' total cells selected\n'])
 fprintf('Cell segmentation complete\n')
 
 figure(11);clf;
-[n, n2] = subplotn(nStim);
-for i = 1:nStim
+[n, n2] = subplotn(nSzs);
+for i = 1:nSzs
     subplot(n,n2,i);
     shade_img = imShade(data_dfof_avg(:,:,i), mask_cell);
     imagesc(shade_img)
@@ -410,95 +419,24 @@ clear data_reg_down
 
 fprintf('Neuropil subtraction complete, saving data...\n')
 
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
-
 fprintf('Calculating dF/F...\n')
 %get dF/F
 nCells = size(npSub_tc,2);
-tc_mat = zeros(nOn+nOff, nCells, ntrials);
+tc_mat = reshape(npSub_tc,[nOn+nOff nCells ntrials]);
 % reshape into trials, could do this in one line with reshape?
-for itrial = 1:ntrials
-    tc_mat(:,:,itrial) = npSub_tc(1+((itrial-1)*(nOn+nOff)):(itrial*(nOn+nOff)),:);
-end
-tc_f = mean(tc_mat(nOff/2:nOff,:,:),1);
+
+tc_f = mean(tc_mat(stimStart/2:stimStart,:,:),1);
 tc_dfof = (tc_mat - tc_f) ./ tc_f;
 clear tc_mat tc_f
 
 fprintf('Time course extraction complete.\n')
 
 
-%% plot tuning
-load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_lbub_fits.mat']));
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc','tc_dfof')
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_input.mat']), 'input')
 
-tuning_mat = zeros(nStim, 2, nCells);
-Ind_struct = [];
-if nCells<36
-    [n, n2] = subplotn(nCells);
-else
-    [n, n2] = subplotn(36);
-end
-tt = (1-nOff:nOn)*(1000./frame_rate);
-figure;
-start = 1;
-f = 1;
-for iCell = 1:nCells
-    if ~sum(iCell==goodfit_ind) % only plot goodfit cells
-        continue
-    end
-    if start >36
-        set(gcf, 'Position', [0 0 800 1000]);
-        print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs' num2str(f) '.pdf']), '-dpdf')
-        start = 1;
-        f= f+1;
-        figure;
-    end
-    subplot(n, n2, start)
-    for iStim = 1:nStim
-        ind = find(sz_mat == szs(iStim));
-        plot(tt', squeeze(mean(tc_dfof(:,iCell,ind),3)))
-        hold on
-        tuning_mat(iStim,1,iCell) = mean(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),3),1);
-        tuning_mat(iStim,2,iCell) = std(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),1),[],3)./sqrt(length(ind));
-        Ind_struct(iStim).all_trials = ind;
-        title(iCell)
-    end
-    ylim([-0.05 0.25])
-    vline(nOff)
-    start = start + 1;
-end
-set(gcf, 'Position', [0 0 800 1000]);
-print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs' num2str(f) '.pdf']), '-dpdf')
-
-figure;
-start = 1;
-f = 1;
-for iCell = 1:nCells
-    if ~sum(iCell==goodfit_ind) % only plot goodfit cells
-        continue
-    end
-    if start >36
-        set(gcf, 'Position', [0 0 800 1000]);
-        print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Tuning' num2str(f) '.pdf']), '-dpdf')
-        start = 1;
-        f= f+1;
-        figure;
-    end
-    subplot(n, n2, start)
-    ret_mat = tuning_mat(:,1,iCell);
-    ret_mat = ret_mat';
-    plot(szs,ret_mat)
-    colormap gray
-    %clim([0 max(max(tuning_mat(:,1,:),[],1),[],3)])
-    %clim([0 chop(max(tuning_mat(:,1,iCell),[],1),2)])
-    title(num2str(chop(max(tuning_mat(:,1,iCell),[],1),2)))
-    start = start+1;
-end
-set(gcf, 'Position', [0 0 800 1000]);
-print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Tuning' num2str(f) '.pdf']), '-dpdf')
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Tuning.mat']), 'tc_dfof', 'tuning_mat', 'szs', 'Ind_struct')
-
-%% present selected cells
+%% find centered cells
+load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis',mouse,date,RetImgFolder, [date '_' mouse '_' ret_str '_lbub_fits.mat']));
 
 % input stimulus location based on experimental choice
 stimEl = double(input.gratingElevationDeg);
@@ -507,7 +445,7 @@ fprintf(['Stimulus at: El ' num2str(stimEl) ', Az ' num2str(stimAz) '\n'])
 
 % load ret fits - loads 'lbub_fits', 'lbub_diff', 'goodfit_ind', 'resp_ind'
 fprintf(['Loading fits from retinotopy runs: ' ret_str '\n'])
-fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_lbub_fits.mat']);
+fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis',  mouse, date, RetImgFolder, [date '_' mouse '_' ret_str '_lbub_fits.mat']);
 load(fn_out);
 cellAz = lbub_fits(:,4,4);
 cellEl = lbub_fits(:,5,4);
@@ -520,67 +458,142 @@ cellDists = sqrt((cellAz-stimAz).^2+(cellEl-stimEl).^2);
 cutOffRadius = 20;
 fprintf(['Isolating cells with RF centers within ' num2str(cutOffRadius) ' degrees\n'])
 
-cutCells = find(cellDists < cutOffRadius)';
-goodCutCells = intersect(cutCells,goodfit_ind);
-nCutCells = length(goodCutCells);
-fprintf([num2str(nCutCells) ' cells selected\n'])
+centerCells = find(cellDists < cutOffRadius)';
+% goodCutCells = intersect(cutCells,goodfit_ind);
+nCenterCells = length(centerCells);
+% fprintf([num2str(nCutCells) ' cells selected\n'])
 
-nSize = length(szs);
-conTrials = cell2mat(input.tGratingContrast);
-cons = unique(conTrials);
-nCon = length(cons);
-conInds = cell(nCon,1);
-for i = 1:nCon
-    conInds{i} = find(conTrials == cons(i));
+%% plot tcs for all cells
+
+size_tuning_mat = zeros(nSzs, 2, nCells);
+Ind_struct = [];
+if nCells<18
+    [n, n2] = subplotn(nCells);
+else
+    [n, n2] = subplotn(36);
 end
+tt = (1-nOff:nOn)*(1000./frame_rate);
+figure;
+start = 1;
+f = 1;
+for iCell = 1:nCells
+    
+    if start >36
+        set(gcf, 'Position', [0 0 800 1000]);
+        print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_TCs' num2str(f) '.pdf']), '-dpdf')
+        start = 1;
+        f= f+1;
+        figure;
+    end
+    subplot(n, n2, start)
+    for iStim = 1:nSzs
+        ind = find(sz_mat == szs(iStim));
+        plot(squeeze(mean(tc_dfof(stimStart-30:stimStart+nOn+30,iCell,ind),3)))
+        hold on
+        size_tuning_mat(iStim,1,iCell) = mean(mean(tc_dfof(stimStart+1:nOn+stimStart,iCell,ind),3),1);
+        size_tuning_mat(iStim,2,iCell) = std(mean(tc_dfof(stimStart+1:nOn+stimStart,iCell,ind),1),[],3)./sqrt(length(ind));
 
-sizeTune = zeros(nSize,nCon,nCutCells);
+        title(iCell)
+    end
+    %ylim([-0.05 0.25])
+    %vline(tt(120))
+    start = start + 1;
+end
+set(gcf, 'Position', [0 0 800 1000]);
+
+%save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning.mat']), 'tc_dfof', 'size_tuning_mat', 'con_tuning_mat')
+%% contrast tuning and tcs for all cells
+
+con_tuning_mat = zeros(nCons, 2, nCells);
+
+if nCells<18
+    [n, n2] = subplotn(nCells);
+else
+    [n, n2] = subplotn(36);
+end
+tt = (1-nOff:nOn)*(1000./frame_rate);
+figure;
+start = 1;
+f = 1;
+for iCell = 1:nCells
+    
+    if start >36
+        set(gcf, 'Position', [0 0 800 1000]);
+        print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_TCs' num2str(f) '.pdf']), '-dpdf')
+        start = 1;
+        f= f+1;
+        figure;
+    end
+    subplot(n, n2, start)
+    for iStim = 1:nCons
+        ind = find(con_mat == cons(iStim));
+        plot(tt(117:123)', squeeze(mean(tc_dfof(117:123,iCell,ind),3)))
+        hold on
+        con_tuning_mat(iStim,1,iCell) = mean(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),3),1);
+        con_tuning_mat(iStim,2,iCell) = std(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),1),[],3)./sqrt(length(ind));
+
+        title(iCell)
+    end
+    ylim([-0.05 0.25])
+    vline(tt(120))
+    start = start + 1;
+end
+set(gcf, 'Position', [0 0 800 1000]);
+
+%% plot size tuning for centered cells
+
+figure;
+start = 1;
+f = 1;
+for i = 1:nCenterCells
+    iCell = centerCells(i);
+    
+    if start >36
+        set(gcf, 'Position', [0 0 800 1000]);
+        print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning' num2str(f) '.pdf']), '-dpdf')
+        start = 1;
+        f= f+1;
+        figure;
+    end
+    subplot(n, n2, start)
+    ret_mat = size_tuning_mat(:,1,iCell);
+    ret_mat = ret_mat';
+    plot(szs,ret_mat)
+    colormap gray
+    %clim([0 max(max(tuning_mat(:,1,:),[],1),[],3)])
+    %clim([0 chop(max(tuning_mat(:,1,iCell),[],1),2)])
+    title(num2str(chop(max(size_tuning_mat(:,1,iCell),[],1),2)))
+    start = start+1;
+end
+set(gcf, 'Position', [0 0 800 1000]);
+print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning' num2str(f) '.pdf']), '-dpdf')
+
+
+
+%% plot size X contrast tuning for centered cells
+sizeTune = zeros(nSzs,nCons,nCenterCells);
 sizeSEM = sizeTune;
-[n, n2] = subplotn(min([36 nCutCells]));
+[n, n2] = subplotn(min([36 nCenterCells]));
 
 figure;
 start = 1;
 f = 1;
 %suptitle(['Size Tuning Curves for cells within ' num2str(cutOffRadius) ' deg of stim'])
-for i = 1:nCutCells
-    iCell = goodCutCells(i);
+for i = 1:nCenterCells
+    iCell = centerCells(i);
     
     if start >36
         set(gcf, 'Position', [0 0 800 1000]);
-        print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Tuning_in' num2str(cutOffRadius) 'deg' num2str(f) '.pdf']), '-dpdf')
+        print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning_in' num2str(cutOffRadius) 'deg' num2str(f) '.pdf']), '-dpdf')
         start = 1;
         f= f+1;
         figure;
-        suptitle(['Size Tuning Curves for cells within ' num2str(cutOffRadius) ' deg of stim'])
+        
     end
-    % this first section does all trials overlaid for each stim
-%     figure;
-%     for iCond = 1:nStim
-%         subplot(4,2,iCond)
-%         ind_all = Ind_struct(iCond).all_trials;
-%         plot(squeeze(tc_dfof(:,iCell,ind_all)))
-%         title(['Size: ' num2str(szs(iCond)) ' deg'])
-%         ylim([-0.05 0.4])
-%     end
-%     suptitle(['Cell #: ' num2str(iCell)])
-    % this second section shows all trials averaged
-%     figure;
-%     for iCond = 1:nStim
-%         subplot(4,2,iCond)
-%         ind_all = Ind_struct(iCond).all_trials;
-%         plot(squeeze(mean(tc_dfof(:,iCell,ind_all),3)))
-%         title(['Size: ' num2str(szs(iCond)) ' deg'])
-%         ylim([-0.05 0.4])
-%     end
-%     suptitle(['Cell #: ' num2str(iCell)])
-
-    % this third section shows size tuning curves
-    
-    subplot(n,n2,start)
-    for iCon = 1:nCon
-        for iSize = 1:nSize
-            ind = intersect(Ind_struct(iSize).all_trials,conInds{iCon});
-            %stimOff = mean(mean(tc_dfof((nOff/2):nOff,iCell,ind_all),3),1);
+     subplot(n,n2,start)
+    for iCon = 1:nCons
+        for iSize = 1:nSzs
+            ind = intersect(find(sz_mat==szs(iSize)), find(con_mat==cons(iCon)));
             stimOn = mean(mean(tc_dfof((nOff+1):(nOff+nOn),iCell,ind),3),1);
             sd = std(mean(tc_dfof((nOff+1):(nOff+nOn),iCell,ind),1));
             sizeTune(iSize,iCon,i) = stimOn;
@@ -595,77 +608,9 @@ for i = 1:nCutCells
     
     start=start+1;
 end
-% Construct a Legend with the data from the sub-plots
-hL = legend(num2str(cons'));
-% Programatically move the Legend
-newPosition = [0.5 0.07 0.2 0.2];
-newUnits = 'normalized';
-set(hL, 'Position', newPosition, 'Units', newUnits);
-
-
 set(gcf, 'Position', [0 0 800 1000]);
-print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Tuning_in' num2str(cutOffRadius) 'deg' num2str(f) '.pdf']), '-dpdf')
-
-fprintf('\ndone\n')
-return
+print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning_in' num2str(cutOffRadius) 'deg' num2str(f) '.pdf']), '-dpdf')
 
 
-%% Contrast and Size tuning
-colormap prism
-if input.doConStim && input.doSizeStim && input.doMatrix
-    
-    if nCells<26
-        [n, n2] = subplotn(nCells);
-    else
-        [n, n2] = subplotn(25);
-    end
-    
-    con = cell2mat(input.tGratingContrast);
-    cons = unique(con);
-    nStim = length(cons)*length(szs);
-    Stims = [];
-    for isz = 1:length(szs)
-        for icon = 1:length(cons)
-            Stims = [Stims; szs(isz) cons(icon)];
-        end
-    end
-    tuning_mat = zeros(nStim,2,nCells);
-    figure;
-    start = 1;
-    f = 1;
-    for iCell = 1:nCells
-        if start >25
-            legend({num2str(cons')},'FontSize',6)
-            legend('Location','best')
-            legend('boxoff')
-            set(gcf, 'Position', [0 0 800 1000]);
-            print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_SizeByConTuning' num2str(f) '.pdf']), '-dpdf')
-            figure;
-            f = 1+f;
-            start = 1;
-        end
-        for iStim = 1:nStim
-            indS = find(sz_mat == Stims(iStim,1));
-            indC = find(con == Stims(iStim,2));
-            ind = intersect(indS,indC);
-            tuning_mat(iStim,1,iCell) = mean(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),3),1);
-            tuning_mat(iStim,2,iCell) = std(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),1),[],3)./sqrt(length(ind));
-            Ind_struct(iStim).all_trials = ind;
-        end
-        size_con_mat = reshape(tuning_mat(:,1,iCell), [length(cons) length(szs)]);
-        size_con_err = reshape(tuning_mat(:,2,iCell), [length(cons) length(szs)]);
-        subplot(n,n2,start)
-        for icon = 1:length(cons)
-            errorbar(szs, size_con_mat(icon,:), size_con_err(icon,:), '-o')%, 'MarkerEdgeColor', repmat(cons(icon), [1 3]), 'Color', repmat(cons(icon), [1 3]))
-            hold on
-        end
-        start = start +1;
-    end
-    legend({num2str(cons')},'FontSize',6)
-    legend('Location','best')
-    legend('boxoff')
-    set(gcf, 'Position', [0 0 800 1000]);
-    print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_SizeByConTuning' num2str(f) '.pdf']), '-dpdf')
-end
 
-%save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Tuning.mat']), 'data_dfof', 'tuning_mat', 'Stims')
+

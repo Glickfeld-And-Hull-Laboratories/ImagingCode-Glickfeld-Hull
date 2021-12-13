@@ -7,10 +7,10 @@
 %% get path names
 clear all;clc;
 
-mouse = 'i2015';
-date = '211004';
-ImgFolder = char('001');
-time = char('1400');
+mouse = 'i1351';
+date = '211209';
+ImgFolder = char('004');
+time = char('1732');
 doFromRef = 0;
 ref = char('001');
 nrun = size(ImgFolder,1);
@@ -21,7 +21,7 @@ fnOut_base = 'Z:\home\Celine\Analysis\2p_analysis\';
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
-fnOut =fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str])
+fnOut =fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis',mouse, date, ImgFolder)
 
 for irun=1:nrun
     fprintf([ImgFolder(irun,:) ' - ' time(irun,:) '\n'])
@@ -42,9 +42,10 @@ for irun = 1:nrun
     load(imgMatFile);
     
     % load behavior/experimental data
-    %fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
-    % for mouse names without 'i' prefix but have 'i' in behavior
+    %%for mice with IDs that begin in a letter
+    %fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i''' mouse '''-' date '-' time(irun,:) '.mat'];
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
+    
     load(fName);
     
     % read in frames with sbxread
@@ -107,12 +108,12 @@ end
 chooseInt = 4; %nep/2 % interval chosen for data_avg =[epoch of choice]-1
  
 fprintf('\nBegin registering...\n')
-if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str]), 'dir')
+if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis',mouse, date, ImgFolder, [date '_' mouse '_' run_str]), 'dir')
     % checks if analysis already present
     % load reg_shifts.mat (out, data_avg) and save the current input file
     fprintf('Found previous analysis! Loading...\n')
     
-    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+    load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis',mouse, date, ImgFolder, [date '_' mouse '_' run_str '_reg_shifts.mat']))
     
     % register
     fprintf('stackRegister_MA, using shifts from previous registration\n')
@@ -121,7 +122,7 @@ if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\hom
     fprintf('Previous registration loaded...\n')
     
     % save new input
-    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis',mouse, date, ImgFolder, [date '_' mouse '_' run_str '_input.mat']), 'input')
     
 elseif doFromRef
     % if doFromRef specified, along with ref (ref needs to exist, no error catch)
@@ -568,56 +569,56 @@ fprintf('Neuropil mask generated\n')
 
 % clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir
 
-%% Alternatively, load cell masks from other run
-% only run instead of cell segmentation
-
-RetImgFolder = char('001');
-nret = size(RetImgFolder,1);
-ret_str = catRunName(RetImgFolder, nret);
-fprintf(['Loading masks from retinotopy runs: ' ret_str '\n'])
-
-% loads 'mask_cell', 'mask_np'
-%set this up to find the run I want to use for masks 
-load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_mask_cell.mat']))
-fprintf('Cell and neuropil masks loaded\n')
-
-% translate if necessary
-% mask_cell = imtranslate(mask_cell, [9, -11]);
-% mask_np = imtranslate(mask_np, [9, -11]);
-
-% [mask_cell, nCells] = bwlabel(mask_cell); % bwlabel labels all individual cells
-nCells = max(mask_cell(:)); % take max label of mask_cell, should circumvent bwlabel
-fprintf([num2str(nCells) ' total cells selected\n'])
-fprintf('Cell segmentation complete\n')
-
-% save to this folder now
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'mask_cell', 'mask_np')
-fprintf('Saved loaded masks to current folder\n')
-
-figure(11);clf;
-[n, n2] = subplotn(nStim);
-for i = 1:nStim
-    subplot(n,n2,i);
-    shade_img = imShade(data_dfof_avg(:,:,i), mask_cell);
-    imagesc(shade_img)
-    if input.doSizeStim
-        title([num2str(szs(i)) ' deg'])
-    elseif input.doRetStim
-        title(num2str(Stims(i,:)))
-    end
-    clim([0 max(data_dfof_avg(:))])
-    colormap(gray)
-end
-
-% mask_good = zeros(size(mask_cell));
-% for i=1:length(goodfit_ind)
-%     mask_good(mask_cell==goodfit_ind(i)) = i;
+% %% Alternatively, load cell masks from other run
+% % only run instead of cell segmentation
+% 
+% RetImgFolder = char('001');
+% nret = size(RetImgFolder,1);
+% ret_str = catRunName(RetImgFolder, nret);
+% fprintf(['Loading masks from retinotopy runs: ' ret_str '\n'])
+% 
+% % loads 'mask_cell', 'mask_np'
+% %set this up to find the run I want to use for masks 
+% load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' ret_str], [date '_' mouse '_' ret_str '_mask_cell.mat']))
+% fprintf('Cell and neuropil masks loaded\n')
+% 
+% % translate if necessary
+% % mask_cell = imtranslate(mask_cell, [9, -11]);
+% % mask_np = imtranslate(mask_np, [9, -11]);
+% 
+% % [mask_cell, nCells] = bwlabel(mask_cell); % bwlabel labels all individual cells
+% nCells = max(mask_cell(:)); % take max label of mask_cell, should circumvent bwlabel
+% fprintf([num2str(nCells) ' total cells selected\n'])
+% fprintf('Cell segmentation complete\n')
+% 
+% % save to this folder now
+% save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'mask_cell', 'mask_np')
+% fprintf('Saved loaded masks to current folder\n')
+% 
+% figure(11);clf;
+% [n, n2] = subplotn(nStim);
+% for i = 1:nStim
+%     subplot(n,n2,i);
+%     shade_img = imShade(data_dfof_avg(:,:,i), mask_cell);
+%     imagesc(shade_img)
+%     if input.doSizeStim
+%         title([num2str(szs(i)) ' deg'])
+%     elseif input.doRetStim
+%         title(num2str(Stims(i,:)))
+%     end
+%     clim([0 max(data_dfof_avg(:))])
+%     colormap(gray)
 % end
-% clf;shade_img = imShade(data_dfof_max, mask_good);
-% imagesc(shade_img)
-% title('dF/F max projection with good cell masks shaded')
-% clim([0 max(data_dfof_avg(:))])
-% colormap(gray)
+% 
+% % mask_good = zeros(size(mask_cell));
+% % for i=1:length(goodfit_ind)
+% %     mask_good(mask_cell==goodfit_ind(i)) = i;
+% % end
+% % clf;shade_img = imShade(data_dfof_max, mask_good);
+% % imagesc(shade_img)
+% % title('dF/F max projection with good cell masks shaded')
+% % clim([0 max(data_dfof_avg(:))])
+% % colormap(gray)
 
 
 %% Get time courses, including neuropil subtraction
