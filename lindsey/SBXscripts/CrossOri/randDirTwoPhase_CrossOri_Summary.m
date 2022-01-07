@@ -13,7 +13,7 @@ str = {'hiSF','lowSF'};
 
 area_list = strvcat('V1');%,'LM');%,'AL','RL','PM');
 narea = 1;%length(area_list);
-
+driver = 'SCN';
 
 for a = 2
     SFs = [0.1 0.05];
@@ -35,7 +35,7 @@ for iA = 1:narea
     
 for i = 1:length(ind)
     iexp = ind(i);
-    if strcmp(expt(iexp).img_loc, area)
+    if strcmp(expt(iexp).img_loc, area) & strcmp(expt(iexp).driver,driver)
     mouse = expt(iexp).mouse;
     mouse_list = strvcat(mouse_list, mouse);
     date = expt(iexp).date;
@@ -75,8 +75,9 @@ for i = 1:length(ind)
 
     end
 end
-save(fullfile(summaryDir,['randDirTwoPhase_Summary_' str{a} '_' area '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all','component_all','stimDirs')
+save(fullfile(summaryDir,['randDirTwoPhase_Summary_' str{a} '_' area '_' driver '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all','component_all','stimDirs')
 
+%%
 ZcZp_diff = Zc_all-Zp_all;
 ind1 = intersect(resp_ind_all,intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)));
 ind2 = intersect(resp_ind_all,intersect(find(Zp_all(2,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)));
@@ -284,7 +285,6 @@ ylabel('Zp0-Zp90')
 ylim([-1 1])
 
 figure; movegui('center');
-movegui('center')
 subplot(2,2,1)
 cdfplot(Zc_diff(intersect(resp_ind_all,find(DSI<0.5))));
 hold on
@@ -322,6 +322,42 @@ xlabel('DSI')
 ylabel('Zp0-Zp90')
 ylim([-1 1])
 
+[x Zc_use] = sort(ZcZp_diff(1,:),'descend'); 
+[x Zp_use] = sort(ZcZp_diff(1,:),'ascend'); 
+
+figure; movegui('center')
+for i = 1:16
+    subplot(4,4,i)
+    iC = Zc_use(i);
+    r_max = max([avg_resp_dir_all_circ(iC,:,1,1,1) avg_resp_dir_all_circ(iC,:,1,2,1) avg_resp_dir_all_circ(iC,:,2,2,1) component_all_circ(iC,:)],[],2);
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1,1))
+    hold on
+    polarplot(deg2rad(stimDirs_circ),component_all_circ(iC,:,1,1,1))
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,1,2,1))
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,2,1))
+    rlim([0 r_max])
+    title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
+end
+suptitle('Zc cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
+print(fullfile(summaryDir, ['randDirTwoPhase_ZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+
+figure; movegui('center')
+for i = 1:16
+    subplot(4,4,i)
+    iC = Zp_use(i);
+    r_max = max([avg_resp_dir_all_circ(iC,:,1,1,1) avg_resp_dir_all_circ(iC,:,1,2,1) avg_resp_dir_all_circ(iC,:,2,2,1) component_all_circ(iC,:)],[],2);
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ(iC,:,1,1,1))
+    hold on
+    polarplot(deg2rad(stimDirs_circ),component_all_circ(iC,:,1,1,1))
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,1,2,1))
+    polarplot(deg2rad(stimDirs_circ),avg_resp_dir_all_circ_shift(iC,:,2,2,1))
+    rlim([0 r_max])
+    title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
+end
+suptitle('Zp cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
+print(fullfile(summaryDir, ['randDirTwoPhase_ZpCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+
+
 ZcZp_ind = unique([intersect(ind1,ind4), intersect(ind2,ind3)]);
 ZcZp_ind_Zc0 = intersect(ind3,ZcZp_ind);
 if length(ZcZp_ind_Zc0)<16
@@ -329,6 +365,7 @@ if length(ZcZp_ind_Zc0)<16
 else
     n = 16;
 end
+
 figure; movegui('center')
 for i = 1:n
     subplot(4,4,i)
@@ -368,7 +405,7 @@ suptitle('Zp to Zc cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple
 print(fullfile(summaryDir, ['randDirTwoPhase_ZpToZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
 
 %% population tuning
-close all
+%close all
 pop_resp_dir = nan(nStimDir,nStimDir,nMaskPhas,2,2);
 pop_resp_comp = nan(nStimDir,nStimDir,2);
 resp_dir_align = nan(nStimDir,nStimDir,nMaskPhas,2,2);

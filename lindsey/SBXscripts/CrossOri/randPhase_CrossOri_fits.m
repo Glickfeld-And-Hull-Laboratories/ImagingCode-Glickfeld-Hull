@@ -112,7 +112,7 @@ for iexp = 1:nexp
     n = 1;
     for iCell =1:nCells
         if start>25
-            sgtitle([mouse ' ' date '- Thresh- Trials < ' num2str(max_dist) '  deg'])
+            sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
             figure;
             movegui('center')
@@ -140,7 +140,7 @@ for iexp = 1:nexp
         end
         start = start+1;
     end
-    sgtitle([mouse ' ' date '- Thresh- Trials < ' num2str(max_dist) '  deg'])
+    sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
 
     p_anova_shuf = nan(nCells,1);
@@ -188,7 +188,7 @@ for iexp = 1:nexp
         end
         start = start+1;
     end
-    sgtitle([mouse ' ' date '- Thresh- Shuffled Trials < ' num2str(max_dist) '  deg'])
+    sgtitle([mouse ' ' date '- Shuffled Trials < ' num2str(max_dist) '  deg'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
 
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'trN', 'seed', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd','SI_all_avg', 'max_dist')

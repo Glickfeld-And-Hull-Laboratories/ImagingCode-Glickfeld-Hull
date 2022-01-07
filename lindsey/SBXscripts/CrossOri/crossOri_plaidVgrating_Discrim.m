@@ -4,7 +4,7 @@
 % tr_range = {190, 295, 275, 340};
 % useFB = 0;
 % expt = 'plaid_test';
- 
+%  
 % mouse = 'i485';
 % date = {'210506','210507','210509','210510'};
 % time = {'1320','1325',{'1357', '1441', '1451','1521'},'1301'};
@@ -71,7 +71,69 @@
 % useFB = 0;
 % expt = 'plaid_test';
  
- 
+% mouse = 'i484';
+% date = {'211011','211012','211013','211014','211015','211018','211019','211022','211025','211026','211027','211028','211029'};
+% time = {'1053','1036','1008','1023','1015','1016','1227','0956','1022','1104','0957','1118','1027'};
+% tr_range = {[],[],[],[],[],[],[],[],[],[],[],[],[]};
+% useFB = 0;
+% expt = 'plaid_image_FF_pt1CPD';
+
+% mouse = 'i484';
+% date = {'211101','211102','211103','211104','211105','211116','211117','211118'};
+% time = {'1035','1156','1104','1135','1200','1134','1005','0947'};
+% tr_range = {[],[],[],[],[],[],[],[]};
+% useFB = 0;
+% expt = 'plaid_image_50deg_pt1CPD';
+
+% mouse = 'i484';
+% date = {'211108','211109'};
+% time = {'1034','1156'};
+% tr_range = {[],[],};
+% useFB = 0;
+% expt = 'plaid_image_50deg_pt05CPD';
+
+% mouse = 'i484';
+% date = {'211110','211111'};
+% time = {'1133','1011'};
+% tr_range = {[],[],};
+% useFB = 0;
+% expt = 'plaid_image_FF_pt05CPD';
+
+% mouse = 'i484';
+% date = {'211110','211111'};
+% time = {'1133','1011'};
+% tr_range = {[],[],};
+% useFB = 0;
+% expt = 'plaid_image_FF_pt05CPD';
+
+% mouse = 'i484';
+% date = {'211119','211122','211123'};
+% time = {'0950','1033','1134'};
+% tr_range = {[],[],[]};
+% useFB = 0;
+% expt = 'plaid_image_FF_pt2CPD';
+%  
+
+% mouse = 'i492';
+% date = {'211122','211123','211126','211129','211201','211203','211206','211207'};
+% time = {'1123','1309','1146','1147','1128','1130','1142','1045'};
+% tr_range = {[],[],220,[],215,100,330,420};
+% useFB = 0;
+% expt = 'plaid_test';
+% 
+% mouse = 'i784';
+% date = {'211208','211210','211213','211214','211215','211216','211217','211220','211221','211222'};
+% time = {'1200','1140','1122','1237','1001','1138','1059','1102','1117','1112'};
+% tr_range = {180,150,[],[],240,[],170,[],190,[]};
+% useFB = 0;
+% expt = 'plaid_test';
+% 
+mouse = 'i785';
+date = {'211208','211210','211213','211214','211215','211216','211217','211220','211221','211222'};
+time = {'1139','1143','1124','1240','1003','1140','1101','1104','1120','1114'};
+tr_range = {190,180,170,[],225,260,180,210,190,230};
+useFB = 0;
+expt = 'plaid_test';
 %%
 nd = length(date);
 start = 0;
@@ -97,6 +159,9 @@ FIx = strcmp(input.trialOutcomeCell,'incorrect');
 MIx = strcmp(input.trialOutcomeCell,'ignore');
  
 doFB = celleqel2mat_padded(input.tDoFeedbackMotion);
+if isempty(tr_range{i})
+    tr_range{i} = length(doFB);
+end
 if useFB
     trial_use = 1:tr_range{i};
 else
@@ -105,7 +170,8 @@ end
  
 B2Ix = celleqel2mat_padded(input.tBlock2TrialNumber);
 nb = length(unique(B2Ix));
- 
+tLeft = celleqel2mat_padded(input.tLeftResponse); 
+tRight = celleqel2mat_padded(input.tRightResponse); 
 tMask = celleqel2mat_padded(input.tDoMask);
 if isfield (input,'doType2Mask')
     if input.doType2Mask
@@ -142,7 +208,7 @@ tDir(find(tMask==0)) = tGratingDir(find(tMask==0));
 tDir(find(tMask)) = tPlaidDir(find(tMask));
 tDir(find(tMask2)) = tPlaid2Dir(find(tMask2));
  
-tLeftChoice = (SIx & tDir > 45) + (FIx & tDir < 45);
+tLeftChoice = calcChoice2AFC(input);
 tLeftTrial = celleqel2mat_padded(input.tLeftTrial);
  
 RTs = celleqel2mat_padded(input.tDecisionTimeMs);
@@ -231,7 +297,7 @@ xlabel('Direction (deg)')
 ylabel('RT (ms)')
 start = start+1;
 end
-% suptitle([mouse ' ' date{i}])
+% sgtitle([mouse ' ' date{i}])
 % print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse '_' date{i} '_GratingPlaidComp_' expt '.pdf'],'-dpdf','-fillpage');
 if i>1
     [isDiff onlyIn1 onlyIn2] = compareStructures(temp(1),input);
@@ -245,6 +311,14 @@ if i>1
             input = rmfield(input,onlyIn2{ifield});
         end
     end  
+end
+if isfield(input,'doCatchTrial')
+    input = rmfield(input,'doCatchTrial');
+    input = rmfield(input,'fractionCatchTrial');
+    input = rmfield(input,'tDoCatchTrial');
+end
+if isfield(input,'firstTrConsts')
+    input = rmfield(input,'firstTrConsts');
 end
 temp(i) = trialChopper(input,[1 tr_range{i}]);
  
@@ -276,7 +350,9 @@ end
 % for ib = 1:nbB2Ix = celleqel2mat_padded(input.tBlock2TrialNumber);
 B2Ix = celleqel2mat_padded(input.tBlock2TrialNumber);
 nb = length(unique(B2Ix));
- 
+tLeft = celleqel2mat_padded(input.tLeftResponse); 
+tRight = celleqel2mat_padded(input.tRightResponse); 
+
 tGratingDir = chop(celleqel2mat_padded(input.tGratingDirectionStart),3);
 tGratingDir([find(tMask) find(tMask2)]) = nan;
 gratingDirs = unique(tGratingDir);
@@ -297,7 +373,7 @@ tDir(find(tMask==0)) = tGratingDir(find(tMask==0));
 tDir(find(tMask)) = tPlaidDir(find(tMask));
 tDir(find(tMask2)) = tPlaid2Dir(find(tMask2));
  
-tLeftChoice = (SIx & tDir > 45) + (FIx & tDir < 45);
+tLeftChoice = calcChoice2AFC(input);
 tLeftTrial = celleqel2mat_padded(input.tLeftTrial);
  
 RTs = celleqel2mat_padded(input.tDecisionTimeMs);
@@ -385,9 +461,9 @@ ylabel('RT (ms)')
 start = start+1;
 end
 if sum(tMask2)
-    suptitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
+    sgtitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
 else
-    suptitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
+    sgtitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
 end
 print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse '_GratingPlaidComp_' expt '.pdf'],'-dpdf','-fillpage');
  
@@ -447,9 +523,13 @@ end
  
  
 if sum(tMask2)
-    suptitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
+    sgtitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
 else
-    suptitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials'])
+    sgtitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials'])
 end
 print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse '_GratingPlaidComp_' expt '_allData.pdf'],'-dpdf','-fillpage');
- 
+
+if ~exist(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse])
+    mkdir(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse])
+end
+save(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse '\' expt '_data.mat'],'gratingPctLeft', 'plaidPctLeft','plaid2PctLeft','gratingCI','plaidCI','plaid2CI','ntrials_plaid','ntrials_plaid2','ntrials_grating','input');

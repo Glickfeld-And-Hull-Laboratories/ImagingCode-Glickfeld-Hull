@@ -3,7 +3,7 @@ close all
 clc
 doRedChannel = 0;
 ds = 'CrossOriRandDirRandPhase_ExptList';
-driver_list = {'SLC';'SOM';'PV';};
+driver_list = {'SLC';'SOM';'PV';'SCN'};
 ndriver = length(driver_list);
 area_list = {'V1'};
 narea = length(area_list);
@@ -25,8 +25,10 @@ stim_SI_all_all = [];
 plaid_SI_all_all = [];
 phase_SI_all_all = [];
 phase_MI_all_all = [];
+mouse_ind_all = [];
 totCells = 0;
-driver_ind = [];
+driver_ind_all = [];
+totm = 1;
 for iD = 1:ndriver
     fprintf([driver_list{iD} '\n'])
     driver = driver_list{iD};
@@ -177,7 +179,10 @@ for iD = 1:ndriver
     resp_ind_dirall = [resp_ind_dirall ind_dir+totCells];
     resp_ind_phaseall = [resp_ind_phaseall ind_phase+totCells];
     
-    driver_ind = [driver_ind iD.*ones(size(Zc_all))];
+    driver_ind_temp = mat2cell(repmat(driver,size(Zc_all')),ones(size(Zc_all,2),1));
+    driver_ind_all = [driver_ind_all;  driver_ind_temp];
+    mouse_ind_temp = mat2cell(mouse_ind,ones(size(Zc_all,2),1));
+    mouse_ind_all = [mouse_ind_all;  mouse_ind_temp];
     totCells = totCells+size(Zc_all,2);
     
     figure(5)
@@ -190,6 +195,20 @@ for iD = 1:ndriver
     subplot(2,2,3)
     errorbar(iD, mean(ZcZp_all(ind_dir),2),std(ZcZp_all(ind_dir),[],2)./sqrt(length(ind_dir)),'ok')
     hold on
+    
+    figure(9)
+    mice = unique(mouse_ind_temp);
+    nm = length(mice);
+    for i = 1:nm
+        ind_use = intersect(ind_dir,find(strcmp(mouse_ind_temp,mice(i))));
+        subplot(2,1,1)
+        swarmchart(totm.*ones(size(Zc_all(ind_use))),Zc_all(ind_use)',[],defaultPlotColors(iD))
+        hold on
+        subplot(2,1,2)
+        swarmchart(totm.*ones(size(Zp_all(ind_use))),Zp_all(ind_use)',[],defaultPlotColors(iD))
+        hold on
+        totm = totm+1;
+    end
     
     
     figure(6)
@@ -224,21 +243,21 @@ for iD = 1:ndriver
     
     figure(7)
     driver_col = defaultPlotColors();
-    subplot(3,ndriver, 1+((iD-1)*ndriver))
+    subplot(ndriver,ndriver, 1+((iD-1)*ndriver))
     scatter(b_all(ind_phase),plaid_SI_all(ind_phase),[],'MarkerEdgeColor',driver_col(iD,:))
     title(['r = ' num2str(chop(triu2vec(corrcoef(b_all(ind_phase),plaid_SI_all(ind_phase))),2))])
     xlabel('Baseline')
     ylabel('Masking Index')
     xlim([-1 1])
     ylim([-1 1])
-    subplot(3,ndriver, 2+((iD-1)*ndriver))
+    subplot(ndriver,ndriver, 2+((iD-1)*ndriver))
     scatter(amp_all(ind_phase),plaid_SI_all(ind_phase),[],'MarkerEdgeColor',driver_col(iD,:))
     title(['r = ' num2str(chop(triu2vec(corrcoef(amp_all(ind_phase),plaid_SI_all(ind_phase))),2))])
     xlabel('Amplitude')
     ylabel('Masking Index')
     xlim([0 1])
     ylim([-1 1])
-    subplot(3,ndriver, 3+((iD-1)*ndriver))
+    subplot(ndriver,ndriver, 3+((iD-1)*ndriver))
     scatter(b_all(ind_phase),amp_all(ind_phase),[],'MarkerEdgeColor',driver_col(iD,:))
     title(['r = ' num2str(chop(triu2vec(corrcoef(b_all(ind_phase),amp_all(ind_phase))),2))])
     xlabel('Baseline')
@@ -311,29 +330,44 @@ print(fullfile(summaryDir, ['randDir_allDriver_summary_SelectivityComp' cell2mat
 figure(3)
 print(fullfile(summaryDir, ['randDir_allDriver_summary_MIbySI_cdfs_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage')
 
+[drivers,~,driverIx] = unique(driver_ind_all);
 figure(4)
 subplot(3,1,1)
 legend(driver_list)
 ylim([-0.6 0.1])
-[h_MI,atab_MI,ctab_MI,stats_MI] = aoctool(stim_SI_all_all(resp_ind_dirall),plaid_SI_all_all(resp_ind_dirall),driver_ind(resp_ind_dirall),[],'','','','off');
+[h_MI,atab_MI,ctab_MI,stats_MI] = aoctool(stim_SI_all_all(resp_ind_dirall),plaid_SI_all_all(resp_ind_dirall),driverIx(resp_ind_dirall),[],'','','','off');
 title(['Main effect SI: p = ' num2str(chop(atab_MI{3,end},2)) '; Cell type: p = ' num2str(chop(atab_MI{2,end},2)) '; Int: p = ' num2str(chop(atab_MI{4,end},2))])
 subplot(3,1,2)
 ylim([-0.6 0.1])
-[h_B,atab_B,ctab_B,stats_B] = aoctool(phase_SI_all_all(resp_ind_phaseall),b_all_all(resp_ind_phaseall),driver_ind(resp_ind_phaseall),[],'','','','off');
+[h_B,atab_B,ctab_B,stats_B] = aoctool(phase_SI_all_all(resp_ind_phaseall),b_all_all(resp_ind_phaseall),driverIx(resp_ind_phaseall),[],'','','','off');
 title(['Main effect SI: p = ' num2str(chop(atab_B{3,end},2)) '; Cell type: p = ' num2str(chop(atab_B{2,end},2)) '; Int: p = ' num2str(chop(atab_B{4,end},2))])
 subplot(3,1,3)
 ylim([0 0.3])
-[h_A,atab_A,ctab_A,stats_A] = aoctool(phase_SI_all_all(resp_ind_phaseall),amp_all_all(resp_ind_phaseall),driver_ind(resp_ind_phaseall),[],'','','','off');
+[h_A,atab_A,ctab_A,stats_A] = aoctool(phase_SI_all_all(resp_ind_phaseall),amp_all_all(resp_ind_phaseall),driverIx(resp_ind_phaseall),[],'','','','off');
 title(['Main effect SI: p = ' num2str(chop(atab_A{3,end},2)) '; Cell type: p = ' num2str(chop(atab_A{2,end},2)) '; Int: p = ' num2str(chop(atab_A{4,end},2))])
 print(fullfile(summaryDir, ['randDir_allDriver_summary_MIbySI_bins_' cell2mat(area_list) '.pdf']),'-dpdf', '-fillpage')
 
 
-[p_Zc table_Zc stats_Zc] = anova1(Zc_all_all(resp_ind_dirall),driver_ind(resp_ind_dirall),'off');
+[p_Zc table_Zc stats_Zc] = anova1(Zc_all_all(resp_ind_dirall),driverIx(resp_ind_dirall),'off');
 post_Zc = multcompare(stats_Zc,'display','off');
-[p_Zp table_Zp stats_Zp] = anova1(Zp_all_all(resp_ind_dirall),driver_ind(resp_ind_dirall),'off');
+[p_Zp table_Zp stats_Zp] = anova1(Zp_all_all(resp_ind_dirall),driverIx(resp_ind_dirall),'off');
 post_Zp = multcompare(stats_Zp,'display','off');
-[p_ZcZp table_ZcZp stats_ZcZp] = anova1(ZcZp_all_all(resp_ind_dirall),driver_ind(resp_ind_dirall),'off');
+[p_ZcZp table_ZcZp stats_ZcZp] = anova1(ZcZp_all_all(resp_ind_dirall),driverIx(resp_ind_dirall),'off');
 post_ZcZp = multcompare(stats_ZcZp,'display','off');
+
+[mice,~,miceIx] = unique(mouse_ind_all);
+tbl_Zc = table(Zc_all_all(resp_ind_dirall)',driver_ind_all(resp_ind_dirall),mouse_ind_all(resp_ind_dirall),'VariableNames',{'Zc','Driver','Mouse'});
+lme_Zc = fitlme(tbl_Zc,'Zc~Driver+(1|Mouse)');
+lme_Zc_nofe = fitlme(tbl_Zc,'Zc~Driver');
+emm_Zc = emmeans(glme_Zc,{'Driver'});
+outZc = contrasts_wald(glme_Zc,emm_Zc,[1 0 0 -1]);
+outZc = contrasts_wald(glme_Zc,emm_Zc,[1 0 -1]);
+outZc = contrasts_wald(glme_Zc,emm_Zc,[0 1 -1]);
+
+tbl_Zp = table(Zp_all_all(resp_ind_dirall)',driver_ind_all(resp_ind_dirall)',miceIx(resp_ind_dirall),'VariableNames',{'Zp','Driver','Mouse'});
+lme_Zp = fitlme(tbl_Zp,'Zp~Driver+(1|Mouse)');
+tbl_ZcZp = table(Zc_all_all(resp_ind_dirall)'-Zp_all_all(resp_ind_dirall)',driver_ind_all(resp_ind_dirall)',miceIx(resp_ind_dirall),'VariableNames',{'ZcZp','Driver','Mouse'});
+lme_ZcZp = fitlme(tbl_ZcZp,'ZcZp~Driver+(1|Mouse)');
 
 figure(5) 
 groups = mat2cell(post_Zc(:,1:2),[ones(1,size(post_Zc,1))],[2]);
@@ -365,6 +399,12 @@ print(fullfile(summaryDir, ['randDir_allDriver_summary_ZcZp_scatters_' cell2mat(
 
 figure(7)
 
-
+figure(9)
+subplot(2,1,1)
+ylim([-8 8])
+set(gca,'Xtick',1:length(unique(mouse_ind_all)),'XtickLabel',unique(mouse_ind_all))
+subplot(2,1,2)
+ylim([-8 8])
+set(gca,'Xtick',1:length(unique(mouse_ind_all)),'XtickLabel',unique(mouse_ind_all))
 
 

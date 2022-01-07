@@ -131,3 +131,27 @@ expt(11).indicator = {'tg';'GCaMP6s'};
 expt(11).coFolder = {'001'};
 expt(11).coTime = {'1632'};
 expt(11).saveLoc = 'lindsey';
+
+%% i1363 211024
+expt(12).mouse = 'i1363';
+expt(12).date = '211024';
+expt(12).img_loc  = {'V1'};
+expt(12).z = -350;
+expt(12).img_strct  = {'cells'};
+expt(12).driver = {'SCN'};
+expt(12).indicator = {'tg';'GCaMP6s'};
+expt(12).coFolder = {'001'};
+expt(12).coTime = {'1217'};
+expt(12).saveLoc = 'lindsey';
+
+%% i1367 211229
+expt(13).mouse = 'i1367';
+expt(13).date = '211229';
+expt(13).img_loc  = {'V1'};
+expt(13).z = -400;
+expt(13).img_strct  = {'cells'};
+expt(13).driver = {'SCN'};
+expt(13).indicator = {'tg';'GCaMP6s'};
+expt(13).coFolder = {'001'};
+expt(13).coTime = {'1400'};
+expt(13).saveLoc = 'lindsey';

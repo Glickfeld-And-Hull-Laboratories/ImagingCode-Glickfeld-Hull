@@ -8,9 +8,9 @@ frame_rate = 15;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary');
-
+svName = 'RandDirRandPhase';
 area_list = ['V1']; % 'LM'; 'AL'; 'PM'; 'RL'];
-driver = 'PV';
+driver = 'SCN';
 if min(size(area_list)) == 1
     narea = 1;
 else
@@ -48,13 +48,13 @@ for iarea = 1:narea
     mouse_list = [];
     respCellN = [];
     z_all = [];
+    mouse_ind = [];
     for iexp = 1:nexp
-        if sum(strcmp(expt(iexp).img_loc,area)) & strcmp(expt(iexp).driver,driver)
+        if sum(strcmp(expt(iexp).img_loc,area)) & strcmp(expt(iexp).driver,driver) & expt(iexp).con == 0.5
             mouse = expt(iexp).mouse;
             mouse_list = strvcat(mouse_list, mouse);
             date = expt(iexp).date;
             ImgFolder = expt(iexp).coFolder;
-            time = expt(iexp).coTime;
             z_all = [z_all; expt(iexp).z];
             nrun = length(ImgFolder);
             run_str = catRunName(cell2mat(ImgFolder), nrun);
@@ -100,7 +100,7 @@ for iarea = 1:narea
             resp_ind_dir_all = [resp_ind_dir_all resp_ind_dir'+totCells];
             resp_ind_plaid_all = [resp_ind_plaid_all resp_ind_plaid'+totCells];
 
-
+            mouse_ind = [mouse_ind; repmat(mouse, size(Zc'))];
             ImgFolder = expt(iexp).copFolder;
             nrun = length(ImgFolder);
             if ~isempty(ImgFolder)
@@ -193,8 +193,8 @@ for iarea = 1:narea
     end
     mouse_list(find(expUse==0),:) = [];
     z_all(find(expUse==0),:) = [];
-    save(fullfile(summaryDir,['randDirRandPhase_Summary_' area '_' driver '.mat']),'stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all_dir','resp_ind_all_phase','resp_ind_dir_all','resp_ind_plaid_all', 'k_all','amp_all', 'amp_shuf_all', 'b_all', 'phase_SI_all', 'phase_MI_all', 'phase_MI_max_all','anova_all', 'mouse_list', 'z_all')
-
+    save(fullfile(summaryDir,[svName '_Summary_' area '_' driver '.mat']),'mouse_ind','stim_SI_all','stim_OSI_all','plaid_OSI_all','stim_DSI_all','plaid_DSI_all','Zc_all','Zp_all','plaid_SI_all','resp_ind_all_dir','resp_ind_all_phase','resp_ind_dir_all','resp_ind_plaid_all', 'k_all','amp_all', 'amp_shuf_all', 'b_all', 'phase_SI_all', 'phase_MI_all', 'phase_MI_max_all','anova_all', 'mouse_list', 'z_all')
+end
 %%
 
     figure;
@@ -229,7 +229,7 @@ for iarea = 1:narea
     title('')
     legend({'All','stim OSI<0.5', 'stim DSI<0.5'},'Location','southeast')
     suptitle({[area '- n = ' num2str(size(mouse_list,1)) ' expts; ' num2str(size(unique(mouse_list,'rows'),1)) ' mice'], ['All responsive cells- n = ' num2str(length(resp_ind_all_dir))]})
-    print(fullfile(summaryDir, ['randDir_OSI-DSI-Zc-Zp-SI_Summary_' area '_' driver '.pdf']),'-dpdf', '-fillpage')       
+    print(fullfile(summaryDir, [svName '_OSI-DSI-Zc-Zp-SI_Summary_' area '_' driver '.pdf']),'-dpdf', '-fillpage')       
 
     figure;
     subplot(2,2,1)
@@ -249,7 +249,7 @@ for iarea = 1:narea
     xlim([-5 10])
     title('')
     suptitle(['All responsive cells- n = ' num2str(length(resp_ind_all_dir))])
-    print(fullfile(summaryDir, ['randDir_Zc-Zp_Scatter_' area '_' driver '_neg45.pdf']),'-dpdf', '-fillpage') 
+    print(fullfile(summaryDir, [svName '_Zc-Zp_Scatter_' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
 
     figure;
     subplot(3,2,1)
@@ -292,7 +292,7 @@ for iarea = 1:narea
     xlim([-2 10])
     title('')
     suptitle({'High vs low Suppression index',['All responsive cells- n = ' num2str(length(resp_ind_all_dir))]})
-    print(fullfile(summaryDir, ['randDir_highVlowSI' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
+    print(fullfile(summaryDir, [svName '_highVlowSI' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
 
     figure;
     subplot(2,2,1)
@@ -354,7 +354,7 @@ for iarea = 1:narea
     xlim([-2 10])
     title('')
     suptitle({'High vs low DSI', ['All responsive cells- n = ' num2str(length(resp_ind_all_dir))]})
-    print(fullfile(summaryDir, ['randDir_highVlowDSI_' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
+    print(fullfile(summaryDir, [svName '_highVlowDSI_' area '_' driver '.pdf']),'-dpdf', '-fillpage') 
     
     Zp_use = intersect(resp_ind_all_dir, intersect(find(Zp_all>1.28), find(Zp_all-Zc_all>1.28)));
     Zc_use = intersect(resp_ind_all_dir, intersect(find(Zc_all>1.28), find(Zc_all-Zp_all>1.28)));
@@ -381,5 +381,5 @@ for iarea = 1:narea
     xlim([0 30])
     title('')
     suptitle(['Tuning of Zc (n= ' num2str(length(Zc_use)) '); Zp (n = ' num2str(length(Zp_use)) ')'])
-    print(fullfile(summaryDir, ['randDir_ZcZp_Tuning_' area '_' driver '.pdf']),'-dpdf', '-fillpage')
+    print(fullfile(summaryDir, [svName '_ZcZp_Tuning_' area '_' driver '.pdf']),'-dpdf', '-fillpage')
     end

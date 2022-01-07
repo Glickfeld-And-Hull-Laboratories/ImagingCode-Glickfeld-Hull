@@ -1,8 +1,9 @@
 clc; clear all; close all;
-doRedChannel = 1;
-ds = 'i484_passive_ExptList';
-iexp = 9; 
+doRedChannel = 0;
+ds = 'CrossOriRandDirTwoPhase_ExptList';
+iexp = 26; 
 doPhaseAfterDir = 0;
+doDirAfterPass = 0;
 rc = behavConstsAV;
 eval(ds)
 
@@ -12,13 +13,21 @@ frame_rate = params.frameRate;
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
-ImgFolder = expt(iexp).coFolder;
-time = expt(iexp).coTime;
 if doPhaseAfterDir
+    ImgFolder = expt(iexp).coFolder;
     nrun = length(ImgFolder);
     ref_str = catRunName(cell2mat(ImgFolder), nrun);
     ImgFolder = expt(iexp).copFolder;
     time = expt(iexp).copTime;
+elseif doDirAfterPass
+    ImgFolder = expt(iexp).passFolder;
+    nrun = length(ImgFolder);
+    ref_str = catRunName(cell2mat(ImgFolder), nrun);
+    ImgFolder = expt(iexp).coFolder;
+    time = expt(iexp).coTime;
+else
+    ImgFolder = expt(iexp).coFolder;
+    time = expt(iexp).coTime;
 end
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
@@ -84,8 +93,8 @@ nep = floor(size(data,3)./regIntv);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,35001:35500),3);
-if doPhaseAfterDir
+data_avg = mean(data(:,:,55001:55500),3);
+if doPhaseAfterDir || doDirAfterPass
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);
     mkdir(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
@@ -119,7 +128,7 @@ rg(:,:,2) = last./max(last(:));
 figure; image(rg)
 movegui('center')
 %% if red channel data
-if doRedChannel & ~doPhaseAfterDir
+if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
     ImgFolderRed = expt(iexp).redImg;
     CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];
     cd(CD);
@@ -365,7 +374,7 @@ imagesc(data_dfof_max)
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_maxdfof.pdf']),'-dpdf')
 
 data_dfof = cat(3, data_dfof, data_dfof_max);
-if doRedChannel & ~doPhaseAfterDir
+if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
     data_dfof = cat(3,data_dfof,red_data_avg);
 end
 if (strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')) & ~doRedChannel
@@ -375,7 +384,7 @@ end
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas', 'maskDiff_all','maskDiffs','nMaskDiff','SF_all', 'SFs', 'nSF','TF_all', 'TFs', 'nTF', 'frame_rate', 'nTrials')
 
 %% cell segmentation 
-if ~doPhaseAfterDir
+if ~doPhaseAfterDir & ~doDirAfterPass
     mask_exp = zeros(sz(1),sz(2));
     mask_all = zeros(sz(1), sz(2));
     mask_data = data_dfof;
@@ -415,7 +424,7 @@ end
 clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg data_resp data_resp_dfof bwout
 
  %% neuropil subtraction
-if ~doPhaseAfterDir
+if ~doPhaseAfterDir & ~doDirAfterPass
     mask_np = imCellNeuropil(mask_cell, 3, 5);
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')
 else

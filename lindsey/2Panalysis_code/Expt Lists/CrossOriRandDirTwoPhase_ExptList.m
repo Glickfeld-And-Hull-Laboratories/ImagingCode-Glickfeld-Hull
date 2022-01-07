@@ -1,3 +1,5 @@
+params.frameRate = 15;
+
 %% i1323 201004
 expt(1).mouse = 'i1323';
 expt(1).date = '201004';
@@ -309,3 +311,29 @@ expt(24).coFolder = {'002'};
 expt(24).coTime = {'1307'};
 expt(24).SF = 0.05;
 expt(24).saveLoc = 'lindsey';
+
+%% i1363 211227- low SF- fixed symmetry
+expt(25).mouse = 'i1363';
+expt(25).date = '211227';
+expt(25).img_loc  = {'V1'};
+expt(25).z = -400;
+expt(25).img_strct  = {'cells'};
+expt(25).driver = {'SCN'};
+expt(25).indicator = {'tg';'GCaMP6s'};
+expt(25).coFolder = {'002'};
+expt(25).coTime = {'1408'};
+expt(25).SF = 0.05;
+expt(25).saveLoc = 'lindsey';
+
+%% i1367 211230- low SF- fixed symmetry
+expt(26).mouse = 'i1367';
+expt(26).date = '211230';
+expt(26).img_loc  = {'V1'};
+expt(26).z = -400;
+expt(26).img_strct  = {'cells'};
+expt(26).driver = {'SCN'};
+expt(26).indicator = {'tg';'GCaMP6s'};
+expt(26).coFolder = {'002'};
+expt(26).coTime = {'1246'};
+expt(26).SF = 0.05;
+expt(26).saveLoc = 'lindsey';
