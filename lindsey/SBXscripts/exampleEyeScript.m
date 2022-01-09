@@ -20,7 +20,7 @@ data = data_temp(:,:,1:nFrames);      % the raw images...
 
 %% Crop image to isolate pupil 
 %(bright spots can be mistaken for pupil)
-data_crop = cropEyeData(data);
+[data_crop rect] = cropEyeData(data);
 
 %% measure pupil position/diameter
 rad_range = [5 20]; %adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)

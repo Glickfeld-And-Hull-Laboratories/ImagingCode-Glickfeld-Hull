@@ -1,6 +1,7 @@
-function data_crop = cropEyeData(data);
+function [data_crop rect] = cropEyeData(data);
 % crop image to isolate pupil 
 % select rectangle, hit enter if happy, z to redo
+% data_crop is cropped stack, rect is crop sites
 
 figure;
 data_avg = mean(data,3);
