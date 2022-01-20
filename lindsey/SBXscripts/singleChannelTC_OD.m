@@ -267,6 +267,8 @@ resp_ind = find(sum(h_all_dir,2));
 ipsi_resp_ind = find(h_all_dir(resp_ind,1));
 contra_resp_ind = find(h_all_dir(resp_ind,2)); 
 
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData.mat']), 'h_dir', 'resp_ind', 'ipsi_resp_ind', 'contra_resp_ind', 'resp_cell_dir', 'base_cell_dir', 'data_dfof_dir','base_win','resp_win','data_dfof')
+
 %plot histogram of number of significant directions for contra and ipsi
 figure;
 [n n2] = subplotn(nEye);
