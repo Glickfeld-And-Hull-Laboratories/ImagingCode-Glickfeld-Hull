@@ -1,10 +1,10 @@
 %% This code allows us to identify visually responsive cells and create a 
-%% timecourse of how those cells change fluorescence across all frames
-
-%%  Load, register, segment, and neuropil correct 2P data
+% timecourse of how those cells change fluorescence across all frames
 
 clear all
-%% Path names
+clear all global
+%%  Load, register, segment, and neuropil correct 2P data
+% Path names
 
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff'; % base file name
 td_fn = fullfile(fn_base, 'home\Tierney'); % Tierney's personal file folder
@@ -32,18 +32,20 @@ CD = fullfile(data_fn, datemouse, ImgFolder); % Sets current directory in folder
 cd(CD); % Changes current directory
 imgMatFile = [ImgFolder '_000_000.mat']; % Finds the matlab file for whichever run you want to use
 load(imgMatFile);
+
 %% Load 2P images
 
 totframes = input.counterValues{end}(end); %this is from the mworks structure: finds the last value clocked for frame count
 fprintf(['Reading ' num2str(totframes) ' frames \r\n']) % This will spit out "Reading xxx frames" in the command window
-data = sbxread([ImgFolder '_000_000'],0,totframes); % This reads the scanbox data
+data = sbxread([ImgFolder '_000_000'],0,totframes); % This reads the scanbox data (input, how many frames we want to skip, total frames we want)
 %% Data is nPMT x nYpix x nXpix x nframes. 
 
 fprintf(['Data is ' num2str(size(data))]) % Tells me dimensions of my dataset
 %% When imaging a single channel, nPMT = 1, so squeeze:
 
 data = squeeze(data); % This removes PMT from the dimensions set above because we are only imaging one channel (PMT)
-%% Register 2P data
+%% Register 2P data. Register can correct for motion in x-y plane, but not in z
+% plane.
 % Goal here is to remove X-Y movement artifacts. We will pick one average
 % of 500 frames to match the rest of the frames to.
 % 
@@ -52,12 +54,12 @@ data = squeeze(data); % This removes PMT from the dimensions set above because w
 % a. Plot average of 500 frames throughout stack
 
 nframes = 500; %nframes to average
-nskip = 1500; %nframes to skip for each average
+nskip = 1500; %nframes to skip for each average; this may change depending on how many frames we collect total
 
 nep = floor(size(data,3)./nskip); % This determines how many subplots will be in the figure to choose from
 [n n2] = subplotn(nep); 
 figure('units','normalized','outerposition',[0 0 1 1]);
-for i = 1:nep; % Makes subplots of 500 frame average for subplots 1 throiugh nep (9)
+for i = 1:nep; % Makes subplots of 500 frame average for subplots 1 through nep (9)
     subplot(n,n2,i); 
     imagesc(mean(data(:,:,1+((i-1)*nskip):nframes+((i-1)*nskip)),3)); 
     title([num2str(1+((i-1)*nskip)) '-' num2str(nframes+((i-1)*nskip))]); 
@@ -65,7 +67,7 @@ end
 
 %% 
 % b. GUI to select target image: choose one that is sharp and close to center 
-% of stack
+% of stack.
 
 f=gcf;
 w = waitforbuttonpress; %click on subplot
@@ -95,27 +97,32 @@ if exist(fullfile(fnout, [date '_' mouse '_' run_str]))
     [outs, data_reg]=stackRegister_MA(data(:,:,:),[],[],out);
 else
     [out, data_reg] = stackRegister(data,data_avg);
+    % two outputs from stackRegister: out is a matrix that tells you how
+    % much you need to shift to match your target image and
+    % data_reg is the registered stack; version of data that is now fixed
     data_reg_avg = mean(data_reg,3);
     reg = data_reg_avg;
     mkdir(fullfile(fnout,[date '_' mouse '_' run_str]))
     save(fullfile(fnout, [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'data_reg_avg', 'out', 'data_avg')
     save(fullfile(fnout, [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
-%% 
-% New average image after registration
-
-data_reg_avg = mean(data_reg,3);
-%% 
-% Save registration shifts and target, and mworks data
-
-mkdir(fullfile(fnout, datemouse, datemouserun))
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']), 'data_reg_avg', 'out', 'data_avg')
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
+% %% 
+% % New average image after registration
+% 
+% data_reg_avg = mean(data_reg,3);
+% %% 
+% % Save registration shifts and target, and mworks data
+% 
+% mkdir(fullfile(fnout, datemouse, datemouserun))
+% save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']), 'data_reg_avg', 'out', 'data_avg')
+% save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
 %% 
 % Test registration
 % 
 % a. Make sure first and last images are sharp and similar. Focus on vasculature 
-% and nuclei- not cells since F changes
+% and nuclei- not cells since F changes. If images are not clear/similar,
+% try redoing Register using a different reference image. If this doesn't
+% work, data might not be good for analysis.
 
 ind = [1 nep];
 for i = 1:length(ind) 
@@ -124,12 +131,14 @@ for i = 1:length(ind)
     imagesc(mean(data_reg(:,:,1+((ix-1)*nskip):nframes+((ix-1)*nskip)),3)); 
     title([num2str(1+((ix-1)*nskip)) '-' num2str(nframes+((ix-1)*nskip))]); 
 end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_FOV_first&last.pdf']), '-dpdf')
+print(fullfile(fnout, [date '_' mouse '_' run_str], [datemouserun '_FOV_first&last.pdf']), '-dpdf')
+
 %% 
 % b. Average of all frames should be sharp
 
+figure;
 imagesq(data_reg_avg); 
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_FOV_avg.pdf']), '-dpdf')
+print(fullfile(fnout, [date '_' mouse '_' run_str], [datemouserun '_FOV_avg.pdf']), '-dpdf')
 clear data
 %% Segment 2P data
 % Goal here is to create a cell mask to extract fluorescence timecourses
@@ -140,8 +149,8 @@ clear data
 % 
 % First need to know how many frames per trial and how many trials
 
-nOn = input.nScansOn;
-nOff = input.nScansOff;
+nOn = input.nScansOn; % number of On frames per trial
+nOff = input.nScansOff; % number of Off frames per trial
 ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one value per trial, so length = ntrials
 sz = size(data_reg);
 %% 
@@ -186,7 +195,7 @@ myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_avg_all = imfilter(data_dfof_avg,myfilter);
 data_dfof_max = max(data_dfof_avg_all,[],3); %finds all active cells by taking max projection
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all', 'nStim')
+save(fullfile(fnout, [date '_' mouse '_' run_str], [datemouserun '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all', 'nStim')
 %% 
 % 2. Create cell masks from active cells
 % 
@@ -195,6 +204,15 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']),
 data_dfof = cat(3,data_dfof_max, data_dfof_avg_all);
 %% 
 % Set up empty matrices for segmenting cells
+
+% This section is creating empty matrices for the masks with specific
+% dimensions (dimensions are the number of x and y pixels).
+% Mask_all is the cell, mask_exp (expanded) is the cell plus a buffer
+% region around the cell. The buffer region prevents two cells from being
+% fused together if they are in close proximity. Can look at the difference
+% using the following command:
+% figure(3); imagesc(mask_all)
+% figure(4); imagesc(mask_exp)
 
 mask_data = data_dfof;
 mask_exp = zeros(sz(1),sz(2));
@@ -232,16 +250,20 @@ imagesc(mask_cell)
 % c. Create neuropil masks (these are regions around each cell without overlap 
 % from neighboring cells)
 
+% We want to know where photons are coming from in the z-plane. Fluorescence
+% from out of focus photons in the z plane might contaminate our
+% fluorescent signal from the neuron that we are interested in.
+
 nMaskPix = 5; %thickness of neuropil ring in pixels
 nBuffPix = 3; %thickness of buffer between cell and ring
 mask_np = imCellNeuropil(mask_cell,nBuffPix,nMaskPix);
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'data_dfof_max', 'mask_cell', 'mask_np')
+save(fullfile(fnout, [date '_' mouse '_' run_str], [datemouserun '_mask_cell.mat']), 'data_dfof_max', 'mask_cell', 'mask_np')
 clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
 %% Neuropil subtraction
 % Goal is to remove contamination from out-of-focus fluorescence
 %% 
-% # Extract cell timecourses
+% Extract cell timecourses
 
 data_tc = stackGetTimeCourses(data_reg, mask_cell); %applies mask to stack to get timecourses
 %% 
@@ -257,6 +279,9 @@ data_reg_down = stackGroupProject(data_reg,down); %averages every 5 frames in st
 data_tc_down = stackGetTimeCourses(data_reg_down, mask_cell);    
 %% 
 % 2.  Extract neuropil timecourses (full and downsampled)
+
+% I DONT GET WHY THIS GIVES YOU NEUROPIL SUBTRACTION. EXPLAIN NEUROPIL
+% EXTRACTION.
 
 sz = size(data_reg);
 np_tc = zeros(sz(3),nCells);
@@ -294,4 +319,4 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 clear data_reg data_reg_down
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+save(fullfile(fnout, [date '_' mouse '_' run_str], [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
