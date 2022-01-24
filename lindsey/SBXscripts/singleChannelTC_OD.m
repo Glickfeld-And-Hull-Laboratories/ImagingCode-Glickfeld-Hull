@@ -11,15 +11,15 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-mouse = 'i1351';
-date = '220118';
+mouse = 'i1368';
+date = '220120';
 ImgFolder = ['001'; '002'];
-time = {'1724','1758'};
-eye_str = {'Contra','Ipsi'};
+time = {'1625','1703'};
+eye_str = {'Ipsi','Contra'};
 
 frame_rate = 15;
 contra = strcmp(eye_str,'Contra'); %blocks for eye stimulation: 1 is when contra is open; 0: is contra closed
-nrun = size(ImgFolder,2);
+nrun = size(ImgFolder,1);
 run_str = catRunName(ImgFolder, nrun);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -28,7 +28,8 @@ datemouserun = [date '_' mouse '_' run_str];
 %Load 2P data
 data = [];
 clear temp
-offset = 0;
+offset_frames = 0;
+offset_time = 0;
 
 for irun = 1:nrun
     %Load mworks data- this has information about experiment (e.g. the visual stimuli presented and synchronization with the microscope)
@@ -41,20 +42,23 @@ for irun = 1:nrun
     
     if irun>1
         for itrial = 1:ntrials
-            temp(irun).counterValues{itrial} = bsxfun(@plus,temp(irun).counterValues{itrial},offset);
+            temp(irun).counterValues{itrial} = bsxfun(@plus,temp(irun).counterValues{itrial},offset_frames);
+            temp(irun).counterTimesUs{itrial} = bsxfun(@plus,temp(irun).counterTimesUs{itrial},offset_time-temp(irun).counterValues{1}(1)+1000);
+            temp(irun).wheelSpeedTimesUs{itrial} = bsxfun(@plus,temp(irun).wheelSpeedTimesUs{itrial},offset_time-temp(irun).counterValues{1}(1)+1000);
         end
     end
-    offset = offset+totframes;
+    offset_frames = offset_frames+totframes;
+    offset_time = offset_time+temp(irun).counterTimesUs{end}(end);
     
     %Load 2P metadata- this has information about the information about the imaging session (e.g. frame count, zoom)
-    CD = fullfile(data_fn, mouse, date, ImgFolder{irun});
+    CD = fullfile(data_fn, mouse, date, ImgFolder(irun,:));
     cd(CD);
-    imgMatFile = [ImgFolder{irun} '_000_000.mat'];
+    imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
     %Load 2P images
     
     fprintf(['Reading ' num2str(totframes) ' frames \r\n'])
-    data_temp = sbxread([ImgFolder{irun} '_000_000'],0,totframes); %loads the .sbx files with imaging data (path, nframes to skip, nframes to load)
+    data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,totframes); %loads the .sbx files with imaging data (path, nframes to skip, nframes to load)
     data_temp = squeeze(data_temp);
     data = cat(3,data,data_temp);
 end
@@ -287,7 +291,7 @@ start=1;
 n = 1;
 figure;
 movegui('center')
-for iCell = 1:25
+for iCell = 1:nCells
     if start>25
         sgtitle([mouse ' ' date])
         print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
