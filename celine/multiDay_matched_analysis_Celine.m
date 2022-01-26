@@ -159,7 +159,7 @@ for id = 1:nd
             ind = intersect(ind_ori,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
             data_resp(:,iOri,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
             data_resp(:,iOri,iCon,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-            [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri.*3-1));
+            [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri*nCon.*3-1));
         end
     end
 
@@ -201,7 +201,7 @@ data_con_resp_match{id} = data_con_resp;
 data_orth_resp_match{id}=data_orth_resp;
  
 end
-clear data_resp h p h_all resp pref_ori pref_con data_ori_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp
+clear data_resp p h_all resp pref_ori pref_con data_ori_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp
  
 %% get basic counts 
 red_ind_match_list = find(red_ind_match==1);
@@ -212,8 +212,8 @@ green_ind_match_list = find(green_ind_match);
 
 
 %creating the arrays for red cells
-red_match_respd1 = intersect(red_ind_match_list,find(resp_match{1}==1));
-red_match_respd2 = intersect(red_ind_match_list,find(resp_match{2}==1));
+red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
+red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
 
 green_match_respd1 = intersect(green_ind_match_list,find(resp_match{1}==1));
 green_match_respd2 = intersect(green_ind_match_list,find(resp_match{2}==1));
@@ -251,9 +251,8 @@ nKeep = length(keep_cells)
 
 %% counts for keep cells
 
-green_match_respd1 = intersect(resp_green_either,find(resp_match{1}==1));
-green_match_respd2 = intersect(resp_green_either,find(resp_match{2}==1));
-
+green_match_respd1 = intersect(resp_green_either,find(resp_match{2}==1)); %this is for reverse matching
+green_match_respd2 = intersect(resp_green_either,find(resp_match{1}==1));
 
 %matched
 nGreen_keep = length(resp_green_either); %how many matched green cells
@@ -261,7 +260,7 @@ nGreen_keep_respd1 = length(green_match_respd1); %how many of those responded on
 nGreen_keep_respd2 = length(green_match_respd2);%how many of those responded on d2
 
 % make table of values
-countsTable = table([nGreen_keep;nRed_match],[nGreen_keep_respd1;nRed_match_respd1],[nGreen_keep_respd2;nRed_match_respd2],'VariableNames',{'Keep' 'Responsive day 1' 'Responsive day 2'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
+countsTable = table([nGreen_keep;nRed_match],[nGreen_keep_respd1;nRed_match_respd1],[nGreen_keep_respd2;nRed_match_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
 clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
@@ -282,39 +281,41 @@ end
 %we will get one tc per cell per contrast. This represents that cell's tc
 %averaged over trials at the preferred orientation, at each contrast
 
-tc_trial_avrg_keep=cell(1,nCon,nd);
-rect_tc_trial_avrg_keep=cell(1,nCon,nd);
-resp_prefStim_keep=cell(1,nCon,nd);
+tc_trial_avrg_keep=cell(1,nd);
+rect_tc_trial_avrg_keep=cell(1,nd);
+resp_prefStim_keep=cell(1,nd);
 
 for id = 1:nd
-    for iCon=1:nCon
-    tc_trial_avrg=nan((nOn+nOff),nKeep);
-    mean_resp_temp=nan(nKeep,1);
+    
+    tc_trial_avrg=nan((nOn+nOff),nKeep,nCon);
+    mean_resp_temp=nan(nKeep,nCon,1);
     for i=1:nKeep
-        temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
-        tCon=tCon_match{id}(1:nTrials);
-        tDir=tDir_match{id}(1:nTrials);
-        %identify the trials where ori = pref ori
-        temp_ori= pref_ori_keep{2}(i); %find the preferred ori of this cell and convert to degrees
-        ori_inds = find(tDir==temp_ori); %these are the trials at that ori
-             
-        con_inds=find(tCon==cons(iCon));
-        temp_trials = intersect(ori_inds, con_inds); %preferred ori for this cell, looping through all cons
-        
-        tc_trial_avrg(:,i)=nanmean(temp_TCs(:,temp_trials),2);
-        rect_tc_trial_avrg=tc_trial_avrg;
-        rect_tc_trial_avrg(rect_tc_trial_avrg<0)=0;
-        mean_resp_temp(i) = nanmean(tc_trial_avrg(stimStart:stimEnd,i));
+        for iCon = 1:nCon
+            temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
+            tCon=tCon_match{id}(1:nTrials);
+            tDir=tDir_match{id}(1:nTrials);
+            %identify the trials where ori = pref ori
+            temp_ori= pref_ori_keep{2}(i); %find the preferred ori of this cell and convert to degrees
+            ori_inds = find(tDir==temp_ori); %these are the trials at that ori
+
+            con_inds=find(tCon==cons(iCon));
+            temp_trials = intersect(ori_inds, con_inds); %preferred ori for this cell, looping through all cons
+
+            tc_trial_avrg(:,i,iCon)=nanmean(temp_TCs(:,temp_trials),2);
+            rect_tc_trial_avrg=tc_trial_avrg;
+            rect_tc_trial_avrg(rect_tc_trial_avrg<0)=0;
+            mean_resp_temp(i,iCon) = nanmean(tc_trial_avrg(stimStart:stimEnd,i,iCon));
+        end
 
     end
     
     
-tc_trial_avrg_keep{1,iCon,id}=tc_trial_avrg; %this is a cell array with one cell 
+tc_trial_avrg_keep{id}=tc_trial_avrg; %this is a cell array with one cell 
 %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
 rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
-resp_prefStim_keep{1,iCon,id}=mean_resp_temp; %a single column array with a value for each cell that represents the mean df/f of the response window for preferred stimuli
+resp_prefStim_keep{id}=mean_resp_temp; %a single column array with a value for each cell that represents the mean df/f of the response window for preferred stimuli
 end
-end
+
 
 clear tc_trial_avrg temp_trials con_inds temp_con ori_inds temp_ori mean_resp_temp temp_TCs
 
@@ -327,22 +328,22 @@ green_keep_logical = ~red_keep_logical;
 
 
 save(fullfile(fn_multi,'tc_keep.mat'),'tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical')
-%% prepare to plot the timecourses 
+%% prepare to plot the timecourses averaged over cells, at each cell's preferred orientation
 
-tc_green_avrg_keep = cell(1,nCon,nd); %this will be the average across all green cells - a single line
-tc_red_avrg_match = cell(1,nCon,nd); %same for red
-tc_green_se_keep = cell(1,nCon,nd); %this will be the se across all green cells
-tc_red_se_match = cell(1,nCon,nd); %same for red
+tc_green_avrg_keep = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_match = cell(1,nd); %same for red
+tc_green_se_keep = cell(1,nd); %this will be the se across all green cells
+tc_red_se_match = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-    tc_green_avrg_keep{1,iCon,id}=nanmean(tc_trial_avrg_keep{1,iCon,id}(:,green_ind_keep),2);
-    green_std=std(tc_trial_avrg_keep{1,iCon,id}(:,green_ind_keep),[],2);
-    tc_green_se_keep{1,iCon,id}=green_std/sqrt(length(green_ind_keep));
+    tc_green_avrg_keep{id}(:,iCon)=nanmean(tc_trial_avrg_keep{id}(:,green_ind_keep,iCon),2);
+    green_std=std(tc_trial_avrg_keep{id}(:,green_ind_keep,iCon),[],2);
+    tc_green_se_keep{id}(:,iCon)=green_std/sqrt(length(green_ind_keep));
     
-    tc_red_avrg_match{1,iCon,id}=nanmean(tc_trial_avrg_keep{1,iCon,id}(:,red_ind_keep),2);
-    red_std=std(tc_trial_avrg_keep{1,iCon,id}(:,red_ind_keep),[],2);
-    tc_red_se_match{1,iCon,id}=red_std/sqrt(length(red_ind_keep));
+    tc_red_avrg_match{id}(:,iCon)=nanmean(tc_trial_avrg_keep{id}(:,red_ind_keep,iCon),2);
+    red_std=std(tc_trial_avrg_keep{id}(:,red_ind_keep,iCon),[],2);
+    tc_red_se_match{id}(:,iCon)=red_std/sqrt(length(red_ind_keep));
     
     clear green_std red_std
     end
@@ -357,10 +358,10 @@ for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
 
-shadedErrorBar(x,tc_red_avrg_match{1,iCon,2},tc_red_se_match{1,iCon,2},'r');
+shadedErrorBar(x,tc_red_avrg_match{2}(:,iCon),tc_red_se_match{2}(:,iCon),'r');
 ylim([-.02 .15]);
 hold on
-shadedErrorBar(x,tc_green_avrg_keep{1,iCon,2},tc_green_se_keep{1,iCon,2});
+shadedErrorBar(x,tc_green_avrg_keep{2}(:,iCon),tc_green_se_keep{2}(:,iCon));
 title(['Pre-DART contrast = ' num2str(cons(iCon))])
 txt1 = ['HT- ' num2str(sum(nGreen_keep))];
 text(-1.5,0.14,txt1);
@@ -373,24 +374,26 @@ axis square
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(x,tc_red_avrg_match{1,iCon,1},tc_red_se_match{1,iCon,1},'r');
+shadedErrorBar(x,tc_red_avrg_match{1}(:,iCon),tc_red_se_match{1}(:,iCon),'r');
 ylim([-.02 .15]);
 hold on
-shadedErrorBar(x,tc_green_avrg_keep{1,iCon,1},tc_green_se_keep{1,iCon,1});
+shadedErrorBar(x,tc_green_avrg_keep{1}(:,iCon),tc_green_se_keep{1}(:,iCon));
 ylabel('dF/F') 
 xlabel('s') 
 title(['Post-DART contrast = ' num2str(cons(iCon))])
 axis square
 
-%print(fullfile(fn_multi,['timecourses_con' num2str(cons(iCon))]),'-dpdf');
+print(fullfile(fn_multi,['timecourses_con' num2str(cons(iCon))]),'-dpdf');
 end 
 %% make a plot of individual timecourses 
-setYmin = -.1;
+setYmin = -.1; %indicate y axes you want
 setYmax = 0.6;
+
+for iCon = 1:nCon
 
 figure
 subplot(2,2,1)
-plot(x, tc_trial_avrg_keep{2}(:,green_ind_keep),'k')
+plot(x, tc_trial_avrg_keep{2}(:,green_ind_keep,iCon),'k')
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -399,7 +402,7 @@ xlabel('s')
 
 
 subplot(2,2,2)
-plot(x, tc_trial_avrg_keep{2}(:,red_ind_keep),'color',[.7 .05 .05])
+plot(x, tc_trial_avrg_keep{2}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -408,7 +411,7 @@ xlabel('s')
 
 
 subplot(2,2,3)
-plot(x, tc_trial_avrg_keep{1}(:,green_ind_keep),'k')
+plot(x, tc_trial_avrg_keep{1}(:,green_ind_keep,iCon),'k')
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
@@ -417,47 +420,38 @@ xlabel('s')
 
 
 subplot(2,2,4)
-plot(x, tc_trial_avrg_keep{1}(:,red_ind_keep),'color',[.7 .05 .05])
+plot(x, tc_trial_avrg_keep{1}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
-
-
-
-print(fullfile(fn_multi,['highCon_indiv_timecourses']),'-dpdf');
+sgtitle(['contrast = '  num2str(cons(iCon))])
+print(fullfile(fn_multi,['indiv_timecourses_con' num2str(cons(iCon))]),'-dpdf');
+end
 %% makes a scatterplot of max df/f for day 1 vs day 2, and each subplot is one day
 %this is for all cells I'm keeping, red and green
 
 
-% data_resp_keep = cell(1,nd);
-% resp_max_match = cell(1,nd);
-% resp_max_keep = cell(1,nd);
-% 
-% for id = 1:nd
-%     data_resp_keep{id}=data_resp_match{id}(keep_cells,:,:,:);
-%     resp_max_match{id} = squeeze(max(max(data_resp_match{id}(:,:,:,1),[],2),[],3));
-%    resp_max_keep{id} = squeeze(max(max(data_resp_keep{id}(:,:,:,1),[],2),[],3));
-% end
-
 %make this flexible for multiple contrasts
 
 data_resp_keep = cell(1,nd);
-resp_max_match = cell(1,nd);
 resp_max_keep = cell(1,nd);
 
 for id = 1:nd
-   data_resp_keep{id}=data_resp_match{id}(keep_cells,:,2,:);
-   resp_max_keep{id} = squeeze(max(max(data_resp_keep{id}(:,:,:,1),[],2),[],3));
+  data_resp_keep{id}=data_resp_match{id}(keep_cells,:,:,:);
+  resp_max_keep{id} = squeeze(max(data_resp_keep{id}(:,:,:,1),[],2));
+  
 end
 
+save(fullfile(fn_multi,'resp_keep.mat'),'data_resp_keep','resp_max_keep')
 
+%% make max response scatters at each contrast
 
-%%
+for iCon = 1:nCon
 figure; movegui('center') 
 subplot(1,2,1)
-scatter(resp_max_keep{2}(green_ind_keep),resp_max_keep{1}(green_ind_keep),'k')
+scatter(resp_max_keep{2}(green_ind_keep),resp_max_keep{1}(green_ind_keep,iCon),'k')
 
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
@@ -469,7 +463,7 @@ axis square
 
 
 subplot(1,2,2)
-scatter(resp_max_keep{2}(red_ind_keep),resp_max_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
+scatter(resp_max_keep{2}(red_ind_keep),resp_max_keep{1}(red_ind_keep,iCon),'MarkerEdgeColor',[.7 .05 .05])
 
 % hold off
 ylabel('post-DART dF/F')
@@ -480,16 +474,22 @@ refline(1)
 title('HT+')
 axis square
 
-print(fullfile(fn_multi,'highCon_maxResp_crossDay.pdf'),'-dpdf','-bestfit')
-%save(fullfile(fn_multi,'resp_keep.mat'),'data_resp_keep','resp_max_keep')
+sgtitle(num2str(cons(iCon)))
+print(fullfile(fn_multi,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
+
+end
 % extract the max df/f values for analysis
 %% looking at change in dfof
-dfof_max_diff = (resp_max_keep{2}-resp_max_keep{1})./resp_max_keep{2}; %post-pre/pre
 
+%need to edit to look at multiple contrasts
+
+dfof_max_diff = (resp_max_keep{1}-resp_max_keep{2})./resp_max_keep{2}; %post-pre/pre, nCell X nCon
+
+for iCon = 1:nCon
 figure
-x = [mean(dfof_max_diff(green_ind_keep)), mean(dfof_max_diff(red_ind_keep))];
-y = [(std(dfof_max_diff(green_ind_keep)))/sqrt(length(green_ind_keep)), (std(dfof_max_diff(red_ind_keep)))/sqrt(length(red_ind_keep))];
-%y = [std(dfof_max_diff(green_ind_keep)), std(dfof_max_diff(red_ind_keep))]
+x = [mean(dfof_max_diff(green_ind_keep,iCon)), mean(dfof_max_diff(red_ind_keep,iCon))];
+y = [(std(dfof_max_diff(green_ind_keep,iCon)))/sqrt(length(green_ind_keep)), (std(dfof_max_diff(red_ind_keep,iCon)))/sqrt(length(red_ind_keep))];
+
 labs =categorical({'HT-','HT+'})
 bar(labs,x)                
 hold on
@@ -498,46 +498,12 @@ er.Color = [0 0 0];
 er.LineStyle = 'none';  
 %ylim([0 .2])
 hold off
-title('% change in max dfof')
+title(['fractional change dfof, contrast = ', num2str(cons(iCon))])
 
-print(fullfile(fn_multi,'change_max_resp.pdf'),'-dpdf','-bestfit')
+print(fullfile(fn_multi,[num2str(cons(iCon)), '_frac_change_resp.pdf']),'-dpdf','-bestfit')
 
+end
 
-%% plot fractional change in max dfof vs. z-score of red fluorescence
-wIn_red_z = zscore(red_fluor_match_d1(red_ind_keep));
-
-figure
-subplot(1,2,1)
-scatter(z_red_fluor_keep(red_ind_keep),dfof_max_diff(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
-hold on
-scatter(z_red_fluor_keep(green_ind_keep),dfof_max_diff(green_ind_keep),'k')
-hold on
-x=z_red_fluor_keep;
-y=dfof_max_diff;
-p = polyfit(x, y, 1);
-px = [min(x) max(x)];
-py = polyval(p, px);
-
-plot(px, py, 'LineWidth', 2);
-clear x y p px py
-xlabel('red fluorescence z-score')
-ylabel('fractional change max dfof')
-
-subplot(1,2,2)
-scatter(wIn_red_z,dfof_max_diff(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05])
-hold on
-x=wIn_red_z;
-y=dfof_max_diff(red_ind_keep);
-p = polyfit(x, y, 1);
-px = [min(x) max(x)];
-py = polyval(p, px);
-plot(px, py, 'LineWidth', 2);
-clear x y p px py
-xlabel('red fluorescence z-score within red cells')
-ylabel('fractional change max dfof')
-hold off
-
-print(fullfile(fn_multi,'frac_change_vs_red.pdf'),'-dpdf','-bestfit')
 %% plotting  ori response 
 if nKeep<36
     [n n2] = subplotn(nKeep);
@@ -612,18 +578,21 @@ end
 %the orientation that gave the strongest response in the observed data
 
 fig=figure; movegui('center') 
-scatter(pref_ori_keep{1}(green_ind_keep),pref_ori_keep{2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(pref_ori_keep{2}(green_ind_keep),pref_ori_keep{1}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
-scatter(pref_ori_keep{1}(red_ind_keep),pref_ori_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+scatter(pref_ori_keep{2}(red_ind_keep),pref_ori_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
-xlabel('D1- pref ori')
-ylabel('D2- pref ori')
+xlabel('Pre-DART pref ori')
+ylabel('Post-DART pref ori')
 % xlim([0 .4])
 % ylim([0 .4])
 refline(1)
 title('Observed pref ori')
 saveas(fig, 'obsvOri.png')
 
+ori_diff_keep = abs(pref_ori_keep{2}-pref_ori_keep{1});
+figure
+boxplot(ori_diff_keep, red_keep_logical) %this isn't the best way to show this
 
 %% extract fit orientation preference
 
@@ -708,9 +677,9 @@ end
 
 %% compare Von M fit pref ori across days
 fig=figure; movegui('center') 
-scatter(fit_pref_oris_keep{1}(green_ind_keep),fit_pref_oris_keep{2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{2}(green_ind_keep),fit_pref_oris_keep{1}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
-scatter(fit_pref_oris_keep{1}(red_ind_keep),fit_pref_oris_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{2}(red_ind_keep),fit_pref_oris_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
 xlabel('D1- pref ori')
 ylabel('D2- pref ori')
@@ -758,15 +727,23 @@ diff_pref = cell(1,nd);
 well_fit = cell(1,nd);
 for id = 1:nd
     diff_pref{id}=sort(abs(shuff_pref_ori{id} - fit_pref_oris_keep{id}),1);
-    well_fit{id} = find(diff_pref{id}((reps*.9),:)<22.5);
+    well_fit{id} = find(diff_pref{id}((reps*.9),:)<45); %set to current jump size in orientation
 end
 %well_fit gives a list of the well-fit cell
+% this compares the fit pref ori across days for cells that were well-fit on the
+% pre-DART day 
+[R_g p_g] = corrcoef(fit_pref_oris_keep{2},fit_pref_oris_keep{1})
 figure; movegui('center') 
-scatter(fit_pref_oris_keep{1}(well_fit{2}),fit_pref_oris_keep{2}(well_fit{2}),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{2}((intersect(well_fit{2},green_ind_keep))),fit_pref_oris_keep{1}((intersect(well_fit{2},green_ind_keep))),'k','jitter', 'on', 'jitterAmount', 5)
+hold on
+scatter(fit_pref_oris_keep{2}(intersect(well_fit{2},red_ind_keep)),fit_pref_oris_keep{1}(intersect(well_fit{2},red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+hold off
 xlabel('D1- pref ori')
 ylabel('D2- pref ori')
 refline(1)
-title('fit pref ori well-fit cells')
+title('fit pref ori for cells that were well-fit pre-DART')
+
+%%
 
 figure; movegui('center') 
 subplot(1,2,1)
@@ -778,6 +755,7 @@ xlabel('fit pref ori')
 ylabel('raw pref ori')
 title('day 1')
 refline(1)
+
 subplot(1,2,2)
 scatter(fit_pref_oris_keep{2}(green_ind_keep),pref_ori_keep{2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
@@ -787,10 +765,9 @@ xlabel('fit pref ori')
 ylabel('raw pref ori')
 title('day 2')
 refline(1)
-%% example cell tcs
-%[16 55]
-%1     2     7     9    14    16    20 23    24    27    40    41    44    54    55
-cellList=[16 55 3 15 47];
+%% example cell tcs - this is to pull out some individual example cell traces
+%
+cellList=[]; %enter the cells you're interested in by their index wihtin the keep dataframe
 
 place=1;
 figure
