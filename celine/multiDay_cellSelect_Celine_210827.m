@@ -8,7 +8,7 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 129;
+day_id = 131;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -285,16 +285,20 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
 %comes up
 if ~isempty(expt(day_id).redChannelRun)
-    bwout = imCellEditInteractiveCC(redChImg);
-    mask_all = mask_all+bwout;
-    mask_exp = imCellBuffer(mask_all,3)+mask_all;
-    close all
+    for iStim=1:size(redForSegmenting,3)
+        mask_data_temp=redForSegmenting(:,:,iStim);
+        mask_data_temp(find(mask_exp >= 1)) = 0;
+        bwout = imCellEditInteractiveLG(mask_data_temp);
+        mask_all = mask_all+bwout;
+        mask_exp = imCellBuffer(mask_all,3)+mask_all;
+        close all
+    end
 end
 
 mask_cell_red = bwlabel(mask_all);
@@ -415,24 +419,24 @@ for iCell = 1:nCells
 end
 
 % plots contrast preference at preferred orientation
-% figure;
-% movegui('center')
-% start = 1;
-% for iCell = 1:nCells
-%     if start>tot
-%         figure; movegui('center')
-%         start = 1;
-%     end
-%     subplot(n,n2,start)
-%     if find(find(h_all)==iCell)
-%         errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
-%         if find(find(mask_label)==iCell)
-%             title('R')
-%         end
-%         ylim([-0.1 inf])
-%         start = start+1;
-%     end
-% end
+figure;
+movegui('center')
+start = 1;
+for iCell = 1:nCells
+    if start>tot
+        figure; movegui('center')
+        start = 1;
+    end
+    subplot(n,n2,start)
+    if find(find(h_all)==iCell)
+        errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
+        if find(find(mask_label)==iCell)
+            title('R')
+        end
+        ylim([-0.1 inf])
+        start = start+1;
+    end
+end
 % %% LG tuning fit
 % [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC]...
 %     = getOriTuningLG(npSub_tc,input,5);

@@ -8,7 +8,7 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(2) = 112;
+day_id(2) = 130;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);
@@ -368,6 +368,7 @@ print(fullfile(fn_multi,'masksAfterTransform.pdf'),'-dpdf','-fillpage')
 
 %%
 %old TCs
+
 match_ind = find([cellImageAlign.pass]);
 cellTCs_match{1} = cellTCs_all{1}(:,match_ind);
 
