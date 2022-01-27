@@ -2,10 +2,14 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '211004';
-imgFolder = '003';
-time = '1457';
-mouse = 'i2015';
+
+
+mouse = 'WK12';
+date = '220107'
+time = char('1532');
+imgFolder = char('003');
+frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
+
 
 %setting my paths
 fn_base = 'Z:\home\Celine\Analysis\2p_analysis\';
@@ -30,7 +34,8 @@ nOff=input.nScansOff;
 %change this to use a padded array, where I add zeros at the end. test=padarray(cellTCs_match{1},30,0,'post');
 stimStart = (nOff/2)+1; %this indicates both the perdiod to trim off the start and the stim on period after trimming
 stimEnd=stimStart+nOn-1;
-nTrials=360;
+nTrialsOG=length(input.tGratingDiameterDeg);
+nTrials= nTrialsOG-1;
 
 cellTCs_OG = npSub_tc;
 
@@ -44,18 +49,18 @@ nCells = size(npSub_tc,2);
 npSub_tc = npSub_tc(stimStart:size(npSub_tc,1),:);
 npSub_tc = padarray(npSub_tc,double(stimStart)-1,0,'post');
 nFrames = size(npSub_tc,1);
-data_trial = reshape(npSub_tc,[nOn+nOff nTrials nCells]);
+data_trial = reshape(npSub_tc,[nOn+nOff nTrialsOG nCells]);
 data_f= mean(data_trial(1: (nOff/2),:,:),1);
 data_tc_trial = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
-
+data_tc_trial = data_tc_trial(:,1:nTrials-1,:);
 clear data_trial data_f
- plot(squeeze(mean(data_tc_trial, 2)))
+plot(squeeze(mean(data_tc_trial, 2)))
 %% find the stimulus conditions
-tCons = celleqel2mat_padded(input.tGratingContrast); %transforms cell array into matrix (1 x ntrials)
+tCons = celleqel2mat_padded(input.tGratingContrast(1:nTrials-1)); %transforms cell array into matrix (1 x ntrials)
 Cons = unique(tCons);
 nCons = length(Cons);
 
-tSize = celleqel2mat_padded(input.tGratingDiameterDeg); %transforms cell array into matrix (1 x ntrials)
+tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:nTrials-1)); %transforms cell array into matrix (1 x ntrials)
 Sizes = unique(tSize);
 nSizes = length(Sizes);
 
@@ -65,8 +70,8 @@ data_resp = zeros(nCells,nSizes,nCons,2);
 h = zeros(nCells, nSizes,nCons);
 p = zeros(nCells, nSizes,nCons);
 
-resp_win = stimStart:stimEnd;
-base_win = (stimStart - input.frameImagingRateMs/2):stimStart-1;
+resp_win = stimStart:stimStart+3;
+base_win = (stimStart - nOff/2):stimStart-1;
 
 
 
@@ -83,10 +88,13 @@ end
 
 h_all = sum(sum(h,2),3);
 resp=logical(h_all);
+resp_small_highCon = logical(h(:,1,4));
 sum(resp)
-respInds = find(resp);
+
 %% plot timecourses at different sizes and contrasts
-frame_rate=double(input.frameImagingRateMs);
+load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
+%frame_rate=double(input.frameImagingRateMs);
+frame_rate = 30;
 t = 1:(size(data_tc_trial,1));
 t=(t-double(stimStart))/frame_rate;
 
@@ -94,33 +102,86 @@ t=(t-double(stimStart))/frame_rate;
 x=1;
 figure;
     for iSize = 1:nSizes %loop through the sizes
-        inds1 = find(tSize == Sizes(5)); %find trials with that size
+        inds1 = find(tSize == Sizes(iSize)); %find trials with that size
         for iCon = 1:nCons
         inds2 = find(tCons == Cons(iCon));
         inds = intersect(inds1,inds2);
-        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,resp),2));
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,intersect(find(resp_small_highCon),centerCells)),2));
         temp_mean = nanmean(temp_trials,2);
-        temp_se = std(temp_trials,[],2)/sqrt(sum(resp));
+        temp_se = std(temp_trials,[],2)/sqrt(length(intersect(find(resp_small_highCon),centerCells)));
 
         subplot(n,n2,x)
+
+        
+        fill([.2 .2 .4 .4],[-.1 .5 .5 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+        hold on
         shadedErrorBar(t,temp_mean,temp_se);
         hold on
-        ylim([-.05 .1])
-%         x = [0 nOn/frame_rate nOn/frame_rate 0];
-%         y = [.08 .08 .082 .082 ];
-%         patch(x,y,'b')
+        ylim([-.03 .2])
+        xlim([-2 2])
+        
+        hline(0)
         hold off
         title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
-        x=x+1
+        x=x+1;
         end
         
 
     end
-    
-%% 
-conInds = find(tCons == .8);
-sizeInds = find(tSize==120);
-temp_trials = squeeze(nanmean(data_tc_trial(:,sizeInds,resp),2));
-temp_mean = nanmean(temp_trials,2);
-temp_se = std(temp_trials,[],2)/sqrt(sum(resp));
-shadedErrorBar(t,temp_mean,temp_se);
+print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, imgFolder, ['tc_matrix.pdf']), '-dpdf')
+%% for checking out individual size/con combinations if something looks unusual
+        inds1 = find(tSize == 30);
+        inds2 = find(tCons == .4);
+        inds = intersect(inds1,inds2);
+         temp_trials = squeeze(nanmean(data_tc_trial(:,inds,resp),2));
+        temp_mean = nanmean(temp_trials,2);
+        temp_se = std(temp_trials,[],2)/sqrt(sum(resp));
+        shadedErrorBar(t(49:82),temp_mean(49:82,:),temp_se(49:82,:));
+        hold on
+        ylim([-.05 .13])
+        vline(0)
+
+%% looking at cells individually
+
+centeredResp=intersect(find(resp_small_highCon),centerCells);
+
+
+for iCell = 1:length(centeredResp)
+figure;
+[n n2] = subplotn(nSizes*nCons);
+x=1;
+cellInd = centeredResp(iCell)
+    for iSize = 1:nSizes %loop through the sizes
+        inds1 = find(tSize == Sizes(iSize)); %find trials with that size
+        for iCon = 1:nCons
+        inds2 = find(tCons == Cons(iCon));
+        inds = intersect(inds1,inds2);
+        temp_trials = data_tc_trial(:,inds,cellInd);
+        temp_mean = nanmean(temp_trials,2);
+        temp_se = std(temp_trials,[],2)/sqrt(size(temp_trials,2));
+
+        subplot(n,n2,x)
+
+        
+        fill([.2 .2 .4 .4],[-.1 .5 .5 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        shadedErrorBar(t,temp_mean,temp_se);
+        hold on
+        ylim([-.03 .2])
+        xlim([-2 2])
+        
+        hline(0)
+        hold off
+        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+        x=x+1;
+        end
+        
+
+    end
+    sgtitle(num2str(cellInd));
+    print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, imgFolder, [num2str(cellInd),'_matrix.pdf']), '-dpdf')
+end

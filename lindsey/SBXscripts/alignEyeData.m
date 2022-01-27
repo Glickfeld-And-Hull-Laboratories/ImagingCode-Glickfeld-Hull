@@ -10,8 +10,13 @@ function [rad centroid] = alignEyeData(Eye_data,input);
     calib = 1/26.6; %mm per pixel
     if isfield(input,'cStimOn')
         cStimOn = celleqel2mat_padded(input.cStimOn);
-        prewin_frames = input.nFramesOn;
-        postwin_frames = input.nFramesOn;
+        if isfield(input,'trialOutcomeCell')
+            prewin_frames = input.frameRateHz;
+            postwin_frames = input.frameRateHz.*3;
+        else
+            prewin_frames = input.nFramesOn;
+            postwin_frames = input.nFramesOn;
+        end
     elseif isfield(input,'cStimOneOn')
         cStimOn = celleqel2mat_padded(input.cStimOneOn);
         prewin_frames = input.stimOneOnFrames; %check these
@@ -37,8 +42,8 @@ function [rad centroid] = alignEyeData(Eye_data,input);
         else
             crange = [double(cStimOn(itrial))-prewin_frames: double(cStimOn(itrial+1)-prewin_frames-1)];
         end
-        if sum(isnan(Rad_temp(crange,1)),1)>0
-            if sum(isnan(Rad_temp(crange,1)),1)./length(crange)> 0.25
+        if sum(isnan(Rad_temp(crange)),1)>0
+            if sum(isnan(Rad_temp(crange)),1)./length(crange)> 0.25
                 Rad_temp(crange,1) = NaN(length(crange),1);
                 Centroid_temp(crange,:) = NaN(length(crange),2);
             else

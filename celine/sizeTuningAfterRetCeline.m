@@ -7,14 +7,15 @@
 %% get path names
 clear all;clc;
 
-mouse = 'WK08';
-date = '211206';
-time = char('1442');
-ImgFolder = char('003');
-RetImgFolder = char('002');
+
+mouse = 'WK11';
+date = '220114'
+time = char('1410');
+ImgFolder = char('002');
+RetImgFolder = char('001');
 
 doFromRef = 1;
-ref = char('002');
+ref = char('001');
 
 nrun = size(ImgFolder,1);
 frame_rate = 30;
@@ -42,12 +43,13 @@ for irun = 1:nrun
     
     % load behavior/experimental data
      %%for mice with IDs that begin in a letter
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i''' mouse '''-' date '-' time(irun,:) '.mat'];
-    %fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
+    %fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i''' mouse '''-' date '-' time(irun,:) '.mat'];
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
     load(fName);
     
     % read in frames with sbxread
-    nframes = info.config.frames;
+    nframes = min([input.counterValues{end}(end) info.config.frames]);
+
     fprintf(['\nReading run ' num2str(irun) ' - ' num2str(nframes) ' frames \n'])
     tic
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
@@ -376,6 +378,16 @@ for i = 1:nSzs
     clim([0 max(data_dfof_avg(:))])
     colormap(gray)
 end
+figure;
+imagesc(mean(data_reg(:,:,:),3)); hold on;
+bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); 
+colormap(gray)
+figure;
+imagesc(data_dfof_max); hold on;
+bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); 
+colormap(gray)
 
 
 %% Get time courses, including neuropil subtraction
@@ -462,7 +474,7 @@ centerCells = find(cellDists < cutOffRadius)';
 % goodCutCells = intersect(cutCells,goodfit_ind);
 nCenterCells = length(centerCells);
 % fprintf([num2str(nCutCells) ' cells selected\n'])
-
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_centerCells.mat']),'centerCells')
 %% plot tcs for all cells
 
 size_tuning_mat = zeros(nSzs, 2, nCells);
@@ -509,7 +521,7 @@ con_tuning_mat = zeros(nCons, 2, nCells);
 if nCells<18
     [n, n2] = subplotn(nCells);
 else
-    [n, n2] = subplotn(36);
+    [n, n2] = subplotn(16);
 end
 tt = (1-nOff:nOn)*(1000./frame_rate);
 figure;
@@ -517,7 +529,7 @@ start = 1;
 f = 1;
 for iCell = 1:nCells
     
-    if start >36
+    if start >16
         set(gcf, 'Position', [0 0 800 1000]);
         print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_TCs' num2str(f) '.pdf']), '-dpdf')
         start = 1;
@@ -527,15 +539,14 @@ for iCell = 1:nCells
     subplot(n, n2, start)
     for iStim = 1:nCons
         ind = find(con_mat == cons(iStim));
-        plot(tt(117:123)', squeeze(mean(tc_dfof(117:123,iCell,ind),3)))
+        plot(tt, squeeze(mean(tc_dfof(:,iCell,ind),3)))
         hold on
         con_tuning_mat(iStim,1,iCell) = mean(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),3),1);
         con_tuning_mat(iStim,2,iCell) = std(mean(tc_dfof(nOff+1:nOn+nOff,iCell,ind),1),[],3)./sqrt(length(ind));
-
         title(iCell)
     end
-    ylim([-0.05 0.25])
-    vline(tt(120))
+    %ylim([-0.05 0.25])
+    vline(tt(nOff))
     start = start + 1;
 end
 set(gcf, 'Position', [0 0 800 1000]);
@@ -548,7 +559,7 @@ f = 1;
 for i = 1:nCenterCells
     iCell = centerCells(i);
     
-    if start >36
+    if start >16
         set(gcf, 'Position', [0 0 800 1000]);
         print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning' num2str(f) '.pdf']), '-dpdf')
         start = 1;
@@ -573,7 +584,7 @@ print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\c
 %% plot size X contrast tuning for centered cells
 sizeTune = zeros(nSzs,nCons,nCenterCells);
 sizeSEM = sizeTune;
-[n, n2] = subplotn(min([36 nCenterCells]));
+[n, n2] = subplotn(min([16 nCenterCells]));
 
 figure;
 start = 1;
@@ -582,7 +593,7 @@ f = 1;
 for i = 1:nCenterCells
     iCell = centerCells(i);
     
-    if start >36
+    if start >16
         set(gcf, 'Position', [0 0 800 1000]);
         print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning_in' num2str(cutOffRadius) 'deg' num2str(f) '.pdf']), '-dpdf')
         start = 1;

@@ -2,16 +2,16 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '211004';
+date = '220107';
 imgFolder = '003';
-time = '1457';
-mouse = 'i2015';
+time = '1532';
+mouse = 'WK12';
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
 %setting my paths
 
-fnIn_base = 'Z:\home\Celine\Data\2p_data\';
-fnOut_base = 'Z:\home\Celine\Analysis\2p_analysis\';
+fnIn_base = 'Z:\home\celine\Data\2p_data\';
+fnOut_base = 'Z:\home\celine\Analysis\2p_analysis\';
 
 %fnIn_base = 'Z:\home\ACh\Data\2p_data\';
 %fnOut_base = 'Z:\home\ACh\Analysis\2p_analysis\';
@@ -134,7 +134,7 @@ nSizes = length(Sizes);
 %% segmenting green cells
 %create empty matrix with FOV for each direction: nYpix x nXPix x nDir
 %we will find the average dfof for each of the directions
-data_dfof_avg = zeros(sz(1),sz(2),nCons+nDirs); 
+data_dfof_avg = zeros(sz(1),sz(2),nCons+nSizes); 
 %images for segmentation will go through the different stimuli
 figure; movegui('center')
 [n, n2] = subplotn(nCons); %function to optimize subplot number/dimensions
