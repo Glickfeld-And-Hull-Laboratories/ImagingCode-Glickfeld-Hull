@@ -5,17 +5,21 @@ clear all global
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
 cam_fn = fullfile(fn_base, 'home\camaron');
-lg_fn = fullfile(fn_base, 'home\lindsey');
+lg_fn = fullfile(fn_base, 'home\Tierney');
 data_fn = fullfile(lg_fn, 'Data\2P_images');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
-fnout = fullfile(lg_fn, 'Analysis\2P');
+% fnout = fullfile(lg_fn, 'Analysis\2P');
+fnout = fullfile(fn_base, 'home\Tierney\Analysis\2P');
 
 %Specific experiment information
-mouse = 'i1368';
-date = '220120';
-ImgFolder = ['001'; '002'];
-time = {'1625','1703'};
-eye_str = {'Ipsi','Contra'};
+mouse = 'i1369';
+date = '220126';
+ImgFolder = ['001';'002';'003'];
+time = {'1242','1302','1336'};
+eye_str = {'Ipsi','Contra','Ipsi'};
+% ImgFolder = ['002';'003'];
+% time = {'1625','1700'};
+% eye_str = {'Ipsi','Contra'};
 
 frame_rate = 15;
 contra = strcmp(eye_str,'Contra'); %blocks for eye stimulation: 1 is when contra is open; 0: is contra closed
@@ -71,38 +75,47 @@ clear temp
 %Goal here is to remove X-Y movement artifacts
 %1. Find a stable target
 %    a. Plot average of 500 frames throughout stack
-nep = 10; %numer of epochs
-nframes = 500; %nframes to average for target
-nskip = floor(size(data,3)./nep); %nframes to skip for each average
 
-[n, n2] = subplotn(nep); 
-figure('units','normalized','outerposition',[0 0 1 1]);
-for i = 1:nep 
-    subplot(n,n2,i); 
-    imagesc(mean(data(:,:,1+((i-1)*nskip):nframes+((i-1)*nskip)),3)); 
-    title([num2str(1+((i-1)*nskip)) '-' num2str(nframes+((i-1)*nskip))]); 
+if exist(fullfile(fnout, datemouse, datemouserun)) 
+    load(fullfile(fnout, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']))
+    [outs, data_reg]=stackRegister_MA(data(:,:,:),[],[],out);
+    save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
+else
+    nep = 10; %numer of epochs
+    nframes = 500; %nframes to average for target
+    nskip = floor(size(data,3)./nep); %nframes to skip for each average
+
+    [n, n2] = subplotn(nep); 
+    figure('units','normalized','outerposition',[0 0 1 1]);
+    for i = 1:nep 
+        subplot(n,n2,i); 
+        imagesc(mean(data(:,:,1+((i-1)*nskip):nframes+((i-1)*nskip)),3)); 
+        title([num2str(1+((i-1)*nskip)) '-' num2str(nframes+((i-1)*nskip))]); 
+    end
+
+    % b. GUI to select target image- choose one that is sharp and close to center of stack
+    f=gcf;
+    w = waitforbuttonpress; %click on subplot
+    if  w == 0
+        axesClicked = gca;
+        allAxes = findobj(f.Children,'Type','axes');
+        numClicked = find(axesClicked==allAxes);
+        close all
+    end
+    fprintf(['Selected subplot ' num2str(numClicked) '\n'])
+
+    % c. Create target image
+    data_avg = mean(data(:,:,1+((numClicked-1)*nskip):nframes+((numClicked-1)*nskip)),3); %average 500 frames to make target
+    %2. stackRegister minimizes the difference of each frame from the target
+    [out, data_reg] = stackRegister(data,data_avg);
+    %New average image after registration
+    data_reg_avg = mean(data_reg,3);
+    %Save registration shifts and target, and mworks data
+    mkdir(fullfile(fnout, datemouse, datemouserun))
+    save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']), 'data_reg_avg', 'out', 'data_avg')
+    save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
 end
 
-%    b. GUI to select target image- choose one that is sharp and close to center of stack
-f=gcf;
-w = waitforbuttonpress; %click on subplot
-if w == 0
-    axesClicked = gca;
-    allAxes = findobj(f.Children,'Type','axes');
-    numClicked = find(axesClicked==allAxes);
-    close all
-end
-fprintf(['Selected subplot ' num2str(numClicked) '\n'])
-%    c. Create target image
-data_avg = mean(data(:,:,1+((numClicked-1)*nskip):nframes+((numClicked-1)*nskip)),3); %average 500 frames to make target
-%2. stackRegister minimizes the difference of each frame from the target
-[out, data_reg] = stackRegister(data,data_avg);
-%New average image after registration
-data_reg_avg = mean(data_reg,3);
-%Save registration shifts and target, and mworks data
-mkdir(fullfile(fnout, datemouse, datemouserun))
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']), 'data_reg_avg', 'out', 'data_avg')
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
 %Test registration
 %    a. Make sure first and last images are sharp and similar. Focus on vasculature and nuclei- not cells since F changes
 ind = [1 nep];
@@ -130,13 +143,16 @@ ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one val
 sz = size(data_reg);
 %        Each trial has nOff frames followed by nOn frames, so can reshape stack so nYpix x nXpix x nFrames/Trial (nOn+nOff) x nTrials
 data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
+data_tr = data_tr(:,:,nOff/2:end,:);
 fprintf(['Size of data_tr is ' num2str(size(data_tr))])
 %    b. Find baseline F from last half of off period- avoids decay of previous on trial
-data_f = mean(data_tr(:,:,nOff/2:nOff,:),3); 
+data_f = single(mean(data_tr(:,:,1:nOff/2,:),3)); 
 %    c. Find dF/F for each trial
-data_df = bsxfun(@minus, double(data_tr), data_f); 
+data_df = single(data_tr)-data_f;
+%data_df = bsxfun(@minus, double(data_tr), data_f);
+clear data_tr
 data_dfof = bsxfun(@rdivide,data_df, data_f); 
-clear data_f data_df data_tr
+clear data_f data_df
 %    d. Find average dF/F for each stimulus condition (this is for an experiment with changing grating direction)
 tDir = celleqel2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
 Dirs = unique(tDir);
@@ -156,7 +172,7 @@ for ieye = 1:nEye
     for idir = 1:nDirs
         ind_dir = find(tDir == Dirs(idir)); %find all trials with each direction
         ind = intersect(ind_eye,ind_dir);
-        data_dfof_avg(:,:,idir,ieye) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %average all On frames and all trials
+        data_dfof_avg(:,:,idir,ieye) = mean(mean(data_dfof(:,:,nOff/2+1:end,ind),3),4); %average all On frames and all trials
         subplot(n,n2,idir)
         imagesc(data_dfof_avg(:,:,idir,ieye))
     end
@@ -168,6 +184,7 @@ nStim = nDirs;
 
 data_dfof_max = max(max(data_dfof_avg_all,[],4),[],3); %finds all active cells by taking max projection
 figure; movegui('center'); imagesc(data_dfof_max);
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimData.mat']), 'nOn','nOff','ntrials','tDir','Dirs','nDirs','tContra','Eyes','nEye');
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all', 'nStim')
 %% 2. Create cell masks from active cells
 %        Concatenate images of max and all directions
@@ -268,8 +285,8 @@ end
 
 h_all_dir = squeeze(sum(h_dir,1));
 resp_ind = find(sum(h_all_dir,2));
-ipsi_resp_ind = find(h_all_dir(resp_ind,1));
-contra_resp_ind = find(h_all_dir(resp_ind,2)); 
+ipsi_resp_ind = find(h_all_dir(:,1));
+contra_resp_ind = find(h_all_dir(:,2)); 
 
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData.mat']), 'h_dir', 'resp_ind', 'ipsi_resp_ind', 'contra_resp_ind', 'resp_cell_dir', 'base_cell_dir', 'data_dfof_dir','base_win','resp_win','data_dfof')
 
@@ -284,7 +301,7 @@ xlabel('Significant directions')
 ylabel('Cells')
 end
 sgtitle([mouse ' ' date])
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_sigDirsHist.mat']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_sigDirsHist.pdf']),'-dpdf','-bestfit')
 
 %plot all cells for all direction to both contra and ipsi
 start=1;
@@ -294,7 +311,7 @@ movegui('center')
 for iCell = 1:nCells
     if start>25
         sgtitle([mouse ' ' date])
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
         figure;movegui('center');
         start = 1;
         n = n+1;
@@ -308,10 +325,11 @@ for iCell = 1:nCells
     start = start +1;
 end
 sgtitle([mouse ' ' date])
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
 
 %scatter of max response to contra and ipsi
 figure;
+subplot(2,3,1)
 contra_resp = max(data_dfof_dir(resp_ind,:,find(Eyes),1),[],2);
 ipsi_resp = max(data_dfof_dir(resp_ind,:,find(~Eyes),1),[],2);
 scatter(contra_resp,ipsi_resp)
@@ -319,11 +337,50 @@ axis square
 refline(1)
 xlabel('Max (Contra)')
 ylabel('Max (Ipsi)')
-
-figure;
+xlim([0 1])
+ylim([0 1])
+title('Responsive (any)')
+subplot(2,3,4)
 ODI = (contra_resp-ipsi_resp)./(contra_resp+ipsi_resp);
 histogram(ODI,[-1:0.1:1])
-hold on
-histogram(ODI(ipsi_resp_ind),[-1:0.1:1])
 xlabel('ODI')
 ylabel('Cells')
+axis square
+title(['Sig cells = ' num2str(length(resp_ind))])
+subplot(2,3,2)
+contra_resp = max(data_dfof_dir(contra_resp_ind,:,find(Eyes),1),[],2);
+ipsi_resp = max(data_dfof_dir(contra_resp_ind,:,find(~Eyes),1),[],2);
+scatter(contra_resp,ipsi_resp)
+axis square
+refline(1)
+xlabel('Max (Contra)')
+ylabel('Max (Ipsi)')
+xlim([0 1])
+ylim([0 1])
+title('Contra responsive')
+subplot(2,3,5)
+ODI = (contra_resp-ipsi_resp)./(contra_resp+ipsi_resp);
+histogram(ODI,[-1:0.1:1])
+xlabel('ODI')
+ylabel('Cells')
+axis square
+title(['Sig cells = ' num2str(length(contra_resp_ind))])
+subplot(2,3,3)
+contra_resp = max(data_dfof_dir(ipsi_resp_ind,:,find(Eyes),1),[],2);
+ipsi_resp = max(data_dfof_dir(ipsi_resp_ind,:,find(~Eyes),1),[],2);
+scatter(contra_resp,ipsi_resp)
+axis square
+refline(1)
+xlabel('Max (Contra)')
+ylabel('Max (Ipsi)')
+xlim([0 1])
+ylim([0 1])
+title('Ipsi responsive')
+subplot(2,3,6)
+ODI = (contra_resp-ipsi_resp)./(contra_resp+ipsi_resp);
+histogram(ODI,[-1:0.1:1])
+xlabel('ODI')
+ylabel('Cells')
+axis square
+title(['Sig cells = ' num2str(length(ipsi_resp_ind))])
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_OD.pdf']),'-dpdf','-bestfit')
