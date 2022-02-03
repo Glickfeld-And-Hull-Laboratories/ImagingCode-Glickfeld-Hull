@@ -1,0 +1,19 @@
+expt = [];
+frameRateHz = 15;
+%% i1338 211031
+expt(1).mouse = 'i1338';
+expt(1).date = '211031';
+expt(1).img_loc  = {'V1';'L2/3'};
+expt(1).img_strct  = {'cells'};
+expt(1).indicator = {'tg';'GCaMP6s'};
+expt(1).driver = 'SLC';
+expt(1).time_mat = ['1446'];
+expt(1).runs = ['001'];
+expt(1).nrun = size(expt(1).runs,1);
+expt(1).folder = 'lindsey';
+expt(1).redImg = [];
+expt(1).z = 200;
+expt(1).obj = '16x';
+expt(1).zoom = 2.4;
+expt(1).eyeData = 1;
+

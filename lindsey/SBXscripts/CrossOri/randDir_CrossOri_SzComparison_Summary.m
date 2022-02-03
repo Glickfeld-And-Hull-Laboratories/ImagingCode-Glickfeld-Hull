@@ -1,10 +1,10 @@
 clear all
 close all
 clc
-ds_list = {'randDirRandPhase'; 'randDirFF'};
+ds_list = {'randDir'; 'randDirFF'};
 nSz = 2;
 Szs = [30 1000];
-driver = {'PV'};
+driver = {'SLC'};
 area_list = {'V1'};
 narea = length(area_list);
 
@@ -22,8 +22,8 @@ Sz_ind = [];
 for iSz = 1:nSz
     fprintf(['Sz = ' num2str(Szs(iSz)) '\n'])
     ds = ds_list{iSz};
-    summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', ['R' ds(2:7) 'Summary']);
-    load(fullfile(summaryDir,[ds '_Summary_' cell2mat(area_list) '_' cell2mat(driver) '.mat']))
+    summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', ['RandDirSummary']);
+    load(fullfile(summaryDir,[ds '_Summary_' cell2mat(area_list) '_' cell2mat(driver) '_SFpt05_Sz' num2str(Szs(iSz)) '.mat']))
     SzSummary(iSz).name = Szs(iSz);
     SzSummary(iSz).mice = unique(mouse_list,'rows');
     SzSummary(iSz).nmice = size(unique(mouse_list,'rows'),1);
@@ -31,6 +31,7 @@ for iSz = 1:nSz
     SzSummary(iSz).totCells = length(stim_OSI_all);
     SzSummary(iSz).respCells = length(resp_ind_all);
     figure(1)
+    movegui('center')
     ind = resp_ind_all;
     leg_str{1,iSz} = ['Sz = ' num2str(Szs(iSz)) '- ' num2str(length(ind)) ' cells'];
     subplot(3,3,1)
@@ -64,6 +65,7 @@ for iSz = 1:nSz
     hold on
     
     figure(3)
+    movegui('center')
     subplot(2,2,1)
     cdfplot(stim_SI_all(ind))
     hold on
@@ -78,6 +80,7 @@ for iSz = 1:nSz
     hold on
     
     figure(4)
+    movegui('center')
     subplot(3,nSz,iSz)
     ind_h = intersect(resp_ind_all,find(stim_SI_all>0.5));
     ind_l = intersect(resp_ind_all,find(stim_SI_all<0.5));
@@ -125,6 +128,7 @@ for iSz = 1:nSz
     totCells = totCells+size(Zc_all,2);
     
     figure(6)
+    movegui('center')
     subplot(2,2,1)
     errorbar(iSz, mean(Zc_all(resp_ind_all),2),std(Zc_all(resp_ind_all),[],2)./sqrt(length(resp_ind_all)),'ok')
     hold on
@@ -136,6 +140,7 @@ for iSz = 1:nSz
     hold on
     
     figure(7)
+    movegui('center')
     subplot(2,nSz,iSz)
     scatter(Zc_all(resp_ind_all),Zp_all(resp_ind_all),'ok')
     hold on
@@ -166,6 +171,7 @@ for iSz = 1:nSz
     plotZcZpBorders
     
     figure(8)
+    movegui('center')
     subplot(2,2,iSz)
     mdl = fitlm(avg_resp_plaid_align_all(resp_ind_all,9),mean(avg_resp_dir_align_all(resp_ind_all,[9 13]),2));
     scatter(avg_resp_plaid_align_all(resp_ind_all,9),mean(avg_resp_dir_align_all(resp_ind_all,[9 13]),2));

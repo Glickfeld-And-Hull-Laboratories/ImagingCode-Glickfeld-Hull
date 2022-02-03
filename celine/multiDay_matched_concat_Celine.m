@@ -4,29 +4,36 @@ ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
-
-%% depth 1
-day_id1(2) = 113;
-day_id1(1) = expt(day_id1(2)).multiday_matchdays;
-nd = size(day_id1,2);
-day_id1
-
-mouse = expt(day_id1(1)).mouse;
-
-fnout = fullfile(rc.celineAnalysis,mouse);
-if expt(day_id1(2)).multiday_timesincedrug_hours>0
-    dart_str = [expt(day_id1(2)).drug '_' num2str(expt(day_id1(2)).multiday_timesincedrug_hours) 'Hr'];
-else
-    dart_str = 'control';
-end
-
-
-fn_multi_in = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
-
-fn_multi = fullfile(rc.celineAnalysis,mouse,['multiday_concat_' dart_str]);
+nd=2
+%%
+dataset1_title = 'i2028';
+dataset2_title = 'i2029';
+dateStr = string(date)
+analysis_title = strcat(dataset1_title,'_',dataset2_title,dateStr)
+fn_multi=fullfile(rc.celineAnalysis,analysis_title);
 mkdir(fn_multi);
-load(fullfile(fn_multi_in,'tc_keep.mat'));
-load(fullfile(fn_multi_in,'resp_keep.mat'));
+%% dataset 1
+% day_id1(2) = 113;
+% day_id1(1) = expt(day_id1(2)).multiday_matchdays;
+% nd = size(day_id1,2);
+% day_id1
+% 
+% mouse = expt(day_id1(1)).mouse;
+% 
+% fnout = fullfile(rc.celineAnalysis,mouse);
+% if expt(day_id1(2)).multiday_timesincedrug_hours>0
+%     dart_str = [expt(day_id1(2)).drug '_' num2str(expt(day_id1(2)).multiday_timesincedrug_hours) 'Hr'];
+% else
+%     dart_str = 'control';
+% end
+
+
+%fn_multi_in = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
+fn_multi_in1 = fullfile('Z:\home\ACh\Analysis\2p_analysis\i2028\multiday_DART2.0-YM90K_22Hr_reverse')
+%fn_multi = fullfile(rc.celineAnalysis,mouse,['multiday_concat_' dart_str]);
+
+load(fullfile(fn_multi_in1,'tc_keep.mat'));
+load(fullfile(fn_multi_in1,'resp_keep.mat'));
 tc_trial_avrg_1 = tc_trial_avrg_keep;
 red_keep_logical_1=red_keep_logical;
 green_keep_logical_1=green_keep_logical;
@@ -34,24 +41,24 @@ data_resp_keep_1=data_resp_keep;
 resp_max_concat_1=resp_max_keep;
 
 clear tc_trial_avrg_keep red_keep_logical green_keep_logical resp_max_concat data_resp_keep
-%% depth 2
-day_id2(2) = 115;
-day_id2(1) = expt(day_id2(2)).multiday_matchdays;
-nd = size(day_id2,2);
-day_id2
+%% dataset 2
+% day_id2(2) = 115;
+% day_id2(1) = expt(day_id2(2)).multiday_matchdays;
+% nd = size(day_id2,2);
+% day_id2
+% 
+% if expt(day_id1(2)).multiday_timesincedrug_hours>0
+%     dart_str = [expt(day_id2(2)).drug '_' num2str(expt(day_id2(2)).multiday_timesincedrug_hours) 'Hr'];
+% else
+%     dart_str = 'control';
+% end
 
-if expt(day_id1(2)).multiday_timesincedrug_hours>0
-    dart_str = [expt(day_id2(2)).drug '_' num2str(expt(day_id2(2)).multiday_timesincedrug_hours) 'Hr'];
-else
-    dart_str = 'control';
-end
+%fn_multi_in = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
 
+fn_multi_in2 = fullfile('Z:\home\ACh\Analysis\2p_analysis\i2029\multiday_DART2.0-YM90K_22mHr_reverse')
 
-fn_multi_in = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
-
-
-load(fullfile(fn_multi_in,'tc_keep.mat'));
-load(fullfile(fn_multi_in,'resp_keep.mat'));
+load(fullfile(fn_multi_in2,'tc_keep.mat'));
+load(fullfile(fn_multi_in2,'resp_keep.mat'));
 tc_trial_avrg_2 = tc_trial_avrg_keep;
 red_keep_logical_2=red_keep_logical;
 green_keep_logical_2=green_keep_logical;
@@ -99,26 +106,32 @@ for id = 1:nd
 end
 
 %% make figure with se shaded
-figure
-subplot(1,2,1) %for the first day
 
 x=1:(size(tc_green_avrg_match{1},1));
 x=(x-30)/15;
+
+figure
+subplot(1,2,1) %pre-DART - for REVERSE match
+shadedErrorBar(x,tc_red_avrg_match{2},tc_red_se_match{2},'r');
+ylim([-.025 .3]);
+hold on
+shadedErrorBar(x,tc_green_avrg_match{2},tc_green_se_match{2});hold on
+txt1 = ['HT- ' num2str(sum(green_concat))];
+text(-1.5,0.28,txt1);
+txt2 = ['HT+ ' num2str(sum(red_concat))];
+text(-1.5,0.27,txt2,'Color','r');
+title('Pre DART')
+line([0,2],[.25,.25])
+
+
+
+subplot(1,2,2) %ost-DART - for REVERSE match
 shadedErrorBar(x,tc_red_avrg_match{1},tc_red_se_match{1},'r');
-ylim([-.02 .35]);
+ylim([-.025 .30]);
 hold on
 shadedErrorBar(x,tc_green_avrg_match{1},tc_green_se_match{1});
-title('day 1')
-
-
-
-subplot(1,2,2) %for the second day
-shadedErrorBar(x,tc_red_avrg_match{2},tc_red_se_match{2},'r');
-ylim([-.02 .35]);
-hold on
-shadedErrorBar(x,tc_green_avrg_match{2},tc_green_se_match{2});
-title('day 2')
-
+title('Post DART')
+line([0,2],[.25,.25])
 
 print(fullfile(fn_multi,['timecourses']),'-dpdf');
 %% make a plot of individual timecourses 
@@ -151,35 +164,37 @@ print(fullfile(fn_multi,['indiv_timecourses']),'-dpdf');
 
 figure; movegui('center') 
 subplot(1,2,1)
-scatter(resp_max_concat{1}(find(green_concat)),resp_max_concat{2}(find(green_concat)),'k')
+scatter(resp_max_concat{2}(find(green_concat)),resp_max_concat{1}(find(green_concat)),'k')
 % hold on
+% scatter(resp_max_concat{2}([102]),resp_max_concat{1}([102]),'filled')
 % scatter(resp_max_concat{1}(find(red_concat)),resp_max_concat{2}(find(red_concat)),'MarkerEdgeColor',[.7 .05 .05])
 % hold off
-xlabel('D1- max dF/F')
-ylabel('D2- max dF/F')
+xlabel('Pre-DART max dF/F')
+ylabel('Post-DART max dF/F')
 xlim([0 .5])
 ylim([0 .5])
 refline(1)
-title('Max df/f for responsive HT- ')
+title('HT- ')
 
 
 subplot(1,2,2)
-scatter(resp_max_concat{1}(find(red_concat)),resp_max_concat{2}(find(red_concat)),'MarkerEdgeColor',[.7 .05 .05])
+scatter(resp_max_concat{2}(find(red_concat)),resp_max_concat{1}(find(red_concat)),'MarkerEdgeColor',[.7 .05 .05])
 % hold on
+% scatter(resp_max_concat{2}([154]),resp_max_concat{1}([154]),'filled')
 % scatter(resp_max_match{1}(red_ind_match_list),resp_max_match{2}(red_ind_match_list),'MarkerEdgeColor',[.7 .05 .05])
 % hold off
-xlabel('D1- max dF/F')
-ylabel('D2- max dF/F')
+xlabel('Pre-DART max dF/F')
+ylabel('Post-DART max dF/F')
 xlim([0 .5])
 ylim([0 .5])
 refline(1)
-title('Max df/f HT+')
+title('HT+')
 
-print(fullfile(fn_multi,'maxResp_crossDay.pdf'),'-dpdf','-bestfit')
+%print(fullfile(fn_multi,'maxResp_crossDay.pdf'),'-dpdf','-bestfit')
 
 % extract the max df/f values for analysis
 %% looking at change in dfof
-dfof_max_diff = (resp_max_concat{1}-resp_max_concat{2})./resp_max_concat{1};
+dfof_max_diff = (resp_max_concat{1}-resp_max_concat{2})./resp_max_concat{2};
 
 figure
 x = [mean(dfof_max_diff(find(green_concat))), mean(dfof_max_diff(find(red_concat)))];
@@ -193,9 +208,10 @@ er.Color = [0 0 0];
 er.LineStyle = 'none';  
 %ylim([0 .2])
 hold off
-title('change in max dfof')
+title('Change in max dfof')
+ylabel('Fractional change')
 
 print(fullfile(fn_multi,'change_max_resp.pdf'),'-dpdf','-bestfit')
 
-fprintf(['Green cells ' num2str(mean(dfof_max_diff(find(green_concat)))) 's.e.m.' num2str(std(dfof_max_diff(find(green_concat)))/sqrt(sum(green_concat))  )])
-fprintf(['Red cells ' num2str(mean(dfof_max_diff(find(red_concat)))) 's.e.m.' num2str(std(dfof_max_diff(find(red_concat)))/sqrt(sum(red_concat))  )])
+fprintf(['Green cells ' num2str(mean(dfof_max_diff(find(green_concat)))) ' s.e.m.' num2str(std(dfof_max_diff(find(green_concat)))/sqrt(sum(green_concat))  )])
+fprintf(['Red cells ' num2str(mean(dfof_max_diff(find(red_concat)))) ' s.e.m.' num2str(std(dfof_max_diff(find(red_concat)))/sqrt(sum(red_concat))  )])

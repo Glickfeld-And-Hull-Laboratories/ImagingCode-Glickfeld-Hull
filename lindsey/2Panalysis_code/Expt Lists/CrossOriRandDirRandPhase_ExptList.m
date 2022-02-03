@@ -658,6 +658,22 @@ expt(41).copFolder = {'003'};
 expt(41).copTime = {'1413'};
 expt(41).saveLoc = 'lindsey';
 
+%% i1367 211227
+expt(42).mouse = 'i1367';
+expt(42).date = '211227';
+expt(42).img_loc  = {'V1'};
+expt(42).z = -400;
+expt(42).img_strct  = {'cells'};
+expt(42).driver = {'SCN'};
+expt(42).indicator = {'tg';'GCaMP6s'};
+expt(42).sf = 0.05;
+expt(42).con = 0.5;
+expt(42).coFolder = {'002'};
+expt(42).coTime = {'1104'};
+expt(42).copFolder = {'003'};
+expt(42).copTime = {'1209'};
+expt(42).saveLoc = 'lindsey';
+
 
 
 

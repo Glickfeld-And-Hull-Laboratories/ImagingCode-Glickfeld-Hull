@@ -4,15 +4,15 @@ LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindse
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandPhaseSummary');
 
 doPlot = 1;
-ds = ['CrossOriRandDirRandPhase_ExptList'];
-svName = 'randDirRandPhase';
+ds = ['CrossOriRandPhaseFF_ExptList'];
+svName = 'randPhaseFF';
 eval(ds)
-driver = 'SLC';
+driver = 'SCN';
 area = 'V1';
 doRedCells = 0;
 SF = 0.05;
 con = 0.5;
-sz = 30;
+sz = 1000;
 doSFSave = 1;
 doConSave = 0;
 doSzSave = 1;

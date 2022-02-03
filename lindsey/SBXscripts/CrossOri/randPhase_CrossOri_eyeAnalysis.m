@@ -1,6 +1,6 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirRandPhase_ExptList';
+ds = 'i484_passive_ExptList';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
@@ -49,6 +49,7 @@ for irun =  1:nrun
     nFrames = input.counterValues{end}(end);
     data = cat(3, data, data_temp(:,:,1:nFrames));      % the raw images...
 end
+
 figure;
 data_avg = mean(data,3);
 imagesc(data_avg);
@@ -82,7 +83,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [5 25];
+rad_range = [5 20];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);

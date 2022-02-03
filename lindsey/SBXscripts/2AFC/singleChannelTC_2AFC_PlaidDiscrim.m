@@ -1,10 +1,13 @@
 %%
 close all
 clear all
+clear all global
 clc
 dataset = 'plaidDiscrim_exptList';
+%dataset = 'i484_passive_ExptList';
+%dataset = 'plaidDiscrim_Passive_exptList';
 eval(dataset);
-iexp = 15;
+iexp = 47;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 if strcmp(expt(iexp).folder,'lindsey')
     data_base = LG_base;
@@ -70,7 +73,6 @@ input = concatenateDataBlocks(temp);
 clear data_temp
 clear temp
 
-fprintf('Runs loaded\n')
 %% Plot outcome by trial number
 SIx = strcmp(input.trialOutcomeCell, 'success');
 MIx = strcmp(input.trialOutcomeCell, 'ignore');
@@ -97,7 +99,7 @@ if exist(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_
     load(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister_MA(data,[],[],out); 
 else
-    data_avg = mean(data(:,:,60001:60500),3);
+    data_avg = mean(data(:,:,40001:40500),3);
     [out, data_reg] = stackRegister(data,data_avg);
     smooth_out_x = smooth(out(:,3),200);
     smooth_out_y = smooth(out(:,4),200);
@@ -147,8 +149,9 @@ if ~isempty(expt(iexp).redImg)
                 data = sbxread(imgMatFile(1,1:11),0,nframes);
                 red_data = squeeze(data(2,:,:,:));
                 green_data = squeeze(data(1,:,:,:));
-                [out, green_data_reg] = stackRegister(mean(green_data,3),green_data_avg);
-                [outs, red_data_avg] = stackRegister_MA(mean(red_data,3),[],[],out);
+                [out, green_data] = stackRegister(green_data,green_data_avg);
+                [outs, red_data] = stackRegister_MA(red_data,[],[],out);
+                red_data_avg = mean(red_data,3);
                 figure; imagesc(red_data_avg)
                 title('Red')
             end
@@ -222,7 +225,6 @@ figure; plot(dCount); ylim([0 70]); vline(cEnd(SIx),':r');
 % counterTimes_fixed = counterTimes;
 % counterTimes_fixed(short_ind) = [];
 % counterVals_fixed(short_ind) = [];
-cAdaptOn = celleqel2mat_padded(input.cAdaptOn);
 cStimOn = celleqel2mat_padded(input.cStimOn);
 
 %% 2AFC photodiode check
@@ -239,6 +241,7 @@ tDir = tGratingDir;
 tDir(find(tMaskTrial)) = tPlaidDir(find(tMaskTrial));
 dirs = unique(tDir);
 nDir = length(dirs);
+nOn = input.nFramesOn;
 
 nTrials = length(tGratingDir);
 sz = size(data_reg);
@@ -248,13 +251,12 @@ data_tc = nan(sz(1),sz(2),36,nTrials);
 for itrial = 1:nTrials
     if cStimOn(itrial)+15<sz(3)
         data_f(:,:,itrial) = mean(data_reg(:,:,cStimOn(itrial)-frameRateHz:cStimOn(itrial)-1),3);
-        data_targ(:,:,itrial) = mean(data_reg(:,:,cStimOn(itrial)+5:cStimOn(itrial)+30),3);
+        data_targ(:,:,itrial) = mean(data_reg(:,:,cStimOn(itrial)+5:cStimOn(itrial)+nOn),3);
         data_tc(:,:,:,itrial) = data_reg(:,:,cStimOn(itrial)-5:cStimOn(itrial)+30);
     end
 end
 data_targ_dfof = (data_targ-data_f)./data_f;
 data_tc_dfof = mean((data_tc-mean(data_f,3))./mean(data_f,3),4);
-
 
 [n n2] = subplotn(nDir*2);
 figure;
@@ -439,7 +441,7 @@ dataf = mean(data_stim(1:frameRateHz,:,:),1);
 data_stim_dfof = bsxfun(@rdivide, bsxfun(@minus, data_stim, dataf), dataf);
 data_dec_dfof = bsxfun(@rdivide, bsxfun(@minus, data_dec, dataf), dataf);
 tt = [-frameRateHz:frameRateHz-1].*(1000./frameRateHz);
-figure;
+figure; movegui('center')
 subplot(1,2,1)
 plot(tt,nanmean(mean(data_stim_dfof,2),3));
 title('Target')
@@ -449,7 +451,7 @@ title('Decision')
 
 tDoFB = celleqel2mat_padded(input.tDoFeedbackMotion);
 tDir(find(tDoFB)) = NaN;
-figure;
+figure; movegui('center')
 for iDir = 1:nDir
     ind = intersect(find(tMaskTrial == 0), find(tDir == dirs(iDir)));
     subplot(2,nDir,iDir)
@@ -464,15 +466,14 @@ for iDir = 1:nDir
 end
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgTargetResponse_byTarget.pdf']), '-dpdf','-bestfit')
 
+tDecisionTime = celleqel2mat_padded(input.tDecisionTimeMs);
 SIx = strcmp(input.trialOutcomeCell,'success');
 MIx = strcmp(input.trialOutcomeCell,'incorrect');
 IIx = strcmp(input.trialOutcomeCell,'ignore');
 tLeftTrial = celleqel2mat_padded(input.tLeftTrial);
-tLeftResp = zeros(size(SIx));
-tLeftResp(find(tLeftTrial&SIx)) = 1;
-tLeftResp(find(~tLeftTrial&~MIx)) = 1;
+tLeftResp = calcChoice2AFC(input);
 
-figure;
+figure; movegui('center')
 for iDir = 1:nDir
     ind = intersect(find(tMaskTrial == 0 & SIx), find(tDir == dirs(iDir)));
     subplot(2,nDir,iDir)
@@ -502,24 +503,28 @@ for i = 1:nCells
     end
 end
 
-interval = ceil(64/nDir)+1;
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'cStimOn', 'cDecision', 'SIx', 'MIx', 'IIx', 'tMaskTrial', 'tGratingDir','tPlaidDir','tDir', 'tLeftTrial', 'tLeftResp', 'tDoFB','tDecisionTime');
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'tt', 'data_stim_dfof', 'data_dec_dfof','mask_label','nCells','nTrials');
+
+
+interval = 64/nDir;
 x = 1:interval:64;
-x(end) = 63;
+x = uint8(x);
 y = bluered;
 
-figure;
+figure; movegui('center')
 if nCells <49
     [n n2] = subplotn(nCells);
 else
     [n n2] = subplotn(49);
 end
-figure;
+figure; movegui('center')
 start = 1;
 for iC = 1:nCells
     if start > 49
         suptitle('Target response- Grating- All trials')
         print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespGrating_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-        figure;
+        figure; movegui('center')
         start = 1;
     end
     subplot(n,n2,start)
@@ -538,13 +543,13 @@ end
 suptitle('Target response- Grating- All trials')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespGrating_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
 
-figure;
+figure; movegui('center')
 start = 1;
 for iC = 1:nCells
     if start > 49
         suptitle('Target response- Plaid- All trials')
         print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespPlaid_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-        figure;
+        figure; movegui('center')
         start = 1;
     end
     subplot(n,n2,start)
@@ -564,13 +569,13 @@ suptitle('Target response- Plaid- All trials')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespPlaid_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
 
 
-figure;
+figure; movegui('center')
 start = 1;
 for iC = 1:nCells
     if start > 49
         suptitle('Target grating response by choice- Trials <20 deg')
         print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespGrating_bychoice_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-        figure;
+        figure; movegui('center')
         start = 1;
     end
     subplot(n,n2,start)
@@ -587,13 +592,13 @@ end
 suptitle('Target grating response by choice- Trials <20 deg')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespGrating_bychoice_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
 
-figure;
+figure; movegui('center')
 start = 1;
 for iC = 1:nCells
     if start > 49
         suptitle('Target plaid response by choice- Trials <20 deg')
         print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespPlaid_bychoice_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-        figure;
+        figure; movegui('center')
         start = 1;
     end
     subplot(n,n2,start)
@@ -611,13 +616,13 @@ suptitle('Target plaid response by choice- Trials <20 deg')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespPlaid_bychoice_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
 
 
-figure;
+figure; movegui('center')
 start = 1;
 for iC = 1:nCells
     if start > 49
         suptitle('Decision response- All trials')
         print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-        figure;
+        figure; movegui('center')
         start = 1;
     end
     subplot(n,n2,start)
@@ -636,7 +641,7 @@ end
 suptitle('Decision response- All trials')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decResp_allCells_success_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
 
-figure;
+figure; movegui('center')
 subplot(3,2,1) 
 for iDir = 1:nDir
     ind_dir = find(~tMaskTrial & tDir == dirs(iDir));
@@ -690,11 +695,10 @@ ylim([-0.02 0.15])
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_allCells.pdf']), '-dpdf','-bestfit')
 
 %%
-tDecisionTime = celleqel2mat_padded(input.tDecisionTimeMs);
 ind_short = find(tDecisionTime<1000);
 ind_med = find(tDecisionTime>1000 & tDecisionTime<1800);
 ind_long = find(tDecisionTime>1800);
-figure; movegui('center')
+figure; movegui('center');
 [n n2]= subplotn(nCells);
 for iC = 1:nCells
     subplot(n,n2,iC)
@@ -708,7 +712,7 @@ suptitle('Target align: Blue- fast; red- med; yellow- slow')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetAlignByRespTime.pdf']), '-dpdf','-bestfit')
 
 
-figure; movegui('center')
+figure; movegui('center');
 for iC = 1:nCells
     subplot(n,n2,iC)
     plot(tt,nanmean(data_dec_dfof(:,iC,ind_short),3))
@@ -721,14 +725,15 @@ suptitle('Decision align: Blue- fast; red- med; yellow- slow')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decisionAlignByRespTime.pdf']), '-dpdf','-bestfit')
 
 %% Zc/Zp
-resp_win = frameRateHz+5:frameRateHz*2;
+resp_win = frameRateHz+5:size(data_stim_dfof,1);
 base_win = 1:frameRateHz;
 data_stim_resp = squeeze(mean(data_stim_dfof(resp_win,:,:),1));
 data_stim_base = squeeze(mean(data_stim_dfof(base_win,:,:),1));
+data_dec_resp = squeeze(mean(data_dec_dfof(resp_win,:,:),1));
 [h p] = ttest(data_stim_resp,data_stim_base,'tail','right','dim',2);
-stim_resp_dir = zeros(nCells,nDir,2,2);
-h_dir = zeros(nCells,nDir,2);
-p_dir = zeros(nCells,nDir,2);
+stim_resp_dir = zeros(nCells,nDir,2,4);
+h_dir = zeros(nCells,nDir,4);
+p_dir = zeros(nCells,nDir,4);
 for iDir = 1:nDir
     ind_dir = find(tDir == dirs(iDir) & tMaskTrial==0);
     stim_resp_dir(:,iDir,1,1) = nanmean(data_stim_resp(:,ind_dir),2);
@@ -738,6 +743,14 @@ for iDir = 1:nDir
     stim_resp_dir(:,iDir,2,1) = nanmean(data_stim_resp(:,ind_dir),2);
     stim_resp_dir(:,iDir,2,2) = nanstd(data_stim_resp(:,ind_dir),[],2)./sqrt(length(ind_dir));
     [h_dir(:,iDir,2) p_dir(:,iDir,2)] = ttest(data_stim_resp(:,ind_dir),data_stim_base(:,ind_dir),'tail','right','dim',2,'alpha',0.05./length(dirs));
+    ind_dir = find(tDir == dirs(iDir) & tMaskTrial==0 & SIx);
+    stim_resp_dir(:,iDir,1,3) = nanmean(data_stim_resp(:,ind_dir),2);
+    stim_resp_dir(:,iDir,1,4) = nanstd(data_stim_resp(:,ind_dir),[],2)./sqrt(length(ind_dir));
+    [h_dir(:,iDir,3) p_dir(:,iDir,3)] = ttest(data_stim_resp(:,ind_dir),data_stim_base(:,ind_dir),'tail','right','dim',2,'alpha',0.05./length(dirs));
+    ind_dir = find(tDir == dirs(iDir) & tMaskTrial & SIx);
+    stim_resp_dir(:,iDir,2,3) = nanmean(data_stim_resp(:,ind_dir),2);
+    stim_resp_dir(:,iDir,2,4) = nanstd(data_stim_resp(:,ind_dir),[],2)./sqrt(length(ind_dir));
+    [h_dir(:,iDir,4) p_dir(:,iDir,4)] = ttest(data_stim_resp(:,ind_dir),data_stim_base(:,ind_dir),'tail','right','dim',2,'alpha',0.05./length(dirs));
 end
 
 resp_ind = find(h+sum(sum(h_dir,2),3));
@@ -752,25 +765,21 @@ end
 
 component = circshift(stim_resp_dir_interp,-45./int,2)+circshift(stim_resp_dir_interp,45./int,2);
 pattern = stim_resp_dir_interp;
-comp_ind = find(component(1,:)+plaid_resp_dir_interp(1,:));
-patt_ind = find(pattern(1,:)+plaid_resp_dir_interp(1,:));
-comp_patt_ind = find(pattern(1,:)+component(1,:));
 comp_corr = zeros(1,nCells);
 patt_corr = zeros(1,nCells);
 comp_patt_corr = zeros(1,nCells);
 
 for iCell = 1:nCells
-    comp_corr(iCell) = triu2vec(corrcoef(plaid_resp_dir_interp(iCell,comp_ind),component(iCell,comp_ind)));
-    patt_corr(iCell) = triu2vec(corrcoef(plaid_resp_dir_interp(iCell,patt_ind),pattern(iCell,patt_ind)));
-    comp_patt_corr(iCell) = triu2vec(corrcoef(component(iCell,comp_patt_ind),pattern(iCell,comp_patt_ind)));
+    comp_corr(iCell) = triu2vec(corrcoef(plaid_resp_dir_interp(iCell,1:90/int),component(iCell,1:90/int)));
+    patt_corr(iCell) = triu2vec(corrcoef(plaid_resp_dir_interp(iCell,1:90/int),pattern(iCell,1:90/int)));
+    comp_patt_corr(iCell) = triu2vec(corrcoef(component(iCell,1:90/int),pattern(iCell,1:90/int)));
 end
 Rp = ((patt_corr)-(comp_corr.*comp_patt_corr))./sqrt((1-comp_corr.^2).*(1-comp_patt_corr.^2));
 Rc = ((comp_corr)-(patt_corr.*comp_patt_corr))./sqrt((1-patt_corr.^2).*(1-comp_patt_corr.^2));
-Zp = (0.5.*log((1+Rp)./(1-Rp)))./sqrt(1./(length(patt_ind)-3));
-Zc = (0.5.*log((1+Rc)./(1-Rc)))./sqrt(1./(length(comp_ind)-3));
+Zp = (0.5.*log((1+Rp)./(1-Rp)))./sqrt(1./(90/int-3));
+Zc = (0.5.*log((1+Rc)./(1-Rc)))./sqrt(1./(90/int-3));
 
-figure; 
-movegui('center')
+figure; movegui('center') 
 scatter(Zc(resp_ind), Zp(resp_ind))
 xlabel('Zc')
 ylabel('Zp')
@@ -782,28 +791,143 @@ sgtitle([date ' ' mouse])
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_ZcZpScatter.pdf']), '-dpdf','-bestfit')
 
 
-figure;
+figure; movegui('center')
 start = 1;
-for iCell = 1:length(resp_ind)
-    iC = resp_ind(iCell);
-    if start > 25
+for iC = 1:nCells
+    if start > 49
         suptitle('Target response- All trials')
         print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespTuning_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-        figure;
+        figure; movegui('center')
         start = 1;
     end
-    subplot(5,5,start)
+    subplot(n,n2,start)
     errorbar(dirs, stim_resp_dir(iC,:,1,1),stim_resp_dir(iC,:,1,2),'-o')
     hold on
     errorbar(dirs, stim_resp_dir(iC,:,2,1),stim_resp_dir(iC,:,2,2),'-o')
     plot(dirs(1):int:dirs(end), component(iC,1:90/int + 1),'-')
+    plot(dirs,  stim_resp_dir(iC,:,2,3),'-')
     %ylim([-0.4 1])
-    if mask_label(iC)
-        title([num2str(iC) '- Zc: ' num2str(chop(Zc(iC),2)) '; Zp: ' num2str(chop(Zp(iC),2))],'Color','red')
-    else
-        title([num2str(iC) '- Zc: ' num2str(chop(Zc(iC),2)) '; Zp: ' num2str(chop(Zp(iC),2))])
+    if find(resp_ind == iC)
+        if mask_label(iC)
+            title([num2str(iC) '- Zc: ' num2str(chop(Zc(iC),2)) '; Zp: ' num2str(chop(Zp(iC),2))],'Color','red')
+        else
+            title([num2str(iC) '- Zc: ' num2str(chop(Zc(iC),2)) '; Zp: ' num2str(chop(Zp(iC),2))])
+        end
     end
     start = start+1;
 end
 suptitle('Target response- All trials')
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetRespTuning_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'resp_win', 'base_win', 'data_stim_resp','data_dec_resp','stim_resp_dir', 'h_dir', 'resp_ind','stim_resp_dir_interp','plaid_resp_dir_interp','pattern','component','Zp','Zc');
+
+%%
+tDir = tGratingDir;
+tDir(find(tMaskTrial)) = tPlaidDir(find(tMaskTrial));
+[qVals_final qVals_thresh] = wheelTrajectory(input,15);
+qVals_thresh(find(isnan(qVals_thresh))) = tDecisionTime(find(isnan(qVals_thresh)));
+C_stim = zeros(6,nCells);
+C_dec = zeros(6,nCells);
+P_stim = zeros(6,nCells);
+P_dec = zeros(6,nCells);
+for iC=1:nCells
+    tbl = table(zscore(tDir'),zscore(tMaskTrial'),zscore(SIx'),zscore(tLeftResp'),zscore(qVals_thresh'),zscore(data_stim_resp(iC,:)'),'VariableNames',{'Dir','Mask','Rew','Choice','RT','Resp'});
+    glm_out = fitglm(tbl(find(~tDoFB&~isnan(data_dec_resp(1,:))),:));
+    coeffs = glm_out.Coefficients;
+    C_stim(:,iC) = table2array(coeffs(:,1));
+    P_stim(:,iC) = table2array(coeffs(:,end));
+    ind = find(~tDoFB&~IIx&~isnan(data_dec_resp(1,:)));
+    tbl = table(zscore(tDir(:,ind))',zscore(tMaskTrial(:,ind)'),zscore(SIx(:,ind)'),zscore(tLeftResp(:,ind)'),zscore(qVals_thresh(:,ind)'),zscore(data_dec_resp(iC,ind)'),'VariableNames',{'Dir','Mask','Rew','Choice','RT','Resp'});
+    glm_out = fitglm(tbl);
+    coeffs = glm_out.Coefficients;
+    C_dec(:,iC) = table2array(coeffs(:,1));
+    P_dec(:,iC) = table2array(coeffs(:,end));
+end
+figure; movegui('center')
+subplot(2,3,1)
+plot(C_stim(:,find(~mask_label)),'k')
+hold on
+plot(C_stim(:,find(mask_label)),'r')
+predictors = ({'Int','Dir','Mask','Rew','Choice','RT'});
+set(gca,'XTick',1:6,'XTickLabel',predictors);
+xlim([0 7])
+ylim([-0.75 0.75])
+ylabel('Weight')
+title('Stimulus')
+subplot(2,3,2)
+errorbar(mean(C_stim(:,find(~mask_label)),2),std(C_stim(:,find(~mask_label)),[],2)./sqrt(length(find(~mask_label))),'k')
+hold on
+errorbar(mean(C_stim(:,find(mask_label)),2),std(C_stim(:,find(mask_label)),[],2)./sqrt(length(find(mask_label))),'r')
+set(gca,'XTick',1:6,'XTickLabel',predictors);
+xlim([0 7])
+ylim([-0.5 0.5])
+ylabel('Weight')
+title('Stimulus')
+subplot(2,3,3)
+P_stim_dig = P_stim<0.05;
+plot(sum(P_stim_dig(:,find(~mask_label)),2)./sum(~mask_label),'k')
+hold on
+plot(sum(P_stim_dig(:,find(mask_label)),2)./sum(mask_label),'r')
+ylabel('Fraction significant')
+set(gca,'XTick',1:6,'XTickLabel',predictors);
+ylim([0 1])
+xlim([0 7])
+ylabel('Weight')
+title('Stimulus')
+subplot(2,3,4)
+plot(C_dec(:,find(~mask_label)),'k')
+hold on
+plot(C_dec(:,find(mask_label)),'r')
+set(gca,'XTick',1:6,'XTickLabel',predictors);
+xlim([0 7])
+ylim([-0.75 0.75])
+ylabel('Weight')
+title('Decision')
+subplot(2,3,5)
+errorbar(mean(C_dec(:,find(~mask_label)),2),std(C_dec(:,find(~mask_label)),[],2)./sqrt(length(find(~mask_label))),'k')
+hold on
+errorbar(mean(C_dec(:,find(mask_label)),2),std(C_dec(:,find(mask_label)),[],2)./sqrt(length(find(mask_label))),'r')
+set(gca,'XTick',1:6,'XTickLabel',predictors);
+xlim([0 7])
+ylim([-0.5 0.5])
+ylabel('Weight')
+title('Decision')
+subplot(2,3,6)
+P_dec_dig = P_dec<0.05;
+plot(sum(P_dec_dig(:,find(~mask_label)),2)./sum(~mask_label),'k')
+hold on
+plot(sum(P_dec_dig(:,find(mask_label)),2)./sum(mask_label),'r')
+ylabel('Fraction significant')
+set(gca,'XTick',1:6,'XTickLabel',predictors);
+ylim([0 1])
+xlim([0 7])
+title('Decision')
+print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GLM.pdf']), '-dpdf','-bestfit')
+
+figure; movegui('center')
+start = 1;
+n = 1;
+for i = 1:nCells
+    if start>42
+        print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GLMweights_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        n = n+1;
+        start = 1;
+        figure; movegui('center')
+    end
+    subplot(7,6,start)
+    plot(C_stim(:,i),'o')
+%     hold on
+%     plot(C_dec(:,i),'o')
+    set(gca,'Xtick',1:6,'XtickLabel',{'I','T','M','R','C','RT'})
+    xlim([0 7])
+    ylim([-1 1])
+    hline(0)
+    title(num2str(i))
+    start = start+1;
+end
+print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GLMweights' num2str(n) '.pdf']), '-dpdf','-fillpage')
+
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GLM.mat']), 'C_stim', 'C_dec', 'P_stim', 'P_dec','predictors');
+
+
+    
