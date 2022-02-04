@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds)
 
-day_id(2) = 130;
+day_id(2) = 135;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 nd = size(day_id,2);
 day_id
@@ -28,7 +28,7 @@ load(fullfile(fn_multi,'timecourses.mat'))
 load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
 frame_rate = input.frameImagingRateMs;
-%% finding red fluorescent level
+%% finding red fluorescence level
 %  
 % red_fluor_all = cell(1,nd);
 % 
@@ -94,7 +94,7 @@ data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however ma
 fractTimeActive_match = cell(1,nd);
 for id = 1:nd %cycle through days
     
-   nTrials = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
+  nTrials(id) = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
    %currently the way I center the stim on period requires me to cut out
    %one trial, hence the -1
    
@@ -108,7 +108,7 @@ for id = 1:nd %cycle through days
     cellTCs_match{id} = padarray(cellTCs_match{id},30,999,'post');
     cellTCs_match{id}(cellTCs_match{id}==999)=nan;
     nFrames = size(cellTCs_match{id},1);
-    data_trial_match = reshape(cellTCs_match{id},[nOn+nOff nTrials nCells]);
+    data_trial_match = reshape(cellTCs_match{id},[nOn+nOff nTrials(id) nCells]);
     data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
     data_dfof_trial_match{id} = bsxfun(@rdivide,bsxfun(@minus,data_trial_match,data_f_match),data_f_match);
     fractTimeActive_match{id} = zeros(1,nCells);
@@ -147,9 +147,9 @@ for id = 1:nd
     data_resp = zeros(nCells, nOri, nCon,2);
     h = zeros(nCells, nOri, nCon);
     p = zeros(nCells, nOri, nCon);
-    tCon = tCon_match{id}(:,1:nTrials);
-    tOri = tOri_match{id}(:,1:nTrials);
-    tDir = tDir_match{id}(:,1:nTrials);
+    tCon = tCon_match{id}(:,1:nTrials(id));
+    tOri = tOri_match{id}(:,1:nTrials(id));
+    tDir = tDir_match{id}(:,1:nTrials(id));
     data_dfof_trial = rect_dfof_trial{id}; %will use rectified data
 
     for iOri = 1:nOri
@@ -292,8 +292,8 @@ for id = 1:nd
     for i=1:nKeep
         for iCon = 1:nCon
             temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
-            tCon=tCon_match{id}(1:nTrials);
-            tDir=tDir_match{id}(1:nTrials);
+            tCon=tCon_match{id}(1:nTrials(id));
+            tDir=tDir_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
             temp_ori= pref_ori_keep{2}(i); %find the preferred ori of this cell and convert to degrees
             ori_inds = find(tDir==temp_ori); %these are the trials at that ori
@@ -351,22 +351,22 @@ end
 
 %% make figure with se shaded, one figure per contrast
 %creat a time axis in seconds
-x=1:(size(tc_green_avrg_keep{1,1,1},1));
-x=(x-(double(stimStart)-1))/double(frame_rate);
+t=1:(size(tc_green_avrg_keep{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
 
 for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
 
-shadedErrorBar(x,tc_red_avrg_match{2}(:,iCon),tc_red_se_match{2}(:,iCon),'r');
-ylim([-.02 .15]);
+shadedErrorBar(t,tc_red_avrg_match{2}(:,iCon),tc_red_se_match{2}(:,iCon),'r');
+ylim([-.02 .3]);
 hold on
-shadedErrorBar(x,tc_green_avrg_keep{2}(:,iCon),tc_green_se_keep{2}(:,iCon));
+shadedErrorBar(t,tc_green_avrg_keep{2}(:,iCon),tc_green_se_keep{2}(:,iCon));
 title(['Pre-DART contrast = ' num2str(cons(iCon))])
 txt1 = ['HT- ' num2str(sum(nGreen_keep))];
-text(-1.5,0.14,txt1);
+text(-1.5,0.25,txt1);
 txt2 = ['HT+ ' num2str(sum(nRed_match))];
-text(-1.5,0.13,txt2,'Color','r');
+text(-1.5,0.23,txt2,'Color','r');
 ylabel('dF/F') 
 xlabel('s') 
 
@@ -374,26 +374,26 @@ axis square
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(x,tc_red_avrg_match{1}(:,iCon),tc_red_se_match{1}(:,iCon),'r');
-ylim([-.02 .15]);
+shadedErrorBar(t,tc_red_avrg_match{1}(:,iCon),tc_red_se_match{1}(:,iCon),'r');
+ylim([-.02 .3]);
 hold on
-shadedErrorBar(x,tc_green_avrg_keep{1}(:,iCon),tc_green_se_keep{1}(:,iCon));
+shadedErrorBar(t,tc_green_avrg_keep{1}(:,iCon),tc_green_se_keep{1}(:,iCon));
 ylabel('dF/F') 
 xlabel('s') 
 title(['Post-DART contrast = ' num2str(cons(iCon))])
 axis square
 
-print(fullfile(fn_multi,['timecourses_con' num2str(cons(iCon))]),'-dpdf');
+print(fullfile(fn_multi,[num2str(cons(iCon)) '_timecourses.pdf']),'-dpdf');
 end 
 %% make a plot of individual timecourses 
 setYmin = -.1; %indicate y axes you want
-setYmax = 0.6;
+setYmax = 0.8;
 
 for iCon = 1:nCon
 
 figure
 subplot(2,2,1)
-plot(x, tc_trial_avrg_keep{2}(:,green_ind_keep,iCon),'k')
+plot(t, tc_trial_avrg_keep{2}(:,green_ind_keep,iCon),'k')
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -402,7 +402,7 @@ xlabel('s')
 
 
 subplot(2,2,2)
-plot(x, tc_trial_avrg_keep{2}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
+plot(t, tc_trial_avrg_keep{2}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -411,7 +411,7 @@ xlabel('s')
 
 
 subplot(2,2,3)
-plot(x, tc_trial_avrg_keep{1}(:,green_ind_keep,iCon),'k')
+plot(t, tc_trial_avrg_keep{1}(:,green_ind_keep,iCon),'k')
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
@@ -420,23 +420,21 @@ xlabel('s')
 
 
 subplot(2,2,4)
-plot(x, tc_trial_avrg_keep{1}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
+plot(t, tc_trial_avrg_keep{1}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
 sgtitle(['contrast = '  num2str(cons(iCon))])
-print(fullfile(fn_multi,['indiv_timecourses_con' num2str(cons(iCon))]),'-dpdf');
+print(fullfile(fn_multi,[num2str(cons(iCon)) '_indiv_timecourses.pdf']),'-dpdf');
 end
 %% makes a scatterplot of max df/f for day 1 vs day 2, and each subplot is one day
 %this is for all cells I'm keeping, red and green
 
-
-%make this flexible for multiple contrasts
-
 data_resp_keep = cell(1,nd);
 resp_max_keep = cell(1,nd);
+
 
 for id = 1:nd
   data_resp_keep{id}=data_resp_match{id}(keep_cells,:,:,:);
@@ -452,7 +450,7 @@ for iCon = 1:nCon
 figure; movegui('center') 
 subplot(1,2,1)
 scatter(resp_max_keep{2}(green_ind_keep),resp_max_keep{1}(green_ind_keep,iCon),'k')
-
+%set(gca,'xscale','log')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 xlim([-.10 .5])
@@ -483,11 +481,18 @@ end
 
 %need to edit to look at multiple contrasts
 
-dfof_max_diff = (resp_max_keep{1}-resp_max_keep{2})./resp_max_keep{2}; %post-pre/pre, nCell X nCon
+resp_max_keep_rect = resp_max_keep;
+for id = 1:nd
+    resp_max_keep_rect{id}(find(resp_max_keep_rect{id}<0))=0;
+ 
+end
+
+dfof_max_diff = (resp_max_keep_rect{1}-resp_max_keep_rect{2})./(resp_max_keep_rect{1}+resp_max_keep_rect{2}); % (post-pre)/(post+pre), nCell X nCon
+dfof_max_diff_raw = (resp_max_keep{1}-resp_max_keep{2});
 
 for iCon = 1:nCon
 figure
-x = [mean(dfof_max_diff(green_ind_keep,iCon)), mean(dfof_max_diff(red_ind_keep,iCon))];
+x = [nanmean(dfof_max_diff(green_ind_keep,iCon)), nanmean(dfof_max_diff(red_ind_keep,iCon))];
 y = [(std(dfof_max_diff(green_ind_keep,iCon)))/sqrt(length(green_ind_keep)), (std(dfof_max_diff(red_ind_keep,iCon)))/sqrt(length(red_ind_keep))];
 
 labs =categorical({'HT-','HT+'})
@@ -503,7 +508,157 @@ title(['fractional change dfof, contrast = ', num2str(cons(iCon))])
 print(fullfile(fn_multi,[num2str(cons(iCon)), '_frac_change_resp.pdf']),'-dpdf','-bestfit')
 
 end
+%% looking at wheel speed
+[wheel_speed] = wheelSpeedCalc(input,32,'purple'); 
+figure; plot(wheel_speed)
+mean(wheel_speed)
 
+
+%% finding cells that are still saturated by contrast vs. not saturated pre-DART
+%make a data frame for the keep cells only
+data_con_resp_keep = cell(1,nd);
+for id = 1:nd
+    data_con_resp_keep{id} = data_con_resp_match{id}(keep_cells,:);   
+end
+
+%identify cells that are still in the rise of the contrast response
+%function
+risingCells = find(data_con_resp_keep{2}(:,1)<data_con_resp_keep{2}(:,2));
+
+%% make a plot of individual timecourses for rising cells
+setYmin = -.1; %indicate y axes you want
+setYmax = 0.8;
+
+for iCon = 1:nCon
+
+figure
+subplot(2,2,1)
+plot(t, tc_trial_avrg_keep{2}(:,intersect(risingCells,green_ind_keep),iCon),'k')
+ylim([setYmin setYmax]);
+title('day 1')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+
+
+subplot(2,2,2)
+plot(t, tc_trial_avrg_keep{2}(:,intersect(risingCells,red_ind_keep),iCon),'color',[.7 .05 .05])
+ylim([setYmin setYmax]);
+title('day 1')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+
+
+subplot(2,2,3)
+plot(t, tc_trial_avrg_keep{1}(:,intersect(risingCells,green_ind_keep),iCon),'k')
+ylim([setYmin setYmax]);
+title('day 2')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+
+
+subplot(2,2,4)
+plot(t, tc_trial_avrg_keep{1}(:,intersect(risingCells,red_ind_keep),iCon),'color',[.7 .05 .05])
+ylim([setYmin setYmax]);
+title('day 2')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+sgtitle(['contrast = '  num2str(cons(iCon))])
+print(fullfile(fn_multi,[num2str(cons(iCon)) 'risingCells_indiv_timecourses.pdf']),'-dpdf');
+end
+
+%% making mask maps for various measurements
+%show masks
+keep_masks = zeros(size(corrmap{1}));
+keep_green_masks = zeros(size(corrmap{1}));
+keep_red_masks = zeros(size(corrmap{1}));
+keep_masks_fract_change_red = zeros(size(corrmap{1}));
+keep_masks_fract_change_green = zeros(size(corrmap{1}));
+keep_masks_raw_change_red = zeros(size(corrmap{1}));
+keep_masks_raw_change_green = zeros(size(corrmap{1}));
+
+
+for i = 1:length(keep_cells)
+   ind = keep_cells(i);
+   temp_mask_inds = find(masks{2}==ind);
+   keep_masks(temp_mask_inds)=i;
+   
+end
+%I am converting these to be labelled by their position in the keep cell
+%index
+
+for i = 1:length(keep_cells)
+  temp_mask_inds = find(keep_masks==i);
+   if ismember(i,red_ind_keep)
+       keep_red_masks(temp_mask_inds)=i;
+       keep_masks_fract_change_red(temp_mask_inds) = dfof_max_diff(i,1);
+       keep_masks_raw_change_red(temp_mask_inds) = dfof_max_diff_raw(i,1);
+   else
+       keep_green_masks(temp_mask_inds)=i;
+       keep_masks_fract_change_green(temp_mask_inds) = dfof_max_diff(i,1);
+       keep_masks_raw_change_green(temp_mask_inds) = dfof_max_diff_raw(i,1);
+   end
+end
+
+%% spatial distribution vs. fractional change DART effect
+figure;
+
+
+imagesc(keep_masks_fract_change_red)
+colorbar
+title('Spatial distribution of cells by fractional change from DART, HT+')
+caxis([-1 1])
+hold on
+bound = cell2mat(bwboundaries(keep_red_masks(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
+hold off
+colormap bluered
+axis square
+print(fullfile(fn_multi,'HT+_frac_change_map.pdf'),'-dpdf','-bestfit')
+
+figure;
+imagesc(keep_masks_fract_change_green)
+colorbar
+title('Spatial distribution of cells by fractional change from DART, HT-')
+caxis([-1 1])
+hold on
+bound = cell2mat(bwboundaries(keep_green_masks(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
+hold off
+colormap bluered
+axis square
+print(fullfile(fn_multi,'HT-_frac_change_map.pdf'),'-dpdf','-bestfit')
+
+%% spatial distribution vs. raw DART effect
+
+
+imagesc(keep_masks_raw_change_red)
+colorbar
+title('Spatial distribution of cells by raw change from DART, HT+')
+caxis([-.1 .1])
+hold on
+bound = cell2mat(bwboundaries(keep_red_masks(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
+hold off
+colormap bluered
+axis square
+print(fullfile(fn_multi,'HT+_raw_change_map.pdf'),'-dpdf','-bestfit')
+
+figure;
+imagesc(keep_masks_raw_change_green)
+colorbar
+title('Spatial distribution of cells by raw change from DART, HT-')
+caxis([-.5 .5])
+hold on
+bound = cell2mat(bwboundaries(keep_green_masks(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
+hold off
+colormap bluered
+axis square
+print(fullfile(fn_multi,'HT-_raw_change_map.pdf'),'-dpdf','-bestfit')
 %% plotting  ori response 
 if nKeep<36
     [n n2] = subplotn(nKeep);

@@ -7,9 +7,10 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
+%to use the post-DART timepoint as the template
 
-day_id(2) = 134;
-day_id(1) = expt(day_id(2)).multiday_matchdays;
+day_id(1) = 136; %enter the post-DART day ID here
+day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 nd = length(day_id);
 brightnessScaleFactor = 0.3;
