@@ -1,4 +1,4 @@
-function Eye_data = extractEyeData(Eye_data,input)
+function Eye_data = extractEyeData(data,rad_range)
 % data is 3D movie of eye
 % rad_range is [A B] where A is the min and B is the max radius
 warning off;
