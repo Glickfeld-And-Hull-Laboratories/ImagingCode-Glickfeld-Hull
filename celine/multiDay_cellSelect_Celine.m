@@ -1,5 +1,6 @@
 clear all; clear global;  close all
 clc
+%ds = 'con_ori_nonDART'
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
@@ -7,7 +8,7 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 80;
+day_id = 138;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -57,14 +58,15 @@ for irun = 1:nruns
     elseif strcmp(expt(day_id).data_loc,'ACh')
         root = rc.achData;
         CD = fullfile(root,'2p_data', mouse, expDate, runFolder);
-        dat = 'data-i''';
+        dat = 'data-';
     end
     cd(CD);
 
     imgMatFile = [imgFolder '_000_000.mat'];
     load(imgMatFile);
-    if username == 'celine'
-        fName = ['Z:\Behavior\Data\' dat mouse '''-' expDate '-' times{irun} '.mat'];
+%    if username == 'celine'
+    if username == 'cc735'
+        fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
         
     else
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
@@ -125,7 +127,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
     for i = 1:nep 
         subplot(n,n2,i); 
         imagesc(mean(data_g(:,:,1+((i-1)*3000):500+((i-1)*3000)),3)); 
-        title([num2str(1+((i-1)*3000)) '-' num2str(500+((i-1)*100030000))]); 
+        title([num2str(1+((i-1)*3000)) '-' num2str(500+((i-1)*30000))]); 
         colormap gray; 
         clim([100 3000]); 
     end
@@ -157,7 +159,7 @@ nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingContrast,2);
-%ntrials = 720;
+%ntrials = 160;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
@@ -166,12 +168,12 @@ clear data_g_trial data_g_on data_g_f
 
 %find the different contrasts and orientations
 tCon = celleqel2mat_padded(input.tGratingContrast);
-%tCon = tCon(1:720);
+%tCon = tCon(1:160);
 cons = unique(tCon);
 nCon = length(cons);
 ind_con = find(tCon == max(cons(:)));
 tDir = celleqel2mat_padded(input.tGratingDirectionDeg);
-%tDir = tDir(1:720);
+%tDir = tDir(1:160);
 tOri = tDir;
 tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;
 oris = unique(tOri);
@@ -250,13 +252,19 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
         [out, data_rr_reg] = stackRegister(stackGroupProject(data_rr,100), redChImg);
         redChImg = mean(data_rr_reg,3);
     elseif info.config.pmt0_gain>0.5 %if there is a green channel in this run, it gets registered to the registration image from green channel from the 920 run
-        [out, data_rg_reg] = stackRegister(data_rg, regImg);
-        [~, data_rr_reg] = stackRegister_MA(data_rr,[],[],out);
-        redChImg = mean(data_rr_reg,3); 
+       redAvg = mean(data_rr,3);
+        [out, data_rr_reg] = stackRegister(data_rr,redAvg);
+        [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out);
+        redChImgTemp = mean(data_rr_reg,3); 
+        rg_avg = mean(data_rg_reg,3);
+        [out2, ~] = stackRegister(rg_avg,data_avg);
+        [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2);
         
-    else %if there is no green channel in this run, register the red channel directly to the registration image from the green channel at 920
-        [out, data_rr_reg] = stackRegister(stackGroupProject(data_rr,100), regImg);
-        redChImg = mean(data_rr_reg,3);
+    else %if there is no green channel in this run
+        redAvg = mean(data_rr,3);
+        [out, data_rr_reg] = stackRegister(data_rr,redAvg);
+        redChImgTemp = mean(data_rr_reg,3);
+        [~,redChImg] = stackRegister(redChImgTemp,data_avg);
     end
     
     figure; colormap gray; imagesc(redChImg);  movegui('center');title('registration image for red channel');
@@ -267,14 +275,7 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
     figure; image(rgb);  movegui('center')
     title('Green-920 + Red-1040')
     print(fullfile(fnout,'red_green_FOV.pdf'),'-dpdf','-bestfit')
-    
-    if info.config.pmt0_gain>0.5
-        rgb(:,:,1) = redChImg./max(redChImg(:));
-        gImg = mean(data_rg_reg,3);
-        rgb(:,:,2) = gImg./max(gImg(:));
-        figure; image(rgb);  movegui('center')
-        title('Green-1040 + Red-1040')
-    end
+
     
     save(fullfile(fnout,'redImage'),'redChImg')
 elseif ~exist('redChImg')
@@ -284,16 +285,20 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
 %comes up
 if ~isempty(expt(day_id).redChannelRun)
-    bwout = imCellEditInteractiveLG(redChImg);
-    mask_all = mask_all+bwout;
-    mask_exp = imCellBuffer(mask_all,3)+mask_all;
-    close all
+    for iStim=1:size(redForSegmenting,3)
+        mask_data_temp=redForSegmenting(:,:,iStim);
+        mask_data_temp(find(mask_exp >= 1)) = 0;
+        bwout = imCellEditInteractiveLG(mask_data_temp);
+        mask_all = mask_all+bwout;
+        mask_exp = imCellBuffer(mask_all,3)+mask_all;
+        close all
+    end
 end
 
 mask_cell_red = bwlabel(mask_all);
@@ -351,7 +356,7 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
-clear data_g_reg data_reg_down
+%clear data_g_reg data_reg_down
 %% reshape by trials
 %getting df/f for each trial, using a baseline window
 data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);
@@ -414,24 +419,24 @@ for iCell = 1:nCells
 end
 
 % plots contrast preference at preferred orientation
-% figure;
-% movegui('center')
-% start = 1;
-% for iCell = 1:nCells
-%     if start>tot
-%         figure; movegui('center')
-%         start = 1;
-%     end
-%     subplot(n,n2,start)
-%     if find(find(h_all)==iCell)
-%         errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
-%         if find(find(mask_label)==iCell)
-%             title('R')
-%         end
-%         ylim([-0.1 inf])
-%         start = start+1;
-%     end
-% end
+figure;
+movegui('center')
+start = 1;
+for iCell = 1:nCells
+    if start>tot
+        figure; movegui('center')
+        start = 1;
+    end
+    subplot(n,n2,start)
+    if find(find(h_all)==iCell)
+        errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
+        if find(find(mask_label)==iCell)
+            title('R')
+        end
+        ylim([-0.1 inf])
+        start = start+1;
+    end
+end
 % %% LG tuning fit
 % [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC]...
 %     = getOriTuningLG(npSub_tc,input,5);
@@ -488,24 +493,6 @@ vline(60,'g')
 title('Timecourses with np subtracted');
 hold off
 
-% timecourses without np subtracted
-data_tc_trial_noSub = reshape(data_tc, [nOn+nOff,ntrials,nCells]);
-data_f_trial_noSub = mean(data_tc_trial_noSub(nOff/2:nOff,:,:),1);
-data_dfof_trial_noSub = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial_noSub, data_f_trial_noSub), data_f_trial);
-
-%looking at data with np subtracted
-tc_cell_avrg_noSub = mean(data_dfof_trial_noSub,3);%average pver cells, one row per trial
-tc_trial_avrg_noSub  = squeeze(mean(data_dfof_trial_noSub,2));%average over trials, one row per cell
-tc_cell_trial_avrg_noSub  = mean(tc_trial_avrg_noSub,2);%average over trials and cells
-
-figure;
-plot(tc_trial_avrg_noSub, 'LineWidth',.005,'color',[.25 .25 .25]);
-hold on;
-plot(tc_cell_trial_avrg_noSub, 'LineWidth',2, 'color','k');
-hold on;
-vline(60,'g')
-title('Timecourses before np subtraction');
-hold off
 
 
 %% 
