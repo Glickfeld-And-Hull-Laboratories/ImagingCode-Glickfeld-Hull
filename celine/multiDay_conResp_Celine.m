@@ -1,4 +1,4 @@
-clear all; clear global; close all
+% clear all; clear global; close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
