@@ -7,9 +7,10 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
+%to use the post-DART timepoint as the template
 
-day_id(2) = 134;
-day_id(1) = expt(day_id(2)).multiday_matchdays;
+day_id(1) = 138; %enter the post-DART day ID here
+day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 nd = length(day_id);
 brightnessScaleFactor = 0.3;
@@ -34,7 +35,7 @@ end
 fnout = fullfile(rc.achAnalysis,'2p_analysis',mouse);
 
 if expt(day_id(2)).multiday_timesincedrug_hours>0
-    dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(2)).multiday_timesincedrug_hours) 'Hr'];
+    dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(1)).multiday_timesincedrug_hours) 'Hr'];
 else
     dart_str = 'control';
 end
@@ -104,6 +105,8 @@ for id = 1:nd
     cellTCs_all{id} = npSub_tc;
     load(fullfile(fnout,expDate,runFolder,'input.mat'))
     input_temp(id) = input;
+    
+    
 end
 input = input_temp;
 save(fullfile(fn_multi,'input.mat'),'input')
