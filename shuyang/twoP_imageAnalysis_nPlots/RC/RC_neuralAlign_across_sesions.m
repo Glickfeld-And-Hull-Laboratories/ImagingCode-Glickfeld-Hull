@@ -664,16 +664,22 @@ color_code = 'b';
 % fig_name = 'across_session_targetalign_lick_CS1CS2_testCS2';
 % data_file = 'across_sessions_RC_data_CS1CS2_testCS2.mat';
 fig_name = 'across_session_targetalign_lick_CS1CS2_testCS1CS2';
+cdf_name = 'across_session_targetalign_lickCDF_CS1CS2_testCS1CS2';
 data_file = 'across_sessions_RC_data_CS1CS2_testCS1CS2.mat';
 % lick align average
 target_align_licks_all_session = [];
 ntrials_total = 0;
+lick_times = [];
 for ii = 1:length(sessions) 
     %load things  
     lickAlign_output = load((fullfile([analysis_out sessions{ii} '\' sessions{ii} '_' run{ii} '_cueAlignLick.mat'])));
     lickAlign_thisSession = lickAlign_output.lickCueAlign; % frame*trial
     ntrials_total = ntrials_total + size(lickAlign_thisSession,2);
     
+    %identify indices of all licks
+    for itrial = 1:size(lickAlign_thisSession,2)
+        lick_times = [lick_times lickAlign_output.tt(find(lickAlign_thisSession(:,itrial)))];
+    end
     % average across trials
     mean_targetAlign_licks = squeeze(nanmean(lickAlign_thisSession,2));
     target_align_licks_all_session = cat(2,target_align_licks_all_session,mean_targetAlign_licks);
@@ -706,10 +712,32 @@ xlabel('Time from cue (ms)');
 %set(gca,'XTickLabel',a,'FontSize',7);
 %xlim([-1.1 1.6]);ylim([0 3]);
 box off;
-path = 'Z:\2P_analysis\across_sessions_RC\';
+path = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\shuyang\2P_analysis\across_sessions_RC\';
 print(lickAlign_fig,[path,fig_name],'-r600','-dpdf');
 print(lickAlign_fig,[path,fig_name],'-djpeg');
 savefig([path fig_name]);
+
+lickCDF_fig = figure; 
+lickCDF_fig.Units = 'inches';
+lickCDF_fig.Position = [1 1 4 2.5];
+cdfplot(lick_times);
+vline(0,color_code);vline(700,'k');
+ylabel('Fraction of licks');
+%title('CS1 naive day, across sessions');
+%title('CS1 trained day, across sessions');
+%title('CS1+CS2 trained test w/ CS1, across sessions');
+%title('CS1+CS2 trained test w/ CS2, across sessions');
+title('CS1+CS2 trained test w/ CS1+CS2, across sessions');
+xlabel('Time from cue (ms)');
+%a = get(gca,'XTickLabel');
+%set(gca,'XTickLabel',a,'FontSize',7);
+%xlim([-1.1 1.6]);ylim([0 3]);
+box off;
+path = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\shuyang\2P_analysis\across_sessions_RC\';
+print(lickAlign_fig,[path,cdf_name],'-r600','-dpdf');
+print(lickAlign_fig,[path,cdf_name],'-djpeg');
+savefig([path cdf_name]);
+
 
 
 %% align neural data with cue onset on learned days, high lick rate trials vs. low lick rate trials 
