@@ -4,17 +4,17 @@ clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
-eval(ds)
+eval(ds);
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 138;
+day_id = 142;
 %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 
-fn = fullfile(rc.achAnalysis,'2p_analysis',mouse,expDate); %can make this flexible if folder structure is different
+fn = fullfile(rc.achAnalysis,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
 
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
@@ -159,7 +159,7 @@ nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingContrast,2);
-%ntrials = 160;
+%ntrials = 374;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
@@ -167,12 +167,12 @@ data_g_dfof = (data_g_on-data_g_f)./data_g_f;
 clear data_g_trial data_g_on data_g_f
 
 %find the different contrasts and orientations
-tCon = celleqel2mat_padded(input.tGratingContrast);
+tCon = celleqel2mat_padded(input.tGratingContrast(1:ntrials));
 %tCon = tCon(1:160);
 cons = unique(tCon);
 nCon = length(cons);
 ind_con = find(tCon == max(cons(:)));
-tDir = celleqel2mat_padded(input.tGratingDirectionDeg);
+tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:ntrials));
 %tDir = tDir(1:160);
 tOri = tDir;
 tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;

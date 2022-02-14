@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 138; %enter the post-DART day ID here
+day_id(1) = 142; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 nd = length(day_id);
@@ -32,7 +32,7 @@ elseif strcmp(expt(day_id(1)).data_loc,'ACh')
         dat = 'data-i';
 end
 
-fnout = fullfile(rc.achAnalysis,'2p_analysis',mouse);
+fnout = fullfile(rc.achAnalysis,mouse);
 
 if expt(day_id(2)).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(1)).multiday_timesincedrug_hours) 'Hr'];
@@ -40,7 +40,7 @@ else
     dart_str = 'control';
 end
 
-fn_multi = fullfile(rc.achAnalysis,'2p_analysis',mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
 mkdir(fn_multi)
 data = cell(1,nd);
 fov_avg = cell(1,nd);
@@ -374,6 +374,7 @@ print(fullfile(fn_multi,'masksAfterTransform.pdf'),'-dpdf','-fillpage')
 
 match_ind = find([cellImageAlign.pass]);
 cellTCs_match{1} = cellTCs_all{1}(:,match_ind);
+
 
 %new TCs
 data_tc = stackGetTimeCourses(data{3}, mask_cell);

@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds);
 
-day_id = 130; %enter post-DART day
+day_id = 142; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -32,8 +32,10 @@ load(fullfile(fn_multi,'input.mat'))
 cd(fn_multi)
 nKeep = size(tc_trial_avrg_keep{1},2);
 clear d
-%% find stimulus conditions
+% find stimulus conditions
 frame_rate = input.frameImagingRateMs;
+
+
 %tells the contrast, direction and orientation for each trial each day
 tCon_match = cell(1,nd);
 tDir_match = cell(1,nd);
@@ -41,8 +43,8 @@ tOri_match = cell(1,nd);
 
 %find the contrasts, directions and orientations for each day
 for id = 1:nd
-    tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast);
-    tDir_match{id} = celleqel2mat_padded(input(id).tGratingDirectionDeg);
+    tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:nTrials(id)));
+    tDir_match{id} = celleqel2mat_padded(input(id).tGratingDirectionDeg(1:nTrials(id)));
     tOri_match{id} = tDir_match{id};
     tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
 end
@@ -155,13 +157,13 @@ xlabel('s')
 sgtitle(['contrast = '  num2str(cons(iCon))])
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_indiv_timecourses.pdf']),'-dpdf');
 end
-%% makes a scatterplot of max df/f for day 1 vs day 2, and each subplot is one day
+%% scatterplot of max df/f for day 1 vs day 2, and each subplot is one day
 
 
 for iCon = 1:nCon
 figure; movegui('center') 
 subplot(1,2,1)
-scatter((resp_max_keep{2}(green_ind_keep)),(resp_max_keep{1}(green_ind_keep,iCon)),'k')
+scatter((resp_max_keep{2}(green_ind_keep,iCon)),(resp_max_keep{1}(green_ind_keep,iCon)),'k')
 
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
@@ -173,7 +175,7 @@ axis square
 
 
 subplot(1,2,2)
-scatter((resp_max_keep{2}(red_ind_keep)),(resp_max_keep{1}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
+scatter((resp_max_keep{2}(red_ind_keep,iCon)),(resp_max_keep{1}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
 
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
@@ -189,7 +191,7 @@ print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'
 
 end
 % extract the max df/f values for analysis
-%% looking at change in dfof
+%% fractional change in dfof
 
 for iCon = 1:nCon
 figure
