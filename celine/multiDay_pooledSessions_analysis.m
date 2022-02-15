@@ -9,7 +9,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-sess_list = [142,138];%enter all the sessions you want to pool
+sess_list = [142,138,133,131];%enter all the sessions you want to pool
 nSess=length(sess_list);
 
 nd=2%hard coding for two days per experimental session
@@ -63,13 +63,20 @@ end
 %% to find all the contrasts represented in the data across sessions -
 %assumes two days per session
 cons = [];
+all_cons = cell(nSess,1);
 for iSess = 1:nSess
    cons1 = unique(tCon_pooled{iSess}{1}); 
    cons2 = unique(tCon_pooled{iSess}{2}); 
-   all_cons(iSess,:) =  intersect(cons1,cons2); %find contrasts that were used in both days of this experiment
-   cons = unique(all_cons);
+   all_cons{iSess} =  intersect(cons1,cons2); %find contrasts that were used in both days of this experiment
+   
    clear cons1 cons2
 end
+
+
+%figure out which contrasts were covered in all experiments
+
+cons = unique(cell2mat_padded(all_cons));
+cons=cons(2:end);
 nCon = length(cons);
 
 %check whether stimStart is the same for all sessions
@@ -98,30 +105,35 @@ green_resp_full = cell(1,nd);
 red_resp_full = cell(1,nd);
 green_resp_firstSec = cell(1,nd);
 red_resp_firstSec = cell(1,nd);
+cellCounts=nan(2,nCon);
 
 for id = 1:nd
     for iCon=1:nCon
         green_trials=[]; %start with empty array for each day X contrast
         red_trials=[]; 
         for iSess = 1:nSess
-            conInd = find(all_cons(iSess,:)==cons(iCon)); %figure out which index will
+            
+            conInd = find(all_cons{iSess}==cons(iCon)); %figure out which index will
             %correspond to the desired contrast in this session
             %grab all those trials for this session/day
             green_trials=[green_trials, trial_avrg_resp{iSess}{id}(:,green_ind{iSess},conInd)];
             red_trials=[red_trials, trial_avrg_resp{iSess}{id}(:,red_ind{iSess},conInd)];
+            
         end
         tc_green_avrg{id}(:,conInd)=nanmean(green_trials,2);
         green_resp_full{id}(:,conInd)=nanmean(green_trials(stimStart:(stimStart+30),:),1);
         green_resp_firstSec{id}(:,conInd)=nanmean(green_trials(stimStart:(stimStart+15),:),1);
         green_std=std(green_trials,[],2);
-        tc_green_se{id}(:,conInd)=green_std/sqrt(nGreen);
+        tc_green_se{id}(:,conInd)=green_std/sqrt(size(green_trials,2));
+        cellCounts(1,iCon)=size(green_trials,2);
         
         tc_red_avrg{id}(:,conInd)=nanmean(red_trials,2);
         red_resp_full{id}(:,conInd)=nanmean(red_trials(stimStart:(stimStart+30),:),1);
         red_resp_firstSec{id}(:,conInd)=nanmean(red_trials(stimStart:(stimStart+15),:),1);
         red_std=std(red_trials,[],2);
-        tc_red_se{id}(:,conInd)=red_std/sqrt(nRed);
-        clear green_std green trials
+        tc_red_se{id}(:,conInd)=red_std/sqrt(size(red_trials,2));
+        cellCounts(2,iCon)=size(red_trials,2);
+        clear green_std green_trials red_std red_trials
         end
 end
     %%
@@ -140,9 +152,9 @@ ylim([-.02 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg{2}(:,iCon),tc_green_se{2}(:,iCon));
 title(['Pre-DART contrast = ' num2str(cons(iCon))])
-txt1 = ['HT- ' num2str(nGreen)];
+txt1 = ['HT- ' num2str(cellCounts(1,iCon))];
 text(-1.5,0.25,txt1);
-txt2 = ['HT+ ' num2str(nRed)];
+txt2 = ['HT+ ' num2str(cellCounts(2,iCon))];
 text(-1.5,0.23,txt2,'Color','r');
 ylabel('dF/F') 
 xlabel('s') 
