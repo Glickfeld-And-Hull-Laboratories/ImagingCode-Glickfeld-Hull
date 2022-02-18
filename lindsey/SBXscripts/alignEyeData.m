@@ -19,8 +19,8 @@ function [rad centroid] = alignEyeData(Eye_data,input);
         end
     elseif isfield(input,'cStimOneOn')
         cStimOn = celleqel2mat_padded(input.cStimOneOn);
-        prewin_frames = input.stimOneOnFrames; %check these
-        postwin_frames = input.stimOneOnFrames;
+        prewin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
+        postwin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
     else
         cStimOn = input.nFramesOff+1:input.nFramesOff+input.nFramesOn:nFrames;
         prewin_frames = input.nFramesOn;
