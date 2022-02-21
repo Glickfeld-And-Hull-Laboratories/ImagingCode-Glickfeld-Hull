@@ -12,25 +12,24 @@ dateStr = string(date)
 analysis_title = strcat(dataset1_title,'_',dataset2_title,dateStr)
 fn_multi=fullfile(rc.celineAnalysis,analysis_title);
 mkdir(fn_multi);
-%% dataset 1
-% day_id1(2) = 113;
-% day_id1(1) = expt(day_id1(2)).multiday_matchdays;
-% nd = size(day_id1,2);
-% day_id1
-% 
-% mouse = expt(day_id1(1)).mouse;
-% 
-% fnout = fullfile(rc.celineAnalysis,mouse);
-% if expt(day_id1(2)).multiday_timesincedrug_hours>0
-%     dart_str = [expt(day_id1(2)).drug '_' num2str(expt(day_id1(2)).multiday_timesincedrug_hours) 'Hr'];
-% else
-%     dart_str = 'control';
-% end
+% dataset 1
+day_id1(2) = 113;
+day_id1(1) = expt(day_id1(2)).multiday_matchdays;
+nd = size(day_id1,2);
+day_id1
+
+mouse = expt(day_id1(1)).mouse;
+
+fnout = fullfile(rc.celineAnalysis,mouse);
+if expt(day_id1(2)).multiday_timesincedrug_hours>0
+    dart_str = [expt(day_id1(2)).drug '_' num2str(expt(day_id1(2)).multiday_timesincedrug_hours) 'Hr'];
+else
+    dart_str = 'control';
+end
 
 
-%fn_multi_in = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
-fn_multi_in1 = fullfile('Z:\home\ACh\Analysis\2p_analysis\i2028\multiday_DART2.0-YM90K_22Hr_reverse')
-%fn_multi = fullfile(rc.celineAnalysis,mouse,['multiday_concat_' dart_str]);
+fn_multi_in1 = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.celineAnalysis,mouse,['multiday_concat_' dart_str]);
 
 load(fullfile(fn_multi_in1,'tc_keep.mat'));
 load(fullfile(fn_multi_in1,'resp_keep.mat'));
@@ -42,20 +41,19 @@ resp_max_concat_1=resp_max_keep;
 
 clear tc_trial_avrg_keep red_keep_logical green_keep_logical resp_max_concat data_resp_keep
 %% dataset 2
-% day_id2(2) = 115;
-% day_id2(1) = expt(day_id2(2)).multiday_matchdays;
-% nd = size(day_id2,2);
-% day_id2
-% 
-% if expt(day_id1(2)).multiday_timesincedrug_hours>0
-%     dart_str = [expt(day_id2(2)).drug '_' num2str(expt(day_id2(2)).multiday_timesincedrug_hours) 'Hr'];
-% else
-%     dart_str = 'control';
-% end
+day_id2(2) = 115;
+day_id2(1) = expt(day_id2(2)).multiday_matchdays;
+nd = size(day_id2,2);
+day_id2
 
-%fn_multi_in = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
+if expt(day_id1(2)).multiday_timesincedrug_hours>0
+    dart_str = [expt(day_id2(2)).drug '_' num2str(expt(day_id2(2)).multiday_timesincedrug_hours) 'Hr'];
+else
+    dart_str = 'control';
+end
 
-fn_multi_in2 = fullfile('Z:\home\ACh\Analysis\2p_analysis\i2029\multiday_DART2.0-YM90K_22mHr_reverse')
+fn_multi_in2 = fullfile(rc.celineAnalysis,mouse,['multiday_' dart_str]);
+
 
 load(fullfile(fn_multi_in2,'tc_keep.mat'));
 load(fullfile(fn_multi_in2,'resp_keep.mat'));

@@ -5,8 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-%day_id = 142; %enter post-DART day
-day_id = input('Enter day id ');% alternative to run from command line.
+day_id_list = [142; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -338,9 +337,8 @@ for i = 1:length(red_ind_keep)
 end
 green_keep_logical = ~red_keep_logical;
 
-explanation1 = 'tc_trial_keep contains the timecourses for all "keep" cells for each day. The tOri_match and tCon_match data structures can be used to find trials of particular stim conditions within this. tc_trial_avrg_keep only has the timecourses averaged over tirals for each cell at its preferred orientation and at each contrast.';
-save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
 
+save(fullfile(fn_multi,'tc_keep.mat'),'nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
 
 %% make and save response matrix for keep cells
 
@@ -372,9 +370,7 @@ for id = 1:nd
     data_con_resp_keep{id} = data_con_resp_match{id}(keep_cells,:);   
     data_ori_resp_keep{id} = data_ori_resp_match{id}(keep_cells,:);  
 end
-
-explanation2 = 'data_resp_keep gives the df/f averaged over the full response window for all conditions in the form nCells X nOris X nCons X mean vs. std. resp_max_keep gives the df/f averaged over the full stim period for each cell at the preferred ori only, with a dimension for each contrast';
-save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','data_ori_resp_keep')
+save(fullfile(fn_multi,'resp_keep.mat'),'data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','data_ori_resp_keep')
 %% making mask maps for various measurements
 %show masks
 keep_masks = zeros(size(corrmap{1}));
