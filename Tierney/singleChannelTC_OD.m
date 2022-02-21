@@ -12,10 +12,10 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(fn_base, 'home\Tierney\Analysis\2P');
 
 %Specific experiment information
-mouse = 'i2509';
-date = '220207';
-ImgFolder = ['003';'004';'005'];
-time = {'1320','1341','1415'};
+mouse = 'i2508';
+date = '220216';
+ImgFolder = ['001';'002';'003'];
+time = {'1404','1424','1501'};
 eye_str = {'Ipsi','Contra','Ipsi'};
 
 frame_rate = 15;
@@ -73,7 +73,7 @@ clear temp
 %1. Find a stable target
 %    a. Plot average of 500 frames throughout stack
 
-nep = 10; %numer of epochs
+nep = 10; %number of epochs
 nframes = 500; %nframes to average for target
 nskip = floor(size(data,3)./nep); %nframes to skip for each average
 

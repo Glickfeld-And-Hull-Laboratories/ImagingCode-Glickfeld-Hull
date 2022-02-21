@@ -1,108 +1,122 @@
 clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
-dataStructLabels = {'contrastxori'};
-rc = behavConstsDART; %directories
+ds = 'ExperimentData_MultiDayMatch_TD'; %dataset info
+dataStructLabels = {'stimruns'};
 eval(ds)
-doGreenOnly = false;
-doCorrImg = true;
 
 
-day_id(2) = 130;
+day_id(2) = 3;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);
 brightnessScaleFactor = 0.3;
 mouse = expt(day_id(1)).mouse;
 
-if strcmp(expt(day_id(1)).data_loc,'lindsey')
-    root = fullfile(rc.data,mouse);
-elseif strcmp(expt(day_id(1)).data_loc,'ashley')
-    root = fullfile(rc.ashleyData,mouse,'two-photon imaging');
-elseif strcmp(expt(day_id(1)).data_loc,'tammy')
-        root = rc.tammyData;
-        expDate = expt(day_id(1)).date;
-        runFolder = expt(day_id(1)).contrastxori_runs;
-        dat = 'data-i';
-elseif strcmp(expt(day_id(1)).data_loc,'ACh')
-        root = rc.achData;
-        expDate = expt(day_id(1)).date;
-        runFolder = expt(day_id(1)).contrastxori_runs;
-        dat = 'data-i';
-end
+%Path names
+fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
+td_fn = fullfile(fn_base, 'home\Tierney');
+data_fn = fullfile(td_fn, 'Data\2P_images');
+mworks_fn = fullfile(fn_base, 'Behavior\Data');
+fnIn = fullfile(fn_base, 'home\Tierney\Analysis\2P');
 
-fnout = fullfile(rc.achAnalysis,'2p_analysis',mouse);
-
-if expt(day_id(2)).multiday_timesincedrug_hours>0
-    dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(2)).multiday_timesincedrug_hours) 'Hr'];
+if expt(day_id(2)).multiday_time_days>0
+    time_str = [num2str(expt(day_id(2)).multiday_time_days) 'Days'];
 else
-    dart_str = 'control';
+    time_str = 'control';
 end
 
-fn_multi = fullfile(rc.achAnalysis,'2p_analysis',mouse,['multiday_' dart_str]);
+fn_multi = fullfile(fn_base, 'home\Tierney\Analysis\2P',mouse,['multiday_' time_str,'_',expt(day_id(2)).experiment]);
 mkdir(fn_multi)
 data = cell(1,nd);
 fov_avg = cell(1,nd);
 fov_norm = cell(1,nd);
-fov_red = cell(1,nd);
 align_fov = cell(1,nd);
 corrmap = cell(1,nd);
 dfmax = cell(1,nd);
 masks = cell(1,nd);
 maskNP = cell(1,nd);
-red_ind = cell(1,nd);
 cellTCs_all = cell(1,nd);
 %% load all data 
-runFolder = [];
 for id = 1:nd 
     clear global
+    ImgFolder = expt(day_id(id)).stimruns
     expDate = expt(day_id(id)).date;
-    runs = eval(['expt(day_id(' num2str(id) ')).' cell2mat(dataStructLabels) '_runs']);
-    nrun = length(runs);
-    out_all = [];
-    data_g = [];
+    ImgFolder = eval(['expt(day_id(' num2str(id) ')).' cell2mat(dataStructLabels)]);
+    nrun = length(ImgFolder);
+    time = expt(day_id(id)).time
+    contra = strcmp(expt(day_id(id)).eye_str,'Contra');
+
+    %Load 2P data
+data_day = [];
+clear temp
+offset_frames = 0;
+offset_time = 0;
+
     for irun = 1:nrun
-        imgFolder = runs{irun};
-        fName = [imgFolder '_000_000'];
-        cd(fullfile(root, '2p_data',mouse,expDate, imgFolder))
-        load(fName)
-        if nrun == 1
-            load(fullfile(fnout,expDate,imgFolder,'regOuts&Img.mat'))
-            nframes = size(outs,1);
-            runFolder = imgFolder;
-        else
-            nframes = info.config.nframes;
-            runFolder = [runFolder '_' imgFolder];
+        %Load mworks data- this has information about experiment (e.g. the visual stimuli presented and synchronization with the microscope)
+        fName = fullfile(mworks_fn, ['data-' mouse '-' expDate '-' time{irun} '.mat']);
+        load(fName);
+        ntrials = size(input.tGratingDirectionDeg,2);
+        totframes = input.counterValues{end}(end); %this is from the mworks structure- finds the last value clocked for frame count
+        input.contraTrialNumber = mat2cell(contra(irun).*ones(1,ntrials),1,ones(1,ntrials)); %create a field for tracking which eye stimulated
+        temp(irun) = input;
+
+        if irun>1
+            for itrial = 1:ntrials
+                temp(irun).counterValues{itrial} = bsxfun(@plus,temp(irun).counterValues{itrial},offset_frames);
+                temp(irun).counterTimesUs{itrial} = bsxfun(@plus,temp(irun).counterTimesUs{itrial},offset_time-temp(irun).counterValues{1}(1)+1000);
+                temp(irun).wheelSpeedTimesUs{itrial} = bsxfun(@plus,temp(irun).wheelSpeedTimesUs{itrial},offset_time-temp(irun).counterValues{1}(1)+1000);
+            end
         end
-        fprintf(['Loading day ' num2str(id) ' data \n Mouse: ' expt(day_id(id)).mouse ' Date: ' expt(day_id(id)).date])
-        data_temp = sbxread(fName(1,1:11),0,nframes);
-        data_g = cat(3, data_g, squeeze(data_temp(1,:,:,:)));
-        clear data_temp
-        out_all = [out_all; outs];
+        offset_frames = offset_frames+totframes;
+        offset_time = offset_time+temp(irun).counterTimesUs{end}(end);
+
+        %Load 2P metadata- this has information about the information about the imaging session (e.g. frame count, zoom)
+        CD = fullfile(data_fn, mouse, expDate, ImgFolder(irun,:));
+        cd(CD);
+        imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
+        load(imgMatFile);
+       
+        %Load 2P images
+
+        fprintf(['Reading ' num2str(totframes) ' frames \r\n'])
+        data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,totframes); %loads the .sbx files with imaging data (path, nframes to skip, nframes to load)
+        data_temp = squeeze(data_temp);
+        data_day = cat(3,data_day,data_temp);
     end
-    [~,data{id}] = stackRegister_MA(data_g,[],[],double(out_all));
+
+input = concatenateDataBlocks(temp);
+clear data_temp
+clear temp
+    
+% Registration
+run_str = catRunName(ImgFolder, nrun);
+datemouse = [expDate '_' mouse];
+datemouserun = [expDate '_' mouse '_' run_str];
+
+    if exist(fullfile(fnIn, datemouse, datemouserun)) 
+        load(fullfile(fnIn, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']))
+        fprintf(['Starting registration for day ' num2str(id)])
+        [~,data{id}] = stackRegister_MA(data_day,[],[],double(out));
+        save(fullfile(fnIn, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
+    else
+        fprintf(['No registration found'])
+    end 
+    
     data_avg = mean(data{id},3);
     figure; imagesc(data_avg); title(['Avg FOV day ' num2str(id)])
-    clear data_g
     fov_avg{id} = data_avg;
     fov_norm{id} = uint8((fov_avg{id}./max(fov_avg{id}(:))).*255);
     fov_norm{id}(fov_norm{id} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
 
-    if exist(fullfile(fnout,expDate,runFolder,'redImage.mat'))
-        load(fullfile(fnout,expDate,runFolder,'redImage.mat'))
-    	fov_red{id} = uint8((redChImg./max(redChImg(:))).*255);
-    else
-        fov_red{id} = zeros(size(data_avg));
-    end
-    load(fullfile(fnout,expDate,runFolder,'mask_cell.mat'))
+    load(fullfile(fnIn,datemouse, datemouserun, [datemouserun '_mask_cell.mat']))
     dfmax{id} = data_dfof(:,:,1);
     corrmap{id} = data_dfof(:,:,end);
     masks{id} = mask_cell;
     maskNP{id} = mask_np;
-    red_ind{id} = mask_label;
-    load(fullfile(fnout,expDate,runFolder,'TCs.mat'))
+    load(fullfile(fnIn,datemouse,datemouserun,[datemouserun '_TCs.mat']))
     cellTCs_all{id} = npSub_tc;
-    load(fullfile(fnout,expDate,runFolder,'input.mat'))
+    load(fullfile(fnIn,datemouse,datemouserun,[datemouserun '_input.mat']))
     input_temp(id) = input;
 end
 input = input_temp;
@@ -114,11 +128,10 @@ corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
 if exist(fullfile(fn_multi,'multiday_alignment.mat'))
     load(fullfile(fn_multi,'multiday_alignment.mat'))
 else
-    [input_points_1, base_points_1] = cpselect(fov_red{2},fov_red{1},'Wait', true);
-    [input_points_2, base_points_2] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
-    [input_points_3, base_points_3] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
-    input_points = [input_points_1; input_points_2; input_points_3];
-    base_points = [base_points_1; base_points_2; base_points_3];
+    [input_points_1, base_points_1] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
+    [input_points_2, base_points_2] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
+    input_points = [input_points_1; input_points_2];
+    base_points = [base_points_1; base_points_2];
 end
 %%
 fitGeoTAf = fitgeotrans(input_points(:,:), base_points(:,:),'affine'); 
@@ -127,7 +140,7 @@ fov_avg{3} = mean(data{3},3);
 fov_norm{3} = uint8((fov_avg{3}./max(fov_avg{3}(:))).*255);
 corrmap{3} = double(imwarp(corrmap{2},fitGeoTAf, 'OutputView', imref2d(size(corrmap{2}))));
 corrmap_norm{3} = uint8((corrmap{3}./max(corrmap{3}(:))).*255);
-red_trans = (imwarp(fov_red{2},fitGeoTAf, 'OutputView', imref2d(size(fov_red{2}))));
+red_trans = (imwarp(fov_red{2},fitGeoTAf, 'OutputView', imref2d(size(fov_red{2})))); %%%%%%%%%%%% DELETE THIS AND NEXT LINE?
 fov_red{3} = uint8(red_trans);
 dfmax{3} = (imwarp(dfmax{2},fitGeoTAf, 'OutputView', imref2d(size(dfmax{2}))));
 
@@ -158,6 +171,7 @@ title('Overlay')
 %suptitle(mouse)
 print(fullfile(fn_multi,'FOV correlation map manual alignment'),'-dpdf','-fillpage')
 
+%%%%%%% DELETE THIS SECTION???
 figure;colormap gray
 movegui('center')
 subplot 221
