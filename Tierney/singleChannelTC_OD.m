@@ -12,8 +12,8 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(fn_base, 'home\Tierney\Analysis\2P');
 
 %Specific experiment information
-mouse = 'i2508';
-date = '220216';
+mouse = 'i2510';
+date = '220222';
 ImgFolder = ['001';'002';'003'];
 time = {'1404','1424','1501'};
 eye_str = {'Ipsi','Contra','Ipsi'};
