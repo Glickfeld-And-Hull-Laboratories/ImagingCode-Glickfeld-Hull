@@ -171,7 +171,6 @@ title('Overlay')
 %suptitle(mouse)
 print(fullfile(fn_multi,'FOV correlation map manual alignment'),'-dpdf','-fillpage')
 
-%%%%%%% DELETE THIS SECTION???
 figure;colormap gray
 movegui('center')
 subplot 221
