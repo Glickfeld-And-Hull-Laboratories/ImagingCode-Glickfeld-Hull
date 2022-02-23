@@ -9,7 +9,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-sess_list = [142,138,133,131];%enter all the sessions you want to pool
+sess_list = [142,138];%enter all the sessions you want to pool
 nSess=length(sess_list);
 
 nd=2%hard coding for two days per experimental session
@@ -76,7 +76,7 @@ end
 %figure out which contrasts were covered in all experiments
 
 cons = unique(cell2mat_padded(all_cons));
-cons=cons(2:end);
+%cons=cons(2:end);
 nCon = length(cons);
 
 %check whether stimStart is the same for all sessions
@@ -182,8 +182,8 @@ for iCon = 1:nCon
 figure; movegui('center') 
 subplot(1,2,1)
 scatter(green_resp_full{2}(:,iCon),green_resp_full{1}(:,iCon),'k')
-hold on
-scatter(green_resp_firstSec{2}(:,iCon),green_resp_firstSec{1}(:,iCon),'k','filled')
+% hold on
+% scatter(green_resp_firstSec{2}(:,iCon),green_resp_firstSec{1}(:,iCon),'k','filled')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([-.1 .5])
@@ -196,8 +196,8 @@ hold off
 
 subplot(1,2,2)
 scatter(red_resp_full{2}(:,iCon),red_resp_full{1}(:,iCon),'MarkerEdgeColor',[.7 .05 .05])
-hold on
-scatter(red_resp_firstSec{2}(:,iCon),red_resp_firstSec{1}(:,iCon),'filled','MarkerFaceColor',[.7 .05 .05])
+% hold on
+% scatter(red_resp_firstSec{2}(:,iCon),red_resp_firstSec{1}(:,iCon),'filled','MarkerFaceColor',[.7 .05 .05])
 
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')

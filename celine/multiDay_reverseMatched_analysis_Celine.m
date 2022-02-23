@@ -2,10 +2,10 @@ clear all; clear global; close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-rc = behavConstsAV; %directories
+rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 142; %enter post-DART day
+day_id = 131; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
