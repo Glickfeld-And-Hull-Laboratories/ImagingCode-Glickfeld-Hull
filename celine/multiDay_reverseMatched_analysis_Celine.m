@@ -2,7 +2,8 @@ clear all; clear global; close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-rc = behavConstsDART; %directories
+
+rc = behavConstsAV; %directories
 eval(ds);
 
 day_id = 131; %enter post-DART day
@@ -85,7 +86,7 @@ for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
 
-shadedErrorBar(t,tc_red_avrg_match{2}(:,iCon),tc_red_se_match{2}(:,iCon),'r');
+shadedErrorBar(t,tc_red_avrg_match{2}(:,iCon),tc_red_se_match{2}(:,iCon),'lineProps','r');
 ylim([-.02 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg_keep{2}(:,iCon),tc_green_se_keep{2}(:,iCon));
@@ -101,7 +102,7 @@ axis square
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(t,tc_red_avrg_match{1}(:,iCon),tc_red_se_match{1}(:,iCon),'r');
+shadedErrorBar(t,tc_red_avrg_match{1}(:,iCon),tc_red_se_match{1}(:,iCon),'lineProps','r');
 ylim([-.02 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg_keep{1}(:,iCon),tc_green_se_keep{1}(:,iCon));
@@ -112,6 +113,7 @@ axis square
 
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_timecourses.pdf']),'-dpdf');
 end 
+clear txt1 txt2
 %% make a plot of individual timecourses 
 
 setYmin = -.1; %indicate y axes you want
@@ -164,7 +166,8 @@ for iCon = 1:nCon
 figure; movegui('center') 
 subplot(1,2,1)
 scatter((resp_max_keep{2}(green_ind_keep,iCon)),(resp_max_keep{1}(green_ind_keep,iCon)),'k')
-
+hold on
+scatter((resp_max_keep{2}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{1}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),'k','MarkerFaceColor','k')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([-.1 .5])
@@ -176,7 +179,9 @@ axis square
 
 subplot(1,2,2)
 scatter((resp_max_keep{2}(red_ind_keep,iCon)),(resp_max_keep{1}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
-
+hold on
+scatter((resp_max_keep{2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{1}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05])
+hold off
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([-.1 .5])
@@ -189,8 +194,36 @@ axis square
 sgtitle(num2str(cons(iCon)))
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
 
+figure;
+subplot(1,2,1)
+scatter((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff_raw(red_ind_keep,iCon),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05],'MarkerFaceAlpha',.25)
+lsline;
+hold on
+scatter((resp_max_keep{2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),dfof_max_diff_raw(intersect(red_ind_keep,find(sig_diff{iCon})),iCon),'MarkerFaceColor',[.7 .05 .05])
+[R,p]=corrcoef((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff_raw(red_ind_keep,iCon),'Rows','complete');
+title(['R = '  num2str(R(2)) ', p = ' num2str(p(2))])
+ylabel('pre-DART - post-DART dF/F')
+xlabel('pre-DART  dF/F')
+axis square
+hold off
+
+subplot(1,2,2)
+scatter((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff(red_ind_keep,iCon),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05],'MarkerFaceAlpha',.25)
+lsline;
+hold on
+scatter((resp_max_keep{2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),dfof_max_diff(intersect(red_ind_keep,find(sig_diff{iCon})),iCon),'MarkerFaceColor',[.7 .05 .05])
+[R,p]=corrcoef((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff(red_ind_keep,iCon),'Rows','complete');
+title(['R = '  num2str(R(2)) ', p = ' num2str(p(2))])
+ylabel('(post-pre)/(post+pre)')
+xlabel('pre-DART  dF/F')
+axis square
+sgtitle(num2str(cons(iCon)))
+print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'd1Resp_vs_change.pdf']),'-dpdf','-bestfit')
+clear R p
 end
-% extract the max df/f values for analysis
+
+
+
 %% fractional change in dfof
 
 for iCon = 1:nCon
@@ -218,15 +251,89 @@ for id = 1:nd
     nanmean(wheel_speed{id})
 end
 
-figure; 
-subplot(1,2,1);
-plot(wheel_speed{2})
 
+
+wheel_tc = cell(1,nd);
+wheel_trial_avg= cell(1,nd);
+RIx = cell(1,nd);
+
+for id = 1:nd
+    wheel_tc{id}=zeros(nOn+nOff, nTrials(id));
+    for iTrial = 1:nTrials(id)
+        wheel_tc{id}(:,iTrial) = wheel_speed{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
+    end
+    wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
+    RIx{id} = wheel_trial_avg{id}>0.6; %.55 is the noise level in the wheel movement
+    mean(RIx{id})
+end
+
+figure; movegui('center')
+subplot(1,2,1);
+plot(wheel_trial_avg{2})
+title('running day 1');
 subplot(1,2,2);
-plot(wheel_speed{1})
+plot(wheel_trial_avg{1})
+title('running day 2');
 print(fullfile(fn_multi_analysis,['running.pdf']),'-dpdf','-bestfit')
 
+%now I knwo which trials the mouse was running on, need to look at LMI
+%LMI = (R_loc - R_stat)/(R_loc + R_stat)
+%find the intersection of trials at the preferred orientation during
+%locomotion vs stationary periods - I may not have enough trials of each
+%kind
 
+
+locTCs = cell(1,nd);
+statTCs = cell(1,nd);
+
+locResp = cell(1,nd);
+statResp = cell(1,nd);
+
+for id = 1:nd
+    loc=squeeze(nanmean(data_trial_keep{id}(:,find(RIx{id}),:),2)); %average of all lomotion trials for each cell
+    stat=squeeze(nanmean(data_trial_keep{id}(:,find(~RIx{id}),:),2)); %average of all stationary trials for each cell
+
+    locr_mean = nanmean(loc(:,red_ind_keep),2); %averaged across red cells
+    locr_std = std(loc(:,red_ind_keep),[],2);
+    locr_se=locr_std/sqrt(length(red_ind_keep));
+    statr_mean = nanmean(stat(:,red_ind_keep),2);
+    statr_std = std(stat(:,red_ind_keep),[],2);
+    statr_se=statr_std/sqrt(length(red_ind_keep));
+
+    locg_mean = nanmean(loc(:,green_ind_keep),2);
+    locg_std = std(loc(:,green_ind_keep),[],2);
+    locg_se=locg_std/sqrt(length(green_ind_keep));
+
+    statg_mean = nanmean(stat(:,green_ind_keep),2);
+    statg_std = std(stat(:,green_ind_keep),[],2);
+    statg_se=statg_std/sqrt(length(green_ind_keep));
+
+    figure;
+    shadedErrorBar(t,locr_mean,locr_se,'lineProps','r')
+    hold on
+    shadedErrorBar(t,statr_mean,statr_se,'lineProps','--r')
+    shadedErrorBar(t,locg_mean,locg_se,'lineProps','k')
+    shadedErrorBar(t,statg_mean,statg_se,'lineProps','--k')
+
+    txt2 = [('-- Stationary')];
+    text(-1.5,0.05,txt2);
+    hold off
+    
+    locTCs{id}=loc;
+    statTCs{id}=stat;
+    
+    locResp{id}=nanmean(loc(stimStart:stimStart+nOn,:),1);
+    statResp{id}=nanmean(stat(stimStart:stimStart+nOn,:),1);
+    clear loc stat
+end
+
+
+%for each day, extract the LMI for each cell - here I'm collasping across
+%all stim conditions
+LMI = cell(1,nd);
+for id = 1:nd
+    LMI{id}=(locResp{id}-statResp{id})./(locResp{id}+statResp{id});
+end
 
 %% finding cells that are still saturated by contrast vs. not saturated pre-DART
 
@@ -462,8 +569,12 @@ end
 figure;
 movegui('center')
 start = 1;
-
+linCell=[];
+lin
 for iCell = 1:nKeep
+    data_d1=[];
+    data_d2=[];
+    
     if ismember(iCell,red_ind_keep)
         if start>tot
 
@@ -474,17 +585,24 @@ for iCell = 1:nKeep
         end
         subplot(n,n2,start)
             for iCon = 1:nCon
-            scatter(data_resp_keep{2}(iCell,:,iCon,1),data_resp_keep{1}(iCell,:,iCon,1))
-            hold on
-            lsline
-            hold on
+                scatter(data_resp_keep{2}(iCell,:,iCon,1),data_resp_keep{1}(iCell,:,iCon,1))
+                data_d1=[data_d1,data_resp_keep{2}(iCell,:,iCon,1)]; %collects the values for day 1 over all contrasts
+                data_d2=[data_d2,data_resp_keep{1}(iCell,:,iCon,1)]; %collects the values for day 2 over all contrasts
+                hold on
+                lsline
             end
             max_list = [max(max(data_resp_keep{2}(iCell,:,:,1))),max(max(data_resp_keep{1}(iCell,:,:,1)))];
             upperLim =max(max_list)+0.1;
             ylim([-.05 upperLim]);
             xlim([-.05 upperLim]);
             axis square
+            [R,p]=corrcoef(data_d1,data_d2);
+            if R > 0.5
+                linCells=[linCells,iCell];
+                
+            end
             start=start+1;
+            
     end     
     sgtitle('HT+')
     
