@@ -120,7 +120,6 @@ for id = 1:nd %cycle through days
     data_trial_match = reshape(cellTCs_match{id},[nOn+nOff nTrials(id) nCells]);
     data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
     data_dfof_trial_match{id} = bsxfun(@rdivide,bsxfun(@minus,data_trial_match,data_f_match),data_f_match);
-    fractTimeActive_match{id} = zeros(1,nCells);
     meansub_match = cellTCs_match{id}-mean(cellTCs_match{id},1);
     cellstd_match = std(meansub_match,[],1);
     for iCell = 1:nCells
@@ -284,6 +283,7 @@ for id = 1:nd
     pref_ori_keep{id}=oris(pref_ori_keep{id});
     pref_con_keep{id} = pref_con_match{id}(:,keep_cells);
     pref_con_keep{id}=cons(pref_con_keep{id});
+    
 end
 
 
@@ -296,7 +296,7 @@ writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
 
 tc_trial_avrg_keep=cell(1,nd);
 rect_tc_trial_avrg_keep=cell(1,nd);
-resp_prefStim_keep=cell(1,nd);
+pref_responses = cell(nCon,nKeep,nd);
 
 for id = 1:nd
     
@@ -314,6 +314,7 @@ for id = 1:nd
             con_inds=find(tCon==cons(iCon));
             temp_trials = intersect(ori_inds, con_inds); %preferred ori for this cell, looping through all cons
 
+            pref_responses{iCon,i,id}=nanmean(temp_TCs(stimStart:stimEnd,temp_trials),1);
             tc_trial_avrg(:,i,iCon)=nanmean(temp_TCs(:,temp_trials),2);
             rect_tc_trial_avrg=tc_trial_avrg;
             rect_tc_trial_avrg(rect_tc_trial_avrg<0)=0;
@@ -326,7 +327,6 @@ for id = 1:nd
 tc_trial_avrg_keep{id}=tc_trial_avrg; %this is a cell array with one cell 
 %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
 rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
-resp_prefStim_keep{id}=mean_resp_temp; %a single column array with a value for each cell that represents the mean df/f of the response window for preferred stimuli
 end
 
 
@@ -338,8 +338,19 @@ for i = 1:length(red_ind_keep)
 end
 green_keep_logical = ~red_keep_logical;
 
+%sig_diff will be a logical vector indicating which cells were
+%significantly modulated at each contrast, in terms of the call's response
+%to its preferred orientation
+sig_diff = cell(1,nCon);
+for iCon = 1:nCon
+    for i = 1:nKeep
+        sig_diff{iCon}(i)=ttest2(pref_responses{iCon,i,1},pref_responses{iCon,i,2});
+    end
+end
+
+
 explanation1 = 'tc_trial_keep contains the timecourses for all "keep" cells for each day. The tOri_match and tCon_match data structures can be used to find trials of particular stim conditions within this. tc_trial_avrg_keep only has the timecourses averaged over tirals for each cell at its preferred orientation and at each contrast.';
-save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
+save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','sig_diff','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
 
 
 %% make and save response matrix for keep cells
