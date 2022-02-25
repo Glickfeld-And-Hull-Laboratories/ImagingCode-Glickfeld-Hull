@@ -8,7 +8,7 @@ ds = 'ExperimentData_MultiDayMatch_TD'; %dataset info
 dataStructLabels = {'runs'};
 eval(ds)
 
-day_id = 13;
+day_id = 11;
 
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
@@ -226,7 +226,7 @@ nMaskPix = 5; %thickness of neuropil ring in pixels
 nBuffPix = 3; %thickness of buffer between cell and ring
 mask_np = imCellNeuropil(mask_cell,nBuffPix,nMaskPix);
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'data_dfof_max', 'mask_cell', 'mask_np')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'corrImg', 'data_dfof_max', 'mask_cell', 'mask_np')
 clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
 
 %% Neuropil subtraction
@@ -471,7 +471,7 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI.mat']), 'ODI',
         end
     end
     
-    [yfit_max yfit_max_ind] = max(y_fit(:,:,:),[],1);
+    [yfit_max, yfit_max_ind] = max(y_fit(:,:,:),[],1);
     prefOri_yfit = squeeze(theta_hires(yfit_max_ind));
     
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir', 'b_ori', 'k1_ori', 'R1_ori', 'u1_ori', 'R_square_ori', 'sse_ori','stim_DSI','stim_OSI', 'yfit_max', 'yfit_max_ind', 'prefOri_yfit') 
