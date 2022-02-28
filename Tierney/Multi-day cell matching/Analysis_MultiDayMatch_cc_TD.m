@@ -5,7 +5,7 @@ dataStructLabels = {'stimruns'};
 eval(ds)
 
 
-day_id(2) = 3;
+day_id(2) = 17;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);
@@ -110,8 +110,9 @@ datemouserun = [expDate '_' mouse '_' run_str];
     fov_norm{id}(fov_norm{id} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
 
     load(fullfile(fnIn,datemouse, datemouserun, [datemouserun '_mask_cell.mat']))
-    dfmax{id} = data_dfof(:,:,1);
-    corrmap{id} = data_dfof(:,:,end);
+    load(fullfile(fnIn,datemouse, datemouserun, [datemouserun '_respData.mat']))
+    dfmax{id} = data_dfof_max;
+    corrmap{id} = corrImg;
     masks{id} = mask_cell;
     maskNP{id} = mask_np;
     load(fullfile(fnIn,datemouse,datemouserun,[datemouserun '_TCs.mat']))
@@ -140,8 +141,6 @@ fov_avg{3} = mean(data{3},3);
 fov_norm{3} = uint8((fov_avg{3}./max(fov_avg{3}(:))).*255);
 corrmap{3} = double(imwarp(corrmap{2},fitGeoTAf, 'OutputView', imref2d(size(corrmap{2}))));
 corrmap_norm{3} = uint8((corrmap{3}./max(corrmap{3}(:))).*255);
-red_trans = (imwarp(fov_red{2},fitGeoTAf, 'OutputView', imref2d(size(fov_red{2})))); %%%%%%%%%%%% DELETE THIS AND NEXT LINE?
-fov_red{3} = uint8(red_trans);
 dfmax{3} = (imwarp(dfmax{2},fitGeoTAf, 'OutputView', imref2d(size(dfmax{2}))));
 
 figure;colormap gray
@@ -170,19 +169,6 @@ imshow(cat(3,d1,d21,filler))
 title('Overlay')
 %suptitle(mouse)
 print(fullfile(fn_multi,'FOV correlation map manual alignment'),'-dpdf','-fillpage')
-
-%%%%%%% DELETE THIS SECTION???
-figure;colormap gray
-movegui('center')
-subplot 221
-imshow(fov_red{1}); title('Day 1 Data Avg')
-subplot 222
-imshow(fov_red{3}); title('Transformed Day 2 Data Avg')
-subplot 223
-filler = zeros(size(fov_red{1}));
-imshow(cat(3,fov_red{1},fov_red{3},filler))
-title('Overlay')
-print(fullfile(fn_multi,'red channel manual alignment'),'-dpdf','-fillpage')
 
 %% cell-by-cell correlation
 % size of cell box
@@ -243,24 +229,9 @@ for icell = 1:nc
             xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
         [reg_corr, shift_corr] = shift_opt(day2_cell_corr,day1_cell_corr,2);
         r_corr = corr(reg_corr(:),day1_cell_corr(:));
-        if red_ind{1}(icell)
-            day1_red_avg = fov_red{1}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-            day2_red_avg = fov_red{3}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-            [red_reg_avg, shift_red] = shift_opt(double(day2_red_avg),double(day1_red_avg),2);
-            r_red = corr(red_reg_avg(:),double(day1_red_avg(:)));
-        else
-            day1_red_avg = nan;
-            day2_red_avg = nan;
-            red_reg_avg = nan;
-            r_red = nan;
-        end
         
-        [max_val max_ind] = max([r_avg r_max r_corr r_red]);
-        if max_val>0.55 & (r_corr>0.4 || r_red>0.4 || r_max>0.4)
+        [max_val max_ind] = max([r_avg r_max r_corr]);
+        if max_val>0.55 & (r_corr>0.4 || r_max>0.4)
             pass = true;
             figure;
             movegui('center')
@@ -272,21 +243,15 @@ for icell = 1:nc
             imagesc(reg_corr)
             title(num2str(r_corr))
             subplot(3,2,start+2)
-            if red_ind{1}(icell)
-                imagesc(day1_red_avg)
-                 title('Red')
-            else
+
                 imagesc(day1_cell_avg)
                 title('Avg')
-            end
+            
             subplot(3,2,start+3)
-            if red_ind{1}(icell)
-                imagesc(red_reg_avg)
-                title(num2str(r_red))
-            else
+            
                 imagesc(reg_avg)
                 title(num2str(r_avg))
-            end
+            
             subplot(3,2,start+4)
             imagesc(day1_cell_max)
             title('Max')
@@ -294,7 +259,7 @@ for icell = 1:nc
             imagesc(reg_max)
             title(num2str(r_max))
            
-            prompt = 'Choose image: 1- Corr, 2- Avg/Red, 3- Max, 0- skip: ';
+            prompt = 'Choose image: 1- Corr, 2- Avg, 3- Max, 0- skip: ';
             x = input(prompt);
             switch x
                 case 0
@@ -304,13 +269,10 @@ for icell = 1:nc
                     img_select = corrmap{3};
                     shifts = shift_corr;
                 case 2
-                    if red_ind{1}(icell)
-                        img_select = fov_red{3};
-                        shifts = shift_red;
-                    else
+
                         img_select = fov_avg{3};
                         shifts = shift_avg;
-                    end
+                    
                 case 3     
                     img_select = dfmax{3};
                     shifts = shift_max;
@@ -346,20 +308,16 @@ for icell = 1:nc
         cellImageAlign(icell).center_yx = [yCenter(icell),xCenter(icell)];
         cellImageAlign(icell).d(1).avg_img = day1_cell_avg;
         cellImageAlign(icell).d(1).corr_img = day1_cell_corr;
-        cellImageAlign(icell).d(1).red_img = day1_red_avg;
         cellImageAlign(icell).d(1).max_img = day1_cell_max;
         cellImageAlign(icell).d(2).avg_img = reg_avg;
         cellImageAlign(icell).d(2).corr_img = reg_corr;
-        cellImageAlign(icell).d(2).red_img = red_reg_avg;
         cellImageAlign(icell).d(2).max_img = reg_max;
         cellImageAlign(icell).r_avg = r_avg;
         cellImageAlign(icell).r_corr = r_corr;
-        cellImageAlign(icell).r_red = r_red;
         cellImageAlign(icell).shifts = shifts;
         cellImageAlign(icell).pass = pass;
     else
         cellImageAlign(icell).pass = false;
-        cellImageAlign(icell).r_red = 0;
     end
     if length(find([cellImageAlign.pass])) ~= max(max(bwlabel(mask_all)))
         mask_all = mask_all-bwout_full;
@@ -412,10 +370,10 @@ npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
             
 cellTCs_match{2} = npSub_tc;
 
-red_ind_match = ismember(match_ind,find(~isnan([cellImageAlign.r_red])));
-red_ind_all = red_ind;
 
-save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_ind_all','red_ind_match','match_ind')
-save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','fov_red','dfmax','corrmap','masks','mask_np');
+save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'match_ind')
+save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','dfmax','corrmap','masks','mask_np');
 
 clear data_reg_down data
+
+%% start another script where i load in the two saved files above, and analyze from there

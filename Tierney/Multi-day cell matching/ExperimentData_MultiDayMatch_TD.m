@@ -348,3 +348,111 @@ expt(13).stimruns = ['001';'002';'003'];
 expt(13).time = {'0848','0907','0942'};
 expt(13).eye_str = {'Ipsi','Contra','Ipsi'};
 expt(13).data_loc = 'Tierney';
+
+%% i2509 220223 - post-MD 2
+ 
+expt(14).mouse = 'i2509';
+expt(14).date = '220223';
+expt(14).experiment = 'MD2'
+expt(14).folder = '2P_images'; %%%%%%%
+expt(14).img_loc  = {'V1';'L2/3'};
+expt(14).z = -170.31;
+expt(14).obj = '16x';
+expt(14).zoom = 2;
+expt(14).frame_rate = 15;
+expt(14).multiday_time_days = 2;
+expt(14).multiday_matchdays = [11];
+expt(14).regImgStartFrame = 39808; %%%%%%%
+expt(14).motionThreshold = 0.05;
+expt(14).areaBorders = 0;
+expt(14).img_strct  = {'cells'};
+expt(14).indicator = {'virus';'GCaMP8s'};
+expt(14).drug = nan; %%%%%%%
+expt(14).greenredsimultaneous = 0; %%%%%%%
+expt(14).greenChannelLabel = 'ANY'; %%%%%%%
+expt(14).rettuning = {'002';'0947'}; %%%%%%%
+expt(14).stimruns = ['001';'002';'003'];
+expt(14).time = {'1652','1710','1746'};
+expt(14).eye_str = {'Ipsi','Contra','Ipsi'};
+expt(14).data_loc = 'Tierney';
+
+%% i2511 220223 - baseline 1
+ 
+expt(15).mouse = 'i2511';
+expt(15).date = '220223';
+expt(15).experiment = 'baseline1'
+expt(15).folder = '2P_images'; %%%%%%%
+expt(15).img_loc  = {'V1';'L2/3'};
+expt(15).z = -152.34;
+expt(15).obj = '16x';
+expt(15).zoom = 2;
+expt(15).frame_rate = 15;
+expt(15).multiday_time_days = 0;
+expt(15).multiday_matchdays = [];
+expt(15).regImgStartFrame = 39808; %%%%%%%
+expt(15).motionThreshold = 0.05;
+expt(15).areaBorders = 0;
+expt(15).img_strct  = {'cells'};
+expt(15).indicator = {'virus';'GCaMP8s'};
+expt(15).drug = nan; %%%%%%%
+expt(15).greenredsimultaneous = 0; %%%%%%%
+expt(15).greenChannelLabel = 'ANY'; %%%%%%%
+expt(15).rettuning = {'002';'0947'}; %%%%%%%
+expt(15).stimruns = ['001';'002';'003'];
+expt(15).time = {'1514','1534','1609'};
+expt(15).eye_str = {'Ipsi','Contra','Ipsi'};
+expt(15).data_loc = 'Tierney';
+
+%% i2511 220224 - baseline 2
+ 
+expt(16).mouse = 'i2511';
+expt(16).date = '220224';
+expt(16).experiment = 'baseline2'
+expt(16).folder = '2P_images'; %%%%%%%
+expt(16).img_loc  = {'V1';'L2/3'};
+expt(16).z = -148.43;
+expt(16).obj = '16x';
+expt(16).zoom = 2;
+expt(16).frame_rate = 15;
+expt(16).multiday_time_days = 1;
+expt(16).multiday_matchdays = [15];
+expt(16).regImgStartFrame = 39808; %%%%%%%
+expt(16).motionThreshold = 0.05;
+expt(16).areaBorders = 0;
+expt(16).img_strct  = {'cells'};
+expt(16).indicator = {'virus';'GCaMP8s'};
+expt(16).drug = nan; %%%%%%%
+expt(16).greenredsimultaneous = 0; %%%%%%%
+expt(16).greenChannelLabel = 'ANY'; %%%%%%%
+expt(16).rettuning = {'002';'0947'}; %%%%%%%
+expt(16).stimruns = ['001';'002';'003'];
+expt(16).time = {'1240','1300','1335'};
+expt(16).eye_str = {'Ipsi','Contra','Ipsi'};
+expt(16).data_loc = 'Tierney';
+
+%% i2509 220225 - post-MD 3
+ 
+expt(17).mouse = 'i2509';
+expt(17).date = '220225';
+expt(17).experiment = 'MD3'
+expt(17).folder = '2P_images'; %%%%%%%
+expt(17).img_loc  = {'V1';'L2/3'};
+expt(17).z = -165.62;
+expt(17).obj = '16x';
+expt(17).zoom = 2;
+expt(17).frame_rate = 15;
+expt(17).multiday_time_days = 3;
+expt(17).multiday_matchdays = [11];
+expt(17).regImgStartFrame = 39808; %%%%%%%
+expt(17).motionThreshold = 0.05;
+expt(17).areaBorders = 0;
+expt(17).img_strct  = {'cells'};
+expt(17).indicator = {'virus';'GCaMP8s'};
+expt(17).drug = nan; %%%%%%%
+expt(17).greenredsimultaneous = 0; %%%%%%%
+expt(17).greenChannelLabel = 'ANY'; %%%%%%%
+expt(17).rettuning = {'002';'0947'}; %%%%%%%
+expt(17).stimruns = ['001';'002';'003'];
+expt(17).time = {'0825','0846','0920'};
+expt(17).eye_str = {'Ipsi','Contra','Ipsi'};
+expt(17).data_loc = 'Tierney';
