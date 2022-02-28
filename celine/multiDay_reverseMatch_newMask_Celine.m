@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 145; %enter the post-DART day ID here
+day_id(1) = 147; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 nd = length(day_id);
@@ -405,7 +405,7 @@ cellTCs_match{2} = npSub_tc;
 red_ind_match = ismember(match_ind,find(~isnan([cellImageAlign.r_red])));
 red_ind_all = red_ind;
 
-save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_ind_all','red_ind_match','match_ind')
+save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_ind_all','red_ind_match','match_ind','data_tc')
 save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','fov_red','dfmax','corrmap','masks','mask_np');
 
 clear data_reg_down data

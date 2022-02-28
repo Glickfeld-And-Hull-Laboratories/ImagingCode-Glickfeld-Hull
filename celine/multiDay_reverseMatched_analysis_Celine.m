@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds);
 
-day_id = 131; %enter post-DART day
+day_id = 133; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -263,10 +263,10 @@ for id = 1:nd
         wheel_tc{id}(:,iTrial) = wheel_speed{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
     end
     wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
-    RIx{id} = wheel_trial_avg{id}>0.6; %.55 is the noise level in the wheel movement
+    RIx{id} = wheel_trial_avg{id}>2; %.55 is the noise level in the wheel movement
     mean(RIx{id})
 end
-
+%%
 figure; movegui('center')
 subplot(1,2,1);
 plot(wheel_trial_avg{2})
@@ -283,57 +283,93 @@ print(fullfile(fn_multi_analysis,['running.pdf']),'-dpdf','-bestfit')
 %kind
 
 
-locTCs = cell(1,nd);
-statTCs = cell(1,nd);
+locTCs = cell(2,nCon);
+statTCs = cell(2,nCon);
 
-locResp = cell(1,nd);
-statResp = cell(1,nd);
+locResp = cell(1,nCon);
+statResp = cell(1,nCon);
 
-for id = 1:nd
-    loc=squeeze(nanmean(data_trial_keep{id}(:,find(RIx{id}),:),2)); %average of all lomotion trials for each cell
-    stat=squeeze(nanmean(data_trial_keep{id}(:,find(~RIx{id}),:),2)); %average of all stationary trials for each cell
+for iCon = 1:nCon
+    %make this the average for running state for each contrast
+    for id = 1:nd
+        tCon = tCon_match{id}(:,1:nTrials(id));
+        ind_con = find(tCon == cons(iCon));
+        loc=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(RIx{id}), ind_con),:),2)); %average of all lomotion trials for each cell
+        stat=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(~RIx{id}),ind_con),:),2)); %average of all stationary trials for each cell
 
-    locr_mean = nanmean(loc(:,red_ind_keep),2); %averaged across red cells
-    locr_std = std(loc(:,red_ind_keep),[],2);
-    locr_se=locr_std/sqrt(length(red_ind_keep));
-    statr_mean = nanmean(stat(:,red_ind_keep),2);
-    statr_std = std(stat(:,red_ind_keep),[],2);
-    statr_se=statr_std/sqrt(length(red_ind_keep));
+        locr_mean = nanmean(loc(:,red_ind_keep),2); %averaged across red cells
+        locr_std = std(loc(:,red_ind_keep),[],2);
+        locr_se=locr_std/sqrt(length(red_ind_keep));
+        statr_mean = nanmean(stat(:,red_ind_keep),2);
+        statr_std = std(stat(:,red_ind_keep),[],2);
+        statr_se=statr_std/sqrt(length(red_ind_keep));
 
-    locg_mean = nanmean(loc(:,green_ind_keep),2);
-    locg_std = std(loc(:,green_ind_keep),[],2);
-    locg_se=locg_std/sqrt(length(green_ind_keep));
+        locg_mean = nanmean(loc(:,green_ind_keep),2);
+        locg_std = std(loc(:,green_ind_keep),[],2);
+        locg_se=locg_std/sqrt(length(green_ind_keep));
 
-    statg_mean = nanmean(stat(:,green_ind_keep),2);
-    statg_std = std(stat(:,green_ind_keep),[],2);
-    statg_se=statg_std/sqrt(length(green_ind_keep));
+        statg_mean = nanmean(stat(:,green_ind_keep),2);
+        statg_std = std(stat(:,green_ind_keep),[],2);
+        statg_se=statg_std/sqrt(length(green_ind_keep));
 
-    figure;
-    shadedErrorBar(t,locr_mean,locr_se,'lineProps','r')
-    hold on
-    shadedErrorBar(t,statr_mean,statr_se,'lineProps','--r')
-    shadedErrorBar(t,locg_mean,locg_se,'lineProps','k')
-    shadedErrorBar(t,statg_mean,statg_se,'lineProps','--k')
+        figure;
+        shadedErrorBar(t,locr_mean,locr_se,'lineProps','r')
+        hold on
+        shadedErrorBar(t,statr_mean,statr_se,'lineProps','--r')
+        shadedErrorBar(t,locg_mean,locg_se,'lineProps','k')
+        shadedErrorBar(t,statg_mean,statg_se,'lineProps','--k')
+        ylim([-.02 .2]);
+        title(['contrast ', num2str(cons(iCon)), ' day ',num2str(id)])
+        txt1=[num2str(length(intersect(find(RIx{id}), ind_con))), ' running trials']
+        text(-1.5,0.15,txt1);
+        txt2 = [num2str(length(intersect(find(~RIx{id}), ind_con))), ' stationary trials']
+        text(-1.5,0.13,txt2);
+        hold off
 
-    txt2 = [('-- Stationary')];
-    text(-1.5,0.05,txt2);
-    hold off
-    
-    locTCs{id}=loc;
-    statTCs{id}=stat;
-    
-    locResp{id}=nanmean(loc(stimStart:stimStart+nOn,:),1);
-    statResp{id}=nanmean(stat(stimStart:stimStart+nOn,:),1);
-    clear loc stat
+        locTCs{id,iCon}=loc;
+        statTCs{id,iCon}=stat;
+
+        locResp{id,iCon}=nanmean(loc(stimStart:stimStart+nOn,:),1);
+        statResp{id,iCon}=nanmean(stat(stimStart:stimStart+nOn,:),1);
+        clear loc stat ind_con tCon
+    end
 end
 
-
+%%
 %for each day, extract the LMI for each cell - here I'm collasping across
 %all stim conditions
 LMI = cell(1,nd);
 for id = 1:nd
     LMI{id}=(locResp{id}-statResp{id})./(locResp{id}+statResp{id});
 end
+
+
+
+figure; movegui('center') 
+subplot(1,2,1)
+scatter((LMI{2}(green_ind_keep)),(LMI{1}(green_ind_keep)),'k')
+ylabel('post-DART LMI')
+xlabel('pre-DART  LMI')
+ylim([-10 10])
+xlim([-10 10])
+hline(0)
+vline(0)
+title('HT- ')
+axis square
+
+
+subplot(1,2,2)
+scatter((LMI{2}(red_ind_keep)),(LMI{1}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+ylabel('post-DART LMI')
+xlabel('pre-DART  LMI')
+ylim([-10 10])
+xlim([-10 10])
+hline(0)
+vline(0)
+title('HT+')
+axis square
+
+
 
 %% finding cells that are still saturated by contrast vs. not saturated pre-DART
 
