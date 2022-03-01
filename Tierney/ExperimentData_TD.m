@@ -1,3 +1,6 @@
+%% INPUT MATCHDAYS FOR ALL EXPT EXCEPT 2509
+
+
 %% i2508 220204 - baseline 2
  
 expt(1).mouse = 'i2508';
@@ -64,7 +67,9 @@ expt(3).obj = '16x';
 expt(3).zoom = 2;
 expt(3).frame_rate = 15;
 expt(3).multiday_time_days = 0;
-expt(3).multiday_matchdays = []; % input should be the comparison day
+expt(4).matchday_baseline = []; % input should be the comparison day
+expt(5).matchday_MD = [4]; % input should be the comparison day
+expt(4).matchday_recovery = [5]; % input should be the comparison day
 expt(3).regImgStartFrame = 39808; %%%%%%%
 expt(3).motionThreshold = 0.05;
 expt(3).areaBorders = 0;
@@ -91,7 +96,9 @@ expt(4).obj = '16x';
 expt(4).zoom = 2;
 expt(4).frame_rate = 15;
 expt(4).multiday_time_days = 7;
-expt(4).multiday_matchdays = [3]; % input should be the comparison day
+expt(4).matchday_baseline = [3]; % input should be the comparison day
+expt(5).matchday_MD = []; % input should be the comparison day
+expt(4).matchday_recovery = [5]; % input should be the comparison day
 expt(4).regImgStartFrame = 39808; %%%%%%%
 expt(4).motionThreshold = 0.05;
 expt(4).areaBorders = 0;
@@ -118,7 +125,9 @@ expt(5).obj = '16x';
 expt(5).zoom = 2;
 expt(5).frame_rate = 15;
 expt(5).multiday_time_days = 10;
-expt(5).multiday_matchdays = [3];
+expt(5).matchday_baseline = [3]; % input should be the comparison day
+expt(5).matchday_MD = [4]; % input should be the comparison day
+expt(5).matchday_recovery = []; % input should be the comparison day
 expt(5).regImgStartFrame = 39808; %%%%%%%
 expt(5).motionThreshold = 0.05;
 expt(5).areaBorders = 0;

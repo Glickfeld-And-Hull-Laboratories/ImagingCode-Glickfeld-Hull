@@ -1,31 +1,38 @@
+%% Experiment info
 clear all; clear global; close all
 clc
-ds = 'ExperimentData_MultiDayMatch_TD'; %dataset info
-dataStructLabels = {'stimruns'};
+
+%Path names
+fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
+fn_td = fullfile(fn_base, 'home\Tierney');
+fn_data = fullfile(fn_td, 'Data\2P_images');
+mworks_fn = fullfile(fn_base, 'Behavior\Data');
+fn_analysis = fullfile(fn_base, 'home\Tierney\Analysis\2P');
+
+ds = 'ExperimentData_TD'; %dataset info
 eval(ds)
+dataStructLabels = {'stimruns'};
 
-
-day_id(2) = 17;
-day_id(1) = expt(day_id(2)).multiday_matchdays;
+% Comparison days
+day_id(2) = 4;
+day_id(1) = expt(day_id(2)).matchday_baseline; % for comparison to baseline
 
 nd = length(day_id);
 brightnessScaleFactor = 0.3;
 mouse = expt(day_id(1)).mouse;
 
-%Path names
-fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
-td_fn = fullfile(fn_base, 'home\Tierney');
-data_fn = fullfile(td_fn, 'Data\2P_images');
-mworks_fn = fullfile(fn_base, 'Behavior\Data');
-fnIn = fullfile(fn_base, 'home\Tierney\Analysis\2P');
+% if expt(day_id(2)).multiday_time_days>0
+%     time_str = [num2str(expt(day_id(2)).multiday_time_days) 'Days'];
+% else
+%     time_str = 'baseline';
+% end
 
-if expt(day_id(2)).multiday_time_days>0
-    time_str = [num2str(expt(day_id(2)).multiday_time_days) 'Days'];
-else
-    time_str = 'control';
-end
+% Export name
+expt(day_id(2)).multiday_time_days>0
+time_str = [num2str(expt(day_id(2)).multiday_time_days) 'Days'];
 
-fn_multi = fullfile(fn_base, 'home\Tierney\Analysis\2P',mouse,['multiday_' time_str,'_',expt(day_id(2)).experiment]);
+fn_multi = fullfile(fn_analysis, 'MultidayAnalysis',mouse,['multiday_' time_str,'_',expt(day_id(2)).experiment]);
+
 mkdir(fn_multi)
 data = cell(1,nd);
 fov_avg = cell(1,nd);
@@ -47,10 +54,10 @@ for id = 1:nd
     contra = strcmp(expt(day_id(id)).eye_str,'Contra');
 
     %Load 2P data
-data_day = [];
-clear temp
-offset_frames = 0;
-offset_time = 0;
+    data_day = [];
+    clear temp
+    offset_frames = 0;
+    offset_time = 0;
 
     for irun = 1:nrun
         %Load mworks data- this has information about experiment (e.g. the visual stimuli presented and synchronization with the microscope)
@@ -72,7 +79,7 @@ offset_time = 0;
         offset_time = offset_time+temp(irun).counterTimesUs{end}(end);
 
         %Load 2P metadata- this has information about the information about the imaging session (e.g. frame count, zoom)
-        CD = fullfile(data_fn, mouse, expDate, ImgFolder(irun,:));
+        CD = fullfile(fn_data, mouse, expDate, ImgFolder(irun,:));
         cd(CD);
         imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
         load(imgMatFile);
@@ -85,20 +92,20 @@ offset_time = 0;
         data_day = cat(3,data_day,data_temp);
     end
 
-input = concatenateDataBlocks(temp);
-clear data_temp
-clear temp
-    
-% Registration
-run_str = catRunName(ImgFolder, nrun);
-datemouse = [expDate '_' mouse];
-datemouserun = [expDate '_' mouse '_' run_str];
+    input = concatenateDataBlocks(temp);
+    clear data_temp
+    clear temp
 
-    if exist(fullfile(fnIn, datemouse, datemouserun)) 
-        load(fullfile(fnIn, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']))
+    % Registration
+    run_str = catRunName(ImgFolder, nrun);
+    datemouse = [expDate '_' mouse];
+    datemouserun = [expDate '_' mouse '_' run_str];
+
+    if exist(fullfile(fn_analysis, datemouse, datemouserun)) 
+        load(fullfile(fn_analysis, datemouse, datemouserun, [datemouserun '_reg_shifts.mat']))
         fprintf(['Starting registration for day ' num2str(id)])
         [~,data{id}] = stackRegister_MA(data_day,[],[],double(out));
-        save(fullfile(fnIn, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
+        save(fullfile(fn_analysis, datemouse, datemouserun, [datemouserun '_input.mat']), 'input')
     else
         fprintf(['No registration found'])
     end 
@@ -109,15 +116,15 @@ datemouserun = [expDate '_' mouse '_' run_str];
     fov_norm{id} = uint8((fov_avg{id}./max(fov_avg{id}(:))).*255);
     fov_norm{id}(fov_norm{id} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
 
-    load(fullfile(fnIn,datemouse, datemouserun, [datemouserun '_mask_cell.mat']))
-    load(fullfile(fnIn,datemouse, datemouserun, [datemouserun '_respData.mat']))
+    load(fullfile(fn_analysis,datemouse, datemouserun, [datemouserun '_mask_cell.mat']))
+    load(fullfile(fn_analysis,datemouse, datemouserun, [datemouserun '_respData.mat']))
     dfmax{id} = data_dfof_max;
     corrmap{id} = corrImg;
     masks{id} = mask_cell;
     maskNP{id} = mask_np;
-    load(fullfile(fnIn,datemouse,datemouserun,[datemouserun '_TCs.mat']))
+    load(fullfile(fn_analysis,datemouse,datemouserun,[datemouserun '_TCs.mat']))
     cellTCs_all{id} = npSub_tc;
-    load(fullfile(fnIn,datemouse,datemouserun,[datemouserun '_input.mat']))
+    load(fullfile(fn_analysis,datemouse,datemouserun,[datemouserun '_input.mat']))
     input_temp(id) = input;
 end
 input = input_temp;

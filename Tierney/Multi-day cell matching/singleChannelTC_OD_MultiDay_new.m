@@ -362,7 +362,16 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' nu
 max_dir_contra = Dirs(max_ind_contra);
 [ipsi_resp max_ind_ipsi] = max(data_dfof_dir(:,:,find(~Eyes),1),[],2); 
 max_dir_ipsi = Dirs(max_ind_ipsi);
-ODI = (contra_resp-ipsi_resp)./(contra_resp+ipsi_resp);
+
+real_contra_resp = contra_resp;
+real_contra_ind = find(real_contra_resp < 0);
+real_contra_resp(real_contra_ind) = 0;
+
+real_ipsi_resp = ipsi_resp;
+real_ipsi_ind = find(real_ipsi_resp < 0);
+real_ipsi_resp(real_ipsi_ind) = 0;
+
+ODI = (real_contra_resp-real_ipsi_resp)./(real_contra_resp+real_ipsi_resp);
 
 %scatter of max response to contra and ipsi
 figure;
@@ -381,6 +390,7 @@ title('Responsive (any)')
 subplot(2,3,4)
 ODI_any = (contra_resp_any-ipsi_resp_any)./(contra_resp_any+ipsi_resp_any);
 histogram(ODI_any,[-1:0.1:1])
+[temp_counts_any,~] = histcounts(ODI_any,[-1:0.1:1])
 xlabel('ODI')
 ylabel('Cells')
 axis square
@@ -401,6 +411,7 @@ title('Contra responsive')
 subplot(2,3,5)
 ODI_contraonly = (contra_resp_contraonly-ipsi_resp_contraonly)./(contra_resp_contraonly+ipsi_resp_contraonly);
 histogram(ODI_contraonly,[-1:0.1:1])
+[temp_counts_contraonly,~] = histcounts(ODI_contraonly,[-1:0.1:1])
 xlabel('ODI')
 ylabel('Cells')
 axis square
@@ -421,13 +432,23 @@ title('Ipsi responsive')
 subplot(2,3,6)
 ODI_ipsionly = (contra_resp_ipsionly-ipsi_resp_ipsionly)./(contra_resp_ipsionly+ipsi_resp_ipsionly);
 histogram(ODI_ipsionly,[-1:0.1:1])
+[temp_counts_ipsionly,~] = histcounts(ODI_ipsionly,[-1:0.1:1]);
 xlabel('ODI')
 ylabel('Cells')
 axis square
 title(['Sig cells = ' num2str(length(ipsi_resp_ind))])
+
+max_histcounts = max([temp_counts_any temp_counts_contraonly temp_counts_ipsionly]);
+subplot(2,3,4)
+axis([-1 1 0 max_histcounts+1])
+subplot(2,3,5)
+axis([-1 1 0 max_histcounts+1])
+subplot(2,3,6)
+axis([-1 1 0 max_histcounts+1])
+
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_OD.pdf']),'-dpdf','-bestfit')
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI.mat']), 'ODI', 'contra_resp', 'ipsi_resp', 'max_dir_contra', 'max_dir_ipsi')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI.mat']), 'ODI', 'real_contra_resp', 'real_ipsi_resp', 'max_dir_contra', 'max_dir_ipsi')
 
 %% von mises 
 
