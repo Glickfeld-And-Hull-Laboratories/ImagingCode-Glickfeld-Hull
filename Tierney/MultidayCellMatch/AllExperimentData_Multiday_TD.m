@@ -464,7 +464,7 @@ expt(18).date = '220302';
 expt(18).experiment = 'MD1'
 expt(18).folder = '2P_images'; %%%%%%%
 expt(18).img_loc  = {'V1';'L2/3'};
-expt(18).z = -165.62; %%%%%%%%%%%%%%%%%%%%% CHANGE
+expt(18).z = -153.90;
 expt(18).obj = '16x';
 expt(18).zoom = 2;
 expt(18).frame_rate = 15;
@@ -480,7 +480,7 @@ expt(18).greenredsimultaneous = 0; %%%%%%%
 expt(18).greenChannelLabel = 'ANY'; %%%%%%%
 expt(18).rettuning = {'002';'0947'}; %%%%%%%
 expt(18).stimruns = ['001';'002';'003'];
-expt(18).time = {'0825','0846','0920'}; %%%%%%%%%%%%%%%%%%%%% CHANGE
+expt(18).time = {'1412','1433','1513'};
 expt(18).eye_str = {'Ipsi','Contra','Ipsi'};
 expt(18).data_loc = 'Tierney';
 

@@ -4,11 +4,11 @@ clear all global
 close all
 
 % Pull in experiment data
-ds = 'ExperimentData_MultiDayMatch_TD'; %dataset info
+ds = 'AllExperimentData_Multiday_TD'; %dataset info
 dataStructLabels = {'runs'};
 eval(ds)
 
-day_id = 10;
+day_id = 18;
 
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
@@ -31,8 +31,8 @@ run_str = catRunName(ImgFolder, nrun);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
 
-%%
-%Load 2P data
+%% Load 2P data
+
 data = [];
 clear temp
 offset_frames = 0;
@@ -267,7 +267,7 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 clear data_reg data_reg_down
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells')
 
 %% looking at time courses
 
@@ -463,8 +463,8 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI.mat']), 'ODI',
     theta_hires= deg2rad(0:180);
     y_fit = zeros(length(theta_hires),nEye,nCells);
     
-    Oris = Dirs(1:nDirs/2);
-    nOris = length(Oris);
+%     Oris = Dirs(1:nDirs/2);
+%     nOris = length(Oris);
     for iEye = 1:nEye
         data_dfof_ori(:,:,iEye)= mean(reshape(data_dfof_dir(:,:,iEye,1),[nCells nOris 2]),3);
         for iCell = 1:nCells
@@ -480,7 +480,7 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI.mat']), 'ODI',
                 min_val = 0;
             end
             stim_OSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
-            [max_val max_ind] = max(data_dfof_dir(iCell,:,iEye,1),[],2);
+            [max_val max_ind] = max(data_dfof_dir(iCell,:,iEye,1),[],2); % SUPPOSED TO BE DIR OR ORI??????
             null_ind = max_ind+(nDirs./2);
             null_ind(find(null_ind>nDirs)) = null_ind(find(null_ind>nDirs))-nDirs;
             min_val = data_dfof_dir(iCell,null_ind,iEye,1);
