@@ -187,8 +187,8 @@ nStim = nDirs;
 
 data_dfof_max = max(max(data_dfof_avg_all,[],4),[],3); %finds all active cells by taking max projection
 figure; movegui('center'); imagesc(data_dfof_max);
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimData.mat']), 'nOn','nOff','ntrials','tDir','Dirs','nDirs','tContra','Eyes','nEye');
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']), 'data_dfof_max', 'data_dfof_avg_all', 'nStim')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimData_Dir.mat']), 'nOn','nOff','ntrials','tDir','Dirs','nDirs','tContra','Eyes','nEye');
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV_Dir.mat']), 'data_dfof_max', 'data_dfof_avg_all', 'nStim')
 %% 2. Create cell masks from active cells
 
 % Get pixel correlation image, another method to identify cells
@@ -226,7 +226,7 @@ nMaskPix = 5; %thickness of neuropil ring in pixels
 nBuffPix = 3; %thickness of buffer between cell and ring
 mask_np = imCellNeuropil(mask_cell,nBuffPix,nMaskPix);
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell_new.mat']), 'corrImg', 'data_dfof_max', 'mask_cell', 'mask_np')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'corrImg', 'data_dfof_max', 'mask_cell', 'mask_np')
 clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
 
 %% Neuropil subtraction
@@ -267,7 +267,7 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 clear data_reg data_reg_down
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs_Dir.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells')
 
 %% looking at time courses
 
@@ -318,7 +318,7 @@ resp_ind = find(sum(h_all_dir,2));
 ipsi_resp_ind = find(h_all_dir(:,1));
 contra_resp_ind = find(h_all_dir(:,2)); 
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData.mat']), 'h_dir', 'resp_ind', 'ipsi_resp_ind', 'contra_resp_ind', 'resp_cell_dir', 'base_cell_dir', 'data_dfof_dir','base_win','resp_win','data_dfof')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData_Dir.mat']), 'h_dir', 'resp_ind', 'ipsi_resp_ind', 'contra_resp_ind', 'resp_cell_dir', 'base_cell_dir', 'data_dfof_dir','base_win','resp_win','data_dfof')
 
 %plot histogram of number of significant directions for contra and ipsi
 figure;
@@ -446,9 +446,9 @@ axis([-1 1 0 max_histcounts+1])
 subplot(2,3,6)
 axis([-1 1 0 max_histcounts+1])
 
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_OD.pdf']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_OD_Dir.pdf']),'-dpdf','-bestfit')
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI.mat']), 'ODI', 'real_contra_resp', 'real_ipsi_resp', 'max_dir_contra', 'max_dir_ipsi')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI_Dir.mat']), 'ODI', 'real_contra_resp', 'real_ipsi_resp', 'max_dir_contra', 'max_dir_ipsi')
 
 %% von mises 
 
@@ -495,4 +495,4 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI.mat']), 'ODI',
     [yfit_max, yfit_max_ind] = max(y_fit(:,:,:),[],1);
     prefOri_yfit = squeeze(theta_hires(yfit_max_ind));
     
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir', 'b_ori', 'k1_ori', 'R1_ori', 'u1_ori', 'R_square_ori', 'sse_ori','stim_DSI','stim_OSI', 'yfit_max', 'yfit_max_ind', 'prefOri_yfit') 
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp_Dir.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir', 'b_ori', 'k1_ori', 'R1_ori', 'u1_ori', 'R_square_ori', 'sse_ori','stim_DSI','stim_OSI', 'yfit_max', 'yfit_max_ind', 'prefOri_yfit') 

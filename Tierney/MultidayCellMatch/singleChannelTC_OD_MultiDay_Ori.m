@@ -4,11 +4,10 @@ clear all global
 close all
 
 % Pull in experiment data
-ds = 'AllExperimentData_Multiday_TD'; %dataset info
-dataStructLabels = {'runs'};
+ds = 'ExperimentData_TD'; %dataset info
 eval(ds)
 
-day_id = 18;
+day_id = 7;
 
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
@@ -79,7 +78,7 @@ clear temp
 %1. Find a stable target
 %    a. Plot average of 500 frames throughout stack
 
-nep = 10; %numer of epochs
+nep = 10; %number of epochs
 nframes = 500; %nframes to average for target
 nskip = floor(size(data,3)./nep); %nframes to skip for each average
 
@@ -231,7 +230,7 @@ nMaskPix = 5; %thickness of neuropil ring in pixels
 nBuffPix = 3; %thickness of buffer between cell and ring
 mask_np = imCellNeuropil(mask_cell,nBuffPix,nMaskPix);
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell_Ori.mat']), 'corrImg', 'data_dfof_max', 'mask_cell', 'mask_np')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'corrImg', 'data_dfof_max', 'mask_cell', 'mask_np')
 clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_Ori_all data_dfof_max data_dfof_targ data_avg data_dfof2_Ori data_dfof_Ori 
 
 %% Neuropil subtraction
@@ -272,7 +271,7 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 clear data_reg data_reg_down
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs_Ori.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells')
 
 %% looking at time courses
 
@@ -385,11 +384,11 @@ contra_resp_any = max(data_dfof_Ori(resp_ind,:,find(Eyes),1),[],2);
 ipsi_resp_any = max(data_dfof_Ori(resp_ind,:,find(~Eyes),1),[],2);
 scatter(contra_resp_any,ipsi_resp_any)
 axis square
-refline(1)
 xlabel('Max (Contra)')
 ylabel('Max (Ipsi)')
 xlim([0 1])
 ylim([0 1])
+refline(1)
 title('Responsive (any)')
 
 subplot(2,3,4)
@@ -406,11 +405,11 @@ contra_resp_contraonly = max(data_dfof_Ori(contra_resp_ind,:,find(Eyes),1),[],2)
 ipsi_resp_contraonly = max(data_dfof_Ori(contra_resp_ind,:,find(~Eyes),1),[],2);
 scatter(contra_resp_contraonly,ipsi_resp_contraonly)
 axis square
-refline(1)
 xlabel('Max (Contra)')
 ylabel('Max (Ipsi)')
 xlim([0 1])
 ylim([0 1])
+refline(1)
 title('Contra responsive')
 
 subplot(2,3,5)
@@ -427,11 +426,11 @@ contra_resp_ipsionly = max(data_dfof_Ori(ipsi_resp_ind,:,find(Eyes),1),[],2);
 ipsi_resp_ipsionly = max(data_dfof_Ori(ipsi_resp_ind,:,find(~Eyes),1),[],2);
 scatter(contra_resp_ipsionly,ipsi_resp_ipsionly)
 axis square
-refline(1)
 xlabel('Max (Contra)')
 ylabel('Max (Ipsi)')
 xlim([0 1])
 ylim([0 1])
+refline(1)
 title('Ipsi responsive')
 
 subplot(2,3,6)
@@ -451,7 +450,7 @@ axis([-1 1 0 max_histcounts+1])
 subplot(2,3,6)
 axis([-1 1 0 max_histcounts+1])
 
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_OD.pdf']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_OD_Ori.pdf']),'-dpdf','-bestfit')
 
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI_Ori.mat']), 'ODI', 'real_contra_resp', 'real_ipsi_resp', 'max_Ori_contra', 'max_Ori_ipsi')
 
@@ -463,37 +462,24 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI_Ori.mat']), 'O
     u1_ori = zeros(nEye,nCells);
     R_square_ori = zeros(nEye,nCells);
     sse_ori = zeros(nEye,nCells);
-    stim_DSI = zeros(nEye,nCells);
     stim_OSI = zeros(nEye,nCells);
     theta_hires= deg2rad(0:180);
     y_fit = zeros(length(theta_hires),nEye,nCells);
     
-%     Oris = Oris(1:nDirs/2);
-%     nOris = length(Oris); % CAN TAKE THESE TWO LINES OUT IF ALL ELSE
-%     WORKS
     for iEye = 1:nEye
-        data_dfof_ori(:,:,iEye)= mean(reshape(data_dfof_Ori(:,:,iEye,1),[nCells nOris 2]),3);
         for iCell = 1:nCells
-            data = [data_dfof_ori(iCell,:,iEye) data_dfof_ori(iCell,1,iEye)];
+            data = [data_dfof_Ori(iCell,:,iEye) data_dfof_Ori(iCell,1,iEye)];
             theta = [deg2rad(Oris) pi];
             [b_ori(iEye,iCell),k1_ori(iEye,iCell),R1_ori(iEye,iCell),u1_ori(iEye,iCell),sse_ori(iEye,iCell),R_square_ori(iEye,iCell)] ...
                 = miaovonmisesfit_ori(theta,data);
-            [max_val max_ind] = max(data_dfof_ori(iCell,:,iEye),[],2);
+            [max_val max_ind] = max(data_dfof_Ori(iCell,:,iEye),[],2);
             null_ind = max_ind+(nOris./2);
             null_ind(find(null_ind>nOris)) = null_ind(find(null_ind>nOris))-nOris;
-            min_val = data_dfof_ori(iCell,null_ind,iEye);
+            min_val = data_dfof_Ori(iCell,null_ind,iEye);
             if min_val<0
                 min_val = 0;
             end
             stim_OSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
-            [max_val max_ind] = max(data_dfof_Ori(iCell,:,iEye,1),[],2);
-            null_ind = max_ind+(nDirs./2); % SHOULD ALL THESE DIRS BE ORIS?? CHANGE OIRS > DIRS IN DIR SCRIPT
-            null_ind(find(null_ind>nDirs)) = null_ind(find(null_ind>nDirs))-nDirs;
-            min_val = data_dfof_Ori(iCell,null_ind,iEye,1);
-            if min_val<0
-                min_val = 0;
-            end
-            stim_DSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
             y_fit(:,iEye,iCell) = b_ori(iEye,iCell) + R1_ori(iEye,iCell) .* exp(k1_ori(iEye,iCell).*(cos(2.*(theta_hires-u1_ori(iEye,iCell)))-1));
         end
     end
@@ -501,4 +487,4 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_ODI_Ori.mat']), 'O
     [yfit_max, yfit_max_ind] = max(y_fit(:,:,:),[],1);
     prefOri_yfit = squeeze(theta_hires(yfit_max_ind));
     
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriRespOri.mat']), 'data_dfof_Ori', 'data_dfof_ori','base_win','resp_win','h_Ori', 'b_ori', 'k1_ori', 'R1_ori', 'u1_ori', 'R_square_ori', 'sse_ori','stim_DSI','stim_OSI', 'yfit_max', 'yfit_max_ind', 'prefOri_yfit') 
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriRespOri.mat']), 'data_dfof_Ori','base_win','resp_win','h_Ori', 'b_ori', 'k1_ori', 'R1_ori', 'u1_ori', 'R_square_ori', 'sse_ori','stim_OSI', 'yfit_max', 'yfit_max_ind', 'prefOri_yfit') 

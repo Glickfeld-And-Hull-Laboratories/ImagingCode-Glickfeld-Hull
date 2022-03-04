@@ -5,19 +5,15 @@ clc
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
 fn_analysis = fullfile(fn_base, 'home\Tierney\Analysis\2P'); % CHANGE THIS TO MULTIDAY IMAGING FOLDER
+fn_multi = fullfile(fn_base, 'home\Tierney\Analysis\2P\MultidayAnalysis');
 fn_pop = fullfile(fn_base, 'home\Tierney\Analysis\2P\PopulationAnalysis');
 % fn_out = fullfile(fn_pop,['population_' time_str,'_',expt(day_id(2)).experiment]);
 
 ds = 'ExperimentData_TD'; % dataset info 
 eval(ds)
 % 
-% ds = 'DART_V1_contrast_ori_Celine'; %dataset info
-% dataStructLabels = {'contrastxori'};
-% rc =  behavConstsDART; %directories
-% eval(ds);
-% 
-% sess_list = [142,138];%enter all the sessions you want to pool
-% nSess=length(sess_list);
+% sess_list = [142,138];% enter all the sessions you want to pool
+% nSess = length(sess_list);
 % 
 % nd=2%hard coding for two days per experimental session
 % frame_rate = 15;
@@ -53,8 +49,8 @@ for id = 1:nd
     datemouserun = [date '_' mouse '_' run_str];
    
     % Load respData and ODI
-    fn_respData = fullfile(fn_analysis, datemouse, datemouserun, [datemouserun, '_respData' '.mat']);
-    fn_ODI = fullfile(fn_analysis, datemouse, datemouserun, [datemouserun, '_ODI' '.mat']);
+    fn_respData = fullfile(fn_multi, mouse, fn_match, [mouse, '_respData_multiday.mat']);
+    fn_ODI = fullfile(fn_multi, mouse, fn_match, [mouse, '_ODI_multiday.mat']);
     fn_oriResp = fullfile(fn_analysis, datemouse, datemouserun, [datemouserun, '_oriResp' '.mat']);
     temp_respData = load(fn_respData);
     temp_ODI = load(fn_ODI);

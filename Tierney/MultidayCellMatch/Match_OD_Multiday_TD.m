@@ -117,7 +117,7 @@ for id = 1:nd
     fov_norm{id}(fov_norm{id} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
 
     load(fullfile(fn_analysis,datemouse, datemouserun, [datemouserun '_mask_cell.mat']))
-    load(fullfile(fn_analysis,datemouse, datemouserun, [datemouserun '_respData.mat']))
+    load(fullfile(fn_analysis,datemouse, datemouserun, [datemouserun '_respData_Ori.mat']))
     dfmax{id} = data_dfof_max;
     corrmap{id} = corrImg;
     masks{id} = mask_cell;
@@ -379,6 +379,6 @@ cellTCs_match{2} = npSub_tc;
 
 
 save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'match_ind')
-save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','dfmax','corrmap','masks','mask_np','data_dfof_dir');
+save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','dfmax','corrmap','masks','mask_np','data_dfof_Ori');
 
 clear data_reg_down data
