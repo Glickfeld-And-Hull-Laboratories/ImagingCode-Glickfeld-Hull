@@ -14,7 +14,7 @@ eval(ds)
 dataStructLabels = {'stimruns'};
 
 % Comparison days
-day_id(2) = 4;
+day_id(2) = 2;
 day_id(1) = expt(day_id(2)).matchday_baseline; % for comparison to baseline
 
 nd = length(day_id);

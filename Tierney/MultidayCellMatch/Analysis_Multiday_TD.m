@@ -9,9 +9,13 @@ fn_multi = fullfile(fn_base, 'home\Tierney\Analysis\2P\MultidayAnalysis');
 ds = 'ExperimentData_TD'; % dataset info 
 eval(ds)
 
-% Baseline (1), post-MD (2), and recovery (3) days
-day_id(2) = 4;
+% Baseline (1) and post-MD (2) days
+day_id(2) = 11;
 day_id(1) = expt(day_id(2)).matchday_baseline;
+
+% % Baseline (1), post-MD (2), and recovery (3) days
+% day_id(2) = 2;
+% day_id(1) = expt(day_id(2)).matchday_baseline;
 % day_id(3) = expt(day_id(2)).matchday_recovery;
 
 nd = length(day_id);
@@ -29,9 +33,10 @@ for id = 1:nd
     date = expt(day_id(id)).date;
     runs = expt(day_id(id)).stimruns;
     nrun = length(runs);
+    run_str = catRunName(runs, nrun);
+    eye_str = expt(day_id(id)).eye_str;
     contra = strcmp(expt(day_id(id)).eye_str,'Contra'); % 1 is contra eye open; 0 is ipsi eye open
     
-    run_str = catRunName(runs, nrun);
     datemouse = [date '_' mouse];
     datemouserun = [date '_' mouse '_' run_str];
    
@@ -47,7 +52,9 @@ load(fullfile(fn_multi, mouse, fn_match, ['input.mat']));
 
 %% Extract variables of interest from the cell arrays loaded above
 
-% Use this section if stimData values are different
+% Use this section if stimData values are different for each day; would need
+% to add (id) in for loops after these variables.
+
 % nOn = zeros(1,nd); 
 % nOff = zeros(1,nd); 
 % ntrials = zeros(1,nd); 
@@ -88,10 +95,13 @@ for id = 1:nd
     tOri{id} = stimData{1}.tOri;
 end    
     
-%% looking at time courses
+%% looking at time courses: average across all trials
 
 data_dfof_trial = cell(1,nd)
 
+% In the below plots, circshift (-50) was used, so stimOn starts at 10
+% frames.
+figure
 for id = 1:nd
     nCells = size(cellTCs_match{id},2);
     data_tc_trial{id} = reshape(cellTCs_match{id}, [nOn+nOff,ntrials(id),nCells]);
@@ -99,20 +109,24 @@ for id = 1:nd
     data_dfof_trial{id} = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial{id}, data_f_trial{id}), data_f_trial{id});
 
     %looking at data with np subtracted
-    tc_cell_avrg{id} = mean(data_dfof_trial{id},3);%average pver cells, one row per trial
+    tc_cell_avrg{id} = mean(data_dfof_trial{id},3);%average per cells, one row per trial
     tc_trial_avrg{id} = squeeze(mean(data_dfof_trial{id},2));%average over trials, one row per cell
     tc_cell_trial_avrg{id} = mean(tc_cell_avrg{id},2);%average over trials and cells
 
     subplot(2,1,id)
-    plot(tc_trial_avrg{id}, 'LineWidth',.005,'color',[.25 .25 .25]);
+    plot(circshift(tc_trial_avrg{id},-50), 'LineWidth',.005);
     hold on;
-    plot(tc_cell_trial_avrg{id}, 'LineWidth',2, 'color','k');
+    plot(circshift(tc_cell_trial_avrg{id},-50), 'LineWidth',2, 'color','k');
     hold on;
-    title(['Timecourses with np subtracted day ' num2str(id)]);
+    title(['Timecourses: ' num2str(expt(id).experiment)]); % Timecourses with neuropil subtracted
+    xlabel('Frames')
+    ylabel('df/f')
     hold off
 end
-    
-%% make tuning curves
+
+print(fullfile(fn_multi, mouse, fn_match, [mouse '_Timecourses_multiday.pdf']),'-dpdf','-bestfit')
+
+%% get tuning data
 base_win = nOff/2:nOff;
 resp_win = nOff+5:nOff+nOn;
 
@@ -160,58 +174,24 @@ clear h_Ori_temp p_Ori_temp data_dfof_Ori_temp
 
 save(fullfile(fn_multi, mouse, fn_match, [mouse '_respData_multiday.mat']), 'h_Ori', 'resp_ind', 'ipsi_resp_ind', 'contra_resp_ind', 'resp_cell_Ori', 'base_cell_Ori', 'data_dfof_Ori','base_win','resp_win','data_dfof')
 
-% Plot histogram of number of significant directions for contra and ipsi
-% figure;
-% [n n2] = subplotn(nEye);
-% for iEye = 1:nEye
-%     subplot(n,n2,iEye)
-%     histogram(h_all_dir(:,iEye),[0:1:nDirs])
-%     title(eye_str{find(contra==Eyes(iEye))})
-%     xlabel(['Significant directions ' num2str(id)]);
-%     ylabel('Cells')
-%     ylim([0 50]);
-% end
-% sgtitle([mouse ' ' date])
-% 
-% print(fullfile(fn_multi, mouse, fn_match, [datemouserun '_sigDirsHist_multiday.pdf']),'-dpdf','-bestfit')
-
-% EDIT: MAKE THIS DATA INTO SCATTERPLOT INSTEAD. ONE FOR IPSI AND ONE FOR CONTRA (SIDE
-% BY SIDE). PRE ON X AXIS AND POST ON Y AXIS, EACH DOT IS A CELL. SEE SLACK
-% FROM CELINE
-
-% EDIT: ADD TITLES, AXES TITLES, ETC.
+figure
 for iEye = 1:nEye
-    figure;
-    swarmchart((h_all_Ori{1}(:,iEye)),(h_all_Ori{2}(:,iEye)),'k')
+    subplot(2,1,iEye)
+%     C = linspace(1,10,length(h_all_Ori{2}(:,iEye)));
+%     swarmchart((h_all_Ori{1}(:,iEye)),(h_all_Ori{2}(:,iEye)),[],C)
+    swarmchart((h_all_Ori{1}(:,iEye)),(h_all_Ori{2}(:,iEye)))
+    axis square
+    title(['Significant orientations: ' eye_str{find(contra(1:2)==Eyes(iEye))}]);
+    xlabel([num2str(expt(1).experiment)])
+    ylabel([num2str(expt(2).experiment)])
+    refline(1)
+    hold on    
 end
 
 print(fullfile(fn_multi, mouse, fn_match, [mouse '_sigOrisScatter_multiday.pdf']),'-dpdf','-bestfit')
 
-% %plot all cells for all direction to both contra and ipsi
-% start=1;
-% n = 1;
-% figure;
-% movegui('center')
-% for iCell = 1:nCells
-%     if start>25
-%         sgtitle([mouse ' ' date])
-%         print(fullfile(fn_multi, mouse, fn_match, [datemouserun '_cellTuningDir_multiday' num2str(n) '.pdf']),'-dpdf','-bestfit')
-%         figure;movegui('center');
-%         start = 1;
-%         n = n+1;
-%     end
-%     subplot(5,5,start)
-%     for iEye = 1:2
-%         errorbar(Dirs, data_dfof_dir(iCell,:,iEye,1), data_dfof_dir(iCell,:,iEye,2), '-o')
-%         hold on
-%     end
-%     title(['R = ' num2str(h_all_dir(iCell,:))])
-%     start = start +1;
-% end
-% sgtitle([mouse ' ' date])
-% print(fullfile(fn_multi, mouse, fn_match, [datemouserun '_cellTuningDir_multiday' num2str(n) '.pdf']),'-dpdf','-bestfit')
+%% get ODI
 
-% EDIT: CHECK THAT THIS RUNS, ADDED FOR LOOP
 for id = 1:nd
     [contra_resp{id} max_ind_contra{id}] = max(data_dfof_Ori{id}(:,:,find(Eyes),1),[],2);
     max_Ori_contra{id} = Oris(max_ind_contra{id});
@@ -235,115 +215,88 @@ for id = 1:nd
     subplot(2,2,id)
     contra_resp_any{id} = max(data_dfof_Ori{id}(resp_ind{id},:,find(Eyes),1),[],2);
     ipsi_resp_any{id} = max(data_dfof_Ori{id}(resp_ind{id},:,find(~Eyes),1),[],2);
+%     C = linspace(1,10,length(contra_resp_any{id}(:,1)));
+%     scatter(contra_resp_any{id},ipsi_resp_any{id},[],C)
     scatter(contra_resp_any{id},ipsi_resp_any{id})
+    set(gca,'xscale','log')
+    set(gca,'yscale','log')
     axis square
     xlabel('Max (Contra)')
     ylabel('Max (Ipsi)')
-    xlim([0 1])
-    ylim([0 1])
+    xlim([0.01 1])
+    ylim([0.01 1])
     refline(1)
-    title(['Responsive ' num2str(id)])
-    % EDIT: SAVE OUTPUT EACH DAY????? OR DOES SUBPLOT SOLVE THIS??
+    title(['Responsive cells: ' num2str(expt(id).experiment)])
 end
 
-print(fullfile(fn_multi, mouse, fn_match, [datemouserun '_ResponsiveCells_multiday.pdf']),'-dpdf','-bestfit')
-
+% ODI
 for id = 1:nd
-    subplot(2,2,id+2) % EDIT: CAN I DO THIS??????
+    subplot(2,2,id+2)
     ODI_any{id} = (contra_resp_any{id}-ipsi_resp_any{id})./(contra_resp_any{id}+ipsi_resp_any{id});
     histogram(ODI_any{id},[-1:0.1:1])
     [temp_counts_any{id},~] = histcounts(ODI_any{id},[-1:0.1:1])
     xlabel('ODI')
     ylabel('Cells')
     axis square
-    title(['Sig cells = ' num2str(id)])
+    title(['ODI: ' num2str(expt(id).experiment)])
 
-    max_histcounts = max([temp_counts_any{id}]); %EDIT: ERROR HERE FIX IT
-    subplot(2,3,id+2)
-    axis([-1 1 0 max_histcounts{id}+1])
-
-    % EDIT: SAVE OUTPUT EACH DAY????? OR DOES SUBPLOT SOLVE THIS??
+    max_histcounts = max([temp_counts_any{id}]);
+    subplot(2,2,id+2)
+    axis([-1 1 0 max_histcounts+1])
 end
 
-print(fullfile(fn_multi, mouse, fn_match, [datemouserun '_OD_multiday.pdf']),'-dpdf','-bestfit')
+print(fullfile(fn_multi, mouse, fn_match, [mouse '_OD_multiday.pdf']),'-dpdf','-bestfit')
 
-% subplot(2,3,2)
-% contra_resp_contraonly = max(data_dfof_dir(contra_resp_ind,:,find(Eyes),1),[],2); 
-% ipsi_resp_contraonly = max(data_dfof_dir(contra_resp_ind,:,find(~Eyes),1),[],2);
-% scatter(contra_resp_contraonly,ipsi_resp_contraonly)
-% axis square
-% refline(1)
-% xlabel('Max (Contra)')
-% ylabel('Max (Ipsi)')
-% xlim([0 1])
-% ylim([0 1])
-% title('Contra responsive')
-% 
-% subplot(2,3,5)
-% ODI_contraonly = (contra_resp_contraonly-ipsi_resp_contraonly)./(contra_resp_contraonly+ipsi_resp_contraonly);
-% histogram(ODI_contraonly,[-1:0.1:1])
-% [temp_counts_contraonly,~] = histcounts(ODI_contraonly,[-1:0.1:1])
-% xlabel('ODI')
-% ylabel('Cells')
-% axis square
-% title(['Sig cells = ' num2str(length(contra_resp_ind))])
-% 
-% subplot(2,3,3)
-% contra_resp_ipsionly = max(data_dfof_dir(ipsi_resp_ind,:,find(Eyes),1),[],2);
-% ipsi_resp_ipsionly = max(data_dfof_dir(ipsi_resp_ind,:,find(~Eyes),1),[],2);
-% scatter(contra_resp_ipsionly,ipsi_resp_ipsionly)
-% axis square
-% refline(1)
-% xlabel('Max (Contra)')
-% ylabel('Max (Ipsi)')
-% xlim([0 1])
-% ylim([0 1])
-% title('Ipsi responsive')
-% 
-% subplot(2,3,6)
-% ODI_ipsionly = (contra_resp_ipsionly-ipsi_resp_ipsionly)./(contra_resp_ipsionly+ipsi_resp_ipsionly);
-% histogram(ODI_ipsionly,[-1:0.1:1])
-% [temp_counts_ipsionly,~] = histcounts(ODI_ipsionly,[-1:0.1:1]);
-% xlabel('ODI')
-% ylabel('Cells')
-% axis square
-% title(['Sig cells = ' num2str(length(ipsi_resp_ind))])
+save(fullfile(fn_multi, mouse, fn_match, [mouse '_ODI_multiday.mat']), 'ODI', 'real_contra_resp', 'real_ipsi_resp', 'max_Ori_contra', 'max_Ori_ipsi')
 
-% max_histcounts = max([temp_counts_any temp_counts_contraonly temp_counts_ipsionly]);
-% subplot(2,3,4)
-% axis([-1 1 0 max_histcounts+1])
-% subplot(2,3,5)
-% axis([-1 1 0 max_histcounts+1])
-% subplot(2,3,6)
-% axis([-1 1 0 max_histcounts+1])
+%% Population average for contra/ipsi inputs
 
-save(fullfile(fn_multi, mouse, fn_match, [datemouserun '_ODI_multiday.mat']), 'ODI', 'real_contra_resp', 'real_ipsi_resp', 'max_Ori_contra', 'max_Ori_ipsi')
+%Get responses from individual eyes
+mean_ipsi = zeros(1,nd);
+mean_contra = zeros(1,nd);
+ 
+for id = 1:nd
+     mean_ipsi(id) = mean(real_ipsi_resp{id});
+     mean_contra(id) = mean(real_contra_resp{id});
+end
 
-%% von mises 
+figure
+mean_resp = [mean_ipsi; mean_contra]
+bar(mean_resp')
+axis square
+xlabel('Timepoint')
+set(gca,'XTick',1:3,'XTickLabel',{'Pre','Post','Rec'})
+ylabel('Mean response (df/f)') % CHECK THAT THIS IS ACTUALLY DF/F
+legend('Ipsi','Contra')
+title(['Ipsi v. contra response'])
 
-% EDIT: HOW SHOULD I PREALLOCATE THESE? CELL ARRAYS????
+print(fullfile(fn_multi, mouse, fn_match, [mouse '_EyeRespHist.pdf']),'-dpdf','-bestfit')
 
-    b_ori = zeros(nEye,nCells);
-    k1_ori = zeros(nEye,nCells);
-    R1_ori = zeros(nEye,nCells);
-    u1_ori = zeros(nEye,nCells);
-    R_square_ori = zeros(nEye,nCells);
-    sse_ori = zeros(nEye,nCells);
-    stim_OSI = zeros(nEye,nCells);
-    theta_hires= deg2rad(0:180);
-    y_fit = zeros(length(theta_hires),nEye,nCells);
+save(fullfile(fn_multi, mouse, fn_match, [mouse '_EyeResp.mat']), 'mean_ipsi', 'mean_contra')
+
+%% von mises
+
+    b_ori = cell(1,nd);
+    k1_ori = cell(1,nd);
+    R1_ori = cell(1,nd);
+    u1_ori = cell(1,nd);
+    R_square_ori = cell(1,nd);
+    sse_ori = cell(1,nd);
+    stim_OSI = cell(1,nd);
+    theta_hires = deg2rad(0:180);
+    y_fit = cell(1,nd);
 
 for id = 1:nd    
     for iEye = 1:nEye
         for iCell = 1:nCells
-            data = [data_dfof_ori{id}(iCell,:,iEye) data_dfof_ori{id}(iCell,1,iEye)];
+            data = [data_dfof_Ori{id}(iCell,:,iEye) data_dfof_Ori{id}(iCell,1,iEye)];
             theta = [deg2rad(Oris) pi];
             [b_ori{id}(iEye,iCell),k1_ori{id}(iEye,iCell),R1_ori{id}(iEye,iCell),u1_ori{id}(iEye,iCell),sse_ori{id}(iEye,iCell),R_square_ori{id}(iEye,iCell)] ...
-                = miaovonmisesfit_ori(theta,data); % EDIT: DO I NEED {ID} HERE??????
-            [max_val{id} max_ind{id}] = max(data_dfof_ori{id}(iCell,:,iEye),[],2);
+                = miaovonmisesfit_ori(theta,data);
+            [max_val{id} max_ind{id}] = max(data_dfof_Ori{id}(iCell,:,iEye),[],2);
             null_ind{id} = max_ind{id}+(nOris./2);
             null_ind{id}(find(null_ind{id}>nOris)) = null_ind{id}(find(null_ind{id}>nOris))-nOris;
-            min_val{id} = data_dfof_ori{id}(iCell,null_ind{id},iEye);
+            min_val{id} = data_dfof_Ori{id}(iCell,null_ind{id},iEye);
             if min_val{id}<0
                 min_val{id} = 0;
             end
@@ -355,4 +308,59 @@ for id = 1:nd
     [yfit_max{id}, yfit_max_ind{id}] = max(y_fit{id}(:,:,:),[],1);
     prefOri_yfit{id} = squeeze(theta_hires(yfit_max_ind{id}));
 end   
-save(fullfile(fn_multi, mouse, fn_match, [datemouserun '_oriResp_multiday.mat']), 'data_dfof_Ori', 'data_dfof_ori','base_win','resp_win','h_Ori', 'b_ori', 'k1_ori', 'R1_ori', 'u1_ori', 'R_square_ori', 'sse_ori','stim_DSI','stim_OSI', 'yfit_max', 'yfit_max_ind', 'prefOri_yfit') 
+save(fullfile(fn_multi, mouse, fn_match, [mouse '_oriResp_multiday.mat']), 'data_dfof_Ori','base_win','resp_win','h_Ori', 'b_ori', 'k1_ori', 'R1_ori', 'u1_ori', 'R_square_ori', 'sse_ori','stim_OSI', 'yfit_max', 'yfit_max_ind', 'prefOri_yfit') 
+
+%% Population average for tuning.
+
+% Plot tuning widths in cumulative distribution plot
+figure
+for iEye = 1:nEye
+    subplot(2,2,iEye)
+    for id = 1:nd
+        cdfplot(k1_ori{id}(iEye,:));
+        hold on
+    end
+    axis square
+    xlabel('Tuning width')
+    ylabel('Fraction of cells')
+    title(['Tuning width: ' eye_str{find(contra(1:2)==Eyes(iEye))}]);
+end
+legend('Pre','Post','Rec','Location','Southeast');
+
+% Compare tuning widths of individual cells -- plot in scatterplots
+% (baseline v. MD)
+for iEye = 1:nEye
+    subplot(2,2,iEye+2)
+    scatter(k1_ori{1}(iEye,:),k1_ori{2}(iEye,:));
+    axis square
+    title(['Tuning width: ' eye_str{find(contra(1:2)==Eyes(iEye))}]);
+    xlabel([num2str(expt(1).experiment)])
+    ylabel([num2str(expt(2).experiment)])
+    refline(1)
+    hold on   
+end
+
+print(fullfile(fn_multi, mouse, fn_match, [mouse '_TuningPlots.pdf']),'-dpdf','-bestfit')
+
+%% Compare dfof between pre- and post-MD
+
+% EDIT: FINISH THIS SECTION
+figure
+for iEye = nEye
+    
+end
+
+temp_data = data_dfof{1};
+temp_max = max(reshape(temp_data,[],size(temp_data,3)),[],1);
+
+% EDIT: PUT TEMP_MAX IN HERE INSTEAD????
+[contra_resp{id} max_ind_contra{id}] = max(data_dfof_Ori{id}(:,:,find(Eyes),1),[],2);
+
+subplot(2,1,iEye)
+scatter((data_dfof_max{1}(:,iEye)),(data_dfof_max{2}(:,iEye)))
+axis square
+title(['Max dfof: ' eye_str{find(contra(1:2)==Eyes(iEye))}]);
+xlabel([num2str(expt(1).experiment)])
+ylabel([num2str(expt(2).experiment)])
+refline(1)
+hold on   

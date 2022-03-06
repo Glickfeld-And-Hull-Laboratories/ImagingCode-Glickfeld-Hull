@@ -7,7 +7,7 @@ close all
 ds = 'ExperimentData_TD'; %dataset info
 eval(ds)
 
-day_id = 7;
+day_id = 2;
 
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';

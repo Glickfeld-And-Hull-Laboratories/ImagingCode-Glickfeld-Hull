@@ -11,9 +11,9 @@ fn_pop = fullfile(fn_base, 'home\Tierney\Analysis\2P\PopulationAnalysis');
 
 ds = 'ExperimentData_TD'; % dataset info 
 eval(ds)
-% 
-% sess_list = [142,138];% enter all the sessions you want to pool
-% nSess = length(sess_list);
+
+sess_list = [2, 4, 8, 11];% enter all the sessions you want to pool
+nSess = length(sess_list);
 % 
 % nd=2%hard coding for two days per experimental session
 % frame_rate = 15;
@@ -31,7 +31,7 @@ eval(ds)
 % Baseline (1), post-MD (2), and recovery (3) days
 day_id(2) = 4;
 day_id(1) = expt(day_id(2)).matchday_baseline;
-day_id(3) = expt(day_id(2)).matchday_recovery;
+% day_id(3) = expt(day_id(2)).matchday_recovery;
 
 nd = length(day_id);
 
@@ -93,68 +93,3 @@ title('Mean ODI across days')
 % MAKE EACH MOUSE A DIFFERENT COLOR
 
 print(fullfile(fn_pop, [mouse '_meanODI.pdf']),'-dpdf','-bestfit')
-
-%% Population average for contra/ipsi inputs
-
-%Get responses from individual eyes
-real_ipsi = [];
-real_contra = [];
- 
- for id = 1:nd
-     real_ipsi = ODI{id}.real_ipsi_resp;
-     mean_ipsi(id) = mean(real_ipsi);
-     real_contra = ODI{id}.real_contra_resp;
-     mean_contra(id) = mean(real_contra);
- end
-
-mean_resp = [mean_ipsi; mean_contra]
-bar(mean_resp')
-axis square
-xlabel('Timepoint')
-set(gca,'XTick',1:3,'XTickLabel',{'Pre','Post','Rec'})
-ylabel('Mean response (df/f)') % CHECK THAT THIS IS ACTUALLY DF/F
-legend('Ipsi','Contra')
-title(['Ipsi v. contra response'])
-
-print(fullfile(fn_pop, [mouse '_EyeResp.pdf']),'-dpdf','-bestfit')
-
-save(fullfile(fn_out, ['PopulationData.mat']), 'mean_ODI', 'mean_ipsi', 'mean_contra')
-%% Population average for tuning.
-
-Eyes = unique(contra);
-nEye = length(Eyes);
-
-%Get tuning widths (k from von mises) from individual eyes
-figure
-titles = {'Ipsi', 'Contra'} % CHECK THAT THIS IS THE RIGHT ORDER. REMINDER HOW TO NOT HARD CODE???
-for iEye = 1:nEye
-    subplot(1,2,iEye)
-    for id = 1:nd
-        cdfplot(oriResp{id}.k1_ori(iEye,:));
-        hold on
-    end
-    axis square
-    title(titles{iEye})
-end
-hold off
-legend('Pre','Post','Rec','Location','Southeast');
-
-print(fullfile(fn_pop, [mouse '_TuningCDF.pdf']),'-dpdf','-bestfit')
-
-% Ipsi eye -- MD v. baseline
-subplot(2,2,1)
-scatter(oriResp{1}.k1_ori(1,:),oriResp{2}.k1_ori(1,:));
-
-% Ipsi eye -- MD v. recovery
-subplot(2,2,2)
-scatter(oriResp{1}.k1_ori(1,:),oriResp{3}.k1_ori(1,:));
-
-% Contra eye -- MD v. baseline
-subplot(2,2,3)
-scatter(oriResp{1}.k1_ori(1,:),oriResp{2}.k1_ori(2,:));
-
-% Contra eye -- MD v. recovery
-subplot(2,2,4)
-scatter(oriResp{1}.k1_ori(1,:),oriResp{3}.k1_ori(2,:));
-
-print(fullfile(fn_pop, [mouse '_TuningScatter.pdf']),'-dpdf','-bestfit')
