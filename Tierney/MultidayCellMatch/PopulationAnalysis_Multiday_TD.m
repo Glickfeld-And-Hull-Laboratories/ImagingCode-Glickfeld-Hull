@@ -274,8 +274,8 @@ for id = 1:nd
     set(gca,'xscale','log')
     set(gca,'yscale','log')
     axis square
-    xlabel('Max (Contra)')
-    ylabel('Max (Ipsi)')
+    xlabel('Max df/f (Contra)')
+    ylabel('Max df/f (Ipsi)')
     xlim([0.001 1])
     ylim([0.001 1])
     refline(1)
