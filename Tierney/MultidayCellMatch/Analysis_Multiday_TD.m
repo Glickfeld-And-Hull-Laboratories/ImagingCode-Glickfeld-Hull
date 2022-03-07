@@ -95,6 +95,8 @@ for id = 1:nd
     tOri{id} = stimData{1}.tOri;
 end    
     
+save(fullfile(fn_multi, mouse, fn_match, [mouse '_stimData_multiday.mat']), 'nOn','nOff','Eyes','nEye','Oris','nOris','ntrials','tContra','tOri')
+
 %% looking at time courses: average across all trials
 
 data_dfof_trial = cell(1,nd)
