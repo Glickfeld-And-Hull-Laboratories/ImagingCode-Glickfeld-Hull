@@ -430,19 +430,19 @@ expt(16).time = {'1240','1300','1335'};
 expt(16).eye_str = {'Ipsi','Contra','Ipsi'};
 expt(16).data_loc = 'Tierney';
 
-%% i2509 220225 - baseline 2
+%% i2509 220225 - post-MD 3
  
-expt(17).mouse = 'i2511';
-expt(17).date = '220224';
-expt(17).experiment = 'baseline2'
+expt(17).mouse = 'i2509';
+expt(17).date = '220225';
+expt(17).experiment = 'MD3'
 expt(17).folder = '2P_images'; %%%%%%%
 expt(17).img_loc  = {'V1';'L2/3'};
-expt(17).z = -148.43;
+expt(17).z = -165.62;
 expt(17).obj = '16x';
 expt(17).zoom = 2;
 expt(17).frame_rate = 15;
-expt(17).multiday_time_days = 1;
-expt(17).multiday_matchdays = [15];
+expt(17).multiday_time_days = 3;
+expt(17).multiday_matchdays = [11];
 expt(17).regImgStartFrame = 39808; %%%%%%%
 expt(17).motionThreshold = 0.05;
 expt(17).areaBorders = 0;
@@ -453,6 +453,60 @@ expt(17).greenredsimultaneous = 0; %%%%%%%
 expt(17).greenChannelLabel = 'ANY'; %%%%%%%
 expt(17).rettuning = {'002';'0947'}; %%%%%%%
 expt(17).stimruns = ['001';'002';'003'];
-expt(17).time = {'1240','1300','1335'};
+expt(17).time = {'0825','0846','0920'};
 expt(17).eye_str = {'Ipsi','Contra','Ipsi'};
 expt(17).data_loc = 'Tierney';
+
+%% i2510 220302 - post-MD 1
+ 
+expt(18).mouse = 'i2510';
+expt(18).date = '220302';
+expt(18).experiment = 'MD1'
+expt(18).folder = '2P_images'; %%%%%%%
+expt(18).img_loc  = {'V1';'L2/3'};
+expt(18).z = -153.90;
+expt(18).obj = '16x';
+expt(18).zoom = 2;
+expt(18).frame_rate = 15;
+expt(18).multiday_time_days = 7;
+expt(18).multiday_matchdays = [13];
+expt(18).regImgStartFrame = 39808; %%%%%%%
+expt(18).motionThreshold = 0.05;
+expt(18).areaBorders = 0;
+expt(18).img_strct  = {'cells'};
+expt(18).indicator = {'virus';'GCaMP8s'};
+expt(18).drug = nan; %%%%%%%
+expt(18).greenredsimultaneous = 0; %%%%%%%
+expt(18).greenChannelLabel = 'ANY'; %%%%%%%
+expt(18).rettuning = {'002';'0947'}; %%%%%%%
+expt(18).stimruns = ['001';'002';'003'];
+expt(18).time = {'1412','1433','1513'};
+expt(18).eye_str = {'Ipsi','Contra','Ipsi'};
+expt(18).data_loc = 'Tierney';
+
+%% i2511 220303 - post-MD 1
+ 
+expt(19).mouse = 'i2511';
+expt(19).date = '220303';
+expt(19).experiment = 'MD1'
+expt(19).folder = '2P_images'; %%%%%%%
+expt(19).img_loc  = {'V1';'L2/3'};
+expt(19).z = -165.62; %%%%%%%%%%%%%%%%%%%%% CHANGE
+expt(19).obj = '16x';
+expt(19).zoom = 2;
+expt(19).frame_rate = 15;
+expt(19).multiday_time_days = 7;
+expt(19).multiday_matchdays = [16];
+expt(19).regImgStartFrame = 39808; %%%%%%%
+expt(19).motionThreshold = 0.05;
+expt(19).areaBorders = 0;
+expt(19).img_strct  = {'cells'};
+expt(19).indicator = {'virus';'GCaMP8s'};
+expt(19).drug = nan; %%%%%%%
+expt(19).greenredsimultaneous = 0; %%%%%%%
+expt(19).greenChannelLabel = 'ANY'; %%%%%%%
+expt(19).rettuning = {'002';'0947'}; %%%%%%%
+expt(19).stimruns = ['001';'002';'003'];
+expt(19).time = {'0825','0846','0920'}; %%%%%%%%%%%%%%%%%%%%% CHANGE
+expt(19).eye_str = {'Ipsi','Contra','Ipsi'};
+expt(19).data_loc = 'Tierney';
