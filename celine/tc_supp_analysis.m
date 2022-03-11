@@ -4,10 +4,11 @@ clear all; clear global; close all
 %identifying animal and run
 
 
-mouse = 'WK12';
-date = '220107'
-time = char('1532');
-imgFolder = char('003');
+mouse = 'WK11';
+date = '220114';
+time = char('1410');
+imgFolder = char('002');
+RetImgFolder = char('001');
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
 
@@ -70,7 +71,7 @@ data_resp = zeros(nCells,nSizes,nCons,2);
 h = zeros(nCells, nSizes,nCons);
 p = zeros(nCells, nSizes,nCons);
 
-resp_win = stimStart:stimStart+3;
+resp_win = stimStart+2:stimStart+8;
 base_win = (stimStart - nOff/2):stimStart-1;
 
 
@@ -82,17 +83,19 @@ for iSize = 1:nSizes
         ind = intersect(ind_size,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
         data_resp(:,iSize,iCon,1) = squeeze(mean(mean(data_tc_trial(resp_win,ind,:),1),2));
         data_resp(:,iSize,iCon,2) = squeeze(std(mean(data_tc_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-        [h(:,iSize,iCon), p(:,iSize,iCon)] = ttest(mean(data_tc_trial(resp_win,ind,:),1), mean(data_tc_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nSizes.*3-1));
+        [h(:,iSize,iCon), p(:,iSize,iCon)] = ttest(mean(data_tc_trial(resp_win,ind,:),1), mean(data_tc_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./((nSizes*nCons)-1));
     end
 end
 
 h_all = sum(sum(h,2),3);
-resp=logical(h_all);
+resp_all=logical(h_all);
 resp_small_highCon = logical(h(:,1,4));
-sum(resp)
 
-%% plot timecourses at different sizes and contrasts
 load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
+centeredResp=intersect(find(resp_small_highCon),centerCells);
+length(centeredResp)
+%% plot timecourses at different sizes and contrasts
+
 %frame_rate=double(input.frameImagingRateMs);
 frame_rate = 30;
 t = 1:(size(data_tc_trial,1));
@@ -106,20 +109,19 @@ figure;
         for iCon = 1:nCons
         inds2 = find(tCons == Cons(iCon));
         inds = intersect(inds1,inds2);
-        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,intersect(find(resp_small_highCon),centerCells)),2));
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,centeredResp),2));
         temp_mean = nanmean(temp_trials,2);
-        temp_se = std(temp_trials,[],2)/sqrt(length(intersect(find(resp_small_highCon),centerCells)));
+        temp_se = std(temp_trials,[],2)/sqrt(length(centeredResp));
 
         subplot(n,n2,x)
 
-        
-        fill([.2 .2 .4 .4],[-.1 .5 .5 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        shadedErrorBar(t,temp_mean,temp_se);
+        hold on
+        fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
         hold on
         fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
         hold on
-        shadedErrorBar(t,temp_mean,temp_se);
-        hold on
-        ylim([-.03 .2])
+        ylim([-.03 .1])
         xlim([-2 2])
         
         hline(0)
@@ -135,9 +137,10 @@ print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\c
         inds1 = find(tSize == 30);
         inds2 = find(tCons == .4);
         inds = intersect(inds1,inds2);
-         temp_trials = squeeze(nanmean(data_tc_trial(:,inds,resp),2));
+         temp_trials = squeeze(nanmean(data_tc_trial(:,inds,resp_all),2));
         temp_mean = nanmean(temp_trials,2);
-        temp_se = std(temp_trials,[],2)/sqrt(sum(resp));
+        temp_se = std(temp_trials,[],2)/sqrt(sum(resp_all));
+        figure
         shadedErrorBar(t(49:82),temp_mean(49:82,:),temp_se(49:82,:));
         hold on
         ylim([-.05 .13])
@@ -145,7 +148,7 @@ print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\c
 
 %% looking at cells individually
 
-centeredResp=intersect(find(resp_small_highCon),centerCells);
+
 
 
 for iCell = 1:length(centeredResp)

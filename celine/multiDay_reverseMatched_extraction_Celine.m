@@ -100,6 +100,7 @@ cellTCs_match_OG = cellTCs_match;
 data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however many days there are (1X2 usually)
 
 fractTimeActive_match = cell(1,nd);
+cellstd_match = cell(1,nd);
 for id = 1:nd %cycle through days
     
   %nTrials(id) = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
@@ -117,17 +118,20 @@ for id = 1:nd %cycle through days
     %padding with zeroas but that altered the TC so I changed this to pad with NANs 
     cellTCs_match{id}(cellTCs_match{id}==999)=nan;
     nFrames = size(cellTCs_match{id},1);
+    
+    
     data_trial_match = reshape(cellTCs_match{id},[nOn+nOff nTrials(id) nCells]);
     data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
     data_dfof_trial_match{id} = bsxfun(@rdivide,bsxfun(@minus,data_trial_match,data_f_match),data_f_match);
-    meansub_match = cellTCs_match{id}-mean(cellTCs_match{id},1);
-    cellstd_match = std(meansub_match,[],1);
+    meansub_match = cellTCs_match{id}-nanmean(cellTCs_match{id},1);
+    cellstd = nanstd(meansub_match,[],1);
+    cellstd_match{id}=cellstd;
     for iCell = 1:nCells
-        fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd_match(1,iCell)))./nFrames;
+        fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames;
     end
     
 end
-clear data_trial_match data_f_match
+clear  data_f_match cellstd 
 
 % MUST USE NANMEAN INSTEAD OF MEAN MOVING FORWARD SINCE I SET THE PADDING
 % VALUES TO NAN
@@ -155,6 +159,7 @@ for id = 1:nd
     data_resp = zeros(nCells, nOri, nCon,2);
     h = zeros(nCells, nOri, nCon);
     p = zeros(nCells, nOri, nCon);
+    passThresh=zeros(nCells, nOri, nCon);
     tCon = tCon_match{id}(:,1:nTrials(id));
     tOri = tOri_match{id}(:,1:nTrials(id));
     tDir = tDir_match{id}(:,1:nTrials(id));
@@ -167,13 +172,20 @@ for id = 1:nd
             ind = intersect(ind_ori,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
             data_resp(:,iOri,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
             data_resp(:,iOri,iCon,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-            [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri*nCon.*3-1));
+            [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri*nCon-1));
+%             baseStd=squeeze(std(nanmean(data_dfof_trial(base_win,ind,:),1),[],2));
+%             baseMean=squeeze(nanmean(nanmean(data_dfof_trial(base_win,ind,:),1),2));
+%             thresh=baseMean + (3.*baseStd);
+%             passThresh(:,iOri,iCon) = logical(data_resp(:,iOri,iCon,1) > thresh);
+%             passThresh(:,iOri,iCon) = logical(data_resp(:,iOri,iCon,1) > .05);
+%             h(:,iOri,iCon) = h(:,iOri,iCon) .*passThresh(:,iOri,iCon);
+        
         end
     end
-
-    h_all = sum(sum(h,2),3);
-
-    resp=logical(h_all);
+    
+    resp_sig = data_resp(:,:,:,1).*h;
+    h_pass = sum(sum((h),2),3); 
+    resp=logical(h_pass);
     
     pref_ori = zeros(1,nCells);
     pref_con = zeros(1,nCells);
@@ -183,10 +195,10 @@ for id = 1:nd
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
     for iCell = 1:nCells
-          [max_val, pref_ori(1,iCell)] = max(nanmean(data_resp(iCell,:,:,1),3),[],2);
-          [max_val_con, pref_con(1,iCell)] = max(squeeze(nanmean(data_resp(iCell,:,:,1),2))',[],2);
-          data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
-          data_con_resp(iCell,:)=nanmean(data_resp(iCell,:,:,1),2);
+          [max_val, pref_ori(1,iCell)] = max(nanmean(resp_sig(iCell,:,:,1),3),[],2);
+          [max_val_con, pref_con(1,iCell)] = max(squeeze(nanmean(resp_sig(iCell,:,:,1),2))',[],2);
+          data_ori_resp(iCell,:)=resp_sig(iCell,:,pref_con(iCell),1);
+          data_con_resp(iCell,:)=nanmean(resp_sig(iCell,:,:,1),2);
           
       if pref_ori(iCell)<= nOri/2
           orth_ori(iCell)=pref_ori(iCell)+2;
@@ -200,7 +212,7 @@ for id = 1:nd
 data_resp_match{id} = data_resp;
 h_match{id} = h;
 p_match{id} = p;
-h_all_match{id} = h_all;
+h_all_match{id} = h_pass;
 resp_match{id} = resp;
 pref_ori_match{id} = pref_ori;
 pref_con_match{id} = pref_con;
@@ -209,7 +221,7 @@ data_con_resp_match{id} = data_con_resp;
 data_orth_resp_match{id}=data_orth_resp;
  
 end
-clear data_resp p h_all resp pref_ori pref_con data_ori_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp
+clear data_resp p h_all resp pref_ori pref_con data_ori_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp  baseStd baseMean thresh pass
  
 %% get basic counts 
 red_ind_match_list = find(red_ind_match==1);
@@ -219,56 +231,37 @@ green_ind_match = ~(red_ind_match);
 green_ind_match_list = find(green_ind_match);
 
 
-%creating the arrays for red cells
-red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
-red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
-
+%find cells that were matched and were active
 green_match_respd1 = intersect(green_ind_match_list,find(resp_match{2}==1));
 green_match_respd2 = intersect(green_ind_match_list,find(resp_match{1}==1));
 
-%matched
-nGreen_keep = length(green_ind_match_list); %how many matched green cells
-nGreen_keep_respd1 = length(green_match_respd1); %how many of those responded on d1
-nGreen_keep_respd2 = length(green_match_respd2);%how many of those responded on d2
-nRed_match = length(red_ind_match_list);%how many red cells matched
-nRed_match_respd1 = length(red_match_respd1); %how many of the matched red cells responded on d1
-nRed_match_respd2 = length(red_match_respd2); %how many of the matched red cells responded on d1
+red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
+red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
 
-%% extract data for cells I want to keep
-
-%first narrow down to the cells in question - find the green cells that
-%were responsive on at least one day
-
+%find cells that were active on at least one day
 resp_green_either = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
-
+resp_red_either = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
 
 %these are the cells I will include from now on
-keep_cells = union(resp_green_either,red_ind_match_list);
-
+keep_cells = union(resp_green_either,resp_red_either);
+nGreen_keep = length(resp_green_either); %how many green cells to keep
+nRed_keep = length(resp_red_either);%how many red cells to keep
 nKeep = length(keep_cells)
 
 %making a list of the day 1 indices for the cells I want to keep
-% keep_d1 = match_ind(:,keep_cells);
-% 
-[red_ind_match_list,red_ind_keep] = intersect(keep_cells,red_ind_match_list,'stable'); %find the indices *within keep_cells* that are red
-[resp_green_either,green_ind_keep] = intersect(keep_cells,resp_green_either,'stable'); %same for green
+%find the indices
+[resp_green_either,green_ind_keep] = intersect(keep_cells,resp_green_either,'stable');
+[resp_red_either,red_ind_keep] = intersect(keep_cells,resp_red_either,'stable');
 
-%for now I will keep both sets of indices - if the scripts runs slowly I
-%can clear these
-
-
-%% counts for keep cells
-
-green_match_respd1 = intersect(resp_green_either,find(resp_match{2}==1)); %this is for reverse matching
-green_match_respd2 = intersect(resp_green_either,find(resp_match{1}==1));
-
-%matched
-nGreen_keep = length(resp_green_either); %how many matched green cells
 nGreen_keep_respd1 = length(green_match_respd1); %how many of those responded on d1
 nGreen_keep_respd2 = length(green_match_respd2);%how many of those responded on d2
 
+nRed_keep_respd1 = length(red_match_respd1); %how many of those responded on d1
+nRed_keep_respd2 = length(red_match_respd2);%how many of those responded on d2
+
+
 % make table of values
-countsTable = table([nGreen_keep;nRed_match],[nGreen_keep_respd1;nRed_match_respd1],[nGreen_keep_respd2;nRed_match_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
+countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1],[nGreen_keep_respd2;nRed_keep_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
 clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
@@ -388,6 +381,30 @@ explanation2 = 'data_resp_keep gives the df/f averaged over the full response wi
 save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','data_ori_resp_keep')
 %% making mask maps for various measurements
 %show masks
+%get masks of matched cells
+mask_match = cell(1,nd);
+mask_match{1}= zeros(size(corrmap{1}));
+mask_match{2}=masks{2}; %the second cell in the "masks" array already is only for matched cells
+for i = 1:size(match_ind,2)
+   ind = match_ind(i);
+   temp_mask_inds = find(masks{1}==ind);
+   mask_match{1}(temp_mask_inds)=i;
+end
+
+figure;
+imagesc(corrmap{1});
+colormap gray
+%caxis([0.05 .3])
+title('average FOV day 1');
+hold on
+bound = cell2mat(bwboundaries(mask_match{1}(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+bound = cell2mat(bwboundaries(mask_match{2}(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
+hold off
+
+
+
 keep_masks = zeros(size(corrmap{1}));
 keep_green_masks = zeros(size(corrmap{1}));
 keep_red_masks = zeros(size(corrmap{1}));
@@ -399,10 +416,13 @@ keep_masks_d1_red = zeros(size(corrmap{1}));
 
 for i = 1:length(keep_cells)
    ind = keep_cells(i);
-   temp_mask_inds = find(masks{2}==ind);
+   temp_mask_inds = find(masks{2}==ind); %pulling from the masks of matched cells from the baseline day
    keep_masks(temp_mask_inds)=i;
    
 end
+
+
+
 %I am converting these to be labelled by their position in the keep cell
 %index
 
@@ -420,4 +440,113 @@ for i = 1:length(keep_cells)
    end
 end
 
-save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
+save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
+%% looking at wheel speed
+wheel_speed = cell(1,nd);
+for id = 1:nd
+    wheel_speed{id} = wheelSpeedCalc(input(id),32,'purple'); 
+    nanmean(wheel_speed{id})
+end
+
+
+
+wheel_tc = cell(1,nd);
+wheel_trial_avg= cell(1,nd);
+RIx = cell(1,nd);
+
+for id = 1:nd
+    wheel_tc{id}=zeros(nOn+nOff, nTrials(id));
+    for iTrial = 1:nTrials(id)
+        wheel_tc{id}(:,iTrial) = wheel_speed{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
+    end
+    wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
+    RIx{id} = wheel_trial_avg{id}>2; %.55 is the noise level in the wheel movement
+    mean(RIx{id})
+end
+
+
+
+
+locTCs = cell(2,nCon);
+statTCs = cell(2,nCon);
+
+locResp = cell(2,nCon);
+statResp = cell(2,nCon);
+locCounts=cell(2,nCon);
+
+for iCon = 1:nCon
+    %make this the average for running state for each contrast
+    for id = 1:nd
+        tCon = tCon_match{id}(:,1:nTrials(id));
+        ind_con = find(tCon == cons(iCon));
+        loc=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(RIx{id}), ind_con),:),2)); %average of locomotion at this contrast trials for each cell
+        stat=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(~RIx{id}),ind_con),:),2)); %average of stationary  at this contrast trials for each cell
+
+        locTCs{id,iCon}=loc;
+        statTCs{id,iCon}=stat;
+        locCounts{id,iCon}=[length(intersect(find(RIx{id}), ind_con)),length(intersect(find(~RIx{id}),ind_con))];
+
+        locResp{id,iCon}=nanmean(loc(stimStart:stimStart+nOn,:),1);
+        statResp{id,iCon}=nanmean(stat(stimStart:stimStart+nOn,:),1);
+        clear loc stat ind_con tCon
+    end
+end
+
+
+
+%for each day, extract the LMI for each cell - here I'm collasping across
+%all stim conditions
+LMI = cell(2,nCon);
+
+for iCon=1:nCon
+    for id = 1:nd
+            locRectified = locResp{id,iCon};
+            locRectified(find(locRectified<0))=0;
+            statRectified = statResp{id,iCon};
+            statRectified(find(statRectified<0))=0;
+            LMI{id,iCon}=(locRectified-statRectified)./(locRectified+statRectified);
+        
+    end
+end
+
+
+
+save(fullfile(fn_multi,'locomotion.mat'),'locTCs','statTCs','locResp','statResp','LMI','RIx','wheel_tc','locCounts')
+% %% comparing F and df/f for HT+ and HT-
+% figure;
+% subplot(1,2,1)
+% dfof_pre = squeeze( nanmean(nanmean(data_dfof_trial_match{2}(resp_win,:,:),1),2)); %gets the average dfof during all stim on perdiods
+% f_pre = nanmean(cellTCs_match{2},1)'; %gets the average fluorescence for the entire recording time
+% scatter(f_pre,dfof_pre,'k')%plots all cells
+% hold on
+% scatter(f_pre(red_ind_match),dfof_pre(red_ind_match),'r') %replots only HT+ cells, now colored red
+% hold on
+% plot(mean(f_pre(red_ind_match)),mean(dfof_pre(red_ind_match)),'r.','MarkerSize',25);
+% hold on
+% plot(mean(f_pre(~red_ind_match)),mean(dfof_pre(~red_ind_match)),'k.','MarkerSize',25);
+% xlabel({'Mean F for the';'entire timecourse'})
+% ylabel('Mean dF/F for all stim on periods');
+% xlim([0 20000])
+% ylim([-.2 .5])
+% title('pre-DART');
+% axis square
+% hold off
+% 
+% subplot(1,2,2)
+% dfof_post = squeeze( nanmean(nanmean(data_dfof_trial_match{1}(resp_win,:,:),1),2)); %gets the average dfof during all stim on perdiods
+% f_post = nanmean(cellTCs_match{1},1)'; %gets the average fluorescence for the entire recording time
+% scatter(f_post,dfof_post,'k')%plots all cells
+% hold on
+% scatter(f_post(red_ind_match),dfof_post(red_ind_match),'r') %replots only HT+ cells, now colored red
+% hold on
+% plot(mean(f_post(red_ind_match)),mean(dfof_post(red_ind_match)),'r.','MarkerSize',25);
+% hold on
+% plot(mean(f_post(~red_ind_match)),mean(dfof_post(~red_ind_match)),'k.','MarkerSize',25);
+% xlabel({'Mean F for the';'entire timecourse'})
+% ylabel('Mean dF/F for all stim on periods');
+% xlim([0 20000])
+% ylim([-.2 .5])
+% title('post-DART');
+% axis square
+% hold off
+% print(fullfile(fn_multi, 'F_vs_dFoF.pdf'),'-dpdf');

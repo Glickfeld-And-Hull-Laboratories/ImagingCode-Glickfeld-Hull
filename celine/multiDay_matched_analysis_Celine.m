@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds);
 
-day_id = 136; %enter post-DART day
+day_id = 133; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays
 
 

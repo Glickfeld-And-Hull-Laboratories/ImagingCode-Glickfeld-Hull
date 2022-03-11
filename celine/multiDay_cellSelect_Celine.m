@@ -384,7 +384,7 @@ end
 
 %%
 h_all = sum(sum(h,2),3);
-if length(find(h_all))<36
+if length(find(n))<36
     [n n2] = subplotn(length(find(h_all)));
     tot = n.*n2;
 else
@@ -404,7 +404,7 @@ for iCell = 1:nCells
         start = 1;
     end
     subplot(n,n2,start)
-    if find(find(h_all)==iCell)
+    %if find(find(h_all)==iCell)
         for iCon = 1:nCon
             errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-o')
             hold on
@@ -414,7 +414,7 @@ for iCell = 1:nCells
         end
         start= start+1;
         ylim([-0.1 inf])
-    end
+    %end
     [max_val, pref_ori(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
 end
 
@@ -476,6 +476,7 @@ green_inds = setdiff(green_inds, find(mask_label));
 green_tcs = npSub_tc(:,green_inds);
 
 data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);
+
 data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
@@ -490,8 +491,9 @@ hold on;
 plot(tc_cell_trial_avrg, 'LineWidth',2, 'color','k');
 hold on;
 vline(60,'g')
-title('Timecourses with np subtracted');
+title('');
 hold off
+ylim([-.04 .1])
 
 
 
