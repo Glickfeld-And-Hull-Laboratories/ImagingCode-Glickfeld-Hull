@@ -1,10 +1,10 @@
 clear;
 %% load data and check if piezo is working that day
-analysis_out = 'Z:\2P_analysis\';
-bdata_source = 'Z:\Data\behavior\RC\';
-sessions = '210616_img1091';% for behavior data
-mouse = '1091';
-date = '210616';
+analysis_out = 'Z:\home\shuyang\2P_analysis\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
+sessions = '220311_img1914';% for behavior data
+mouse = '1914';
+date = '220311';
 run = '000';
 cue = 1; % 1: CS1 2: CS2 3:CS1+CS2 4:interleave
 fprintf([date ' ' mouse '\n']);
@@ -14,7 +14,8 @@ img_fn2 = sessions;
 mworks = get_bx_data_sj(bdata_source, img_fn2);
 nf = mworks.counterValues{end}(end);
 
-cd(fullfile('Z:\Data\2photon\', [date '_img' mouse]));
+
+cd(fullfile('Z:\home\shuyang\Data\2photon\', [date '_img' mouse]));
 fn_piezo = fopen([date '_img' mouse '_000_' run '.ephys']);
 piezo_data = fread(fn_piezo,'single');
 piezo_data_volts = piezo_data(2:2:end);
@@ -22,6 +23,7 @@ piezo_data_volts = piezo_data(2:2:end);
 figure;plot(piezo_data_volts);
 
 %% downsample piezo data to each frame and plot piezo and licking
+
 % for data collected before 2021, the frame numbers were not recorded. but it seems there is a certain number of extra piezo reads before the first frame.
 % so use this way the determine the beginning and then every 3 piezo read is 1 frame
 % piezo data is in 90Hz and imaging data is in 30Hz. 
@@ -47,6 +49,9 @@ for iframe = 1:nf
     piezo_frames(iframe,:) = mean(piezo_data_temp(2,ind),2);
 end
 
+%piezo_data = load(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignPiezo.mat']));%old data was already moved out of isilon
+%piezo_frames = piezo_data.piezo_frames;
+%load(fullfile(analysis_out, img_fn, [img_fn '_' run '_HPfiltered_targetAlign.mat']));
 load(fullfile(analysis_out, img_fn, [img_fn '_' run '_targetAlign.mat']));
 frameRateHz = double(mworks.frameRateHz);
 prewin_frames = round(1500./frameRateHz);
@@ -71,6 +76,7 @@ end
 ind_nan = find(isnan(targetAlign_piezo(1,:)));
 
 targetAlign_piezo = abs(targetAlign_piezo);
+%load(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignLick.mat']));
 load(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']));
 tt = (-prewin_frames:postwin_frames-1).*(1000./frameRateHz);
 figure;
@@ -99,7 +105,9 @@ elseif cue == 2
 end
 vline(700,'k');
 supertitle([date ' ' mouse]);
+%savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_avgTrialPiezo_abs.fig']));
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_avgTrialPiezo_abs.fig']));
+
 
 preRew_lickSearchRange = prewin_frames+lickDelay_frames:prewin_frames+lickDelay_frames+rewDelay_frames; % 100ms after cue - reward delivery onset
 postRew_lickSearchRange = prewin_frames+rewDelay_frames+lickDelay_frames:prewin_frames+rewDelay_frames+rewDelay_frames; % 100ms after reward delivery - 700ms after reward delivery
@@ -124,6 +132,7 @@ xlim([0 10]);
 ylim([-0.5 0.5]);
 axis square;
 supertitle([date ' ' mouse ]);
+%savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_LickvsPiezo_abs.fig']));
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_LickvsPiezo_abs.fig']));
 
 
@@ -190,6 +199,7 @@ ylim([0 inf]);
 title(['Post- Rew: ' num2str(chop(HL_piezo.low25_postrew,2)) ' vs ' num2str(chop(HL_piezo.high25_postrew,2)) ' V']);
 hold off;
 supertitle([mouse ' ' date '- Piezo Amp by Volts: low25 (blue) & high25 (black)']);
+%savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignSpiking_byPiezoAmp25_abs.fig']));
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoAmp25_abs.fig']));
 
 figure;
@@ -227,6 +237,7 @@ ylim([0 inf]);
 title(['Post- Rew: ' num2str(chop(HL_piezo.low10_postrew,2)) ' vs ' num2str(chop(HL_piezo.high10_postrew,2)) ' V']);
 hold off;
 supertitle([mouse ' ' date '- Piezo Amp by Volts: low10 (blue) & high10 (black)']);
+%savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignSpiking_byPiezoAmp10_abs.fig']));
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoAmp10_abs.fig']));
 
 %% sort out trials by looking at time of big movements: 25% and 10%
@@ -301,8 +312,10 @@ vline(700,'k');
 ylim([0 inf]);
 title('earliest 10% vs latest 10%');
 supertitle([mouse ' ' date '- Movement by latency: early (blue) & late (black)']);
+%savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignSpiking_byPiezoLatency_abs.fig']));
 savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byPiezoLatency_abs.fig']));
 
+%save(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignPiezo.mat']), ...
 save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignPiezo.mat']), ...
     'targetAlign_piezo','targetAlign_piezo_thresh1','targetAlign_piezo_thresh1ALL',...
     'targetAlign_piezo_thresh2','targetAlign_piezo_thresh2ALL','targetAlign_piezo_thresh3', ...
@@ -313,5 +326,6 @@ save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignPiezo.mat']), ...
     'ind_alllatepiezo25_rew', 'ind_allearlypiezo10_rew', 'ind_alllatepiezo10_rew',...
     'HL_piezo','piezo_frames');
 
+%
 
 

@@ -70,6 +70,6 @@ if n>1
     remove_2 = [comp(2:end);remove_2]; 
     sm(:, :, remove_2) = [];
 end
-saveData = 0;
-sm_dsum = plotMask(sm,saveData, 0,0);
+plot_mask = 1;
+sm_dsum = plotMask_Jin(sm,plot_mask);
 end

@@ -8,9 +8,9 @@
 
 %% SECTION ONE - assign pathnames and datasets to be analyzed/written. 
 clear;
-bdata_source = 'Z:\Data\behavior\RC\';
-analysis_outputs_dir = 'Z:\behavior_analysis\RC\';
-RC_fig_dir_base = 'Z:\behavior_analysis\RC\sessions_&_summaries\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
+analysis_outputs_dir = 'Z:\home\shuyang\behavior_analysis\RC\';
+RC_fig_dir_base = 'Z:\home\shuyang\behavior_analysis\RC\sessions_&_summaries\';
 
 time_before_ms = 2000; %defines the window around the cue presentation which will be taken for plotting
 time_after_ms = 3000;
@@ -174,6 +174,10 @@ for ii = 1:length(sessions)
             elseif soundamp == 0 && b_data.gratingSpeedDPS > 0 % plays only visual stim
                 vline(time_before_ms+1, 'g');
             end
+            if b_data.trialLaserPowerMw > 0 && b_data.fixedReqHoldTimeMs ~= 1900 % if doing optogenetics
+                laser_bf_cue = b_data.fixedReqHoldTimeMs;
+                vline(time_before_ms+1 - laser_bf_cue, 'c');
+            end
             vline(time_before_ms+1 + cue_rew_int, 'k');
             ylabel('trial # (descending)');
             xlabel('time (ms) colored=cue black=reward');
@@ -271,7 +275,7 @@ for ii = 1:length(sessions)
             %         end
         end
     end
-    save(['Z:\behavior_analysis\RC\RT_data\', sessions{ii}], 'RT_this_session_raw', 'time_before_ms');%,'bad_trials');
+    save(['Z:\home\shuyang\behavior_analysis\RC\RT_data\', sessions{ii}], 'RT_this_session_raw', 'time_before_ms');%,'bad_trials');
     %trim RT data to exclude misses and FA (false alarm)s  
     if b_data.block2TrPer80Level1 > 0
         TFT_rate_audi_this_session = length(find(RT_raw_audi<200))/(length(RT_raw_audi)-1);
@@ -395,7 +399,7 @@ for ii = 1:length(sessions)
     end
     full_trial_licks_rewarded = full_trial_licks;
     %bin licking by 100ms bins and convert to licks/sec
-    full_trial_licks_rewarded_sum = sum(full_trial_licks_rewarded,1);
+    full_trial_licks_rewarded_sum = sum(full_trial_licks_rewarded,1);% sum across trials
     full_trial_licks_rewarded_bin = zeros(1,(length(full_trial_licks_rewarded_sum)/bin_size));
     cue_presentation_binned = (pre_cue_window_lick/bin_size)+1;
     iii=1;
@@ -407,7 +411,7 @@ for ii = 1:length(sessions)
     %plot rewarded trials
     full_trial_licks_rewarded_bin = (full_trial_licks_rewarded_bin/size(full_trial_licks_rewarded,1))*(1000/bin_size); % convert to lick rate in Hz
     x_axis_bin = ([1:length(full_trial_licks_rewarded_bin)]-cue_presentation_binned)*(bin_size/1000);
-    save(['Z:\behavior_analysis\RC\hist_data_across_animals\', sessions{ii}, 'rew_hist'], 'full_trial_licks_rewarded_bin','x_axis_bin');
+    save(['Z:\home\shuyang\behavior_analysis\RC\hist_data_across_animals\', sessions{ii}, 'rew_hist'], 'full_trial_licks_rewarded_bin','x_axis_bin');
     if exist([session_fig_dir, sessions{ii}, '_rew_lick_hist.fig'], 'file')==0
         figure; bar(x_axis_bin, full_trial_licks_rewarded_bin);
         title(['Rewarded trials: lick rate per ', num2str(bin_size), 'ms', this_date, ' img', this_mouse, 'n=', num2str(size(full_trial_licks_rewarded,1))]);
@@ -439,7 +443,7 @@ end
 
 %% save RT std, FA rate and miss rate
 if jakes_RT_filtering
-save(['Z:\behavior_analysis\RC\RT_stats_across_animals\', sessions{ii}(end-3:end), 'RTstd_FA_misses'], ...
+save(['Z:\home\shuyang\behavior_analysis\RC\RT_stats_across_animals\', sessions{ii}(end-3:end), 'RTstd_FA_misses'], ...
     'std_of_RT_across_sessions', 'std_of_RT_across_sessions_2CS','TFT_rates',...
     'miss_rates', 'TFT_rates_2CS', 'miss_rates_2CS','RT_across_sessions','RT_across_sessions_2CS',...
     'RT_across_sessions_testDay','std_of_RT_across_sessions_testDay','TFT_rates_testDay',...
@@ -553,7 +557,7 @@ savefig([sum_fig_dir, '\', this_mouse, '_iti_vs_pre-cue_licking']);
 
 
 %save variables for across animals RT plot
-out_dir = 'Z:\behavior_analysis\RC\RT_across_animals\';
+out_dir = 'Z:\home\shuyang\behavior_analysis\RC\RT_across_animals\';
 save([out_dir, this_mouse, 'RT_sem_across_sessions'], 'RT_across_sessions', ...
     'RT_across_sessions_sem', 'RT_across_sessions_2CS', 'RT_across_sessions_sem_2CS',...
     'RT_across_sessions_IL','RT_across_sessions_sem_IL');

@@ -28,15 +28,15 @@
 
 % cue = [1,1,1,1,1,3];% 1: CS1 2: CS2 3:CS1+CS2
 
-expt(1).mouse = char('1091');
-expt(1).date = char('210616');
+expt(1).mouse = char('1914');
+expt(1).date = char('220311');
 expt(1).run = char('000');
 expt(1).ttl =   [1];
 expt(1).noreg = [0];
 expt(1).imgreglaseron = [0];
 
 %behavior data
-sessions = {'210616_img1091'};
+sessions = {'220311_img1914'};
 cue = 1;% 1: CS1 2: CS2 3:CS1+CS2 4:interleave 5: unexpected reward
 
 
