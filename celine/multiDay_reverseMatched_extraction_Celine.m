@@ -172,7 +172,7 @@ for id = 1:nd
             ind = intersect(ind_ori,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
             data_resp(:,iOri,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
             data_resp(:,iOri,iCon,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-            [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri*nCon-1));
+            [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nOri*nCon-1));
 %             baseStd=squeeze(std(nanmean(data_dfof_trial(base_win,ind,:),1),[],2));
 %             baseMean=squeeze(nanmean(nanmean(data_dfof_trial(base_win,ind,:),1),2));
 %             thresh=baseMean + (3.*baseStd);
@@ -301,7 +301,7 @@ for id = 1:nd
             tCon=tCon_match{id}(1:nTrials(id));
             tDir=tDir_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
-            temp_ori= pref_ori_keep{2}(i); %find the preferred ori of this cell and convert to degrees
+            temp_ori= pref_ori_keep{id}(i); %find the preferred ori of this cell and convert to degrees
             ori_inds = find(tDir==temp_ori); %these are the trials at that ori
 
             con_inds=find(tCon==cons(iCon));
@@ -321,6 +321,37 @@ tc_trial_avrg_keep{id}=tc_trial_avrg; %this is a cell array with one cell
 %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
 rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
 end
+
+
+
+tc_trial_avrg_keep_allCon=cell(1,nd);
+pref_responses_allCon = cell(nKeep,nd);
+
+for id = 1:nd
+    
+    tc_trial_avrg=nan((nOn+nOff),nKeep);
+    mean_resp_temp=nan(nKeep,1);
+    for i=1:nKeep
+        
+            temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
+            tDir=tDir_match{id}(1:nTrials(id));
+            %identify the trials where ori = pref ori
+            temp_ori= pref_ori_keep{id}(i); %find the preferred ori of this cell and convert to degrees
+            ori_inds = find(tDir==temp_ori); %these are the trials at that ori
+
+            pref_responses_allCon{i,id}=nanmean(temp_TCs(stimStart:stimEnd,ori_inds),1);
+            tc_trial_avrg(:,i)=nanmean(temp_TCs(:,ori_inds),2);
+        
+
+    end
+    
+    
+tc_trial_avrg_keep_allCon{id}=tc_trial_avrg; %this is a cell array with one cell 
+%per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
+end
+
+
+
 
 
 clear tc_trial_avrg temp_trials con_inds temp_con ori_inds temp_ori mean_resp_temp temp_TCs
@@ -343,7 +374,7 @@ end
 
 
 explanation1 = 'tc_trial_keep contains the timecourses for all "keep" cells for each day. The tOri_match and tCon_match data structures can be used to find trials of particular stim conditions within this. tc_trial_avrg_keep only has the timecourses averaged over tirals for each cell at its preferred orientation and at each contrast.';
-save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','sig_diff','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
+save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','tc_trial_avrg_keep_allCon','pref_responses_allCon', 'sig_diff','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
 
 
 %% make and save response matrix for keep cells

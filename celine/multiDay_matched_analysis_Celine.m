@@ -5,10 +5,10 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds);
 
-day_id = 133; %enter post-DART day
+day_id = 131; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays
 
-
+nd=2;
 mouse = expt(day_id).mouse;
 
 fnout = fullfile(rc.achAnalysis,mouse);

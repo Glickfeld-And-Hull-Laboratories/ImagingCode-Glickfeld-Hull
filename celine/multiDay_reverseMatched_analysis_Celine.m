@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsAV; %directories
 eval(ds);
 
-day_id = 133; %enter post-DART day
+day_id = 138; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -161,6 +161,63 @@ xlabel('s')
 sgtitle(['contrast = '  num2str(cons(iCon))])
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_indiv_timecourses.pdf']),'-dpdf');
 end
+
+%% time to peak
+tHalfMax = cell(1,nd);
+
+for id = 1:nd
+    tHalfMaxTemp=nan(nKeep,1);
+
+        for iCell=1:nKeep
+            %pull the data for a given cell at a given contrast (pref ori)
+            tempData=tc_trial_avrg_keep_allCon{id}(stimStart:stimStart+nOn,iCell);
+            smoothData=smoothdata(tempData,'movmean',5) ;
+%             figure;plot(tempData)
+%             hold on
+%             plot(smoothData)
+            halfMax = max(smoothData)/2;
+            tHalfMaxCell =double(min(find(smoothData>halfMax)))/double(frame_rate);
+
+            if length(tHalfMaxCell)>0
+                tHalfMaxTemp(iCell)=tHalfMaxCell;
+            end
+ 
+       end
+    tHalfMax{id}=tHalfMaxTemp;
+end
+clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
+%% scatter for tMax
+
+
+
+figure; movegui('center') 
+subplot(1,2,1)
+swarmchart((tHalfMax{2}(green_ind_keep)),(tHalfMax{1}(green_ind_keep)),'k')
+ylabel('post-DART half-max(s)')
+xlabel('pre-DART half-max(s)')
+ylim([0 2.5])
+xlim([0 2.5])
+refline(1)
+title('HT- ')
+axis square
+
+
+subplot(1,2,2)
+swarmchart((tHalfMax{2}(red_ind_keep)),(tHalfMax{1}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+
+ylabel('post-DART half-max(s)')
+xlabel('pre-DART half-max(s)')
+ylim([0 2.5])
+xlim([0 2.5])
+
+
+refline(1)
+title('HT+')
+axis square
+
+sgtitle('time to half max (s), averaged over contrast')
+print(fullfile(fn_multi_analysis, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')
+
 %% scatterplot of max df/f for day 1 vs day 2, and each subplot is one day
 
 
