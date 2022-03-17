@@ -1,8 +1,8 @@
 %% get path names
-date = '200629';
-ImgFolder = strvcat('003');
-time = strvcat('1616');
-mouse = 'i1312';
+date = '211203';
+ImgFolder = strvcat('002');
+time = strvcat('1457');
+mouse = 'i1367';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,1);
@@ -85,7 +85,7 @@ data = data(:,:,input.counterValues{1}(1):input.counterValues{end}(end));
 %% Choose register interval
 nep = floor(size(data,3)./10000);
 [n n2] = subplotn(nep);
-figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
+figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):300+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(300+((i-1)*10000))]); end
 
 data_avg = mean(data(:,:,20001:20500),3);
 %% Register data
@@ -206,7 +206,7 @@ myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_max = max(imfilter(data_dfof,myfilter),[],3);
 figure;
 imagesc(data_dfof_max)
-
+data_dfof = cat(3,data_dfof,data_dfof_max);
 %% cell segmentation 
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));

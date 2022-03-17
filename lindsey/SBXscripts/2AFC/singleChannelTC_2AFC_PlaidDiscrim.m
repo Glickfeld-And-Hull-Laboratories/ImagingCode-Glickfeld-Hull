@@ -7,7 +7,7 @@ dataset = 'plaidDiscrim_exptList';
 %dataset = 'i484_passive_ExptList';
 %dataset = 'plaidDiscrim_Passive_exptList';
 eval(dataset);
-iexp = 47;
+iexp = 63;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 if strcmp(expt(iexp).folder,'lindsey')
     data_base = LG_base;
@@ -83,12 +83,12 @@ hold on
 plot(smooth(MIx,10));
 hold on
 plot(celleqel2mat_padded(input.tDoFeedbackMotion))
-
+movegui('center')
 %% Choose register interval
 nep = floor(size(data,3)./10000);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
-
+movegui('center')
 %% Register data
 run_str = ['runs']; 
 for irun = 1:nrun
@@ -99,7 +99,7 @@ if exist(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_
     load(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister_MA(data,[],[],out); 
 else
-    data_avg = mean(data(:,:,40001:40500),3);
+    data_avg = mean(data(:,:,60001:60500),3);
     [out, data_reg] = stackRegister(data,data_avg);
     smooth_out_x = smooth(out(:,3),200);
     smooth_out_y = smooth(out(:,4),200);
@@ -161,6 +161,7 @@ if ~isempty(expt(iexp).redImg)
 
     data_avg = mean(data_reg(:,:,size(data_reg,3)-10000:end),3);
     figure; 
+    movegui('center')
     subplot(2,2,1)
     sz = size(data_avg);
     rgb = zeros(sz(1),sz(2),3);
@@ -205,6 +206,7 @@ SIx = strcmp(input.trialOutcomeCell,'success');
 dCount = diff(counterTimes);
 dVal = diff(counterVals);
 figure; plot(dCount); ylim([0 70]); vline(cEnd(SIx),':r'); 
+movegui('center')
 % hold on; plot(dVal.*30)
 % 
 % short_ind = find(dCount<20);
@@ -260,6 +262,7 @@ data_tc_dfof = mean((data_tc-mean(data_f,3))./mean(data_f,3),4);
 
 [n n2] = subplotn(nDir*2);
 figure;
+movegui('center')
 data_dfof = zeros(sz(1),sz(2),nDir*2);
 grating_type = {'Grating','Plaid'};
 start = 1;
@@ -280,7 +283,8 @@ end
 data_dfof_max = max(data_dfof,[],3);
 data_dfof_all = mean(data_targ_dfof,3);
 data_dfof_neg = mean(((-data_targ+data_f)./data_targ),3);
-figure; imagesc(data_dfof_max)
+figure; movegui('center')
+imagesc(data_dfof_max)
 data_dfof = cat(3,data_dfof_max,data_dfof);
 data_dfof = cat(3,data_dfof,data_dfof_all);
 % data_reg_3hz = stackGroupProject(data_reg,10);
@@ -314,7 +318,8 @@ if strcmp(cell2mat(expt(iexp).img_strct),'cells')
         close all
     end
     mask_cell = bwlabel(mask_all);
-    figure; imagesc(mask_cell)
+    figure; movegui('center')
+    imagesc(mask_cell)
     print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_bouton_mask.pdf']), '-dpdf')
 
     mask_np = imCellNeuropil(mask_cell, 3, 5);
@@ -379,7 +384,8 @@ elseif strcmp(cell2mat(expt(iexp).img_strct),'axons')
         end
     end      
     mask_cell = bwlabel(mask_all);
-    figure; imagesc(mask_cell)
+    figure; movegui('center')
+    imagesc(mask_cell)
     mask_cell_red = zeros(size(mask_cell)); 
     print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_bouton_mask.pdf']), '-dpdf')
 
@@ -694,6 +700,19 @@ xlabel('Time from decision (ms)')
 ylim([-0.02 0.15])
 print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_allCells.pdf']), '-dpdf','-bestfit')
 
+dirs = unique(tDir);
+nDir = length(dirs);
+stim_dfof_dir = zeros(size(data_stim_dfof,1),nCells,nDir,2);
+dec_dfof_dir = zeros(size(data_dec_dfof,1),nCells,nDir,2);
+for iDir = 1:nDir
+    ind_dir = find(tDir == dirs(iDir) & tMaskTrial==0);
+    stim_dfof_dir(:,:,iDir,1) = mean(data_stim_dfof(:,:,ind_dir),3);
+    dec_dfof_dir(:,:,iDir,1) = mean(data_dec_dfof(:,:,ind_dir),3);
+    ind_dir = find(tDir == dirs(iDir) & tMaskTrial==1);
+    stim_dfof_dir(:,:,iDir,2) = mean(data_stim_dfof(:,:,ind_dir),3);
+    dec_dfof_dir(:,:,iDir,2) = mean(data_dec_dfof(:,:,ind_dir),3);
+end
+
 %%
 ind_short = find(tDecisionTime<1000);
 ind_med = find(tDecisionTime>1000 & tDecisionTime<1800);
@@ -929,5 +948,169 @@ print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' r
 
 save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GLM.mat']), 'C_stim', 'C_dec', 'P_stim', 'P_dec','predictors');
 
+%% passive direction tuning
+dir_run_str = ['runs-' expt(iexp).dir_run];
 
+CD = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).dir_run];
+cd(CD);
+imgMatFile = [expt(iexp).dir_run '_000_000.mat'];
+load(imgMatFile);
+fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' expt(iexp).mouse '-' expt(iexp).date '-' expt(iexp).dir_time '.mat'];
+load(fName);
+nframes = [input.counterValues{end}(end) info.config.frames];
     
+if min(nframes)<input.counterValues{end}(end)
+    ntrials = size(input.trialOutcomeCell,2);
+    for itrial = ntrials:-1:1
+        if input.counterValues{itrial}(end) <= nframes
+            break
+        end
+    end
+    input = trialChopper(input,[1 itrial]);
+end
+dir_input = input;
+mkdir(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str]))
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_input.mat']),'dir_input');
+fprintf(['Reading run ' expt(iexp).dir_run '- ' num2str(min(nframes)) ' frames \r\n'])
+dir_data = sbxread(imgMatFile(1,1:11),0,min(nframes));
+dir_data = squeeze(dir_data);
+[out dir_reg_dir] = stackRegister(dir_data,data_avg);
+clear dir_data
+
+load(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
+data_tc = stackGetTimeCourses(data_reg_dir, mask_cell);
+data_tc_down = stackGetTimeCourses(stackGroupProject(data_reg_dir,5), mask_cell);
+nCells = size(data_tc,2);
+%np_tc = stackGetTimeCourses(data_reg,mask_np);
+clear np_tc np_tc_down
+sz = size(data_reg_dir);
+down = 5;
+data_reg_down  = stackGroupProject(data_reg_dir,down);
+np_tc = zeros(sz(3),nCells);
+np_tc_down = zeros(floor(sz(3)./down), nCells);
+for i = 1:nCells
+     np_tc(:,i) = stackGetTimeCourses(data_reg_dir,mask_np(:,:,i));
+     np_tc_down(:,i) = stackGetTimeCourses(data_reg_down,mask_np(:,:,i));
+     fprintf(['Cell #' num2str(i) '\n']) 
+end
+%get weights by maximizing skew
+ii= 0.01:0.01:1;
+x = zeros(length(ii), nCells);
+for i = 1:100
+    x(i,:) = skewness(data_tc_down-tcRemoveDC(np_tc_down*ii(i)));
+end
+[max_skew ind] =  max(x,[],1);
+np_w = 0.01*ind;
+npSub_tc_dir = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
+clear data_reg_dir data_reg_down
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc_dir')
+
+%% Direction analysis
+nOn = dir_input.nScansOn;
+nOff = dir_input.nScansOff;
+dir_mat = celleqel2mat_padded(dir_input.tGratingDirectionDeg);
+nTrials = length(dir_mat);
+dir_input.trialSinceReset = nTrials;
+
+down = 10;
+nframes = size(npSub_tc_dir,1)./down;
+data_tc_down = squeeze(mean(reshape(npSub_tc_dir, [down,nframes,nCells]),1));
+
+tuningDownSampFactor = down;
+[avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC] = ...
+    getOriTuning(data_tc_down,dir_input,tuningDownSampFactor,frameRateHz);
+    vonMisesFitAllCells = squeeze(vonMisesFitAllCellsAllBoots(:,1,:));
+
+if nCells<500
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_oriTuningAndFits.mat']),...
+            'avgResponseEaOri','semResponseEaOri','vonMisesFitAllCellsAllBoots','fitReliability','R_square', 'tuningTC')
+else        
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_oriTuningAndFits.mat']),...
+            'avgResponseEaOri','semResponseEaOri','vonMisesFitAllCellsAllBoots','fitReliability','R_square', 'tuningTC','-v7.3')        
+end
+
+dir_mat = celleqel2mat_padded(dir_input.tGratingDirectionDeg);
+ori_mat = dir_mat;
+ori_mat(find(dir_mat>=180)) = ori_mat(find(dir_mat>=180))-180;
+oris = unique(ori_mat);
+figure; 
+if nCells<49
+    [n n2] = subplotn(nCells);
+else
+    [n, n2] = subplotn(49);
+end
+if nCells>250
+    nC = 250;
+else
+    nC = nCells;
+end
+start = 1;
+x = 0;
+for ic = 1:nC
+    if start > 49
+        suptitle([expt(iexp).mouse ' ' expt(iexp).date ' n = ' num2str(length(find(fitReliability(find(mask_label))<22.5))) '/' num2str(sum(mask_label)) expt(iexp).driver '+ and ' num2str(length(find(fitReliability(find(~mask_label))<22.5))) '/' num2str(sum(~mask_label)) expt(iexp).driver '- well-fit'])
+        print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_oriTuningFits_cells' num2str(start-49) '-' num2str(start-1) '.pdf']),'-dpdf','-fillpage')
+        start = 1;
+        x = x+1;
+        figure;
+    end
+    subplot(n,n2,ic-(x.*49))
+    errorbar(oris,avgResponseEaOri(ic,:), semResponseEaOri(ic,:),'-o')
+    hold on
+    plot(0:180,vonMisesFitAllCellsAllBoots(:,1,ic));
+    tit_str = num2str(chop(R_square(1,ic),2));
+    if mask_label(ic)
+        tit_str = [tit_str '-' expt(iexp).driver];
+    end
+    if fitReliability(ic)<22.5
+        tit_str = [tit_str '- R'];
+    end
+    title(tit_str)
+    start = start+1;
+end
+suptitle([expt(iexp).mouse ' ' expt(iexp).date ' n = ' num2str(length(find(fitReliability(find(mask_label))<22.5))) '/' num2str(sum(mask_label)) expt(iexp).driver '+ and ' num2str(length(find(fitReliability(find(~mask_label))<22.5))) '/' num2str(sum(~mask_label)) expt(iexp).driver '- well-fit'])
+print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_oriTuningFits' num2str(start-49) '-' num2str(start-1) '.pdf']),'-dpdf','-fillpage')
+
+[max_resp prefOri] = max(vonMisesFitAllCellsAllBoots,[],1);
+prefOri = squeeze(prefOri)-1;
+prefOri_bootdiff = abs(prefOri(2:end,:)-prefOri(1,:));
+prefOri_bootdiff(find(prefOri_bootdiff>90)) = 180-prefOri_bootdiff(find(prefOri_bootdiff>90));
+ind_theta90 = find(prctile(prefOri_bootdiff,90,1)<22.5);
+edges = [0 22.5:45:180]; 
+[bin ind_bin] = histc(prefOri(1,:),edges);
+ind_bin(find(ind_bin==5)) = 1;
+bin(1) = bin(1)+bin(5);
+bin(5) = [];
+
+tunedCells = cell(1,length(bin));
+for i = 1:length(bin)
+    tunedCells{i} = intersect(find(ind_bin==i),ind_theta90);
+end
+
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_oriTuningInfo.mat']),...
+    'prefOri', 'prefOri_bootdiff', 'ind_theta90', 'tunedCells');
+
+prewin_frames = frameRateHz;
+postwin_frames = nOn+nOff;
+tc_trial = nan(prewin_frames+postwin_frames,nCells,nTrials);
+start = 1;
+for i = 1:nTrials-1
+    if start+nOff+postwin_frames <= nFrames
+        tc_trial(:,:,i) = npSub_tc_dir(start+nOff-prewin_frames:start+nOff+postwin_frames-1,:);
+    end
+    start = start+nOn+nOff;
+end
+trial_f = mean(tc_trial(1:prewin_frames,:,:),1);
+trial_dfof = (tc_trial-trial_f)./trial_f;
+
+dirs = unique(dir_mat);
+nDir = length(dirs);
+avg_dir_tc_pass = zeros(prewin_frames+postwin_frames,nCells,nDir);
+for i = 1:nDir
+    ind = find(dir_mat==dirs(i));
+    tr_ind(i) = length(ind);
+    avg_dir_tc_pass(:,:,i) = nanmean(trial_dfof(:,:,i),3);
+end
+avg_dir_tc_behav = stim_dfof_dir;
+save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_run_str], [date '_' mouse '_' dir_run_str '_TCsForPCA.mat']),...
+    'avg_dir_tc_pass', 'avg_dir_tc_behav');

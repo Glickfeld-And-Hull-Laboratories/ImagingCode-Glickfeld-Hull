@@ -11,11 +11,11 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '210927';
-ImgFolder = '002';
-time = '1408';
-mouse = 'i1358';
-frame_rate = 30;
+date = '220120';
+ImgFolder = '003';
+time = '1742';
+mouse = 'i1368';
+frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -88,13 +88,14 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_FOV_first&last.pd
 %    b. Average of all frames should be sharp
 imagesq(data_reg_avg); 
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_FOV_avg.pdf']), '-dpdf')
-clear data
 
+clear data
 %% Segment 2P data
 %Goal here is to create a cell mask to extract fluorescence timecourses
 %1. Find activated cells
 %    a. Reshape data stack to segregate trials 
 %    First need to know how many frames per trial and how many trials
+
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one value per trial, so length = ntrials
@@ -224,6 +225,7 @@ for iDir = 1:nDirs
 end
 
 h_all_dir = sum(h_dir,1);
+resp_ind = find(h_all_dir);
 start=1;
 n = 1;
 figure;
@@ -241,6 +243,24 @@ for iCell = 1:nCells
     start = start +1;
 end
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+
+%plot significant cells
+start=1;
+n = 1;
+figure;
+movegui('center')
+for i = 1:length(resp_ind)
+    iCell = resp_ind(i);
+    if start>25
+        figure;movegui('center');
+        start = 1;
+        n = n+1;
+    end
+    subplot(5,5,start)
+    errorbar(Dirs, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
+    title(['R = ' num2str(h_all_dir(iCell))])
+    start = start +1;
+end
 
 tOri = tDir;
 tOri(find(tDir>=180)) = tOri(find(tDir>=180))-180;
