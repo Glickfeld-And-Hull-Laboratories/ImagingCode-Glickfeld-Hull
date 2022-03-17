@@ -67,6 +67,21 @@ for iA = 1:narea
     plotZcZpBorders
     end
     
+    Zp_use = intersect(resp_ind_all,intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)));
+    figure(3)
+    subplot(2,2,1)
+    cdfplot(abs(Zc_all(1,Zp_use)-Zc_all(2,Zp_use)))
+    hold on
+    subplot(2,2,2)
+    cdfplot(abs(Zp_all(1,Zp_use)-Zp_all(2,Zp_use)))
+    hold on
+    subplot(2,2,3)
+    cdfplot(abs((Zc_all(1,Zp_use)-Zp_all(1,Zp_use))-(Zc_all(2,Zp_use)-Zp_all(2,Zp_use))))
+    hold on
+    subplot(2,2,4)
+    scatter(Zc_all(2,Zp_use),Zp_all(2,Zp_use))
+    hold on
+    
 end
 figure(1)
 movegui('center')
@@ -102,3 +117,23 @@ print(fullfile(summaryDir, ['randDirTwoPhase_' str{a} '_allArea_summary.pdf']),'
 figure(2)
 movegui('center')
 print(fullfile(summaryDir, ['randDirTwoPhase_' str{a} 'allArea_summary_ZcZp_scatters.pdf']),'-dpdf', '-fillpage')
+
+figure(3)
+movegui('center')
+subplot(2,2,1)
+legend(leg_str{1,:},'location','southeast')
+xlabel('Zc: 0 vs 90')
+xlim([0 6])
+subplot(2,2,2)
+xlabel('Zp: 0 vs 90')
+xlim([0 6])
+subplot(2,2,3)
+xlabel('Zc-Zp: 0 vs 90')
+xlim([0 10])
+subplot(2,2,4)
+ xlim([-4 8])
+ylim([-4 8])
+xlabel('Zc')
+ylabel('Zp')
+axis square
+plotZcZpBorders

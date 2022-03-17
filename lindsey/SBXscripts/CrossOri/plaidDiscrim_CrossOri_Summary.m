@@ -11,7 +11,7 @@ stimOn = 25000;
 stimSz = 1000;
 stimSetDur = 'LT';
 stimSetSz = 'FF';
-area = 'RL';
+area = 'V1';
 nexp = size(expt,2);
 
 resp_ind_all = [];
@@ -34,6 +34,16 @@ C_stim_all = [];
 P_stim_all = [];
 C_dec_all = [];
 P_dec_all = [];
+h_dir_all = [];
+
+alltrain_traintest_pctCorr_all = [];
+alltrain_alltest_pctCorr_all = [];
+gratingtrain_traintest_pctCorr_all = [];
+gratingtrain_gratingtest_pctCorr_all = [];
+gratingtrain_plaidtest_pctCorr_all = [];
+plaidtrain_traintest_pctCorr_all = [];
+plaidtrain_plaidtest_pctCorr_all = [];
+plaidtrain_gratingtest_pctCorr_all = [];
 
 mouse_list = [];
 
@@ -41,7 +51,7 @@ totTrials = zeros(nexp,2);
 quant = zeros(nexp,2);
 
 totCells = zeros(nexp,1);
-for iexp = 1:nexp
+for iexp = 1:nexp-2
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     layer = expt(iexp).img_loc{2};
@@ -58,60 +68,84 @@ for iexp = 1:nexp
             & input.stimOnTimeMs <= stimOn) & sum(tDoFB)<nTrials & input.gratingMaxDiameterDeg == stimSz
         load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']))
         if input.gratingSpatialFreqCPD == 0.1
-        fprintf([mouse ' ' date '\n'])
-        mouse_list = strvcat(mouse_list, mouse);
+            fprintf([mouse ' ' date '\n'])
+            mouse_list = strvcat(mouse_list, mouse);
 
-        load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']))
-        load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
-        load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GLM.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GLM.mat']))
+
+
+            red_cells = find(mask_label);
+
+            nCells = size(stim_resp_dir,1);
+            totCells(iexp,:) = nCells;
+
+            resp_ind_all = [resp_ind_all; resp_ind+sum(totCells(1:iexp-1,:),1)];
+            red_cells_all = [red_cells_all red_cells+sum(totCells(1:iexp-1,:),1)];
+            z_all = [z_all expt(iexp).z.*ones(1,nCells)];
+            driver_all = [driver_all repmat(mat2cell(expt(iexp).driver,1,3),ones(1,nCells))];
+            if size(stim_resp_dir,2)>8
+                stim_resp_dir(:,5,:,:) = [];
+                h_dir(:,5,:) = [];
+            end
+            stim_resp_dir_all = cat(1, stim_resp_dir_all, stim_resp_dir(:,:,:,1:2));
+            h_dir_all = cat(1, h_dir_all,h_dir(:,:,1:2));
+
+            Zc_all = [Zc_all Zc];
+            Zp_all = [Zp_all Zp];
+
+            C_stim_all = [C_stim_all C_stim];
+            P_stim_all = [P_stim_all P_stim];
+            C_dec_all = [C_dec_all C_dec];
+            P_dec_all = [P_dec_all P_dec];
+
+            tDecisionTime = celleqel2mat_padded(input.tDecisionTimeMs);
+            IgnoreIx = strcmp(input.trialOutcomeCell,'ignore');
+            quant(iexp,:) = quantile(tDecisionTime,[0.2 0.8]);
+            ind_short = find(tDecisionTime<quant(iexp,1) & ~tDoFB & ~IgnoreIx & ~isnan(squeeze(data_dec_dfof(1,1,:))'));
+            ind_long = find(tDecisionTime>quant(iexp,2) & ~tDoFB & ~IgnoreIx & ~isnan(squeeze(data_dec_dfof(1,1,:))'));
+            totTrials(iexp,1) = length(ind_short);
+            totTrials(iexp,2) = length(ind_long);
+            resp_stim_short = mean(data_stim_dfof(:,:,ind_short),3);
+            resp_stim_long = mean(data_stim_dfof(:,:,ind_long),3);
+            resp_stim_short_all = [resp_stim_short_all resp_stim_short];
+            resp_stim_long_all = [resp_stim_long_all resp_stim_long];
+            resp_dec_short = mean(data_dec_dfof(:,:,ind_short),3);
+            resp_dec_long = mean(data_dec_dfof(:,:,ind_long),3);
+            resp_dec_short_all = [resp_dec_short_all resp_dec_short];
+            resp_dec_long_all = [resp_dec_long_all resp_dec_long];
+            corr_stim = zeros(1,nCells);
+            corr_dec = zeros(1,nCells);
+            for iC = 1:nCells
+                corr_stim(1,iC) = triu2vec(corrcoef(resp_stim_short(:,iC),resp_stim_long(:,iC)));
+                corr_dec(1,iC) = triu2vec(corrcoef(resp_dec_short(:,iC),resp_dec_long(:,iC)));
+            end
+            corr_stim_all = [corr_stim_all corr_stim];
+            corr_dec_all = [corr_dec_all corr_dec];
+
+            if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_popDecode.mat']))
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_popDecode.mat']))
+                alltrain_traintest_pctCorr_all = cat(1,alltrain_traintest_pctCorr_all,alltrain_traintest_pctCorr);
+                alltrain_alltest_pctCorr_all = cat(1,alltrain_alltest_pctCorr_all,alltrain_alltest_pctCorr);
+                gratingtrain_traintest_pctCorr_all = cat(1,gratingtrain_traintest_pctCorr_all,gratingtrain_traintest_pctCorr);
+                gratingtrain_gratingtest_pctCorr_all = cat(1,gratingtrain_gratingtest_pctCorr_all,gratingtrain_gratingtest_pctCorr);
+                gratingtrain_plaidtest_pctCorr_all = cat(1,gratingtrain_plaidtest_pctCorr_all,gratingtrain_plaidtest_pctCorr);
+                plaidtrain_traintest_pctCorr_all = cat(1,plaidtrain_traintest_pctCorr_all,plaidtrain_traintest_pctCorr);
+                plaidtrain_plaidtest_pctCorr_all = cat(1,plaidtrain_plaidtest_pctCorr_all,plaidtrain_plaidtest_pctCorr);
+                plaidtrain_gratingtest_pctCorr_all = cat(1,plaidtrain_gratingtest_pctCorr_all,plaidtrain_gratingtest_pctCorr);
+            end
         
-        red_cells = find(mask_label);
-
-        nCells = size(stim_resp_dir,1);
-        totCells(iexp,:) = nCells;
-
-        resp_ind_all = [resp_ind_all; resp_ind+sum(totCells(1:iexp-1,:),1)];
-        red_cells_all = [red_cells_all red_cells+sum(totCells(1:iexp-1,:),1)];
-        z_all = [z_all expt(iexp).z.*ones(1,nCells)];
-        driver_all = [driver_all repmat(mat2cell(expt(iexp).driver,1,3),ones(1,nCells))];
-        stim_resp_dir_all = cat(1, stim_resp_dir_all, stim_resp_dir(:,1:8,:,1:2));
-
-        Zc_all = [Zc_all Zc];
-        Zp_all = [Zp_all Zp];
-        
-        C_stim_all = [C_stim_all C_stim];
-        P_stim_all = [P_stim_all P_stim];
-        C_dec_all = [C_dec_all C_dec];
-        P_dec_all = [P_dec_all P_dec];
-        
-        tDecisionTime = celleqel2mat_padded(input.tDecisionTimeMs);
-        IgnoreIx = strcmp(input.trialOutcomeCell,'ignore');
-        quant(iexp,:) = quantile(tDecisionTime,[0.2 0.8]);
-        ind_short = find(tDecisionTime<quant(iexp,1) & ~tDoFB & ~IgnoreIx & ~isnan(squeeze(data_dec_dfof(1,1,:))'));
-        ind_long = find(tDecisionTime>quant(iexp,2) & ~tDoFB & ~IgnoreIx & ~isnan(squeeze(data_dec_dfof(1,1,:))'));
-        totTrials(iexp,1) = length(ind_short);
-        totTrials(iexp,2) = length(ind_long);
-        resp_stim_short = mean(data_stim_dfof(:,:,ind_short),3);
-        resp_stim_long = mean(data_stim_dfof(:,:,ind_long),3);
-        resp_stim_short_all = [resp_stim_short_all resp_stim_short];
-        resp_stim_long_all = [resp_stim_long_all resp_stim_long];
-        resp_dec_short = mean(data_dec_dfof(:,:,ind_short),3);
-        resp_dec_long = mean(data_dec_dfof(:,:,ind_long),3);
-        resp_dec_short_all = [resp_dec_short_all resp_dec_short];
-        resp_dec_long_all = [resp_dec_long_all resp_dec_long];
-        corr_stim = zeros(1,nCells);
-        corr_dec = zeros(1,nCells);
-        for iC = 1:nCells
-            corr_stim(1,iC) = triu2vec(corrcoef(resp_stim_short(:,iC),resp_stim_long(:,iC)));
-            corr_dec(1,iC) = triu2vec(corrcoef(resp_dec_short(:,iC),resp_dec_long(:,iC)));
-        end
-        corr_stim_all = [corr_stim_all corr_stim];
-        corr_dec_all = [corr_dec_all corr_dec];
         end
     end
 end
-
-save(fullfile(summaryDir,[svName '_Summary_' area '_stimOn' stimSetDur num2str(stimOn) '_' stimSetSz '.mat']),'totCells','driver_all','z_all','red_cells_all','corr_stim_all','corr_dec_all','resp_dec_short_all','resp_dec_long_all','resp_stim_short_all','resp_stim_long_all','resp_ind_all','Zp_all','Zc_all','stim_resp_dir_all','C_stim_all','P_stim_all','C_dec_all','P_dec_all', 'mouse_list')
+dirs = unique(tDir);
+dirs(find(isnan(dirs))) = [];
+if length(dirs)>8
+    dirs(5) = [];
+end
+save(fullfile(summaryDir,[svName '_Summary_' area '_stimOn' stimSetDur num2str(stimOn) '_' stimSetSz '.mat']),'dirs','totCells','driver_all','z_all','red_cells_all','corr_stim_all','corr_dec_all','resp_dec_short_all','resp_dec_long_all','resp_stim_short_all','resp_stim_long_all','resp_ind_all','h_dir_all','Zp_all','Zc_all','stim_resp_dir_all','C_stim_all','P_stim_all','C_dec_all','P_dec_all', 'mouse_list','alltrain_traintest_pctCorr_all','alltrain_alltest_pctCorr_all','gratingtrain_traintest_pctCorr_all','gratingtrain_gratingtest_pctCorr_all','gratingtrain_plaidtest_pctCorr_all','plaidtrain_traintest_pctCorr_all','plaidtrain_plaidtest_pctCorr_all','plaidtrain_gratingtest_pctCorr_all')
 
 %%
 
