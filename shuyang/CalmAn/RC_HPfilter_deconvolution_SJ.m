@@ -1,13 +1,13 @@
 clear;
-analysis_out = 'Z:\2P_analysis\';
-bdata_source = 'Z:\Data\behavior\RC\';
+analysis_out = 'Z:\home\shuyang\2P_analysis\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
 
 ttl =   1;
 noreg = 0;
 imgreglaseron = 0;
 
-mouse = '1079';
-date = '201114';
+mouse = '1901';
+date = '211008';
 run = '000';
 
 fprintf([date ' ' mouse '\n'])
@@ -32,17 +32,19 @@ end
 % frequency response as flat as possible in the passband, also called
 % maximally flat magnitude filter. 
 FrameRate = 30;
-cutoffF =[0.005, 0.01, 0.02, 0.035, 0.05];
-filter_output = {};
-for i = 1:length(cutoffF)
-    [b,a]=butter(3,(cutoffF(i)*2/FrameRate),'high');%get transfer function coefficients. first input is filter order, second input is cutoff frequency, formula is on matlab page
+%cutoffF =[0.005, 0.01, 0.02, 0.035, 0.05];
+cutoffF = 0.035;
+%filter_output = {};
+filter_output = struct;
+%for i = 1:length(cutoffF)
+    [b,a]=butter(3,(cutoffF*2/FrameRate),'high');%get transfer function coefficients. first input is filter order, second input is cutoff frequency, formula is on matlab page
     tc_avg_filtered = filtfilt(b,a,tc_avg); %zero-phase filtering, in both forward and reverse directions. this function operates along the first array dimension of x with size greater than 1
     
     figure; plot(mean(tc_avg,2)); hold on; plot(mean(tc_avg_filtered,2));
-    title ([date ' img' mouse ' ' run ' ' num2str(cutoffF(i))]); ylabel('rawF(blue) filtered F(red)');
+    title ([date ' img' mouse ' ' run ' ' num2str(cutoffF)]); ylabel('rawF(blue) filtered F(red)');
     xlabel ('frame');
     box off;
-    savefig([analysis_out filter_out date '_img' mouse '_' run '_TCaveVsHPfilter' num2str(cutoffF(i)) '.fig']);
+    savefig([analysis_out filter_out date '_img' mouse '_' run '_TCaveVsHPfilter' num2str(cutoffF) '.fig']);
     
     % for each cell, find peaks in raw F and filtered F. if the number of peaks
     % are identical, then high pass filtering didn't get rid of any peaks
@@ -60,25 +62,27 @@ for i = 1:length(cutoffF)
     figure; bar(diff_pks);
     ylim([-10 8]);xlabel('cell #');
     box off;
-    title([date ' img' mouse ' ' run ' ' num2str(cutoffF(i)) ' npksHP - npksRaw']);
-    savefig([analysis_out filter_out date '_img' mouse '_' run '_diff_pks' num2str(cutoffF(i)) '.fig']);
-    filter_output{i}.cutoff = cutoffF(i);
-    filter_output{i}.tc_avg_filtered = tc_avg_filtered;
-    filter_output{i}.diff_pks = diff_pks;
-end
-save([analysis_out filter_out date '_img' mouse '_' run '_HPfilter.mat' ],'filter_output');
+    title([date ' img' mouse ' ' run ' ' num2str(cutoffF) ' npksHP - npksRaw']);
+    savefig([analysis_out filter_out date '_img' mouse '_' run '_diff_pks' num2str(cutoffF) '.fig']);
+    filter_output.cutoff = cutoffF;
+    filter_output.tc_avg_filtered = tc_avg_filtered;
+    filter_output.diff_pks = diff_pks;
+%end
+save([analysis_out filter_out date '_img' mouse '_' run '_HPfilter' num2str(cutoffF) '.mat' ],'filter_output');
 close all;
     
+%{
 %% plot on a cell by cell basis, with different filtered frequencies
-filename = dir([analysis_out filter_out '*' '_HPfilter.mat']);
+filename = dir([analysis_out filter_out '*' '_HPfilter0.035.mat']);
 load([analysis_out,filter_out, filename.name]);
 [fig_filtered] = GUI_rawTrace_nHPfiltered(tc_avg,filter_output,[date '_img' mouse]);
 savefig([analysis_out filter_out date '_img' mouse '_' run '_GUI_TCave_HPfilter.fig']);
 %[fig_filtered_peaks] = GUI_rawTrace_nHPfiltered_peaks(tc_avg,filter_output,[date '_img' mouse]);
+%}
 
 %% Deconvolution
 % find the baseline states: 4s-120frames before cTargetOn
-filename = dir([analysis_out filter_out '*' '_HPfilter.mat']);
+filename = dir([analysis_out filter_out '*' '_HPfilter0.035.mat']);
 load([analysis_out,filter_out, filename.name]);
 
 baseline = zeros(1,120*length(cTargetOn_cutted));
@@ -94,8 +98,8 @@ end
 baseline(baseline==0) = []; % this should only happen when you manually cut the neural data
 
 % 0.005, 0.01, 0.02, 0.035, 0.05
-tc_avg_filtered = filter_output{4}.tc_avg_filtered;
-cutoffF = filter_output{4}.cutoff;
+tc_avg_filtered = filter_output.tc_avg_filtered;
+cutoffF = filter_output.cutoff;
 TCave = tc_avg_filtered+abs(min(min(tc_avg_filtered)))+10; %bring all the filtered trace to above 0 
 frames = 1:1:size(TCave,1);
 threshold = -3; %changing the threhold basically changes the identification of spikes when the peak amplitude is small (those small peaks), doesn't change anything with the bigger jittered ones. -3 or -3.5 gives a FR close to 1 during stationary
@@ -166,23 +170,22 @@ for c = 1:size(spk_peak,2)
 end
 figure; plot(nobase_maxperiod);
 title('not return to baseline period');
-savefig([analysis_out decon_out date '_img' mouse '_Caevent_nobase' num2str(threshold) '.fig']);
+savefig([analysis_out decon_out date '_img' mouse '_Caevent_nobase' num2str(threshold) '_cutoffF 0.035' '.fig']);
 %if the maximum not return to baseline period is bigger than n # of frames,
 %throw out this cell
-nobase_thres = 2000; % determine this number after looking at the plot. sort out the outliers, I typically use a number in between 2000-4000. 
+nobase_thres = 600; % determine this number after looking at the plot. sort out the outliers, I typically use a number in between 2000-4000. 
 nobase_cell = find(nobase_maxperiod > nobase_thres);
 
-baseline_btm = zeros(1, size(TCave,2));
-for n = 1:size(TCave,2)                     % for each cell
-    TCave_sort = sort(TCave(:,n),1,'ascend');
+baseline_btm = zeros(1, size(tc_avg,2));
+for n = 1:size(tc_avg,2)                     % for each cell
+    TCave_sort = sort(tc_avg(:,n),1,'ascend');
     btm = TCave_sort(1:floor(length(TCave_sort)*0.1));
     baseline_btm(n) = mean(btm);
 end
 figure; plot(baseline_btm);
 title('baseline fluorescence');
-savefig([analysis_out decon_out date '_img' mouse '_baselineF' num2str(threshold) '.fig']);
+savefig([analysis_out decon_out date '_img' mouse '_baselineF' num2str(threshold) '_cutoffF 0.035' '.fig']);
 baseline_thres = 2000; % same as above, if all of the cells look bright to you, can also set this to empty. 
-%baseline_thres = [];
 low_Fcell = find(baseline_btm < baseline_thres);
 %low_Fcell = [];
 
@@ -198,12 +201,13 @@ spk_peak_cl = spk_peak; spk_peak_cl(badPCs) = [];
 spk_inx_cl = spk_inx; spk_inx_cl(badPCs) = [];
 
 % make sure you save everything you want to save
-save([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_deconvolution_thresh', num2str(threshold), '_TCave_cl.mat'],...
+save([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_deconvolution_thresh', num2str(threshold), '_cutoffF 0.035' '_TCave_cl.mat'],...
     'TCave_cl','threshold','badPCs','nobase_cell','low_Fcell','nobase_thres','baseline_thres','all_TCave_cl');
-save([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvolve_threshold' num2str(threshold) '.mat' ],'FRstay_cell_cl', ...
+save([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_cutoff_' num2str(cutoffF) '_deconvolve_threshold' num2str(threshold) '.mat' ],'FRstay_cell_cl', ...
     'aveFR_cl','badPCs','spk_logic_cl','spk_cl','kernel_cl','spk_peak_cl',...
     'spk_inx_cl','threshold','badPCs','nobase_cell','low_Fcell','nobase_thres',...
     'baseline_thres','-append');
+
 
 %% make a new mask figure
 % load mask3D final
@@ -214,7 +218,7 @@ allcells = 1:size(TCave,2);
 goodcells = setdiff(allcells,badPCs);
 figure;
 %needs to modify the line below due to different file names
-imshow([analysis_out,img_fn 'AVG_' date '_img' mouse '_' run '_rgstr_tiff_every50_ref1_jpeg.jpg']); hold on;
+imshow([analysis_out,img_fn 'AVG_' date '_img' mouse '_' run '_rgstr_tiff_every50_ref3_jpeg.jpg']); hold on;
 for m  = 1:length(goodcells)
     bound = cell2mat(bwboundaries(mask3D(:,:,goodcells(m))));
     randcolor = rand(1,4);
@@ -224,7 +228,6 @@ for m  = 1:length(goodcells)
 end
 hold on;
 title([date ' img' mouse ' masks only good cells']);
-savefig([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_mask_wdendrites_goodcells.fig']);
-
+savefig([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_HPfiltered_mask_wdendrites_goodcells.fig']);
 
 

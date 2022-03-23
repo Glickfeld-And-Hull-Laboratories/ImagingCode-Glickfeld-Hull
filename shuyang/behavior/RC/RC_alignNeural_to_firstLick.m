@@ -5,8 +5,8 @@
 
 clear; 
 close all;
-bdata_source = 'Z:\Data\behavior\RC\';
-analysis_out = 'Z:\2P_analysis\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
+analysis_out = 'Z:\home\shuyang\2P_analysis\';
 RC_imaging_list_SJ;
 
 for  j = 1:length(expt.ttl)
@@ -19,10 +19,13 @@ for  j = 1:length(expt.ttl)
     fprintf([date ' ' mouse ' ' run '\n']);
     img_fn = [date '_img' mouse];
     input = get_bx_data_sj(bdata_source, sessions{j});
+    %load(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_targetAlign.mat']));
     load(fullfile(analysis_out,img_fn, [img_fn '_' run '_targetAlign.mat']));
     threshold = -3;
+    %load(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_cutoff_0.035' '_deconvolve_threshold' num2str(threshold) '.mat' ]));
     load(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvolve_threshold' num2str(threshold) '.mat' ]));
     
+
     cTargetOn = input.cTargetOn;
     if iscell(cTargetOn) % if it is a cell, it means cTargetOn wasn't being over written in extract TC. If it's not a cell, it's already over written in extract TC. can be used directly
         cTargetOn = cell2mat(input.cTargetOn);
@@ -150,10 +153,12 @@ for  j = 1:length(expt.ttl)
     end
     
     tt = (-prewin_frames:postwin_frames-1).*(1000./frameRateHz);
+    %save(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignLick.mat']), ...
     save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']), ...
         'postRew_lickAlignEvents_1500_3000ms_scale', 'postRew_lickAlign_1500_3000ms_scale',...
         'firstPostRew_lickAlignEvents_1500_3000ms_scale','firstPostRew_lickAlign_1500_3000ms_scale',...
         '-append');
+    
     
     figure;
     subplot(2,1,1); % align neural activity to lick burst onset, only burst trials are included 
@@ -170,6 +175,7 @@ for  j = 1:length(expt.ttl)
     ylabel('Lick rate (Hz)');
     vline(0,'k'); ylim([0 inf]);
     supertitle([mouse ' ' date '- post reward lick burst aligned spiking']);
+    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_postRew_lickAlignSpiking_1500_3000ms_scale.fig']));
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_postRew_lickAlignSpiking_1500_3000ms_scale.fig']));
     hold off;
     
@@ -188,6 +194,7 @@ for  j = 1:length(expt.ttl)
     title(['Rew- ' num2str(length(postRewTrials))]);
     supertitle([mouse ' ' date '- Licks relative to reward']);
     hold off;
+    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_lastVsFirstLick_1500_3000ms_scale.fig']));
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_lastVsFirstLick_1500_3000ms_scale.fig']));
     
 end

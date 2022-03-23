@@ -1,7 +1,7 @@
 clear; 
 close all;
-bdata_source = 'Z:\Data\behavior\RC\';
-analysis_out = 'Z:\2P_analysis\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
+analysis_out = 'Z:\home\shuyang\2P_analysis\';
 RC_imaging_list_SJ;
 
 for  j = 1:length(expt.ttl)
@@ -14,8 +14,9 @@ for  j = 1:length(expt.ttl)
     fprintf([date ' ' mouse ' ' run '\n']);
     img_fn = [date '_img' mouse];
     input = get_bx_data_sj(bdata_source, sessions{j});
+    %load(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_targetAlign.mat']));
     load(fullfile(analysis_out,img_fn, [img_fn '_' run '_targetAlign.mat']));
-    
+     
     rewDelay_frames =  round(0.7.*frameRateHz);% there's 700ms between the cue and the reward delivery !!!!! if you change tooFastMs in the varibles in MWorks, this needs to be changed
     
     cTargetOn = input.cTargetOn;
@@ -136,6 +137,7 @@ for  j = 1:length(expt.ttl)
         vline(0,'g');
     end
     vline(700,'k');
+    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlign_lickHz.fig']));
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlign_lickHz.fig']));
     
     nIC = size(targetAlign_events,2);
@@ -165,6 +167,7 @@ for  j = 1:length(expt.ttl)
         ylabel('Spike rate (Hz)');
         ylim([-1 inf]);
         title([mouse ' ' date '- lick bursts: early (n = ' num2str(length(ind_early_bst)) '); late (n = ' num2str(length(ind_late_bst)) ')']);
+        %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignSpiking_byLickTime.fig']));
         savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byLickTime.fig']));
         hold off;
     end
@@ -209,6 +212,7 @@ for  j = 1:length(expt.ttl)
     ylabel('Lick rate (Hz)');
     ylim([0 inf]);
     supertitle([mouse ' ' date '- post reward lick burst aligned spiking']);
+    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_postRew_lickAlignSpiking.fig']));
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_postRew_lickAlignSpiking.fig']));
     hold off;
     
@@ -221,7 +225,8 @@ for  j = 1:length(expt.ttl)
     xlabel('Time from cue');
     ylabel('Cumulative Licks');
     hold off;
-    savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cumulativeLicking.fig']));
+    savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cumulativeLicking.fig']));
+    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cumulativeLicking.fig']));
     
     tl_rew = (1-postLick_frames:(postLick_frames*2)).*(1000./frameRateHz);
     figure; % align neural and licking data to the first and last lick, respectively
@@ -252,6 +257,7 @@ for  j = 1:length(expt.ttl)
     title(['Rew- ' num2str(length(postRewTrials))]);
     supertitle([mouse ' ' date '- Licks relative to reward']);
     hold off;
+    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_lastVsFirstLick.fig']));
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_lastVsFirstLick.fig']));
     
     [sortlickHz sortlickHz_ind] = sort(lickBurstHz_all,'ascend');
@@ -303,8 +309,10 @@ for  j = 1:length(expt.ttl)
     title(['Post- Rew: ' num2str(chop(HL_lickrate.low_postrew,2)) ' vs ' num2str(chop(HL_lickrate.high_postrew,2)) ' Hz']);
     supertitle([mouse ' ' date '- lick bursts by rate: low (blue) & high (black)']);
     hold off;
+    %savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignSpiking_byLickRate.fig']));
     savefig(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignSpiking_byLickRate.fig']));
     
+    %save(fullfile(analysis_out,img_fn, [img_fn '_' run '_HPfiltered_cueAlignLick.mat']), 'firstPostRewLickFrame', ...
     save(fullfile(analysis_out,img_fn, [img_fn '_' run '_cueAlignLick.mat']), 'firstPostRewLickFrame', ...
         'lastPreRewLickFrame', 'tl_rew', 'firstPostRew_lickAlignEvents', 'lastPreRew_lickAlignEvents', ...
         'lickCueAlign', 'lickBurstStart', 'lickCounterVals', 'lickSearch_frames', 'lickDelay_frames',...
@@ -313,5 +321,6 @@ for  j = 1:length(expt.ttl)
         'postRew_lickBurstStart','tl', 'ind_prerew_early_bst', 'ind_prerew_late_bst','postRew_lickAlign',...
         'preRew_lickBurstHz','postRew_lickBurstHz','ind_low_prerew','ind_high_prerew','ind_low_postrew',...
         'ind_high_postrew','ind_high_bst','ind_low_bst','HL_lickrate');
+    
     
 end

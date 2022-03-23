@@ -71,7 +71,7 @@ num_spks_cell = zeros(1,size(TCave,2));
 FRstay_cell = zeros(1,size(TCave,2));
 for c = 1: size(TCave,2)
     [kernel(:,c), spk(:,c), options] = deconvolveCa_stay(TCave(:,c), 'optimize_pars', true, ...
-        'optimize_b', true, 'method','foopsi', 'smin', smin_run(c)); % deconvolveCa_stay is the function I modified that applies the smin of running to the whole dataset (only changed for FOOPSI model OR1)
+        'optimize_b', true, 'method','foopsi', 'smin', smin_run(c)); % deconvolveCa_stay is the function I modified that applies the smin of running to the whole dataset (only changed for FOOPSI model OR1) I think I just assigned smin_run(c) to gmax
     % get only the peaks of each spike
     [spk_peak{c},spk_inx{c}] = findpeaks(spk(:,c)); % the index you get here is the index in frm_stay
     % spike logic

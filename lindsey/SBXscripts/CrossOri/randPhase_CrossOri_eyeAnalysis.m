@@ -37,7 +37,7 @@ calib = 1/26.6; %mm per pixel
 nrun = length(ImgFolder);
 data = [];
 for irun =  1:nrun
-    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
+    CD = [base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
     cd(CD);
     fn = [ImgFolder{irun} '_000_000_eye.mat'];
 
@@ -179,7 +179,7 @@ for i = 1:minx
 end
 movegui('center')
 sgtitle(['No pupil detected- ' num2str(length(x)) ' frames'])
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_noPupil2.pdf']),'-dpdf','-fillpage');
+print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_noPupil2.pdf']),'-dpdf','-fillpage');
 
 x = setdiff(x2,x3);
 if length(x)>25
@@ -201,7 +201,7 @@ for i = 1:minx
 end
 movegui('center')
 sgtitle('Pupil detected')
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Pupil.pdf']),'-dpdf','-fillpage');
+print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Pupil.pdf']),'-dpdf','-fillpage');
         
 
 %%
@@ -283,7 +283,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     title([num2str(sum(centroid_dist<4)) ' trials w/in 4 deg'])
     sgtitle([num2str(sum(~isnan(centroid_dist))) '/' num2str(nTrials) ' measurable trials'])
     xlabel('Centroid distance from median')
-    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilPosDist.pdf']),'-dpdf','-fillpage');
+    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilPosDist.pdf']),'-dpdf','-fillpage');
     movegui('center')
         
     [n edges bin] = histcounts(centroid_dist,[0:2:30]);
@@ -304,7 +304,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
         title([num2str(edges(ii)) '- ' num2str(length(find(bin== i(ii))))])
     end
     sgtitle('Example eye image by distance from median')
-    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilImgByDist.pdf']),'-dpdf','-fillpage');
+    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilImgByDist.pdf']),'-dpdf','-fillpage');
     movegui('center')
     
 %     centroid_dist_sf = cell(1,nSF);
@@ -328,7 +328,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
 %         end
 %     end  
 %    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med', 'centroid_dist_sf', 'centroid_med_sf', 'centroid_dist_tf', 'centroid_med_tf' );
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med');
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med');
     %close all
 end
 %     %% eye plots
