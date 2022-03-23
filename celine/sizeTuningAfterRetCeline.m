@@ -8,14 +8,14 @@
 clear all;clc;
 
 
-mouse = 'WK15';
-date = '220309';
-time = char('1653');
-ImgFolder = char('002');
-RetImgFolder = char('001');
+mouse = 'WK16';
+date = '220315';
+time = char('1654');
+ImgFolder = char('004');
+RetImgFolder = char('003');
 
 doFromRef = 1;
-ref = char('001');
+ref = char('003');
 
 nrun = size(ImgFolder,1);
 frame_rate = 30;

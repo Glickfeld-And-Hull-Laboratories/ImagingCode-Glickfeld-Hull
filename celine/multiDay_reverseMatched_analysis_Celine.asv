@@ -218,7 +218,7 @@ axis square
 sgtitle('time to half max (s), averaged over contrast')
 print(fullfile(fn_multi_analysis, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')
 
-%% scatterplot of max df/f for day 1 vs day 2, and each subplot is one cell type
+%% scatterplot of max df/f for day 1 vs day 2, and each subplot is one cell t
 
 
 for iCon = 1:nCon

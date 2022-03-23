@@ -4,11 +4,13 @@ clear all; clear global; close all
 %identifying animal and run
 
 
-mouse = 'WK11';
-date = '220114';
-time = char('1410');
-imgFolder = char('002');
-RetImgFolder = char('001');
+
+mouse = 'WK16';
+date = '220315';
+time = char('1654');
+imgFolder = char('004');
+
+
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
 
@@ -56,7 +58,7 @@ data_tc_trial = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
 data_tc_trial = data_tc_trial(:,1:nTrials-1,:);
 clear data_trial data_f
 plot(squeeze(mean(data_tc_trial, 2)))
-%% find the stimulus conditions
+% find the stimulus conditions
 tCons = celleqel2mat_padded(input.tGratingContrast(1:nTrials-1)); %transforms cell array into matrix (1 x ntrials)
 Cons = unique(tCons);
 nCons = length(Cons);
@@ -65,7 +67,7 @@ tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:nTrials-1)); %transforms
 Sizes = unique(tSize);
 nSizes = length(Sizes);
 
-%% find preferred size and contrast, find cells that are responsive 
+% find preferred size and contrast, find cells that are responsive 
 
 data_resp = zeros(nCells,nSizes,nCons,2);
 h = zeros(nCells, nSizes,nCons);
@@ -86,15 +88,21 @@ for iSize = 1:nSizes
         [h(:,iSize,iCon), p(:,iSize,iCon)] = ttest(mean(data_tc_trial(resp_win,ind,:),1), mean(data_tc_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./((nSizes*nCons)-1));
     end
 end
+sizeOnly = squeeze(mean(data_resp(:,:,:,1),3));
+for iCell = 1:nCells
+   [~,prefSize(1,iCell)] = max(sizeOnly(iCell,:,:,1),[],2); 
+end
 
 h_all = sum(sum(h,2),3);
 resp_all=logical(h_all);
 resp_small_highCon = logical(h(:,1,4));
 
 load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
-centeredResp=intersect(find(resp_small_highCon),centerCells);
-length(centeredResp)
-%% plot timecourses at different sizes and contrasts
+centeredResp=intersect(find(resp_all),centerCells);
+smallResp=intersect(centeredResp,find(prefSize<4));
+length(smallResp)
+clear sizeOnly
+% plot timecourses at different sizes and contrasts
 
 %frame_rate=double(input.frameImagingRateMs);
 frame_rate = 30;
@@ -109,9 +117,9 @@ figure;
         for iCon = 1:nCons
         inds2 = find(tCons == Cons(iCon));
         inds = intersect(inds1,inds2);
-        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,centeredResp),2));
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,smallResp),2));
         temp_mean = nanmean(temp_trials,2);
-        temp_se = std(temp_trials,[],2)/sqrt(length(centeredResp));
+        temp_se = std(temp_trials,[],2)/sqrt(length(smallResp));
 
         subplot(n,n2,x)
 
@@ -132,6 +140,7 @@ figure;
         
 
     end
+sgtitle([mouse, ', ', num2str(length(smallResp)),' cells'])
 print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, imgFolder, ['tc_matrix.pdf']), '-dpdf')
 %% for checking out individual size/con combinations if something looks unusual
         inds1 = find(tSize == 30);
