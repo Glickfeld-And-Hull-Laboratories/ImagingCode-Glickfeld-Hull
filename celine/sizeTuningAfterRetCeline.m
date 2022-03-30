@@ -8,9 +8,9 @@
 clear all;clc;
 
 
-mouse = 'WK16';
-date = '220315';
-time = char('1654');
+mouse = 'WK17';
+date = '220327';
+time = char('1504');
 ImgFolder = char('004');
 RetImgFolder = char('003');
 

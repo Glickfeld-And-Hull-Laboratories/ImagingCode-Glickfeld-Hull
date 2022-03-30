@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 133; %enter the post-DART day ID here
+day_id(1) = 156; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -67,7 +67,7 @@ for id = 1:nd
     for irun = 1:nrun
         imgFolder = runs{irun};
         fName = [imgFolder '_000_000'];
-        cd(fullfile(root, '2p_data',mouse,expDate, imgFolder))
+        cd(fullfile(root, mouse,expDate, imgFolder))
         load(fName)
         if nrun == 1
             load(fullfile(fnout,expDate,imgFolder,'regOuts&Img.mat'))
@@ -111,7 +111,7 @@ for id = 1:nd
     
 end
 input = input_temp;
-%save(fullfile(fn_multi,'input.mat'),'input')
+save(fullfile(fn_multi,'input.mat'),'input')
 clear input
 %% manual align
 corrmap_norm{1} = uint8((corrmap{1}./max(corrmap{1}(:))).*255);

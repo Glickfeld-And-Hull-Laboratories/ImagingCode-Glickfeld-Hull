@@ -9,10 +9,10 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-sess_list = [142,138];%enter all the sessions you want to pool
+sess_list = [131];%enter all the sessions you want to pool
 nSess=length(sess_list);
 
-nd=2%hard coding for two days per experimental session
+nd=2;%hard coding for two days per experimental session
 frame_rate = 15;
 
 sess_title = string(sess_list(1));
@@ -75,8 +75,9 @@ end
 
 %figure out which contrasts were covered in all experiments
 
-cons = unique(cell2mat_padded(all_cons));
-%cons=cons(2:end);
+%cons = unique(cell2mat_padded(all_cons)); %use this if different mice
+%experienced different contrasts
+cons = unique(cell2mat(all_cons));
 nCon = length(cons);
 
 %check whether stimStart is the same for all sessions

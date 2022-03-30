@@ -181,7 +181,7 @@ for id = 1:nd
 %             h(:,iOri,iCon) = h(:,iOri,iCon) .*passThresh(:,iOri,iCon);
         
         end
-    end
+    end 
     
     resp_sig = data_resp(:,:,:,1).*h;
     h_pass = sum(sum((h),2),3); 
@@ -195,10 +195,10 @@ for id = 1:nd
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
     for iCell = 1:nCells
-          [max_val, pref_ori(1,iCell)] = max(nanmean(resp_sig(iCell,:,:,1),3),[],2);
-          [max_val_con, pref_con(1,iCell)] = max(squeeze(nanmean(resp_sig(iCell,:,:,1),2))',[],2);
-          data_ori_resp(iCell,:)=resp_sig(iCell,:,pref_con(iCell),1);
-          data_con_resp(iCell,:)=nanmean(resp_sig(iCell,:,:,1),2);
+          [max_val, pref_ori(1,iCell)] = max(max(resp_sig(iCell,:,:),[],3));
+          [max_val_con, pref_con(1,iCell)] = max(max(resp_sig(iCell,:,:),[],2)); 
+          data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
+          data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
           
       if pref_ori(iCell)<= nOri/2
           orth_ori(iCell)=pref_ori(iCell)+2;
@@ -238,11 +238,36 @@ green_match_respd2 = intersect(green_ind_match_list,find(resp_match{1}==1));
 red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
 red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
 
+%%
 %find cells that were active on at least one day
-resp_green_either = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
-resp_red_either = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
+resp_green_either_temp = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
+resp_red_either_temp = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
 
+keep_cells_temp = union(resp_green_either_temp,resp_red_either_temp);
+
+outliers=cell(1,nd);
+for id = 1:nd
+  data_resp_keep_temp=data_resp_match{id}(keep_cells_temp,:,:,:,1);
+  resp_max_keep_temp = max(squeeze(max(data_resp_keep_temp(:,:,:,1),[],3)),[],2);
+  mean_max = nanmean(resp_max_keep_temp);
+  std_max=std(resp_max_keep_temp);
+  thresh=mean_max+(3*std_max);
+  outliers{id}=keep_cells_temp(find(resp_max_keep_temp>thresh));
+end
+outliers_either=union(outliers{1},outliers{2});
+fprintf(['removing ' num2str(length(outliers_either)) ' outlier cells'])
+
+resp_green_either=setdiff(resp_green_either_temp,outliers_either);
+resp_red_either=setdiff(resp_red_either_temp,outliers_either);
+
+clear resp_green_either_temp resp_red_either_temp keep_cells_temp data_resp_keep_temp resp_max_keep_temp mean_max std_max thresh outliers
+%Impose a constraint where if the max response of a cell is > 2 std from
+%the max resposne of other cells I'm keeping, I drop it? 
+%%
 %these are the cells I will include from now on
+%find cells that were active on at least one day
+% resp_green_either = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
+% resp_red_either = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
 keep_cells = union(resp_green_either,resp_red_either);
 nGreen_keep = length(resp_green_either); %how many green cells to keep
 nRed_keep = length(resp_red_either);%how many red cells to keep
@@ -269,6 +294,7 @@ clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_res
 data_trial_keep=cell(1,nd);
 pref_ori_keep=cell(1,nd);
 pref_con_keep=cell(1,nd);
+resp_keep=cell(1,nd);
 
 for id = 1:nd
     data_trial_keep{id} = data_dfof_trial_match{id}(:,:,keep_cells);
@@ -276,7 +302,7 @@ for id = 1:nd
     pref_ori_keep{id}=oris(pref_ori_keep{id});
     pref_con_keep{id} = pref_con_match{id}(:,keep_cells);
     pref_con_keep{id}=cons(pref_con_keep{id});
-    
+    resp_keep{id} = resp_match{id}(keep_cells)
 end
 
 
@@ -301,7 +327,7 @@ for id = 1:nd
             tCon=tCon_match{id}(1:nTrials(id));
             tDir=tDir_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
-            temp_ori= pref_ori_keep{id}(i); %find the preferred ori of this cell and convert to degrees
+            temp_ori= pref_ori_keep{id}(i); %find the preferred ori of this cell (already in degrees)
             ori_inds = find(tDir==temp_ori); %these are the trials at that ori
 
             con_inds=find(tCon==cons(iCon));
@@ -374,7 +400,7 @@ end
 
 
 explanation1 = 'tc_trial_keep contains the timecourses for all "keep" cells for each day. The tOri_match and tCon_match data structures can be used to find trials of particular stim conditions within this. tc_trial_avrg_keep only has the timecourses averaged over tirals for each cell at its preferred orientation and at each contrast.';
-save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','tc_trial_avrg_keep_allCon','pref_responses_allCon', 'sig_diff','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
+save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','resp_keep','tc_trial_avrg_keep_allCon','pref_responses_allCon', 'sig_diff','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
 
 
 %% make and save response matrix for keep cells
@@ -470,6 +496,17 @@ for i = 1:length(keep_cells)
        keep_masks_raw_change_green(temp_mask_inds) = dfof_max_diff_raw(i,2);
    end
 end
+
+figure;
+imagesc(fov_red{1});
+colormap gray
+caxis([10 200])
+title('matched red cells');
+hold on
+bound = cell2mat(bwboundaries(keep_red_masks));
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+hold off
+print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
 %% looking at wheel speed

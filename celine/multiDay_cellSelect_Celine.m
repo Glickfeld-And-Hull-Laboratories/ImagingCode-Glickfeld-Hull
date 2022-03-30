@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 150;
+day_id = 158;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -53,24 +53,35 @@ for irun = 1:nruns
         dat = 'data-i';
     elseif strcmp(expt(day_id).data_loc,'celine')
         root = rc.Data;
-        CD = fullfile(root,'2p_data', mouse, expDate, runFolder);
+        CD = fullfile(root, mouse, expDate, runFolder);
         dat = 'data-i';
     elseif strcmp(expt(day_id).data_loc,'ACh')
         root = rc.achData;
-        CD = fullfile(root,'2p_data', mouse, expDate, runFolder);
+        CD = fullfile(root, mouse, expDate, runFolder);
         dat = 'data-';
     end
     cd(CD);
 
     imgMatFile = [imgFolder '_000_000.mat'];
     load(imgMatFile);
-%    if username == 'celine'
-    if username == 'cc735'
-        fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-        
-    else
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+    tHostname = lower(hostname);
+    [s,tUsername] = dos('ECHO %USERNAME%');
+    switch tHostname
+        case {'nuke'}
+            if username == 'celine' 
+                fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+
+            else
+                fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+            end
+        case{'nb-hubel'}
+                if username == 'cc735'
+                    fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+                else
+                    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+                 end
     end
+    
     load(fName); %load the mworks behavioral file
 
     temp(irun) = input; %load the data from the mworks file into temp
@@ -234,7 +245,7 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
         cd(fullfile(root, mouse, '2P',expDate, redRun));
     elseif strcmp(expt(day_id).data_loc,'ACh')
         root = rc.achData;
-        cd(fullfile(root,'2p_data', mouse, expDate, redRun));
+        cd(fullfile(root, mouse, expDate, redRun));
     end
     load(imgMatFile);
 

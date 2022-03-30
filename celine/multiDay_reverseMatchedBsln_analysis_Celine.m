@@ -3,10 +3,10 @@ clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 
-rc = behavConstsAV; %directories
+rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 138; %enter post-DART day
+day_id = 150; %enter baseline 1 day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -61,7 +61,7 @@ nOff = input(1).nScansOff;
 %% make figure with se shaded, one figure per contrast
 
 tc_green_avrg_keep = cell(1,nd); %this will be the average across all green cells - a single line
-tc_red_avrg_match = cell(1,nd); %same for red
+tc_red_avrg_keep = cell(1,nd); %same for red
 tc_green_se_keep = cell(1,nd); %this will be the se across all green cells
 tc_red_se_match = cell(1,nd); %same for red
 
@@ -71,7 +71,7 @@ for id = 1:nd
     green_std=std(tc_trial_avrg_keep{id}(:,green_ind_keep,iCon),[],2);
     tc_green_se_keep{id}(:,iCon)=green_std/sqrt(length(green_ind_keep));
     
-    tc_red_avrg_match{id}(:,iCon)=nanmean(tc_trial_avrg_keep{id}(:,red_ind_keep,iCon),2);
+    tc_red_avrg_keep{id}(:,iCon)=nanmean(tc_trial_avrg_keep{id}(:,red_ind_keep,iCon),2);
     red_std=std(tc_trial_avrg_keep{id}(:,red_ind_keep,iCon),[],2);
     tc_red_se_match{id}(:,iCon)=red_std/sqrt(length(red_ind_keep));
     
@@ -88,11 +88,11 @@ for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
 
-shadedErrorBar(t,tc_red_avrg_match{2}(:,iCon),tc_red_se_match{2}(:,iCon),'lineProps','r');
+shadedErrorBar(t,tc_red_avrg_keep{2}(:,iCon),tc_red_se_match{2}(:,iCon),'r');
 ylim([-.02 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg_keep{2}(:,iCon),tc_green_se_keep{2}(:,iCon));
-title(['Pre-DART contrast = ' num2str(cons(iCon))])
+title(['baseline 2 contrast = ' num2str(cons(iCon))])
 txt1 = ['HT- ' num2str(length(green_ind_keep))];
 text(-1.5,0.25,txt1);
 txt2 = ['HT+ ' num2str(length(red_ind_keep))];
@@ -104,13 +104,13 @@ axis square
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(t,tc_red_avrg_match{1}(:,iCon),tc_red_se_match{1}(:,iCon),'lineProps','r');
+shadedErrorBar(t,tc_red_avrg_keep{1}(:,iCon),tc_red_se_match{1}(:,iCon),'r');
 ylim([-.02 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg_keep{1}(:,iCon),tc_green_se_keep{1}(:,iCon));
 ylabel('dF/F') 
 xlabel('s') 
-title(['Post-DART contrast = ' num2str(cons(iCon))])
+title(['baseline 1 contrast = ' num2str(cons(iCon))])
 axis square
 
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_timecourses.pdf']),'-dpdf');
@@ -121,48 +121,64 @@ clear txt1 txt2
 setYmin = -.1; %indicate y axes you want
 setYmax = 0.8;
 
+
 for iCon = 1:nCon
 
 figure
 subplot(2,2,1)
-plot(t, tc_trial_avrg_keep{2}(:,green_ind_keep,iCon),'k')
+plot(t, tc_trial_avrg_keep{2}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+hold on
+plot(t, tc_green_avrg_keep{2}(:,iCon),'color',[0 0 0],'LineWidth',2)
 ylim([setYmin setYmax]);
-title('day 1')
+title('day 2')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
+hold off
 
 
 subplot(2,2,2)
-plot(t, tc_trial_avrg_keep{2}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
+plot(t, tc_trial_avrg_keep{2}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
+hold on
+plot(t, tc_red_avrg_keep{2}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 2')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,3)
+plot(t, tc_trial_avrg_keep{1}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+hold on
+plot(t, tc_green_avrg_keep{1}(:,iCon),'color',[0 0 0],'LineWidth',2)
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
-
-
-subplot(2,2,3)
-plot(t, tc_trial_avrg_keep{1}(:,green_ind_keep,iCon),'k')
-ylim([setYmin setYmax]);
-title('day 2')
-xlim([-2 4])
-ylabel('dF/F') 
-xlabel('s') 
+hold off
 
 
 subplot(2,2,4)
-plot(t, tc_trial_avrg_keep{1}(:,red_ind_keep,iCon),'color',[.7 .05 .05])
+plot(t, tc_trial_avrg_keep{1}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
+hold on
+plot(t, tc_red_avrg_keep{1}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
 ylim([setYmin setYmax]);
-title('day 2')
+title('day 1')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
 sgtitle(['contrast = '  num2str(cons(iCon))])
+hold off
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_indiv_timecourses.pdf']),'-dpdf');
 end
 
+
 %% time to peak
+tHalfMax = cell(1,nd);
+
 tHalfMax = cell(1,nd);
 
 for id = 1:nd
@@ -171,30 +187,35 @@ for id = 1:nd
         for iCell=1:nKeep
             %pull the data for a given cell at a given contrast (pref ori)
             tempData=tc_trial_avrg_keep_allCon{id}(stimStart:stimStart+nOn,iCell);
-            smoothData=smoothdata(tempData,'movmean',5) ;
-%             figure;plot(tempData)
-%             hold on
-%             plot(smoothData)
-            halfMax = max(smoothData)/2;
-            tHalfMaxCell =double(min(find(smoothData>halfMax)))/double(frame_rate);
-
-            if length(tHalfMaxCell)>0
-                tHalfMaxTemp(iCell)=tHalfMaxCell;
+            if resp_keep{id}(iCell)
+                smoothData=smoothdata(tempData,'movmean',5) ;
+                halfMax = max(smoothData(3:length(smoothData)))/2;
+                tHalfMaxCell =double(min(find(smoothData>halfMax)))/double(frame_rate);
+                if rem(iCell, 10) == 0 
+                figure;plot(tempData)
+                hold on
+                plot(smoothData)
+                hold on
+                vline(min(find(smoothData>halfMax)))
+                end
+                if length(tHalfMaxCell)>0
+                    tHalfMaxTemp(iCell)=tHalfMaxCell;
+                end
             end
  
        end
     tHalfMax{id}=tHalfMaxTemp;
 end
 clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
-%% scatter for tMax
+% scatter for tMax
 
 
 
 figure; movegui('center') 
 subplot(1,2,1)
-swarmchart((tHalfMax{2}(green_ind_keep)),(tHalfMax{1}(green_ind_keep)),'k')
-ylabel('post-DART half-max(s)')
-xlabel('pre-DART half-max(s)')
+scatter((tHalfMax{2}(green_ind_keep)),(tHalfMax{1}(green_ind_keep)),'k')
+ylabel('baseline 2 half-max(s)')
+xlabel('baseline 1 half-max(s)')
 ylim([0 2.5])
 xlim([0 2.5])
 refline(1)
@@ -203,10 +224,10 @@ axis square
 
 
 subplot(1,2,2)
-swarmchart((tHalfMax{2}(red_ind_keep)),(tHalfMax{1}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+scatter((tHalfMax{2}(red_ind_keep)),(tHalfMax{1}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
 
-ylabel('post-DART half-max(s)')
-xlabel('pre-DART half-max(s)')
+ylabel('baseline 1 half-max(s)')
+xlabel('baseline 2 half-max(s)')
 ylim([0 2.5])
 xlim([0 2.5])
 
@@ -218,7 +239,7 @@ axis square
 sgtitle('time to half max (s), averaged over contrast')
 print(fullfile(fn_multi_analysis, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')
 
-%% scatterplot of max df/f for day 1 vs day 2, and each subplot is one cell t
+%% scatterplot of max df/f for day 1 vs day 2, and each subplot is one cell type
 
 
 for iCon = 1:nCon
@@ -227,8 +248,8 @@ subplot(1,2,1)
 scatter((resp_max_keep{2}(green_ind_keep,iCon)),(resp_max_keep{1}(green_ind_keep,iCon)),'k')
 hold on
 scatter((resp_max_keep{2}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{1}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),'k','MarkerFaceColor','k')
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
+ylabel('baseline 2 dF/F')
+xlabel('baseline 1  dF/F')
 ylim([-.1 .5])
 xlim([-.1 .5])
 refline(1)
@@ -241,8 +262,8 @@ scatter((resp_max_keep{2}(red_ind_keep,iCon)),(resp_max_keep{1}(red_ind_keep,iCo
 hold on
 scatter((resp_max_keep{2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{1}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05])
 hold off
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
+ylabel('baseline 2 dF/F')
+xlabel('baseline 1  dF/F')
 ylim([-.1 .5])
 xlim([-.1 .5])
 
@@ -253,7 +274,7 @@ axis square
 sgtitle(num2str(cons(iCon)))
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
 end
-
+%%
 figure;
 for iCon = 1:nCon
 subplot(1,nCon,iCon)
@@ -262,8 +283,8 @@ for iRed = 1:length(red_ind_keep)
     scatter((resp_max_keep{2}(thisCell,iCon)),(resp_max_keep{1}(thisCell,iCon)))
 hold on
 end
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
+ylabel('baseline 2 dF/F')
+xlabel('baseline 1  dF/F')
 ylim([-.1 .5])
 xlim([-.1 .5])
 
@@ -273,69 +294,6 @@ title(num2str(cons(iCon)))
 
 end
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'maxResp_HTCellsColored.pdf']),'-dpdf','-bestfit')
-
-for iCon = 1:nCon
-figure;
-subplot(1,2,1)
-scatter((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff_raw(red_ind_keep,iCon),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05],'MarkerFaceAlpha',.25)
-lsline;
-hold on
-scatter((resp_max_keep{2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),dfof_max_diff_raw(intersect(red_ind_keep,find(sig_diff{iCon})),iCon),'MarkerFaceColor',[.7 .05 .05])
-[R,p]=corrcoef((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff_raw(red_ind_keep,iCon),'Rows','complete');
-title(['R = '  num2str(R(2)) ', p = ' num2str(p(2))])
-ylabel('pre-DART - post-DART dF/F')
-xlabel('pre-DART  dF/F')
-axis square
-hold off
-
-subplot(1,2,2)
-scatter((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff(red_ind_keep,iCon),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05],'MarkerFaceAlpha',.25)
-lsline;
-hold on
-scatter((resp_max_keep{2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),dfof_max_diff(intersect(red_ind_keep,find(sig_diff{iCon})),iCon),'MarkerFaceColor',[.7 .05 .05])
-[R,p]=corrcoef((resp_max_keep{2}(red_ind_keep,iCon)),dfof_max_diff(red_ind_keep,iCon),'Rows','complete');
-title(['R = '  num2str(R(2)) ', p = ' num2str(p(2))])
-ylabel('(post-pre)/(post+pre)')
-xlabel('pre-DART  dF/F')
-axis square
-sgtitle(num2str(cons(iCon)))
-print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'd1Resp_vs_change.pdf']),'-dpdf','-bestfit')
-clear R p
-end
-
-
-%same as plot above but comparing contrasts across days rather than days
-%across contrasts. NOTE this is for two contrasts, 50% and 100%. Would need
-%to change this for additional contrasts
-figure;
-
-subplot(1,2,1)
-scatter(dfof_max_diff(red_ind_keep,1),dfof_max_diff(red_ind_keep,2),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05],'MarkerFaceAlpha',.25)
-ylim([-1 1])
-xlim([-1 1])
-lsline;
-[R,p]=corrcoef(dfof_max_diff(red_ind_keep,1),dfof_max_diff(red_ind_keep,2),'Rows','complete');
-title(['R = '  num2str(R(2)) ', p = ' num2str(p(2))])
-xlabel('Fractional change contrast 0.5')
-ylabel('Fractional change contrast 1')
-refline(1)
-axis square
-
-subplot(1,2,2)
-scatter(dfof_max_diff_raw(red_ind_keep,1),dfof_max_diff_raw(red_ind_keep,2),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05],'MarkerFaceAlpha',.25)
-ylim([-.35 .35])
-xlim([-.35 .35])
-lsline;
-[R,p]=corrcoef(dfof_max_diff_raw(red_ind_keep,1),dfof_max_diff_raw(red_ind_keep,2),'Rows','complete');
-title(['R = '  num2str(R(2)) ', p = ' num2str(p(2))])
-xlabel('Raw change contrast 0.5')
-ylabel('Raw change contrast 1')
-refline(1)
-axis square
-
-print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'changeVsContrast.pdf']),'-dpdf','-bestfit')
-clear R p
-
 
 
 %% fractional change in dfof
@@ -392,13 +350,13 @@ for iCon = 1:nCon
         statg_se=statg_std/sqrt(length(green_ind_keep));
 
         subplot(1,2,1)
-        shadedErrorBar(t,locr_mean,locr_se,'lineProps','r')
+        shadedErrorBar(t,locr_mean,locr_se,'r')
         hold on
-        shadedErrorBar(t,statr_mean,statr_se,'lineProps','--r')
-        shadedErrorBar(t,locg_mean,locg_se,'lineProps','k')
-        shadedErrorBar(t,statg_mean,statg_se,'lineProps','--k')
-        ylim([-.02 .2]);
-        title(['contrast ', num2str(cons(iCon)), ' pre-DART'])
+        shadedErrorBar(t,statr_mean,statr_se,'--r')
+        shadedErrorBar(t,locg_mean,locg_se,'k')
+        shadedErrorBar(t,statg_mean,statg_se,'--k')
+        ylim([-.05 .2]);
+        title(['contrast ', num2str(cons(iCon)), ' baseline 1'])
         txt1=[num2str(locCounts{2,iCon}(1)), ' running trials']
         text(-1.5,0.18,txt1);
         txt2 = [num2str(locCounts{2,iCon}(2)), ' stationary trials']
@@ -424,13 +382,13 @@ for iCon = 1:nCon
         statg_se=statg_std/sqrt(length(green_ind_keep));
         
         subplot(1,2,2)
-        shadedErrorBar(t,locr_mean,locr_se,'lineProps','r')
+        shadedErrorBar(t,locr_mean,locr_se,'r')
         hold on
-        shadedErrorBar(t,statr_mean,statr_se,'lineProps','--r')
-        shadedErrorBar(t,locg_mean,locg_se,'lineProps','k')
-        shadedErrorBar(t,statg_mean,statg_se,'lineProps','--k')
-        ylim([-.02 .2]);
-        title(['contrast ', num2str(cons(iCon)), ' post-DART'])
+        shadedErrorBar(t,statr_mean,statr_se,'--r')
+        shadedErrorBar(t,locg_mean,locg_se,'k')
+        shadedErrorBar(t,statg_mean,statg_se,'--k')
+        ylim([-.05 .2]);
+        title(['contrast ', num2str(cons(iCon)), ' baseline 2'])
         txt1=[num2str(locCounts{1,iCon}(1)), ' running trials']
         text(-1.5,0.18,txt1);
         txt2 = [num2str(locCounts{1,iCon}(2)), ' stationary trials']
@@ -451,8 +409,8 @@ for iCon = 1:nCon
 figure; movegui('center') 
 subplot(1,2,1)
 scatter((LMI{2,iCon}(green_ind_keep)),(LMI{1,iCon}(green_ind_keep)),'k')
-ylabel('post-DART LMI')
-xlabel('pre-DART  LMI')
+ylabel('baseline 2 LMI')
+xlabel('baseline 1  LMI')
 ylim([-1 1])
 xlim([-1 1])
 hline(0)
@@ -464,8 +422,8 @@ axis square
 
 subplot(1,2,2)
 scatter((LMI{2,iCon}(red_ind_keep)),(LMI{1,iCon}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
-ylabel('post-DART LMI')
-xlabel('pre-DART  LMI')
+ylabel('baseline 2 LMI')
+xlabel('baseline 1  LMI')
 ylim([-1 1])
 xlim([-1 1])
 hline(0)
@@ -478,7 +436,7 @@ sgtitle(num2str(cons(iCon)))
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_LMI.pdf']),'-dpdf');
 end
 
-%% finding cells that are still saturated by contrast vs. not saturated pre-DART
+%% finding cells that are still saturated by contrast vs. not saturated baseline 2
 
 %identify cells that are still in the rise of the contrast response
 %function
@@ -587,7 +545,7 @@ colormap bluered
 axis square
 print(fullfile(fn_multi_analysis,'HT-_raw_change_map.pdf'),'-dpdf','-bestfit')
 
-% map of kept HT+ cells by their pre-DART df/F
+% map of kept HT+ cells by their baseline 2 df/F
 imagesc(keep_masks_d1_red)
 colorbar
 title('Spatial distribution of cells by raw change from DART, HT+')
@@ -795,8 +753,8 @@ myRef = refline(1)
 myRef.LineStyle = ':'
 
 title(['\color{red}HT+ cells, all stimulus conditions, n= ' num2str(length(intersect(red_ind_keep,find(linCell))))])
-xlabel('pre-DART')
-ylabel('post-DART')
+xlabel('baseline 1')
+ylabel('baseline 2')
 myRef = refline(1)
 myRef.LineStyle = ':'
 
@@ -853,8 +811,8 @@ myRef = refline(1)
 myRef.LineStyle = ':'
 
 title(['HT- cells, all stimulus conditions, n= ' num2str(length(intersect(green_ind_keep,find(linCell))))])
-xlabel('pre-DART')
-ylabel('post-DART')
+xlabel('baseline 1')
+ylabel('baseline 2')
 myRef = refline(1)
 myRef.LineStyle = ':'
 
@@ -869,8 +827,8 @@ scatter(pref_ori_keep{2}(green_ind_keep),pref_ori_keep{1}(green_ind_keep),'k','j
 hold on
 scatter(pref_ori_keep{2}(red_ind_keep),pref_ori_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
-xlabel('Pre-DART pref ori')
-ylabel('Post-DART pref ori')
+xlabel('baseline 2 pref ori')
+ylabel('baseline 1 pref ori')
 % xlim([0 .4])
 % ylim([0 .4])
 refline(1)
@@ -1018,7 +976,7 @@ for id = 1:nd
 end
 %well_fit gives a list of the well-fit cell
 % this compares the fit pref ori across days for cells that were well-fit on the
-% pre-DART day 
+% baseline 2 day 
 [R_g p_g] = corrcoef(fit_pref_oris_keep{2},fit_pref_oris_keep{1})
 figure; movegui('center') 
 scatter(fit_pref_oris_keep{2}((intersect(well_fit{2},green_ind_keep))),fit_pref_oris_keep{1}((intersect(well_fit{2},green_ind_keep))),'k','jitter', 'on', 'jitterAmount', 5)
@@ -1028,7 +986,7 @@ hold off
 xlabel('D1- pref ori')
 ylabel('D2- pref ori')
 refline(1)
-title('fit pref ori for cells that were well-fit pre-DART')
+title('fit pref ori for cells that were well-fit baseline 2')
 
 %%
 

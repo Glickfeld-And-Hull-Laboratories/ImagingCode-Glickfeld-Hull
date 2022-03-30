@@ -199,7 +199,7 @@ if PLOTIT_FIT == 1
                 fn_out = fullfile(fnout, datemouse, datemouserun, [datemouserun '_RFfits' num2str(ifig) '.pdf']);
             end
         end
-        print(fn_out,'-dpdf')
+%        print(fn_out,'-dpdf')
         figure;
         ifig = 1+ifig;
         start = 1;
