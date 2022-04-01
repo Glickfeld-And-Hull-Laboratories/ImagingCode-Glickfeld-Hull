@@ -18,7 +18,7 @@ image_dest_base  = 'Z:\Analysis\WF_MovingDots_Analysis\BxAndAnalysisOutputs\'; %
 % behavior analysis results 
 color_code = {'b','r','k'};
 
-%% df/f stay vs.run, scatter plot
+%% df/f stay vs.run, line plot
 ACS_dest = [image_dest_base 'acrossSessions\'];
 ave_dfOvF_states_all = [];
 for i = 1: length(sessions)

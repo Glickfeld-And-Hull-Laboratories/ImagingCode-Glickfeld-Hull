@@ -103,3 +103,18 @@ expt(6).dirFolder = {'004'};
 expt(6).dirTime = {'1702'};
 expt(6).saveLoc = 'lindsey';
 
+%% i1369 220317 TF- 2Hz, 0.05cpd
+expt(7).mouse = 'i1369';
+expt(7).date = '220317';
+expt(7).img_loc  = {'LM';'L2/3'};
+expt(7).inj_loc = {'LM'};
+expt(7).z = -200;
+expt(7).img_strct  = {'cells'};
+expt(7).driver = {'SLC'};
+expt(7).indicator = {'tg';'GCaMP6s'};
+expt(7).coFolder = {'002'};
+expt(7).coTime = {'0950'};
+expt(7).dirFolder = {'003'};
+expt(7).dirTime = {'1057'};
+expt(7).saveLoc = 'sara';
+

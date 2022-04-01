@@ -1,4 +1,4 @@
-function conStruct_all = nakaRushtonFit(resp_mat, cons)
+mefunction conStruct_all = nakaRushtonFit(resp_mat, cons)
     %resp_mat is nCells x nContrasts
     nCellsTot = size(resp_mat,1);
     nCon = length(cons);

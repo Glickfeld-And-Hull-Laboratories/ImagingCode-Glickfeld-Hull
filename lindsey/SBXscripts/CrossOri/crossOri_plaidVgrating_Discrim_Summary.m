@@ -24,23 +24,33 @@ end
 figure;
 
 for i = 1:nm
-    subplot(1,2,1)
+    subplot(2,2,1)
     errorbar([1 2],gratingPctLeft_all(:,i),gratingPctLeft_all(:,i)-gratingCI_all(:,1,i),gratingCI_all(:,2,i)-gratingPctLeft_all(:,i),'-ok')
     hold on
-    errorbar([1 2],plaidPctLeft_all(:,i),plaidPctLeft_all(:,i)-plaidCI_all(:,1,i),plaidCI_all(:,2,i)-plaidPctLeft_all(:,i),'-oc')
-    subplot(1,2,2)
+    subplot(2,2,2)
+    errorbar([1 2],plaidPctLeft_all(:,i),plaidPctLeft_all(:,i)-plaidCI_all(:,1,i),plaidCI_all(:,2,i)-plaidPctLeft_all(:,i),'-ok')
+    hold on
+    subplot(2,2,3)
     plot([1 2],[selectGrating(i) selectPlaid(i)],'-oc') 
     hold on
 end
-subplot(1,2,1)
+subplot(2,2,1)
+title('Grating')
 xlim([0 3])
 ylabel('Fraction left choice')
 set(gca,'XTick',[1:2],'XTickLabels',{'0','90'})
 xlabel('Direction (deg)')
-subplot(1,2,2)
+subplot(2,2,2)
+title('Plaid')
+xlim([0 3])
+ylabel('Fraction left choice')
+set(gca,'XTick',[1:2],'XTickLabels',{'0','90'})
+xlabel('Direction (deg)')
+subplot(2,2,3)
 errorbar([1 2],mean([selectGrating; selectPlaid],2), std([selectGrating; selectPlaid],[],2)./sqrt(nm),'-ok') 
 xlim([0 3])
 ylim([0 1])
 set(gca,'XTick',[1:2],'XTickLabels',{'grating','plaid'})
 ylabel('Selectivity')
 
+print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\AllMice_PlaidTest_Summary.pdf'],'-dpdf','-fillpage');

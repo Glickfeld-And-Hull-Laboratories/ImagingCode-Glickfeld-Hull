@@ -8,8 +8,8 @@ clear;
 %    '190617_img1027_2','190618_img1025_1','190618_img1029_1'}; 
 %days = {'1021-190617_1','1023-190617_1','1024-190617_1',...
 %    '1027-190617_1','1025-190618_1','1029-190618_1'};
-sessions = {'190617_img1021_1'};
-days = {'1021-190617_1'};
+sessions = {'211110_img1902_1'};
+days = {'1902-211110_1'};
 bx_source = 'Z:\Data\Behv_MovingDots\behavior_raw';
 image_source_base  = 'Z:\Data\WF imaging\'; %location of permanently stored image files for retreiving meta data
 image_dest_base    = 'Z:\Analysis\WF_MovingDots_Analysis\BxAndAnalysisOutputs\'; %stores the data on crash in the movingDots analysis folder

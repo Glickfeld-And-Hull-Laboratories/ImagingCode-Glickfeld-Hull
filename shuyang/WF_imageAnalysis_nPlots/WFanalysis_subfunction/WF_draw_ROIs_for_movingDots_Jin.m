@@ -50,5 +50,5 @@ cluster.roi_mask_combined = sum(roi_mask,1);
 cluster.roi_position = roi_position;
 cluster.num_cluster = num_cluster;
 close gcf;
-save([image_dest '_cluster'], 'cluster');
+save([image_dest '_cluster.mat'], 'cluster');
 return

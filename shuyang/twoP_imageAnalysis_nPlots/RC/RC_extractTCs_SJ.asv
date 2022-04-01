@@ -1,13 +1,13 @@
 clear;
-analysis_out = 'Z:\2P_analysis\';
-bdata_source = 'Z:\Data\behavior\RC\';
+analysis_out = 'Z:\home\shuyang\2P_analysis\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
 write_tiff = true; do_jake_pockel = true;
 ttl =   1;
 noreg = 0;
 imgreglaseron = 0;
-sessions = '210628_img1091';% for behavior data
-mouse = '1091';
-date = '210628';
+sessions = '220311_img1914';% for behavior data
+mouse = '1914';
+date = '220311';
 run = '000';
 %time = expt(id).time(iexp,:);
 fprintf([date ' ' mouse ' ' run '\n'])
@@ -17,7 +17,7 @@ if ~exist(fullfile(analysis_out,img_fn))
 end
 
 %% load and remove laser off period
-cd(fullfile('Z:\Data\2photon\', [date '_img' mouse]));
+cd(fullfile('Z:\home\shuyang\Data\2photon\', [date '_img' mouse]));
 %load([date '_img' mouse '_000_' run '.mat']);
 
 %identify behavior file
@@ -91,12 +91,13 @@ savefig([analysis_out,img_fn date '_img' mouse '_' run '_raw_F_wholeview']);
 %!!!!!! if do this, also need to rewrite cTargetOn. Otherwise you'll be
 %referencing some trials with no neural data in the later analysis.
 %cut = 25000:size(data_cut,3);
-cut1 = 28808;
-cut2 = 28887;
-cuta = cut1:cut2;
-cutb = 39893:39895;
-cut = [cuta, cutb];
-data_cut(:,:,cut) = [];
+cut1 = 13410;
+%cut2 = 28887;
+%cuta = cut1:cut2;
+%cutb = 39893:39895;
+%cut = [cuta, cutb];
+cut = cut1:length(laseron);
+data_cut(:,:,(cut1:end)) = [];
 laseron(cut) = [];
 figure; plot(squeeze(mean(mean(data_cut,2),1)));
 
@@ -160,6 +161,7 @@ end
 if size(data_cut,3) >= 60000
     data_cut = data_cut(:,:,1:2:end);
 end
+
 fprintf(['Registering ' num2str(size(data_cut,3)) ' frames'])
 [rgs_out,img_rgs]= stackRegister(data_cut, img_ref);
 
@@ -177,7 +179,7 @@ switch response
 end
 
 %% PCA
-nPCA = 400; %100 for old datasets, 500 for newer
+nPCA = 200; %100 for old datasets, 500 for newer
 imgsize = size (img_rgs,3);
 [mixedsig_PCA, mixedfilters_PCA, CovEvals_PCA, ~, ~, ~] = CellsortPCA_2P_Jin(img_rgs,[1 imgsize], nPCA,[], []);
 figure; plot(CovEvals_PCA); % looks like can take 2-60th PCA or sth
@@ -204,13 +206,13 @@ clear data_cut;
 %PCuse =       1:125;
 PCuse =       1:size(mixedfilters_PCA,3);
 mu =          0.3; % weight of temporal info in spatio-teporal ICA
-nIC =         350; % cannot be bigger than nPCA. If CoEvals doesn't change in later ICs, it will not converge!
+nIC =         65; % cannot be bigger than nPCA. If CoEvals doesn't change in later ICs, it will not converge!
 ica_A_guess = []; %If this is empty than matlab will randomdize it and you can get different results, can see the random number generator in CellsortICA2P
 termtol =      1e-6;
 maxrounds =   2000;
 npw =         264;
 nph =         796;
-[ica_sig, mixedfilters_ICA, ica_A, numiter] = CellsortICA_2P(mixedsig_PCA,...
+[ica_sig, mixedfilters_ICA, ica_A, numiter] = CellsortICA_2P_Jin(mixedsig_PCA,...
     mixedfilters_PCA,...
     CovEvals_PCA, ...
     PCuse,...
@@ -236,7 +238,7 @@ icasig_filt = stackFilter(icasig);
 
 %set threshold a threshold for which pixels to include in a given dendrite's mask.
 nIC = size(icasig_filt, 3);
-cluster_threshold = 97; % this is using the top 3 percent of the fluorescence values, so brightest 3% is yes (1), and the rest is no (0)
+cluster_threshold = 96.5; % this is using the top 3 percent of the fluorescence values, so brightest 3% is yes (1), and the rest is no (0)
 %tried lower values for the threshold and turns out to have some wierd
 %masks
 mask_cell = zeros(size(icasig_filt));

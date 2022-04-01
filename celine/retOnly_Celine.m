@@ -7,12 +7,12 @@
 %% get path names
 clear all;clc;
 
-mouse = 'WK11';
-date = '220114';
-ImgFolder = char('001');
-time = char('1319');
+mouse = 'WK17';
+date = '220327';
+ImgFolder = char('003');
+time = char('1419');
 doFromRef = 0;
-ref = char('001');
+ref = char('003');
 nrun = size(ImgFolder,1);
 frame_rate = 30;
 run_str = catRunName(ImgFolder, nrun);
@@ -172,7 +172,7 @@ else
     
     % save
     fprintf('Registration complete, now saving...\n')
-    mkdir(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str]))
+    mkdir(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', mouse, date, ImgFolder))
     save(fullfile('\home\celine\Analysis\2P_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
     save(fullfile('\home\celine\Analysis\2P_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
@@ -1092,6 +1092,8 @@ for i=1:length(goodfit_ind)
     retMap_El(ind) = lbub_fits(goodfit_ind(i),5,4);
     retMap_Az(ind) = lbub_fits(goodfit_ind(i),4,4);
 end
+
+
 
 imAlpha=ones(size(retMap_El));
 imAlpha(isnan(retMap_El))=0; % set all unmasked pixels to alpha=0

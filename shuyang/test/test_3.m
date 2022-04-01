@@ -1,63 +1,46 @@
-for itrial = 1:nTrials
-    if cTargetOn(itrial)+postwin_frames-1 < nFrames
-        lickTimes = input.lickometerTimesUs{itrial};
-        counterTimes = input.counterTimesUs{itrial};
-        counterVals = input.counterValues{itrial};
-        lickCounterVals{itrial} = zeros(size(lickTimes));
-        lickTC{itrial} = zeros(size(counterVals));
-        for icount = 1:length(counterTimes)-1
-            ind = find(lickTimes>counterTimes(icount) & lickTimes<counterTimes(icount+1));
-            if length(ind)>0
-                lickCounterVals{itrial}(1,ind) = icount;
-            end
-        end
-        for ival = 1:length(counterTimes)
-            ind = find(lickCounterVals{itrial} == ival);
-            if length(ind)>0
-                lickTC{itrial}(1,ival) = length(ind);
-            end
-        end
-        if input.counterValues{itrial}(end)-cTargetOn(itrial) > postwin_frames
-            lickCueAlign(:,itrial) = lickTC{itrial}(1,cTargetOn(itrial)-prewin_frames-counterVals(1):cTargetOn(itrial)+postwin_frames-1-counterVals(1))';
-        end
-        ind = intersect(lickSearchRange,find(lickCueAlign(:,itrial)));
-        for i = 1:length(ind)
-            ilick = ind(i);
-            if sum(lickCueAlign(ilick:ilick+lickSearch_frames-1,itrial),1) >= 3
-                lickBurstStart(:,itrial) = ilick;
-                break
-            end
-        end
-        ind_pre = intersect(preRew_lickSearchRange_600ms,find(lickCueAlign(:,itrial)));
-        ind_post = intersect(postRew_lickSearchRange,find(lickCueAlign(:,itrial)));
-        ind_all = intersect(lickSearchRange,find(lickCueAlign(:,itrial)));
-        preRew_lickBurstHz(:,itrial) = length(ind_pre)./0.6;
-        postRew_lickBurstHz(:,itrial) = length(ind_post)./(length(postRew_lickSearchRange)./frameRateHz);
-        lickBurstHz_all(:,itrial) = length(ind_all)./(length(lickSearchRange)./frameRateHz);
-        ind = intersect(postRew_lickSearchRange,find(lickCueAlign(:,itrial)));
-        for i = 1:length(ind)
-            ilick = ind(i);
-            if sum(lickCueAlign(ilick:ilick+lickSearch_frames-1,itrial),1) >= 3
-                postRew_lickBurstStart(:,itrial) = ilick;
-                postRew_lickAlignEvents(:,:,itrial) = targetAlign_events(ilick-postLick_frames:ilick+postLick_frames-1,:,itrial);
-                postRew_lickAlign(:,itrial) = lickCueAlign(ilick-postLick_frames:ilick+postLick_frames-1,itrial);
-                break
-            end
-        end
-        ind_pre = find(lickCueAlign(prewin_frames:prewin_frames+rewDelay_frames,itrial),1,'last');
-        if ~isempty(ind_pre)
-            lastPreRewLickFrame(1,itrial) = ind_pre;
-            preRewTrials = [preRewTrials itrial];
-            lastPreRew_lickAlignEvents(:,:,itrial) = targetAlign_events(ind_pre-postLick_frames+prewin_frames:ind_pre+postLick_frames+postLick_frames-1+prewin_frames,:,itrial);
-            lastPreRew_lickAlign(:,itrial) = lickCueAlign(ind_pre-postLick_frames+prewin_frames:ind_pre+postLick_frames+postLick_frames-1+prewin_frames,itrial);
-        end
-        ind_post = find(lickCueAlign(prewin_frames+rewDelay_frames:prewin_frames+postwin_frames-postLick_frames-postLick_frames,itrial),1,'first');
-        if ~isempty(ind_post)
-            firstPostRewLickFrame(1,itrial) = ind_post;
-            postRewTrials = [postRewTrials itrial];
-            firstPostRew_lickAlignEvents(:,:,itrial) = targetAlign_events(ind_post-postLick_frames+prewin_frames+rewDelay_frames:ind_post+postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
-            firstPostRew_lickAlign(:,itrial) = lickCueAlign(ind_post-postLick_frames+prewin_frames+rewDelay_frames:ind_post+postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,itrial);
-        end
-        rewAlignEvents(:,:,itrial) =targetAlign_events(-postLick_frames+prewin_frames+rewDelay_frames:postLick_frames+postLick_frames-1+prewin_frames+rewDelay_frames,:,itrial);
+MWorks_output = load([MWorks_source 'data-i' days '.mat' ]);
+MWorks_output = MWorks_output.input;
+dfOvF_temp = load([image_dest,'_dfOvF.mat']);
+dfOvF = dfOvF_temp.dfOvF_btmbase;
+%dfOvF = dfOvF_temp.dfOvF_avglaseroff;
+% laseroff = 300;
+% laseron = 50;
+laseroff = double(MWorks_output.nScansOff);
+laseron = double(MWorks_output.nScansOn);
+%which frames are the first frame when laser is turned on each time: 151,311...
+%ntrials = double(MWorks_output.trialSinceReset);
+ntrials = 15;
+laseron_frame = zeros(1,ntrials-1);
+for i = 1:ntrials-1
+    laseron_frame(i) = (laseroff+laseron)*(i-1)+1+laseroff; % the indexes of laser onset, not the whole time of laseron
+end
+
+laser_align_dfOvF = zeros(ntrials-1,10+laseron+15,size(dfOvF,1));% trial*frame*ROI, 1s before laser on and 1.5s after laser on 
+for r = 1:size(dfOvF,1)
+    for f = 1:length(laseron_frame)
+        laser_align_dfOvF(f,:,r) = dfOvF(r,laseron_frame(f)-9:laseron_frame(f)+laseron+15);
     end
 end
+
+align_fig = figure; 
+align_fig.Units = 'centimeters';
+align_fig.Position = [1 1 12 3.45];
+x = double(1:(10+laseron+15));
+x2 = (x./10)-0.9;
+colorcode = {'r','d'};
+for r = 1:size(dfOvF,1)
+    shadedErrorBar(x2,mean(laser_align_dfOvF(:,:,r),1),std(laser_align_dfOvF(:,:,r),0,1)/sqrt(size(laser_align_dfOvF(:,:,r),1)));hold on; 
+end
+xlabel('time from laser on(s)');
+ylabel('df/F');
+title(sessions);
+ylim([0 0.5]);
+%ylim([-0.1 0.3]);
+vline(0,'b'); vline(laseron/10,'b');
+box off; hold off;
+a = get(gca,'XTickLabel');
+set(gca,'XTickLabel',a,'FontSize',8,'FontName','Arial');
+print(align_fig,[image_dest 'dfOvF_btmbase_align_laseron.pdf'],'-r600','-dpdf');
+savefig([image_dest 'dfOvF_btmbase_align_laseron.fig']);
+% print(align_fig,[image_dest 'dfOvFavglaseroff_align_laseron_frames.pdf'],'-r600','-dpdf');
+% savefig([image_dest 'dfOvFavglaseroff_align_laseron_frames.fig']);

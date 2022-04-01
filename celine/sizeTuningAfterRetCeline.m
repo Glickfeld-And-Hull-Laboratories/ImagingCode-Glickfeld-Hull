@@ -8,14 +8,14 @@
 clear all;clc;
 
 
-mouse = 'WK11';
-date = '220114'
-time = char('1410');
-ImgFolder = char('002');
-RetImgFolder = char('001');
+mouse = 'WK17';
+date = '220327';
+time = char('1504');
+ImgFolder = char('004');
+RetImgFolder = char('003');
 
 doFromRef = 1;
-ref = char('001');
+ref = char('003');
 
 nrun = size(ImgFolder,1);
 frame_rate = 30;
@@ -513,7 +513,7 @@ for iCell = 1:nCells
 end
 set(gcf, 'Position', [0 0 800 1000]);
 
-%save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning.mat']), 'tc_dfof', 'size_tuning_mat', 'con_tuning_mat')
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning.mat']), 'tc_dfof', 'size_tuning_mat', 'con_tuning_mat')
 %% contrast tuning and tcs for all cells
 
 con_tuning_mat = zeros(nCons, 2, nCells);

@@ -1,6 +1,6 @@
 clear;
-analysis_out = 'Z:\2P_analysis\';
-bdata_source = 'Z:\Data\behavior\RC\';
+analysis_out = 'Z:\home\shuyang\2P_analysis\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
 
 removing_bad_trials = false; %bad_trials = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21]; %added to remove shitty trials, turn off if not needed
 
@@ -20,9 +20,11 @@ for  j = 1:length(expt.ttl)
     img_fn = [date '_img' mouse '\getTC_' run '\'];
     filename = dir([analysis_out,img_fn  '*' '_TCave.mat']);
     load([analysis_out,img_fn, filename.name]);
-    threshold = -2;
-    filename = dir([analysis_out,date '_img' mouse '\' date '_img' mouse '_' run  '*' num2str(threshold) '_TCave_cl.mat']);
+    threshold = -3;
+    %filename = dir([analysis_out,date '_img' mouse '\' date '_img' mouse '_' run '_deconvolution_thresh', num2str(threshold), '_cutoffF 0.035' '_TCave_cl.mat']);
+    filename = dir([analysis_out,date '_img' mouse '\' date '_img' mouse '_' run '_deconvolution_thresh', num2str(threshold), '_TCave_cl.mat']);
     load([analysis_out,date '_img' mouse '\', filename.name]);
+    %spk = load([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_cutoff_0.035' '_deconvolve_threshold' num2str(threshold) '.mat' ]);
     spk = load([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvolve_threshold' num2str(threshold) '.mat' ]);
     spk_logic = spk.spk_logic_cl;
     nIC = size(spk_logic,2);
@@ -34,8 +36,8 @@ for  j = 1:length(expt.ttl)
         all_events = all_events_temp;
     end
     
-    save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvolve_threshold' num2str(threshold) '.mat' ]), 'all_events', '-append')
-    
+    %save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_cutoff_0.035' '_deconvolve_threshold' num2str(threshold) '.mat' ]), 'all_events', '-append');
+    save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvolve_threshold' num2str(threshold) '.mat' ]), 'all_events', '-append');
     
     %% align events
     img_fn2 = sessions{iexp};
@@ -77,7 +79,7 @@ for  j = 1:length(expt.ttl)
     tt = (-prewin_frames:postwin_frames-1).*(1000./frameRateHz); %t = # of frames*frame duration
     %if exist([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_dFoverF.fig'], 'file')==0
     if mworks.block2TrPer80Level1 > 0 %if it's an interleaved session
-        load (['Z:\behavior_analysis\RC\' date '_img' mouse '_IL_trial_inx.mat']);
+        load (['Z:\home\shuyang\behavior_analysis\RC\' date '_img' mouse '_IL_trial_inx.mat']);
         figure;
         subplot(3,1,1);
         shadedErrorBar(tt, nanmean(nanmean(targetAligndFoverF(:,:,auditrials),3),2), std(nanmean(targetAligndFoverF(:,:,auditrials),3),[],2)./sqrt(nIC));vline(0,'b');vline(700,'k');
@@ -88,8 +90,8 @@ for  j = 1:length(expt.ttl)
         subplot(3,1,3);
         shadedErrorBar(tt, nanmean(nanmean(targetAligndFoverF(:,:,avtrials),3),2), std(nanmean(targetAligndFoverF(:,:,avtrials),3),[],2)./sqrt(nIC));vline(0,'r');vline(700,'k');
         ylabel('Avg dF/F');xlabel('Time from cue'); box off;
+        %savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_HPfiltered_cueAlign_dFoverF.fig']));       
         savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_dFoverF.fig']));
-        
         figure;
         subplot(3,1,1);
         shadedErrorBar(tt, nanmean(nanmean(targetAlign_events(:,:,auditrials),3),2).*(1000/frameRateHz), (std(nanmean(targetAlign_events(:,:,auditrials),3),[],2)./sqrt(nIC)).*(1000./frameRateHz));
@@ -101,7 +103,8 @@ for  j = 1:length(expt.ttl)
         subplot(3,1,3);
         shadedErrorBar(tt, nanmean(nanmean(targetAlign_events(:,:,avtrials),3),2).*(1000/frameRateHz), (std(nanmean(targetAlign_events(:,:,avtrials),3),[],2)./sqrt(nIC)).*(1000./frameRateHz));
         ylim([0 4.5]);vline(0,'r');vline(700,'k');ylabel('Spike rate (Hz)');xlabel('Time from cue (ms)');box off;
-        savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_events_Hz.fig']));   
+        %savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_HPfiltered_cueAlign_events_Hz.fig'])); 
+        savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_events_Hz.fig'])); 
     else
         figure;
         shadedErrorBar(tt, nanmean(nanmean(targetAligndFoverF,3),2), std(nanmean(targetAligndFoverF,3),[],2)./sqrt(nIC));
@@ -116,6 +119,8 @@ for  j = 1:length(expt.ttl)
         xlabel('Time from cue');
         ylabel('Avg dF/F');
         title([date ' img' mouse ' ' run]);
+        box off;
+        %savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_HPfiltered_cueAlign_dFoverF.fig']));
         savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_dFoverF.fig']));
         %end
         %if exist([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_events_Hz.fig'], 'file')==0
@@ -132,10 +137,13 @@ for  j = 1:length(expt.ttl)
         xlabel('Time from cue (ms)');
         ylabel('Spike rate (Hz)');
         title([date ' img' mouse ' ' run]);box off;
+        %savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_HPfiltered_cueAlign_events_Hz.fig']));
         savefig(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_cueAlign_events_Hz.fig']));
         %end
     end
-    save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_targetAlign.mat']), 'targetAlign_events', ...
-        'targetAligndFoverF', 'prewin_frames', 'postwin_frames', 'tt', 'frameRateHz','-append');
-    
+%     save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_HPfiltered_targetAlign.mat']), 'targetAlign_events', ...
+%         'targetAligndFoverF', 'prewin_frames', 'postwin_frames', 'tt', 'frameRateHz');
+        save(fullfile([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_targetAlign.mat']), 'targetAlign_events', ...
+        'targetAligndFoverF', 'prewin_frames', 'postwin_frames', 'tt', 'frameRateHz');
+  
 end

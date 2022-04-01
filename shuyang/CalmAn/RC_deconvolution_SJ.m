@@ -1,14 +1,14 @@
 clear;
-analysis_out = 'Z:\2P_analysis\';
-bdata_source = 'Z:\Data\behavior\RC\';
+analysis_out = 'Z:\home\shuyang\2P_analysis\';
+bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
 
 ttl =   1;
 noreg = 0;
 imgreglaseron = 0;
 
-sessions = '201216_img1078';% for behavior data
-mouse = '1078';
-date = '201216';
+sessions = '220311_img1914';% for behavior data
+mouse = '1914';
+date = '220311';
 run = '000';
 
 fprintf([date ' ' mouse '\n'])
@@ -101,7 +101,7 @@ title('not return to baseline period');
 savefig([analysis_out decon_out date '_img' mouse '_Caevent_nobase' num2str(threshold) '.fig']);
 %if the maximum not return to baseline period is bigger than n # of frames,
 %throw out this cell
-nobase_thres = 8000;
+nobase_thres = 2000;
 nobase_cell = find(nobase_maxperiod > nobase_thres);
 
 baseline_btm = zeros(1, size(TCave,2));
@@ -113,12 +113,15 @@ end
 figure; plot(baseline_btm);
 title('baseline fluorescence');
 savefig([analysis_out decon_out date '_img' mouse '_baselineF' num2str(threshold) '.fig']);
-baseline_thres = 3000;
+baseline_thres = 2000;
 %baseline_thres = [];
 low_Fcell = find(baseline_btm < baseline_thres);
 %low_Fcell = [];
 
-badPCs = union(nobase_cell,low_Fcell);
+fire_toolow_cell = find(FRstay_cell < 0.1);
+%fire_toolow_cell = [];
+badPC_1 = union(nobase_cell,low_Fcell);
+badPCs = union(badPC_1,fire_toolow_cell);
 TCave_cl = TCave;TCave_cl(:,badPCs) = [];
 all_TCave_cl = tc_avg_all; all_TCave_cl(:,badPCs) = [];
 FRstay_cell_cl = FRstay_cell;FRstay_cell_cl(badPCs) = [];
@@ -139,14 +142,14 @@ save([analysis_out date '_img' mouse '\' date '_img' mouse '_' run '_spk_deconvo
 
 %% make a new mask figure
 % load mask3D final
-filename2 = dir([analysis_out,img_fn '*' 'thresh97_coor0.8_mask3D.mat']);
+filename2 = dir([analysis_out,img_fn '*' 'thresh96_coor0.9_mask3D.mat']);
 mask3D = load([analysis_out img_fn filename2.name]);
 mask3D = mask3D.mask3D;
 allcells = 1:size(TCave,2);
 goodcells = setdiff(allcells,badPCs);
 figure;
 %needs to modify the line below due to different file names
-imshow([analysis_out,img_fn 'AVG_' date '_img' mouse '_' run '_rgstr_tiff_every50_ref2_jpeg.jpg']); hold on;
+imshow([analysis_out,img_fn 'AVG_' date '_img' mouse '_' run '_rgstr_tiff_every50_ref3_jpeg.jpg']); hold on;
 for m  = 1:length(goodcells)
     bound = cell2mat(bwboundaries(mask3D(:,:,goodcells(m))));
     randcolor = rand(1,4);

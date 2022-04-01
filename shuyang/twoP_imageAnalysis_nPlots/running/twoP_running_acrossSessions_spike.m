@@ -138,7 +138,7 @@ print(FR_Onset_fig,[path,fig_name],'-r600','-depsc');
 
 FR_Offset_fig = figure; 
 subplot(2,1,1);
-shadedErrorBar(x,ave_spike_runoff_acrossessions,ste_spike_runoff_acrossessions,{'color',[0.1922 0.6392 0.3294]},{'Linewidth',1});hold on;
+shadedErrorBar(x,ave_spike_runoff_acrossessions,ste_spike_runoff_acrossessions,{'color',[0.1922 0.6392 0.3294],'Linewidth',1});hold on;% all line props need to be in the same cell. otherwise it won't don anything for vargin > 4
 xlim([-1.1 1.6]);ylim([0 2.6]);
 vline(0,'k'); ylabel('firing rate(Hz)');
 a = get(gca,'XTickLabel');

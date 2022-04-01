@@ -1,10 +1,9 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirTwoPhase_ExptList';
-iexp = 26; 
+ds = 'CrossOriRandPhase_15Hz_ExptList';
+iexp = 7; 
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
-rc = behavConstsAV;
 eval(ds)
 
 frame_rate = params.frameRate;
@@ -32,8 +31,8 @@ end
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
-LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
-%LG_base = '\\CRASH.dhe.duke.edu\data\home\lindsey';
+base = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\' expt(7).saveLoc];
+
 
 fprintf(['2P imaging cross ori analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
 for irun=1:nrun
@@ -47,9 +46,9 @@ clear temp
 trial_n = [];
 offset = 0;
 for irun = 1:nrun
-    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
+    CD = [base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
     %CD = ['\\CRASH.dhe.duke.edu\data\home\ashley\data\AW68\two-photon imaging\' date '\' ImgFolder(irun,:)];
-    %CD = [LG_base '\Data\2P_images\' mouse '-KM' '\' date '_' mouse '\' ImgFolder(irun,:)];
+    %CD = [base '\Data\2P_images\' mouse '-KM' '\' date '_' mouse '\' ImgFolder(irun,:)];
     %CD = ['\\CRASH.dhe.duke.edu\data\home\kevin\Data\2P\' date '_' mouse '\' ImgFolder(irun,:)];
     cd(CD);
     imgMatFile = [ImgFolder{irun} '_000_000.mat'];
@@ -93,29 +92,29 @@ nep = floor(size(data,3)./regIntv);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,55001:55500),3);
+data_avg = mean(data(:,:,30001:30500),3);
 if doPhaseAfterDir || doDirAfterPass
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
+    load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);
-    mkdir(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
-elseif exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+    mkdir(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+elseif exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+    load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     [outs, data_reg] = stackRegister_MA(data,[],[],out);
 else
     [out, data_reg] = stackRegister(data,data_avg);
-    mkdir(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    mkdir(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
 
 % test stability
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); end
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_byFrame.pdf']),'-dpdf', '-bestfit')
+print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_byFrame.pdf']),'-dpdf', '-bestfit')
 movegui('center')
 figure; imagesq(mean(data_reg(:,:,1:regIntv),3)); truesize;
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
+print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
 
 i = 1;
 sz = size(data_reg);
@@ -130,7 +129,7 @@ movegui('center')
 %% if red channel data
 if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
     ImgFolderRed = expt(iexp).redImg;
-    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];
+    CD = [base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];
     cd(CD);
     imgMatFile = [ImgFolderRed{1} '_000_000.mat'];
     load(imgMatFile);
@@ -148,7 +147,7 @@ if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
     figure; imagesc(data_red_avg);
     
     ImgFolderRed = expt(iexp).redImg;
-    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];        
+    CD = [base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];        
     cd(CD);
     imgMatFile = [expt(iexp).redImg{1} '_000_000.mat'];
     load(imgMatFile);
@@ -167,7 +166,7 @@ if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
         figure; imagesc(green_data_avg)
         title('Green')
         if size(expt(iexp).redImg,2) == 2
-            CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{2}];                  
+            CD = [base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{2}];                  
             cd(CD);
             imgMatFile = [expt(iexp).redImg{2} '_000_000.mat'];
             load(imgMatFile);
@@ -185,7 +184,7 @@ if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
             figure; imagesc(red_data_avg); movegui('center')
             title('Red')
         end
-        save(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_redData.mat']), 'green_data_avg', 'red_data_avg')
+        save(fullfile([base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_redData.mat']), 'green_data_avg', 'red_data_avg')
     end
 
     data_avg = mean(data_reg(:,:,size(data_reg,3)-10000:end),3);
@@ -204,7 +203,7 @@ if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
     else
         title('Red at 920; Green at 920')
     end
-    print(fullfile([LG_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
+    print(fullfile([base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
 
 end
 
@@ -322,7 +321,7 @@ if nStimDir > 1 & ~input.doTwoStimTogether
     colormap gray
     caxis([0 1])
     sgtitle([mouse ' ' date])
-    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GratingVsPlaid.pdf']),'-dpdf')
+    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GratingVsPlaid.pdf']),'-dpdf')
 elseif nStimDir > 1 & input.doTwoStimTogether
     nStim2 = nStimDir.*2;
     data_dfof = cat(3, data_dfof, zeros(sz(1),sz(2), nStim2));
@@ -371,7 +370,7 @@ data_dfof_max = max(imfilter(data_dfof,myfilter),[],3);
 figure;
 movegui('center')
 imagesc(data_dfof_max)
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_maxdfof.pdf']),'-dpdf')
+print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_maxdfof.pdf']),'-dpdf')
 
 data_dfof = cat(3, data_dfof, data_dfof_max);
 if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
@@ -381,7 +380,7 @@ if (strcmp(expt(iexp).driver,'SOM') || strcmp(expt(iexp).driver,'PV')) & ~doRedC
     data_dfof = cat(3,data_dfof,data_avg);
 end
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas', 'maskDiff_all','maskDiffs','nMaskDiff','SF_all', 'SFs', 'nSF','TF_all', 'TFs', 'nTF', 'frame_rate', 'nTrials')
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas', 'maskDiff_all','maskDiffs','nMaskDiff','SF_all', 'SFs', 'nSF','TF_all', 'TFs', 'nTF', 'frame_rate', 'nTrials')
 
 %% cell segmentation 
 if ~doPhaseAfterDir & ~doDirAfterPass
@@ -426,9 +425,9 @@ clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg data_res
  %% neuropil subtraction
 if ~doPhaseAfterDir & ~doDirAfterPass
     mask_np = imCellNeuropil(mask_cell, 3, 5);
-    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')
 else
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_mask_cell.mat']))
+    load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_mask_cell.mat']))
 end
 clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_data_temp mask_exp data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
 
@@ -458,7 +457,7 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 clear data_reg data_reg_down
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells', 'sz')
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells', 'sz')
 
 clear data_tc data_tc_down np_tc np_tc_down mask_np mask_cell
 

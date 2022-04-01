@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '211126';
-mouse = 'WK06';
-ImgFolder = '005';
-time = '1308';
+date = '220327';
+mouse = 'WK17';
+ImgFolder = '003';
+time = '1419';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -98,7 +98,7 @@ expt_input = concatenateDataBlocks(temp);
     
 %     sz = size(data);
 %     data = data(:,:,1:(nOn+nOff)*ntrials);
-    if size(data,3) < 100000
+    if size(data,3) < 10000
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
         if (nOn+nOff)*ntrials > size(data,3)
@@ -161,6 +161,8 @@ expt_input = concatenateDataBlocks(temp);
             end
             print(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder,'quickRet.pdf'),'-dpdf','-fillpage')
         end
+        
+        
         pixThreshold = 0.2*max(data_dfof_avg_all(:));
         img_avg_resp = zeros(1,nStim);
         for i = 1:nStim 

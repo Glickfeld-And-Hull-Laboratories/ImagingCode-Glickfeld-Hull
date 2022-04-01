@@ -197,3 +197,63 @@ expt(12).passFolder = {'002'};
 expt(12).passTime = {'1211'};
 expt(12).redImg = {'004','005'};
 expt(12).saveLoc = 'lindsey';
+
+%% 220130
+expt(13).mouse = 'i484';
+expt(13).date = '220130';
+expt(13).img_loc  = {'AL'};
+expt(13).z = 200;
+expt(13).img_strct  = {'cells'};
+expt(13).driver = {'SOM'};
+expt(13).indicator = {'AAV';'GCaMP7f'};
+expt(13).SF = 0.05;
+expt(13).size = 30;
+expt(13).coFolder = {'002'};
+expt(13).coTime = {'1054'};
+expt(13).redImg = {};
+expt(13).saveLoc = 'lindsey';
+
+%% i484 220130
+expt(14).mouse = 'i484';
+expt(14).date = '220130';
+expt(14).img_loc  = {'AL'};
+expt(14).z = 200;
+expt(14).img_strct  = {'cells'};
+expt(14).driver = {'SOM'};
+expt(14).indicator = {'AAV';'GCaMP7f'};
+expt(14).SF = 0.1;
+expt(14).size = 1000;
+expt(14).coFolder = {'003'};
+expt(14).coTime = {'1157'};
+expt(14).redImg = {};
+expt(14).saveLoc = 'lindsey';
+
+%% i484 220201
+expt(15).mouse = 'i484';
+expt(15).date = '220201';
+expt(15).img_loc  = {'LM'};
+expt(15).z = 200;
+expt(15).img_strct  = {'cells'};
+expt(15).driver = {'SOM'};
+expt(15).indicator = {'AAV';'GCaMP7f'};
+expt(15).SF = 0.05;
+expt(15).size = 30;
+expt(15).coFolder = {'003'};
+expt(15).coTime = {'1205'};
+expt(15).redImg = {'004','005'};
+expt(15).saveLoc = 'lindsey';
+
+%% i484 220202
+expt(16).mouse = 'i484';
+expt(16).date = '220202';
+expt(16).img_loc  = {'LM'};
+expt(16).z = 200;
+expt(16).img_strct  = {'cells'};
+expt(16).driver = {'SOM'};
+expt(16).indicator = {'AAV';'GCaMP7f'};
+expt(16).SF = 0.1;
+expt(16).size = 1000;
+expt(16).coFolder = {'001'};
+expt(16).coTime = {'1258'};
+expt(16).redImg = {'002','003'};
+expt(16).saveLoc = 'lindsey';
