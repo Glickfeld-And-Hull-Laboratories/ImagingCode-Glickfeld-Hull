@@ -4,20 +4,21 @@
 %response plasticity/stability to tuning
 clear all;
 clear global;
+clc;
 %% get path names D2
-ref_date = '211129';
-date = '211207';
-time = strvcat('0919');
+ref_date = '220318';
+date = '220324';
+time = strvcat('1542');
 alignToRef = 1;
 ImgFolder = strvcat('001');
-mouse = 'tj_100721';
+mouse = 'i1370';
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
 ref_str = 'runs-001';
 run_str = catRunName(ImgFolder, nrun);
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
+%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load and register - same as d1 code
 data = [];
@@ -70,7 +71,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((
 
 %% Register data - identify clearest stack and align frames to that
 
-data_avg = mean(data(:,:,4001:4500),3); 
+data_avg = mean(data(:,:,8001:8500),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -278,11 +279,11 @@ corrmap_norm{3} = uint8((corrmap{3}./max(corrmap{3}(:))).*255);
 dfmax{3} = imwarp(dfmax{2},fitGeoTAf, 'OutputView', imref2d(size(dfmax{2}))); %new dfof max
 %redChImg = imwarp(fov_red{2},fitGeoTAf, 'OutputView', imref2d(size(fov_red{2})));
 
-sz = size(fov_avg{3});
+sz = size(fov_avg{1});
 rgb = zeros(sz(1),sz(2),3);
 %rgb(:,:,1) = redChImg./max(redChImg(:));
 rgb(:,:,2) = fov_avg{3}./max(fov_avg{3}(:));
-figure; image(rgb); movegui('center') %i think this would overlay your red and green?***
+figure; image(rgb); movegui('center') %i think this would overlay your red and green?*** -> no, it overlays d1 and d2 images
 
 figure;colormap gray %not sure what this part is doing - why the 3 and filler?*** also why is it colored?***
 filler = zeros(size(dfmax{1}));
@@ -296,7 +297,11 @@ imshow(cat(3,dfmax{1},dfmax{3},filler))
 title('Overlay')
 %print(fullfile(fn_multi,'overlays'),'-dpdf','-fillpage')
 
+%the 3 concatenates that dimension; colormap gray is wrong here
 %might want to save the fitGeoTrans data***
+%fov_avg{1} is the d1 data
+%fov_avg{2} is the NON-shifted d2/3 data
+%fov_avg{3} is the shifted d2/3 data
 
 %% make new cell masks for D2
 clear input %why? -> i think it is used below***
@@ -411,7 +416,7 @@ for icell = 1:nc %for each cell
             shifts = nan;
         end
 
-        %***THIS IS WHERE ALL THE SINGLE CELL DATA ARE KEPT***
+        %***THIS IS WHERE ALL THE SINGLE CELL DATA ARE KEPT, INCLUDING IF THE CELLS MATCH ACROSS DAYS***
         cellImageAlign(icell).center_yx = [yCenter(icell),xCenter(icell)]; %cell centers
         cellImageAlign(icell).d(1).avg_img = day1_cell_avg; %this and the ones below are avg,corr,max for d1 and d2
         cellImageAlign(icell).d(1).corr_img = day1_cell_corr;
@@ -521,21 +526,21 @@ save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' m
 
 %%
 %old TCs
-match = find([cellImageAlign.pass]);
+match = find([cellImageAlign.pass]); %finds matched cell indices
 %[match_ind,red_ind] = intersect(match,redCells);
 %cellTCs_match{1} = cellTCs_all{1}(:,match_ind);
 
 %new TCs
-data_tc = stackGetTimeCourses(data3, mask_cell);
+data_tc = stackGetTimeCourses(data3, mask_cell); %tc of d2/3 data
 [nFrames nCells] = size(data_tc);
 down = 5;
 data_reg_down  = stackGroupProject(data3,down);
-data_tc_down = stackGetTimeCourses(data_reg_down, mask_cell);
+data_tc_down = stackGetTimeCourses(data_reg_down, mask_cell); %downsampled data
 
 np_tc = zeros(nFrames,nCells);
 np_tc_down = zeros(floor(nFrames./down), nCells);
 for i = 1:nCells
-     np_tc(:,i) = stackGetTimeCourses(data3,mask_np(:,:,i));
+     np_tc(:,i) = stackGetTimeCourses(data3,mask_np(:,:,i)); 
      np_tc_down(:,i) = stackGetTimeCourses(data_reg_down,mask_np(:,:,i));
      fprintf(['Cell #' num2str(i) '%s/n']) 
 end
@@ -547,7 +552,7 @@ for i = 1:100
 end
 [max_skew ind] =  max(x,[],1);
 np_w = 0.01*ind;
-npSub_tc = data_tc(:,:)-bsxfun(@times,tcRemoveDC(np_tc(:,:)),np_w);
+npSub_tc = data_tc(:,:)-bsxfun(@times,tcRemoveDC(np_tc(:,:)),np_w); %np-subtracted data based on max skew
  
 cellTCs_match{2} = npSub_tc(:,:);
 
@@ -569,11 +574,11 @@ if isfield(input, 'nScansOn')
     nOff = input.nScansOff;
     nCells = size(npSub_tc,2);
     if nOn>29
-        data_mat = zeros(nOn+nOff, nCells, ntrials);
+        data_mat = zeros(nOn+nOff, nCells, ntrials); %this is trial-level data
         for itrial = 1:ntrials
             data_mat(:,:,itrial) = npSub_tc(1+((itrial-1).*(nOn+nOff)):(itrial.*(nOn+nOff)),:);
         end
-        data_f = mean(data_mat(nOff/2:nOff,:,:),1);
+        data_f = mean(data_mat(nOff/2:nOff,:,:),1); %2nd half of off frames for baseline
     else
         data_mat = zeros(100, nCells, ntrials-1);
         for itrial = 1:ntrials-1
@@ -582,7 +587,7 @@ if isfield(input, 'nScansOn')
         data_f = mean(data_mat(1:50,:,:),1);
     end
     data_df = bsxfun(@minus, data_mat, data_f);
-    data_dfof = bsxfun(@rdivide, data_df, data_f);
+    data_dfof = bsxfun(@rdivide, data_df, data_f); %df/f data matrix
     
     ndir = length(Dirs);
     [n, n2] = subplotn(nCells);
@@ -590,12 +595,12 @@ if isfield(input, 'nScansOn')
     p_dir = zeros(nCells, ndir);
     base_win = 50:60;
     resp_win = 70:90;
-    base = squeeze(mean(data_dfof(base_win,:,:),1));
-    resp = squeeze(mean(data_dfof(resp_win,:,:),1));
-    resp_mat = squeeze(mean(data_mat(resp_win,:,:),1));
+    base = squeeze(mean(data_dfof(base_win,:,:),1)); %avg across base
+    resp = squeeze(mean(data_dfof(resp_win,:,:),1)); %avg across resp
+    resp_mat = squeeze(mean(data_mat(resp_win,:,:),1)); %non-standardized data
 %     figure;scatter(mean(resp,2),mean(resp_mat,2));xlabel('dfof resp');ylabel('f resp')
     dir_resp = zeros(nCells,ndir);
-    [x y] = ttest(resp', base', 'tail','right');
+    [x y] = ttest(resp', base', 'tail','right'); %what is this for?
     no_match = find(isnan(x));
     max_dir = zeros(nCells,1);
     figure;
@@ -675,7 +680,7 @@ if isfield(input, 'nScansOn')
         end
     end
     
-    good_ind = unique([find(x)'; find(sum(h_dir,2)>0); find(sum(h_ori,2)>0)]);
+    good_ind = unique([find(x)'; find(sum(h_dir,2)>0); find(sum(h_ori,2)>0)]); %cells with at least 1 sig dir/ori
     print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_oriTuning.pdf']),'-dpdf')
     save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_trialData.mat']),'data_dfof','resp_mat','max_dir','h_dir', 'h_ori', 'max_ori','good_ind','dir_resp')
 end
@@ -714,7 +719,7 @@ end
 start = 1;
 x = 0;
 for ic = 1:nCells
-    if start > 49
+    if start > 49 %?***
         suptitle([mouse ' ' date ' n = ' num2str(length(find(fitReliability<22.5))) '/' num2str(nCells) '- well-fit'])
         print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_oriTuningFits_cells' num2str(start-49) '-' num2str(start-1) '.pdf']),'-dpdf','-fillpage')
         start = 1;
@@ -737,11 +742,11 @@ print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' 
 
 [max_resp prefOri] = max(vonMisesFitAllCellsAllBoots,[],1);
 prefOri = squeeze(prefOri)-1;
-prefOri_bootdiff = abs(prefOri(2:end,:)-prefOri(1,:));
-prefOri_bootdiff(find(prefOri_bootdiff>90)) = 180-prefOri_bootdiff(find(prefOri_bootdiff>90));
-ind_theta90 = find(prctile(prefOri_bootdiff,90,1)<22.5);
-edges = [0 22.5:45:180]; 
-[bin ind_bin] = histc(prefOri(1,:),edges);
+prefOri_bootdiff = abs(prefOri(2:end,:)-prefOri(1,:)); %how different is each bootstrap from original?***
+prefOri_bootdiff(find(prefOri_bootdiff>90)) = 180-prefOri_bootdiff(find(prefOri_bootdiff>90)); %?***
+ind_theta90 = find(prctile(prefOri_bootdiff,90,1)<22.5); %?***
+edges = [0 22.5:45:225]; 
+[bin ind_bin] = histc(prefOri(1,:),edges); %?***
 ind_bin(find(ind_bin==5)) = 1;
 bin(1) = bin(1)+bin(5);
 bin(5) = [];
