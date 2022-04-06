@@ -15,8 +15,8 @@ clc
 %% get path names
 date = '220331';
 ImgFolder = strvcat('003'); %could we use char() instead here?
-time = strvcat('0937');
-mouse = 'i2515';
+time = strvcat('0812');
+mouse = 'i2514';
 run = strvcat('001'); %multiple depths?***
 nrun = size(ImgFolder,1); %what is this?***
 frame_rate = 15.5;
@@ -93,7 +93,7 @@ end
 %frames; what about pixel 1,2 etc.
 %% Register data
 
-data_avg = mean(data(:,:,22001:22500),3); %mean of pixel values over selected range of frames
+data_avg = mean(data(:,:,26001:26500),3); %mean of pixel values over selected range of frames
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str])) %if this folder exists)
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat'])) %load this mat file

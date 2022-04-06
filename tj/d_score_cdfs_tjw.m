@@ -5,10 +5,10 @@ clear all global
 clc
 %%
 newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\Multi_Day_Comparisons'; %folder to save files to
-dataset = 'practice_exp_list_tjw'; %experiment list to pick files from
+dataset = 'exp_list_tjw'; %experiment list to pick files from
 eval(dataset); %load dataset
-pre_rw = 43;
-post_rw = 49; %day 1 in expt list
+pre_rw = 22;
+post_rw = 37; %day 1 in expt list
 mouse = expt(pre_rw).mouse; %mouse
 img_area = expt(pre_rw).img_loc{1};
 img_layer = expt(pre_rw).img_loc{2};

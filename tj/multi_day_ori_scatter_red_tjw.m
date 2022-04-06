@@ -6,14 +6,14 @@ clc
 %find folders to load and experiment info
 
 fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P'; %folder to load files from
-newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\Multi_Day_Comparisons'; %folder to save files to
-dataset = 'exp_list_tjw'; %experiment list to pick files from
+newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\Arc_Multi_Day_Comparisons'; %folder to save files to
+dataset = 'exp_list_arc_tjw'; %experiment list to pick files from
 eval(dataset); %load dataset
-d1 = 31; %day 1 in expt list
-d2 = 32; %day 2 in expt list
-d3 = 33; %day 3 in expt list
+d1 = 1; %day 1 in expt list
+d2 = 2; %day 2 in expt list
+d3 = 3; %day 3 in expt list
 mouse = expt(d1).mouse; %mouse
-ref_str = 'runs-001'; %string on file name to load
+ref_str = 'runs-003'; %string on file name to load
 ref_str_d1 = ['runs-',expt(d1).runs]; %need to fix this part***
 img_area = expt(d1).img_loc{1};
 img_layer = expt(d1).img_loc{2};
@@ -34,13 +34,19 @@ d3_ori = load(fullfile(fnout, [date_d3 '_' mouse], [date_d3 '_' mouse '_' ref_st
 %load multiday data for days 2 and 3
 d2_matches = load(fullfile(fnout, [date_d2 '_' mouse], [date_d2 '_' mouse '_' ref_str], [date_d2 '_' mouse '_' ref_str '_' 'multiday_alignment.mat']));
 d3_matches = load(fullfile(fnout, [date_d3 '_' mouse], [date_d3 '_' mouse '_' ref_str], [date_d3 '_' mouse '_' ref_str '_' 'multiday_alignment.mat']));
+d2_tcs = load(fullfile(fnout, [date_d2 '_' mouse], [date_d2 '_' mouse '_' ref_str], [date_d2 '_' mouse '_' ref_str '_' 'TCs.mat']));
+d3_tcs = load(fullfile(fnout, [date_d3 '_' mouse], [date_d3 '_' mouse '_' ref_str], [date_d3 '_' mouse '_' ref_str '_' 'TCs.mat']));
+
+
 
 %%
 %identify matched cells and their pref oris for each day
 
+
+
 %find cells that match from d1 to d2 and d1 to d3
-match_d2 = find([d2_matches.cellImageAlign.pass]); 
-match_d3 = find([d3_matches.cellImageAlign.pass]); 
+match_d2 = find([d2_tcs.match_ind]); 
+match_d3 = find([d3_tcs.match_ind]); 
 
 %find pref oris of matched cells for d1 and d2
 prefori_d1_d2_match = d1_ori.prefOri(1,match_d2);
