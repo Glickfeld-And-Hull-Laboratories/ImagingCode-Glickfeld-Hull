@@ -94,20 +94,20 @@ expt(3).coSize = 10;
 expt(3).saveLoc = 'lindsey';
 
 %% i1329 210207 10 deg
-expt(4).mouse = 'i1329';
-expt(4).date = '210207';
-expt(4).img_loc  = {'V1';'L2/3'};
-expt(4).inj_loc = {'V1'};
-expt(4).z = -200;
-expt(4).img_strct  = {'cells'};
-expt(4).driver = {'SLC'};
-expt(4).indicator = {'tg';'GCaMP6s'};
-expt(4).retFolder = {'002'};
-expt(4).retTime = {'1212'};
-expt(4).coFolder = {'003'};
-expt(4).coTime = {'1319'};
-expt(4).coSize = 10;
-expt(4).saveLoc = 'lindsey';
+% expt(4).mouse = 'i1329';
+% expt(4).date = '210207';
+% expt(4).img_loc  = {'V1';'L2/3'};
+% expt(4).inj_loc = {'V1'};
+% expt(4).z = -200;
+% expt(4).img_strct  = {'cells'};
+% expt(4).driver = {'SLC'};
+% expt(4).indicator = {'tg';'GCaMP6s'};
+% expt(4).retFolder = {'002'};
+% expt(4).retTime = {'1212'};
+% expt(4).coFolder = {'003'};
+% expt(4).coTime = {'1319'};
+% expt(4).coSize = 10;
+% expt(4).saveLoc = 'lindsey';
 
 %% i1333 210207 10 deg
 expt(5).mouse = 'i1333';
