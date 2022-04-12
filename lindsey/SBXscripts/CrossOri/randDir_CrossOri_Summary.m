@@ -1,24 +1,24 @@
 clear all;
 close all;
 clc
-ds = 'CrossOriRandDirFF_ExptList';
+ds = 'CrossOriRandDir_ExptList';
 eval(ds)
 frame_rate = 15;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirSummary');
-svName = 'randDirFF';
+svName = 'randDir';
 if ~exist(summaryDir)
     mkdir(summaryDir)
 end
 
 doPlot = 0;
-area_list = ['V1']; % 'LM'; 'AL'; 'PM'; 'RL'];
+area_list = ['V1'; 'LM'; 'AL'; 'PM'; 'RL'];
 driver = 'SLC';
 doRedCells =0;
-SF = 0.05;
+SF = 0.1;
 con = 0.5;
-sz = 1000;
+sz = 30;
 doSFSave = 1;
 doConSave = 0;
 doSzSave = 1;
@@ -28,7 +28,7 @@ else
     narea =length(area_list);
 end
 
-for iarea = narea
+for iarea = 1:narea
     area = area_list(iarea,:);
     fprintf([area ' ' driver '\n'])
     stim_OSI_all = [];

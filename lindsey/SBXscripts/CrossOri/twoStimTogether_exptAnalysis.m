@@ -5,7 +5,7 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-iexp =14;
+iexp =7;
 
 frame_rate = params.frameRate;
 

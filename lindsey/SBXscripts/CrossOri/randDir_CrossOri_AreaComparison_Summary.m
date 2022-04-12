@@ -3,7 +3,10 @@ close all
 clc
 doRedChannel = 0;
 ds = 'CrossOriRandDir_ExptList';
+svName = 'randDir';
 driver = 'SLC';
+SF = 'pt1';
+Sz = '30';
 area_list = strvcat('V1','LM','AL','RL','PM');
 narea = length(area_list);
 eval(ds)
@@ -21,12 +24,14 @@ Zp_pca_all = [];
 f2overf1_all_all = [];
 resp_ind_all_all = [];
 f1resp_ind_all_all = [];
+grating_resp_all = [];
+plaid_resp_all = [];
 totCells = 0;
 area_ind = [];
 pca_area = [];
 for iA = 1:narea
     fprintf([area_list(iA,:) '\n'])
-    load(fullfile(summaryDir,['randDir_Summary_' area_list(iA,:) '_' driver '.mat']))
+    load(fullfile(summaryDir,[svName '_Summary_' area_list(iA,:) '_' driver '_SF' SF '_Sz' Sz '.mat']))
     areaSummary(iA).name = area_list(iA,:);
     areaSummary(iA).mice = unique(mouse_list,'rows');
     areaSummary(iA).nmice = size(unique(mouse_list,'rows'),1);
@@ -180,7 +185,7 @@ for iA = 1:narea
     axis square
     plotZcZpBorders
     
-%     load(fullfile(summaryDir,['randDir_PCA_Summary_' area_list(iA,:) '.mat']))
+%     load(fullfile(summaryDir,[svName '_PCA_Summary_' area_list(iA,:) '.mat']))
 %     Zc_pca_all = [Zc_pca_all Zc_all];
 %     Zp_pca_all = [Zp_pca_all Zp_all];
 %     pca_area = [pca_area iA.*ones(size(Zc_all))];
@@ -191,6 +196,18 @@ for iA = 1:narea
 %     subplot(2,1,2)
 %     errorbar(iA,nanmean(Zp_all,2),nanstd(Zp_all,[],2)./sqrt(sum(~isnan(Zp_all))),'ok')
 %     hold on
+
+grating_resp = sum(h_resp_all(resp_ind_all,1:8,1),2);
+plaid_resp = sum(h_resp_all(resp_ind_all,1:8,2),2);
+grating_resp_all = [grating_resp_all histc(grating_resp,0:8)];
+plaid_resp_all = [plaid_resp_all histc(plaid_resp,0:8)];
+figure(6)
+subplot(2,1,1)
+cdfplot(grating_resp)
+hold on
+subplot(2,1,2)
+cdfplot(plaid_resp)
+hold on
 end
 figure(1)
 subplot(3,3,1)
@@ -229,7 +246,7 @@ xlabel('Zc')
 ylabel('Zp')
 xlim([-0.5 2])
 ylim([-0.4 0.4])
-print(fullfile(summaryDir, ['randDir_allArea_summary_' driver '.pdf']),'-dpdf', '-fillpage') 
+print(fullfile(summaryDir, [svName '_allArea_summary_' driver '.pdf']),'-dpdf', '-fillpage') 
 
 figure(2)
 subplot(2,2,1)
@@ -251,10 +268,10 @@ xlabel('Zp')
 ylabel('F2overF1')
 xlim([-0.4 0.4])
 ylim([0 1.25])
-print(fullfile(summaryDir, ['randDir_allArea_summary_F2F1_' driver '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, [svName '_allArea_summary_F2F1_' driver '.pdf']),'-dpdf', '-fillpage')
 
 figure(3)
-print(fullfile(summaryDir, ['randDir_allArea_summary_SI&F2F1byOSI_' driver '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, [svName '_allArea_summary_SI&F2F1byOSI_' driver '.pdf']),'-dpdf', '-fillpage')
 
 [p_Zc table_Zc stats_Zc] = anova1(Zc_all_all(resp_ind_all_all),area_ind(resp_ind_all_all),'off');
 post_Zc = multcompare(stats_Zc,'display','off');
@@ -294,10 +311,10 @@ ylim([0 1])
 sigstar(groups(ind),post_f2f1(ind,end),1)
 set(gca,'XTick',1:narea,'XTickLabel',area_list)
 ylabel('F2/F1')
-print(fullfile(summaryDir, ['randDir_allArea_summary_ZcZpF2F1_withStats_' driver '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, [svName '_allArea_summary_ZcZpF2F1_withStats_' driver '.pdf']),'-dpdf', '-fillpage')
 
 figure(5)
-print(fullfile(summaryDir, ['randDir_allArea_summary_ZcZp_scatters_' driver '.pdf']),'-dpdf', '-fillpage')
+print(fullfile(summaryDir, [svName '_allArea_summary_ZcZp_scatters_' driver '.pdf']),'-dpdf', '-fillpage')
 
 % [p_Zc_pca table_Zc_pca stats_Zc_pca] = anova1(Zc_pca_all,pca_area,'off');
 % post_Zc_pca = multcompare(stats_Zc_pca,'display','off');
@@ -319,8 +336,18 @@ print(fullfile(summaryDir, ['randDir_allArea_summary_ZcZp_scatters_' driver '.pd
 % sigstar(groups(ind),post_Zp_pca(ind,end),1)
 % set(gca,'XTick',1:narea,'XTickLabel',area_list)
 % ylabel('PCA- Zp')
-% print(fullfile(summaryDir, ['randDir_allArea_summary_PCA_ZcZp.pdf']),'-dpdf', '-fillpage') 
+% print(fullfile(summaryDir, [svName '_allArea_summary_PCA_ZcZp.pdf']),'-dpdf', '-fillpage') 
 
+figure(6)
+subplot(2,1,1)
+xlabel('Sig resp dirs')
+ylabel('Fraction of cells')
+title('Gratings')
+legend(leg_str{2,:},'location','southeast')
+subplot(2,1,2)
+xlabel('Sig resp dirs')
+ylabel('Fraction of cells')
+title('Plaids')
 
 
 
