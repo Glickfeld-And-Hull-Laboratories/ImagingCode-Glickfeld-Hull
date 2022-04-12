@@ -449,7 +449,7 @@ for i = 1:size(match_ind,2)
 end
 
 figure;
-imagesc(corrmap{1});
+imagesc(corrmap{3});
 colormap gray
 %caxis([0.05 .3])
 title('average FOV day 1');
@@ -487,20 +487,20 @@ for i = 1:length(keep_cells)
   temp_mask_inds = find(keep_masks==i);
    if ismember(i,red_ind_keep)
        keep_red_masks(temp_mask_inds)=i;
-       keep_masks_fract_change_red(temp_mask_inds) = dfof_max_diff(i,2);
-       keep_masks_raw_change_red(temp_mask_inds) = dfof_max_diff_raw(i,2);
-       keep_masks_d1_red(temp_mask_inds)=resp_max_keep{2}(i,2);
+       keep_masks_fract_change_red(temp_mask_inds) = dfof_max_diff(i,(size(dfof_max_diff,2)));
+       keep_masks_raw_change_red(temp_mask_inds) = dfof_max_diff_raw(i,(size(dfof_max_diff,2)));
+       keep_masks_d1_red(temp_mask_inds)=resp_max_keep{2}(i,size(resp_max_keep{2},2));
    else
        keep_green_masks(temp_mask_inds)=i;
-       keep_masks_fract_change_green(temp_mask_inds) = dfof_max_diff(i,2);
-       keep_masks_raw_change_green(temp_mask_inds) = dfof_max_diff_raw(i,2);
+       keep_masks_fract_change_green(temp_mask_inds) = dfof_max_diff(i,(size(dfof_max_diff,2)));
+       keep_masks_raw_change_green(temp_mask_inds) = dfof_max_diff_raw(i,(size(dfof_max_diff,2)));
    end
 end
 
 figure;
-imagesc(fov_red{1});
+imagesc(fov_red{3});
 colormap gray
-caxis([10 200])
+caxis([10 100])
 title('matched red cells');
 hold on
 bound = cell2mat(bwboundaries(keep_red_masks));
@@ -535,44 +535,49 @@ end
 
 
 
-locTCs = cell(2,nCon);
-statTCs = cell(2,nCon);
+locTCs = cell(1,nd);
+statTCs = cell(1,nd);
 
-locResp = cell(2,nCon);
-statResp = cell(2,nCon);
-locCounts=cell(2,nCon);
+locResp = cell(1,nd);
+statResp = cell(1,nd);
+locCounts=cell(1,nd);
 
-for iCon = 1:nCon
+for id = 1:nd
     %make this the average for running state for each contrast
-    for id = 1:nd
+    locTrials=nan((nOn+nOff),nKeep,nCon);
+    statTrials=nan((nOn+nOff),nKeep,nCon);
+    for iCon = 1:nCon
         tCon = tCon_match{id}(:,1:nTrials(id));
         ind_con = find(tCon == cons(iCon));
         loc=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(RIx{id}), ind_con),:),2)); %average of locomotion at this contrast trials for each cell
         stat=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(~RIx{id}),ind_con),:),2)); %average of stationary  at this contrast trials for each cell
 
-        locTCs{id,iCon}=loc;
-        statTCs{id,iCon}=stat;
-        locCounts{id,iCon}=[length(intersect(find(RIx{id}), ind_con)),length(intersect(find(~RIx{id}),ind_con))];
+        locTCs{id}(:,:,iCon)=loc;
+        statTCs{id}(:,:,iCon)=stat;
+        locCounts{id}(:,iCon)=[length(intersect(find(RIx{id}), ind_con)),length(intersect(find(~RIx{id}),ind_con))];
 
-        locResp{id,iCon}=nanmean(loc(stimStart:stimStart+nOn,:),1);
-        statResp{id,iCon}=nanmean(stat(stimStart:stimStart+nOn,:),1);
+        locResp{id}(:,iCon)=nanmean(loc(stimStart:stimStart+nOn,:),1);
+        statResp{id}(:,iCon)=nanmean(stat(stimStart:stimStart+nOn,:),1);
         clear loc stat ind_con tCon
     end
 end
 
 
 
+
+
+
 %for each day, extract the LMI for each cell - here I'm collasping across
 %all stim conditions
-LMI = cell(2,nCon);
+LMI = cell(1,nd);
 
-for iCon=1:nCon
-    for id = 1:nd
-            locRectified = locResp{id,iCon};
+for id = 1:nd
+    for iCon=1:nCon
+            locRectified = locResp{id}(:,iCon);
             locRectified(find(locRectified<0))=0;
-            statRectified = statResp{id,iCon};
+            statRectified = statResp{id}(:,iCon);
             statRectified(find(statRectified<0))=0;
-            LMI{id,iCon}=(locRectified-statRectified)./(locRectified+statRectified);
+            LMI{id}(:,iCon)=(locRectified-statRectified)./(locRectified+statRectified);
         
     end
 end

@@ -9,7 +9,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-sess_list = [131];%enter all the sessions you want to pool
+sess_list = [131 133];%enter all the sessions you want to pool
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -29,7 +29,7 @@ tOri_pooled = cell(1,nSess);
 prefOri_pooled = cell(1,nSess);
 prefCon_pooled = cell(1,nSess);
 stimStart_pooled = []; %stimStart should be the same across sessions but I want to make sure
-trial_avrg_resp = cell(1,nSess);
+trial_avrg_tc = cell(1,nSess);
 trial_tc = cell(1,nSess);
 green_ind = cell(1,nSess);
 red_ind = cell(1,nSess);
@@ -52,7 +52,7 @@ for iSess = 1:nSess
     tCon_pooled{iSess} = tCon_match;
     tOri_pooled{iSess} = tOri_match;
     stimStart_pooled = [stimStart_pooled, stimStart];
-    trial_avrg_resp{iSess} = tc_trial_avrg_keep;
+    trial_avrg_tc{iSess} = tc_trial_avrg_keep;
     trial_tc{iSess} = data_trial_keep;
     green_ind{iSess} = green_ind_keep;
     red_ind{iSess} = red_ind_keep;
@@ -107,6 +107,8 @@ red_resp_full = cell(1,nd);
 green_resp_firstSec = cell(1,nd);
 red_resp_firstSec = cell(1,nd);
 cellCounts=nan(2,nCon);
+tc_green_all=cell(nd,nCon);
+tc_red_all=cell(nd,nCon);
 
 for id = 1:nd
     for iCon=1:nCon
@@ -117,10 +119,11 @@ for id = 1:nd
             conInd = find(all_cons{iSess}==cons(iCon)); %figure out which index will
             %correspond to the desired contrast in this session
             %grab all those trials for this session/day
-            green_trials=[green_trials, trial_avrg_resp{iSess}{id}(:,green_ind{iSess},conInd)];
-            red_trials=[red_trials, trial_avrg_resp{iSess}{id}(:,red_ind{iSess},conInd)];
+            green_trials=[green_trials, trial_avrg_tc{iSess}{id}(:,green_ind{iSess},conInd)];
+            red_trials=[red_trials, trial_avrg_tc{iSess}{id}(:,red_ind{iSess},conInd)];
             
         end
+        tc_green_all{id,conInd}=green_trials;
         tc_green_avrg{id}(:,conInd)=nanmean(green_trials,2);
         green_resp_full{id}(:,conInd)=nanmean(green_trials(stimStart:(stimStart+30),:),1);
         green_resp_firstSec{id}(:,conInd)=nanmean(green_trials(stimStart:(stimStart+15),:),1);
@@ -128,13 +131,14 @@ for id = 1:nd
         tc_green_se{id}(:,conInd)=green_std/sqrt(size(green_trials,2));
         cellCounts(1,iCon)=size(green_trials,2);
         
+        tc_red_all{id,conInd}=red_trials;
         tc_red_avrg{id}(:,conInd)=nanmean(red_trials,2);
         red_resp_full{id}(:,conInd)=nanmean(red_trials(stimStart:(stimStart+30),:),1);
         red_resp_firstSec{id}(:,conInd)=nanmean(red_trials(stimStart:(stimStart+15),:),1);
         red_std=std(red_trials,[],2);
         tc_red_se{id}(:,conInd)=red_std/sqrt(size(red_trials,2));
         cellCounts(2,iCon)=size(red_trials,2);
-        clear green_std green_trials red_std red_trials
+        clear green_std  red_std
         end
 end
     %%
@@ -177,6 +181,66 @@ axis square
 print(fullfile(fnout,[num2str(cons(iCon)) '_timecourses.pdf']),'-dpdf');
 end 
 clear txt1 txt2 
+
+%% make a plot of individual timecourses 
+
+setYmin = -.2; %indicate y axes you want
+setYmax = 0.8;
+
+
+for iCon = 1:nCon
+
+figure
+subplot(2,2,1)
+plot(t, tc_green_all{2,iCon},'color',[0 0 0 .2])
+hold on
+plot(t, tc_green_avrg{2}(:,iCon),'color',[0 0 0],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 1')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,2)
+plot(t, tc_red_all{2,iCon},'color',[.7 .05 .05 .2])
+hold on
+plot(t, tc_red_avrg{2}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 1')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,3)
+plot(t, tc_green_all{1,iCon},'color',[0 0 0 .2])
+hold on
+plot(t, tc_green_avrg{1}(:,iCon),'color',[0 0 0],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 2')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,4)
+plot(t, tc_red_all{1,iCon},'color',[.7 .05 .05 .2])
+hold on
+plot(t, tc_red_avrg{1}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 2')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+sgtitle(['contrast = '  num2str(cons(iCon))])
+hold off
+print(fullfile(fnout,[num2str(cons(iCon)) '_indiv_timecourses.pdf']),'-dpdf');
+end
+
 %% scatterplot of responses
 
 for iCon = 1:nCon
@@ -215,3 +279,64 @@ print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bes
 
 end
 
+
+%% time to peak
+tHalfMax = cell(1,nd);
+
+for id = 1:nd
+    tHalfMaxTemp=nan(nKeep,1);
+
+        for iCell=1:nKeep
+            %pull the data for a given cell at a given contrast (pref ori)
+            tempData=tc_trial_avrg_keep_allCon{id}(stimStart:stimStart+nOn,iCell);
+            if resp_keep{id}(iCell)
+                smoothData=smoothdata(tempData,'movmean',5) ;
+                halfMax = max(smoothData(3:length(smoothData)))/2;
+                tHalfMaxCell =double(min(find(smoothData>halfMax)))/double(frame_rate);
+                if rem(iCell, 10) == 0 
+                figure;plot(tempData)
+                hold on
+                plot(smoothData)
+                hold on
+                vline(min(find(smoothData>halfMax)))
+                end
+                if length(tHalfMaxCell)>0
+                    tHalfMaxTemp(iCell)=tHalfMaxCell;
+                end
+            end
+ 
+       end
+    tHalfMax{id}=tHalfMaxTemp;
+end
+clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
+%% scatter for tMax
+
+
+
+figure; movegui('center') 
+subplot(1,2,1)
+scatter((tHalfMax{2}(green_ind_keep)),(tHalfMax{1}(green_ind_keep)),'k')
+ylabel('post-DART half-max(s)')
+xlabel('pre-DART half-max(s)')
+ylim([0 2.5])
+xlim([0 2.5])
+refline(1)
+title('HT- ')
+axis square
+
+
+subplot(1,2,2)
+scatter((tHalfMax{2}(red_ind_keep)),(tHalfMax{1}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+
+ylabel('post-DART half-max(s)')
+xlabel('pre-DART half-max(s)')
+ylim([0 2.5])
+xlim([0 2.5])
+
+
+refline(1)
+title('HT+')
+axis square
+
+sgtitle('time to half max (s), averaged over contrast')
+print(fullfile(fnout, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')

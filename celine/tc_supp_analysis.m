@@ -3,11 +3,11 @@ clear all; clear global; close all
 
 %identifying animal and run
 
-mouse = 'WK17';
-date = '220327';
-time = char('1504');
-ImgFolder = char('004');
-RetImgFolder = char('003');
+mouse = 'WK15';
+date = '220309';
+time = char('1653');
+ImgFolder = char('002');
+RetImgFolder = char('001');
 
 
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration

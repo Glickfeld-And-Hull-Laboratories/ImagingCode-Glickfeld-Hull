@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '220327';
+date = '220404';
 mouse = 'WK17';
-ImgFolder = '003';
-time = '1419';
+ImgFolder = '001';
+time = '1023';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -35,7 +35,7 @@ for irun = 1:nrun
     load(imgMatFile);
 
     nframes = info.config.frames;
-    %nframes = 4050;
+    
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
 

@@ -6,10 +6,13 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 150; %enter baseline 1 day
+day_id = 133; %enter reference day ID
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
+% INDICATE WHICH SESSION IS WHICH DEPENDING ON MATCHING DIRECTION
+bsln1 = 2;
+bsln2 = 1;
 
 mouse = expt(day_id).mouse;
 
@@ -33,7 +36,7 @@ load(fullfile(fn_multi,'input.mat'))
 load(fullfile(fn_multi,'locomotion.mat'))
 
 cd(fn_multi)
-nKeep = size(tc_trial_avrg_keep{1},2);
+nKeep = size(tc_trial_avrg_keep{bsln2},2);
 clear d
 % find stimulus conditions
 frame_rate = input.frameImagingRateMs;
@@ -51,8 +54,8 @@ for id = 1:nd
     tOri_match{id} = tDir_match{id};
     tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
 end
-oris = unique(tOri_match{1});
-cons = unique(tCon_match{1});
+oris = unique(tOri_match{bsln2});
+cons = unique(tCon_match{bsln2});
 nOri = length(oris);
 nCon = length(cons);
 
@@ -88,11 +91,11 @@ for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
 
-shadedErrorBar(t,tc_red_avrg_keep{2}(:,iCon),tc_red_se_match{2}(:,iCon),'r');
+shadedErrorBar(t,tc_red_avrg_keep{bsln1}(:,iCon),tc_red_se_match{bsln1}(:,iCon),'r');
 ylim([-.02 .3]);
 hold on
-shadedErrorBar(t,tc_green_avrg_keep{2}(:,iCon),tc_green_se_keep{2}(:,iCon));
-title(['baseline 2 contrast = ' num2str(cons(iCon))])
+shadedErrorBar(t,tc_green_avrg_keep{bsln1}(:,iCon),tc_green_se_keep{bsln1}(:,iCon));
+title(['baseline 1 contrast = ' num2str(cons(iCon))])
 txt1 = ['HT- ' num2str(length(green_ind_keep))];
 text(-1.5,0.25,txt1);
 txt2 = ['HT+ ' num2str(length(red_ind_keep))];
@@ -104,13 +107,13 @@ axis square
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(t,tc_red_avrg_keep{1}(:,iCon),tc_red_se_match{1}(:,iCon),'r');
+shadedErrorBar(t,tc_red_avrg_keep{bsln2}(:,iCon),tc_red_se_match{bsln2}(:,iCon),'r');
 ylim([-.02 .3]);
 hold on
-shadedErrorBar(t,tc_green_avrg_keep{1}(:,iCon),tc_green_se_keep{1}(:,iCon));
+shadedErrorBar(t,tc_green_avrg_keep{bsln2}(:,iCon),tc_green_se_keep{bsln2}(:,iCon));
 ylabel('dF/F') 
 xlabel('s') 
-title(['baseline 1 contrast = ' num2str(cons(iCon))])
+title(['baseline 2 contrast = ' num2str(cons(iCon))])
 axis square
 
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_timecourses.pdf']),'-dpdf');
@@ -126,23 +129,11 @@ for iCon = 1:nCon
 
 figure
 subplot(2,2,1)
-plot(t, tc_trial_avrg_keep{2}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+plot(t, tc_trial_avrg_keep{bsln1}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
 hold on
-plot(t, tc_green_avrg_keep{2}(:,iCon),'color',[0 0 0],'LineWidth',2)
+plot(t, tc_green_avrg_keep{bsln1}(:,iCon),'color',[0 0 0],'LineWidth',2)
 ylim([setYmin setYmax]);
-title('day 2')
-xlim([-2 4])
-ylabel('dF/F') 
-xlabel('s') 
-hold off
-
-
-subplot(2,2,2)
-plot(t, tc_trial_avrg_keep{2}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
-hold on
-plot(t, tc_red_avrg_keep{2}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
-ylim([setYmin setYmax]);
-title('day 2')
+title('baseline 1')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
@@ -150,11 +141,23 @@ hold off
 
 
 subplot(2,2,3)
-plot(t, tc_trial_avrg_keep{1}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+plot(t, tc_trial_avrg_keep{bsln1}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
 hold on
-plot(t, tc_green_avrg_keep{1}(:,iCon),'color',[0 0 0],'LineWidth',2)
+plot(t, tc_red_avrg_keep{bsln1}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
 ylim([setYmin setYmax]);
-title('day 1')
+title('baseline 1')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,2)
+plot(t, tc_trial_avrg_keep{bsln2}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+hold on
+plot(t, tc_green_avrg_keep{bsln2}(:,iCon),'color',[0 0 0],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('baseline 2')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
@@ -162,11 +165,11 @@ hold off
 
 
 subplot(2,2,4)
-plot(t, tc_trial_avrg_keep{1}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
+plot(t, tc_trial_avrg_keep{bsln2}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
 hold on
-plot(t, tc_red_avrg_keep{1}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+plot(t, tc_red_avrg_keep{bsln2}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
 ylim([setYmin setYmax]);
-title('day 1')
+title('baseline 2')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
@@ -213,9 +216,9 @@ clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
 
 figure; movegui('center') 
 subplot(1,2,1)
-scatter((tHalfMax{2}(green_ind_keep)),(tHalfMax{1}(green_ind_keep)),'k')
-ylabel('baseline 2 half-max(s)')
-xlabel('baseline 1 half-max(s)')
+scatter((tHalfMax{bsln1}(green_ind_keep)),(tHalfMax{bsln2}(green_ind_keep)),'k')
+ylabel('baseline 1 half-max(s)')
+xlabel('baseline 2 half-max(s)')
 ylim([0 2.5])
 xlim([0 2.5])
 refline(1)
@@ -224,10 +227,10 @@ axis square
 
 
 subplot(1,2,2)
-scatter((tHalfMax{2}(red_ind_keep)),(tHalfMax{1}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+scatter((tHalfMax{bsln1}(red_ind_keep)),(tHalfMax{bsln2}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
 
-ylabel('baseline 1 half-max(s)')
-xlabel('baseline 2 half-max(s)')
+ylabel('baseline 2 half-max(s)')
+xlabel('baseline 1 half-max(s)')
 ylim([0 2.5])
 xlim([0 2.5])
 
@@ -245,11 +248,11 @@ print(fullfile(fn_multi_analysis, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')
 for iCon = 1:nCon
 figure; movegui('center') 
 subplot(1,2,1)
-scatter((resp_max_keep{2}(green_ind_keep,iCon)),(resp_max_keep{1}(green_ind_keep,iCon)),'k')
+scatter((resp_max_keep{bsln1}(green_ind_keep,iCon)),(resp_max_keep{bsln2}(green_ind_keep,iCon)),'k')
 hold on
-scatter((resp_max_keep{2}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{1}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),'k','MarkerFaceColor','k')
-ylabel('baseline 2 dF/F')
-xlabel('baseline 1  dF/F')
+scatter((resp_max_keep{bsln1}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{bsln2}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),'k','MarkerFaceColor','k')
+ylabel('baseline 1 dF/F')
+xlabel('baseline 2  dF/F')
 ylim([-.1 .5])
 xlim([-.1 .5])
 refline(1)
@@ -258,12 +261,12 @@ axis square
 
 
 subplot(1,2,2)
-scatter((resp_max_keep{2}(red_ind_keep,iCon)),(resp_max_keep{1}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
+scatter((resp_max_keep{bsln1}(red_ind_keep,iCon)),(resp_max_keep{bsln2}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
 hold on
-scatter((resp_max_keep{2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{1}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05])
+scatter((resp_max_keep{bsln1}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{bsln2}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05])
 hold off
-ylabel('baseline 2 dF/F')
-xlabel('baseline 1  dF/F')
+ylabel('baseline 1 dF/F')
+xlabel('baseline 2  dF/F')
 ylim([-.1 .5])
 xlim([-.1 .5])
 
@@ -280,11 +283,11 @@ for iCon = 1:nCon
 subplot(1,nCon,iCon)
 for iRed = 1:length(red_ind_keep)
     thisCell = red_ind_keep(iRed);
-    scatter((resp_max_keep{2}(thisCell,iCon)),(resp_max_keep{1}(thisCell,iCon)))
+    scatter((resp_max_keep{bsln1}(thisCell,iCon)),(resp_max_keep{bsln2}(thisCell,iCon)))
 hold on
 end
-ylabel('baseline 2 dF/F')
-xlabel('baseline 1  dF/F')
+ylabel('baseline 1 dF/F')
+xlabel('baseline 2  dF/F')
 ylim([-.1 .5])
 xlim([-.1 .5])
 
@@ -334,19 +337,18 @@ for iCon = 1:nCon
     figure;
  
         
-        locr_mean = nanmean(locTCs{2,iCon}(:,red_ind_keep),2); %averaged across red cells
-        locr_std = std(locTCs{2,iCon}(:,red_ind_keep),[],2);
+        locr_mean = nanmean(locTCs{bsln1}(:,red_ind_keep,iCon),2); %averaged across red cells
+        locr_std = std(locTCs{bsln1}(:,red_ind_keep,iCon),[],2);
         locr_se=locr_std/sqrt(length(red_ind_keep));
-        statr_mean = nanmean(statTCs{2,iCon}(:,red_ind_keep),2);
-        statr_std = std(statTCs{2,iCon}(:,red_ind_keep),[],2);
+        statr_mean = nanmean(statTCs{bsln1}(:,red_ind_keep,iCon),2);
+        statr_std = std(statTCs{bsln1}(:,red_ind_keep,iCon),[],2);
         statr_se=statr_std/sqrt(length(red_ind_keep));
 
-        locg_mean = nanmean(locTCs{2,iCon}(:,green_ind_keep),2);
-        locg_std = std(locTCs{2,iCon}(:,green_ind_keep),[],2);
+        locg_mean = nanmean(locTCs{bsln1}(:,green_ind_keep,iCon),2);
+        locg_std = std(locTCs{bsln1}(:,green_ind_keep,iCon),[],2);
         locg_se=locg_std/sqrt(length(green_ind_keep));
-
-        statg_mean = nanmean(statTCs{2,iCon}(:,green_ind_keep),2);
-        statg_std = std(statTCs{2,iCon}(:,green_ind_keep),[],2);
+        statg_mean = nanmean(statTCs{bsln1}(:,green_ind_keep,iCon),2);
+        statg_std = std(statTCs{bsln1}(:,green_ind_keep,iCon),[],2);
         statg_se=statg_std/sqrt(length(green_ind_keep));
 
         subplot(1,2,1)
@@ -357,28 +359,28 @@ for iCon = 1:nCon
         shadedErrorBar(t,statg_mean,statg_se,'--k')
         ylim([-.05 .2]);
         title(['contrast ', num2str(cons(iCon)), ' baseline 1'])
-        txt1=[num2str(locCounts{2,iCon}(1)), ' running trials']
+        txt1=[num2str(locCounts{bsln1}(1,iCon)), ' running trials']
         text(-1.5,0.18,txt1);
-        txt2 = [num2str(locCounts{2,iCon}(2)), ' stationary trials']
+        txt2 = [num2str(locCounts{bsln1}(2,iCon)), ' stationary trials']
         text(-1.5,0.16,txt2);
         axis square
         hold off   
         
  
         
-        locr_mean = nanmean(locTCs{1,iCon}(:,red_ind_keep),2); %averaged across red cells
-        locr_std = std(locTCs{1,iCon}(:,red_ind_keep),[],2);
+        locr_mean = nanmean(locTCs{bsln2}(:,red_ind_keep,iCon),2); %averaged across red cells
+        locr_std = std(locTCs{bsln2}(:,red_ind_keep,iCon),[],2);
         locr_se=locr_std/sqrt(length(red_ind_keep));
-        statr_mean = nanmean(statTCs{1,iCon}(:,red_ind_keep),2);
-        statr_std = std(statTCs{1,iCon}(:,red_ind_keep),[],2);
+        statr_mean = nanmean(statTCs{bsln2}(:,red_ind_keep,iCon),2);
+        statr_std = std(statTCs{bsln2}(:,red_ind_keep,iCon),[],2);
         statr_se=statr_std/sqrt(length(red_ind_keep));
 
-        locg_mean = nanmean(locTCs{1,iCon}(:,green_ind_keep),2);
-        locg_std = std(locTCs{1,iCon}(:,green_ind_keep),[],2);
+        locg_mean = nanmean(locTCs{bsln2}(:,green_ind_keep,iCon),2);
+        locg_std = std(locTCs{bsln2}(:,green_ind_keep,iCon),[],2);
         locg_se=locg_std/sqrt(length(green_ind_keep));
 
-        statg_mean = nanmean(statTCs{1,iCon}(:,green_ind_keep),2);
-        statg_std = std(statTCs{1,iCon}(:,green_ind_keep),[],2);
+        statg_mean = nanmean(statTCs{bsln2}(:,green_ind_keep,iCon),2);
+        statg_std = std(statTCs{bsln2}(:,green_ind_keep,iCon),[],2);
         statg_se=statg_std/sqrt(length(green_ind_keep));
         
         subplot(1,2,2)
@@ -389,9 +391,9 @@ for iCon = 1:nCon
         shadedErrorBar(t,statg_mean,statg_se,'--k')
         ylim([-.05 .2]);
         title(['contrast ', num2str(cons(iCon)), ' baseline 2'])
-        txt1=[num2str(locCounts{1,iCon}(1)), ' running trials']
+        txt1=[num2str(locCounts{bsln2}(1,iCon)), ' running trials']
         text(-1.5,0.18,txt1);
-        txt2 = [num2str(locCounts{1,iCon}(2)), ' stationary trials']
+        txt2 = [num2str(locCounts{bsln2}(2,iCon)), ' stationary trials']
         text(-1.5,0.16,txt2);
         axis square
         hold off
@@ -406,11 +408,12 @@ end
 
 for iCon = 1:nCon
 
+
 figure; movegui('center') 
 subplot(1,2,1)
-scatter((LMI{2,iCon}(green_ind_keep)),(LMI{1,iCon}(green_ind_keep)),'k')
+swarmchart((LMI{bsln1}(green_ind_keep,iCon)),(LMI{bsln2}(green_ind_keep,iCon)),'k')
 ylabel('baseline 2 LMI')
-xlabel('baseline 1  LMI')
+xlabel('baseline 1 LMI')
 ylim([-1 1])
 xlim([-1 1])
 hline(0)
@@ -421,7 +424,7 @@ axis square
 
 
 subplot(1,2,2)
-scatter((LMI{2,iCon}(red_ind_keep)),(LMI{1,iCon}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+swarmchart((LMI{bsln1}(red_ind_keep,iCon)),(LMI{bsln2}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
 ylabel('baseline 2 LMI')
 xlabel('baseline 1  LMI')
 ylim([-1 1])
@@ -436,11 +439,11 @@ sgtitle(num2str(cons(iCon)))
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_LMI.pdf']),'-dpdf');
 end
 
-%% finding cells that are still saturated by contrast vs. not saturated baseline 2
+%% finding cells that are still saturated by contrast vs. not saturated baseline 1
 
 %identify cells that are still in the rise of the contrast response
 %function
-risingCells = find(data_con_resp_keep{2}(:,1)<data_con_resp_keep{2}(:,2));
+risingCells = find(data_con_resp_keep{bsln1}(:,1)<data_con_resp_keep{bsln1}(:,2));
 
 % make a plot of individual timecourses for rising cells
 setYmin = -.1; %indicate y axes you want
@@ -450,7 +453,7 @@ for iCon = 1:nCon
 
 figure
 subplot(2,2,1)
-plot(t, tc_trial_avrg_keep{2}(:,intersect(risingCells,green_ind_keep),iCon),'k')
+plot(t, tc_trial_avrg_keep{bsln1}(:,intersect(risingCells,green_ind_keep),iCon),'k')
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -459,7 +462,7 @@ xlabel('s')
 
 
 subplot(2,2,2)
-plot(t, tc_trial_avrg_keep{2}(:,intersect(risingCells,red_ind_keep),iCon),'color',[.7 .05 .05])
+plot(t, tc_trial_avrg_keep{bsln1}(:,intersect(risingCells,red_ind_keep),iCon),'color',[.7 .05 .05])
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -468,7 +471,7 @@ xlabel('s')
 
 
 subplot(2,2,3)
-plot(t, tc_trial_avrg_keep{1}(:,intersect(risingCells,green_ind_keep),iCon),'k')
+plot(t, tc_trial_avrg_keep{bsln2}(:,intersect(risingCells,green_ind_keep),iCon),'k')
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
@@ -477,7 +480,7 @@ xlabel('s')
 
 
 subplot(2,2,4)
-plot(t, tc_trial_avrg_keep{1}(:,intersect(risingCells,red_ind_keep),iCon),'color',[.7 .05 .05])
+plot(t, tc_trial_avrg_keep{bsln2}(:,intersect(risingCells,red_ind_keep),iCon),'color',[.7 .05 .05])
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
@@ -545,7 +548,7 @@ colormap bluered
 axis square
 print(fullfile(fn_multi_analysis,'HT-_raw_change_map.pdf'),'-dpdf','-bestfit')
 
-% map of kept HT+ cells by their baseline 2 df/F
+% map of kept HT+ cells by their baseline 1 df/F
 imagesc(keep_masks_d1_red)
 colorbar
 title('Spatial distribution of cells by raw change from DART, HT+')
@@ -621,9 +624,9 @@ for iCell = 1:nKeep
             
         end
         subplot(n,n2,start)
-        errorbar(cons, squeeze(nanmean(data_resp_keep{2}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{2}(iCell,:,:,2),2)),'-')
+        errorbar(cons, squeeze(nanmean(data_resp_keep{bsln1}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{bsln1}(iCell,:,:,2),2)),'-')
         hold on
-        errorbar(cons, squeeze(nanmean(data_resp_keep{1}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{1}(iCell,:,:,2),2)),'-')
+        errorbar(cons, squeeze(nanmean(data_resp_keep{bsln2}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{bsln2}(iCell,:,:,2),2)),'-')
         start= start+1;
         %ylim([-.05 .2])
     end     
@@ -646,9 +649,9 @@ for iCell = 1:nKeep
             
         end
         subplot(n,n2,start)
-        errorbar(cons, squeeze(nanmean(data_resp_keep{2}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{2}(iCell,:,:,2),2)),'-')
+        errorbar(cons, squeeze(nanmean(data_resp_keep{bsln1}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{bsln1}(iCell,:,:,2),2)),'-')
         hold on
-        errorbar(cons, squeeze(nanmean(data_resp_keep{1}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{1}(iCell,:,:,2),2)),'--')
+        errorbar(cons, squeeze(nanmean(data_resp_keep{bsln2}(iCell,:,:,1),2)), squeeze(nanmean(data_resp_keep{bsln2}(iCell,:,:,2),2)),'--')
 
         start= start+1;
         %ylim([-.05 .2])
@@ -682,7 +685,7 @@ for iCell = 1:nKeep
         end
         subplot(n,n2,start)
             for iCon = 1:nCon
-                scatter(data_resp_keep{2}(iCell,:,iCon,1),data_resp_keep{1}(iCell,:,iCon,1))
+                scatter(data_resp_keep{bsln1}(iCell,:,iCon,1),data_resp_keep{bsln2}(iCell,:,iCon,1))
                 %the contrasts are plotted indiviudally so that the points
                 %corresponding to different contrasts are different colors,
                 hold on
@@ -695,7 +698,7 @@ for iCell = 1:nKeep
                 end
             %max_list and upperLim are to find a single axis upper limit
             %that will work for botht eh x and y axes
-            max_list = [max(max(data_resp_keep{2}(iCell,:,:,1))),max(max(data_resp_keep{1}(iCell,:,:,1)))];
+            max_list = [max(max(data_resp_keep{bsln1}(iCell,:,:,1))),max(max(data_resp_keep{bsln2}(iCell,:,:,1)))];
             upperLim =max(max_list)+0.1;
             ylim([-.05 upperLim]);
             xlim([-.05 upperLim]);
@@ -716,8 +719,8 @@ for iCell = 1:nKeep
  
  data_post=[];
   for iCon = 1:nCon
-                data_pre=[data_pre,data_resp_keep{2}(iCell,:,iCon,1)]; %collects the values for day 1 over all contrasts
-                data_post=[data_post,data_resp_keep{1}(iCell,:,iCon,1)]; %collects the values for day 2 over all contrasts
+                data_pre=[data_pre,data_resp_keep{bsln1}(iCell,:,iCon,1)]; %collects the values for day 1 over all contrasts
+                data_post=[data_post,data_resp_keep{bsln2}(iCell,:,iCon,1)]; %collects the values for day 2 over all contrasts
   end
   data_pre_all(:,iCell)=data_pre;
    [R,p]=corrcoef(data_pre,data_post); %gets the correlation data for
@@ -753,8 +756,8 @@ myRef = refline(1)
 myRef.LineStyle = ':'
 
 title(['\color{red}HT+ cells, all stimulus conditions, n= ' num2str(length(intersect(red_ind_keep,find(linCell))))])
-xlabel('baseline 1')
-ylabel('baseline 2')
+xlabel('baseline 2')
+ylabel('baseline 1')
 myRef = refline(1)
 myRef.LineStyle = ':'
 
@@ -774,8 +777,8 @@ for iCell = 1:nKeep
  
  data_post=[];
   for iCon = 1:nCon
-                data_pre=[data_pre,data_resp_keep{2}(iCell,:,iCon,1)]; %collects the values for day 1 over all contrasts
-                data_post=[data_post,data_resp_keep{1}(iCell,:,iCon,1)]; %collects the values for day 2 over all contrasts
+                data_pre=[data_pre,data_resp_keep{bsln1}(iCell,:,iCon,1)]; %collects the values for day 1 over all contrasts
+                data_post=[data_post,data_resp_keep{bsln2}(iCell,:,iCon,1)]; %collects the values for day 2 over all contrasts
   end
   data_pre_all(:,iCell)=data_pre;
    [R,p]=corrcoef(data_pre,data_post); %gets the correlation data for
@@ -811,8 +814,8 @@ myRef = refline(1)
 myRef.LineStyle = ':'
 
 title(['HT- cells, all stimulus conditions, n= ' num2str(length(intersect(green_ind_keep,find(linCell))))])
-xlabel('baseline 1')
-ylabel('baseline 2')
+xlabel('baseline 2')
+ylabel('baseline 1')
 myRef = refline(1)
 myRef.LineStyle = ':'
 
@@ -823,19 +826,19 @@ myRef.LineStyle = ':'
 %the orientation that gave the strongest response in the observed data
 
 fig=figure; movegui('center') 
-scatter(pref_ori_keep{2}(green_ind_keep),pref_ori_keep{1}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(pref_ori_keep{bsln1}(green_ind_keep),pref_ori_keep{bsln2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
-scatter(pref_ori_keep{2}(red_ind_keep),pref_ori_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+scatter(pref_ori_keep{bsln1}(red_ind_keep),pref_ori_keep{bsln2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
-xlabel('baseline 2 pref ori')
-ylabel('baseline 1 pref ori')
+xlabel('baseline 1 pref ori')
+ylabel('baseline 2 pref ori')
 % xlim([0 .4])
 % ylim([0 .4])
 refline(1)
 title('Observed pref ori')
 saveas(fig, 'obsvOri.png')
 
-ori_diff_keep = abs(pref_ori_keep{2}-pref_ori_keep{1});
+ori_diff_keep = abs(pref_ori_keep{bsln1}-pref_ori_keep{bsln2});
 figure
 boxplot(ori_diff_keep, red_keep_logical) %this isn't the best way to show this
 
@@ -922,9 +925,9 @@ end
 
 %% compare Von M fit pref ori across days
 fig=figure; movegui('center') 
-scatter(fit_pref_oris_keep{2}(green_ind_keep),fit_pref_oris_keep{1}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln1}(green_ind_keep),fit_pref_oris_keep{bsln2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
-scatter(fit_pref_oris_keep{2}(red_ind_keep),fit_pref_oris_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln1}(red_ind_keep),fit_pref_oris_keep{bsln2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
 xlabel('D1- pref ori')
 ylabel('D2- pref ori')
@@ -976,25 +979,25 @@ for id = 1:nd
 end
 %well_fit gives a list of the well-fit cell
 % this compares the fit pref ori across days for cells that were well-fit on the
-% baseline 2 day 
-[R_g p_g] = corrcoef(fit_pref_oris_keep{2},fit_pref_oris_keep{1})
+% baseline 1 day 
+[R_g p_g] = corrcoef(fit_pref_oris_keep{bsln1},fit_pref_oris_keep{bsln2})
 figure; movegui('center') 
-scatter(fit_pref_oris_keep{2}((intersect(well_fit{2},green_ind_keep))),fit_pref_oris_keep{1}((intersect(well_fit{2},green_ind_keep))),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln1}((intersect(well_fit{bsln1},green_ind_keep))),fit_pref_oris_keep{bsln2}((intersect(well_fit{bsln1},green_ind_keep))),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
-scatter(fit_pref_oris_keep{2}(intersect(well_fit{2},red_ind_keep)),fit_pref_oris_keep{1}(intersect(well_fit{2},red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln1}(intersect(well_fit{bsln1},red_ind_keep)),fit_pref_oris_keep{bsln2}(intersect(well_fit{bsln1},red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
 xlabel('D1- pref ori')
 ylabel('D2- pref ori')
 refline(1)
-title('fit pref ori for cells that were well-fit baseline 2')
+title('fit pref ori for cells that were well-fit baseline 1')
 
 %%
 
 figure; movegui('center') 
 subplot(1,2,1)
-scatter(fit_pref_oris_keep{1}(green_ind_keep),pref_ori_keep{1}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln2}(green_ind_keep),pref_ori_keep{bsln2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
-scatter(fit_pref_oris_keep{1}(red_ind_keep),pref_ori_keep{1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln2}(red_ind_keep),pref_ori_keep{bsln2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
 xlabel('fit pref ori')
 ylabel('raw pref ori')
@@ -1002,9 +1005,9 @@ title('day 1')
 refline(1)
 
 subplot(1,2,2)
-scatter(fit_pref_oris_keep{2}(green_ind_keep),pref_ori_keep{2}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln1}(green_ind_keep),pref_ori_keep{bsln1}(green_ind_keep),'k','jitter', 'on', 'jitterAmount', 5)
 hold on
-scatter(fit_pref_oris_keep{2}(red_ind_keep),pref_ori_keep{2}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
+scatter(fit_pref_oris_keep{bsln1}(red_ind_keep),pref_ori_keep{bsln1}(red_ind_keep),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 5)
 hold off
 xlabel('fit pref ori')
 ylabel('raw pref ori')
