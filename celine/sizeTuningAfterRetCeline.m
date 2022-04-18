@@ -6,16 +6,16 @@
 
 %% get path names
 clear all;clc;
-
-
 mouse = 'WK17';
-date = '220327';
-time = char('1504');
-ImgFolder = char('004');
-RetImgFolder = char('003');
+date = '220404';
+time = char('1146');
+ImgFolder = char('002');
+RetImgFolder = char('001');
+
+
 
 doFromRef = 1;
-ref = char('003');
+ref = char('001');
 
 nrun = size(ImgFolder,1);
 frame_rate = 30;
@@ -470,11 +470,12 @@ cellDists = sqrt((cellAz-stimAz).^2+(cellEl-stimEl).^2);
 cutOffRadius = 20;
 fprintf(['Isolating cells with RF centers within ' num2str(cutOffRadius) ' degrees\n'])
 
-centerCells = find(cellDists < cutOffRadius)';
-% goodCutCells = intersect(cutCells,goodfit_ind);
-nCenterCells = length(centerCells);
+centerCells_all = find(cellDists < cutOffRadius)';
+%goodCutCells = intersect(cutCells,goodfit_ind);
+centerCells=intersect(centerCells_all,goodfit_ind);
+nCenterCells = length(centerCells)
 % fprintf([num2str(nCutCells) ' cells selected\n'])
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_centerCells.mat']),'centerCells')
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_centerCells.mat']),'centerCells','cellDists')
 %% plot tcs for all cells
 
 size_tuning_mat = zeros(nSzs, 2, nCells);
@@ -513,7 +514,7 @@ for iCell = 1:nCells
 end
 set(gcf, 'Position', [0 0 800 1000]);
 
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning.mat']), 'tc_dfof', 'size_tuning_mat', 'con_tuning_mat')
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_Tuning.mat']), 'tc_dfof', 'size_tuning_mat')
 %% contrast tuning and tcs for all cells
 
 con_tuning_mat = zeros(nCons, 2, nCells);
