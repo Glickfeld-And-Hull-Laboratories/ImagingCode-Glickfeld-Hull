@@ -7,12 +7,12 @@
 %% get path names
 clear all;clc;
 
-mouse = 'WK17';
-date = '220327';
-ImgFolder = char('003');
-time = char('1419');
+mouse = 'WK19';
+date = '220414';
+ImgFolder = char('004');
+time = char('1217');
 doFromRef = 0;
-ref = char('003');
+ref = char('001');
 nrun = size(ImgFolder,1);
 frame_rate = 30;
 run_str = catRunName(ImgFolder, nrun);
