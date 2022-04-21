@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 162; %enter the post-DART day ID here
+day_id(1) = 164; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 

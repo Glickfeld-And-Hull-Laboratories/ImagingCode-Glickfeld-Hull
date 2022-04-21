@@ -8,9 +8,9 @@
 clear all;clc;
 
 mouse = 'WK19';
-date = '220414';
-ImgFolder = char('004');
-time = char('1217');
+date = '220418';
+ImgFolder = char('001');
+time = char('1509');
 doFromRef = 0;
 ref = char('001');
 nrun = size(ImgFolder,1);

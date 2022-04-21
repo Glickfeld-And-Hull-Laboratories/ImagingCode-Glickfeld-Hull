@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '220404';
-mouse = 'WK17';
-ImgFolder = '000';
-time = '1010';
+date = '220418';
+mouse = 'WK19';
+ImgFolder = '001';
+time = '1509';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -99,6 +99,7 @@ expt_input = concatenateDataBlocks(temp);
 %     sz = size(data);
 %     data = data(:,:,1:(nOn+nOff)*ntrials);
     if size(data,3) < 10000
+        data= data(:,:,1:58725);
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
         if (nOn+nOff)*ntrials > size(data,3)
@@ -190,7 +191,7 @@ expt_input = concatenateDataBlocks(temp);
         data_tr = reshape(data_tc,[nOn+nOff, ntrials]);
         data_f = mean(data_tr(nOff/2:nOff,:),1);
         data_df = bsxfun(@minus, data_tr, data_f); 
-        data_dfof = bsxfun(@rdivide,data_df, squeeze(data_f)); 
+        data_dfof = bsxfun(@rdivide,data_df(nOff:nOff+nOn,:), squeeze(data_f)); 
 
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);

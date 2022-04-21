@@ -6,9 +6,9 @@
 
 %% get path names
 clear all;clc;
-mouse = 'WK17';
-date = '220404';
-time = char('1146');
+mouse = 'WK19';
+date = '220418';
+time = char('1601');
 ImgFolder = char('002');
 RetImgFolder = char('001');
 
@@ -475,7 +475,7 @@ centerCells_all = find(cellDists < cutOffRadius)';
 centerCells=intersect(centerCells_all,goodfit_ind);
 nCenterCells = length(centerCells)
 % fprintf([num2str(nCutCells) ' cells selected\n'])
-save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_centerCells.mat']),'centerCells','cellDists')
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_centerCells.mat']),'centerCells','cellDists','goodfit_ind')
 %% plot tcs for all cells
 
 size_tuning_mat = zeros(nSzs, 2, nCells);

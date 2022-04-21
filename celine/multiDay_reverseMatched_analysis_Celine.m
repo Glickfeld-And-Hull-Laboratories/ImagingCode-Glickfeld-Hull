@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 131; %enter post-DART day
+day_id = 164; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -266,7 +266,7 @@ clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
 
 figure; movegui('center') 
 subplot(1,2,1)
-scatter((tHalfMax{pre}(green_ind_keep)),(tHalfMax{post}(green_ind_keep)),'k')
+scatter((tHalfMax{pre}(green_ind_keep)),(tHalfMax{post}(green_ind_keep)),'k','jitter', 'on', 'jitterAmount', 0.3)
 hold on
 lsline
 ylabel('post-DART half-max(s)')
@@ -280,7 +280,7 @@ hold off
 
 
 subplot(1,2,2)
-scatter((tHalfMax{pre}(red_ind_keep)),(tHalfMax{post}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+scatter((tHalfMax{pre}(red_ind_keep)),(tHalfMax{post}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 0.3)
 hold on
 lsline
 ylabel('post-DART half-max(s)')
@@ -866,16 +866,18 @@ f2=polyval(meanFit,xRange);
 plot(xRange,f2,'b-','LineWidth',2)
 txt1 = ['y=', num2str(round(meanFit(1),2)),'x',num2str(round(meanFit(2),4))];
 text(.15,0.01,txt1);
-hold off
 axis square
 myRef = refline(1)
 myRef.LineStyle = ':'
+axis square
 
 title(['\color{red}HT+ cells, all stimulus conditions, n= ' num2str(length(intersect(red_ind_keep,find(linCell))))])
 xlabel('pre-DART')
 ylabel('post-DART')
+
 myRef = refline(1)
 myRef.LineStyle = ':'
+axis square
 print(fullfile(fn_multi_analysis,'HT+_allResp.pdf'),'-dpdf','-bestfit')
 
 
@@ -924,16 +926,20 @@ f2=polyval(meanFit,xRange);
 plot(xRange,f2,'b-','LineWidth',2)
 txt1 = ['y=', num2str(round(meanFit(1),2)),'x',num2str(round(meanFit(2),4))];
 text(.2,-0.01,txt1);
-hold off
-axis square
+xlim(xRange);
+ylim(xRange);
 myRef = refline(1)
 myRef.LineStyle = ':'
+axis square
 
 title(['HT- cells, all stimulus conditions, n= ' num2str(length(intersect(green_ind_keep,find(linCell))))])
 xlabel('pre-DART')
 ylabel('post-DART')
 myRef = refline(1)
 myRef.LineStyle = ':'
+xlim(xRange);
+ylim(xRange);
+axis square
 
 print(fullfile(fn_multi_analysis,'HT-_allResp.pdf'),'-dpdf','-bestfit')
 
