@@ -10,6 +10,9 @@ if strcmp(wheel,'red')
 elseif strcmp(wheel,'purple')
     diameter = 14.6;
     circ = pi.*diameter;
+elseif strcmp (wheel, 'orange')
+  diameter = 13.3;
+  circ = pi.*dimeter;
 else
     error('wrong color')
 end
