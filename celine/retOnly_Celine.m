@@ -7,10 +7,10 @@
 %% get path names
 clear all;clc;
 
-mouse = 'WK19';
-date = '220418';
+mouse = 'WK20';
+date = '220514';
 ImgFolder = char('001');
-time = char('1509');
+time = char('1317');
 doFromRef = 0;
 ref = char('001');
 nrun = size(ImgFolder,1);

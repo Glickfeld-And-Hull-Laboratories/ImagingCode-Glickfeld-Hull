@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-sess_list = [114 123 131 133 138 142];%enter all the sessions you want to concatenate
+sess_list = [114 123 131 133];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -14,6 +14,8 @@ nd=2;%hard coding for two days per experimental session
 % INDICATE THE PRE VS. POST DAYS DEPENDING ON THE ORDER OF MATCHING
 pre=2;
 post=1;
+
+targetCon = 0.5%what contrast to extract for all data - must be one that all datasets had
 
 frame_rate = 15;
 
@@ -79,27 +81,27 @@ for iSess = 1:nSess
     end
     oris = unique(tOri_match{post});
     cons = unique(tCon_match{post});
-    maxCon=find(cons==0.5);
+    sharedCon=find(cons==targetCon);
 
     nOn = input(1).nScansOn;
     nOff = input(1).nScansOff;
     %start conatenating
     oris_concat = [oris_concat,oris]; %I will organize thisas rows so I can subsequently make sure everything matches
-    cons_concat = [cons_concat,cons(maxCon)];
+    cons_concat = [cons_concat,cons(sharedCon)];
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
     clear cons
     
     for id = 1:nd
-        tc_trial_avrg_keep_concat{id} =cat(2,tc_trial_avrg_keep_concat{id},tc_trial_avrg_keep{id}(:,:,maxCon));
+        tc_trial_avrg_keep_concat{id} =cat(2,tc_trial_avrg_keep_concat{id},tc_trial_avrg_keep{id}(:,:,sharedCon));
         resp_keep_concat{id}=cat(1,resp_keep_concat{id},resp_keep{id});
-        resp_max_keep_concat{id}=cat(1,resp_max_keep_concat{id},resp_max_keep{id}(:,maxCon));
-        LMI_concat{id}=cat(1,LMI_concat{id},LMI{id}(:,maxCon));
-        locResp_concat{id}=cat(1,locResp_concat{id},locResp{id}(:,maxCon));
-        statResp_concat{id}=cat(1,statResp_concat{id},statResp{id}(:,maxCon));
+        resp_max_keep_concat{id}=cat(1,resp_max_keep_concat{id},resp_max_keep{id}(:,sharedCon));
+        LMI_concat{id}=cat(1,LMI_concat{id},LMI{id}(:,sharedCon));
+        locResp_concat{id}=cat(1,locResp_concat{id},locResp{id}(:,sharedCon));
+        statResp_concat{id}=cat(1,statResp_concat{id},statResp{id}(:,sharedCon));
     end
-    dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,maxCon));
+    dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
 end
 %%
 clear mouse day_id nKeep iSess fn_multi cons oris

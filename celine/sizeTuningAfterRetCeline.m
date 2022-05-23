@@ -6,9 +6,9 @@
 
 %% get path names
 clear all;clc;
-mouse = 'WK19';
-date = '220418';
-time = char('1601');
+mouse = 'WK20';
+date = '220513';
+time = char('1538');
 ImgFolder = char('002');
 RetImgFolder = char('001');
 
