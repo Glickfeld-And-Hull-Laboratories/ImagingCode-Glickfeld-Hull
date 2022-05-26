@@ -1,12 +1,12 @@
-clear all; clear global; close all
-clc
+% clear all; clear global; close all
+% clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
 %day_id = 142; %enter post-DART day
-day_id = input('Enter day id ');% alternative to run from command line.
+%day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -138,7 +138,7 @@ clear  data_f_match cellstd
 
 %% find significant responses and preferred stimuli
 
-resp_win = stimStart:stimEnd;
+resp_win = stimStart:(stimEnd+5);
 base_win = 1: stimStart-1;
 
 %make cell arrays to keep everything in
@@ -309,74 +309,129 @@ end
 conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
 
+%% looking at wheel speed
+wheel_speed = cell(1,nd);
+
+for id = 1:nd
+    wheel_speed{id} = wheelSpeedCalc(input(id),32,'purple'); 
+    nanmean(wheel_speed{id})
+end
+
+
+
+wheel_tc = cell(1,nd);
+wheel_trial_avg= cell(1,nd);
+RIx = cell(1,nd);
+
+for id = 1:nd
+    wheel_tc{id}=zeros(nOn+nOff, nTrials(id));
+    for iTrial = 1:nTrials(id)
+        wheel_tc{id}(:,iTrial) = wheel_speed{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
+    end
+    wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
+    RIx{id} = wheel_trial_avg{id}>2; %.55 is the noise level in the wheel movement
+    mean(RIx{id})
+end
+
 %% narrow down to the stimuli preferred for each cell each day
 %we will get one tc per cell per contrast. This represents that cell's tc
 %averaged over trials at the preferred orientation, at each contrast
+%only include stationary trials
 
-tc_trial_avrg_keep=cell(1,nd);
+tc_trial_avrg_stat=cell(1,nd);
+tc_trial_avrg_loc=cell(1,nd);
 rect_tc_trial_avrg_keep=cell(1,nd);
-pref_responses = cell(nCon,nKeep,nd);
+tc_trial_avrg_keep_allCond=cell(1,nd);
+pref_responses_stat = cell(1,nd);
+pref_responses_loc = cell(1,nd);
+pref_responses_allCond = cell(1,nd);
+trialCounts=cell(2,nd);
+
 
 for id = 1:nd
-    
-    tc_trial_avrg=nan((nOn+nOff),nKeep,nCon);
-    mean_resp_temp=nan(nKeep,nCon,1);
-    for i=1:nKeep
-        for iCon = 1:nCon
+    trialCounts{1,id}=[];
+    trialCounts{2,id}=[];
+    temp_tc_stat=nan((nOn+nOff),nKeep,nCon);
+    temp_tc_loc=nan((nOn+nOff),nKeep,nCon);
+    temp_pref_responses_stat=zeros(nKeep,nCon,1);
+    temp_pref_responses_loc=zeros(nKeep,nCon,1);
+    for iCon = 1:nCon
+        for i=1:nKeep
+            
             temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
             tCon=tCon_match{id}(1:nTrials(id));
-            tDir=tDir_match{id}(1:nTrials(id));
+            tOri=tOri_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
             temp_ori= pref_ori_keep{id}(i); %find the preferred ori of this cell (already in degrees)
-            ori_inds = find(tDir==temp_ori); %these are the trials at that ori
-
+            ori_inds = find(tOri==temp_ori); %these are the trials at that ori
             con_inds=find(tCon==cons(iCon));
-            temp_trials = intersect(ori_inds, con_inds); %preferred ori for this cell, looping through all cons
-
-            pref_responses{iCon,i,id}=nanmean(temp_TCs(stimStart:stimEnd,temp_trials),1);
-            tc_trial_avrg(:,i,iCon)=nanmean(temp_TCs(:,temp_trials),2);
-            rect_tc_trial_avrg=tc_trial_avrg;
+            stat_inds = find(~RIx{id});
+            loc_inds = find(RIx{id});
+            temp_trials1 = intersect(ori_inds, con_inds); %preferred ori for this cell, looping through all cons
+            temp_trials_stat = intersect(temp_trials1,stat_inds);
+            temp_trials_loc = intersect(temp_trials1,loc_inds);
+            temp_pref_responses_stat(i,iCon)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,temp_trials_stat),1),2);
+            temp_pref_responses_loc(i,iCon)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,temp_trials_loc),1),2);
+            temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,temp_trials1),1),2);
+            
+            temp_tc_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat),2);
+            temp_tc_loc(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_loc),2);
+            temp_tc_allCond(:,i,iCon)=nanmean(temp_TCs(:,temp_trials1),2);%average over all trials regardless of stationary vs. locomotion
+            rect_tc_trial_avrg=temp_tc_stat;
             rect_tc_trial_avrg(rect_tc_trial_avrg<0)=0;
-            mean_resp_temp(i,iCon) = nanmean(tc_trial_avrg(stimStart:stimEnd,i,iCon));
+            
+            
+            trialCounts{1,id}=[trialCounts{1,id},length(temp_trials_stat)];
+            trialCounts{2,id}=[trialCounts{2,id},length(temp_trials_loc)];
+            length(temp_trials1)
         end
 
     end
     
     
-tc_trial_avrg_keep{id}=tc_trial_avrg; %this is a cell array with one cell 
+tc_trial_avrg_stat{id}=temp_tc_stat; %this is a cell array with one cell 
+tc_trial_avrg_loc{id}=temp_tc_loc;
+tc_trial_avrg_keep_allCond{id}=temp_tc_allCond;
 %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
 rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
+pref_responses_stat{id} = temp_pref_responses_stat;
+pref_responses_loc{id} = temp_pref_responses_loc;
+pref_responses_allCond{id} = temp_pref_responses_allCond;
+
 end
 
+trialCountTable = table([mean(trialCounts{1,2});std(trialCounts{1,2})],[mean(trialCounts{2,2});std(trialCounts{2,2})],[mean(trialCounts{1,1});std(trialCounts{1,1})],[mean(trialCounts{2,1});std(trialCounts{2,1})],'VariableNames',{'pre stat' 'pre loc' 'post stat' 'post loc'}, 'RowNames',{'Mean'  'std'})
+writetable(trialCountTable,fullfile(fn_multi,'trialCounts.csv'),'WriteRowNames',true)
 
-
-tc_trial_avrg_keep_allCon=cell(1,nd);
-pref_responses_allCon = cell(nKeep,nd);
-
-for id = 1:nd
-    
-    tc_trial_avrg=nan((nOn+nOff),nKeep);
-    mean_resp_temp=nan(nKeep,1);
-    for i=1:nKeep
-        
-            temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
-            tDir=tDir_match{id}(1:nTrials(id));
-            %identify the trials where ori = pref ori
-            temp_ori= pref_ori_keep{id}(i); %find the preferred ori of this cell and convert to degrees
-            ori_inds = find(tDir==temp_ori); %these are the trials at that ori
-
-            pref_responses_allCon{i,id}=nanmean(temp_TCs(stimStart:stimEnd,ori_inds),1);
-            tc_trial_avrg(:,i)=nanmean(temp_TCs(:,ori_inds),2);
-        
-
-    end
-    
-    
-tc_trial_avrg_keep_allCon{id}=tc_trial_avrg; %this is a cell array with one cell 
-%per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
-end
-
-
+%%
+% % 
+% tc_trial_avrg_keep_allCon=cell(1,nd);
+% pref_responses_allCon = cell(1,nd);
+% 
+% for id = 1:nd
+%     pref_responses_temp=nan(1,nKeep);
+%     tc_trial_avrg_temp=nan((nOn+nOff),nKeep);
+%     mean_resp_temp=nan(nKeep,1);
+%     for i=1:nKeep
+%         
+%             temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
+%             tDir=tDir_match{id}(1:nTrials(id));
+%             %identify the trials where ori = pref ori
+%             temp_ori= pref_ori_keep{id}(i); %find the preferred ori of this cell and convert to degrees
+%             ori_inds = find(tDir==temp_ori); %these are the trials at that ori
+% 
+%             pref_responses_temp(i)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,ori_inds),1),2);
+%             tc_trial_avrg_temp(:,i)=nanmean(temp_TCs(:,ori_inds),2);
+%         
+% 
+%     end
+%     
+% pref_responses_allCon{id}=pref_responses_temp;
+% tc_trial_avrg_keep_allCon{id}=tc_trial_avrg_temp; %this is a cell array with one cell 
+% %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
+% end
+% 
+% 
 
 
 
@@ -391,19 +446,20 @@ green_keep_logical = ~red_keep_logical;
 %sig_diff will be a logical vector indicating which cells were
 %significantly modulated at each contrast, in terms of the call's response
 %to its preferred orientation
-sig_diff = cell(1,nCon);
-for iCon = 1:nCon
-    for i = 1:nKeep
-        sig_diff{iCon}(i)=ttest2(pref_responses{iCon,i,1},pref_responses{iCon,i,2});
-    end
-end
+% sig_diff = cell(1,nCon);
+% for iCon = 1:nCon
+%     for i = 1:nKeep
+%         sig_diff{iCon}(i)=ttest2(pref_responses{iCon,i,1},pref_responses{iCon,i,2});
+%     end
+% end
 
 
 explanation1 = 'tc_trial_keep contains the timecourses for all "keep" cells for each day. The tOri_match and tCon_match data structures can be used to find trials of particular stim conditions within this. tc_trial_avrg_keep only has the timecourses averaged over tirals for each cell at its preferred orientation and at each contrast.';
-save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','resp_keep','tc_trial_avrg_keep_allCon','pref_responses_allCon', 'sig_diff','pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_keep', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
+save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','pref_responses_stat','pref_responses_loc','resp_keep','tc_trial_avrg_keep_allCond','pref_responses_allCond', 'pref_con_keep','pref_ori_keep','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
 
 
 %% make and save response matrix for keep cells
+% this is averaging over stationry and running trials
 
 data_resp_keep = cell(1,nd);
 resp_max_keep = cell(1,nd);
@@ -459,6 +515,7 @@ plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 bound = cell2mat(bwboundaries(mask_match{2}(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
 hold off
+print(fullfile(fn_multi,'matchCells.pdf'),'-dpdf');
 
 
 
@@ -509,82 +566,73 @@ hold off
 print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
-%% looking at wheel speed
-wheel_speed = cell(1,nd);
-for id = 1:nd
-    wheel_speed{id} = wheelSpeedCalc(input(id),32,'purple'); 
-    nanmean(wheel_speed{id})
-end
-
-
-
-wheel_tc = cell(1,nd);
-wheel_trial_avg= cell(1,nd);
-RIx = cell(1,nd);
-
-for id = 1:nd
-    wheel_tc{id}=zeros(nOn+nOff, nTrials(id));
-    for iTrial = 1:nTrials(id)
-        wheel_tc{id}(:,iTrial) = wheel_speed{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
-    end
-    wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
-    RIx{id} = wheel_trial_avg{id}>2; %.55 is the noise level in the wheel movement
-    mean(RIx{id})
-end
-
-
-
-
-locTCs = cell(1,nd);
-statTCs = cell(1,nd);
-
-locResp = cell(1,nd);
-statResp = cell(1,nd);
-locCounts=cell(1,nd);
-
-for id = 1:nd
-    %make this the average for running state for each contrast
-    locTrials=nan((nOn+nOff),nKeep,nCon);
-    statTrials=nan((nOn+nOff),nKeep,nCon);
-    for iCon = 1:nCon
-        tCon = tCon_match{id}(:,1:nTrials(id));
-        ind_con = find(tCon == cons(iCon));
-        loc=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(RIx{id}), ind_con),:),2)); %average of locomotion at this contrast trials for each cell
-        stat=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(~RIx{id}),ind_con),:),2)); %average of stationary  at this contrast trials for each cell
-
-        locTCs{id}(:,:,iCon)=loc;
-        statTCs{id}(:,:,iCon)=stat;
-        locCounts{id}(:,iCon)=[length(intersect(find(RIx{id}), ind_con)),length(intersect(find(~RIx{id}),ind_con))];
-
-        locResp{id}(:,iCon)=nanmean(loc(stimStart:stimStart+nOn,:),1);
-        statResp{id}(:,iCon)=nanmean(stat(stimStart:stimStart+nOn,:),1);
-        clear loc stat ind_con tCon
-    end
-end
+%% extract stationary and running trials seperately
+%this is averaging over all oris, I don't think I need this anymore
+% 
+% 
+% locTCs = cell(1,nd);
+% statTCs = cell(1,nd);
+% 
+% locResp = cell(1,nd);
+% statResp = cell(1,nd);
+% locCounts=cell(1,nd);
+% 
+% for id = 1:nd
+%     %make this the average for running state for each contrast
+%     locTrials=nan((nOn+nOff),nKeep,nCon);
+%     statTrials=nan((nOn+nOff),nKeep,nCon);
+%     for iCon = 1:nCon
+%         tCon = tCon_match{id}(:,1:nTrials(id));
+%         ind_con = find(tCon == cons(iCon));
+%         loc=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(RIx{id}), ind_con),:),2)); %average of locomotion at this contrast trials for each cell
+%         stat=squeeze(nanmean(data_trial_keep{id}(:,intersect(find(~RIx{id}),ind_con),:),2)); %average of stationary  at this contrast trials for each cell
+% 
+%         locTCs{id}(:,:,iCon)=loc;
+%         statTCs{id}(:,:,iCon)=stat;
+%         locCounts{id}(:,iCon)=[length(intersect(find(RIx{id}), ind_con)),length(intersect(find(~RIx{id}),ind_con))];
+% 
+%         locResp{id}(:,iCon)=nanmean(loc(stimStart:stimStart+nOn,:),1);
+%         statResp{id}(:,iCon)=nanmean(stat(stimStart:stimStart+nOn,:),1);
+%         clear loc stat ind_con tCon
+%     end
+% end
+% 
+% 
 
 
 
 
+%for each day, extract the LMI for each cell, calculated at the preferred
+%orientation
 
-
-%for each day, extract the LMI for each cell - here I'm collasping across
-%all stim conditions
 LMI = cell(1,nd);
+ %for the loc-stat/loc+stat version
 
 for id = 1:nd
     for iCon=1:nCon
-            locRectified = locResp{id}(:,iCon);
+            locRectified = pref_responses_loc{id}(:,iCon);
             locRectified(find(locRectified<0))=0;
-            statRectified = statResp{id}(:,iCon);
+            statRectified = pref_responses_stat{id}(:,iCon);
             statRectified(find(statRectified<0))=0;
             LMI{id}(:,iCon)=(locRectified-statRectified)./(locRectified+statRectified);
         
     end
 end
 
+%for loc/stat version
+% for id = 1:nd
+%     for iCon=1:nCon
+%             locTemp = pref_responses_loc{id}(:,iCon);
+%             statTemp = pref_responses_stat{id}(:,iCon);
+%             
+%             LMI{id}(:,iCon)=(locTemp)./(statTemp);
+%         
+%     end
+% end
 
 
-save(fullfile(fn_multi,'locomotion.mat'),'locTCs','statTCs','locResp','statResp','LMI','RIx','wheel_tc','locCounts')
+
+save(fullfile(fn_multi,'locomotion.mat'),'LMI','RIx','wheel_tc')
 % %% comparing F and df/f for HT+ and HT-
 % figure;
 % subplot(1,2,1)

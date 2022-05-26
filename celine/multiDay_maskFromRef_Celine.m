@@ -8,15 +8,20 @@ eval(ds);
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 171;
-%% load data for day
+day_id = 166;
+
+refFolder = '003'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION, 
+%TO IMPORT MASKS FROM
+
+
+%% load data for day and register to the reference
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 
 fn = fullfile(rc.achAnalysis,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
-
+fnref = fullfile(fn,refFolder);
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
 times = eval(['expt(day_id).' cell2mat(dataStructLabels) '_time']);
 nruns = length(runs);
@@ -130,21 +135,14 @@ if exist(fullfile(fnout,'regOuts&Img.mat')) %check if there is already registrat
     input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
     clear data_g
-else %if not, must register. Start by showing average for each of four 500-frame bins so user can choose one
-    nep = floor(size(data_g,3)./3000);
-    [n n2] = subplotn(nep);
-    figure; 
-    movegui('center')
-    for i = 1:nep 
-        subplot(n,n2,i); 
-        imagesc(mean(data_g(:,:,1+((i-1)*3000):500+((i-1)*3000)),3)); 
-        title([num2str(1+((i-1)*3000)) '-' num2str(500+((i-1)*30000))]); 
-        colormap gray; 
-        clim([100 3000]); 
-    end
-    regImgStartFrame = input('Enter Registration Image Start Frame, ENTER INTO DS:');
-    regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
-    [outs,data_g_reg] = stackRegister(data_g,regImg);
+else %if not, must register to the reference now
+    %load in reference data
+    
+    load(fullfile(fnref,'regOuts&Img.mat'))
+    regImg = data_avg; clear data_avg; %rename the data_avg from the reference run, and then clear than variable
+    [outs,data_g_reg] = stackRegister(data_g,regImg); %use regImg (which was the average of 
+    %the registered data from the reference) to register the current data 
+    data_avg = mean(data_g_reg,3);
     data_avg = mean(data_g_reg,3);
     figure;imagesc(data_avg);colormap gray; truesize; clim([100 3000]);
     print(fullfile(fnout,'avgFOV.pdf'),'-dpdf','-bestfit')
@@ -153,24 +151,17 @@ else %if not, must register. Start by showing average for each of four 500-frame
     input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
 end
-%
-%reg red data 
-%register the red data from the 920 nm run (same run used for green
-%above)to the output of the green registration
-% if info.config.pmt1_gain > 0.5
-%     [~,data_r_reg] = stackRegister_MA(data_r,[],[],double(outs));
-%     redChImg = mean(data_r_reg,3);
-%     clear data_r clear data_r_reg
-% end
-    
+%%
 % find activated cells
 %find number of frames per trial and temporarily reshape data into trials
 %overal goal here is to get green data in terms of df/f
 nOn = input.nScansOn;
 nOff = input.nScansOff;
-sz = size(data_g_reg);
+
+% data_g_reg = data_g_reg(:,:,1:10080);
+% ntrials = 160;
 ntrials = size(input.tGratingContrast,2);
-%ntrials = 374;
+sz = size(data_g_reg);
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
@@ -230,7 +221,7 @@ clear data_g_down
 
 data_dfof = cat(3, data_dfof,data_avg);
 
-%% load red cells
+%% load red cells and register them to the green signal
 %this is where we use the 1040, 1000-frame run
 if exist(fullfile(fnout,'redImage.mat'))
     load(fullfile(fnout,'redImage'))
@@ -250,6 +241,7 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
     load(imgMatFile);
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
+    
     data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);
     if size(data_temp,1) == 2
         data_rg = squeeze(data_temp(1,:,:,:));
@@ -293,50 +285,22 @@ elseif ~exist('redChImg')
     redChImg = zeros(size(regImg));
 end
 clear data_rr data_rg data_rg_reg data_rr_reg
-%% segment cells
-close all
+%% import masks from a reference run
+load(fullfile(fnref,'mask_cell.mat'));
+nCells = max(mask_cell(:)); % take max label of mask_cell, should circumvent bwlabel
+fprintf([num2str(nCells) ' total cells selected\n'])
 
-redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
-mask_exp = zeros(sz(1),sz(2));
-mask_all = zeros(sz(1), sz(2));
-%find and label the red cells - this is the first segmentation figure that
-%comes up
-if ~isempty(expt(day_id).redChannelRun)
-    for iStim=1:size(redForSegmenting,3)
-        mask_data_temp=redForSegmenting(:,:,iStim);
-        mask_data_temp(find(mask_exp >= 1)) = 0;
-        bwout = imCellEditInteractiveLG(mask_data_temp);
-        mask_all = mask_all+bwout;
-        mask_exp = imCellBuffer(mask_all,3)+mask_all;
-        close all
-    end
-end
+figure;
+imagesc(data_dfof(:,:,1)); hold on;
+bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',.5); 
+colormap(gray)
+figure;
+imagesc(data_dfof(:,:,3)); hold on;
+bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',.5); 
+colormap(gray)
 
-mask_cell_red = bwlabel(mask_all);
-mask_data = data_dfof; %this is the registered data from the 920 run
-%after making masks for all the red cellfs, go through different stimuli and
-%identify cells that are visible for each
-
-for iStim = 1:size(data_dfof,3)
-    mask_data_temp = mask_data(:,:,iStim);
-    mask_data_temp(find(mask_exp >= 1)) = 0;
-    bwout = imCellEditInteractiveLG(mask_data_temp);
-    mask_all = mask_all+bwout;
-    mask_exp = imCellBuffer(mask_all,3)+mask_all;
-    close all
-end
-mask_cell = bwlabel(mask_all);
-figure; imagesc(mask_cell) 
-
-nCells = max(mask_cell(:));
-mask_label = zeros(1,nCells);
-for i = 1:nCells
-    if mask_cell_red(find(mask_cell == i, 1))
-        mask_label(1,i) = 1;
-    end
-end
-
-mask_np = imCellNeuropil(mask_cell, 3, 5);
 save(fullfile(fnout, 'mask_cell.mat'), 'redChImg', 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
 
 %% extract timecourses
@@ -365,7 +329,6 @@ end
 [max_skew ind] =  max(x,[],1);
 np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
-
 save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
 %clear data_g_reg data_reg_down
@@ -393,7 +356,9 @@ for iOri = 1:nOri
         [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri.*3-1));
     end
 end
-%%
+
+
+
 h_all = sum(sum(h,2),3);
 
 resp=logical(h_all);
@@ -455,37 +420,6 @@ for iCell = 1:nCells
         start = start+1;
     end
 end
-% %% LG tuning fit
-% [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC]...
-%     = getOriTuningLG(npSub_tc,input,5);
-% %% extracting output from vonM fits
-% % the output is in a 181 orientations X 1001 bootstraps X nCells matrix,
-% % and there is a fitReliability output that tells the 90th percentile of
-% % the difference between the bootstrapped fits and the original fit.
-% % Ultimately I probably only want to take cells that have a fitReliability
-% % value below 22.5 but right now none of them do
-% median(fitReliability,2)
-% 
-% prefOris = nan(size(vonMisesFitAllCellsAllBoots,2),nCells);
-% ogFitPref = nan(1,nCells);
-% for i = 1:nCells
-%     for fit = 2:size(vonMisesFitAllCellsAllBoots,2)
-%         prefOris(fit,i) = mean(find(vonMisesFitAllCellsAllBoots(:,fit,i)==max(vonMisesFitAllCellsAllBoots(:,fit,i))));
-%         ogFitPref(i) = mean(find(vonMisesFitAllCellsAllBoots(:,1,i)==max(vonMisesFitAllCellsAllBoots(:,1,i))));
-%     end
-% end
-% meanPref = mean(prefOris,1);
-% %I now have meanPref which tells me the average orientation indicated by
-% %the 1000 bootstraps, and the max from the original fit. I'm not sure how
-% %to get the oringal U value, or the K value
-% vonMisesFitAllCells = squeeze(vonMisesFitAllCellsAllBoots(:,1,:)); % takes just the first of the bootstraps, which is the original fit 
-% [maxResp prefOri] = max(vonMisesFitAllCells,[],1);
-% 
-% %combine max Resp, prefOri, and fit reliability 
-% vonM_output = [maxResp; prefOri;fitReliability];
-% 
-% save(fullfile(fn,'vonM_fits.mat'),'vonMisesFitAllCells');
-% save(fullfile(fn,'vonM_output.mat'),'vonM_output');
 
 %% looking at time courses
 red_tcs = npSub_tc(:,find(mask_label));
@@ -527,99 +461,3 @@ bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
 
-%% plotting contrast and ori functions for red cells only
-% if length(find(mask_label))<36
-%     [n n2] = subplotn(length(find(mask_label)));
-%     tot = n.*n2;
-% else
-%     n = 6;
-%     n2 = 6;
-%     tot = 36;
-% end
-% 
-% % plot ori tuning at each contrast
-% figure;
-% movegui('center')
-% start = 1;
-% pref_ori = zeros(1,nCells);
-% for iCell = 1:nCells
-%     if start>tot
-%         figure; movegui('center')
-%         start = 1;
-%     end
-%     subplot(n,n2,start)
-%     if find(find(mask_label)==iCell)
-%         for iCon = 1:nCon
-%             errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-o')
-%             hold on
-%         end
-%         start= start+1;
-%         ylim([-0.1 inf])
-%     end
-%     [max_val, pref_ori(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
-% end
-% 
-% % plots contrast preference at preferred orientation
-% figure;
-% movegui('center')
-% start = 1;
-% for iCell = 1:nCells
-%     if start>tot
-%         figure; movegui('center')
-%         start = 1;
-%     end
-%     subplot(n,n2,start)
-%     if find(find(mask_label)==iCell)
-%         errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
-%         ylim([-0.1 inf])
-%         start = start+1;
-%     end
-% end
-% 
-% %% plotting contrast and ori functions for green cells only
-% if length(green_inds)<36
-%     [n n2] = subplotn(length(green_inds));
-%     tot = n.*n2;
-% else
-%     n = 6;
-%     n2 = 6;
-%     tot = 36;
-% end
-% 
-% % plot ori tuning at each contrast
-% figure;
-% movegui('center')
-% start = 1;
-% pref_ori = zeros(1,length(green_inds));
-% for indx = 1:length(green_inds)
-%     iCell = green_inds(indx);
-%     if start>tot
-%         figure; movegui('center')
-%         start = 1;
-%     end
-%     subplot(n,n2,start)
-%         for iCon = 1:nCon
-%             errorbar(oris, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-o')
-%             hold on
-%         end
-%         start= start+1;
-%         ylim([-0.1 inf])
-%     [max_val, pref_ori(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
-% end
-% 
-% % plots contrast preference at preferred orientation
-% figure;
-% movegui('center')
-% start = 1;
-% for indx = 1:length(green_inds)
-%     iCell = green_inds(indx);
-%     if start>tot
-%         figure; movegui('center')
-%         start = 1;
-%     end
-%     subplot(n,n2,start)
-%         errorbar(cons, squeeze(data_resp(iCell,pref_ori(iCell),:,1)), squeeze(data_resp(iCell,pref_ori(iCell),:,2)),'-o')
-%         ylim([-0.1 inf])
-%         start = start+1;
-%     
-% end

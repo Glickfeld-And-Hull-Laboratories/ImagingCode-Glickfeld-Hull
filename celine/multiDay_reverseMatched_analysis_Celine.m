@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 164; %enter post-DART day
+day_id = 131; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -37,7 +37,7 @@ load(fullfile(fn_multi,'input.mat'))
 load(fullfile(fn_multi,'locomotion.mat'))
 
 cd(fn_multi)
-nKeep = size(tc_trial_avrg_keep{post},2);
+nKeep = size(tc_trial_avrg_stat{post},2);
 clear d
 % find stimulus conditions
 frame_rate = input.frameImagingRateMs;
@@ -62,41 +62,42 @@ nCon = length(cons);
 
 nOn = input(1).nScansOn;
 nOff = input(1).nScansOff;
-%% make figure with se shaded, one figure per contrast
 
-tc_green_avrg_keep = cell(1,nd); %this will be the average across all green cells - a single line
-tc_red_avrg_keep = cell(1,nd); %same for red
-tc_green_se_keep = cell(1,nd); %this will be the se across all green cells
-tc_red_se_match = cell(1,nd); %same for red
+%% make figure with se shaded, averaging over contrasts and stationary vs. running
+
+tc_green_avrg = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg = cell(1,nd); %same for red
+tc_green_se = cell(1,nd); %this will be the se across all green cells
+tc_red_se = cell(1,nd); %same for red
 
 for id = 1:nd
-    for iCon=1:nCon
-    tc_green_avrg_keep{id}(:,iCon)=nanmean(tc_trial_avrg_keep{id}(:,green_ind_keep,iCon),2);
-    green_std=std(tc_trial_avrg_keep{id}(:,green_ind_keep,iCon),[],2);
-    tc_green_se_keep{id}(:,iCon)=green_std/sqrt(length(green_ind_keep));
+
+    tc_green_avrg{id}(:)=nanmean(tc_trial_avrg_keep_allCon{id}(:,green_ind_keep),2);
+    green_std=std(tc_trial_avrg_keep_allCon{id}(:,green_ind_keep),[],2);
+    tc_green_se{id}(:)=green_std/sqrt(length(green_ind_keep));
     
-    tc_red_avrg_keep{id}(:,iCon)=nanmean(tc_trial_avrg_keep{id}(:,red_ind_keep,iCon),2);
-    red_std=std(tc_trial_avrg_keep{id}(:,red_ind_keep,iCon),[],2);
-    tc_red_se_match{id}(:,iCon)=red_std/sqrt(length(red_ind_keep));
+    tc_red_avrg{id}(:)=nanmean(tc_trial_avrg_keep_allCon{id}(:,red_ind_keep),2);
+    red_std=std(tc_trial_avrg_keep_allCon{id}(:,red_ind_keep),[],2);
+    tc_red_se{id}(:)=red_std/sqrt(length(red_ind_keep));
     
     clear green_std red_std
-    end
+    
 end
 
 
 %creat a time axis in seconds
-t=1:(size(tc_green_avrg_keep{1,1,1},1));
+t=1:(size(tc_green_avrg{1},2));
 t=(t-(double(stimStart)-1))/double(frame_rate);
 
 for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
 
-shadedErrorBar(t,tc_red_avrg_keep{pre}(:,iCon),tc_red_se_match{pre}(:,iCon),'r');
+shadedErrorBar(t,tc_red_avrg{pre},tc_red_se{pre},'r');
 ylim([-.02 .3]);
 hold on
-shadedErrorBar(t,tc_green_avrg_keep{pre}(:,iCon),tc_green_se_keep{pre}(:,iCon));
-title(['Pre-DART contrast = ' num2str(cons(iCon))])
+shadedErrorBar(t,tc_green_avrg{pre},tc_green_se{pre});
+title(['pre-DART, average'])
 txt1 = ['HT- ' num2str(length(green_ind_keep))];
 text(-1.5,0.25,txt1);
 txt2 = ['HT+ ' num2str(length(red_ind_keep))];
@@ -108,13 +109,13 @@ axis square
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(t,tc_red_avrg_keep{post}(:,iCon),tc_red_se_match{post}(:,iCon),'r');
+shadedErrorBar(t,tc_red_avrg{post},tc_red_se{post},'r');
 ylim([-.02 .3]);
 hold on
-shadedErrorBar(t,tc_green_avrg_keep{post}(:,iCon),tc_green_se_keep{post}(:,iCon));
+shadedErrorBar(t,tc_green_avrg{post},tc_green_se{post});
 ylabel('dF/F') 
 xlabel('s') 
-title(['Post-DART contrast = ' num2str(cons(iCon))])
+title(['post-DART, average'])
 axis square
 x0=5;
 y0=5;
@@ -122,9 +123,138 @@ width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
-print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_timecourses.pdf']),'-dpdf');
+print(fullfile(fn_multi_analysis,[ 'average_stat_timecourses.pdf']),'-dpdf');
 end 
 clear txt1 txt2
+
+%% make figure with se shaded, one figure per contrast - stationary
+
+tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_stat = cell(1,nd); %same for red
+tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
+tc_red_se_stat = cell(1,nd); %same for red
+
+for id = 1:nd
+    for iCon=1:nCon
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat{id}(:,green_ind_keep,iCon),2);
+    green_std=std(tc_trial_avrg_stat{id}(:,green_ind_keep,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(green_ind_keep));
+    
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat{id}(:,red_ind_keep,iCon),2);
+    red_std=std(tc_trial_avrg_stat{id}(:,red_ind_keep,iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(red_ind_keep));
+    
+    clear green_std red_std
+    end
+end
+
+
+%creat a time axis in seconds
+t=1:(size(tc_green_avrg_stat{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+figure
+subplot(1,2,1) %for the first day
+
+shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'r');
+ylim([-.02 .3]);
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon));
+title(['Stationary, pre-DART contrast = ' num2str(cons(iCon))])
+txt1 = ['HT- ' num2str(length(green_ind_keep))];
+text(-1.5,0.25,txt1);
+txt2 = ['HT+ ' num2str(length(red_ind_keep))];
+text(-1.5,0.23,txt2,'Color','r');
+ylabel('dF/F') 
+xlabel('s') 
+
+axis square
+
+
+subplot(1,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'r');
+ylim([-.02 .3]);
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon));
+ylabel('dF/F') 
+xlabel('s') 
+title(['Stationary,post-DART contrast = ' num2str(cons(iCon))])
+axis square
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_stat_timecourses.pdf']),'-dpdf');
+end 
+clear txt1 txt2
+
+%% make figure with se shaded, one figure per contrast - running
+
+tc_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_loc = cell(1,nd); %same for red
+tc_green_se_loc = cell(1,nd); %this will be the se across all green cells
+tc_red_se_loc = cell(1,nd); %same for red
+
+for id = 1:nd
+    for iCon=1:nCon
+    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc{id}(:,green_ind_keep,iCon),2);
+    green_std=std(tc_trial_avrg_loc{id}(:,green_ind_keep,iCon),[],2);
+    tc_green_se_loc{id}(:,iCon)=green_std/sqrt(length(green_ind_keep));
+    
+    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc{id}(:,red_ind_keep,iCon),2);
+    red_std=std(tc_trial_avrg_loc{id}(:,red_ind_keep,iCon),[],2);
+    tc_red_se_loc{id}(:,iCon)=red_std/sqrt(length(red_ind_keep));
+    
+    clear green_std red_std
+    end
+end
+
+
+%creat a time axis in seconds
+t=1:(size(tc_green_avrg_loc{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+figure
+subplot(1,2,1) %for the first day
+
+shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon),tc_red_se_loc{pre}(:,iCon),'r');
+ylim([-.02 .6]);
+hold on
+shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon),tc_green_se_loc{pre}(:,iCon));
+title(['Running, pre-DART contrast = ' num2str(cons(iCon))])
+txt1 = ['HT- ' num2str(length(green_ind_keep))];
+text(-1.5,0.25,txt1);
+txt2 = ['HT+ ' num2str(length(red_ind_keep))];
+text(-1.5,0.23,txt2,'Color','r');
+ylabel('dF/F') 
+xlabel('s') 
+
+axis square
+
+
+subplot(1,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon),tc_red_se_loc{post}(:,iCon),'r');
+ylim([-.02 .6]);
+hold on
+shadedErrorBar(t,tc_green_avrg_loc{post}(:,iCon),tc_green_se_loc{post}(:,iCon));
+ylabel('dF/F') 
+xlabel('s') 
+title(['Running, post-DART contrast = ' num2str(cons(iCon))])
+axis square
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_loc_timecourses.pdf']),'-dpdf');
+end 
+clear txt1 txt2
+
 %% make a plot of individual timecourses 
 
 setYmin = -.2; %indicate y axes you want
@@ -135,9 +265,9 @@ for iCon = 1:nCon
 
 figure
 subplot(2,2,1)
-plot(t, tc_trial_avrg_keep{pre}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+plot(t, tc_trial_avrg_stat{pre}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
 hold on
-plot(t, tc_green_avrg_keep{pre}(:,iCon),'color',[0 0 0],'LineWidth',2)
+plot(t, tc_green_avrg_stat{pre}(:,iCon),'color',[0 0 0],'LineWidth',2)
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -147,9 +277,9 @@ hold off
 
 
 subplot(2,2,3)
-plot(t, tc_trial_avrg_keep{pre}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
+plot(t, tc_trial_avrg_stat{pre}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
 hold on
-plot(t, tc_red_avrg_keep{pre}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+plot(t, tc_red_avrg_stat{pre}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
 ylim([setYmin setYmax]);
 title('day 1')
 xlim([-2 4])
@@ -159,9 +289,9 @@ hold off
 
 
 subplot(2,2,2)
-plot(t, tc_trial_avrg_keep{post}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+plot(t, tc_trial_avrg_stat{post}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
 hold on
-plot(t, tc_green_avrg_keep{post}(:,iCon),'color',[0 0 0],'LineWidth',2)
+plot(t, tc_green_avrg_stat{post}(:,iCon),'color',[0 0 0],'LineWidth',2)
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
@@ -171,26 +301,89 @@ hold off
 
 
 subplot(2,2,4)
-plot(t, tc_trial_avrg_keep{post}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
+plot(t, tc_trial_avrg_stat{post}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
 hold on
-plot(t, tc_red_avrg_keep{post}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+plot(t, tc_red_avrg_stat{post}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
 ylim([setYmin setYmax]);
 title('day 2')
 xlim([-2 4])
 ylabel('dF/F') 
 xlabel('s') 
-sgtitle(['contrast = '  num2str(cons(iCon))])
+sgtitle(['Stationary, contrast = '  num2str(cons(iCon))])
 hold off
 
 x0=5;
 y0=5;
 width=6;
-height=6
+height=6;
 set(gcf,'units','inches','position',[x0,y0,width,height])
-print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_indiv_timecourses.pdf']),'-dpdf');
+print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_stat_indiv_timecourses.pdf']),'-dpdf');
+end
+
+
+
+for iCon = 1:nCon
+
+figure
+subplot(2,2,1)
+plot(t, tc_trial_avrg_loc{pre}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+hold on
+plot(t, tc_green_avrg_loc{pre}(:,iCon),'color',[0 0 0],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 1')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,3)
+plot(t, tc_trial_avrg_loc{pre}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
+hold on
+plot(t, tc_red_avrg_loc{pre}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 1')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,2)
+plot(t, tc_trial_avrg_loc{post}(:,green_ind_keep,iCon),'color',[0 0 0 .2])
+hold on
+plot(t, tc_green_avrg_loc{post}(:,iCon),'color',[0 0 0],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 2')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+hold off
+
+
+subplot(2,2,4)
+plot(t, tc_trial_avrg_loc{post}(:,red_ind_keep,iCon),'color',[.7 .05 .05 .2])
+hold on
+plot(t, tc_red_avrg_loc{post}(:,iCon),'color',[.7 .05 .05],'LineWidth',2)
+ylim([setYmin setYmax]);
+title('day 2')
+xlim([-2 4])
+ylabel('dF/F') 
+xlabel('s') 
+sgtitle(['Running, contrast = '  num2str(cons(iCon))])
+hold off
+
+x0=5;
+y0=5;
+width=6;
+height=6;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_loc_indiv_timecourses.pdf']),'-dpdf');
 end
 
 %% ploting pre-and post dart average timecourse seperately for each cell
+%this is at all contrasts, stationary
+
 if nKeep<36
     [n n2] = subplotn(nKeep);
     tot = n.*n2;
@@ -214,15 +407,15 @@ for iCell = 1:nKeep
     end
     subplot(n,n2,start)
     if ismember(iCell,red_ind_keep)
-        plot(t,tc_trial_avrg_keep_allCon{pre}(:,iCell),'r')
+        plot(t,tc_trial_avrg_keep_allCon{1,pre}(:,iCell),'r')
         hold on
-        plot(t,tc_trial_avrg_keep_allCon{post}(:,iCell),'--r')
+        plot(t,tc_trial_avrg_keep_allCon{1,post}(:,iCell),'--r')
         hold off
         ylim([setYmin setYmax]);
     else
-        plot(t,tc_trial_avrg_keep_allCon{pre}(:,iCell),'k')
+        plot(t,tc_trial_avrg_keep_allCon{1,pre}(:,iCell),'k')
         hold on
-        plot(t,tc_trial_avrg_keep_allCon{post}(:,iCell),'--k')
+        plot(t,tc_trial_avrg_keep_allCon{1,post}(:,iCell),'--k')
         hold off
         ylim([setYmin setYmax]);
     end
@@ -234,6 +427,7 @@ end
 tHalfMax = cell(1,nd);
 
 for id = 1:nd
+    
     tHalfMaxTemp=nan(nKeep,1);
 
         for iCell=1:nKeep
@@ -241,16 +435,16 @@ for id = 1:nd
             tempData=tc_trial_avrg_keep_allCon{id}(stimStart:stimStart+nOn,iCell);
             if resp_keep{id}(iCell)
                 smoothData=smoothdata(tempData,'movmean',5) ;
-                halfMax = max(smoothData(3:length(smoothData)))/2;
+                %halfMax = max(smoothData(3:length(smoothData)))/2;
+                halfMax = max(smoothData)/2;
                 tHalfMaxCell =double(min(find(smoothData>halfMax)))/double(frame_rate);
-                if iCell == 4
-                %if rem(iCell, 10) == 0 
-                figure;plot(tempData)
-                hold on
-                plot(smoothData)
-                hold on
-                vline(min(find(smoothData>halfMax)))
-                end
+%                 if rem(iCell, 10) == 0 
+%                 figure;plot(tempData)
+%                 hold on
+%                 plot(smoothData)
+%                 hold on
+%                 vline(min(find(smoothData>halfMax)))
+%                 end
                 if length(tHalfMaxCell)>0
                     tHalfMaxTemp(iCell)=tHalfMaxCell;
                 end
@@ -258,6 +452,7 @@ for id = 1:nd
  
        end
     tHalfMax{id}=tHalfMaxTemp;
+    
 end
 clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
 % scatter for tMax
@@ -267,12 +462,10 @@ clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
 figure; movegui('center') 
 subplot(1,2,1)
 scatter((tHalfMax{pre}(green_ind_keep)),(tHalfMax{post}(green_ind_keep)),'k','jitter', 'on', 'jitterAmount', 0.3)
-hold on
-lsline
 ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
-ylim([0 2.5])
-xlim([0 2.5])
+% ylim([0 .1])
+% xlim([0 .1])
 refline(1)
 title('HT- ')
 axis square
@@ -281,14 +474,12 @@ hold off
 
 subplot(1,2,2)
 scatter((tHalfMax{pre}(red_ind_keep)),(tHalfMax{post}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05],'jitter', 'on', 'jitterAmount', 0.3)
-hold on
-lsline
 ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
-ylim([0 2.5])
-xlim([0 2.5])
+% ylim([0 .1])
+% xlim([0 .1])
 refline(1)
-title('HT+')
+title('HT+ ')
 axis square
 hold off
 
@@ -300,8 +491,8 @@ print(fullfile(fn_multi_analysis, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')
 
 for iCon = 1:nCon
 figure; movegui('center') 
-subplot(1,2,1)
-scatter((resp_max_keep{pre}(green_ind_keep,iCon)),(resp_max_keep{post}(green_ind_keep,iCon)),'k')
+subplot(2,2,1)
+scatter((pref_responses_stat{pre}(green_ind_keep,iCon)),(pref_responses_stat{post}(green_ind_keep,iCon)),'k')
 % hold on
 % scatter((resp_max_keep{pre}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{post}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),'k','MarkerFaceColor','k')
 ylabel('post-DART dF/F')
@@ -309,12 +500,12 @@ xlabel('pre-DART  dF/F')
 ylim([-.1 .5])
 xlim([-.1 .5])
 refline(1)
-title('HT- ')
+title('HT- stationary')
 axis square
 
 
-subplot(1,2,2)
-scatter((resp_max_keep{pre}(red_ind_keep,iCon)),(resp_max_keep{post}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
+subplot(2,2,2)
+scatter((pref_responses_stat{pre}(red_ind_keep,iCon)),(pref_responses_stat{post}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
 % hold on
 % scatter((resp_max_keep{pre}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{post}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05])
 % hold off
@@ -324,12 +515,64 @@ ylim([-.1 .5])
 xlim([-.1 .5])
 
 refline(1)
-title('HT+')
+title('HT+ stationary')
+axis square
+
+
+subplot(2,2,3)
+scatter((pref_responses_loc{pre}(green_ind_keep,iCon)),(pref_responses_loc{post}(green_ind_keep,iCon)),'k')
+% hold on
+% scatter((resp_max_keep{pre}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{post}(intersect(green_ind_keep,find(sig_diff{iCon})),iCon)),'k','MarkerFaceColor','k')
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+refline(1)
+title('HT- running')
+axis square
+
+subplot(2,2,4)
+scatter((pref_responses_loc{pre}(red_ind_keep,iCon)),(pref_responses_loc{post}(red_ind_keep,iCon)),'MarkerEdgeColor',[.7 .05 .05])
+% hold on
+% scatter((resp_max_keep{pre}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),(resp_max_keep{post}(intersect(red_ind_keep,find(sig_diff{iCon})),iCon)),'MarkerEdgeColor',[.7 .05 .05],'MarkerFaceColor',[.7 .05 .05])
+% hold off
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+
+refline(1)
+title('HT+ running')
 axis square
 
 sgtitle(num2str(cons(iCon)))
 print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
 end
+%% dfof for all stimuli, running and stationary
+figure; movegui('center') 
+subplot(1,2,1)
+scatter((pref_responses_allCon{pre}(green_ind_keep)),(pref_responses_allCon{post}(green_ind_keep)),'k')
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+refline(1)
+title('HT- average')
+axis square
+
+
+subplot(1,2,2)
+scatter((pref_responses_allCon{pre}(red_ind_keep)),(pref_responses_allCon{post}(red_ind_keep)),'MarkerEdgeColor',[.7 .05 .05])
+
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+
+refline(1)
+title('HT+ average')
+axis square
+
 %%
 figure;
 for iCon = 1:nCon
@@ -436,88 +679,86 @@ print(fullfile(fn_multi_analysis,[num2str(cons(iCon)), '_frac_change_resp.pdf'])
 
 end
 
-%%
-
-%now I know which trials the mouse was running on, need to look at LMI
-%LMI = (R_loc - R_stat)/(R_loc + R_stat)
-%find the intersection of trials at the preferred orientation during
-%locomotion vs stationary periods - I may not have enough trials of each
-%kind
-
-%creat a time axis in seconds
-t=1:(size(tc_green_avrg_keep{1,1,1},1));
-t=(t-(double(stimStart)-1))/double(frame_rate);
-
-for iCon = 1:nCon
-    %make this the average for running state for each contrast
-    figure;
- 
-        
-        locr_mean = nanmean(locTCs{pre}(:,red_ind_keep,iCon),2); %averaged across red cells
-        locr_std = std(locTCs{pre}(:,red_ind_keep,iCon),[],2);
-        locr_se=locr_std/sqrt(length(red_ind_keep));
-        statr_mean = nanmean(statTCs{pre}(:,red_ind_keep,iCon),2);
-        statr_std = std(statTCs{pre}(:,red_ind_keep,iCon),[],2);
-        statr_se=statr_std/sqrt(length(red_ind_keep));
-
-        locg_mean = nanmean(locTCs{pre}(:,green_ind_keep,iCon),2);
-        locg_std = std(locTCs{pre}(:,green_ind_keep,iCon),[],2);
-        locg_se=locg_std/sqrt(length(green_ind_keep));
-        statg_mean = nanmean(statTCs{pre}(:,green_ind_keep,iCon),2);
-        statg_std = std(statTCs{pre}(:,green_ind_keep,iCon),[],2);
-        statg_se=statg_std/sqrt(length(green_ind_keep));
-
-        subplot(1,2,1)
-        shadedErrorBar(t,locr_mean,locr_se,'r')
-        hold on
-        shadedErrorBar(t,statr_mean,statr_se,'--r')
-        shadedErrorBar(t,locg_mean,locg_se,'k')
-        shadedErrorBar(t,statg_mean,statg_se,'--k')
-        ylim([-.05 .2]);
-        title(['contrast ', num2str(cons(iCon)), ' pre-DART'])
-        txt1=[num2str(locCounts{pre}(1,iCon)), ' running trials']
-        text(-1.5,0.18,txt1);
-        txt2 = [num2str(locCounts{pre}(2,iCon)), ' stationary trials']
-        text(-1.5,0.16,txt2);
-        axis square
-        hold off   
-        
- 
-        
-        locr_mean = nanmean(locTCs{post}(:,red_ind_keep,iCon),2); %averaged across red cells
-        locr_std = std(locTCs{post}(:,red_ind_keep,iCon),[],2);
-        locr_se=locr_std/sqrt(length(red_ind_keep));
-        statr_mean = nanmean(statTCs{post}(:,red_ind_keep,iCon),2);
-        statr_std = std(statTCs{post}(:,red_ind_keep,iCon),[],2);
-        statr_se=statr_std/sqrt(length(red_ind_keep));
-
-        locg_mean = nanmean(locTCs{post}(:,green_ind_keep,iCon),2);
-        locg_std = std(locTCs{post}(:,green_ind_keep,iCon),[],2);
-        locg_se=locg_std/sqrt(length(green_ind_keep));
-
-        statg_mean = nanmean(statTCs{post}(:,green_ind_keep,iCon),2);
-        statg_std = std(statTCs{post}(:,green_ind_keep,iCon),[],2);
-        statg_se=statg_std/sqrt(length(green_ind_keep));
-        
-        subplot(1,2,2)
-        shadedErrorBar(t,locr_mean,locr_se,'r')
-        hold on
-        shadedErrorBar(t,statr_mean,statr_se,'--r')
-        shadedErrorBar(t,locg_mean,locg_se,'k')
-        shadedErrorBar(t,statg_mean,statg_se,'--k')
-        ylim([-.05 .2]);
-        title(['contrast ', num2str(cons(iCon)), ' post-DART'])
-        txt1=[num2str(locCounts{post}(1,iCon)), ' running trials']
-        text(-1.5,0.18,txt1);
-        txt2 = [num2str(locCounts{post}(2,iCon)), ' stationary trials']
-        text(-1.5,0.16,txt2);
-        axis square
-        hold off
-        
-       clear locr_mean locr_std locr_se statr_mean statr_std statr_se locg_mean locg_std locg_se statg_mean statg_std statg_se txt1 txt2
-       print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_locomotionTCs.pdf']),'-dpdf');
-  
-end
+%% plots stationary and running TCs over one another - not sure I need this any more
+% 
+% %now I know which trials the mouse was running on, need to look at LMI
+% %LMI = (R_loc - R_stat)/(R_loc + R_stat)
+% %change this to use the stat and loc timecourses from above
+% 
+% %creat a time axis in seconds
+% t=1:(size(tc_green_avrg_stat{1,1,1},1));
+% t=(t-(double(stimStart)-1))/double(frame_rate);
+% 
+% for iCon = 1:nCon
+%     %make this the average for running state for each contrast
+%     figure;
+%  
+%         
+%         locr_mean = nanmean(locTCs{pre}(:,red_ind_keep,iCon),2); %averaged across red cells
+%         locr_std = std(locTCs{pre}(:,red_ind_keep,iCon),[],2);
+%         locr_se=locr_std/sqrt(length(red_ind_keep));
+%         statr_mean = nanmean(statTCs{pre}(:,red_ind_keep,iCon),2);
+%         statr_std = std(statTCs{pre}(:,red_ind_keep,iCon),[],2);
+%         statr_se=statr_std/sqrt(length(red_ind_keep));
+% 
+%         locg_mean = nanmean(locTCs{pre}(:,green_ind_keep,iCon),2);
+%         locg_std = std(locTCs{pre}(:,green_ind_keep,iCon),[],2);
+%         locg_se=locg_std/sqrt(length(green_ind_keep));
+%         statg_mean = nanmean(statTCs{pre}(:,green_ind_keep,iCon),2);
+%         statg_std = std(statTCs{pre}(:,green_ind_keep,iCon),[],2);
+%         statg_se=statg_std/sqrt(length(green_ind_keep));
+% 
+%         subplot(1,2,1)
+%         shadedErrorBar(t,locr_mean,locr_se,'r')
+%         hold on
+%         shadedErrorBar(t,statr_mean,statr_se,'--r')
+%         shadedErrorBar(t,locg_mean,locg_se,'k')
+%         shadedErrorBar(t,statg_mean,statg_se,'--k')
+%         ylim([-.05 .2]);
+%         title(['contrast ', num2str(cons(iCon)), ' pre-DART'])
+%         txt1=[num2str(locCounts{pre}(1,iCon)), ' running trials']
+%         text(-1.5,0.18,txt1);
+%         txt2 = [num2str(locCounts{pre}(2,iCon)), ' stationary trials']
+%         text(-1.5,0.16,txt2);
+%         axis square
+%         hold off   
+%         
+%  
+%         
+%         locr_mean = nanmean(locTCs{post}(:,red_ind_keep,iCon),2); %averaged across red cells
+%         locr_std = std(locTCs{post}(:,red_ind_keep,iCon),[],2);
+%         locr_se=locr_std/sqrt(length(red_ind_keep));
+%         statr_mean = nanmean(statTCs{post}(:,red_ind_keep,iCon),2);
+%         statr_std = std(statTCs{post}(:,red_ind_keep,iCon),[],2);
+%         statr_se=statr_std/sqrt(length(red_ind_keep));
+% 
+%         locg_mean = nanmean(locTCs{post}(:,green_ind_keep,iCon),2);
+%         locg_std = std(locTCs{post}(:,green_ind_keep,iCon),[],2);
+%         locg_se=locg_std/sqrt(length(green_ind_keep));
+% 
+%         statg_mean = nanmean(statTCs{post}(:,green_ind_keep,iCon),2);
+%         statg_std = std(statTCs{post}(:,green_ind_keep,iCon),[],2);
+%         statg_se=statg_std/sqrt(length(green_ind_keep));
+%         
+%         subplot(1,2,2)
+%         shadedErrorBar(t,locr_mean,locr_se,'r')
+%         hold on
+%         shadedErrorBar(t,statr_mean,statr_se,'--r')
+%         shadedErrorBar(t,locg_mean,locg_se,'k')
+%         shadedErrorBar(t,statg_mean,statg_se,'--k')
+%         ylim([-.05 .2]);
+%         title(['contrast ', num2str(cons(iCon)), ' post-DART'])
+%         txt1=[num2str(locCounts{post}(1,iCon)), ' running trials']
+%         text(-1.5,0.18,txt1);
+%         txt2 = [num2str(locCounts{post}(2,iCon)), ' stationary trials']
+%         text(-1.5,0.16,txt2);
+%         axis square
+%         hold off
+%         
+%        clear locr_mean locr_std locr_se statr_mean statr_std statr_se locg_mean locg_std locg_se statg_mean statg_std statg_se txt1 txt2
+%        print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_locomotionTCs.pdf']),'-dpdf');
+%   
+% end
 
 %% locomotion modulation index
 
@@ -551,7 +792,7 @@ title('HT+')
 axis square
 
 sgtitle(num2str(cons(iCon)))
-print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_LMI.pdf']),'-dpdf');
+%print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_LMI.pdf']),'-dpdf');
 end
 
 %% finding cells that are still saturated by contrast vs. not saturated pre-DART
@@ -1137,7 +1378,7 @@ title('day 2')
 refline(1)
 %% example cell tcs - this is to pull out some individual example cell traces
 %
-cellList=[red_ind_keep]; %enter the cells you're interested in by their index wihtin the keep dataframe
+cellList=[49 93]; %enter the cells you're interested in by their index wihtin the keep dataframe
 
 place=1;
 figure
@@ -1145,8 +1386,8 @@ for i=1:length(cellList)
     for id = 1:nd
         thisCell = cellList(i)
         %only pulling from dfof data of keep cells
-        tCon=tCon_match{id}(1:nTrials);
-        tDir=tDir_match{id}(1:nTrials);
+        tCon=tCon_match{id}(1:nTrials(id));
+        tDir=tDir_match{id}(1:nTrials(id));
         %identify the trials where ori = pref ori
         temp_ori= pref_ori_keep{id}(thisCell); %find the preferred ori of this cell and convert to degrees
         ori_inds = find(tDir==temp_ori); %these are the trials at that ori
@@ -1162,7 +1403,7 @@ for i=1:length(cellList)
             shadedErrorBar(t,thisCellMean,thisCellSE,'r')
             ylim([-.2 .5]);
         else
-            shadedErrorBar(x,thisCellMean,thisCellSE,'k')
+            shadedErrorBar(t,thisCellMean,thisCellSE,'k')
             ylim([-.2 .5]);
         end
         title(string(thisCell));
@@ -1172,6 +1413,18 @@ for i=1:length(cellList)
     
 end
 
+
+c = linspace(1,10,length(cellList));
+figure
+scatter((pref_responses_stat{pre}(cellList,iCon)),(pref_responses_stat{post}(cellList,iCon)),[],c,'filled')
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+colorbar
+
+refline(1)
+axis square
 
 %%
 figure;
