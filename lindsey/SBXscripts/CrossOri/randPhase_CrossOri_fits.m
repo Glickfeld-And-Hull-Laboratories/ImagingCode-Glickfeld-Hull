@@ -1,6 +1,6 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirRandPhase_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
@@ -8,17 +8,17 @@ nexp = size(expt,2);
 nanframes = zeros(1,nexp);
 max_dist = 2;
 
-for iexp = 1:nexp
+for iexp = 14
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     area = expt(iexp).img_loc{1};
-    ImgFolder = expt(iexp).copFolder;
-    time = expt(iexp).copTime;
+    ImgFolder = expt(iexp).coFolder;
+    time = expt(iexp).coTime;
     nrun = length(ImgFolder);
     run_str = catRunName(cell2mat(ImgFolder), nrun);
     
 
-    base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
+    base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 
     fprintf(['2P imaging sine fitting analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
     for irun=1:nrun

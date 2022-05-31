@@ -1,23 +1,24 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirRandPhase_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList';
 
 rc = behavConstsAV;
 eval(ds)
 nexp = size(expt,2);
 
-frame_rate = 30;
-for iexp  = 1:nexp
+frame_rate = 15;
+for iexp  = 15
 %%
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
-ImgFolder = expt(iexp).copFolder;
-time = expt(iexp).copTime;
+ImgFolder = expt(iexp).coFolder;
+time = expt(iexp).coTime;
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
-base = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey\' expt(iexp).saveLoc];
+base = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\' expt(iexp).saveLoc];
+
 fprintf([mouse ' ' date '\n'])
 
 %% Test stim analysis
@@ -28,6 +29,8 @@ load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str
 if doRedChannel == 0
     red_cells = [];
 end
+
+fprintf(['Expt analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date ])
 
 SF_all = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
 SFs = unique(SF_all);
@@ -117,7 +120,7 @@ for iff = 1:nF
                     base_cell{im,it,ip,iff} = squeeze(mean(data_dfof_tc(base_win,:,ind),1));
                     data_dfof_con_ph_tc_avg(:,:,im,it,ip,iff,1) = squeeze(nanmean(data_dfof_tc(:,:,ind),3));
                     data_dfof_con_ph_tc_avg(:,:,im,it,ip,iff,2) = squeeze(nanstd(data_dfof_tc(:,:,ind),[],3)./sqrt(length(ind)));
-                    trialInd{im,it,ip,iff} = ind;
+                    trialInd{im,it,ip,iff} = ind; 
                 end
             elseif it>1 || im>1
                 ind = intersect(ind_f,intersect(ind_mask,ind_stim));

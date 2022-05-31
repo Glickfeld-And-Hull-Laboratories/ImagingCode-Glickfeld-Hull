@@ -118,3 +118,152 @@ expt(7).dirFolder = {'003'};
 expt(7).dirTime = {'1057'};
 expt(7).saveLoc = 'sara';
 
+%% i1369 220321 TF- 2Hz, 0.05cpd
+expt(8).mouse = 'i1369';
+expt(8).date = '220321';
+expt(8).img_loc  = {'V1';'L2/3'};
+expt(8).inj_loc = {'V1'};
+expt(8).z = -200;
+expt(8).img_strct  = {'cells'};
+expt(8).driver = {'SLC'};
+expt(8).indicator = {'tg';'GCaMP6s'};
+expt(8).coFolder = {'002'};
+expt(8).coTime = {'1514'};
+expt(8).dirFolder = {'003'};
+expt(8).dirTime = {'1617'};
+expt(8).saveLoc = 'sara';
+
+%% i1370 220322 TF- 2Hz, 0.05cpd
+expt(9).mouse = 'i1370';
+expt(9).date = '220322';
+expt(9).img_loc  = {'LM';'L2/3'};
+expt(9).inj_loc = {'LM'};
+expt(9).z = -200;
+expt(9).img_strct  = {'cells'};
+expt(9).driver = {'SLC'};
+expt(9).indicator = {'tg';'GCaMP6s'};
+expt(9).coFolder = {'002'};
+expt(9).coTime = {'1722'};
+expt(9).dirFolder = {'003'};
+expt(9).dirTime = {'1825'};
+expt(9).saveLoc = 'sara';
+
+%% i1370 220324 TF- 2Hz, 0.05cpd
+expt(10).mouse = 'i1370';
+expt(10).date = '220324';
+expt(10).img_loc  = {'V1';'L2/3'};
+expt(10).inj_loc = {'V1'};
+expt(10).z = -200;
+expt(10).img_strct  = {'cells'};
+expt(10).driver = {'SLC'};
+expt(10).indicator = {'tg';'GCaMP6s'};
+expt(10).coFolder = {'002'};
+expt(10).coTime = {'1010'};
+expt(10).dirFolder = {'003'};
+expt(10).dirTime = {'1128'};
+expt(10).saveLoc = 'sara';
+
+%% i1372 220331 TF- 2Hz, 0.05cpd
+expt(11).mouse = 'i1372';
+expt(11).date = '220331';
+expt(11).img_loc  = {'V1';'L2/3'};
+expt(11).inj_loc = {'V1'};
+expt(11).z = -200;
+expt(11).img_strct  = {'cells'};
+expt(11).driver = {'SLC'};
+expt(11).indicator = {'tg';'GCaMP6s'};
+expt(11).coFolder = {'002'};
+expt(11).coTime = {'1148'};
+expt(11).dirFolder = {'003'};
+expt(11).dirTime = {'1257'};
+expt(11).saveLoc = 'sara';
+
+%% i1372 220404 TF- 2Hz, 0.05cpd
+% expt(12).mouse = 'i1372';
+% expt(12).date = '220404';
+% expt(12).img_loc  = {'V1';'L2/3'};
+% expt(12).inj_loc = {'V1'};
+% expt(12).z = -200;
+% expt(12).img_strct  = {'cells'};
+% expt(12).driver = {'SLC'};
+% expt(12).indicator = {'tg';'GCaMP6s'};
+% expt(12).coFolder = {'002'};
+% expt(12).coTime = {'1431'};
+% expt(12).dirFolder = {'003'};
+% expt(12).dirTime = {'1536'};
+% expt(12).saveLoc = 'sara';
+
+%% i1351 220404 TF- 2Hz, 0.05cpd
+% expt(13).mouse = 'i1351';
+% expt(13).date = '220404';
+% expt(13).img_loc  = {'LM';'L2/3'};
+% expt(13).inj_loc = {'LM'};
+% expt(13).z = -200;
+% expt(13).img_strct  = {'cells'};
+% expt(13).driver = {'SLC'};
+% expt(13).indicator = {'tg';'GCaMP6s'};
+% expt(13).coFolder = {'002'};
+% expt(13).coTime = {'1635'};
+% expt(13).dirFolder = {'003'};
+% expt(13).dirTime = {'1739'};
+% expt(13).saveLoc = 'sara';
+
+%% i1351 220405 TF- 2Hz, 0.05cpd
+expt(14).mouse = 'i1351';
+expt(14).date = '220405';
+expt(14).img_loc  = {'V1';'L2/3'};
+expt(14).inj_loc = {'V1'};
+expt(14).z = -200;
+expt(14).img_strct  = {'cells'};
+expt(14).driver = {'SLC'};
+expt(14).indicator = {'tg';'GCaMP6s'};
+expt(14).coFolder = {'002'};
+expt(14).coTime = {'1331'};
+expt(14).dirFolder = {'003'};
+expt(14).dirTime = {'1436'};
+expt(14).saveLoc = 'sara';
+
+%% i1351 220412 TF- 2Hz, 0.05cpd
+expt(15).mouse = 'i1351';
+expt(15).date = '220412';
+expt(15).img_loc  = {'LM';'L2/3'};
+expt(15).inj_loc = {'LM'};
+expt(15).z = -200;
+expt(15).img_strct  = {'cells'};
+expt(15).driver = {'SLC'};
+expt(15).indicator = {'tg';'GCaMP6s'};
+expt(15).coFolder = {'002'};
+expt(15).coTime = {'1507'};
+expt(15).dirFolder = {'003'};
+expt(15).dirTime = {'1613'};
+expt(15).saveLoc = 'sara';
+
+%% i1372 220419 TF- 2Hz, 0.05cpd
+expt(16).mouse = 'i1372';
+expt(16).date = '220419';
+expt(16).img_loc  = {'LM';'L2/3'};
+expt(16).inj_loc = {'LM'};
+expt(16).z = -200;
+expt(16).img_strct  = {'cells'};
+expt(16).driver = {'SLC'};
+expt(16).indicator = {'tg';'GCaMP6s'};
+expt(16).coFolder = {'002'};
+expt(16).coTime = {'1504'};
+expt(16).dirFolder = {'003'};
+expt(16).dirTime = {'1612'};
+expt(16).saveLoc = 'sara';
+
+%% i1369 220518 TF- 2Hz, 0.05cpd
+expt(17).mouse = 'i1369';
+expt(17).date = '220518';
+expt(17).img_loc  = {'V1';'L2/3'};
+expt(17).inj_loc = {'V1'};
+expt(17).z = -200;
+expt(17).img_strct  = {'cells'};
+expt(17).driver = {'SLC'};
+expt(17).indicator = {'tg';'GCaMP6s'};
+expt(17).rfFolder = {'002'}; %spatial receptive field
+expt(17).rfTime = {'1616'};
+expt(17).prFolder = {'003'}; %phase reversal (simple v. complex)
+expt(17).prTime = {'1722'};
+expt(17).saveLoc = 'sara';
