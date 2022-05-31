@@ -8,7 +8,7 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(2) = 134;
+day_id(2) = 169;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);
@@ -31,7 +31,7 @@ elseif strcmp(expt(day_id(1)).data_loc,'ACh')
         dat = 'data-i';
 end
 
-fnout = fullfile(rc.achAnalysis,'2p_analysis',mouse);
+fnout = fullfile(rc.achAnalysis,mouse);
 
 if expt(day_id(2)).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(2)).multiday_timesincedrug_hours) 'Hr'];
@@ -39,7 +39,7 @@ else
     dart_str = 'control';
 end
 
-fn_multi = fullfile(rc.achAnalysis,'2p_analysis',mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
 mkdir(fn_multi)
 data = cell(1,nd);
 fov_avg = cell(1,nd);
@@ -64,7 +64,7 @@ for id = 1:nd
     for irun = 1:nrun
         imgFolder = runs{irun};
         fName = [imgFolder '_000_000'];
-        cd(fullfile(root, '2p_data',mouse,expDate, imgFolder))
+        cd(fullfile(root,mouse,expDate, imgFolder))
         load(fName)
         if nrun == 1
             load(fullfile(fnout,expDate,imgFolder,'regOuts&Img.mat'))

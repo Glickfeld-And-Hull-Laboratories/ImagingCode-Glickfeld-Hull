@@ -106,12 +106,17 @@ for iexp = 14
     SI_avg = (resp_avg_rect-(test_avg_rect+mask_avg_rect))./(resp_avg_rect+(test_avg_rect+mask_avg_rect));
     [eye_n edges bin] = histcounts(stim_all,[1:5]);
    
-    figure;
-    movegui('center')
-    start = 1;
-    n = 1;
+    
+    if nCells>300
+        doPlot = 0;
+    else
+        figure;
+        movegui('center')
+        start = 1;
+        n = 1;
+    end
     for iCell =1:nCells
-        if start>25
+        if start>25 & doPlot
             sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
             figure;
@@ -122,13 +127,15 @@ for iexp = 14
         p_anova_all(iCell,1) = anova1(resp_all(iCell,:), stim_all,'off');
         if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
             [b_hat_all(iCell,1), amp_hat_all(iCell,1), per_hat_all(iCell,1),pha_hat_all(iCell,1),sse_all(iCell,1),R_square_all(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all)),SI_all(iCell,:));
-            subplot(5,5,start)
-            scatter(maskPhas(stim_all),SI_all(iCell,:));
-            hold on
-            scatter(maskPhas,SI_avg(iCell,:))
             yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
-            plot(phase_range, yfit_all(iCell,:,1));
-            title(['Rsq = ' num2str(chop(R_square_all(iCell,1),2)) '; p = ' num2str(chop(p_anova_all(iCell,1),2))])
+            if doPlot
+                subplot(5,5,start)
+                scatter(maskPhas(stim_all),SI_all(iCell,:));
+                hold on
+                scatter(maskPhas,SI_avg(iCell,:))
+                plot(phase_range, yfit_all(iCell,:,1));
+                title(['Rsq = ' num2str(chop(R_square_all(iCell,1),2)) '; p = ' num2str(chop(p_anova_all(iCell,1),2))])
+            end
         else
             b_hat_all(iCell,1) = max(SI_avg(iCell,:),[],2);
             amp_hat_all(iCell,1) = 0;
@@ -140,9 +147,10 @@ for iexp = 14
         end
         start = start+1;
     end
-    sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
-    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
-
+    if doPlot
+        sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+    end
     p_anova_shuf = nan(nCells,1);
     b_hat_shuf = nan(nCells,1); 
     amp_hat_shuf = nan(nCells,1); 
@@ -154,12 +162,14 @@ for iexp = 14
     
     rng(seed);
     stim_all_shuf = stim_all(randperm(length(stim_all)));
-    figure;
-    movegui('center')
-    start = 1;
-    n = 1;
+    if doPlot
+        figure;
+        movegui('center')
+        start = 1;
+        n = 1;
+    end
     for iCell = 1:nCells
-        if start>25
+        if start>25 & doPlot
             sgtitle([mouse ' ' date '- Thresh Shuffled- Trials < ' num2str(max_dist) '  deg'])
             print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
             figure;
@@ -170,13 +180,15 @@ for iexp = 14
         p_anova_shuf(iCell,1) = anova1(resp_all(iCell,:), stim_all_shuf,'off');
         if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
             [b_hat_shuf(iCell,1), amp_hat_shuf(iCell,1), per_hat_shuf(iCell,1),pha_hat_shuf(iCell,1),sse_shuf(iCell,1),R_square_shuf(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all_shuf)),SI_all(iCell,:));
-            subplot(5,5,start)
-            scatter(maskPhas(stim_all_shuf),SI_all(iCell,:));
-            hold on
-            scatter(maskPhas,SI_avg(iCell,:))
             yfit_shuf(iCell,:,1) = b_hat_shuf(iCell,1)+amp_hat_shuf(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_shuf(iCell,1) + 2.*pi/pha_hat_shuf(iCell,1)));
-            plot(phase_range, yfit_shuf(iCell,:,1));
-            title(['Rsq = ' num2str(chop(R_square_shuf(iCell,1),2)) '; p = ' num2str(chop(p_anova_shuf(iCell,1),2))])
+            if doPlot
+                subplot(5,5,start)
+                scatter(maskPhas(stim_all_shuf),SI_all(iCell,:));
+                hold on
+                scatter(maskPhas,SI_avg(iCell,:))
+                plot(phase_range, yfit_shuf(iCell,:,1));
+                title(['Rsq = ' num2str(chop(R_square_shuf(iCell,1),2)) '; p = ' num2str(chop(p_anova_shuf(iCell,1),2))])
+            end
         else
             b_hat_shuf(iCell,1) = max(SI_avg(iCell,:),[],2);
             amp_hat_shuf(iCell,1) = 0;
@@ -188,9 +200,10 @@ for iexp = 14
         end
         start = start+1;
     end
-    sgtitle([mouse ' ' date '- Shuffled Trials < ' num2str(max_dist) '  deg'])
-    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
-
+    if doPlot
+        sgtitle([mouse ' ' date '- Shuffled Trials < ' num2str(max_dist) '  deg'])
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
+    end
     save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'trN', 'seed', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd','SI_all_avg', 'max_dist')
     close all
 end

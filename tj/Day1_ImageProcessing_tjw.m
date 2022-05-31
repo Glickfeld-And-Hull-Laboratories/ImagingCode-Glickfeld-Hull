@@ -13,18 +13,18 @@ clear all
 clear global
 clc
 %% get path names
-date = '211129';
-ImgFolder = strvcat('001'); %could we use char() instead here?
-time = strvcat('1321');
-mouse = 'tj_100721';
+date = '220428';
+ImgFolder = strvcat('003'); %could we use char() instead here?
+time = strvcat('1238');
+mouse = 'i2517';
 run = strvcat('001'); %multiple depths?***
 nrun = size(ImgFolder,1); %what is this?***
 frame_rate = 15.5;
 run_str = catRunName(ImgFolder, nrun);
 ref_str = catRunName(run, size(run,1)); %what is this?***
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
+%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load data
 data = [];
@@ -93,7 +93,7 @@ end
 %frames; what about pixel 1,2 etc.
 %% Register data
 
-data_avg = mean(data(:,:,10001:10500),3); %mean of pixel values over selected range of frames
+data_avg = mean(data(:,:,22001:22500),3); %mean of pixel values over selected range of frames
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str])) %if this folder exists)
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat'])) %load this mat file
@@ -491,12 +491,12 @@ prefOri_bootdiff = abs(prefOri(2:end,:)-prefOri(1,:));
 prefOri_bootdiff(find(prefOri_bootdiff>90)) = 180-prefOri_bootdiff(find(prefOri_bootdiff>90));
 ind_theta90 = find(prctile(prefOri_bootdiff,90,1)<22.5);
 edges = [0 22.5:45:180]; 
-[bin ind_bin] = histc(prefOri(1,:),edges);
+[bin ind_bin] = histc(prefOri(1,:),edges); %how many pref oris are between 0-22.5? 22.5-67.5? etc.*
 ind_bin(find(ind_bin==5)) = 1;
 bin(1) = bin(1)+bin(5);
 bin(5) = [];
 
-tunedCells = cell(1,length(bin));
+tunedCells = cell(1,length(bin)); %what is this cutting down on?*** ***
 for i = 1:length(bin)
     tunedCells{i} = intersect(find(ind_bin==i),ind_theta90);
 end
@@ -518,9 +518,11 @@ fov_norm{1}(fov_norm{1} > (brightnessScaleFactor*255)) = brightnessScaleFactor*2
 
 % process the red channel from a 1000 frame run
 % select the correct date = either "1" for D1 or "2" for D2/3
+
+%1040 run
 irun = 1;
-WL = '920'; %should this be 1040 for red?***
-ImgFolder = strvcat('001'); %is this where we change the run?***
+WL = '1040'; 
+ImgFolder = strvcat('002'); %is this where we change the run?***
 run = catRunName(ImgFolder, nrun);
 imgMatFile = [ImgFolder '_000_000.mat'];
 CD = fullfile(tj_fn, [mouse '\' date '_' mouse '\' ImgFolder(irun,:)]);
@@ -531,15 +533,27 @@ data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames); %why subset 1:11 h
 mkdir(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run]));
 
 if size(data_temp,1)>1
-data_rg = squeeze(data_temp(1,:,:,:));
-data_rr = squeeze(data_temp(2,:,:,:));
-[out data_g_reg] = stackRegister(data_rg,mean(data_rg,3));
-[out2 data_r_reg] = stackRegister_MA(data_rr,[],[],out);
-red = mean(data_r_reg,3);
-greenChImg = mean(data_g_reg,3);
-clear data_temp 
+data_1040_green = squeeze(data_temp(1,:,:,:)); %PMT 0 (green)
+data_1040_red = squeeze(data_temp(2,:,:,:)); %PMT 1 (red)
+[out_1040_red_regtoself data_1040_red_regtoself] = stackRegister(data_1040_red,mean(data_1040_red,3)); %register 1040 red channel to self
+[out_1040_green_regtomaingreen data_1040_green_regtomaingreen] = stackRegister(data_1040_green,data_reg_avg);
+[out_1040_red_regto1040green data_red_regto1040green] = stackRegister_MA(mean(data_1040_red_regtoself,3),[],[],out_1040_green_regtomaingreen);
+data_red_regto1040green_avg = mean(data_red_regto1040green,3);
+
+%do the line below registered to data_reg_avg***
+%[out data_g_reg] = stackRegister(data_rg,mean(data_rg,3)); %method 1
+%[out2 data_r_reg] = stackRegister_MA(data_rr,[],[],out); %method 1
+%[out3 data_g_reg_avg] = stackRegister(mean(data_g_reg,3),data_reg_avg); 
+%[out4 data_r_reg_avg] = stackRegister_MA(mean(data_rr,3),[],[],out3);
+
+
+red = data_red_regto1040green_avg;
+%greenChImg = mean(data_g_reg,3);
+%clear data_temp 
 fov_red{1} = uint8((red./max(red(:))).*255);
 end
+
+
 
 %% select red cells
 % size of cell box

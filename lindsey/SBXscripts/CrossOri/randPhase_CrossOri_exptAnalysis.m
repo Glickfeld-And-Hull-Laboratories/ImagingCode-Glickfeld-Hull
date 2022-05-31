@@ -60,6 +60,11 @@ tt = (1-prewin_frames:postwin_frames).*(1/frame_rate);
 data_resp = nan(prewin_frames+postwin_frames,nCells,nTrials);
 data_f = nan(1,nCells,nTrials);
 
+if exist('npSub_tc','var') == 0
+    npSub_tc = data_tc;
+    clear data_tc
+end
+
 for itrial = 1:nTrials
     if cStimOn(itrial) + postwin_frames < sz(3)
         data_resp(:,:,itrial) = npSub_tc(cStimOn(itrial)-prewin_frames:cStimOn(itrial)+postwin_frames-1,:);

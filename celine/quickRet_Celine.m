@@ -23,8 +23,7 @@ for irun = 1:nrun
     if strcmp(rc.name,'ashle')
     CD = ['Z:\home\ashley\data\' mouse '\two-photon imaging\' date '\' ImgFolder(irun,:)];
     elseif strcmp(rc.name,'celine')
-    % = ['Z:\home\celine\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
-    CD = ['Z:\home\ACh\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
+    CD = ['Z:\home\celine\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
     elseif strcmp(rc.name,'tw299')
     CD = ['Z:\All_Staff\home\tj\2p_Imaging\' mouse '\' datemouse '\' ImgFolder(irun,:)];
     else
@@ -97,9 +96,10 @@ expt_input = concatenateDataBlocks(temp);
     clear data_reg
     end
     
-%     sz = size(data);
-%     data = data(:,:,1:(nOn+nOff)*ntrials);
+    sz = size(data);
+    data = data(:,:,1:(nOn+nOff)*ntrials);
     if size(data,3) < 10000
+       
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
         if (nOn+nOff)*ntrials > size(data,3)
@@ -191,7 +191,7 @@ expt_input = concatenateDataBlocks(temp);
         data_tr = reshape(data_tc,[nOn+nOff, ntrials]);
         data_f = mean(data_tr(nOff/2:nOff,:),1);
         data_df = bsxfun(@minus, data_tr, data_f); 
-        data_dfof = bsxfun(@rdivide,data_df, squeeze(data_f)); 
+        data_dfof = bsxfun(@rdivide,data_df(nOff:nOff+nOn,:), squeeze(data_f)); 
 
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
