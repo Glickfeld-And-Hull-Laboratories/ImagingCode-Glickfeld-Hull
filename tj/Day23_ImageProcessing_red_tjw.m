@@ -6,15 +6,15 @@ clear all;
 clear global;
 clc;
 %% get path names D2
-ref_date = '220322';
-date = '220324';
-time = strvcat('1348');
+ref_date = '220413';
+date = '220419';
+time = strvcat('1220');
 alignToRef = 1;
 ImgFolder = strvcat('003');
-mouse = 'i2513';
+mouse = 'i2515';
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
-ref_str = 'runs-001';
+ref_str = 'runs-003';
 run_str = catRunName(ImgFolder, nrun);
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
 fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
@@ -71,7 +71,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((
 
 %% Register data - identify clearest stack and align frames to that
 
-data_avg = mean(data(:,:,24001:24500),3); 
+data_avg = mean(data(:,:,34001:34500),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -105,7 +105,7 @@ if isfield(input, 'nScansOn')
         sz = size(data_reg);
 %         make data_tr smaller for dfof images to not use all of the memory
 
-        data_tr = reshape(single(data_reg(:,:,1:nframes/2)),[sz(1), sz(2), nOn+nOff, ntrials/2]);
+        data_tr = reshape(single(data_reg(:,:,1:nframes/4)),[sz(1), sz(2), nOn+nOff, ntrials/4]);
 
         data_f = mean(double(data_tr(:,:,nOff/2:nOff,:)),3);
         data_df = bsxfun(@minus, double(data_tr), data_f); 
@@ -242,7 +242,7 @@ redCells = multiDayD1.redCells;
 %% process the red channel from a 1000 frame run on day 2/3
 irun = 1;
 WL = '1040';
-ImgFolder = strvcat('001');
+ImgFolder = strvcat('002');
 run = catRunName(ImgFolder, nrun);
 imgMatFile = [ImgFolder '_000_000.mat'];
 CD = fullfile(tj_fn, [mouse '\' date '_' mouse '\' ImgFolder(irun,:)]);
