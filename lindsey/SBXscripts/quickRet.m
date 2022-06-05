@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '220519';
-mouse = 'i1369';
-ImgFolder = '001';
-time = '1553';
+date = '220529';
+mouse = 'i1370';
+ImgFolder = '002';
+time = '1451';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -156,6 +156,8 @@ expt_input = concatenateDataBlocks(temp);
         elseif strcmp(rc.name,'robin')
             mkdir(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
             print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')    
+        elseif strcmp(rc.name,'celine')
+            print('ret9pos.pdf', '-dpdf','-bestfit')    
         end
 
         if strcmp(rc.name,'ashle')
@@ -224,4 +226,6 @@ expt_input = concatenateDataBlocks(temp);
     print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
     elseif strcmp(rc.name,'robin')
            print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
+      elseif strcmp(rc.name,'celine')
+            print('retFOV.pdf', '-dpdf','-bestfit') 
     end

@@ -279,7 +279,7 @@ for icell = 1:nc
             subplot(3,2,start+5)
             imagesc(reg_max)
             title(num2str(r_max))
-           
+         
             prompt = 'Choose image: 1- Corr, 2- Avg/Red, 3- Max, 0- skip: ';
             x = input(prompt);
             switch x

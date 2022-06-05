@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 172; %enter the post-DART day ID here
+day_id(1) = 175; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -58,7 +58,7 @@ cellTCs_all = cell(1,nd);
 %% load all data 
 runFolder = [];
 for id = 1:nd 
-    clear global
+    %clear global
     expDate = expt(day_id(id)).date;
     runs = eval(['expt(day_id(' num2str(id) ')).' cell2mat(dataStructLabels) '_runs']);
     nrun = length(runs);
@@ -284,6 +284,7 @@ for icell = 1:nc
             subplot(3,2,start+5)
             imagesc(reg_max)
             title(num2str(r_max))
+            drawnow
            
             prompt = 'Choose image: 1- Corr, 2- Avg/Red, 3- Max, 0- skip: ';
             x = input(prompt);
