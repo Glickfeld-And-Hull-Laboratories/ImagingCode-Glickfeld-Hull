@@ -38,7 +38,7 @@ d3_matches = load(fullfile(fnout, [date_d3 '_' mouse], [date_d3 '_' mouse '_' re
 %%
 %identify matched cells and their pref oris for each day
 
-%find cells that match from d1 to d2 and d1 to d3
+%find cells that match from d1 to d2 and d1 to d3  ***FIX THIS!!!
 match_d2 = find([d2_matches.cellImageAlign.pass]); 
 match_d3 = find([d3_matches.cellImageAlign.pass]); 
 
