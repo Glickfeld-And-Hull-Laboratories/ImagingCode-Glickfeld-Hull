@@ -84,7 +84,7 @@ mask_avg_all = [];
 mouse_list = [];
 
 totCells = zeros(nexp,1);
-for iexp = 20 %7:nexp
+for iexp = 17:18 %7:nexp
     if strcmp(expt(iexp).inj_loc,inj_area) & strcmp(expt(iexp).driver,driver) & strcmp(expt(iexp).img_loc,img_area)        
         mouse = expt(iexp).mouse;
         mouse_list = strvcat(mouse_list, mouse);
@@ -819,10 +819,10 @@ SG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 summaryDir = fullfile(SG_base, 'Analysis', '2P', 'CrossOri', 'RandPhaseSummary');
 svName = 'randPhase';
 dateOfAnalysis = '220603';
-driver_list= strvcat('SLC', 'SLC', 'SLC', 'syn','syn'); 
-area = 'V1_LM_LP_LI';
-img_list = strvcat('V1', 'LM', 'LI', 'LM','LP');
-inj_list = strvcat('V1', 'LM', 'LI', 'V1', 'V1');
+driver_list= strvcat('SLC', 'SLC', 'syn','syn'); 
+area = 'V1_LM_LP';
+img_list = strvcat('V1', 'LM', 'LM','LP');
+inj_list = strvcat('V1', 'LM', 'V1', 'V1');
 narea = length(img_list);
 
 C = { [.0 .45 .0], [.2 .153 .91]}; %cell array of colors
@@ -836,19 +836,20 @@ figure;
         leg_str{iA}=[img_list(iA,:) ' n=' num2str(length(ind))];
         nCells = length(ind);
         
-        subplot(2,2,1)
+        subplot(1,2,1)
             cdfplot(amp_all_all(ind,:));
             hold on
             xlim([0 .8])
             legend(leg_str, 'location', 'southeast')
             xlabel('Phase modulation amplitude')
             
-        subplot(2,2,2)
+        subplot(1,2,2)
             cdfplot(b_all_all(ind,:));
             hold on
             legend(leg_str, 'location', 'southeast')
             xlabel('Phase modulation baseline')
+
     end
- movegui('center')
+ 
 
     print(fullfile(summaryDir, [svName '_' area '_CompareAxons.pdf']),'-dpdf', '-fillpage')  
