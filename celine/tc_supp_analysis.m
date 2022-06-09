@@ -3,12 +3,12 @@ clear all; clear global; close all
 
 %identifying animal and run
 
-mouse = 'WK19';
-date = '220418';
-time = char('1601');
+
+mouse = 'WK20';
+date = '220514';
+time = char('1353');
 ImgFolder = char('002');
 RetImgFolder = char('001');
-
 
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
@@ -206,7 +206,7 @@ end
 
 
 %% looking at wheel speed
-wheel_speed = wheelSpeedCalc(input,32,'purple'); 
+wheel_speed = wheelSpeedCalc(input,32,'orange'); 
 nanmean(wheel_speed)
 
 
@@ -317,7 +317,7 @@ figure;
 sgtitle([mouse, ', ', num2str(length(goodFitResp)),' cells'])
 
 %% 
-DistCutoffs=[0,10,20];
+DistCutoffs=[0,5,10,20];
 
 [n n2] = subplotn(1*(length(DistCutoffs)-1));
 x=1;
@@ -336,7 +336,7 @@ figure;
 
         subplot(n,n2,x)
 
-        shadedErrorBar(t,temp_mean,temp_se);
+        shadedErrorBar(t(60:90),temp_mean(60:90),temp_se(60:90));
         hold on
         fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
         hold on

@@ -15,7 +15,7 @@ nd=2;%hard coding for two days per experimental session
 pre=2;
 post=1;
 
-targetCon = .5 %what contrast to extract for all data - must be one that all datasets had
+targetCon = 0.5 %what contrast to extract for all data - must be one that all datasets had
 
 frame_rate = 15;
 
@@ -24,7 +24,17 @@ for iSess = 2:nSess
     sess_title = strcat(sess_title,'_',string(sess_list(iSess)));
 end
 d=string(datetime('today'));
-fnout= fullfile(rc.achAnalysis,strcat('concat', sess_title),d);
+if nSess == 1
+         if expt(sess_list(1)).multiday_timesincedrug_hours>0
+            dart_str = [expt(sess_list(1)).drug '_' num2str(expt(sess_list(1)).multiday_timesincedrug_hours) 'Hr'];
+        else
+            dart_str = 'control';
+        end
+        
+        fnout = fullfile(rc.achAnalysis,expt(sess_list(1)).mouse,['multiday_' dart_str],d);
+else
+    fnout= fullfile(rc.achAnalysis,strcat('concat', sess_title),d);
+end
 mkdir(fnout);
 cd(fnout)
 clear d sess_title
@@ -455,7 +465,7 @@ end
 clear txt1 txt2
 
 %% scatterplot of max df/f for day 1 vs day 2, and each subplot is one cell type
-green_ex_list=[]; %to hilight particular cells
+green_ex_list=[]; %to highlight particular cells
 red_ex_list=[];
 
 for iCon = 1:nCon
@@ -468,8 +478,8 @@ hold on
 scatter(nanmean(pref_responses_stat_concat{pre}(green_ind_concat,iCon)),nanmean(pref_responses_stat_concat{post}(green_ind_concat,iCon)),15,'r*')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-ylim([-.1 .5])
-xlim([-.1 .5])
+ylim([-.1 1])
+xlim([-.1 1])
 refline(1)
 title('HT- stationary')
 axis square
@@ -499,8 +509,8 @@ hold on
 scatter(nanmean(pref_responses_loc_concat{pre}(green_ind_concat,iCon)),nanmean(pref_responses_loc_concat{post}(green_ind_concat,iCon)),15,'r*')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-ylim([-.1 .5])
-xlim([-.1 .5])
+ylim([-.1 1.5])
+xlim([-.1 1.5])
 refline(1)
 title('HT- running')
 axis square
@@ -525,7 +535,11 @@ sgtitle(num2str(cons(iCon)))
 print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
 end
 
-%% 
+%%
+responseTable = table([nanmean(pref_responses_stat_concat{pre}(green_ind_concat));nanmean(pref_responses_stat_concat{post}(green_ind_concat))],[nanmean(pref_responses_stat_concat{pre}(red_ind_concat));nanmean(pref_responses_stat_concat{post}(red_ind_concat))],[nanmean(pref_responses_loc_concat{pre}(green_ind_concat));nanmean(pref_responses_loc_concat{post}(green_ind_concat))],[nanmean(pref_responses_loc_concat{pre}(red_ind_concat));nanmean(pref_responses_loc_concat{post}(red_ind_concat))],'VariableNames',{'Pyramidal cells stat'  'HT+ cells stat' 'Pyramidal cells loc'  'HT+ cells loc'}, 'RowNames',{'Pre'  'Post'})
+writetable(responseTable,fullfile(fnout,[num2str(targetCon) 'responseTable.csv']),'WriteRowNames',true)
+
+    %% 
 pref_responses_stat_transform = cell(1,nd);
 for id = 1:nd
     
@@ -606,7 +620,7 @@ clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
 
 figure; movegui('center') 
 subplot(1,2,1)
-scatter((tHalfMax{pre}(green_ind_concat)),(tHalfMax{post}(green_ind_concat)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.01)
+scatter((tHalfMax{pre}(green_ind_concat)),(tHalfMax{post}(green_ind_concat)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.1)
 hold on
 ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
@@ -623,7 +637,7 @@ hold off
 
 
 subplot(1,2,2)
-scatter((tHalfMax{pre}(red_ind_concat)),(tHalfMax{post}(red_ind_concat)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.01)
+scatter((tHalfMax{pre}(red_ind_concat)),(tHalfMax{post}(red_ind_concat)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.1)
 hold on
 ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
@@ -690,12 +704,12 @@ end
 
 %% example cell tcs - this is to pull out some individual example cell traces
 %
-cellList=[12 68]; %enter the cells you're interested in by their index wihtin the keep dataframe
+cellList=[49 93]; %enter the cells you're interested in by their index wihtin the keep dataframe
 
 
 c = linspace(1,10,length(cellList));
 figure
-scatter((pref_responses_stat{pre}(cellList,iCon)),(pref_responses_stat{post}(cellList,iCon)),[],c,'filled')
+scatter((pref_responses_stat_concat{pre}(cellList)),(pref_responses_stat_concat{post}(cellList)),[],c,'filled')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([-.1 .5])

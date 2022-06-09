@@ -5,10 +5,10 @@ ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
-doGreenOnly = false;
+doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 171;
+day_id = 175;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -92,7 +92,7 @@ for irun = 1:nruns
 
     if info.config.pmt1_gain > 0.5
         data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
-        %data_temp_r = squeeze(data_temp_g(2,:,:,:));
+        data_temp_r = squeeze(data_temp_g(2,:,:,:));
         data_temp_g = squeeze(data_temp_g(1,:,:,:));
     else
         data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
@@ -142,6 +142,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
         colormap gray; 
         clim([100 3000]); 
     end
+    
     regImgStartFrame = input('Enter Registration Image Start Frame, ENTER INTO DS:');
     regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
     [outs,data_g_reg] = stackRegister(data_g,regImg);
@@ -296,7 +297,7 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
+%redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
@@ -337,7 +338,7 @@ for i = 1:nCells
 end
 
 mask_np = imCellNeuropil(mask_cell, 3, 5);
-save(fullfile(fnout, 'mask_cell.mat'), 'redChImg', 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
+save(fullfile(fnout, 'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
 
 %% extract timecourses
 
