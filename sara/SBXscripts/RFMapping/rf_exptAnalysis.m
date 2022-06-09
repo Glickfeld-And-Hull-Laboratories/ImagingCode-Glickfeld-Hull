@@ -1,5 +1,5 @@
 clc; clear all; close all;
-ds = 'CrossOriRandPhase_15Hz_ExptList';
+ds = 'RFMapping_15Hz_ExptList_SG';
 
 rc = behavConstsAV;
 eval(ds)
@@ -7,7 +7,7 @@ nexp = size(expt,2);
 
 frame_rate = 15;
 
-for iexp  = 17
+for iexp  = 1
 %%
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
@@ -15,7 +15,8 @@ area = expt(iexp).img_loc{1};
 ImgFolder = expt(iexp).rfFolder;
 time = expt(iexp).rfTime;
 nrun = length(ImgFolder);
-run_str = catRunName(cell2mat(ImgFolder), nrun);
+% run_str = catRunName(cell2mat(ImgFolder), nrun);
+run_str = 'runs-002';
 
 base = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\' expt(iexp).saveLoc];
 
@@ -64,7 +65,6 @@ data_dfof_con_tc_avg = nan(nOn+nOff, nCells, nPhas, nEl, nAz);
 resp = zeros(nCells, nEl*nAz);
 h_resp = zeros(nCells, nPhas, nEl, nAz);
 p_resp = zeros(nCells, nEl, nAz);
-
 indOn = [];
 indOff = [];
 indResp = [];
@@ -72,6 +72,7 @@ indInt = [];
 hOn = [];
 hOff = [];
 
+start = 1;
 for ip = 1:nPhas
     ind_p = find(stimPhas == Phas(ip));
     for iE = 1:nEl
@@ -80,6 +81,7 @@ for ip = 1:nPhas
             ind_Az = find(stimAz == Az(iA));
             ind = intersect(ind_p,intersect(ind_Az,ind_El));
             trialsperstim(ip,iE,iA) = length(ind);
+            stim_list(start,:) = [Phas(ip) El(iE) Az(iA)];
             resp_cell{ip,iE,iA} = squeeze(mean(data_dfof_tc(resp_win,:,ind),1));
             base_cell{ip,iE,iA} = squeeze(mean(data_dfof_tc(base_win,:,ind),1));
             resp_cell_m{ip,iE,iA} = nanmean(squeeze(mean(data_dfof_tc(resp_win,:,ind),1)),2);
@@ -87,6 +89,7 @@ for ip = 1:nPhas
             data_dfof_con_tc_avg(:,:,ip,iE,iA,2) = squeeze(nanstd(data_dfof_tc(:,:,ind),[],3)./sqrt(length(ind)));
             [h_resp(:,ip,iE,iA) p_resp] =  ttest2(resp_cell{ip,iE,iA},base_cell{ip,iE,iA},'dim',2,'tail','right');
             trialInd{ip,iE,iA} = ind;
+            start = start+1;
         end
     end
     if ip == 1
@@ -101,6 +104,32 @@ for ip = 1:nPhas
     indInt = intersect(indOn,indOff);
 end
 
+%anova instead of ttest
+stimSq = flip(reshape(1:(nEl*nAz), nEl, nAz).',1);
+stimSq1 = flip(reshape(stimSq, nEl, []));
+
+cellOn = squeeze(resp_cell(1,:,:));
+
+% skel = cell(275,40);
+% for i = 1:(nEl*nAz)
+%     skel = [skel; resp_cellre{i}];
+% end
+
+
+resp_cellre = reshape(resp_cell, ip, nEl*nAz);
+maxlength = max(cellfun(@numel, resp_cellre));
+
+
+% for ic = 1:nCells
+%     for ip = 1:nPhas
+%        for iE = 1:nEl
+%            for iA = 1:nAz
+%               resp_cell{ip,iE,iA} = squeeze(mean(data_dfof_tc(resp_win,:,ind),1));
+%               resp_cellre = reshape(resp_cell, ip, nEl*nAz);
+%               [p_resp] = anova1(resp_cellre(ip,:)
+
+              
+
 
 
 
@@ -114,20 +143,27 @@ cellOff = cat(3,cellOff{:});
 cellOff = reshape(cellOff, nCells, nEl, nAz);
 cellOff = cellOff(indResp,:,:);
 
+a = squeeze(cellOn(i,:,:));
 
 figure;
 s = 1;
-for i = 1:36
-    subplot(6,6,s)
-    h = heatmap(squeeze(cellOn(i,:,:)), 'ColorMap', parula)
+for i = 15
+    subplot(1,2,s)
+    h = heatmap(squeeze(cellOn(i,:,:)), 'ColorMap', flipud(autumn), 'CellLabelColor', 'none');
     h.Title = 'On';
+    h.GridVisible ='off';
     
-    subplot(6,6,s+1)
-    h = heatmap(squeeze(cellOff(i,:,:)), 'ColorMap', parula)
+
+    subplot(1,2,s+1)
+    h = heatmap(squeeze(cellOff(i,:,:)), 'ColorMap', flipud(summer), 'CellLabelColor', 'none');
     h.Title = 'Off';
+    h.GridVisible = 'off';
+
     movegui('center')
     s=s+2;
 end 
+
+    imagesc(squeeze(cellOn(15,:,:)))
 
 
 %looking at intersect only:
@@ -149,17 +185,33 @@ figure;
 s = 1;
 for i = 41:52
     subplot(6,4,s)
-    h = heatmap(squeeze(cellOn(i,:,:)), 'ColorMap', parula)
+    h = heatmap(squeeze(cellOn(i,:,:)), 'ColorMap', parula);
     h.Title = 'On';
     
     subplot(6,4,s+1)
-    h = heatmap(squeeze(cellOff(i,:,:)), 'ColorMap', parula)
+    h = heatmap(squeeze(cellOff(i,:,:)), 'ColorMap', parula);
     h.Title = 'Off';
     movegui('center')
     s=s+2;
 end 
+
+
+
     print(fullfile(summaryDir, ['_heatmaps.pdf']),'-dpdf', '-fillpage')
 
+
+figure;
+s = 1;
+for i = 56
+    subplot(1,2,s)
+    a = pcolor(squeeze(cellOn(i,:,:)));
+    
+    subplot(1,2,s+1)
+    a = imagesc(squeeze(cellOn(i,:,:)));
+%     a.FaceColor = 'interp';
+    s=s+2;
+end 
+    
 
 
 
