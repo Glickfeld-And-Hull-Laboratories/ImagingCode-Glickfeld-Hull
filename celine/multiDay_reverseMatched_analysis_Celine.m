@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 131; %enter post-DART day
+day_id = 133; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -41,7 +41,7 @@ nKeep = size(tc_trial_avrg_stat{post},2);
 clear d
 % find stimulus conditions
 frame_rate = input.frameImagingRateMs;
-%%
+%
 
 %tells the contrast, direction and orientation for each trial each day
 tCon_match = cell(1,nd);
@@ -63,6 +63,165 @@ nCon = length(cons);
 nOn = input(1).nScansOn;
 nOff = input(1).nScansOff;
 
+%% plot trial-by-trial activity in green vs red cell
+
+trialResp=cell(1,2);
+green_trialResp=cell(2,2);
+red_trialResp=cell(2,2);
+linCellProps = nan(6,4);
+
+for id = 1:nd
+trialResp{id} = mean(data_trial_keep{id}(stimStart:(stimStart+nOn),:,:),1);
+green_trialResp{1,id}=mean(trialResp{id}(:,~RIx{id},green_ind_keep),3);
+green_trialResp{2,id}=mean(trialResp{id}(:,RIx{id},green_ind_keep),3);
+red_trialResp{1,id}=mean(trialResp{id}(:,~RIx{id},red_ind_keep),3);
+red_trialResp{2,id}=mean(trialResp{id}(:,RIx{id},red_ind_keep),3);
+end
+
+%
+figure;
+subplot(1,2,1)
+scatter(green_trialResp{1,pre},red_trialResp{1,pre},10,'MarkerEdgeColor','k')
+ylabel('SOM activity')
+xlabel('Pyr activity')
+title('stationary')
+% ylim([-.05 .15])
+% xlim([-.05 .35])
+hold on
+scatter(green_trialResp{1,post},red_trialResp{1,post},10,'MarkerEdgeColor','b')
+hold on
+
+
+idx = isnan(red_trialResp{1,pre});
+linfit = polyfit(green_trialResp{1,pre}(~idx),red_trialResp{1,pre}(~idx),1);
+y1 = polyval(linfit,green_trialResp{1,pre});
+plot(green_trialResp{1,pre},y1,'k');
+[R,p]=corrcoef(green_trialResp{1,pre}(~idx),red_trialResp{1,pre}(~idx)); 
+linCellProps(1,1)=linfit(1); %slope
+linCellProps(2,1)=linfit(2); %intercept
+linCellProps(3,1)=R(2);
+linCellProps(4,1)=p(2);
+linCellProps(5,1)=min(green_trialResp{1,pre});
+linCellProps(6,1)=max(green_trialResp{1,pre});
+
+hold on
+idx2 = isnan(red_trialResp{1,post});
+linfit = polyfit(green_trialResp{1,post}(~idx2),red_trialResp{1,post}(~idx2),1);
+y2 = polyval(linfit,green_trialResp{1,post});
+plot(green_trialResp{1,post},y2,'b');
+[R,p]=corrcoef(green_trialResp{1,post}(~idx2),red_trialResp{1,post}(~idx2)); 
+linCellProps(1,2)=linfit(1); %slope
+linCellProps(2,2)=linfit(2); %intercept
+linCellProps(3,2)=R(2);
+linCellProps(4,2)=p(2);
+linCellProps(5,2)=min(green_trialResp{1,post});
+linCellProps(6,2)=max(green_trialResp{1,post});
+set(gca, 'TickDir', 'out')
+
+
+subplot(1,2,2)
+scatter(green_trialResp{2,pre},red_trialResp{2,pre},10,'MarkerEdgeColor','k')
+ylabel('SOM activity')
+xlabel('Pyr activity')
+title('running')
+% ylim([-.05 .15])
+% xlim([-.05 .35])
+hold on
+scatter(green_trialResp{2,post},red_trialResp{2,post},10,'MarkerEdgeColor','b')
+hold on
+
+idx = isnan(red_trialResp{2,pre});
+linfit = polyfit(green_trialResp{2,pre}(~idx),red_trialResp{2,pre}(~idx),1);
+y1 = polyval(linfit,green_trialResp{2,pre});
+plot(green_trialResp{2,pre},y1,'k');
+[R,p]=corrcoef(green_trialResp{2,pre}(~idx),red_trialResp{2,pre}(~idx)); 
+linCellProps(1,3)=linfit(1); %slope
+linCellProps(2,3)=linfit(2); %intercept
+linCellProps(3,3)=R(2);
+linCellProps(4,3)=p(2);
+linCellProps(5,3)=min(green_trialResp{2,pre});
+linCellProps(6,3)=max(green_trialResp{2,pre});
+
+
+hold on
+idx2 = isnan(red_trialResp{2,post});
+linfit1 = polyfit(green_trialResp{2,post}(~idx2),red_trialResp{2,post}(~idx2),1);
+y2 = polyval(linfit,green_trialResp{2,post});
+plot(green_trialResp{2,post},y2,'b');
+[R,p]=corrcoef(green_trialResp{2,post}(~idx2),red_trialResp{2,post}(~idx2)); 
+linCellProps(1,4)=linfit(1); %slope
+linCellProps(2,4)=linfit(2); %intercept
+linCellProps(3,4)=R(2);
+linCellProps(4,4)=p(2);
+linCellProps(5,4)=min(green_trialResp{2,post});
+linCellProps(6,4)=max(green_trialResp{2,post});
+
+sgtitle('Average response for each trial')
+x0=5;
+y0=5;
+width=5;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca, 'TickDir', 'out')
+
+print(fullfile(fn_multi_analysis,[ 'HT_Pyr_relationship.pdf']),'-dpdf');
+
+
+%% response by condition for cells matched across all conditions
+% find cells that I ahve running data for on both days
+haveRunning_pre = ~isnan(pref_responses_loc{pre});
+haveRunning_post = ~isnan(pref_responses_loc{post});
+haveRunning_both = find(haveRunning_pre.* haveRunning_post);
+haveRunning_green = intersect(haveRunning_both, green_ind_keep);
+haveRunning_red = intersect(haveRunning_both, red_ind_keep);
+
+
+responseByCond = nan((nCon*2),4);
+
+for iCon = 1:nCon
+    if iCon == 1
+        counter=1
+    else
+        counter=counter+2
+    end
+    
+    responseByCond(counter,:)=[mean(pref_responses_stat{pre}(haveRunning_green,iCon), "omitnan") mean(pref_responses_stat{pre}(haveRunning_red,iCon), "omitnan") mean(pref_responses_stat{post}(haveRunning_green,iCon), "omitnan") mean(pref_responses_stat{post}(haveRunning_red,iCon), "omitnan")]
+    responseByCond((counter+1),:)=[mean(pref_responses_loc{pre}(haveRunning_green,iCon), "omitnan") mean(pref_responses_loc{pre}(haveRunning_red,iCon), "omitnan") mean(pref_responses_loc{post}(haveRunning_green,iCon), "omitnan") mean(pref_responses_loc{post}(haveRunning_red,iCon), "omitnan")]
+
+end
+
+responseByCondProps = nan(6,2);
+figure;
+scatter(responseByCond(:,1),responseByCond(:,2),'k')
+hold on
+linfit = polyfit(responseByCond(:,1),responseByCond(:,2),1);
+y1 = polyval(linfit,responseByCond(:,1));
+plot(responseByCond(:,1),y1,'k');
+[R,p]=corrcoef(responseByCond(:,1),responseByCond(:,2)); 
+responseByCondProps(1,1)=linfit(1); %slope
+responseByCondProps(2,1)=linfit(2); %intercept
+responseByCondProps(3,1)=R(2);
+responseByCondProps(4,1)=p(2);
+responseByCondProps(5,1)=min(responseByCond(:,1));
+responseByCondProps(6,1)=max(responseByCond(:,1));
+hold on
+
+scatter(responseByCond(:,3),responseByCond(:,4),'b')
+hold on
+linfit = polyfit(responseByCond(:,3),responseByCond(:,4),1);
+y2 = polyval(linfit,responseByCond(:,3));
+plot(responseByCond(:,3),y2,'b');
+[R,p]=corrcoef(responseByCond(:,3),responseByCond(:,4)); 
+responseByCondProps(1,2)=linfit(1); %slope
+responseByCondProps(2,2)=linfit(2); %intercept
+responseByCondProps(3,2)=R(2);
+responseByCondProps(4,2)=p(2);
+responseByCondProps(5,2)=min(responseByCond(:,3));
+responseByCondProps(6,2)=max(responseByCond(:,3));
+
+save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'linCellProps','responseByCond','responseByCondProps')
+
+clear R p x0 y0 y1 y2 linfit
 %% make figure with se shaded, averaging over contrasts and stationary vs. running
 
 tc_green_avrg = cell(1,nd); %this will be the average across all green cells - a single line
@@ -1527,3 +1686,4 @@ figure; image(rgb);  movegui('center')
 hold on
 bound = cell2mat(bwboundaries(keep_masks(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+

@@ -40,9 +40,9 @@ frame_rate = input.frameImagingRateMs;
 % fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
 % cd(fn);
 % load('redImage.mat');  
-% load('mask_cell.mat');
-%     
-%     
+% % load('mask_cell.mat');
+% %     
+% %     
 % % cell_stats=regionprops(mask_cell_red);
 % % figure; imagesc(redChImg), colormap gray; caxis([200 1000]);
 % % hold on
@@ -53,11 +53,11 @@ frame_rate = input.frameImagingRateMs;
 % %             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
 % %     
 % % end
-% 
-% red_fluor_all{i} = stackGetTimeCourses(redChImg, mask_cell);
-% end
-% red_fluor_match_d1=red_fluor_all{1}(:,match_ind);
-% z_red_fluor_d1=zscore(red_fluor_match_d1);
+% % 
+% % red_fluor_all{i} = stackGetTimeCourses(redChImg, mask_cell);
+% % end
+% % red_fluor_match_d1=red_fluor_all{1}(:,match_ind);
+% % z_red_fluor_d1=zscore(red_fluor_match_d1);
 
 
 %% stimulus props

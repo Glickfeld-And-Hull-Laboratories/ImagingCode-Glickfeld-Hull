@@ -15,7 +15,7 @@ nd=2;%hard coding for two days per experimental session
 pre=2;
 post=1;
 
-targetCon = 0.5 %what contrast to extract for all data - must be one that all datasets had
+targetCon = .5%what contrast to extract for all data - must be one that all datasets had
 
 frame_rate = 15;
 
@@ -56,16 +56,12 @@ dfof_max_diff_concat=[];
 nKeep_concat=[];
 LMI_concat = cell(1,nd);
 data_resp_concat = cell(1,nd);
-% statCounts=[];
-% locCounts=[];
 
-%add locomotion and and stationary TCs?
 for iSess = 1:nSess
     day_id = sess_list(iSess)
     mouse = expt(day_id).mouse;
     mice=[mice;mouse];
 
-   
     if expt(day_id).multiday_timesincedrug_hours>0
         dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
     else
@@ -77,7 +73,6 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'resp_keep.mat'))
     load(fullfile(fn_multi,'input.mat'))
     load(fullfile(fn_multi,'locomotion.mat'))
-    
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -139,8 +134,15 @@ nOri=length(oris);
 nKeep_total = sum(nKeep_concat);
 mean(RIx_concat{pre})
 mean(RIx_concat{post})
+%% find cells that I ahve running data for on both days
+haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
+haveRunning_post = ~isnan(pref_responses_loc_concat{post});
+haveRunning_both = find(haveRunning_pre.* haveRunning_post);
+haveRunning_green = intersect(haveRunning_both, green_ind_concat);
+haveRunning_red = intersect(haveRunning_both, red_ind_concat);
 
-%% make figure with se shaded, averaging over contrasts and stationary vs. running
+
+%% make figure with se shaded, averaging over stationary vs. running
 
 tc_green_avrg = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg = cell(1,nd); %same for red
@@ -149,13 +151,13 @@ tc_red_se = cell(1,nd); %same for red
 
 for id = 1:nd
 
-    tc_green_avrg{id}(:)=nanmean(tc_trial_avrg_keep_allCond_concat{id}(:,green_ind_concat),2);
-    green_std=std(tc_trial_avrg_keep_allCond_concat{id}(:,green_ind_concat),[],2);
-    tc_green_se{id}(:)=green_std/sqrt(length(green_ind_concat));
+    tc_green_avrg{id}(:)=nanmean(tc_trial_avrg_keep_allCond_concat{id}(:,haveRunning_green),2);
+    green_std=std(tc_trial_avrg_keep_allCond_concat{id}(:,haveRunning_green),[],2);
+    tc_green_se{id}(:)=green_std/sqrt(length(haveRunning_green));
     
-    tc_red_avrg{id}(:)=nanmean(tc_trial_avrg_keep_allCond_concat{id}(:,red_ind_concat),2);
-    red_std=std(tc_trial_avrg_keep_allCond_concat{id}(:,red_ind_concat),[],2);
-    tc_red_se{id}(:)=red_std/sqrt(length(red_ind_concat));
+    tc_red_avrg{id}(:)=nanmean(tc_trial_avrg_keep_allCond_concat{id}(:,haveRunning_red),2);
+    red_std=std(tc_trial_avrg_keep_allCond_concat{id}(:,haveRunning_red),[],2);
+    tc_red_se{id}(:)=red_std/sqrt(length(haveRunning_red));
     
     clear green_std red_std
     
@@ -217,15 +219,18 @@ tc_red_avrg_stat = cell(1,nd); %same for red
 tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
 tc_red_se_stat = cell(1,nd); %same for red
 
+
+
 for id = 1:nd
     for iCon=1:nCon
-    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon),[],2);
-    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(green_ind_concat));
+        
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_green,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_green,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(haveRunning_green));
     
-    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon),[],2);
-    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(red_ind_concat));
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_red,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_red,iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(haveRunning_red));
     
     clear green_std red_std
     end
@@ -252,10 +257,10 @@ line([0,2],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 title('HT-')
-txt1 = ['pre ', num2str(length(find(~isnan(pref_responses_stat_concat{pre}(green_ind_concat)))))];
-txt2 = ['post ',num2str(length(find(~isnan(pref_responses_stat_concat{post}(green_ind_concat)))))];
+txt1 = ['n = ', num2str(length(haveRunning_green))];
+%txt2 = ['post ',num2str(length(find(~isnan(pref_responses_stat_concat{post}(green_ind_concat)))))];
 text(-1.5,-0.03,txt1);
-text(0.75,-0.03,txt2,'Color','b');
+%text(0.75,-0.03,txt2,'Color','b');
 ylabel('dF/F') 
 xlabel('s') 
 set(gca,'XColor', 'none','YColor','none')
@@ -273,10 +278,10 @@ line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
 title('HT+')
-txt1 = ['pre ', num2str(length(find(~isnan(pref_responses_stat_concat{pre}(red_ind_concat)))))];
-txt2 = ['post ',num2str(length(find(~isnan(pref_responses_stat_concat{post}(red_ind_concat)))))];
+txt1 = ['n = ', num2str(length(haveRunning_red))];
+%txt2 = ['post ',num2str(length(find(~isnan(pref_responses_stat_concat{post}(red_ind_concat)))))];
 text(-1.5,-0.03,txt1);
-text(0.75,-0.03,txt2,'Color','b');
+%text(0.75,-0.03,txt2,'Color','b');
 x0=5;
 y0=5;
 width=4;
@@ -348,13 +353,13 @@ tc_red_se_loc = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,green_ind_concat,iCon),2);
-    green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,green_ind_concat,iCon),[],2);
-    tc_green_se_loc{id}(:,iCon)=green_std/sqrt(length(green_ind_concat));
+    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_green,iCon),2);
+    green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_green,iCon),[],2);
+    tc_green_se_loc{id}(:,iCon)=green_std/sqrt(length(haveRunning_green));
     
-    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,red_ind_concat,iCon),2);
-    red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,red_ind_concat,iCon),[],2);
-    tc_red_se_loc{id}(:,iCon)=red_std/sqrt(length(red_ind_concat));
+    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_red,iCon),2);
+    red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_red,iCon),[],2);
+    tc_red_se_loc{id}(:,iCon)=red_std/sqrt(length(haveRunning_red));
     
     clear green_std red_std
     end
@@ -427,10 +432,10 @@ line([0,2],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 title('HT-')
-txt1 = ['pre ', num2str(length(find(~isnan(pref_responses_loc_concat{pre}(green_ind_concat)))))];
-txt2 = ['post ',num2str(length(find(~isnan(pref_responses_loc_concat{post}(green_ind_concat)))))];
+txt1 = ['n = ', num2str(length(haveRunning_green))];
+%txt2 = ['post ',num2str(length(find(~isnan(pref_responses_loc_concat{post}(green_ind_concat)))))];
 text(-1.5,-0.03,txt1);
-text(0.75,-0.03,txt2,'Color','b');
+%text(0.75,-0.03,txt2,'Color','b');
 ylabel('dF/F') 
 xlabel('s') 
 set(gca,'XColor', 'none','YColor','none')
@@ -448,10 +453,10 @@ line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
 title('HT+')
-txt1 = ['pre ', num2str(length(find(~isnan(pref_responses_loc_concat{pre}(red_ind_concat)))))];
-txt2 = ['post ', num2str(length(find(~isnan(pref_responses_loc_concat{post}(red_ind_concat)))))];
+txt1 = ['n = ',num2str(length(haveRunning_red))];
+%txt2 = ['post ', num2str()];
 text(-1.5,-0.03,txt1);
-text(0.75,-0.03,txt2,'Color','b');
+%text(0.75,-0.03,txt2,'Color','b');
 x0=5;
 y0=5;
 width=4;
@@ -471,11 +476,11 @@ red_ex_list=[];
 for iCon = 1:nCon
 figure; movegui('center') 
 subplot(2,2,1)
-scatter((pref_responses_stat_concat{pre}(green_ind_concat,iCon)),(pref_responses_stat_concat{post}(green_ind_concat,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
+scatter((pref_responses_stat_concat{pre}(haveRunning_green,iCon)),(pref_responses_stat_concat{post}(haveRunning_green,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
 hold on
 scatter((pref_responses_stat_concat{pre}(green_ex_list,iCon)),(pref_responses_stat_concat{post}(green_ex_list,iCon)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter(nanmean(pref_responses_stat_concat{pre}(green_ind_concat,iCon)),nanmean(pref_responses_stat_concat{post}(green_ind_concat,iCon)),15,'r*')
+scatter(nanmean(pref_responses_stat_concat{pre}(haveRunning_green,iCon)),nanmean(pref_responses_stat_concat{post}(haveRunning_green,iCon)),15,'r*')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([-.1 1])
@@ -488,15 +493,15 @@ set(gca, 'TickDir', 'out')
 
 
 subplot(2,2,2)
-scatter((pref_responses_stat_concat{pre}(red_ind_concat,iCon)),(pref_responses_stat_concat{post}(red_ind_concat,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
+scatter((pref_responses_stat_concat{pre}(haveRunning_red,iCon)),(pref_responses_stat_concat{post}(haveRunning_red,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
 hold on
 scatter((pref_responses_stat_concat{pre}(red_ex_list,iCon)),(pref_responses_stat_concat{post}(red_ex_list,iCon)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter(nanmean(pref_responses_stat_concat{pre}(red_ind_concat,iCon)),nanmean(pref_responses_stat_concat{post}(red_ind_concat,iCon)),15,'r*')
+scatter(nanmean(pref_responses_stat_concat{pre}(haveRunning_red,iCon)),nanmean(pref_responses_stat_concat{post}(haveRunning_red,iCon)),15,'r*')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-ylim([-.1 .5])
-xlim([-.1 .5])
+ylim([-.1 1])
+xlim([-.1 1])
 set(gca, 'TickDir', 'out')
 refline(1)
 title('HT+ stationary')
@@ -504,26 +509,26 @@ axis square
 
 
 subplot(2,2,3)
-scatter((pref_responses_loc_concat{pre}(green_ind_concat,iCon)),(pref_responses_loc_concat{post}(green_ind_concat,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
+scatter((pref_responses_loc_concat{pre}(haveRunning_green,iCon)),(pref_responses_loc_concat{post}(haveRunning_green,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter(nanmean(pref_responses_loc_concat{pre}(green_ind_concat,iCon)),nanmean(pref_responses_loc_concat{post}(green_ind_concat,iCon)),15,'r*')
+scatter(nanmean(pref_responses_loc_concat{pre}(haveRunning_green,iCon)),nanmean(pref_responses_loc_concat{post}(haveRunning_green,iCon)),15,'r*')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-ylim([-.1 1.5])
-xlim([-.1 1.5])
+ylim([-.1 1])
+xlim([-.1 1])
 refline(1)
 title('HT- running')
 axis square
 set(gca, 'TickDir', 'out')
 
 subplot(2,2,4)
-scatter((pref_responses_loc_concat{pre}(red_ind_concat,iCon)),(pref_responses_loc_concat{post}(red_ind_concat,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
+scatter((pref_responses_loc_concat{pre}(haveRunning_red,iCon)),(pref_responses_loc_concat{post}(haveRunning_red,iCon)),10,'MarkerEdgeColor',[.7 .7 .7],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter(nanmean(pref_responses_loc_concat{pre}(red_ind_concat,iCon)),nanmean(pref_responses_loc_concat{post}(red_ind_concat,iCon)),15,'r*')
+scatter(nanmean(pref_responses_loc_concat{pre}(haveRunning_red,iCon)),nanmean(pref_responses_loc_concat{post}(haveRunning_red,iCon)),15,'r*')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-ylim([-.1 .5])
-xlim([-.1 .5])
+ylim([-.1 1])
+xlim([-.1 1])
 
 refline(1)
 title('HT+ running')
@@ -536,7 +541,7 @@ print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bes
 end
 
 %%
-responseTable = table([nanmean(pref_responses_stat_concat{pre}(green_ind_concat));nanmean(pref_responses_stat_concat{post}(green_ind_concat))],[nanmean(pref_responses_stat_concat{pre}(red_ind_concat));nanmean(pref_responses_stat_concat{post}(red_ind_concat))],[nanmean(pref_responses_loc_concat{pre}(green_ind_concat));nanmean(pref_responses_loc_concat{post}(green_ind_concat))],[nanmean(pref_responses_loc_concat{pre}(red_ind_concat));nanmean(pref_responses_loc_concat{post}(red_ind_concat))],'VariableNames',{'Pyramidal cells stat'  'HT+ cells stat' 'Pyramidal cells loc'  'HT+ cells loc'}, 'RowNames',{'Pre'  'Post'})
+responseTable = table([nanmean(pref_responses_stat_concat{pre}(haveRunning_green));nanmean(pref_responses_stat_concat{post}(haveRunning_green))],[nanmean(pref_responses_stat_concat{pre}(haveRunning_red));nanmean(pref_responses_stat_concat{post}(haveRunning_red))],[nanmean(pref_responses_loc_concat{pre}(haveRunning_green));nanmean(pref_responses_loc_concat{post}(haveRunning_green))],[nanmean(pref_responses_loc_concat{pre}(haveRunning_red));nanmean(pref_responses_loc_concat{post}(haveRunning_red))],'VariableNames',{'Pyramidal cells stat'  'HT+ cells stat' 'Pyramidal cells loc'  'HT+ cells loc'}, 'RowNames',{'Pre'  'Post'})
 writetable(responseTable,fullfile(fnout,[num2str(targetCon) 'responseTable.csv']),'WriteRowNames',true)
 
     %% 
@@ -552,15 +557,7 @@ scatter((pref_responses_stat_transform{pre}(red_ind_concat,iCon)),(pref_response
 refline(1);
 hold on
 scatter(nanmean(pref_responses_stat_transform{pre}(red_ind_concat,iCon)),nanmean(pref_responses_stat_transform{post}(red_ind_concat,iCon)),10,'r*')
-%% plot initial data inset
-figure
-scatter((pref_responses_stat_concat{pre}(red_ind_concat,iCon)),(pref_responses_stat_concat{post}(red_ind_concat,iCon)),20,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.01)
-refline(1)
-hold on
-scatter(nanmean(pref_responses_stat_concat{pre}(red_ind_concat,iCon)),nanmean(pref_responses_stat_concat{post}(red_ind_concat,iCon)),30,'r*')
-ylim([-.02 .1])
-xlim([-.02 .1])
-set(gca, 'TickDir', 'out')
+
 %% calculate fract chage
 raw_diff=((pref_responses_stat_concat{post}(:,iCon))-(pref_responses_stat_concat{pre}(:,iCon)));
 
