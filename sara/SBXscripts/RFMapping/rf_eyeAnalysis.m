@@ -1,17 +1,17 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_15Hz_ExptList_SG';
+ds = 'RFMapping_15Hz_ExptList_SG';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 %%
-for iexp = 20
+for iexp = 1
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
-ImgFolder = expt(iexp).coFolder;
-time = expt(iexp).coTime;
+ImgFolder = expt(iexp).rfFolder;
+time = expt(iexp).rfTime;
 nrun = length(ImgFolder);
 % run_str = catRunName(cell2mat(ImgFolder), nrun);
 run_str = 'runs-002';
@@ -210,7 +210,19 @@ print(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     
     %align eyetracking to 
      %reset frame counter    
-    cStimOn = celleqel2mat_padded(input.cStimOneOn);
+     if exist('input.cStimOneOn', 'var')
+        cStimOn = celleqel2mat_padded(input.cStimOneOn);
+     else
+         counter = celleqel2mat_padded(input.counter);
+         cStimOn = counter + 1 - double(nOn+nOff); %magic number
+     end 
+
+     if ~exist('prewin_frames', 'var')   
+        prewin_frames = nOff;
+        postwin_frames = nOn;
+     else
+     end
+        
     nanrun = ceil(500*(frame_rate/1000));
     Rad_temp = sqrt(Area./pi);
     Centroid_temp = Centroid;
@@ -308,112 +320,7 @@ print(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
     sgtitle('Example eye image by distance from median')
     print(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilImgByDist.pdf']),'-dpdf','-fillpage');
     movegui('center')
-    
-%     centroid_dist_sf = cell(1,nSF);
-%     centroid_med_sf = cell(1,nSF);
-%     if nSF>1
-%         for isf = 1:nSF
-%             ind_plaid = intersect(find(maskCon_all == maskCons(2)), find(stimCon_all == stimCons(2)));
-%             ind_sf = intersect(ind_plaid,intersect(find(SF_all == SFs(isf)),find(~isnan(centroid_stim(1,:)))));
-%             centroid_med_sf{isf} = findMaxNeighbors(centroid_stim(:,ind),2);
-%             centroid_dist_sf{isf} = sqrt((centroid_stim(1,:)-centroid_med(1)).^2 + (centroid_stim(2,:)-centroid_med(2)).^2);
-%         end
-%     end  
-%     centroid_dist_tf = cell(1,nTF);
-%     centroid_med_tf = cell(1,nTF);
-%     if nTF>1
-%         for itf = 1:nTF
-%             ind_plaid = intersect(find(maskCon_all == maskCons(2)), find(stimCon_all == stimCons(2)));
-%             ind_tf = intersect(ind_plaid,intersect(find(TF_all == TFs(itf)),find(~isnan(centroid_stim(1,:)))));
-%             centroid_med_tf{itf} = findMaxNeighbors(centroid_stim(:,ind_tf),2);
-%             centroid_dist_tf{itf} = sqrt((centroid_stim(1,:)-centroid_med(1)).^2 + (centroid_stim(2,:)-centroid_med(2)).^2);
-%         end
-%     end  
-%    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med', 'centroid_dist_sf', 'centroid_med_sf', 'centroid_dist_tf', 'centroid_med_tf' );
+   
     save(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']), 'rect', 'Area', 'Centroid', 'SNR', 'Val', 'frame_rate' , 'rad_mat_start','centroid_mat_start', 'cStimOn', 'rad_base','rad_stim','centroid_base', 'centroid_stim', 'centroid_dist', 'centroid_med');
-    %close all
+
 end
-%     %% eye plots
-% trial_n = zeros(nMaskCon,nStimCon,nMaskPhas);
-% trialInd = cell(nMaskCon,nStimCon,nMaskPhas);
-% for im = 1:nMaskCon
-%     ind_mask = find(maskCon_all == maskCons(im));
-%     for it = 1:nStimCon
-%         ind_stim = find(stimCon_all == stimCons(it));
-%         ind_sm = intersect(ind_mask,ind_stim);
-%         if it>1 & im>1
-%             for ip = 1:nMaskPhas
-%                 ind_phase = find(maskPhas_all == maskPhas(ip));
-%                 ind = intersect(ind_phase,ind_sm);
-%                 trialInd{im,it,ip} = ind;
-%                 trial_n(im,it,ip) = length(ind);
-%             end
-%         else
-%             trialInd{im,it,1} = ind_sm;
-%             trial_n(im,it,1) = length(ind);
-%         end
-%     end
-% end
-% 
-% figure;
-% start = 1;
-% n = 1;
-% for iC = 1:length(resp_ind)
-%     iCell = resp_ind(iC);
-%     if start > 25
-%         sgtitle({['All responsive cells- Test = ' num2str(stimCons(2)) ' Mask = ' num2str(maskCons(3))], ['Trials: ' num2str(length(find(~isnan(centroid_dist)))) ' measured; ' num2str(length(find(centroid_dist<5))) ' <5 deg; ' num2str(length(find(centroid_dist<2))) ' <2 deg']})
-%         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respByPhase_eyeTrack_allResp_' num2str(n) '.pdf']),'-dpdf','-fillpage');
-%         start = 1;
-%         figure;
-%         n = n+1;
-%     end
-%     subplot(5,5,start)
-%     test_avg = mean(resp_cell{1,2,1}(iCell,:),2);
-%     mask_avg = mean(resp_cell{end,1,1}(iCell,:),2);
-%     test_sem = mean(resp_cell{1,2,1}(iCell,:),2)./sqrt(size(resp_cell{1,end,1}(iCell,:),2));
-%     mask_sem = mean(resp_cell{end,1,1}(iCell,:),2)./sqrt(size(resp_cell{end,1,1}(iCell,:),2));
-%     shadedErrorBar(1:360,repmat(test_avg,[1 360]),repmat(test_sem,[1 360]));
-%     hold on
-%     shadedErrorBar(1:360,repmat(mask_avg,[1 360]),repmat(mask_sem,[1 360]));
-%     resp_all = [];
-%     stim_all = [];
-%     for ip = 1:nMaskPhas
-%         [memb ind] = ismember(trialInd{end,2,ip},find(~isnan(centroid_dist)));
-%         resp_avg(1,ip) = mean(resp_cell{end,2,ip}(iCell,find(ind)),2);
-%         resp_sem(1,ip) = std(resp_cell{end,2,ip}(iCell,find(ind)),[],2)./sqrt(size(resp_cell{end,2,ip}(iCell,find(ind)),2));
-%         resp_all = [resp_all resp_cell{end,2,ip}(iCell,find(ind))];
-%         stim_all = [stim_all ip.*ones(size(resp_cell{end,2,ip}(iCell,find(ind))))];
-%     end
-%     errorbar(maskPhas,resp_avg,resp_sem)
-%     p1 = anova1(resp_all, stim_all,'off');
-%     resp_all = [];
-%     stim_all = [];
-%     for ip = 1:nMaskPhas
-%         [memb ind] = ismember(trialInd{end,2,ip},find(centroid_dist<5));
-%         resp_avg(1,ip) = mean(resp_cell{end,2,ip}(iCell,find(ind)),2);
-%         resp_sem(1,ip) = std(resp_cell{end,2,ip}(iCell,find(ind)),[],2)./sqrt(size(resp_cell{end,2,ip}(iCell,find(ind)),2));
-%         resp_all = [resp_all resp_cell{end,2,ip}(iCell,find(ind))];
-%         stim_all = [stim_all ip.*ones(size(resp_cell{end,2,ip}(iCell,find(ind))))];
-%     end
-%     errorbar(maskPhas,resp_avg,resp_sem)
-%     p2 = anova1(resp_all, stim_all,'off');
-%     resp_all = [];
-%     stim_all = [];
-%     for ip = 1:nMaskPhas
-%         [memb ind] = ismember(trialInd{end,2,ip},find(centroid_dist<2));
-%         resp_avg(1,ip) = mean(resp_cell{end,2,ip}(iCell,find(ind)),2);
-%         resp_sem(1,ip) = std(resp_cell{end,2,ip}(iCell,find(ind)),[],2)./sqrt(size(resp_cell{end,2,ip}(iCell,find(ind)),2));
-%         resp_all = [resp_all resp_cell{end,2,ip}(iCell,find(ind))];
-%         stim_all = [stim_all ip.*ones(size(resp_cell{end,2,ip}(iCell,find(ind))))];
-%     end
-%     errorbar(maskPhas,resp_avg,resp_sem)
-%     p3 = anova1(resp_all, stim_all,'off');
-%     title([num2str(chop(p3,2))])
-%     ylabel('dF/F')
-%     xlabel('Phase (deg)')
-%     start = start+1;
-% end
-% sgtitle({['All responsive cells- Test = ' num2str(stimCons(2)) ' Mask = ' num2str(maskCons(3))], ['Trials: ' num2str(length(find(~isnan(centroid_dist)))) ' measured; ' num2str(length(find(centroid_dist<5))) ' <5 deg; ' num2str(length(find(centroid_dist<2))) ' <2 deg']})
-% print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respByPhase_eyeTrack_allResp_' num2str(n) '.pdf']),'-dpdf','-fillpage');
-% close all
-% end

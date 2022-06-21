@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_15Hz_ExptList';
-iexp = 16; 
+ds = 'CrossOriRandPhase_15Hz_ExptList_SG';
+iexp = 20; 
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
@@ -29,7 +29,8 @@ else
     time = expt(iexp).coTime;
 end
 nrun = length(ImgFolder);
-run_str = catRunName(cell2mat(ImgFolder), nrun);
+% run_str = catRunName(cell2mat(ImgFolder), nrun);
+run_str = 'runs-002';
 
 base = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\' expt(iexp).saveLoc];
 
@@ -92,7 +93,7 @@ nep = floor(size(data,3)./regIntv);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,30001:30500),3);
+data_avg = mean(data(:,:,20001:20500),3);
 if doPhaseAfterDir || doDirAfterPass
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);

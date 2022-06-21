@@ -8,10 +8,10 @@
 %% get path names
 close all;clear all;clc;
 
-mouse = 'i2720';
-date = '220525';
+mouse = 'i2721';
+date = '220601';
 runs = {'002'};
-expTime = {'1457'};
+time = {'1449'};
 nrun = length(runs);
 frame_rate = 15;
 ImgFolder = runs;
@@ -20,10 +20,12 @@ run_str = catRunName(runs, 1);
 
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
 sara_fn = fullfile(fn_base, 'home\sara');
-base = fullfile(fn_base, 'home\lindsey');
+% base = fullfile(fn_base, 'home\sara');
 data_fn = fullfile(sara_fn, 'Data\2P_images');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
-fnout = fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]);
+% fnout = fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '-' run_str]);  %   why is this turning into a cell array?????
+
+fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\sara\Analysis\2P\220601_i2721\220601_i2721_runs-002');
 
 if ~exist(fnout)
     mkdir(fnout)
@@ -31,7 +33,7 @@ end
 
 fprintf(['2P imaging retinotopy analysis - by KM, Glickfeld Lab\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
 for irun=1:nrun
-    fprintf([runs{irun} ' - ' expTime{irun} '\n'])
+    fprintf([runs{irun} ' - ' time{irun} '\n'])
 end
 
 %% load data, read with sbxread, and concatenate selected runs
@@ -46,7 +48,7 @@ for irun = 1:nrun
     fName = [dataFolder '_000_000'];
 
     % load behavior data
-    mwName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse '-' date '-' expTime{irun} '.mat'];
+    mwName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse '-' date '-' time{irun} '.mat'];
     load(mwName);
 
     temp(irun) = input;
@@ -82,7 +84,7 @@ for i = 1:nep
 end
 %% Register data
 
-chooseInt = 9; %nep/2 % interval chosen for data_avg =[epoch of choice]-1
+chooseInt = 10; %nep/2 % interval chosen for data_avg =[epoch of choice]-1
 
 fprintf('\nBegin registering...\n')
     
@@ -90,10 +92,19 @@ fprintf('\nBegin registering...\n')
     data_avg = mean(data(:,:,meanrng),3);
     fprintf(['\nRegister frame averaged from ' num2str(meanrng(1)) ' - ' num2str(meanrng(end)) '\n'])
     
-    % register
-    fprintf('stackRegister\n')
-    [out, data_reg] = stackRegister(data,data_avg);
-    
+    %check if data has already been registered
+        if exist(fullfile(fnout, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+            fprintf('load registered data\n')
+            load(fullfile(fnout, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+            [outs, data_reg] = stackRegister_MA(data,[],[],out);
+        else %register
+            fprintf('stackRegister\n')
+            [out, data_reg] = stackRegister(data,data_avg);
+            mkdir(fullfile(fnout, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
+            save(fullfile(fnout, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+            save(fullfile(fnout, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+        end
+
     % save
     fprintf('Registration complete, now saving...\n')
     if ~exist(fullfile(fnout,dataFolder))
@@ -114,6 +125,8 @@ for i = 1:nep
     imagesc(mean(data_reg(:,:,(1:500)+((i-1)*regIntv)),3));
     title([num2str(i) ': ' num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]);
 end
+
+sz = size(data_reg);
 
 % figure 3 shows imagesq (scaled?) of the registered data 1-10000, then prints to FOV_avg.mat
 fprintf('Examine FOV\n')
@@ -192,10 +205,12 @@ if nStimCon >= 2  || nMaskCon >=2
                     start = start+1;
                 end
             else
+                for ip = 1:nMaskPhas
                 ind_all = intersect(ind_stim,ind_mask);
                 data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_all),3);
                 Stims(start,:) = [stimCons(is) maskCons(im) maskPhas(ip)];
                 start = start+1;
+                end
             end
         end
     end
@@ -323,9 +338,9 @@ end
 fprintf([num2str(nCells) ' total cells extracted\n'])
 s = whos('data_tc');
 if s.bytes < 2000000000
-    save(fullfile(fnout, [date '_' mouse '_' run_str  '_TCs.mat']), 'data_tc')
+    save(fullfile(fnout, [date '_' mouse '_' run_str  '_TCs.mat']), 'data_tc', 'sz', 'nCells')
 else
-    save(fullfile(fnout, [date '_' mouse '_' run_str  '_TCs.mat']), 'data_tc' ,'-v7.3')
+    save(fullfile(fnout, [date '_' mouse '_' run_str  '_TCs.mat']), 'data_tc' ,'-v7.3', 'sz', 'nCells')
 end
 
 fprintf('Time course extraction complete.\n')

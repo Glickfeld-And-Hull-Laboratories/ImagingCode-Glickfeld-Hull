@@ -1,6 +1,6 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirRandPhase_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList_SG';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
@@ -8,17 +8,17 @@ nexp = size(expt,2);
 nanframes = zeros(1,nexp);
 max_dist = 2;
 
-for iexp = 1:nexp
+for iexp = 20
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     area = expt(iexp).img_loc{1};
-    ImgFolder = expt(iexp).copFolder;
-    time = expt(iexp).copTime;
+    ImgFolder = expt(iexp).coFolder;
+    time = expt(iexp).coTime;
     nrun = length(ImgFolder);
-    run_str = catRunName(cell2mat(ImgFolder), nrun);
-    
+%     run_str = catRunName(cell2mat(ImgFolder), nrun);
+    run_str = 'runs-002';
 
-    base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
+    base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 
     fprintf(['2P imaging sine fitting analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
     for irun=1:nrun
@@ -110,11 +110,12 @@ for iexp = 1:nexp
     if nCells>300
         doPlot = 0;
     else
+        doPlot = 1;
         figure;
         movegui('center')
+    end
         start = 1;
         n = 1;
-    end
     for iCell =1:nCells
         if start>25 & doPlot
             sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
@@ -151,6 +152,7 @@ for iexp = 1:nexp
         sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
         print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end
+    
     p_anova_shuf = nan(nCells,1);
     b_hat_shuf = nan(nCells,1); 
     amp_hat_shuf = nan(nCells,1); 
@@ -165,9 +167,9 @@ for iexp = 1:nexp
     if doPlot
         figure;
         movegui('center')
+    end
         start = 1;
         n = 1;
-    end
     for iCell = 1:nCells
         if start>25 & doPlot
             sgtitle([mouse ' ' date '- Thresh Shuffled- Trials < ' num2str(max_dist) '  deg'])

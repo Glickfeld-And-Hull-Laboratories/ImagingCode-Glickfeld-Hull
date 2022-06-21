@@ -13,7 +13,7 @@ str = {'hiSF','lowSF'};
 
 area_list = strvcat('V1');%,'LM');%,'AL','RL','PM');
 narea = 1;%length(area_list);
-driver = 'SCN';
+driver = 'SLC';
 
 for a = 2
     SFs = [0.1 0.05];
@@ -42,7 +42,7 @@ for i = 1:length(ind)
     ImgFolder = expt(iexp).coFolder;
     time = expt(iexp).coTime;
     nrun = length(ImgFolder);
-    run_str = catRunName(cell2mat(ImgFolder), nrun);
+    run_str = catRunName(ImgFolder, nrun);
 
     fprintf([mouse ' ' date '\n'])
 
@@ -75,6 +75,7 @@ for i = 1:length(ind)
 
     end
 end
+
 save(fullfile(summaryDir,['randDirTwoPhase_Summary_' str{a} '_' area '_' driver '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all','component_all','stimDirs')
 
 %%

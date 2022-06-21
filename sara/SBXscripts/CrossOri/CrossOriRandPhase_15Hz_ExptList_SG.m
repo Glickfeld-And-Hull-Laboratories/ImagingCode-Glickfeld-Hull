@@ -253,17 +253,62 @@ expt(16).dirFolder = {'003'};
 expt(16).dirTime = {'1612'};
 expt(16).saveLoc = 'sara';
 
-%% i1369 220518 TF- 2Hz, 0.05cpd
-expt(17).mouse = 'i1369';
-expt(17).date = '220518';
-expt(17).img_loc  = {'V1';'L2/3'};
+%% i2720 220525 TF- 2Hz, 0.05cpd
+expt(17).mouse = 'i2720';
+expt(17).date = '220525';
+expt(17).img_loc  = {'LM';'L2/3'};
 expt(17).inj_loc = {'V1'};
-expt(17).z = -200;
+expt(17).z = -150;
 expt(17).img_strct  = {'cells'};
-expt(17).driver = {'SLC'};
-expt(17).indicator = {'tg';'GCaMP6s'};
-expt(17).rfFolder = {'002'}; %spatial receptive field
-expt(17).rfTime = {'1616'};
-expt(17).prFolder = {'003'}; %phase reversal (simple v. complex)
-expt(17).prTime = {'1722'};
+expt(17).driver = {'syn'};
+expt(17).indicator = {'AAV';'jGCaMP8f'};
+expt(17).coFolder = {'002'}; 
+expt(17).coTime = {'1457'};
+expt(17).dirFolder = {'003'};
+expt(17).dirTime = {'1606'};
 expt(17).saveLoc = 'sara';
+
+%% i2721 220530 TF- 2Hz, 0.05cpd
+expt(18).mouse = 'i2721';
+expt(18).date = '220530';
+expt(18).img_loc  = {'LM';'L2/3'};
+expt(18).inj_loc = {'V1'};
+expt(18).z = -150;
+expt(18).img_strct  = {'cells'};
+expt(18).driver = {'syn'};
+expt(18).indicator = {'AAV';'jGCaMP8f'};
+expt(18).coFolder = {'002'};
+expt(18).coTime = {'1430'};
+expt(18).dirFolder = {'003'};
+expt(18).dirTime = {'1540'};
+expt(18).saveLoc = 'sara';
+
+%% i2721 220601 TF- 2Hz, 0.05cpd
+expt(19).mouse = 'i2721';
+expt(19).date = '220601';
+expt(19).img_loc  = {'LP';'L2/3'}; %maybe not LIP
+expt(19).inj_loc = {'V1'};
+expt(19).z = -150;
+expt(19).img_strct  = {'cells'};
+expt(19).driver = {'syn'};
+expt(19).indicator = {'AAV';'jGCaMP8f'};
+expt(19).coFolder = {'002'};
+expt(19).coTime = {'1449'};
+expt(19).dirFolder = {'003'};
+expt(19).dirTime = {'1556'};
+expt(19).saveLoc = 'sara';
+
+%% i1372 220606 TF- 2Hz, 0.05cpd
+expt(20).mouse = 'i1372';
+expt(20).date = '220606';
+expt(20).img_loc  = {'LI';'L2/3'}; %maybe not LIP
+expt(20).inj_loc = {'LI'};
+expt(20).z = -200;
+expt(20).img_strct  = {'cells'};
+expt(20).driver = {'SLC'};
+expt(20).indicator = {'AAV';'GCaMP6s'};
+expt(20).coFolder = {'002'};
+expt(20).coTime = {'1445'};
+expt(20).dirFolder = {'003'};
+expt(20).dirTime = {'1550'};
+expt(20).saveLoc = 'sara';
