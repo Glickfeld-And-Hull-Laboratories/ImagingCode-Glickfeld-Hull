@@ -8,7 +8,7 @@ rc = behavConstsAV;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 
-iexp = 3;
+iexp = 5;
              %%
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
@@ -202,7 +202,12 @@ iexp = 3;
                         phasedir_resp_avg(:,iPhase,iDir,i,1) = squeeze(mean((mean(data_dfof_cycavg(resp_win{i},:,ind),1)-mean(data_dfof_cycavg(base_win{i},:,ind),1)),3));
                         phasedir_resp_avg(:,iPhase,iDir,i,2) = squeeze(std((mean(data_dfof_cycavg(resp_win{i},:,ind),1)-mean(data_dfof_cycavg(base_win{i},:,ind),1)),[],3))./sqrt(length(ind));
                         if length(ind)>3
-                            [h_dir(:,iPhase,iDir,i), p_dir(:,iPhase,iDir,i)] = ttest2(squeeze(mean(data_dfof_cycavg(resp_win{i},:,ind),1)), squeeze(mean(data_dfof_cycavg(base_win{i},:,ind),1)),'dim', 2, 'tail', 'right', 'alpha', 0.05./(nDir-1));
+                            if nDir>1
+                                alpha = 0.05./nDir-1;
+                            else
+                                alpha = 0.05;
+                            end
+                            [h_dir(:,iPhase,iDir,i), p_dir(:,iPhase,iDir,i)] = ttest2(squeeze(mean(data_dfof_cycavg(resp_win{i},:,ind),1)), squeeze(mean(data_dfof_cycavg(base_win{i},:,ind),1)),'dim', 2, 'tail', 'right', 'alpha', alpha);
                         end
                     end
                 end
@@ -287,13 +292,18 @@ iexp = 3;
             
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ad_run_str], [date '_' mouse '_' ad_run_str '_dfofData.mat']))
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ad_run_str], [date '_' mouse '_' ad_run_str '_stimData.mat']))          
-            
+            resp_ind = find(sum(h1_ori,[2 3]));
             resp_pr = intersect(resp_ind, find(f1_dir>0.03));
+            
+            if ~exist('norm_resp_pref')
+                norm_resp_pref = norm_dfof_stim_pref;
+            end
+
             figure;
-            scatter(f2overf1(resp_pr),norm_resp_pref(resp_pr))
+            scatter(f2overf1(resp_pr),norm_resp_pref(resp_pr),[],sfs(pref_sf(resp_pr)))
             xlim([0 1])
             ylim([-0.5 2])
             xlabel('F2/F1')
             ylabel('Norm resp')
-            
+            colorbar
             

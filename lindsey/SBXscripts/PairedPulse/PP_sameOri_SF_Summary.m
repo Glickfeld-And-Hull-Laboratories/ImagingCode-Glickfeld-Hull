@@ -14,28 +14,30 @@ norm_dir = [];
 norm_prefdir = [];
 
 for iexp = 1:nexp
-    mouse = expt(iexp).mouse;
-    date = expt(iexp).date;
-    ImgFolder = expt(iexp).adaptFolder;
-    nrun = length(ImgFolder);
-    run_str = catRunName(ImgFolder, nrun);
+    if expt(iexp).randDir
+        mouse = expt(iexp).mouse;
+        date = expt(iexp).date;
+        ImgFolder = expt(iexp).adaptFolder;
+        nrun = length(ImgFolder);
+        run_str = catRunName(ImgFolder, nrun);
+        
+        fprintf([mouse ' ' date '\n'])
+        
+        load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
     
-    fprintf([mouse ' ' date '\n'])
+        norm_sf_all(:,end) =  norm_sf_all(:,end) + totCells;
+        norm_prefsf_all(:,end) =  norm_prefsf_all(:,end) + totCells;
+        norm_dir_all(:,end) =  norm_dir_all(:,end) + totCells;
+        norm_prefdir_all(:,end) =  norm_prefdir_all(:,end) + totCells;
     
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
-
-    norm_sf_all(:,end) =  norm_sf_all(:,end) + totCells;
-    norm_prefsf_all(:,end) =  norm_prefsf_all(:,end) + totCells;
-    norm_dir_all(:,end) =  norm_dir_all(:,end) + totCells;
-    norm_prefdir_all(:,end) =  norm_prefdir_all(:,end) + totCells;
-
-    norm_sf = [norm_sf; norm_sf_all];
-    norm_prefsf = [norm_prefsf; norm_prefsf_all];
-    norm_dir = [norm_dir; norm_dir_all];
-    norm_prefdir = [norm_prefdir; norm_prefdir_all];
-
-    nCells = size(pref_sf,1);
-    totCells = totCells+nCells;
+        norm_sf = [norm_sf; norm_sf_all];
+        norm_prefsf = [norm_prefsf; norm_prefsf_all];
+        norm_dir = [norm_dir; norm_dir_all];
+        norm_prefdir = [norm_prefdir; norm_prefdir_all];
+    
+        nCells = size(pref_sf,1);
+        totCells = totCells+nCells;
+    end
 end
 sfs = unique(norm_sf(:,2));
 oris = unique(norm_sf(:,3));
