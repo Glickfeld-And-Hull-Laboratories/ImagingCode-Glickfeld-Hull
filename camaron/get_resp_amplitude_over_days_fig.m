@@ -4,7 +4,7 @@ close all
 % Load data
 
 data_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron';
-mouse = 'i475';
+mouse = 'i472';
 
 data_b = load(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Analysis\2P\pooled_data_figs\' mouse '\b_post_processing.mat']);
 data_p = load(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Analysis\2P\pooled_data_figs\' mouse '\p_post_processing.mat']);
@@ -61,7 +61,7 @@ resp_cells_days_p = data_p.adapt_resp_ind_cell(~cellfun('isempty',data_p.adapt_r
 
 %% Nuke - Matlab 2020
 
-cd('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Analysis\2P\pooled_data_figs\i475\i475_resp_amplitude\')
+cd(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Analysis\2P\pooled_data_figs\' mouse '\'])
 
 
 for iDate = 1:length(dates)

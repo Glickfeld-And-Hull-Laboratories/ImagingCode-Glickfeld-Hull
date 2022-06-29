@@ -9,38 +9,38 @@ clc
 dataset = 'oriAdapt_V1';
 eval(dataset);
 
+i1402_expts = 1:16;
+i1403_expts = 17:29;
 i475_expts = 30:79;
 i472_expts = 80:125;
     
 exp_list = [];
 
-for i = i472_expts
-    if expt(i).TCs_extracted == 1 & ~isempty(expt(i).pass_run) & ~isempty(expt(i).dirtuning) 
+% Just behavior and direction tuning
+for i = i1402_expts
+    if expt(i).TCs_extracted == 1 & ~isempty(expt(i).dirtuning) 
         exp_list = [exp_list i];
     end
 end
 
-% exp_list
-
-
-%% Pre-procssing: Point to dataset and generate placeholders for key variables
-condition = 'b';
-% exp_list = [105 106 108 109 110 111 112 113 114 116 118 119 120];
-
-% dataset = 'oriAdapt_V1';
-% eval(dataset);
-data_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron';
-
-% exp_list = [];
-% 
-% for i = 80:131
-%     if (expt(i).goodImage == 1 & ~isempty(expt(i).dirtuning)) 
+% Inlcude passive runs and direction tuning
+% for i = i475_expts
+%     if expt(i).TCs_extracted == 1 & ~isempty(expt(i).pass_run) & ~isempty(expt(i).dirtuning) 
 %         exp_list = [exp_list i];
 %     end
 % end
-% 
-% exp_list
 
+
+
+%% Pre-procssing: Point to dataset and generate placeholders for key variables
+user = "lindsey";
+condition = 'b';
+
+if user == "lindsey"
+    data_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey';
+elseif user == "camaron"
+    data_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron';
+end
 
 vonMisesFitAllCellsAllBoots_all = []; % For tuning
 data_adapt_dfof_all = cell(1,length(exp_list)); % TC during all adapt window
@@ -428,6 +428,5 @@ save(fullfile(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\c
     'data_adapt_dfof_adapt_all_tuned', 'adapt_resp_Exc', 'adapt_resp_Inh', 'adapt_resp_all', 'TC_mean_Exc', 'TC_sem_Exc', 'TC_mean_Inh', 'TC_sem_Inh', 'TC_mean_all', 'TC_sem_all',...
     'adapt_mean_Exc', 'adapt_sem_Exc', 'Aix_Exc', 'Aix_Exc_mean', 'Aix_Exc_sem', 'adapt_mean_Inh', 'adapt_sem_Inh', 'Aix_Inh', 'Aix_Inh_mean', 'Aix_Inh_sem', ...
     'adapt_mean_all', 'adapt_sem_all', 'Aix_all', 'Aix_all_mean', 'Aix_all_sem', 'ori_bins', 'adaptor_vline', 'target_vline', 'data_adapt_dfof_all', 'mask_label_cell', 'adapt_resp_ind_cell', 'vonMisesFitAllCellsAllBoots_cell', 'adapt_trial_ind_cell', 'dates') 
-
 
 

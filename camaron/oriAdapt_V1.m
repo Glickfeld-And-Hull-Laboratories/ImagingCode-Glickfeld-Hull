@@ -1,5 +1,5 @@
 expt = [];
-%% 1402 191001 
+%% 1402 191001 - Extracted by LG, missing red
 expt(1).mouse = 'i1402';
 expt(1).date = '191001';
 expt(1).img_loc  = {'V1';'L2/3'};
@@ -18,10 +18,10 @@ expt(1).obj = '16x';
 expt(1).zoom = 1.4;
 expt(1).redImg = '005';
 expt(1).eyeData = 0;
-expt(1).TCs_extracted = nan;
+expt(1).TCs_extracted = 1;
 expt(1).goodImage = nan;
 
-%% i1402 191002 
+%% i1402 191002 - Extracted by LG, missing red
 expt(2).mouse = 'i1402';
 expt(2).date = '191002';
 expt(2).img_loc  = {'V1';'L2/3'};
@@ -40,11 +40,11 @@ expt(2).obj = '16x';
 expt(2).zoom = 1.4;
 expt(2).redImg = '003';
 expt(2).eyeData = 1;
-expt(2).TCs_extracted = nan;
+expt(2).TCs_extracted = 1;
 expt(2).goodImage = nan;
 
 
-%% i1402 191003 
+%% i1402 191003 Extracted by LG, missing red
 expt(3).mouse = 'i1402';
 expt(3).date = '191003';
 expt(3).img_loc  = {'V1';'L2/3'};
@@ -63,10 +63,10 @@ expt(3).obj = '16x';
 expt(3).zoom = 1.4;
 expt(3).redImg = '003';
 expt(3).eyeData = 1;
-expt(3).TCs_extracted = nan;
+expt(3).TCs_extracted = 1;
 expt(3).goodImage = nan;
 
-%% i1402 191004 
+%% i1402 191004 - missing red
 expt(4).mouse = 'i1402';
 expt(4).date = '191004';
 expt(4).img_loc  = {'V1';'L2/3'};
@@ -85,10 +85,10 @@ expt(4).obj = '16x';
 expt(4).zoom = 1.4;
 expt(4).redImg = '003';
 expt(4).eyeData = 1;
-expt(4).TCs_extracted = nan;
+expt(4).TCs_extracted = 1;
 expt(4).goodImage = nan;
 
-%% i1402 191005 weak/sparse task responses, but good ori tuning
+%% i1402 191005 weak/sparse task responses, but good ori tuning, mising red
 expt(5).mouse = 'i1402';
 expt(5).date = '191005';
 expt(5).img_loc  = {'V1';'L2/3'};
@@ -107,10 +107,10 @@ expt(5).obj = '16x';
 expt(5).zoom = 1.4;
 expt(5).redImg = '003';
 expt(5).eyeData = 1;
-expt(5).TCs_extracted = nan;
+expt(5).TCs_extracted = 1;
 expt(5).goodImage = nan;
 
-%% i1402 191007 weak/sparse task responses, but good ori tuning
+%% i1402 191007 weak/sparse task responses, but good ori tuning, missing red
 expt(6).mouse = 'i1402';
 expt(6).date = '191007';
 expt(6).img_loc  = {'V1';'L2/3'};
@@ -129,10 +129,10 @@ expt(6).obj = '16x';
 expt(6).zoom = 1.4;
 expt(6).redImg = '002';
 expt(6).eyeData = 1;
-expt(6).TCs_extracted = nan;
+expt(6).TCs_extracted = 1;
 expt(6).goodImage = nan;
 
-%% i1402 191015 okay
+%% i1402 191015 okay, missing red
 expt(7).mouse = 'i1402';
 expt(7).date = '191015';
 expt(7).img_loc  = {'V1';'L2/3'};
@@ -151,10 +151,10 @@ expt(7).obj = '16x';
 expt(7).zoom = 1.4;
 expt(7).redImg = '003';
 expt(7).eyeData = 1;
-expt(7).TCs_extracted = nan;
+expt(7).TCs_extracted = 1;
 expt(7).goodImage = nan;
 
-%% i1402 191016 nice!
+%% i1402 191016 nice!, missing red
 expt(8).mouse = 'i1402';
 expt(8).date = '191016';
 expt(8).img_loc  = {'V1';'L2/3'};
@@ -173,10 +173,10 @@ expt(8).obj = '16x';
 expt(8).zoom = 1.4;
 expt(8).redImg = '002';
 expt(8).eyeData = 1;
-expt(8).TCs_extracted = nan;
+expt(8).TCs_extracted = 1;
 expt(8).goodImage = nan;
 
-%% i1402 191017 
+%% i1402 191017 missing red
 expt(9).mouse = 'i1402';
 expt(9).date = '191017';
 expt(9).img_loc  = {'V1';'L2/3'};
@@ -195,10 +195,10 @@ expt(9).obj = '16x';
 expt(9).zoom = 1.4;
 expt(9).redImg = '003';
 expt(9).eyeData = 1;
-expt(9).TCs_extracted = nan;
+expt(9).TCs_extracted = 1 ;
 expt(9).goodImage = nan;
 
-%% i1402 191018 
+%% i1402 191018 - missing red
 expt(10).mouse = 'i1402';
 expt(10).date = '191018';
 expt(10).img_loc  = {'V1';'L2/3'};
@@ -217,7 +217,7 @@ expt(10).obj = '16x';
 expt(10).zoom = 1.4;
 expt(10).redImg = '003';
 expt(10).eyeData = 1;
-expt(10).TCs_extracted = nan;
+expt(10).TCs_extracted = 1;
 expt(10).goodImage = nan;
 
 %% i1402 191019 
@@ -238,7 +238,7 @@ expt(11).obj = '16x';
 expt(11).zoom = 3.4;
 expt(11).redImg = [];
 expt(11).eyeData = 1;
-expt(11).TCs_extracted = nan;
+expt(11).TCs_extracted = 1;
 expt(11).goodImage = nan;
 
 %% i1402 191020 
@@ -259,7 +259,7 @@ expt(12).obj = '16x';
 expt(12).zoom = 3.4;
 expt(12).redImg = [];
 expt(12).eyeData = 1;
-expt(12).TCs_extracted = nan;
+expt(12).TCs_extracted = 1;
 expt(12).goodImage = nan;
 
 %% i1402 191021
@@ -280,7 +280,7 @@ expt(13).obj = '16x';
 expt(13).zoom = 3.4;
 expt(13).redImg = [];
 expt(13).eyeData = 1;
-expt(13).TCs_extracted = nan;
+expt(13).TCs_extracted = 1;
 expt(13).goodImage = nan;
 
 %% i1402 191022
@@ -301,7 +301,7 @@ expt(14).obj = '16x';
 expt(14).zoom = 3.4;
 expt(14).redImg = [];
 expt(14).eyeData = 1;
-expt(14).TCs_extracted = nan;
+expt(14).TCs_extracted = 1;
 expt(14).goodImage = nan;
 
 %% i1402 191024
@@ -322,7 +322,7 @@ expt(15).obj = '16x';
 expt(15).zoom = 3.4;
 expt(15).redImg = [];
 expt(15).eyeData = 1;
-expt(15).TCs_extracted = nan;
+expt(15).TCs_extracted = 1;
 expt(15).goodImage = nan;
 
 %% i1402 191025
@@ -343,7 +343,7 @@ expt(16).obj = '16x';
 expt(16).zoom = 3.4;
 expt(16).redImg = [];
 expt(16).eyeData = 1;
-expt(16).TCs_extracted = nan;
+expt(16).TCs_extracted = 1;
 expt(16).goodImage = nan;
 
 %% i1403 200318
@@ -365,10 +365,10 @@ expt(17).obj = '16x';
 expt(17).zoom = 2;
 expt(17).redImg = [];
 expt(17).eyeData = 1;
-expt(17).TCs_extracted = nan;
+expt(17).TCs_extracted = 1;
 expt(17).goodImage = nan;
 
-%% i1403 200319
+%% i1403 200319 missing red
 expt(18).mouse = 'i1403';
 expt(18).date = '200319';
 expt(18).img_loc  = {'V1';'L2/3'};
@@ -387,10 +387,10 @@ expt(18).obj = '16x';
 expt(18).zoom = 2;
 expt(18).redImg = '003';
 expt(18).eyeData = 1;
-expt(18).TCs_extracted = nan;
+expt(18).TCs_extracted = 1;
 expt(18).goodImage = nan;
 
-%% i1403 200320
+%% i1403 200320 - missing red
 expt(19).mouse = 'i1403';
 expt(19).date = '200320';
 expt(19).img_loc  = {'V1';'L2/3'};
@@ -409,10 +409,10 @@ expt(19).obj = '16x';
 expt(19).zoom = 2;
 expt(19).redImg = '004';
 expt(19).eyeData = 1;
-expt(19).TCs_extracted = nan;
+expt(19).TCs_extracted = 1;
 expt(19).goodImage = nan;
 
-%% i1403 200321
+%% i1403 200321 - missing red
 expt(20).mouse = 'i1403';
 expt(20).date = '200321';
 expt(20).img_loc  = {'V1';'L2/3'};
@@ -431,10 +431,10 @@ expt(20).obj = '16x';
 expt(20).zoom = 2;
 expt(20).redImg = '003';
 expt(20).eyeData = 1;
-expt(20).TCs_extracted = nan;
+expt(20).TCs_extracted = 1;
 expt(20).goodImage = nan;
 
-%% i1403 200323
+%% i1403 200323 missing red
 expt(21).mouse = 'i1403';
 expt(21).date = '200323';
 expt(21).img_loc  = {'V1';'L2/3'};
@@ -453,10 +453,10 @@ expt(21).obj = '16x';
 expt(21).zoom = 2;
 expt(21).redImg = '003';
 expt(21).eyeData = 1;
-expt(21).TCs_extracted = nan;
+expt(21).TCs_extracted = 1;
 expt(21).goodImage = nan;
 
-%% i1403 200327
+%% i1403 200327 - missing red
 expt(22).mouse = 'i1403';
 expt(22).date = '200327';
 expt(22).img_loc  = {'V1';'L2/3'};
@@ -475,10 +475,10 @@ expt(22).obj = '16x';
 expt(22).zoom = 2;
 expt(22).redImg = '003';
 expt(22).eyeData = 1;
-expt(22).TCs_extracted = nan;
+expt(22).TCs_extracted = 1;
 expt(22).goodImage = nan;
 
-%% i1403 200402- check images- blurry weak responses
+%% i1403 200402- check images- blurry weak responses, no red
 expt(23).mouse = 'i1403';
 expt(23).date = '200402';
 expt(23).img_loc  = {'V1';'L2/3'};
@@ -497,10 +497,10 @@ expt(23).obj = '16x';
 expt(23).zoom = 2;
 expt(23).redImg = '003';
 expt(23).eyeData = 1;
-expt(23).TCs_extracted = nan;
-expt(23).goodImage = nan;
+expt(23).TCs_extracted = 1;
+expt(23).goodImage = 0;
 
-%% i1403 200403- check images- strange texture
+%% i1403 200403- check images- strange texture, red missing
 expt(24).mouse = 'i1403';
 expt(24).date = '200403';
 expt(24).img_loc  = {'V1';'L2/3'};
@@ -519,8 +519,8 @@ expt(24).obj = '16x';
 expt(24).zoom = 2;
 expt(24).redImg = '003';
 expt(24).eyeData = 1;
-expt(24).TCs_extracted = nan;
-expt(24).goodImage = nan;
+expt(24).TCs_extracted = 1;
+expt(24).goodImage = 0;
 
 %% i1403 200403- check images
 expt(25).mouse = 'i1403';
@@ -541,10 +541,10 @@ expt(25).obj = '16x';
 expt(25).zoom = 2;
 expt(25).redImg = '003';
 expt(25).eyeData = 1;
-expt(25).TCs_extracted = nan;
-expt(25).goodImage = nan;
+expt(25).TCs_extracted = 1;
+expt(25).goodImage = 0;
 
-%% i1403 200405- check images- no responses
+%% i1403 200405- check images- no responses, missing dir tuning
 expt(26).mouse = 'i1403';
 expt(26).date = '200405';
 expt(26).img_loc  = {'V1';'L2/3'};
@@ -563,10 +563,10 @@ expt(26).obj = '16x';
 expt(26).zoom = 2;
 expt(26).redImg = '003';
 expt(26).eyeData = 1;
-expt(26).TCs_extracted = nan;
-expt(26).goodImage = nan;
+expt(26).TCs_extracted = 0;
+expt(26).goodImage = 0;
 
-%% i1403 200407
+%% i1403 200407 - missing red, red data in 001?
 expt(27).mouse = 'i1403';
 expt(27).date = '200407';
 expt(27).img_loc  = {'V1';'L2/3'};
@@ -585,10 +585,10 @@ expt(27).obj = '16x';
 expt(27).zoom = 2;
 expt(27).redImg = '003';
 expt(27).eyeData = 1;
-expt(27).TCs_extracted = nan;
+expt(27).TCs_extracted = 1;
 expt(27).goodImage = nan;
 
-%% i1403 200408
+%% i1403 200408 - missing red, red data in 001?
 expt(28).mouse = 'i1403';
 expt(28).date = '200408';
 expt(28).img_loc  = {'V1';'L2/3'};
@@ -607,10 +607,10 @@ expt(28).obj = '16x';
 expt(28).zoom = 1.2;
 expt(28).redImg = '003';
 expt(28).eyeData = 1;
-expt(28).TCs_extracted = nan;
+expt(28).TCs_extracted = 1;
 expt(28).goodImage = nan;
 
-%% i1403 200409
+%% i1403 200409 - missing red
 expt(29).mouse = 'i1403';
 expt(29).date = '200409';
 expt(29).img_loc  = {'V1';'L2/3'};
@@ -631,7 +631,7 @@ expt(29).obj = '16x';
 expt(29).zoom = 1.7;
 expt(29).redImg = '004';
 expt(29).eyeData = 1;
-expt(29).TCs_extracted = nan;
+expt(29).TCs_extracted = 1;
 expt(29).goodImage = nan;
 
 %% i475 - dates to check/enter: 201031 -210201
