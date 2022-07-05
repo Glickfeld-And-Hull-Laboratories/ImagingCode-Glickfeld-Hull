@@ -4,7 +4,7 @@ clear all global
 clc
 dataset = 'oriAdapt_V1';
 eval(dataset);
-iexp = 54;
+iexp = 137;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 if strcmp(expt(iexp).folder,'lindsey')
     data_base = LG_base;
@@ -1258,7 +1258,7 @@ print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_'
 save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_str], [date '_' mouse '_' dir_str '_oriTuningInfo.mat']),...
     'prefOri', 'prefOri_bootdiff', 'ind_theta90', 'tunedCells', 'edges');
 
-%% passive condition
+%% Passive condition
 if ~isempty(expt(iexp).pass_run)
     pass_str = ['runs-' expt(iexp).pass_run];
     CD = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).pass_run];
