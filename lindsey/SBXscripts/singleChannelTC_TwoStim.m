@@ -287,6 +287,12 @@ sf_mat = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
 sfs = unique(sf_mat);
 nSF = length(sfs);
 
+h1_ori = zeros(nCells,nOri,nSF);
+h2_ori = zeros(nCells,nOri,nSF);
+p1_ori = zeros(nCells,nOri,nSF);
+p2_ori = zeros(nCells,nOri,nSF);
+
+
 for iOri = 1:nOri
     ind = find(ori_mat == oris(iOri));
     for iSF = 1:nSF
@@ -480,14 +486,15 @@ end
 
 if input.doRandSF & ~input.doRandDir 
     resp_dfof_stim = zeros(nCells,nSF,2);
+    resp_dfof_var = zeros(nCells,nSF,2);
     tr_ind = cell(1,nSF);
     for i = 1:nSF
         ind_use = find(sf_mat == sfs(i));
         tr_ind{1,i} = ind_use;
-        resp_temp1 = nanmean(tc_one_dfof(:,:,ind_use),3);
-        resp_temp2 = nanmean(tc_two_dfof(:,:,ind_use),3);
-        resp_dfof_stim(:,i,1) = squeeze(mean(resp_temp1(resp_win,:),1)-mean(resp_temp1(base_win,:),1));
-        resp_dfof_stim(:,i,2) = squeeze(mean(resp_temp2(resp_win,:),1)-mean(resp_temp2(base_win,:),1));
+        resp_dfof_stim(:,i,1) = mean(mean(tc_one_dfof(resp_win,:,ind_use),1)-mean(tc_one_dfof(base_win,:,ind_use),1),3,'omitnan')';
+        resp_dfof_stim(:,i,2) = mean(mean(tc_two_dfof(resp_win,:,ind_use),1)-mean(tc_two_dfof(base_win,:,ind_use),1),3,'omitnan')';
+        resp_dfof_var(:,i,1) = var(mean(tc_one_dfof(resp_win,:,ind_use),1)-mean(tc_one_dfof(base_win,:,ind_use),1),[],3,'omitnan')';
+        resp_dfof_var(:,i,2) = var(mean(tc_two_dfof(resp_win,:,ind_use),1)-mean(tc_two_dfof(base_win,:,ind_use),1),[],3,'omitnan')';
     end
 
     figure; 
@@ -881,6 +888,7 @@ more_ad_all = setdiff(1:length(resp_ind), less_ad_all);
 
 ylabel('Adapt Ix')
 xlabel('Cell sorted by Adapt Ix')
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptCI.pdf']),'-dpdf','-bestfit')
 
 figure; scatter(1:length(resp_ind),resp_dfof_pref(resp_ind(norm_resp_med_ind),:,1))
 ylabel('R1 dF/F')

@@ -336,7 +336,7 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' nu
         stim_DSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
         
     end
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','k1_ori','stim_DSI','stim_OSI','R_square_ori')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','k1_ori','b_ori','R1_ori','u1_ori','stim_DSI','stim_OSI','R_square_ori')
 
 %% F1/F0 analysis
 tf = input.gratingTemporalFreqCPS;
