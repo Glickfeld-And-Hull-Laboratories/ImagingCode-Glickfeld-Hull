@@ -19,34 +19,31 @@ function [photoLoc, photoFrames] = photoFrameFinder_movBase(photoData,nframes)
         end
     end
 
-    photo_smooth = smooth(photo,500);
+    photo_smooth = smoothdata(photo,'gaussian',500);
     photo_high = movmax(photo_smooth, 100000);
     photo_smooth = photo_smooth-photo_high;
-    photoSize = size(photo_smooth);
+    photo_diff = diff(photo_smooth);
+    photo_diff_rect = photo_diff;
+    photo_diff_rect(find(photo_diff>0)) = 0;
+    photoSize = size(photo_diff);
 
-    photoMin = min(photo_smooth(clockLoc(1):photoSize(1)),[],1);
-    
-
+    photoMin = min(photo_diff_rect(clockLoc(1):photoSize(1)),[],1);
+    photoThresh = 0.5.*photoMin;
+    photoRecover = 0.05.*photoMin;
     photoLoc = [];
     photoFrames = [];
     n = 0;
     for i = 50:nframes
-        photoAmp_min = min(photo_smooth(clockLoc(i-1):clockLoc(i)),[],1);
-        photoAmp_prev = photo_smooth(clockLoc(i-1));
-        photoBase = median(photo_smooth(clockLoc(i-10):clockLoc(i-1)),1); 
-        photoThresh = photoBase-(0.5*(photoBase-photoMin));
-        
-        
-        if n == 0 && photoAmp_min<photoThresh && photoAmp_prev>photoThresh
+        photoAmp_min = min(photo_diff_rect(clockLoc(i-1):clockLoc(i)),[],1);
+        photoAmp_prev = photo_diff_rect(clockLoc(i-1));
+        if n == 0 && photoAmp_min<photoThresh/2 && photoAmp_prev>photoThresh/2
             photoLoc = [photoLoc clockLoc(i)];
             photoFrames = [photoFrames i];
-            photoRecover = photoBase-(0.05*(photoBase-photoMin));
             n=1+n;
-        elseif n>0 && max(photo_smooth(photoLoc(n):clockLoc(i-1)),[],1) > photoRecover && i-photoFrames(n) > 4
+        elseif n>0 && max(photo_diff_rect(photoLoc(n):clockLoc(i-1)),[],1) > photoRecover && i-photoFrames(n) > 4
             if photoAmp_min<photoThresh && photoAmp_prev>photoThresh 
                 photoLoc = [photoLoc clockLoc(i)];
                 photoFrames = [photoFrames i];
-                photoRecover = photoBase-(0.05*(photoBase-photoMin));
                 n = n+1;
             end
         end
@@ -57,16 +54,6 @@ function [photoLoc, photoFrames] = photoFrameFinder_movBase(photoData,nframes)
     diff_photo = diff(photoFrames);
     ind = find(diff_photo>35);
     ind_double = ind(find(diff(ind)==1));
-    ind_double_temp = ind_double;
-    for i = 1:length(ind_double)
-        if diff_photo(ind_double_temp(i))>25
-            photoFrames(ind_double_temp(i)+1) = [];
-            photoLoc(ind_double_temp(i)+1) = [];
-            ind_double_temp(i+1:end) = ind_double(i+1:end)-1;
-        elseif diff_photo(ind_double_temp(i))<25
-            photoFrames = [photoFrames(1:ind_double_temp(i)) photoFrames(ind_double_temp(i))+11 photoFrames(ind_double_temp(i)+1:end)];
-            photoLoc = [photoLoc(1:ind_double_temp(i)) photoLoc(ind_double_temp(i))+3665 photoLoc(ind_double_temp(i)+1:end)];
-            ind_double_temp(i+1:end) = ind_double(i+1:end)+1;
-        end
-    end
+    photoFrames(ind_double+1) = [];
+    photoLoc(ind_double+1) = [];
 end
