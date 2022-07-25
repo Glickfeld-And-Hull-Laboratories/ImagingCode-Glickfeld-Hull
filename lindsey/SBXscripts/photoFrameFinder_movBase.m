@@ -1,4 +1,4 @@
-function [photoLoc photoFrames] = photoFrameFinder(photoData,nframes);
+function [photoLoc, photoFrames] = photoFrameFinder_movBase(photoData,nframes)
 
     % uses ephys output from scanbox to find frames stim onsets
 
@@ -19,7 +19,7 @@ function [photoLoc photoFrames] = photoFrameFinder(photoData,nframes);
         end
     end
 
-    photo_smooth = smoothdata(photo,'movmedian',500);
+    photo_smooth = smooth(photo,500);
     photo_high = movmax(photo_smooth, 100000);
     photo_smooth = photo_smooth-photo_high;
     photoSize = size(photo_smooth);
@@ -33,7 +33,7 @@ function [photoLoc photoFrames] = photoFrameFinder(photoData,nframes);
     for i = 50:nframes
         photoAmp_min = min(photo_smooth(clockLoc(i-1):clockLoc(i)),[],1);
         photoAmp_prev = photo_smooth(clockLoc(i-1));
-        photoBase = median(photo_smooth(clockLoc(i-10):clockLoc(i-1)),1);
+        photoBase = median(photo_smooth(clockLoc(i-10):clockLoc(i-1)),1); 
         photoThresh = photoBase-(0.5*(photoBase-photoMin));
         
         
