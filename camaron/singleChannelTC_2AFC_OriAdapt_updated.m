@@ -6,7 +6,7 @@ clc
 dataset = 'oriAdapt_V1_cam';
 eval(dataset); % run file to load expt.structure
 
-iexp = 36; % Enter experiment number from oriAdapt_V1
+iexp = 38; % Enter experiment number from oriAdapt_V1
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 CM_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron';
@@ -30,7 +30,10 @@ data = [];
 clear temp
 offset = 0;
 
-%load data
+
+
+
+% load data
 nrun = size(expt(iexp).runs,1);
 for irun = 1:nrun
     CD = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).runs(irun,:)];
@@ -41,6 +44,8 @@ for irun = 1:nrun
     load(fName);
     
     nframes = [input.counterValues{end}(end) info.config.frames];
+
+  
     
     if min(nframes)<input.counterValues{end}(end)
         ntrials = size(input.trialOutcomeCell,2);
@@ -52,6 +57,7 @@ for irun = 1:nrun
         input = trialChopper(input,[1 itrial]);
     end
     temp(irun) = input;
+
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
     data_temp = sbxread(imgMatFile(1,1:11),0,min(nframes));
     if size(data_temp,1)== 2
@@ -82,6 +88,7 @@ clear data_temp
 clear temp
 fprintf('Runs loaded\n')
 toc
+
 
 %% Choose register interval
 stack_spacing = 10000; % Number of frames in each image stack
@@ -238,7 +245,21 @@ cStimOn = celleqel2mat_padded(adapt_input.cStimOn); %uncomment CLM
 clearvars counterVals counterTimes dCount dVal cStart cEnd SIx
 
 %% Check 2AFC photodiode (info must exist)
+
 irun = 1;
+nrun = 1;
+run_str = ['runs']; 
+run_str = [run_str '-' expt(iexp).runs(irun,:)];
+
+if exist(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+%     load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+    load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'adapt_input')
+end
+
+nframes = [adapt_input.counterValues{end}(end) info.config.frames];
+
+
+
 if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).runs(irun,:) '\' [expt(iexp).runs(irun,:) expt(iexp).runs_suffix(irun,:) '.ephys']]);
     photoData = [];
     for irun = 1:nrun
@@ -250,7 +271,7 @@ if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' 
         fclose(fileID);
     end
 
-    [photoLoc stimOnFrames] = photoFrameFinder(photoData,min(nframes));
+    [photoLoc stimOnFrames] = photoFrameFinder_movBase(photoData,min(nframes));
     frameDiff = diff(stimOnFrames);
     ind_long = find(frameDiff>20);
     ind_long_long = ind_long(find(frameDiff(ind_long-1)>20)); % ??
@@ -266,6 +287,7 @@ if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' 
     tFramesStimOn = celleqel2mat_padded(adapt_input.cStimOff)-celleqel2mat_padded(adapt_input.cStimOn);
     ind_fast = tFramesStimOn<adapt_input.nFramesTooFast;
     FBfast = tDoFB & ind_fast;
+    ntrials = size(adapt_input.tGratingContrast,2);
     cAdaptOn = nan(1,ntrials);
     cStimOn = nan(1,ntrials);
     n1 = 1; % First adaptor (distractor)
@@ -287,7 +309,7 @@ if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' 
     unique(cStimOn-cAdaptOn)
     print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str 'photoLoc_diff.pdf']),'-dpdf', '-bestfit')
     save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_photoData.mat']), 'photoLoc', 'stimOnFrames', 'cStimOn','cAdaptOn')
-elseif isfield(info, frame)
+elseif isfield(info, "frame")
     [stimOnFrames stimOffFrames] = photoFrameFinder_Sanworks(info.frame);
 
     tDoFB = celleqel2mat_padded(adapt_input.tDoFeedbackMotion);
@@ -650,160 +672,160 @@ title('Target')
 % base_win = [20:23]; % Unused
 % resp_win = [27:31];
 
-% nt = cell(naOri,nOri);
-% x = 1;
-% start = 1;
-% figure;
-% for icon = 1:naCon
-%     if aCons(icon) == 1
-%         for iaOri = 1:naOri
-%             ind_con = find(aGratingContrast == aCons(icon));
-%             ind_con = intersect(ind_con, find(aGratingOri == aOris(iaOri)));
-%             for iori = 1:nOri
-%                 ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
-%                 subplot(naOri+1,nOri,start)
-%                 plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
-%                 hold on
-%                 title(['Adapt: Ori = '  num2str(aOris(iaOri))])
-%                 ylim([-0.01 0.1])
-%                 start = start+1;
-%                 nt{x,iori} = ind_ori;
-%             end
-%             x = 1+x;
-%         end
-%     else
-%         ind_con = find(aGratingContrast == aCons(icon));
-%         for iori = 1:nOri
-%             ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
-%             subplot(naOri+1,nOri,start)
-%             plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
-%             hold on
-%             title(['No adapt; Ori = ' num2str(tOris(iori))])
-%             ylim([-0.01 0.1])
-%             start = start+1;
-%             nt{x,iori} = ind_ori;
-%         end
-%         x = 1+x;
-%     end
-% end
-% print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgTargetResponse_byTarget.pdf']), '-dpdf','-bestfit')
-% 
-% SIx = strcmp(adapt_input.trialOutcomeCell,'success');
-% MIx = strcmp(adapt_input.trialOutcomeCell,'incorrect');
-% IIx = strcmp(adapt_input.trialOutcomeCell,'ignore');
-% tLeftTrial = celleqel2mat_padded(adapt_input.tLeftTrial);
-% tLeftResp = zeros(size(SIx));
-% tLeftResp(find(tLeftTrial&SIx)) = 1;
-% tLeftResp(find(~tLeftTrial&~SIx)) = 1;
-% 
-% x = 1;
-% start = 1;
-% figure;
-% for icon = 1:naCon
-%     if aCons(icon) == 1
-%         for iaOri = 1:naOri
-%             ind_con = find(aGratingContrast == aCons(icon) & SIx);
-%             ind_con = intersect(ind_con, find(aGratingOri == aOris(iaOri)));
-%             for iori = 1:nOri
-%                 ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
-%                 subplot(naOri+1,nOri,start)
-%                 plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
-%                 hold on
-%                 title(['Adapt: Ori = '  num2str(aOris(iaOri))])
-%                 ylim([-0.01 0.1])
-%                 start = start+1;
-%                 nt{x,iori} = ind_ori;
-%             end
-%             x = 1+x;
-%         end
-%     else
-%         ind_con = find(aGratingContrast == aCons(icon) & SIx);
-%         for iori = 1:nOri
-%             ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
-%             subplot(naOri+1,nOri,start)
-%             plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
-%             hold on
-%             title(['No adapt; Ori = ' num2str(tOris(iori))])
-%             ylim([-0.01 0.1])
-%             start = start+1;
-%             nt{x,iori} = ind_ori;
-%         end
-%         x = 1+x;
-%     end
-% end
-% x = 1;
-% start = 1;
-% for icon = 1:naCon
-%     if aCons(icon) == 1
-%         for iaOri = 1:naOri
-%             ind_con = find(aGratingContrast == aCons(icon) & MIx);
-%             ind_con = intersect(ind_con, find(aGratingOri == aOris(iaOri)));
-%             for iori = 1:nOri
-%                 ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
-%                 subplot(naOri+1,nOri,start)
-%                 plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
-%                 hold on
-%                 title(['Adapt: Ori = '  num2str(aOris(iaOri))])
-%                 ylim([-0.01 0.1])
-%                 start = start+1;
-%                 nt{x,iori} = ind_ori;
-%             end
-%             x = 1+x;
-%         end
-%     else
-%         ind_con = find(aGratingContrast == aCons(icon) & MIx);
-%         for iori = 1:nOri
-%             ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
-%             subplot(naOri+1,nOri,start)
-%             plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
-%             hold on
-%             title(['No adapt; Ori = ' num2str(tOris(iori))])
-%             ylim([-0.01 0.1])
-%             start = start+1;
-%             nt{x,iori} = ind_ori;
-%         end
-%         x = 1+x;
-%     end
-% end
-% legend({'Hit','Miss'})
-% print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgTargetResponse_byTarget_byOutcome.pdf']), '-dpdf','-bestfit')
-% 
-% 
-% ind_aCon0 = find(aGratingContrast == 0);
-% ind_aCon1 = find(aGratingContrast);
-% ind_cond{1} = intersect(find(SIx),ind_aCon0);
-% leg_str = {'Con = 0'};
-% for i = 1:naOri
-%     ind_cond{i+1} = intersect(find(SIx),intersect(ind_aCon1,find(aGratingOri==aOris(i))));
-%     leg_str{i+1} = ['Ori = ' num2str(aOris(i))];
-% end
-% 
-% aCon_p1 = [NaN aGratingContrast];
-% aOri_p1 = [NaN aGratingOri];
-% ind_aCon0_p1{1} = intersect(ind_aCon0,find(aCon_p1==0));
-% for i = 1:naOri
-%     ind_aCon0_p1{i+1} = intersect(ind_aCon0,intersect(find(aCon_p1==1),find(aOri_p1 ==aOris(i))));
-% end
-% 
-% figure;
-% subplot(1,2,1)
-% for i = 1:naOri+1
-%  plot(tt, mean(mean(data_stim_dfof(:,:,ind_cond{i}),3),2))
-%  hold on
-% end
-% title('Current trial')
-% ylabel('dF/F')
-% xlabel('Time from target (ms)')
-% legend(leg_str)
-% subplot(1,2,2)
-% for i = 1:naOri+1
-%  plot(tt, mean(mean(data_stim_dfof(:,:,ind_aCon0_p1{i}),3),2))
-%  hold on
-% end
-% title('Previous trial, for Current Con = 0')
-% ylabel('dF/F')
-% xlabel('Time from target (ms)')
-% print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgTargetResponse.pdf']), '-dpdf','-bestfit')
+nt = cell(naOri,nOri);
+x = 1;
+start = 1;
+figure;
+for icon = 1:naCon
+    if aCons(icon) == 1
+        for iaOri = 1:naOri
+            ind_con = find(aGratingContrast == aCons(icon));
+            ind_con = intersect(ind_con, find(aGratingOri == aOris(iaOri)));
+            for iori = 1:nOri
+                ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
+                subplot(naOri+1,nOri,start)
+                plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
+                hold on
+                title(['Adapt: Ori = '  num2str(aOris(iaOri))])
+                ylim([-0.01 0.1])
+                start = start+1;
+                nt{x,iori} = ind_ori;
+            end
+            x = 1+x;
+        end
+    else
+        ind_con = find(aGratingContrast == aCons(icon));
+        for iori = 1:nOri
+            ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
+            subplot(naOri+1,nOri,start)
+            plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
+            hold on
+            title(['No adapt; Ori = ' num2str(tOris(iori))])
+            ylim([-0.01 0.1])
+            start = start+1;
+            nt{x,iori} = ind_ori;
+        end
+        x = 1+x;
+    end
+end
+print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgTargetResponse_byTarget.pdf']), '-dpdf','-bestfit')
+
+SIx = strcmp(adapt_input.trialOutcomeCell,'success');
+MIx = strcmp(adapt_input.trialOutcomeCell,'incorrect');
+IIx = strcmp(adapt_input.trialOutcomeCell,'ignore');
+tLeftTrial = celleqel2mat_padded(adapt_input.tLeftTrial);
+tLeftResp = zeros(size(SIx));
+tLeftResp(find(tLeftTrial&SIx)) = 1;
+tLeftResp(find(~tLeftTrial&~SIx)) = 1;
+
+x = 1;
+start = 1;
+figure;
+for icon = 1:naCon
+    if aCons(icon) == 1
+        for iaOri = 1:naOri
+            ind_con = find(aGratingContrast == aCons(icon) & SIx);
+            ind_con = intersect(ind_con, find(aGratingOri == aOris(iaOri)));
+            for iori = 1:nOri
+                ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
+                subplot(naOri+1,nOri,start)
+                plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
+                hold on
+                title(['Adapt: Ori = '  num2str(aOris(iaOri))])
+                ylim([-0.01 0.1])
+                start = start+1;
+                nt{x,iori} = ind_ori;
+            end
+            x = 1+x;
+        end
+    else
+        ind_con = find(aGratingContrast == aCons(icon) & SIx);
+        for iori = 1:nOri
+            ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
+            subplot(naOri+1,nOri,start)
+            plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
+            hold on
+            title(['No adapt; Ori = ' num2str(tOris(iori))])
+            ylim([-0.01 0.1])
+            start = start+1;
+            nt{x,iori} = ind_ori;
+        end
+        x = 1+x;
+    end
+end
+x = 1;
+start = 1;
+for icon = 1:naCon
+    if aCons(icon) == 1
+        for iaOri = 1:naOri
+            ind_con = find(aGratingContrast == aCons(icon) & MIx);
+            ind_con = intersect(ind_con, find(aGratingOri == aOris(iaOri)));
+            for iori = 1:nOri
+                ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
+                subplot(naOri+1,nOri,start)
+                plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
+                hold on
+                title(['Adapt: Ori = '  num2str(aOris(iaOri))])
+                ylim([-0.01 0.1])
+                start = start+1;
+                nt{x,iori} = ind_ori;
+            end
+            x = 1+x;
+        end
+    else
+        ind_con = find(aGratingContrast == aCons(icon) & MIx);
+        for iori = 1:nOri
+            ind_ori = intersect(ind_con, find(tGratingOri == tOris(iori)));
+            subplot(naOri+1,nOri,start)
+            plot(tt, mean(nanmean(data_stim_dfof(:,:,ind_ori),3),2))
+            hold on
+            title(['No adapt; Ori = ' num2str(tOris(iori))])
+            ylim([-0.01 0.1])
+            start = start+1;
+            nt{x,iori} = ind_ori;
+        end
+        x = 1+x;
+    end
+end
+legend({'Hit','Miss'})
+print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgTargetResponse_byTarget_byOutcome.pdf']), '-dpdf','-bestfit')
+
+
+ind_aCon0 = find(aGratingContrast == 0);
+ind_aCon1 = find(aGratingContrast);
+ind_cond{1} = intersect(find(SIx),ind_aCon0);
+leg_str = {'Con = 0'};
+for i = 1:naOri
+    ind_cond{i+1} = intersect(find(SIx),intersect(ind_aCon1,find(aGratingOri==aOris(i))));
+    leg_str{i+1} = ['Ori = ' num2str(aOris(i))];
+end
+
+aCon_p1 = [NaN aGratingContrast];
+aOri_p1 = [NaN aGratingOri];
+ind_aCon0_p1{1} = intersect(ind_aCon0,find(aCon_p1==0));
+for i = 1:naOri
+    ind_aCon0_p1{i+1} = intersect(ind_aCon0,intersect(find(aCon_p1==1),find(aOri_p1 ==aOris(i))));
+end
+
+figure;
+subplot(1,2,1)
+for i = 1:naOri+1
+ plot(tt, mean(mean(data_stim_dfof(:,:,ind_cond{i}),3),2))
+ hold on
+end
+title('Current trial')
+ylabel('dF/F')
+xlabel('Time from target (ms)')
+legend(leg_str)
+subplot(1,2,2)
+for i = 1:naOri+1
+ plot(tt, mean(mean(data_stim_dfof(:,:,ind_aCon0_p1{i}),3),2))
+ hold on
+end
+title('Previous trial, for Current Con = 0')
+ylabel('dF/F')
+xlabel('Time from target (ms)')
+print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgTargetResponse.pdf']), '-dpdf','-bestfit')
 
 interval = ceil(64/nOri)+1;
 x = 1:interval:64;
@@ -821,341 +843,341 @@ elseif strcmp(cell2mat(expt(iexp).img_strct),'cells')
         end
     end
 
-%     figure;
-%     if nCells <49
-%         [n n2] = subplotn(nCells);
-%     else
-%         [n n2] = subplotn(49);
-%     end
-% 
-%     start = 1;
-%     for iC = 1:nCells
-%         if start > 49
-%              sgtitle('Adapt response')
-%             print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_adaptResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-%             figure;
-%             start = 1;
-%         end
-%         subplot(n,n2,start)
-%         col_mat = [x(1) x(end)];
-%         for i = 1:naOri
-%             ind_adapt = find(SIx & aGratingContrast & aGratingOri==aOris(i));
-%             plot(tt_adapt, mean(data_adapt_dfof(:,iC,ind_adapt),3),'Color',y(col_mat(i),:))
-%             hold on
-%         end
-%         ylim([-0.05 0.3])
-%         if mask_label(iC)
-%             title([num2str(iC) '-' expt(iexp).driver])
-%         else
-%             title(num2str(iC))
-%         end
-%         start = start+1;
-%     end
-%      sgtitle('Adapt response')
-%     print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_adaptResp_allCells_success_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
-% 
-%     figure;
-%     start = 1;
-%     for iC = 1:nCells
-%         if start > 49
-%              sgtitle('Target response- All trials- All correct')
-%             print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-%             figure;
-%             start = 1;
-%         end
-%         subplot(n,n2,start)
-%         for iori = 1:nOri
-%             ind_ori = find(SIx & tGratingOri == tOris(iori));
-%             plot(tt, mean(data_stim_dfof(:,iC,ind_ori),3),'Color',y(x(iori),:))
-%             hold on
-%         end
-%         if mask_label(iC)
-%             title([num2str(iC) '-' expt(iexp).driver])
-%         else
-%             title(num2str(iC))
-%         end
-%         start = start+1;
-%     end
-%      sgtitle('Target response- All trials- All correct')
-%     print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_success_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
-% 
-% 
-%     figure;
-%     start = 1;
-%     for iC = 1:nCells
-%         if start > 49
-%              sgtitle('Target response by choice- Trials <20 deg')
-%             print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bychoice_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-%             figure;
-%             start = 1;
-%         end
-%         subplot(n,n2,start)
-%         plot(tt, mean(data_stim_dfof(:,iC,find(~tLeftResp&~IIx&abs(tGratingOri)<20)),3))
-%         hold on
-%         plot(tt, mean(data_stim_dfof(:,iC,find(tLeftResp&~IIx&abs(tGratingOri)<20)),3))
-%         if mask_label(iC)
-%             title([num2str(iC) '-' expt(iexp).driver])
-%         else
-%             title(num2str(iC))
-%         end
-%         start = start+1;
-%     end
-%      sgtitle('Target response by choice- Trials <20 deg')
-%     print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bychoice_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
-% 
-%     
-%     figure;
-%     start = 1;
-%     for iC = 1:nCells
-%         if start > 49
-%              sgtitle('Target response by target- Trials <20 deg')
-%             print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bytarget_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-%             figure;
-%             start = 1;
-%         end
-%         subplot(n,n2,start)
-%         plot(tt, mean(data_stim_dfof(:,iC,find(~tLeftTrial&~IIx&abs(tGratingOri)<20)),3))
-%         hold on
-%         plot(tt, mean(data_stim_dfof(:,iC,find(tLeftTrial&~IIx&abs(tGratingOri)<20)),3))
-%         if mask_label(iC)
-%             title([num2str(iC) '-' expt(iexp).driver])
-%         else
-%             title(num2str(iC))
-%         end
-%         start = start+1;
-%     end
-%     sgtitle('Target response by target- Trials <20 deg')
-%     print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bytarget_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
-% 
-%     
-%     figure;
-%     start = 1;
-%     for iC = 1:nCells
-%         if start > 49
-%             sgtitle('Decision response- All trials')
-%             print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
-%             figure;
-%             start = 1;
-%         end
-%         subplot(n,n2,start)
-%         for iori = 1:nOri
-%             ind_ori = find(SIx & tGratingOri == tOris(iori));
-%             plot(tt, mean(data_dec_dfof(:,iC,ind_ori),3),'Color',y(x(iori),:))
-%             hold on
-%         end
-%         if mask_label(iC)
-%             title([num2str(iC) '-' expt(iexp).driver])
-%         else
-%             title(num2str(iC))
-%         end
-%         start = start+1;
-%     end
-%     sgtitle('Decision response- All trials')
-%     print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decResp_allCells_success_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
+    figure;
+    if nCells <49
+        [n n2] = subplotn(nCells);
+    else
+        [n n2] = subplotn(49);
+    end
+
+    start = 1;
+    for iC = 1:nCells
+        if start > 49
+             sgtitle('Adapt response')
+            print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_adaptResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+            figure;
+            start = 1;
+        end
+        subplot(n,n2,start)
+        col_mat = [x(1) x(end)];
+        for i = 1:naOri
+            ind_adapt = find(SIx & aGratingContrast & aGratingOri==aOris(i));
+            plot(tt_adapt, mean(data_adapt_dfof(:,iC,ind_adapt),3),'Color',y(col_mat(i),:))
+            hold on
+        end
+        ylim([-0.05 0.3])
+        if mask_label(iC)
+            title([num2str(iC) '-' expt(iexp).driver])
+        else
+            title(num2str(iC))
+        end
+        start = start+1;
+    end
+     sgtitle('Adapt response')
+    print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_adaptResp_allCells_success_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
+
+    figure;
+    start = 1;
+    for iC = 1:nCells
+        if start > 49
+             sgtitle('Target response- All trials- All correct')
+            print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+            figure;
+            start = 1;
+        end
+        subplot(n,n2,start)
+        for iori = 1:nOri
+            ind_ori = find(SIx & tGratingOri == tOris(iori));
+            plot(tt, mean(data_stim_dfof(:,iC,ind_ori),3),'Color',y(x(iori),:))
+            hold on
+        end
+        if mask_label(iC)
+            title([num2str(iC) '-' expt(iexp).driver])
+        else
+            title(num2str(iC))
+        end
+        start = start+1;
+    end
+     sgtitle('Target response- All trials- All correct')
+    print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_success_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
+
+
+    figure;
+    start = 1;
+    for iC = 1:nCells
+        if start > 49
+             sgtitle('Target response by choice- Trials <20 deg')
+            print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bychoice_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+            figure;
+            start = 1;
+        end
+        subplot(n,n2,start)
+        plot(tt, mean(data_stim_dfof(:,iC,find(~tLeftResp&~IIx&abs(tGratingOri)<20)),3))
+        hold on
+        plot(tt, mean(data_stim_dfof(:,iC,find(tLeftResp&~IIx&abs(tGratingOri)<20)),3))
+        if mask_label(iC)
+            title([num2str(iC) '-' expt(iexp).driver])
+        else
+            title(num2str(iC))
+        end
+        start = start+1;
+    end
+     sgtitle('Target response by choice- Trials <20 deg')
+    print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bychoice_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
+
+    
+    figure;
+    start = 1;
+    for iC = 1:nCells
+        if start > 49
+             sgtitle('Target response by target- Trials <20 deg')
+            print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bytarget_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+            figure;
+            start = 1;
+        end
+        subplot(n,n2,start)
+        plot(tt, mean(data_stim_dfof(:,iC,find(~tLeftTrial&~IIx&abs(tGratingOri)<20)),3))
+        hold on
+        plot(tt, mean(data_stim_dfof(:,iC,find(tLeftTrial&~IIx&abs(tGratingOri)<20)),3))
+        if mask_label(iC)
+            title([num2str(iC) '-' expt(iexp).driver])
+        else
+            title(num2str(iC))
+        end
+        start = start+1;
+    end
+    sgtitle('Target response by target- Trials <20 deg')
+    print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_targetResp_allCells_bytarget_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
+
+    
+    figure;
+    start = 1;
+    for iC = 1:nCells
+        if start > 49
+            sgtitle('Decision response- All trials')
+            print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decResp_allCells_success_cells' num2str(iC-49) '-' num2str(iC-1) '.pdf']), '-dpdf','-bestfit')
+            figure;
+            start = 1;
+        end
+        subplot(n,n2,start)
+        for iori = 1:nOri
+            ind_ori = find(SIx & tGratingOri == tOris(iori));
+            plot(tt, mean(data_dec_dfof(:,iC,ind_ori),3),'Color',y(x(iori),:))
+            hold on
+        end
+        if mask_label(iC)
+            title([num2str(iC) '-' expt(iexp).driver])
+        else
+            title(num2str(iC))
+        end
+        start = start+1;
+    end
+    sgtitle('Decision response- All trials')
+    print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_decResp_allCells_success_cells' num2str(iC-48) '-' num2str(iC) '.pdf']), '-dpdf','-bestfit')
 end
 
-% figure;
-% subplot(3,2,1)
-% for i = 1:naOri
-%     ind_adapt = find(SIx & aGratingContrast & aGratingOri==aOris(i));
-%     plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
-%     hold on
-% end
-% title([expt(iexp).driver '+ n = ' num2str(sum(mask_label))])
-% xlabel('Time from adapt on (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,2)
-% for i = 1:naOri
-%     ind_adapt = find(SIx & aGratingContrast & aGratingOri==aOris(i));
-%     plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(~mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
-%     hold on
-% end
-% title([expt(iexp).driver '- n = ' num2str(sum(~mask_label))])
-% xlabel('Time from adapt on (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,3) 
-% for iori = 1:nOri
-%     ind_ori = find(SIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_stim_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from target (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,4)
-% for iori = 1:nOri
-%     ind_ori = find(SIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_stim_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from target (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,5)
-% for iori = 1:nOri
-%     ind_ori = find(SIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_dec_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from decision (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,6)
-% for iori = 1:nOri
-%     ind_ori = find(SIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_dec_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from decision (ms)')
-% ylim([-0.02 0.15])
-% sgtitle(['All corrects - n = ' num2str(sum(SIx))])
-% print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_allCells_success.pdf']), '-dpdf','-bestfit')
-% 
-% 
-% figure;
-% subplot(3,2,1)
-% for i = 1:naOri
-%     ind_adapt = find(MIx & aGratingContrast & aGratingOri==aOris(i));
-%     plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
-%     hold on
-% end
-% title([expt(iexp).driver '+ n = ' num2str(sum(mask_label))])
-% xlabel('Time from adapt on (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,2)
-% for i = 1:naOri
-%     ind_adapt = find(MIx & aGratingContrast & aGratingOri==aOris(i));
-%     plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(~mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
-%     hold on
-% end
-% title([expt(iexp).driver '- n = ' num2str(sum(~mask_label))])
-% xlabel('Time from adapt on (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,3) 
-% for iori = 1:nOri
-%     ind_ori = find(MIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_stim_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from target (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,4)
-% for iori = 1:nOri
-%     ind_ori = find(MIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_stim_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from target (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,5)
-% for iori = 1:nOri
-%     ind_ori = find(MIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_dec_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from decision (ms)')
-% ylim([-0.02 0.15])
-% subplot(3,2,6)
-% for iori = 1:nOri
-%     ind_ori = find(MIx & tGratingOri == tOris(iori));
-%     plot(tt, mean(mean(data_dec_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
-%     hold on
-% end
-% xlabel('Time from decision (ms)')
-% ylim([-0.02 0.15])
-% sgtitle(['All incorrects - n = ' num2str(sum(MIx))])
-% print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_allCells_incorrect.pdf']), '-dpdf','-bestfit')
+figure;
+subplot(3,2,1)
+for i = 1:naOri
+    ind_adapt = find(SIx & aGratingContrast & aGratingOri==aOris(i));
+    plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
+    hold on
+end
+title([expt(iexp).driver '+ n = ' num2str(sum(mask_label))])
+xlabel('Time from adapt on (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,2)
+for i = 1:naOri
+    ind_adapt = find(SIx & aGratingContrast & aGratingOri==aOris(i));
+    plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(~mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
+    hold on
+end
+title([expt(iexp).driver '- n = ' num2str(sum(~mask_label))])
+xlabel('Time from adapt on (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,3) 
+for iori = 1:nOri
+    ind_ori = find(SIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_stim_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from target (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,4)
+for iori = 1:nOri
+    ind_ori = find(SIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_stim_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from target (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,5)
+for iori = 1:nOri
+    ind_ori = find(SIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_dec_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from decision (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,6)
+for iori = 1:nOri
+    ind_ori = find(SIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_dec_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from decision (ms)')
+ylim([-0.02 0.15])
+sgtitle(['All corrects - n = ' num2str(sum(SIx))])
+print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_allCells_success.pdf']), '-dpdf','-bestfit')
+
+
+figure;
+subplot(3,2,1)
+for i = 1:naOri
+    ind_adapt = find(MIx & aGratingContrast & aGratingOri==aOris(i));
+    plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
+    hold on
+end
+title([expt(iexp).driver '+ n = ' num2str(sum(mask_label))])
+xlabel('Time from adapt on (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,2)
+for i = 1:naOri
+    ind_adapt = find(MIx & aGratingContrast & aGratingOri==aOris(i));
+    plot(tt_adapt, mean(mean(data_adapt_dfof(:,find(~mask_label),ind_adapt),3),2),'Color',y(col_mat(i),:))
+    hold on
+end
+title([expt(iexp).driver '- n = ' num2str(sum(~mask_label))])
+xlabel('Time from adapt on (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,3) 
+for iori = 1:nOri
+    ind_ori = find(MIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_stim_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from target (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,4)
+for iori = 1:nOri
+    ind_ori = find(MIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_stim_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from target (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,5)
+for iori = 1:nOri
+    ind_ori = find(MIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_dec_dfof(:,find(mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from decision (ms)')
+ylim([-0.02 0.15])
+subplot(3,2,6)
+for iori = 1:nOri
+    ind_ori = find(MIx & tGratingOri == tOris(iori));
+    plot(tt, mean(mean(data_dec_dfof(:,find(~mask_label),ind_ori),3),2),'Color',y(x(iori),:))
+    hold on
+end
+xlabel('Time from decision (ms)')
+ylim([-0.02 0.15])
+sgtitle(['All incorrects - n = ' num2str(sum(MIx))])
+print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_allCells_incorrect.pdf']), '-dpdf','-bestfit')
 
 %% adapt analysis - 2AFC * Perform separately from TC extraction
 close all
-% base_win = 19:21;
-% resp_win = 25:27;
-% % base_win = 15:21;
-% % resp_win = 25:31;
-% data_adapt_base = squeeze(nanmean(data_adapt_dfof(base_win,:,:),1));
-% data_adapt_resp = squeeze(nanmean(data_adapt_dfof(resp_win,:,:),1));
-% ind_con = find(aGratingContrast == 1);
-% h_adapt = zeros(nCells,naOri);
-% p_adapt = zeros(nCells,naOri);
-% adapt_resp_ind = cell(1,naOri);
-% for iOri = 1:naOri
-%     ind_ori = find(aGratingOri==aOris(iOri));
-%     ind = intersect(ind_ori,ind_con);
-%     [h_adapt(:,iOri), p_adapt(:,iOri)] = ttest(data_adapt_resp(:,ind), data_adapt_base(:,ind), 'tail', 'right','dim',2);
-%     adapt_resp_ind{iOri} = find(h_adapt(:,iOri));
+base_win = 19:21;
+resp_win = 25:27;
+% base_win = 15:21;
+% resp_win = 25:31;
+data_adapt_base = squeeze(nanmean(data_adapt_dfof(base_win,:,:),1));
+data_adapt_resp = squeeze(nanmean(data_adapt_dfof(resp_win,:,:),1));
+ind_con = find(aGratingContrast == 1);
+h_adapt = zeros(nCells,naOri);
+p_adapt = zeros(nCells,naOri);
+adapt_resp_ind = cell(1,naOri);
+for iOri = 1:naOri
+    ind_ori = find(aGratingOri==aOris(iOri));
+    ind = intersect(ind_ori,ind_con);
+    [h_adapt(:,iOri), p_adapt(:,iOri)] = ttest(data_adapt_resp(:,ind), data_adapt_base(:,ind), 'tail', 'right','dim',2);
+    adapt_resp_ind{iOri} = find(h_adapt(:,iOri));
+end
+
+data_stim_base = squeeze(nanmean(data_stim_dfof(base_win,:,:),1));
+data_stim_resp = squeeze(nanmean(data_stim_dfof(resp_win,:,:),1));
+h_stim = zeros(nCells,nOri);
+p_stim = zeros(nCells,nOri);
+for iOri = 1:nOri
+    ind_ori = find(tGratingOri==tOris(iOri));
+    [h_stim(:,iOri), p_stim(:,iOri)] = ttest(data_stim_resp(:,ind_ori), data_stim_base(:,ind_ori), 'tail', 'right','dim',2);
+end
+stim_resp_ind = find(sum(h_stim,2));
+stim_resp = data_stim_resp-data_stim_base;
+
+figure;
+start = 1;
+for IN = 1:2
+    subplot(naOri+1,2,start)
+    cell_ind = intersect(stim_resp_ind, find(mask_label==IN-1));
+    plot(nanmean(nanmean(data_stim_dfof(:,cell_ind,ind_con),3),2))
+    if IN == 1
+        IN_str = [expt(iexp).driver '-'];
+    else
+        IN_str = [expt(iexp).driver '+'];
+    end
+    vline(base_win, 'b')
+    vline(resp_win, 'r')
+    title(['Target resp; ' num2str(length(cell_ind)) ' ' IN_str ' cells'])
+    start = start+1;
+end
+
+% if ~isfield(adapt_input,'cAdaptOn_all')
+    nFramesPerAdapt = double(ceil(((double(adapt_input.dynAdaptPeriodMs + adapt_input.dynAdaptFlashOffMs))./1000).*frameRateHz));
+    base_win_all = zeros(length(base_win),4,2);
+    resp_win_all = zeros(length(resp_win),4,2);
+    for i = 1:4
+        base_win_all(:,i,1) = base_win+((i-1).*nFramesPerAdapt);
+        resp_win_all(:,i,1) = resp_win+((i-1).*nFramesPerAdapt);
+        base_win_all(:,i,2) = base_win+((i-1).*nFramesPerAdapt);
+        resp_win_all(:,i,2) = resp_win+((i-1).*nFramesPerAdapt);
+    end
+% else
+%     error('need code for cAdaptOn_all')
 % end
-% 
-% data_stim_base = squeeze(nanmean(data_stim_dfof(base_win,:,:),1));
-% data_stim_resp = squeeze(nanmean(data_stim_dfof(resp_win,:,:),1));
-% h_stim = zeros(nCells,nOri);
-% p_stim = zeros(nCells,nOri);
-% for iOri = 1:nOri
-%     ind_ori = find(tGratingOri==tOris(iOri));
-%     [h_stim(:,iOri), p_stim(:,iOri)] = ttest(data_stim_resp(:,ind_ori), data_stim_base(:,ind_ori), 'tail', 'right','dim',2);
-% end
-% stim_resp_ind = find(sum(h_stim,2));
-% stim_resp = data_stim_resp-data_stim_base;
-% 
-% figure;
-% start = 1;
-% for IN = 1:2
-%     subplot(naOri+1,2,start)
-%     cell_ind = intersect(stim_resp_ind, find(mask_label==IN-1));
-%     plot(nanmean(nanmean(data_stim_dfof(:,cell_ind,ind_con),3),2))
-%     if IN == 1
-%         IN_str = [expt(iexp).driver '-'];
-%     else
-%         IN_str = [expt(iexp).driver '+'];
-%     end
-%     vline(base_win, 'b')
-%     vline(resp_win, 'r')
-%     title(['Target resp; ' num2str(length(cell_ind)) ' ' IN_str ' cells'])
-%     start = start+1;
-% end
-% 
-% % if ~isfield(adapt_input,'cAdaptOn_all')
-%     nFramesPerAdapt = double(ceil(((double(adapt_input.dynAdaptPeriodMs + adapt_input.dynAdaptFlashOffMs))./1000).*frameRateHz));
-%     base_win_all = zeros(length(base_win),4,2);
-%     resp_win_all = zeros(length(resp_win),4,2);
-%     for i = 1:4
-%         base_win_all(:,i,1) = base_win+((i-1).*nFramesPerAdapt);
-%         resp_win_all(:,i,1) = resp_win+((i-1).*nFramesPerAdapt);
-%         base_win_all(:,i,2) = base_win+((i-1).*nFramesPerAdapt);
-%         resp_win_all(:,i,2) = resp_win+((i-1).*nFramesPerAdapt);
-%     end
-% % else
-% %     error('need code for cAdaptOn_all')
-% % end
-% 
-% for iOri = 1:naOri
-%     for IN = 1:2
-%         subplot(naOri+1,2,start)
-%         ind_ori = find(aGratingOri==aOris(iOri));
-%         trial_ind = intersect(ind_ori,ind_con);
-%         cell_ind = intersect(adapt_resp_ind{iOri}, find(mask_label==IN-1));
-%         plot(nanmean(nanmean(data_adapt_dfof(:,cell_ind,trial_ind),3),2))
-%         if IN == 1
-%             IN_str = [expt(iexp).driver '-'];
-%         else
-%             IN_str = [expt(iexp).driver '+'];
-%         end
-%         vline(reshape(base_win_all(:,:,IN),[size(base_win_all,1).*size(base_win_all,2) 1]), 'b')
-%         vline(reshape(resp_win_all(:,:,IN),[size(resp_win_all,1).*size(resp_win_all,2) 1]), 'r')
-%         title(['Ori = ' num2str(aOris(iOri)) '; ' num2str(length(cell_ind)) ' ' IN_str ' cells'])
-%         start = start+1;
-%     end
-% end
-% print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_Adapt&Target.pdf']), '-dpdf','-bestfit')
-% 
-% 
-% adapt_cyc_resp = zeros(nCells,nTrials,4);
-% for IN = 1:2
-%     for i = 1:4
-%         adapt_cyc_resp(find(mask_label==IN-1),:,i) = squeeze(nanmean(data_adapt_dfof(resp_win_all(:,i,IN),find(mask_label==IN-1),:),1)...
-%             -nanmean(data_adapt_dfof(base_win_all(:,i,IN),find(mask_label==IN-1),:),1));
-%     end
-% end
-% 
-% save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptResp.mat']), 'mask_label', 'data_adapt_dfof', 'adapt_cyc_resp', 'base_win_all', 'resp_win_all','adapt_resp_ind')
-% save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimResp.mat']), 'stim_resp', 'stim_resp_ind', 'base_win', 'resp_win');
-% save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'tGratingOri', 'tOris', 'aGratingOri', 'aOris', 'aGratingContrast', 'ind_cond', 'SIx', 'MIx');
+
+for iOri = 1:naOri
+    for IN = 1:2
+        subplot(naOri+1,2,start)
+        ind_ori = find(aGratingOri==aOris(iOri));
+        trial_ind = intersect(ind_ori,ind_con);
+        cell_ind = intersect(adapt_resp_ind{iOri}, find(mask_label==IN-1));
+        plot(nanmean(nanmean(data_adapt_dfof(:,cell_ind,trial_ind),3),2))
+        if IN == 1
+            IN_str = [expt(iexp).driver '-'];
+        else
+            IN_str = [expt(iexp).driver '+'];
+        end
+        vline(reshape(base_win_all(:,:,IN),[size(base_win_all,1).*size(base_win_all,2) 1]), 'b')
+        vline(reshape(resp_win_all(:,:,IN),[size(resp_win_all,1).*size(resp_win_all,2) 1]), 'r')
+        title(['Ori = ' num2str(aOris(iOri)) '; ' num2str(length(cell_ind)) ' ' IN_str ' cells'])
+        start = start+1;
+    end
+end
+print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_Adapt&Target.pdf']), '-dpdf','-bestfit')
+
+
+adapt_cyc_resp = zeros(nCells,nTrials,4);
+for IN = 1:2
+    for i = 1:4
+        adapt_cyc_resp(find(mask_label==IN-1),:,i) = squeeze(nanmean(data_adapt_dfof(resp_win_all(:,i,IN),find(mask_label==IN-1),:),1)...
+            -nanmean(data_adapt_dfof(base_win_all(:,i,IN),find(mask_label==IN-1),:),1));
+    end
+end
+
+save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptResp.mat']), 'mask_label', 'data_adapt_dfof', 'adapt_cyc_resp', 'base_win_all', 'resp_win_all','adapt_resp_ind')
+save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimResp.mat']), 'stim_resp', 'stim_resp_ind', 'base_win', 'resp_win');
+save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'tGratingOri', 'tOris', 'aGratingOri', 'aOris', 'aGratingContrast', 'ind_cond', 'SIx', 'MIx');
 %% dir tuning neuropil subtraction
 close all
 data_tc = stackGetTimeCourses(data_reg_dir, mask_cell);
@@ -1327,6 +1349,8 @@ if ~isempty(expt(iexp).pass_run)
         end
         pass_input = trialChopper(pass_input,[1 itrial]);
     end
+
+    %% Sbxread data
     
     fprintf(['Reading run ' expt(iexp).pass_run '- ' num2str(min(nframes)) ' frames \r\n'])
     data = sbxread(imgMatFile(1,1:11),0,min(nframes));
@@ -1384,7 +1408,17 @@ if ~isempty(expt(iexp).pass_run)
 end
 
     %% Check passive photodiode (info must exist)
+    pass_str = ['runs-' expt(iexp).pass_run];
+
+    if exist(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str '_input.mat']))
+%         load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+        load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str '_input.mat']), 'pass_input')
+    end
+
     irun = 1;
+    nrun = 1;
+
+
     if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).pass_run(irun,:) '\' [expt(iexp).pass_run(irun,:) expt(iexp).runs_suffix(irun,:) '.ephys']])
         photoData = [];
         for irun = 1:nrun
@@ -1397,7 +1431,7 @@ end
         end
         ntrials = size(pass_input.tGratingContrast,2);
 
-        [photoLoc stimOnFrames] = photoFrameFinder(photoData,min(nframes));
+        [photoLoc, stimOnFrames] = photoFrameFinder_movBase(photoData,min(nframes));
         frameDiff = diff(stimOnFrames);
         ind_long = find(frameDiff>20);
         ind_long_long = ind_long(find(frameDiff(ind_long-1)>20)); % ??
@@ -1434,7 +1468,7 @@ end
         unique(cStimOn-cAdaptOn)
         print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str 'photoLoc_diff.pdf']),'-dpdf', '-bestfit')
         save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str '_photoData.mat']), 'photoLoc', 'stimOnFrames', 'cStimOn','cAdaptOn')
-    elseif isfield(info, frame)
+    elseif isfield(info, "frame")
         [stimOnFrames stimOffFrames] = photoFrameFinder_Sanworks(info.frame);
         
         tDoFB = celleqel2mat_padded(pass_input.tDoFeedbackMotion);
