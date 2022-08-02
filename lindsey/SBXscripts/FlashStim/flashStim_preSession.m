@@ -1,22 +1,32 @@
 %% Load, register, segment and neuropil correct 2P data
 close all
 clear all global
+clc
+
+ds = 'FlashStim_ExptList';
+eval(ds);
+
+iexp  = 4;
+
+mouse = expt(iexp).mouse;
+date = expt(iexp).date;
+ImgFolder = expt(iexp).preFolder;
+time = cell2mat(expt(iexp).preTime);
+nrun = length(ImgFolder);
+run_str = catRunName(ImgFolder, nrun);
+ImgFolder = cell2mat(ImgFolder);
 
 %Path names
 fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
-cam_fn = fullfile(fn_base, 'home\camaron');
+
+if strcmp(expt(iexp).saveLoc,'tj')
+    data_fn = fullfile(fn_base, 'home\tj\2p_Imaging\');
+end
 lg_fn = fullfile(fn_base, 'home\lindsey');
-data_fn = fullfile(lg_fn, 'Data\2P_images');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
-%Specific experiment information
-date = '220120';
-ImgFolder = '003';
-time = '1742';
-mouse = 'i1368';
-frame_rate = 15;
-run_str = catRunName(ImgFolder, 1);
+frame_rate = params.frameRate;
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
 
@@ -25,7 +35,7 @@ datemouserun = [date '_' mouse '_' run_str];
 fName = fullfile(mworks_fn, ['data-' mouse '-' date '-' time '.mat']);
 load(fName);
 %Load 2P metadata- this has information about the information about the imaging session (e.g. frame count, zoom)
-CD = fullfile(data_fn, mouse, date, ImgFolder);
+CD = fullfile(data_fn, mouse, datemouse, ImgFolder);
 cd(CD);
 imgMatFile = [ImgFolder '_000_000.mat'];
 load(imgMatFile);
@@ -44,7 +54,7 @@ data = squeeze(data);
 %1. Find a stable target
 %    a. Plot average of 500 frames throughout stack
 nframes = 500; %nframes to average for target
-nskip = 5000; %nframes to skip for each average
+nskip = 3000; %nframes to skip for each average
 
 nep = floor(size(data,3)./nskip);
 [n, n2] = subplotn(nep); 
@@ -125,6 +135,7 @@ for idir = 1:nDirs
     imagesc(data_dfof_avg(:,:,idir))
 end
 clear data_dfof
+
 %        Filtering data helps make cells more visible for selection
 myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_avg_all = imfilter(data_dfof_avg,myfilter);
@@ -226,41 +237,6 @@ end
 
 h_all_dir = sum(h_dir,1);
 resp_ind = find(h_all_dir);
-start=1;
-n = 1;
-figure;
-movegui('center')
-for iCell = 1:nCells
-    if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
-        figure;movegui('center');
-        start = 1;
-        n = n+1;
-    end
-    subplot(5,5,start)
-    errorbar(Dirs, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
-    title(['R = ' num2str(h_all_dir(iCell))])
-    start = start +1;
-end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
-
-%plot significant cells
-start=1;
-n = 1;
-figure;
-movegui('center')
-for i = 1:length(resp_ind)
-    iCell = resp_ind(i);
-    if start>25
-        figure;movegui('center');
-        start = 1;
-        n = n+1;
-    end
-    subplot(5,5,start)
-    errorbar(Dirs, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
-    title(['R = ' num2str(h_all_dir(iCell))])
-    start = start +1;
-end
 
 tOri = tDir;
 tOri(find(tDir>=180)) = tOri(find(tDir>=180))-180;
@@ -282,11 +258,23 @@ for iOri = 1:nOri
 end
 
 h_all_ori = sum(h_ori,1);
+b_ori = zeros(1,nCells);
+k1_ori = zeros(1,nCells);
+R1_ori = zeros(1,nCells);
+u1_ori = zeros(1,nCells);
+R_square_ori = zeros(1,nCells);
+sse_ori = zeros(1,nCells);
+stim_DSI = zeros(1,nCells);
+stim_OSI = zeros(1,nCells);
 
+Oris = Dirs(1:nDirs/2);
+nOris = length(Oris);
 start=1;
 n = 1;
 figure;
 movegui('center')
+theta_high = [0:179];
+y_fit = zeros(180,nCells);
 for iCell = 1:nCells
     if start>25
         print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
@@ -297,92 +285,32 @@ for iCell = 1:nCells
     subplot(5,5,start)
     errorbar(Oris, data_dfof_ori(iCell,:,1), data_dfof_ori(iCell,:,2), '-o')
     title(['R = ' num2str(h_all_ori(iCell))])
+
+    data = [data_dfof_ori(iCell,:,1) data_dfof_ori(iCell,1,1)];
+    theta = [deg2rad(Oris) pi];
+    [b_ori(:,iCell),k1_ori(:,iCell),R1_ori(:,iCell),u1_ori(:,iCell),sse_ori(:,iCell),R_square_ori(:,iCell)] ...
+        = miaovonmisesfit_ori(theta,data);
+    y_fit(:,iCell) = b_ori(:,iCell)+R1_ori(:,iCell).*exp(k1_ori(:,iCell).*(cos(2.*(deg2rad(theta_high)-u1_ori(:,iCell)))-1));
+    hold on 
+    plot(theta_high,y_fit(:,iCell))
+    [max_val max_ind] = max(data_dfof_ori(iCell,:,1),[],2);
+    null_ind = max_ind+(nOris./2);
+    null_ind(find(null_ind>nOris)) = null_ind(find(null_ind>nOris))-nOris;
+    min_val = data_dfof_ori(iCell,null_ind,1);
+    if min_val<0
+        min_val = 0;
+    end
+    stim_OSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
+    [max_val max_ind] = max(data_dfof_dir(iCell,:,1),[],2);
+    null_ind = max_ind+(nDirs./2);
+    null_ind(find(null_ind>nDirs)) = null_ind(find(null_ind>nDirs))-nDirs;
+    min_val = data_dfof_dir(iCell,null_ind,1);
+    if min_val<0
+        min_val = 0;
+    end
+    stim_DSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
     start = start +1;
 end
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
 
- b_ori = zeros(1,nCells);
-    k1_ori = zeros(1,nCells);
-    R1_ori = zeros(1,nCells);
-    u1_ori = zeros(1,nCells);
-    R_square_ori = zeros(1,nCells);
-    sse_ori = zeros(1,nCells);
-    stim_DSI = zeros(1,nCells);
-    stim_OSI = zeros(1,nCells);
-    
-    Oris = Dirs(1:nDirs/2);
-    nOris = length(Oris);
-    data_dfof_ori = mean(reshape(data_dfof_dir(:,:,1),[nCells nOris 2]),3);
-    for iCell = 1:nCells
-        data = [data_dfof_ori(iCell,:,1) data_dfof_ori(iCell,1,1)];
-        theta = [deg2rad(Oris) pi];
-        [b_ori(:,iCell),k1_ori(:,iCell),R1_ori(:,iCell),u1_ori(:,iCell),sse_ori(:,iCell),R_square_ori(:,iCell)] ...
-            = miaovonmisesfit_ori(theta,data);
-        [max_val max_ind] = max(data_dfof_ori(iCell,:,1),[],2);
-        null_ind = max_ind+(nOris./2);
-        null_ind(find(null_ind>nOris)) = null_ind(find(null_ind>nOris))-nOris;
-        min_val = data_dfof_ori(iCell,null_ind,1);
-        if min_val<0
-            min_val = 0;
-        end
-        stim_OSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
-        [max_val max_ind] = max(data_dfof_dir(iCell,:,1),[],2);
-        null_ind = max_ind+(nDirs./2);
-        null_ind(find(null_ind>nDirs)) = null_ind(find(null_ind>nDirs))-nDirs;
-        min_val = data_dfof_dir(iCell,null_ind,1);
-        if min_val<0
-            min_val = 0;
-        end
-        stim_DSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
-        
-    end
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','k1_ori','b_ori','R1_ori','u1_ori','stim_DSI','stim_OSI','R_square_ori')
-
-%% F1/F0 analysis
-tf = input.gratingTemporalFreqCPS;
-data_dfof = permute(data_dfof,[1 3 2]);
-phaseCyc = double(tf*frame_rate);
-cycPerTrial = floor(nOn/(phaseCyc));
-data_dfof_cyc = zeros(phaseCyc, nCells, ntrials, cycPerTrial-1);
-for icyc = 1:cycPerTrial-1
-    data_dfof_cyc(:,:,:,icyc) = data_dfof(nOff+phaseCyc+((icyc-1).*phaseCyc):nOff+phaseCyc+(icyc.*phaseCyc)-1,:,:);
-end
-data_dfof_cycavg = mean(data_dfof_cyc,4);
-data_dfof_cycdir = zeros(phaseCyc,nCells,nDirs);
-for iDir = 1:nDirs
-    ind = find(tDir == Dirs(iDir));
-    data_dfof_cycdir(:,:,iDir) = mean(data_dfof_cycavg(:,:,ind),3);
-end
- 
-[max_val max_ind] = max(data_dfof_dir(:,:,1),[],2);
- 
-f0 = zeros(1,nCells);
-f1 = zeros(1,nCells);
-for iCell = 1:nCells
-    cyc = squeeze(data_dfof_cycdir(:,iCell,max_ind(iCell)))';
-    ff = fft(cyc);
-    p2 = abs(ff/length(cyc));
-    p1 = p2(1:1+length(cyc)./2);
-    p1(2:end-1) = 2*p1(2:end-1);
-    f0(1,iCell) = p1(1);
-    f1(1,iCell) = p1(2);
-end
-f1f0 = f1./f0;
-figure; 
-subplot(2,2,1)
-hist(f0)
-xlabel('F0')
-subplot(2,2,2)
-hist(f1)
-xlabel('F1')
-subplot(2,2,3)
-scatter(f0,f1)
-ylim([0 4])
-xlim([0 4])
-xlabel('F0')
-ylabel('F1')
-subplot(2,2,4)
-hist(f1f0)
-xlabel('F1/F0')
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_F1F0.pdf']),'-dpdf','-bestfit')
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_dirAnalysis.mat']), 'max_ind','data_dfof_cycdir','f1','f0','f1f0')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','h_ori','k1_ori','b_ori','R1_ori','u1_ori','stim_DSI','stim_OSI','R_square_ori','y_fit','Oris','Dirs')

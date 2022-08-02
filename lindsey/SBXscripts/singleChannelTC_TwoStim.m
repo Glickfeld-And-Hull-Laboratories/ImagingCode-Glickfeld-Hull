@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '220526';
+date = '220623';
 ImgFolder = {'002'};
-time = strvcat('0948');
-mouse = 'i1369';
+time = strvcat('1540');
+mouse = 'i1372';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -41,7 +41,7 @@ nep = floor(size(data,3)./10000);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
 
-data_avg = mean(data(:,:,80001:80500),3);
+data_avg = mean(data(:,:,60001:60500),3);
 %% Register data
 
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
@@ -154,6 +154,18 @@ elseif input.doRandDir
         subplot(n,n2,it)
         imagesc(data_dfof_stim(:,:,it))
         title(num2str(oris(it)))
+    end  
+elseif input.doRandSF
+    data_dfof_stim = zeros(sz(1),sz(2),nSF);
+    figure;
+    it = 1;
+    [n n2] = subplotn(nSF+1);
+    for it = 1:nSF
+        ind_use = find(sf_mat == sfs(it));
+        subplot(n,n2,it)
+        data_dfof_stim(:,:,it) = nanmean(data_one_dfof(:,:,ind_use),3);
+        imagesc(data_dfof_stim(:,:,it))
+        title(num2str(chop(sfs(it),2)))
     end    
 elseif input.doRandISITime
     data_dfof_stim = zeros(sz(1),sz(2),nISI+1);
@@ -262,7 +274,7 @@ tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
 base_win = 21:23;
-resp_win = 30:32;
+resp_win = 29:31;
 figure;
 subplot(2,1,1)
 shadedErrorBar(1:100,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
@@ -274,6 +286,12 @@ vline([base_win resp_win])
 sf_mat = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
 sfs = unique(sf_mat);
 nSF = length(sfs);
+
+h1_ori = zeros(nCells,nOri,nSF);
+h2_ori = zeros(nCells,nOri,nSF);
+p1_ori = zeros(nCells,nOri,nSF);
+p2_ori = zeros(nCells,nOri,nSF);
+
 
 for iOri = 1:nOri
     ind = find(ori_mat == oris(iOri));
@@ -438,52 +456,125 @@ ylim([0 1.2])
 set(gca,'xscale','log')
 
 %%
-resp_dfof_dir = zeros(nCells,nOri,nISI,2);
-tr_ind = cell(nOri,nISI);
-for i = 1:nOri
-    ind = find(ori_mat == oris(i));
-    for ii = 1:nISI
-        ind_use = intersect(ind, find(tISITime == ISIs(ii)));
-        tr_ind{i,ii} = ind_use;
-        resp_temp1 = nanmean(tc_one_dfof(:,:,ind_use),3);
-        resp_temp2 = nanmean(tc_two_dfof(:,:,ind_use),3);
-        resp_dfof_dir(:,i,ii,1) = squeeze(mean(resp_temp1(resp_win,:),1)-mean(resp_temp1(base_win,:),1));
-        resp_dfof_dir(:,i,ii,2) = squeeze(mean(resp_temp2(resp_win,:),1)-mean(resp_temp2(base_win,:),1));
-    end
-end
-
-resp_dfof_stim = zeros(nCells,nOri,nSF,nISI,2);
-tr_ind = cell(nOri,nSF,nISI);
-tr_n = zeros(nOri,nSF,nISI);
-for i = 1:nOri
-    ind = find(ori_mat == oris(i));
-    for ii = 1:nSF
-        ind2 = find(sf_mat == sfs(ii));
-        for iii = 1:nISI
-            ind_use = intersect(ind, intersect(ind2, find(tISITime == ISIs(iii))));
-            tr_ind{i,ii,iii} = ind_use;
-            tr_n(i,ii,iii) = length(ind_use);
+if input.doRandDir
+    resp_dfof_dir = zeros(nCells,nOri,nISI,2);
+    tr_ind = cell(nOri,nISI);
+    for i = 1:nOri
+        ind = find(ori_mat == oris(i));
+        for ii = 1:nISI
+            ind_use = intersect(ind, find(tISITime == ISIs(ii)));
+            tr_ind{i,ii} = ind_use;
             resp_temp1 = nanmean(tc_one_dfof(:,:,ind_use),3);
             resp_temp2 = nanmean(tc_two_dfof(:,:,ind_use),3);
-            resp_dfof_stim(:,i,ii,iii,1) = squeeze(mean(resp_temp1(resp_win,:),1)-mean(resp_temp1(base_win,:),1));
-            resp_dfof_stim(:,i,ii,iii,2) = squeeze(mean(resp_temp2(resp_win,:),1)-mean(resp_temp2(base_win,:),1));
+            resp_dfof_dir(:,i,ii,1) = squeeze(mean(resp_temp1(resp_win,:),1)-mean(resp_temp1(base_win,:),1));
+            resp_dfof_dir(:,i,ii,2) = squeeze(mean(resp_temp2(resp_win,:),1)-mean(resp_temp2(base_win,:),1));
         end
+    end
+
+    figure; 
+    resp_ind = find(sum(h1_ori,[2 3]));
+    [n n2] = subplotn(length(resp_ind));
+    for iC = 1:length(resp_ind)
+        iCell = resp_ind(iC);
+        subplot(n,n2,iC)
+        imagesc(squeeze(resp_dfof_dir(iCell,:,1,1)))
+        %title(num2str(sum(sum(h1_ori(iCell,:,:),2),3)>0))
+        axis off
+        clim([0 0.4])
     end
 end
 
-figure; 
-resp_ind = find(sum(h1_ori,[2 3]));
-[n n2] = subplotn(length(resp_ind));
-for iC = 1:length(resp_ind)
-    iCell = resp_ind(iC);
-    subplot(n,n2,iC)
-    imagesc(squeeze(resp_dfof_stim(iCell,:,:,1,1)))
-    %title(num2str(sum(sum(h1_ori(iCell,:,:),2),3)>0))
-    axis off
-    clim([0 0.4])
+if input.doRandSF & ~input.doRandDir 
+    resp_dfof_stim = zeros(nCells,nSF,2);
+    resp_dfof_var = zeros(nCells,nSF,2);
+    tr_ind = cell(1,nSF);
+    for i = 1:nSF
+        ind_use = find(sf_mat == sfs(i));
+        tr_ind{1,i} = ind_use;
+        resp_dfof_stim(:,i,1) = mean(mean(tc_one_dfof(resp_win,:,ind_use),1)-mean(tc_one_dfof(base_win,:,ind_use),1),3,'omitnan')';
+        resp_dfof_stim(:,i,2) = mean(mean(tc_two_dfof(resp_win,:,ind_use),1)-mean(tc_two_dfof(base_win,:,ind_use),1),3,'omitnan')';
+        resp_dfof_var(:,i,1) = var(mean(tc_one_dfof(resp_win,:,ind_use),1)-mean(tc_one_dfof(base_win,:,ind_use),1),[],3,'omitnan')';
+        resp_dfof_var(:,i,2) = var(mean(tc_two_dfof(resp_win,:,ind_use),1)-mean(tc_two_dfof(base_win,:,ind_use),1),[],3,'omitnan')';
+    end
+
+    figure; 
+    resp_ind = find(sum(h1_ori,[2 3]));
+    [n n2] = subplotn(length(resp_ind));
+    for iC = 1:length(resp_ind)
+        iCell = resp_ind(iC);
+        subplot(n,n2,iC)
+        plot(sfs,resp_dfof_stim(iCell,:,1),'o')
+    end
+    resp_dfof_sfnan = resp_dfof_stim(:,:,1);
+    resp_dfof_sfnan(squeeze(~h1_ori)) = nan;
+
+    [pref_val pref_sf] = max(resp_dfof_sfnan(:,:,1),[],2);
+    norm_dfof_stim = resp_dfof_stim(:,:,2)./resp_dfof_stim(:,:,1);
+    norm_dfof_stim_nan = norm_dfof_stim;
+    norm_dfof_stim_nan(squeeze(~h1_ori)) = nan;
+    norm_dfof_stim_nan(norm_dfof_stim_nan<0.05) = nan;
+    resp_dfof_pref = indOnly(resp_dfof_stim,pref_sf);
+    ind_use = intersect(resp_ind,find(resp_dfof_pref>0.05));
+    norm_dfof_stim_pref = indOnly(norm_dfof_stim,pref_sf);
+
+    figure;
+    subplot(1,2,1)
+    scatter(repmat(sfs,[nCells 1]), norm_dfof_stim_nan,'ok')
+    hold on
+    errorbar(sfs,mean(norm_dfof_stim_nan,1,'omitnan'),std(norm_dfof_stim_nan,[],1,'omitnan')./sqrt(sum(~isnan(norm_dfof_stim_nan),1)),'or')
+    xlabel('SF')
+    ylabel('Norm resp')
+    xlim([0 0.7])
+
+    subplot(1,2,2)
+    scatter(sfs(pref_sf(ind_use)),norm_dfof_stim_pref(ind_use),'ok')
+    hold on
+    for i = 1:nSF
+        ind = intersect(ind_use,find(pref_sf==i));
+        errorbar(sfs(i),mean(norm_dfof_stim_pref(ind),1,'omitnan'),std(norm_dfof_stim_pref(ind),[],1,'omitnan'),'or')
+    end
+    xlabel('Pref SF')
+    ylabel('Norm resp')
+    xlim([0 0.7])
+    sgtitle([mouse ' ' date '- ' num2str(length(ind_use)) ' resp cells'])
+    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptBySF.pdf']),'-dpdf','-fillpage')
+
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']), 'norm_dfof_stim_nan', 'norm_dfof_stim_pref', 'resp_dfof_stim', 'pref_sf', 'norm_dfof_stim', 'tc_one_dfof', 'tc_two_dfof', 'nCells','frame_rate', 'h1_ori')
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']),'cStimOne','cStimTwo','ori_mat','nOri','oris','sf_mat', 'sfs', 'nSF', 'tISITime','ISIs','nISI','stimOneTime', 'stimOneTimes', 'nTime', 'stimOneContrast', 'stimOneCons','base_win','resp_win','tr_ind')
 end
 
-if input.doRandSF
+if input.doRandSF & input.doRandDir
+    resp_dfof_stim = zeros(nCells,nOri,nSF,nISI,2);
+    tr_ind = cell(nOri,nSF,nISI);
+    tr_n = zeros(nOri,nSF,nISI);
+    for i = 1:nOri
+        ind = find(ori_mat == oris(i));
+        for ii = 1:nSF
+            ind2 = find(sf_mat == sfs(ii));
+            for iii = 1:nISI
+                ind_use = intersect(ind, intersect(ind2, find(tISITime == ISIs(iii))));
+                tr_ind{i,ii,iii} = ind_use;
+                tr_n(i,ii,iii) = length(ind_use);
+                resp_temp1 = nanmean(tc_one_dfof(:,:,ind_use),3);
+                resp_temp2 = nanmean(tc_two_dfof(:,:,ind_use),3);
+                resp_dfof_stim(:,i,ii,iii,1) = squeeze(mean(resp_temp1(resp_win,:),1)-mean(resp_temp1(base_win,:),1));
+                resp_dfof_stim(:,i,ii,iii,2) = squeeze(mean(resp_temp2(resp_win,:),1)-mean(resp_temp2(base_win,:),1));
+            end
+        end
+    end
+    
+    figure; 
+    resp_ind = find(sum(h1_ori,[2 3]));
+    [n n2] = subplotn(length(resp_ind));
+    for iC = 1:length(resp_ind)
+        iCell = resp_ind(iC);
+        subplot(n,n2,iC)
+        imagesc(squeeze(resp_dfof_stim(iCell,:,:,1,1)))
+        %title(num2str(sum(sum(h1_ori(iCell,:,:),2),3)>0))
+        axis off
+        clim([0 0.4])
+    end
+
     [pref_val pref_sf] = max(mean(resp_dfof_stim(:,:,:,1,1),2),[],3);
     [pref_val pref_dir] = max(resp_dfof_stim(:,:,pref_sf,1,1),[],2);
     norm_dfof_stim = resp_dfof_stim(:,:,:,1,2)./resp_dfof_stim(:,:,:,1,1);
@@ -797,6 +888,7 @@ more_ad_all = setdiff(1:length(resp_ind), less_ad_all);
 
 ylabel('Adapt Ix')
 xlabel('Cell sorted by Adapt Ix')
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptCI.pdf']),'-dpdf','-bestfit')
 
 figure; scatter(1:length(resp_ind),resp_dfof_pref(resp_ind(norm_resp_med_ind),:,1))
 ylabel('R1 dF/F')
