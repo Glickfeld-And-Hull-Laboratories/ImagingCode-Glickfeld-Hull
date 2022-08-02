@@ -2,10 +2,10 @@
 clear all; clear global; close all
 
 %identifying animal and run
-date = '220107';
+date = '220709';
 imgFolder = '003';
-time = '1532';
-mouse = 'WK12';
+time = '1528';
+mouse = 'WK23';
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
 %setting my paths

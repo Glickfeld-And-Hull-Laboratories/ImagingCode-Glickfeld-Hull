@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 %131 133 138 142 163 171
-sess_list = [131 133 138 142 163 171];%enter all the sessions you want to concatenate
+sess_list = [186];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -56,6 +56,8 @@ dfof_max_diff_concat=[];
 nKeep_concat=[];
 LMI_concat = cell(1,nd);
 data_resp_concat = cell(1,nd);
+red_fluor_concat=[];
+green_fluor_concat=[];
 
 for iSess = 1:nSess
     day_id = sess_list(iSess)
@@ -73,6 +75,8 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'resp_keep.mat'))
     load(fullfile(fn_multi,'input.mat'))
     load(fullfile(fn_multi,'locomotion.mat'))
+    load(fullfile(fn_multi,'fluor_intensity.mat'))
+    
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -117,6 +121,8 @@ for iSess = 1:nSess
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
+    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
+    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
 end
 %
 clear mouse day_id nKeep iSess fn_multi cons oris
@@ -124,6 +130,7 @@ clear explanation1 resp_keep tc_trial_avrg_keep_allCond pref_responses_allCond s
 clear LMI RIx locCounts locResp locTCs statResp statTCs wheel_tc
 clear data_con_resp_keep data_ori_resp_keep data_rep_keep dfof_max_diff dfof_max_diff_raw explanation2 resp_max_keep data_resp_keep pref_responses_stat pref_responses_loc
 clear tc_trial_avrg_stat tc_trial_avrg_loc
+clear red_fluor_all red_fluor_match green_fluor_match green_fluor_match red_fluor_keep green_fluor_keep
 red_ind_concat = find(red_concat);
 green_ind_concat = find(green_concat);
 %
@@ -135,11 +142,16 @@ nKeep_total = sum(nKeep_concat);
 mean(RIx_concat{pre})
 mean(RIx_concat{post})
 %% find cells that I ahve running data for on both days
-haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
-haveRunning_post = ~isnan(pref_responses_loc_concat{post});
-haveRunning_both = find(haveRunning_pre.* haveRunning_post);
-haveRunning_green = intersect(haveRunning_both, green_ind_concat);
-haveRunning_red = intersect(haveRunning_both, red_ind_concat);
+% haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
+% haveRunning_post = ~isnan(pref_responses_loc_concat{post});
+% haveRunning_both = find(haveRunning_pre.* haveRunning_post);
+% haveRunning_green = intersect(haveRunning_both, green_ind_concat);
+% haveRunning_red = intersect(haveRunning_both, red_ind_concat);
+
+% %%alternate for times when I know I don't have enough running data
+haveRunning_green = green_ind_concat;
+haveRunning_red = red_ind_concat;
+
 
 
 %% make figure with se shaded, averaging over stationary vs. running
@@ -235,7 +247,7 @@ for id = 1:nd
     clear green_std red_std
     end
 end
-
+z=double(nOn)/double(frame_rate)
 
 %creat a time axis in seconds
 t=1:(size(tc_green_avrg_stat{1,1,1},1));
@@ -253,7 +265,7 @@ shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon),'b');
 hold on
-line([0,2],[-.01,-.01],'Color','black','LineWidth',2);
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 title('HT-')
@@ -272,7 +284,7 @@ hold on
 shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
 %ylim([-.02 .3]);
 hold on
-line([0,2],[-.01,-.01],'Color','black','LineWidth',2);
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
@@ -733,13 +745,17 @@ stat_resp=reshape(cell2mat(pref_responses_stat_concat),[(2*nKeep_total),1]);
 loc_resp=reshape(cell2mat(pref_responses_loc_concat),[(2*nKeep_total),1]);
 half_max=reshape(cell2mat(tHalfMax),[(2*nKeep_total),1]);
 LMI=reshape(cell2mat(LMI_concat),[(2*nKeep_total),1]);
-output = table(mouseIDcol,day,cell_type,stat_resp,loc_resp,half_max,LMI);
+green_col = repmat(green_fluor_concat,1,2)';
+red_col = repmat(red_fluor_concat,1,2)';
 
 
+output = table(mouseIDcol,day,cell_type,stat_resp,loc_resp,half_max,LMI,green_col,red_col);
 
 writetable(output,fullfile(fnout,[num2str(targetCon) '_output.csv']))
 
 %%
 stat_resp=cell2mat(pref_responses_stat_concat);
 HT_ind = red_concat';
-save(fullfile(fnout,'DART_dFoF_data.mat'),'stat_resp','HT_ind');
+green_intensity = green_fluor_concat';
+red_intensity = red_fluor_concat';
+save(fullfile(fnout,'DART_dFoF_data.mat'),'stat_resp','HT_ind','mouseID','green_intensity','red_intensity');

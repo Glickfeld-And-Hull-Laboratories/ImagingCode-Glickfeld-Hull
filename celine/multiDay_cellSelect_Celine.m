@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 175;
+day_id = 184;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -105,15 +105,15 @@ for irun = 1:nruns
         data_g = data_temp_g;
         clear data_temp_g
         if info.config.pmt1_gain > 0.5
-            %data_r = data_temp_r;
-            %clear data_temp_r
+            data_r = data_temp_r;
+            clear data_temp_r
         end
     else
         data_g = cat(3, data_g, data_temp_g);
         clear data_temp_g
         if info.config.pmt1_gain > 0.5
-            %data_r = cat(3, data_r, data_temp_r);
-            %clear data_temp_r
+            data_r = cat(3, data_r, data_temp_r);
+            clear data_temp_r
         end
     end
 end
@@ -142,8 +142,10 @@ else %if not, must register. Start by showing average for each of four 500-frame
         colormap gray; 
         clim([100 3000]); 
     end
+    drawnow;
     
     regImgStartFrame = input('Enter Registration Image Start Frame, ENTER INTO DS:');
+    
     regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
     [outs,data_g_reg] = stackRegister(data_g,regImg);
     data_avg = mean(data_g_reg,3);
@@ -226,10 +228,10 @@ clear data_g_dfof
 data_g_down = stackGroupProject(data_g_reg,100);
 corrImg = getPixelCorrelationImage(data_g_down);
 figure; imagesc(corrImg); movegui('center');title('pixel correlation');
-data_dfof = cat(3, data_dfof, corrImg);
+data_dfof = cat(3, data_dfof, data_avg,corrImg);
 clear data_g_down
 
-data_dfof = cat(3, data_dfof,data_avg);
+
 
 %% load red cells
 %this is where we use the 1040, 1000-frame run
@@ -264,13 +266,19 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
         [out, data_rr_reg] = stackRegister(stackGroupProject(data_rr,100), redChImg);
         redChImg = mean(data_rr_reg,3);
     elseif info.config.pmt0_gain>0.5 %if there is a green channel in this run, it gets registered to the registration image from green channel from the 920 run
-       redAvg = mean(data_rr,3);
+        %data_rr = padarray(data_rr,9,0,'pre');
+        redAvg = mean(data_rr,3);
         [out, data_rr_reg] = stackRegister(data_rr,redAvg);
         [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out);
         redChImgTemp = mean(data_rr_reg,3); 
         rg_avg = mean(data_rg_reg,3);
         [out2, ~] = stackRegister(rg_avg,data_avg);
         [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2);
+        
+%         [out, data_rg_reg] = stackRegister(data_rg,data_avg); %register the green channel from the 1040 run to the green channel from the 920 run
+%         [~, data_rr_reg]=stackRegister_MA(data_rr,[],[],out); %use those shifts to register the red 1040 run
+%         redChImg = mean(data_rr_reg,3);
+        
         
     else %if there is no green channel in this run
         redAvg = mean(data_rr,3);
@@ -297,7 +305,7 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-%redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
@@ -315,7 +323,7 @@ end
 
 mask_cell_red = bwlabel(mask_all);
 mask_data = data_dfof; %this is the registered data from the 920 run
-%after making masks for all the red cellfs, go through different stimuli and
+%after making masks for all the red cells, go through different stimuli and
 %identify cells that are visible for each
 
 for iStim = 1:size(data_dfof,3)

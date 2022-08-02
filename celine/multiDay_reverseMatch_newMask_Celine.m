@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 175; %enter the post-DART day ID here
+day_id(1) = 182; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -116,11 +116,12 @@ clear input
 %% manual align
 corrmap_norm{1} = uint8((corrmap{1}./max(corrmap{1}(:))).*255);
 corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
+
 if exist(fullfile(fn_multi,'multiday_alignment.mat'))
     load(fullfile(fn_multi,'multiday_alignment.mat'))
 else
     [input_points_1, base_points_1] = cpselect(fov_red{2},fov_red{1},'Wait', true);
-    [input_points_2, base_points_2] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
+    [input_points_2, base_points_2] = cpselect(fov_avg{2},fov_avg{1},'Wait', true);
     [input_points_3, base_points_3] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
     input_points = [input_points_1; input_points_2; input_points_3];
     base_points = [base_points_1; base_points_2; base_points_3];
