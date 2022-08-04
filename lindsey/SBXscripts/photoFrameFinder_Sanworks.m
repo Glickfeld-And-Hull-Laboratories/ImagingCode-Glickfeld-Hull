@@ -14,7 +14,7 @@ function [stimOnFrames stimOffFrames] = photoFrameFinder_Sanworks(events);
     frameMat = zeros(1,nframes);
     frameMat(framesOn) = 1;
     frameTrig = diff(frameMat);
-    stimOnFrames = find(frameTrig == 1);
-    stimOffFrames = find(frameTrig == -1);
+    stimOnFrames = find(frameTrig == 1) + 1; % +1 accounts for derivative
+    stimOffFrames = find(frameTrig == -1) + 1;
 end
     
