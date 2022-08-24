@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 184;
+day_id = 196;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -220,7 +220,7 @@ end
 % title('Comparing contrasts');
 
 data_ori_max = max(data_g_ori,[],3);
-data_dfof = cat(3, data_ori_max,data_g_ori);
+data_dfof = cat(3, data_ori_max,data_ori_max,data_ori_max,data_g_ori);
 figure; imagesc(data_ori_max); movegui('center');title('data ori max');
 clear data_g_dfof
 
@@ -338,6 +338,7 @@ mask_cell = bwlabel(mask_all);
 figure; imagesc(mask_cell) 
 
 nCells = max(mask_cell(:));
+%mask_label = ones(1,nCells); %this is for the EMX and similar lines only
 mask_label = zeros(1,nCells);
 for i = 1:nCells
     if mask_cell_red(find(mask_cell == i, 1))
@@ -525,16 +526,16 @@ ylim([-.04 .1])
 
 
 %% 
-figure;
-imagesc(data_avg);
-colormap gray
-title('average FOV');
-hold on
-bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
-bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
-hold off
+% figure;
+% imagesc(data_avg);
+% colormap gray
+% title('average FOV');
+% hold on
+% bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
+% bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+% hold off
 
 %% plotting contrast and ori functions for red cells only
 % if length(find(mask_label))<36

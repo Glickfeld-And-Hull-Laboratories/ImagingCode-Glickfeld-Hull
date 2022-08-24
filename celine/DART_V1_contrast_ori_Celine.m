@@ -3592,6 +3592,7 @@ expt(131).rettuning = {};
 expt(131).contrastxori_runs = {'003'};
 expt(131).contrastxori_time = {'1513'};
 expt(131).data_loc = 'ACh';
+expt(131).wheelColor = 'purple';
 %segmented 1/20. 223 cells identified, 40 red. Reverse matched with sess
 %130 on 1/21/22. Matched 128 cells, 36 red
 %3/14 - changing extraction to alpha level of .01, requiring significant
@@ -3651,6 +3652,7 @@ expt(133).rettuning = {};
 expt(133).contrastxori_runs = {'002'};
 expt(133).contrastxori_time = {'1238'};
 expt(133).data_loc = 'ACh';
+expt(133).wheelColor = 'purple';
 %segmented 1/27, identified 119 cells, 17 red. Reverse matched to 132 on
 %1/27/ matched 93 cells
 %3/14 - changing extraction to alpha level of .01, requiring significant
@@ -3739,6 +3741,7 @@ expt(136).rettuning = {};
 expt(136).contrastxori_runs = {'005'};
 expt(136).contrastxori_time = {'1508'};
 expt(136).data_loc = 'ACh';
+expt(136).wheelColor = 'purple';
 %segmented 2/3/22. Found 103 cells, 17 red. Matched 70 cells
 %% i2052	220202
 expt(137).SubNum = 'i2052';
@@ -3796,6 +3799,7 @@ expt(138).rettuning = {};
 expt(138).contrastxori_runs = {'004'};
 expt(138).contrastxori_time = {'1035'};
 expt(138).data_loc = 'ACh';
+expt(138).wheelColor = 'purple';
 %segmented on 2/3/22. Found 101 cells, of which 13 red. Matched 2/5/22, 57
 %cells
 %% i2053	220208
@@ -3882,6 +3886,7 @@ expt(141).rettuning = {};
 expt(141).contrastxori_runs = {'005'};
 expt(141).contrastxori_time = {'1646'};
 expt(141).data_loc = 'ACh';
+expt(141).wheelColor = 'purple';
 % can only laod 33660 frames, 374 trials. Segmented 2/10, found 153 cells,
 % of which 17 red. Matched to sess 139 on 2/10. Matched 85 cells.
 %% i2053	220210
@@ -3911,6 +3916,7 @@ expt(142).rettuning = {};
 expt(142).contrastxori_runs = {'002'};
 expt(142).contrastxori_time = {'1001'};
 expt(142).data_loc = 'ACh';
+expt(142).wheelColor = 'purple';
 %segmented 2/11. 114 cells found, 14 red. Matched 139, matched 76 cells
 %% i2054	220215
 expt(143).SubNum = 'i2054';
@@ -4223,6 +4229,7 @@ expt(153).rettuning = {};
 expt(153).contrastxori_runs = {'002'};
 expt(153).contrastxori_time = {'1646'};
 expt(153).data_loc = 'ACh';
+expt(153).wheelColor = 'purple';
 %segmented 3/25. Found 233 cells, 36 red. Matched to 149 (first baseline
 %day) on 3/25. Matched 96 cells, 25 red
 %% i2059	220324 control site
@@ -4452,6 +4459,7 @@ expt(161).rettuning = {};
 expt(161).contrastxori_runs = {'007'};
 expt(161).contrastxori_time = {'1703'};
 expt(161).data_loc = 'ACh';
+expt(161).wheelColor = 'purple';
 % segmented 4/1. matched to sess 159 on 4/2. 124 cells matched, 28 red
 %% i2058	7 hour control site
 expt(162).SubNum = 'i2058';
@@ -4480,6 +4488,7 @@ expt(162).rettuning = {};
 expt(162).contrastxori_runs = {'010'};
 expt(162).contrastxori_time = {'1814'};
 expt(162).data_loc = 'ACh';
+expt(162).wheelColor = 'purple';
 %segmented 4/2. 114 cells, 25 red. Matched to session 160 on 4/12. Matched
 %63 cells, 20 red
 %% i2058	24 hour HTsite
@@ -4509,6 +4518,7 @@ expt(163).rettuning = {};
 expt(163).contrastxori_runs = {'002'};
 expt(163).contrastxori_time = {'1009'};
 expt(163).data_loc = 'ACh';
+expt(163).wheelColor = 'purple';
 %segmented 4/3. 203 cells, 32 red (tried to use map of the red cells I was
 %able to match in the 7 hour session to guide segmenting red cells here,
 %but I also segmented additional red cells that were clearly visible).
@@ -4681,6 +4691,7 @@ expt(169).rettuning = {};
 expt(169).contrastxori_runs = {'003'};
 expt(169).contrastxori_time = {'1549'};
 expt(169).data_loc = 'ACh';
+expt(169).wheelColor = 'orange';
 %
 %% i2062 5 hour post DART 200 ms
 expt(170).SubNum = 'i2062';
@@ -4737,6 +4748,7 @@ expt(171).rettuning = {};
 expt(171).contrastxori_runs = {'002'};
 expt(171).contrastxori_time = {'0951'};
 expt(171).data_loc = 'ACh';
+expt(171).wheelColor = 'orange';
 %
 %% i2062 24 hour post DART 200ms
 expt(172).SubNum = 'i2062';
@@ -5197,4 +5209,263 @@ expt(187).contrastxori_runs = {'003'};
 expt(187).contrastxori_time = {'1047'};
 expt(187).data_loc = 'ACh';
 expt(187).wheelColor = 'orange';
+%
+%% i2070
+expt(188).SubNum = 'i2070';
+expt(188).mouse = 'i2070';
+expt(188).date = '220802';
+expt(188).folder = '2P';
+expt(188).img_loc  = {'V1';'L2/3'};
+expt(188).z = 240;
+expt(188).obj = '16x';
+expt(188).zoom = 1.7;
+expt(188).frame_rate = 15;
+expt(188).multiday_timesincedrug_hours = 'baseline'
+expt(188).multiday_matchdays = [];
+expt(188).regImgStartFrame = '';
+expt(188).motionThreshold = 0.05;
+expt(188).areaBorders = 0;
+expt(188).img_strct  = {'cells'};
+expt(188).indicator = {'virus';'GCaMP8s'};
+expt(188).drug = 'DART2.0-YM90K';
+expt(188).greenredsimultaneous = 1;
+expt(188).greenChannelLabel = 'ANY';
+expt(188).redChannelLabel = '';
+expt(188).redChannelTag = {'tdTomato','HT'};
+expt(188).redChannelRun = '000';
+expt(188).rettuning = {};
+expt(188).contrastxori_runs = {'003'};
+expt(188).contrastxori_time = {'1600'};
+expt(188).data_loc = 'ACh';
+expt(188).wheelColor = 'orange';
+%
+%% i2070
+expt(189).SubNum = 'i2070';
+expt(189).mouse = 'i2070';
+expt(189).date = '220803';
+expt(189).folder = '2P';
+expt(189).img_loc  = {'V1';'L2/3'};
+expt(189).z = 240;
+expt(189).obj = '16x';
+expt(189).zoom = 1.7;
+expt(189).frame_rate = 15;
+expt(189).multiday_timesincedrug_hours = '5_hour'
+expt(189).multiday_matchdays = [188];
+expt(189).regImgStartFrame = '';
+expt(189).motionThreshold = 0.05;
+expt(189).areaBorders = 0;
+expt(189).img_strct  = {'cells'};
+expt(189).indicator = {'virus';'GCaMP8s'};
+expt(189).drug = 'DART2.0-YM90K';
+expt(189).greenredsimultaneous = 1;
+expt(189).greenChannelLabel = 'ANY';
+expt(189).redChannelLabel = '';
+expt(189).redChannelTag = {'tdTomato','HT'};
+expt(189).redChannelRun = '001';
+expt(189).rettuning = {};
+expt(189).contrastxori_runs = {'002'};
+expt(189).contrastxori_time = {'1620'};
+expt(189).data_loc = 'ACh';
+expt(189).wheelColor = 'orange';
+%% i2070
+expt(190).SubNum = 'i2070';
+expt(190).mouse = 'i2070';
+expt(190).date = '220804';
+expt(190).folder = '2P';
+expt(190).img_loc  = {'V1';'L2/3'};
+expt(190).z = 240;
+expt(190).obj = '16x';
+expt(190).zoom = 1.7;
+expt(190).frame_rate = 15;
+expt(190).multiday_timesincedrug_hours = '22_hour'
+expt(190).multiday_matchdays = [188];
+expt(190).regImgStartFrame = '';
+expt(190).motionThreshold = 0.05;
+expt(190).areaBorders = 0;
+expt(190).img_strct  = {'cells'};
+expt(190).indicator = {'virus';'GCaMP8s'};
+expt(190).drug = 'DART2.0-YM90K';
+expt(190).greenredsimultaneous = 1;
+expt(190).greenChannelLabel = 'ANY';
+expt(190).redChannelLabel = '';
+expt(190).redChannelTag = {'tdTomato','HT'};
+expt(190).redChannelRun = '000';
+expt(190).rettuning = {};
+expt(190).contrastxori_runs = {'002'};
+expt(190).contrastxori_time = {'1056'};
+expt(190).data_loc = 'ACh';
+expt(190).wheelColor = 'orange';
+%
+%% i2069
+expt(191).SubNum = 'i2069';
+expt(191).mouse = 'i2069';
+expt(191).date = '220809';
+expt(191).folder = '2P';
+expt(191).img_loc  = {'V1';'L2/3'};
+expt(191).z = 200
+expt(191).obj = '16x';
+expt(191).zoom = 2;
+expt(191).frame_rate = 15;
+expt(191).multiday_timesincedrug_hours = 'baseline'
+expt(191).multiday_matchdays = [];
+expt(191).regImgStartFrame = '';
+expt(191).motionThreshold = 0.05;
+expt(191).areaBorders = 0;
+expt(191).img_strct  = {'cells'};
+expt(191).indicator = {'virus';'GCaMP8s'};
+expt(191).drug = 'DART2.0-YM90K';
+expt(191).greenredsimultaneous = 1;
+expt(191).greenChannelLabel = 'ANY';
+expt(191).redChannelLabel = '';
+expt(191).redChannelTag = {'tdTomato','HT'};
+expt(191).redChannelRun = '002';
+expt(191).rettuning = {};
+expt(191).contrastxori_runs = {'003'};
+expt(191).contrastxori_time = {'1019'};
+expt(191).data_loc = 'ACh';
+expt(191).wheelColor = 'orange';
+%% i2069
+expt(192).SubNum = 'i2069';
+expt(192).mouse = 'i2069';
+expt(192).date = '220809';
+expt(192).folder = '2P';
+expt(192).img_loc  = {'V1';'L2/3'};
+expt(192).z = 200
+expt(192).obj = '16x';
+expt(192).zoom = 2;
+expt(192).frame_rate = 15;
+expt(192).multiday_timesincedrug_hours = 'baseline_30deg'
+expt(192).multiday_matchdays = [];
+expt(192).regImgStartFrame = '';
+expt(192).motionThreshold = 0.05;
+expt(192).areaBorders = 0;
+expt(192).img_strct  = {'cells'};
+expt(192).indicator = {'virus';'GCaMP8s'};
+expt(192).drug = 'DART2.0-YM90K';
+expt(192).greenredsimultaneous = 1;
+expt(192).greenChannelLabel = 'ANY';
+expt(192).redChannelLabel = '';
+expt(192).redChannelTag = {'tdTomato','HT'};
+expt(192).redChannelRun = '008';
+expt(192).rettuning = {};
+expt(192).contrastxori_runs = {'009'};
+expt(192).contrastxori_time = {'1501'};
+expt(192).data_loc = 'ACh';
+expt(192).wheelColor = 'orange';
+%
+%% i2069
+expt(193).SubNum = 'i2069';
+expt(193).mouse = 'i2069';
+expt(193).date = '220810';
+expt(193).folder = '2P';
+expt(193).img_loc  = {'V1';'L2/3'};
+expt(193).z = 200
+expt(193).obj = '16x';
+expt(193).zoom = 2;
+expt(193).frame_rate = 15;
+expt(193).multiday_timesincedrug_hours = '16hour'
+expt(193).multiday_matchdays = [191];
+expt(193).regImgStartFrame = '';
+expt(193).motionThreshold = 0.05;
+expt(193).areaBorders = 0;
+expt(193).img_strct  = {'cells'};
+expt(193).indicator = {'virus';'GCaMP8s'};
+expt(193).drug = 'DART2.0-YM90K';
+expt(193).greenredsimultaneous = 1;
+expt(193).greenChannelLabel = 'ANY';
+expt(193).redChannelLabel = '';
+expt(193).redChannelTag = {'tdTomato','HT'};
+expt(193).redChannelRun = '001';
+expt(193).rettuning = {};
+expt(193).contrastxori_runs = {'002'};
+expt(193).contrastxori_time = {'0942'};
+expt(193).data_loc = 'ACh';
+expt(193).wheelColor = 'orange';
+%
+%% i2069
+expt(194).SubNum = 'i2069';
+expt(194).mouse = 'i2069';
+expt(194).date = '220810';
+expt(194).folder = '2P';
+expt(194).img_loc  = {'V1';'L2/3'};
+expt(194).z = 200
+expt(194).obj = '16x';
+expt(194).zoom = 2;
+expt(194).frame_rate = 15;
+expt(194).multiday_timesincedrug_hours = '16hour_30degrees'
+expt(194).multiday_matchdays = [192];
+expt(194).regImgStartFrame = '';
+expt(194).motionThreshold = 0.05;
+expt(194).areaBorders = 0;
+expt(194).img_strct  = {'cells'};
+expt(194).indicator = {'virus';'GCaMP8s'};
+expt(194).drug = 'DART2.0-YM90K';
+expt(194).greenredsimultaneous = 1;
+expt(194).greenChannelLabel = 'ANY';
+expt(194).redChannelLabel = '';
+expt(194).redChannelTag = {'tdTomato','HT'};
+expt(194).redChannelRun = '001';
+expt(194).rettuning = {};
+expt(194).contrastxori_runs = {'005'};
+expt(194).contrastxori_time = {'1058'};
+expt(194).data_loc = 'ACh';
+expt(194).wheelColor = 'orange';
+%
+%% i2068
+expt(195).SubNum = 'i2068';
+expt(195).mouse = 'i2068';
+expt(195).date = '220816';
+expt(195).folder = '2P';
+expt(195).img_loc  = {'V1';'L2/3'};
+expt(195).z = 185
+expt(195).obj = '16x';
+expt(195).zoom = 2;
+expt(195).frame_rate = 15;
+expt(195).multiday_timesincedrug_hours = 'baseline'
+expt(195).multiday_matchdays = [];
+expt(195).regImgStartFrame = '';
+expt(195).motionThreshold = 0.05;
+expt(195).areaBorders = 0;
+expt(195).img_strct  = {'cells'};
+expt(195).indicator = {'virus';'GCaMP8s'};
+expt(195).drug = 'DART2.0-YM90K';
+expt(195).greenredsimultaneous = 1;
+expt(195).greenChannelLabel = 'ANY';
+expt(195).redChannelLabel = '';
+expt(195).redChannelTag = {'tdTomato','HT'};
+expt(195).redChannelRun = '002';
+expt(195).rettuning = {};
+expt(195).contrastxori_runs = {'003'};
+expt(195).contrastxori_time = {'1256'};
+expt(195).data_loc = 'ACh';
+expt(195).wheelColor = 'orange';
+%
+%% i2068
+expt(196).SubNum = 'i2068';
+expt(196).mouse = 'i2068';
+expt(196).date = '220817';
+expt(196).folder = '2P';
+expt(196).img_loc  = {'V1';'L2/3'};
+expt(196).z = 185
+expt(196).obj = '16x';
+expt(196).zoom = 2;
+expt(196).frame_rate = 15;
+expt(196).multiday_timesincedrug_hours = '17hour'
+expt(196).multiday_matchdays = [195];
+expt(196).regImgStartFrame = '';
+expt(196).motionThreshold = 0.05;
+expt(196).areaBorders = 0;
+expt(196).img_strct  = {'cells'};
+expt(196).indicator = {'virus';'GCaMP8s'};
+expt(196).drug = 'DART2.0-YM90K';
+expt(196).greenredsimultaneous = 1;
+expt(196).greenChannelLabel = 'ANY';
+expt(196).redChannelLabel = '';
+expt(196).redChannelTag = {'tdTomato','HT'};
+expt(196).redChannelRun = '000';
+expt(196).rettuning = {};
+expt(196).contrastxori_runs = {'002'};
+expt(196).contrastxori_time = {'0957'};
+expt(196).data_loc = 'ACh';
+expt(196).wheelColor = 'orange';
 %

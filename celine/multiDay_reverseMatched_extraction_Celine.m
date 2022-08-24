@@ -1,11 +1,12 @@
-clear all; clear global; close all
+clear all; clear global; 
+close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-%day_id = 142; %enter post-DART day
+%day_id = 169; %enter post-DART day
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
@@ -30,9 +31,8 @@ load(fullfile(fn_multi,'input.mat'))
 frame_rate = input.frameImagingRateMs;
 %% finding red fluorescence level
  allDays = [day_id,pre_day];
-red_fluor_all = cell(1,nd);
 
-for id = 1:nd
+for id = 1 %currently only doing this for the baseline day
 mouse = expt(allDays(id)).mouse;
 date = expt(allDays(id)).date;
 imgFolder = expt(allDays(id)).contrastxori_runs{1};
@@ -54,7 +54,7 @@ load(fullfile(fn,'mask_cell.mat'));
 %             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
 %     
 % end
-
+ 
 %use stackGetTimeCourses to extract the red fluorescence within each mask
 red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
 nCells=max(max(mask_cell));
@@ -62,14 +62,15 @@ for i = 1:nCells
 red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
 end
 
-red_fluor_all{id} = red_fluor_mask-red_fluor_np;
+red_fluor_all = red_fluor_mask-red_fluor_np;
 
-clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
+% clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
 end
 %using the reference day
-red_fluor_match=red_fluor_all{1}(:,match_ind);
+red_fluor_match=red_fluor_all(:,match_ind);
 z_red_fluor=zscore(red_fluor_match);
 load(fullfile(fn_multi,'multiday_alignment.mat'))
+clear red_fluor_all red_fluor_mask red_fluor_np
 %% get green fluor level
 %using the reference day
 green_fluor_match=mean(cellTCs_match{1},1);   
@@ -330,7 +331,7 @@ green_fluor_keep=green_fluor_match(keep_cells);
 
 conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
-save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_all','red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
+save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
 
 %% looking at wheel speed
 wheel_speed = cell(1,nd);
@@ -500,6 +501,15 @@ for i = 1:length(red_ind_keep)
 end
 green_keep_logical = ~red_keep_logical;
 
+% msubset of full timecourses for keep cells only - this is not shifted and
+% padded
+fullTC_keep=cell(1,nd);
+
+for id = 1:nd
+    fullTC_keep{id} = cellTCs_match_OG{id}(:,keep_cells);
+end
+
+
 %sig_diff will be a logical vector indicating which cells were
 %significantly modulated at each contrast, in terms of the call's response
 %to its preferred orientation
@@ -512,7 +522,7 @@ green_keep_logical = ~red_keep_logical;
 
 
 explanation1 = 'tc_trial_keep contains the timecourses for all "keep" cells for each day. The tOri_match and tCon_match data structures can be used to find trials of particular stim conditions within this. tc_trial_avrg_keep only has the timecourses averaged over tirals for each cell at its preferred orientation and at each contrast.';
-save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','pref_responses_stat','pref_responses_loc','resp_keep','tc_trial_avrg_keep_allCond','pref_responses_allCond','tc_trial_avrg_keep_allCon_stat','pref_responses_allCon_stat','tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
+save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','fullTC_keep','pref_responses_stat','pref_responses_loc','resp_keep','tc_trial_avrg_keep_allCond','pref_responses_allCond','tc_trial_avrg_keep_allCon_stat','pref_responses_allCon_stat','tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
 
 
 %% make and save response matrix for keep cells
@@ -689,7 +699,7 @@ end
 
 
 
-save(fullfile(fn_multi,'locomotion.mat'),'LMI','RIx','wheel_tc')
+save(fullfile(fn_multi,'locomotion.mat'),'LMI','RIx','wheel_tc','wheel_speed')
 % %% comparing F and df/f for HT+ and HT-
 % figure;
 % subplot(1,2,1)
