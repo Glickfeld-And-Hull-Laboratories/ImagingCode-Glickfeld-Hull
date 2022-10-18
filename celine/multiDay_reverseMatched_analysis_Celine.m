@@ -6,7 +6,8 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 196; %enter post-DART day
+%      
+day_id = 209; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -109,7 +110,7 @@ for iCell = 1:length(red_ind_keep)
     
     [R,p]=corrcoef(green_trialResp{pre},thisCell_pre);
     txt2 = ['HT+ ' num2str(length(red_ind_keep))];
-    title([num2str(cellID) ' R^2= ' num2str(R(2))]);
+    title([num2str(cellID) ' R= ' num2str(R(2))]);
     R_p_values(1,iCell)=R(2);
     R_p_values(2,iCell)=p(2);
 
@@ -122,7 +123,7 @@ scatter(pref_responses_stat{pre}(red_ind_keep),R_p_values(1,:),'k')
 ylabel('Max dF/F') 
 xlabel('R^2') 
 
-%%
+%
 figure;
 % subplot(1,2,1)
 scatter(green_trialResp{1,pre},red_trialResp{1,pre},10,'MarkerEdgeColor','k')
@@ -1751,9 +1752,18 @@ bound = cell2mat(bwboundaries(keep_masks(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 %% correlating fullTC with full wheel time
 %maybe normalize the tc's
+
+wheel_corr = cell(1,nd);
+
+
 for id = 1:nd
+    clean_wheel_speed{id}=wheel_speed{id};
+    clean_wheel_speed{id}(find(abs(clean_wheel_speed{id})<4.884))=0;
+    clean_wheel_speed{id}=downsample(clean_wheel_speed{id},10);
+    clean_fullTC{id}=downsample(fullTC_keep{id},10);
     for iCell = 1:nKeep
-        fullTC_keep_norm{id}(:,iCell) = fullTC_keep{id}(:,iCell) - mean(fullTC_keep{id}(:,iCell));
+        fullTC_keep_norm{id}(:,iCell) = clean_fullTC{id}(:,iCell) - mean(clean_fullTC{id}(:,iCell));
+        wheel_corr{id}(iCell)=corr(clean_fullTC{id}(:,iCell),clean_wheel_speed{id}');
     end
 end
 %%
@@ -1761,48 +1771,42 @@ end
 
 figure;
 subplot(2,1,1)
-plot(fullTC_keep_norm{pre}(21600:26100,red_ind_keep))
+plot(fullTC_keep_norm{pre}(3000:4000,red_ind_keep))
 subplot(2,1,2)
-plot(wheel_speed{pre})
+plot(clean_wheel_speed{pre}(3000:4000))
 sgtitle('pre-DART HT+')
 
 
 figure;
 subplot(2,1,1)
-plot(fullTC_keep_norm{post}(21600:26100,red_ind_keep))
+plot(fullTC_keep_norm{post}(3000:4000,red_ind_keep))
 subplot(2,1,2)
-plot(wheel_speed{post})
+plot(clean_wheel_speed{post}(3000:4000))
 sgtitle('post-DART HT+')
 
-figure;
-subplot(2,1,1)
-plot(fullTC_keep_norm{pre}(21600:26100,green_ind_keep))
-subplot(2,1,2)
-plot(wheel_speed{pre})
-sgtitle('pre-DART HT-')
-
-figure;
-subplot(2,1,1)
-plot(fullTC_keep_norm{post}(21600:26100,green_ind_keep))
-subplot(2,1,2)
-plot(wheel_speed{post})
-sgtitle('post-DART HT-')
-%,'Color',[0, 0, 0, 0.1]
+% figure;
+% subplot(2,1,1)
+% plot(fullTC_keep_norm{pre}(:,green_ind_keep))
+% subplot(2,1,2)
+% plot(clean_wheel_speed{pre})
+% sgtitle('pre-DART HT-')
+% 
+% figure;
+% subplot(2,1,1)
+% plot(fullTC_keep_norm{post}(:,green_ind_keep))
+% subplot(2,1,2)
+% plot(clean_wheel_speed{post})
+% sgtitle('post-DART HT-')
+% %,'Color',[0, 0, 0, 0.1]
 %%
-wheel_corr = cell(1,nd);
 
-for id = 1:nd
-    for iCell = 1:nKeep
-        wheel_corr{id}(iCell)=corr(fullTC_keep{id}(:,iCell),wheel_speed{id}');
-    end
-end
 
 for iRed = 1:length(red_ind_keep)
     iCell = red_ind_keep(iRed)
     figure;
-    scatter(wheel_speed{pre},fullTC_keep{pre}(:,iCell),'k')
+    scatter(clean_wheel_speed{pre},clean_fullTC{pre}(:,iCell),'k')
     hold on;
-    scatter(wheel_speed{post},fullTC_keep{post}(:,iCell),'b')
+    scatter(clean_wheel_speed{post},clean_fullTC{post}(:,iCell),'b')
     ylabel("F")
     xlabel("Running speed")
     title("example HT+")

@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 196;
+day_id = 209;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -408,7 +408,7 @@ h_all = sum(sum(h,2),3);
 
 resp=logical(h_all);
 red=mask_label';
-resp_red=resp.*red;
+resp_red=logical(resp.*red);
 sum(resp)
 sum(resp_red)
 
@@ -509,8 +509,8 @@ data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = mean(data_dfof_trial,3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(mean(data_dfof_trial,2));%average over trials, one row per cell
+tc_cell_avrg = mean(data_dfof_trial(:,:,:),3);%average pver cells, one row per trial
+tc_trial_avrg = squeeze(mean(data_dfof_trial(:,:,:),2));%average over trials, one row per cell
 tc_cell_trial_avrg = mean(tc_cell_avrg,2);%average over trials and cells
 
 figure;
