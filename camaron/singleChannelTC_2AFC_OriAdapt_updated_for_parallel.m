@@ -6,7 +6,7 @@ clc
 dataset = 'oriAdapt_V1_cam';
 eval(dataset); % run file to load expt.structure
 
-iexp = 43; % Enter experiment number from oriAdapt_V1
+iexp = 71; % Enter experiment number from oriAdapt_V1
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 CM_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron';
@@ -245,14 +245,14 @@ cStimOn = celleqel2mat_padded(adapt_input.cStimOn); %uncomment CLM
 clearvars counterVals counterTimes dCount dVal cStart cEnd SIx
 
 %% Check 2AFC photodiode (info must exist)
-tic
+
 irun = 1;
 nrun = 1;
 run_str = ['runs']; 
 run_str = [run_str '-' expt(iexp).runs(irun,:)];
 
 if exist(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
-    load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+%     load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
     load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'adapt_input')
 end
 
@@ -343,7 +343,6 @@ else
 end
 
 clearvars photoData
-toc
 %% find activated cells
 close all
 tGratingOri = celleqel2mat_padded(adapt_input.tGratingDirectionStart);
@@ -1177,7 +1176,7 @@ for IN = 1:2
 end
 
 save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptResp.mat']), 'mask_label', 'data_adapt_dfof', 'adapt_cyc_resp', 'base_win_all', 'resp_win_all','adapt_resp_ind')
-save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimResp.mat']), 'stim_resp',' data_stim_dfof', 'stim_resp_ind', 'base_win', 'resp_win');
+save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimResp.mat']), 'stim_resp', 'stim_resp_ind', 'base_win', 'resp_win');
 save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'tGratingOri', 'tOris', 'aGratingOri', 'aOris', 'aGratingContrast', 'ind_cond', 'SIx', 'MIx');
 %% dir tuning neuropil subtraction
 close all
@@ -1420,10 +1419,10 @@ end
     nrun = 1;
 
 
-    if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).pass_run(irun,:) '\' [expt(iexp).pass_run(irun,:) expt(iexp).pass_run_suffix(irun,:) '.ephys']])
+    if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).pass_run(irun,:) '\' [expt(iexp).pass_run(irun,:) expt(iexp).runs_suffix(irun,:) '.ephys']])
         photoData = [];
         for irun = 1:nrun
-            filename = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).pass_run(irun,:) '\' [expt(iexp).pass_run(irun,:) expt(iexp).pass_run_suffix(irun,:) '.ephys']];
+            filename = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).pass_run(irun,:) '\' [expt(iexp).pass_run(irun,:) expt(iexp).runs_suffix(irun,:) '.ephys']];
             fileID = fopen(filename, 'r', 'ieee-le');
             if fileID == -1, error('Cannot open file: %s', filename); end
             format = 'uint32';

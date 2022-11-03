@@ -887,12 +887,7 @@ expt(37).goodTrials = [];
 expt(37).TCs_extracted = 0;
 expt(37).goodImage = nan;
 
-%% i475 201112 horrible, s = 0.4 
-% 
-% Index exceeds the number of array elements (952).
-% 
-% Error in singleChannelTC_2AFC_OriAdapt_cam (line 281)
-%         cStimOn(itrial) = stimOnFrames(n2);
+%% i475 201112 horrible, s = 0.4 Done!
 
 expt(38).mouse = 'i475';
 expt(38).date = '201112';
@@ -919,10 +914,10 @@ expt(38).redImg = {'004','005'};
 expt(38).redImg_suffix = {'_000_000', '_000_000'};
 expt(38).eyeData = 1;
 expt(38).goodTrials = [];
-expt(38).TCs_extracted = 0;
+expt(38).TCs_extracted = 1;
 expt(38).goodImage = 1;
 
-%% i475 201113 s = 0.765 w/FB 
+%% i475 201113 s = 0.765 w/FB - still an issue
 % 
 % Index exceeds the number of array elements (835).
 % 
@@ -984,16 +979,10 @@ expt(40).redImg = {'004','005'};
 expt(40).redImg_suffix = {'_000_000', '_000_000'};
 expt(40).eyeData = 1;
 expt(40).goodTrials = [];
-expt(40).TCs_extracted = 1;
+expt(40).TCs_extracted = 0;
 expt(40).goodImage = 1;
 
-%% i475 201116 - 
-
-%{
-Index exceeds the number of array elements (811).
-Error in singleChannelTC_2AFC_OriAdapt_cam (line 278)
-        cStimOn(itrial) = stimOnFrames(n2);
-%}
+%% i475 201116 - Done, ok, few cells
 
 expt(41).mouse = 'i475';
 expt(41).date = '201116';
@@ -1020,8 +1009,8 @@ expt(41).runs_suffix = '_000_000';
 expt(41).pass_run_suffix = '_000_000';
 expt(41).dirtuning_suffix = '_000_000';
 expt(41).redImg_suffix = {'_000_000', '_000_000'};
-expt(41).TCs_extracted = 0;
-expt(41).goodImage = nan;
+expt(41).TCs_extracted = 1;
+expt(41).goodImage = 1;
 
 
 %% i475 201117 - Done
@@ -1112,12 +1101,7 @@ expt(44).TCs_extracted = 1;
 expt(44).goodImage = 1;
 
 
-%% i475 201120 s = 0.63 - incomplete -
-% 
-% Index exceeds the number of array elements (1291).
-% 
-% Error in singleChannelTC_2AFC_OriAdapt_cam (line 281)
-%         cStimOn(itrial) = stimOnFrames(n2);
+%% i475 201120 s = 0.63 - Done, few cells
         
 expt(45).mouse = 'i475';
 expt(45).date = '201120';
@@ -1144,15 +1128,10 @@ expt(45).runs_suffix = '_000_001';
 expt(45).pass_run_suffix = '_000_000';
 expt(45).dirtuning_suffix = '_000_000';
 expt(45).redImg_suffix = {'_000_000', '_000_000'};
-expt(45).TCs_extracted = 0;
+expt(45).TCs_extracted = 1;
 expt(45).goodImage = 1;
 
-%% i475 201123 -
-% 
-% Index exceeds the number of array elements (1124).
-% 
-% Error in singleChannelTC_2AFC_OriAdapt_cam (line 281)
-%         cStimOn(itrial) = stimOnFrames(n2);
+%% i475 201123 - Done
 
 expt(46).mouse = 'i475';
 expt(46).date = '201123';
@@ -1179,7 +1158,7 @@ expt(46).runs_suffix = '_000_000';
 expt(46).pass_run_suffix = '_000_000';
 expt(46).dirtuning_suffix = '_000_000';
 expt(46).redImg_suffix = {'_000_000', '_000_000'};
-expt(46).TCs_extracted = 0;
+expt(46).TCs_extracted = 1;
 expt(46).goodImage = 1;
 
 %% i475 201124 - Done
@@ -1475,7 +1454,7 @@ expt(56).redImg_suffix = {'_000_000', '_000_000'};
 expt(56).TCs_extracted = 1;
 expt(56).goodImage = nan;
 
-%% i475 201214 s = 0.771 - 
+%% i475 201214 s = 0.771 - Incomplete - pFF very slow...
 
 % Array indices must be positive integers or logical values.
 % 
@@ -1778,7 +1757,9 @@ expt(66).TCs_extracted = 0;
 expt(66).goodImage = nan;
 
 
-%% i475 210105
+%% i475 210105 - 
+
+% Cannot read frame index range likely outside of bounds
 expt(67).mouse = 'i475';
 expt(67).date = '210105';
 expt(67).img_loc  = {'LM';'L2/3'};
@@ -1807,7 +1788,10 @@ expt(67).TCs_extracted = 0;
 expt(67).goodImage = nan;
 
 
-%% i475 210107
+%% i475 210107 - 
+% Cannot read frame index range likely outside of bounds
+
+
 expt(68).mouse = 'i475';
 expt(68).date = '210107';
 expt(68).img_loc  = {'LM';'L2/3'};
@@ -1837,6 +1821,8 @@ expt(68).goodImage = nan;
 
 
 %% i475 210108
+% Cannot read frame index range likely outside of bounds
+
 expt(69).mouse = 'i475';
 expt(69).date = '210108';
 expt(69).img_loc  = {'LM';'L2/3'};
@@ -1866,6 +1852,8 @@ expt(69).goodImage = nan;
 
 
 %% i475 210111
+% Cannot read frame index range likely outside of bounds
+
 expt(70).mouse = 'i475';
 expt(70).date = '210111';
 expt(70).img_loc  = {'LM';'L2/3'};
@@ -1895,6 +1883,8 @@ expt(70).goodImage = nan;
 
 
 %% i475 210112 -
+% Cannot read frame index range likely outside of bounds
+
 expt(71).mouse = 'i475';
 expt(71).date = '210112';
 expt(71).img_loc  = {'LM';'L2/3'};
@@ -1952,16 +1942,7 @@ expt(72).TCs_extracted = 1;
 expt(72).goodImage = 0;
 
 
-%% i475 210120 
-
-% Index exceeds the number of array
-% elements (1561).
-% 
-% Error in
-% singleChannelTC_2AFC_OriAdapt_cam_parallel
-% (line 281)
-%         cStimOn(itrial) =
-%         stimOnFrames(n2);
+%% i475 210120 - Done, only 1 cell...
         
 expt(73).mouse = 'i475';
 expt(73).date = '210120';
@@ -1987,10 +1968,16 @@ expt(73).runs_suffix = '_000_000';
 expt(73).pass_run_suffix = '_000_000';
 expt(73).dirtuning_suffix = '_000_000';
 expt(73).redImg_suffix = {'_000_000', '_000_000'};
-expt(73).TCs_extracted = 0;
+expt(73).TCs_extracted = 1;
 expt(73).goodImage = nan;
 
 %% i475 210121 s = 0.96
+
+% Error using reshape
+% Number of elements must not change. Use [] as one of the size inputs to automatically calculate the appropriate size for that dimension.
+% 
+% Error in singleChannelTC_2AFC_OriAdapt_updated (line 468)
+%     data_tr = reshape(data_reg_dir, [sz(1) sz(2) nOn+nOff nTrials]);
 
 % Index exceeds the number of array
 % elements (1406).
@@ -2028,7 +2015,7 @@ expt(74).redImg_suffix = {'_000_000', '_000_000'};
 expt(74).TCs_extracted = 0;
 expt(74).goodImage = nan;
 
-%% i475 210122 pf issue...incomplete 
+%% i475 210122 pf issue...incomplete + bad countervalues
 expt(75).mouse = 'i475';
 expt(75).date = '210122';
 expt(75).img_loc  = {'V1';'L2/3'};
@@ -2114,7 +2101,7 @@ expt(77).goodImage = 0;
 
 
 
-%% i475 210129 -pf issue
+%% i475 210129 -pf issue - counter values look terrible (use correct nframes)
 expt(78).mouse = 'i475';
 expt(78).date = '210129';
 expt(78).img_loc  = {'V1';'L2/3'};
@@ -3406,7 +3393,7 @@ expt(121).goodTrials = [];
 expt(121).TCs_extracted = 1;
 expt(121).goodImage = 1;
 
-%% i472 210630 s = 0.818 - Incomplete - Looks like light leakage or some other issue, photobleaching?
+%% i472 210630 s = 0.818 - Passive Incomplete- Looks like light leakage or some other issue, photobleaching? Terible image, one cell
 expt(122).mouse = 'i472';
 expt(122).date = '210630';
 expt(122).img_loc  = {'V1';'L2/3'};
@@ -3577,7 +3564,7 @@ expt(127).redImg = {'004','005'};
 expt(127).redImg_suffix = {'_000_000', '_000_000'};
 expt(127).eyeData = 1;
 expt(127).goodTrials = [];
-expt(127).TCs_extracted = 1;
+expt(127).TCs_extracted = 0;
 expt(127).goodImage = 0;
 
 %% i472 210810 - Done, image was bad, low responsiveness
@@ -3606,7 +3593,7 @@ expt(128).redImg = {'004','005'};
 expt(128).redImg_suffix = {'_000_000', '_000_000'};
 expt(128).eyeData = 1;
 expt(128).goodTrials = [];
-expt(128).TCs_extracted = 1;
+expt(128).TCs_extracted =0;
 expt(128).goodImage = 0;
 
 %% i472 210812 s = 0.952 - "
@@ -3642,7 +3629,7 @@ expt(129).redImg = {'004','005'};
 expt(129).redImg_suffix = {'_000_000', '_000_000'};
 expt(129).eyeData = 1;
 expt(129).goodTrials = [];
-expt(129).TCs_extracted = 1;
+expt(129).TCs_extracted = 0;
 expt(129).goodImage = 0;
 
 %% i472 210813 s = 0.9 ignores - incomplete - messy image; used different registration method. No responsive cells.
@@ -3671,7 +3658,7 @@ expt(130).redImg = {'004','005'};
 expt(130).redImg_suffix = {'_000_000', '_000_000'};
 expt(130).eyeData = 1;
 expt(130).goodTrials = [];
-expt(130).TCs_extracted = 1;
+expt(130).TCs_extracted = 0;
 expt(130).goodImage = 0;
 
 %% i472 210817 s > 0.8 - bad images -does not look good
@@ -3700,7 +3687,7 @@ expt(131).redImg = {'004','005'};
 expt(131).redImg_suffix = {'_000_000', '_000_000'};
 expt(131).eyeData = 1;
 expt(131).goodTrials = [];
-expt(131).TCs_extracted = 1;
+expt(131).TCs_extracted = 0;
 expt(131).goodImage = 0;
 
 
@@ -3731,7 +3718,7 @@ expt(132).redImg = {'004','005'};
 expt(132).redImg_suffix = {'_000_000', '_000_000'};
 expt(132).eyeData = 1;
 expt(132).goodTrials = [];
-expt(132).TCs_extracted = 1;
+expt(132).TCs_extracted = 0;
 expt(132).goodImage = 1;
 
 %% i472 210819 - Done...
@@ -3760,7 +3747,7 @@ expt(133).redImg = {'004','005'};
 expt(133).redImg_suffix = {'_000_000', '_000_000'};
 expt(133).eyeData = 1;
 expt(133).goodTrials = [];
-expt(133).TCs_extracted = 1;
+expt(133).TCs_extracted = 0;
 expt(133).goodImage = 1;
 
 %% i472 210823 -Done...
@@ -3789,7 +3776,7 @@ expt(134).redImg = {'004','005'};
 expt(134).redImg_suffix = {'_000_000', '_000_000'};
 expt(134).eyeData = 1;
 expt(134).goodTrials = [];
-expt(134).TCs_extracted = 1;
+expt(134).TCs_extracted = 0;
 expt(134).goodImage = 1;
 
 %% i472 210824 - Done...
@@ -3818,7 +3805,7 @@ expt(135).redImg = {'004','005'};
 expt(135).redImg_suffix = {'_000_000', '_000_000'};
 expt(135).eyeData = 1;
 expt(135).goodTrials = [];
-expt(135).TCs_extracted = 1;
+expt(135).TCs_extracted = 0;
 expt(135).goodImage = 1;
 
 %% i472 210825 - Behavior only - Incomplete - Very few cells
@@ -3847,7 +3834,7 @@ expt(136).redImg = {};
 expt(136).redImg_suffix = {'_000_000', '_000_000'};
 expt(136).eyeData = 1;
 expt(136).goodTrials = [];
-expt(136).TCs_extracted = 1;
+expt(136).TCs_extracted = 0;
 expt(136).goodImage = 0;
 %% 1369 220630 - Naive mouse passive viewing adaptor followed by 16 dir tuning 
 expt(137).mouse = 'i1369';
@@ -3875,7 +3862,7 @@ expt(137).redImg = [];
 expt(137).redImg_suffix = {'_000_000', '_000_000'};
 expt(137).eyeData = 1;
 expt(137).goodTrials = [];
-expt(137).TCs_extracted = 1;
+expt(137).TCs_extracted = 0;
 expt(137).goodImage = 0;
 %% 1370 220630 - Naive mouse passive viewing adaptor followed by 16 dir tuning 
 expt(138).mouse = 'i1370';
@@ -3931,7 +3918,7 @@ expt(139).redImg = [];
 expt(139).redImg_suffix = {'_000_000', '_000_000'};
 expt(139).eyeData = 1;
 expt(139).goodTrials = [];
-expt(139).TCs_extracted = 1;
+expt(139).TCs_extracted = 0;
 expt(139).goodImage = 0;
 %%
 save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Data\2P_images\expt.mat'), 'expt')

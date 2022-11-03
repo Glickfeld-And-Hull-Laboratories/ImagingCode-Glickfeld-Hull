@@ -4,7 +4,7 @@ clear all global
 clc
 dataset = 'oriAdapt_V1_cam';
 eval(dataset);
-iexp = 137;
+iexp = 48;
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 if strcmp(expt(iexp).folder,'lindsey')
     data_base = LG_base;

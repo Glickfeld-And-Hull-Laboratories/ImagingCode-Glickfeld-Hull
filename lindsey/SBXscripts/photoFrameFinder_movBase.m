@@ -1,4 +1,4 @@
-function [photoLoc, photoFrames] = photoFrameFinder_movBase(photoData,nframes)
+function [photoLoc, photoFrames, photo_smooth, clockLoc] = photoFrameFinder_movBase(photoData,nframes)
 
     % uses ephys output from scanbox to find frames stim onsets
 
