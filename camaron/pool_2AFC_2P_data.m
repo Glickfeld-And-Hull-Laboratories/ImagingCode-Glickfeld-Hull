@@ -7,7 +7,7 @@ dataset = 'oriAdapt_V1';
 eval(dataset);
 
 mouse = 'i475'; % indicate mouse data to pool
-
+cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
 filename = [mouse '_image_matching.mat'];
 load(filename, "expt_list_final")
 
@@ -77,18 +77,26 @@ for i = 1:length(expt_list_final)
     
     b_adapt_trial_ind_all{i} = adapt_trial_ind; % trials when adapter is on
     b_control_trial_ind_all{i} = control_trial_ind; % trials when adapter is off
-    
-    % find index of responsive cells
-    b_adapt_resp_ind_all(i) = b_adapt_resp.adapt_resp_ind;
-    b_stim_resp_ind_all{i} = b_stim_resp.stim_resp_ind;
-    
+
+    % Break data into trial conditions (adapt when adapt on, target for both conditions)
+    b_data_adapt_dfof_all_adapt{i} = b_adapt_resp.data_adapt_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
+    b_data_stim_dfof_all_control{i} = b_stim_resp.data_stim_dfof(:, :, control_trial_ind); % Expt(i) = [trial_time X nCells X Control_Trials]
+    b_data_stim_dfof_all_adapt{i} = b_stim_resp.data_stim_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
+
     % anyalysis window used to determine responsive cells (save these)
     base_win = b_stim_resp.base_win;
     resp_win = b_stim_resp.resp_win;
     base_win_all = b_adapt_resp.base_win_all;
     resp_win_all = b_adapt_resp.resp_win_all;
+
+    % find index of responsive cells
+    b_adapt_resp_ind_all_TC(i) = b_adapt_resp.adapt_resp_ind; % Uses data from TC_extraction, compare with new ttest
+    b_stim_resp_ind_all_TC{i} = b_stim_resp.stim_resp_ind;
+
+    b_adapt_resp_ind_all{i} = find_respCells(b_data_adapt_dfof_all_adapt{i}, base_win, resp_win);
+    b_stim_resp_ind_all{i} = find_respCells(b_data_stim_dfof_all_control{i}, base_win, resp_win);
     
-    % -----
+    %%
     
     %Passive 
     % TCs
@@ -107,10 +115,18 @@ for i = 1:length(expt_list_final)
     
     p_adapt_trial_ind_all{i} = adapt_trial_ind; % trials when adapter is on
     p_control_trial_ind_all{i} = control_trial_ind; % trials when adapter is off
+
+    % Break data into trial conditions (adapt when adapt on, target for both conditions)
+    p_data_adapt_dfof_all_adapt{i} = p_adapt_resp.data_adapt_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
+    p_data_stim_dfof_all_control{i} = p_stim_resp.data_stim_dfof(:, :, control_trial_ind); % Expt(i) = [trial_time X nCells X Control_Trials]
+    p_data_stim_dfof_all_adapt{i} = p_stim_resp.data_stim_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
     
     % find index of responsive cells
-    p_adapt_resp_ind_all(i) = p_adapt_resp.adapt_resp_ind;
-    p_stim_resp_ind_all{i} = p_stim_resp.stim_resp_ind;
+    p_adapt_resp_ind_all_TC(i) = p_adapt_resp.adapt_resp_ind;
+    p_stim_resp_ind_all_TC{i} = p_stim_resp.stim_resp_ind;
+
+    p_adapt_resp_ind_all{i} = find_respCells(p_data_adapt_dfof_all_adapt{i}, base_win, resp_win);
+    p_stim_resp_ind_all{i} = find_respCells(p_data_stim_dfof_all_control{i}, base_win, resp_win);
     
     % -----
     
@@ -133,7 +149,10 @@ clearvars -except adaptor_vline adaptPeriodMsb_adapt_resp_ind_all ...
     mouse ori_bins p_adapt_resp_ind_all p_adapt_trial_ind_all ...
     p_control_trial_ind_all p_data_adapt_dfof_all p_data_stim_dfof_all ...
     p_mask_label_all p_stim_resp_ind_all resp_win resp_win_all ...
-    target_vline tuned_cells
+    target_vline tuned_cells b_data_adapt_dfof_all_adapt ...
+    b_data_stim_dfof_all_control b_data_stim_dfof_all_adapt ...
+    p_data_adapt_dfof_all_adapt p_data_stim_dfof_all_control ...
+    p_data_stim_dfof_all_adapt
 
 %%
 cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
