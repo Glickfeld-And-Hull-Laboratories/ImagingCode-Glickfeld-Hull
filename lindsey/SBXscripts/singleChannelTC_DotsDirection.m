@@ -11,10 +11,10 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '220908';
-ImgFolder = '001';
-time = '1051';
-mouse = 'i1376';
+date = '220904';
+ImgFolder = '002';
+time = '1343';
+mouse = 'i1372';
 frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
@@ -102,8 +102,6 @@ ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one val
 sz = size(data_reg);
 %        Each trial has nOff frames followed by nOn frames, so can reshape stack so nYpix x nXpix x nFrames/Trial (nOn+nOff) x nTrials
 data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
-data_tr_inv = mean(mean(data_tr(:,:,nOff/2:nOff,:),3),4)-mean(mean(data_tr(:,:,nOff+1:nOn+nOff,:),3),4);
-
 fprintf(['Size of data_tr is ' num2str(size(data_tr))])
 %    b. Find baseline F from last half of off period- avoids decay of previous on trial
 data_f = mean(data_tr(:,:,nOff/2:nOff,:),3); 
@@ -112,23 +110,24 @@ data_df = bsxfun(@minus, double(data_tr), data_f);
 data_dfof = bsxfun(@rdivide,data_df, data_f); 
 clear data_f data_df data_tr
 %    d. Find average dF/F for each stimulus condition (this is for an experiment with changing grating direction)
-tDir = celleqel2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
+tDir = celleqel2mat_padded(input.tDotDirectionDeg); %transforms cell array into matrix (1 x ntrials)
 Dirs = unique(tDir);
 nDirs = length(Dirs);
-data_dfof_avg = zeros(sz(1),sz(2),nDirs); %create empty matrix with FOV for each direction: nYpix x nXPix x nDir
-
+data_dfof_avg = zeros(sz(1),sz(2),nDirs+1); %create empty matrix with FOV for each direction: nYpix x nXPix x nDir
+tCoh = celleqel2mat_padded(input.tDotCoherence);
 nStim = nDirs;
 figure; movegui('center')
-[n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
+[n, n2] = subplotn(nDirs+1); %function to optimize subplot number/dimensions
 for idir = 1:nDirs
-    ind = find(tDir == Dirs(idir)); %find all trials with each direction
+    ind = intersect(find(tCoh == 1), find(tDir == Dirs(idir))); %find all trials with each direction
     data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %average all On frames and all trials
     subplot(n,n2,idir)
     imagesc(data_dfof_avg(:,:,idir))
 end
-
-data_dfof_avg = cat(3,data_reg_avg,data_dfof_avg);
-data_dfof_avg = cat(3,data_dfof_avg,data_tr_inv);
+ind = find(tCoh < 1); %find all trials with each direction
+data_dfof_avg(:,:,idir+1) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %average all On frames and all trials
+subplot(n,n2,idir+1)
+imagesc(data_dfof_avg(:,:,idir+1))
 
 clear data_dfof
 %        Filtering data helps make cells more visible for selection
@@ -216,19 +215,29 @@ data_trial = reshape(npSub_tc, [nOn+nOff ntrials nCells]);
 data_f = mean(data_trial(base_win,:,:),1);
 data_dfof = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
 
-resp_cell_dir = cell(1,nDirs);
-base_cell_dir = cell(1,nDirs);
-data_dfof_dir = zeros(nCells,nDirs,2);
-h_dir = zeros(nDirs,nCells);
-p_dir = zeros(nDirs,nCells);
+resp_cell_dir = cell(1,nDirs+1);
+base_cell_dir = cell(1,nDirs+1);
+ind = cell(1,nDirs+1);
+data_dfof_dir = zeros(nCells,nDirs+1,2);
+h_dir = zeros(nDirs+1,nCells);
+p_dir = zeros(nDirs+1,nCells);
 for iDir = 1:nDirs
-    ind = find(tDir==Dirs(iDir));
-    resp_cell_dir{iDir} = squeeze(mean(data_dfof(resp_win,ind,:),1));
-    base_cell_dir{iDir} = squeeze(mean(data_dfof(base_win,ind,:),1));
+    ind{iDir} = intersect(find(tCoh == 1),find(tDir==Dirs(iDir)));
+    resp_cell_dir{iDir} = squeeze(mean(data_dfof(resp_win,ind{iDir},:),1));
+    base_cell_dir{iDir} = squeeze(mean(data_dfof(base_win,ind{iDir},:),1));
     [h_dir(iDir,:), p_dir(iDir,:)] = ttest(resp_cell_dir{iDir},base_cell_dir{iDir},'tail','right','alpha',0.05./(nDirs-1));
-    data_dfof_dir(:,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
-    data_dfof_dir(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
+    data_dfof_dir(:,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,ind{iDir},:),1),2));
+    data_dfof_dir(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,ind{iDir},:),1),[],2)./sqrt(length(ind{iDir})));
 end
+iDir = iDir+1;
+ind{iDir} = find(tCoh<1);
+resp_cell_dir{iDir} = squeeze(mean(data_dfof(resp_win,ind{iDir},:),1));
+base_cell_dir{iDir} = squeeze(mean(data_dfof(base_win,ind{iDir},:),1));
+[h_dir(iDir,:), p_dir(iDir,:)] = ttest(resp_cell_dir{iDir},base_cell_dir{iDir},'tail','right','alpha',0.05./(nDirs-1));
+data_dfof_dir(:,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,ind{iDir},:),1),2));
+data_dfof_dir(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,ind{iDir},:),1),[],2)./sqrt(length(ind{iDir})));
+
+group_str = {'Dir=0','Dir=180','Coh=0'};
 
 h_all_dir = sum(h_dir,1);
 resp_ind = find(h_all_dir);
@@ -238,157 +247,114 @@ figure;
 movegui('center')
 for iCell = 1:nCells
     if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
         figure;movegui('center');
         start = 1;
         n = n+1;
     end
     subplot(5,5,start)
-    errorbar(Dirs, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
+    errorbar(1:3, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
+    set(gca, 'XTick', 1:3, 'XTickLabel', group_str)
+    xlim([0 4])
+    ylim([0 inf])
     title(['R = ' num2str(h_all_dir(iCell))])
     start = start +1;
 end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
 
-%plot significant cells
-start=1;
-n = 1;
+%%
+wheel_speed = wheelSpeedCalc(input,32,'purple');
+wheel_tr_tc = reshape(wheel_speed,[nOn+nOff, ntrials]);
+wheel_tr = mean(wheel_tr_tc(nOff+1:end,:),1);
+figure; plot(wheel_tr)
+RIx = wheel_tr>1;
+
+
+ind_norun_1 = find(ismember(ind{1},find(~RIx)));
+ind_norun_2 = find(ismember(ind{2},find(~RIx)));
+[h_ds_0, p_ds_0] = ttest2(resp_cell_dir{1}(ind_norun_1,:),resp_cell_dir{2}(ind_norun_2,:),'tail','right');
+[h_ds_180, p_ds_180] = ttest2(resp_cell_dir{1}(ind_norun_1,:),resp_cell_dir{2}(ind_norun_2,:),'tail','left');
+
+data_dfof_dir_run = zeros(nCells,nDirs+1,2);
+data_dfof_dir_norun = zeros(nCells,nDirs+1,2);
+for iDir = 1:nDirs+1
+    run_ind = intersect(ind{iDir},find(RIx));
+    length(run_ind)
+    norun_ind = intersect(ind{iDir},find(~RIx));
+    data_dfof_dir_run(:,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,run_ind,:),1),2));
+    data_dfof_dir_run(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,run_ind,:),1),[],2)./sqrt(length(run_ind)));
+    data_dfof_dir_norun(:,iDir,1) = squeeze(mean(mean(data_dfof(resp_win,norun_ind,:),1),2));
+    data_dfof_dir_norun(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,norun_ind,:),1),[],2)./sqrt(length(norun_ind)));
+end
+
 figure;
-movegui('center')
-for i = 1:length(resp_ind)
-    iCell = resp_ind(i);
-    if start>25
-        figure;movegui('center');
-        start = 1;
-        n = n+1;
-    end
-    subplot(5,5,start)
-    errorbar(Dirs, data_dfof_dir(iCell,:,1), data_dfof_dir(iCell,:,2), '-o')
-    title(['R = ' num2str(h_all_dir(iCell))])
-    start = start +1;
-end
-
-tOri = tDir;
-tOri(find(tDir>=180)) = tOri(find(tDir>=180))-180;
-Oris = unique(tOri);
-nOri = length(Oris);
-
-resp_cell_ori = cell(1,nOri);
-base_cell_ori = cell(1,nOri);
-data_dfof_ori = zeros(nCells,nOri,2);
-h_ori = zeros(nOri,nCells);
-p_ori = zeros(nOri,nCells);
-for iOri = 1:nOri
-    ind = find(tOri==Oris(iOri));
-    resp_cell_ori{iOri} = squeeze(mean(data_dfof(resp_win,ind,:),1));
-    base_cell_ori{iOri} = squeeze(mean(data_dfof(base_win,ind,:),1));
-    [h_ori(iOri,:) p_ori(iOri,:)] = ttest(resp_cell_ori{iOri},base_cell_ori{iOri},'tail','right','alpha',0.05./(nOri-1));
-    data_dfof_ori(:,iOri,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
-    data_dfof_ori(:,iOri,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-end
-
-h_all_ori = sum(h_ori,1);
-
-start=1;
-n = 1;
-figure;
-movegui('center')
-for iCell = 1:nCells
-    if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
-        figure;movegui('center');
-        start = 1;
-        n = n+1;
-    end
-    subplot(5,5,start)
-    errorbar(Oris, data_dfof_ori(iCell,:,1), data_dfof_ori(iCell,:,2), '-o')
-    title(['R = ' num2str(h_all_ori(iCell))])
-    start = start +1;
-end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
-
- b_ori = zeros(1,nCells);
-    k1_ori = zeros(1,nCells);
-    R1_ori = zeros(1,nCells);
-    u1_ori = zeros(1,nCells);
-    R_square_ori = zeros(1,nCells);
-    sse_ori = zeros(1,nCells);
-    stim_DSI = zeros(1,nCells);
-    stim_OSI = zeros(1,nCells);
-    
-    Oris = Dirs(1:nDirs/2);
-    nOris = length(Oris);
-    data_dfof_ori = mean(reshape(data_dfof_dir(:,:,1),[nCells nOris 2]),3);
-    for iCell = 1:nCells
-        data = [data_dfof_ori(iCell,:,1) data_dfof_ori(iCell,1,1)];
-        theta = [deg2rad(Oris) pi];
-        [b_ori(:,iCell),k1_ori(:,iCell),R1_ori(:,iCell),u1_ori(:,iCell),sse_ori(:,iCell),R_square_ori(:,iCell)] ...
-            = miaovonmisesfit_ori(theta,data);
-        [max_val max_ind] = max(data_dfof_ori(iCell,:,1),[],2);
-        null_ind = max_ind+(nOris./2);
-        null_ind(find(null_ind>nOris)) = null_ind(find(null_ind>nOris))-nOris;
-        min_val = data_dfof_ori(iCell,null_ind,1);
-        if min_val<0
-            min_val = 0;
-        end
-        stim_OSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
-        [max_val max_ind] = max(data_dfof_dir(iCell,:,1),[],2);
-        null_ind = max_ind+(nDirs./2);
-        null_ind(find(null_ind>nDirs)) = null_ind(find(null_ind>nDirs))-nDirs;
-        min_val = data_dfof_dir(iCell,null_ind,1);
-        if min_val<0
-            min_val = 0;
-        end
-        stim_DSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
-        
-    end
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','k1_ori','b_ori','R1_ori','u1_ori','stim_DSI','stim_OSI','R_square_ori')
-
-%% F1/F0 analysis
-tf = input.gratingTemporalFreqCPS;
-data_dfof = permute(data_dfof,[1 3 2]);
-phaseCyc = double(tf*frame_rate);
-cycPerTrial = floor(nOn/(phaseCyc));
-data_dfof_cyc = zeros(phaseCyc, nCells, ntrials, cycPerTrial-1);
-for icyc = 1:cycPerTrial-1
-    data_dfof_cyc(:,:,:,icyc) = data_dfof(nOff+phaseCyc+((icyc-1).*phaseCyc):nOff+phaseCyc+(icyc.*phaseCyc)-1,:,:);
-end
-data_dfof_cycavg = mean(data_dfof_cyc,4);
-data_dfof_cycdir = zeros(phaseCyc,nCells,nDirs);
-for iDir = 1:nDirs
-    ind = find(tDir == Dirs(iDir));
-    data_dfof_cycdir(:,:,iDir) = mean(data_dfof_cycavg(:,:,ind),3);
-end
- 
-[max_val max_ind] = max(data_dfof_dir(:,:,1),[],2);
- 
-f0 = zeros(1,nCells);
-f1 = zeros(1,nCells);
-for iCell = 1:nCells
-    cyc = squeeze(data_dfof_cycdir(:,iCell,max_ind(iCell)))';
-    ff = fft(cyc);
-    p2 = abs(ff/length(cyc));
-    p1 = p2(1:1+length(cyc)./2);
-    p1(2:end-1) = 2*p1(2:end-1);
-    f0(1,iCell) = p1(1);
-    f1(1,iCell) = p1(2);
-end
-f1f0 = f1./f0;
-figure; 
 subplot(2,2,1)
-hist(f0)
-xlabel('F0')
-subplot(2,2,2)
-hist(f1)
-xlabel('F1')
-subplot(2,2,3)
-scatter(f0,f1)
-ylim([0 4])
+errorbar(1:3, mean(data_dfof_dir_run(:,:,1),1), std(data_dfof_dir_run(:,:,1),[],1)./sqrt(nCells), '-o')
+hold on
+errorbar(1:3, mean(data_dfof_dir_norun(:,:,1),1), std(data_dfof_dir_norun(:,:,1),[],1)./sqrt(nCells), '-o')
+set(gca, 'XTick', 1:3, 'XTickLabel', group_str)
 xlim([0 4])
-xlabel('F0')
-ylabel('F1')
+ylim([0 inf])
+ylabel('dF/F')
+legend({'Running','Stationary'},'location','southeast')
+subplot(2,2,2)
+[max_val_run max_ind_run] = max(data_dfof_dir_run(:,:,1),[],2);
+data_dfof_dir_run_norm = data_dfof_dir_run(:,:,1)./max_val_run;
+[max_val max_ind_norun] = max(data_dfof_dir_norun(:,:,1),[],2);
+data_dfof_dir_norun_norm = data_dfof_dir_norun(:,:,1)./max_val_run;
+errorbar(1:3, mean(data_dfof_dir_run_norm,1), std(data_dfof_dir_run_norm,[],1)./sqrt(nCells), '-o')
+hold on
+errorbar(1:3, mean(data_dfof_dir_norun_norm,1), std(data_dfof_dir_norun_norm,[],1)./sqrt(nCells), '-o')
+set(gca, 'XTick', 1:3, 'XTickLabel', group_str)
+xlim([0 4])
+ylim([0 1])
+ylabel('Normalized dF/F')
+subplot(2,2,3)
+histogram(max_ind_run)
+title('Max resp- Running')
+set(gca, 'XTick', 1:3, 'XTickLabel', group_str)
 subplot(2,2,4)
-hist(f1f0)
-xlabel('F1/F0')
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_F1F0.pdf']),'-dpdf','-bestfit')
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_dirAnalysis.mat']), 'max_ind','data_dfof_cycdir','f1','f0','f1f0')
+histogram(max_ind_norun)
+title('Max resp- Stationary')
+set(gca, 'XTick', 1:3, 'XTickLabel', group_str)
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_coherenceSummary.pdf']),'-dpdf','-bestfit')
+
+%%
+start=1;
+n = 1;
+figure;
+movegui('center')
+for iCell = 1:nCells
+    if start>25
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
+        figure;movegui('center');
+        start = 1;
+        n = n+1;
+    end
+    subplot(5,5,start)
+    errorbar(1:3, data_dfof_dir_run(iCell,:,1), data_dfof_dir_run(iCell,:,2), '-o')
+    hold on
+    errorbar(1:3, data_dfof_dir_norun(iCell,:,1), data_dfof_dir_norun(iCell,:,2), '-o')
+    set(gca, 'XTick', 1:3, 'XTickLabel', group_str)
+    xlim([0 4])
+    ylim([0 inf])
+    title(num2str(iCell))
+    start = start +1;
+end
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
+
+figure;
+
+for i = 1:3
+    subplot(3,1,i)
+    ind_cell = find(max_ind_norun==i);
+    errorbar(1:3, mean(data_dfof_dir_run_norm(ind_cell,:),1), std(data_dfof_dir_run_norm(ind_cell,:),[],1)./sqrt(length(ind_cell)), '-o')
+    hold on
+    errorbar(1:3, mean(data_dfof_dir_norun_norm(ind_cell,:),1), std(data_dfof_dir_norun_norm(ind_cell,:),[],1)./sqrt(length(ind_cell)), '-o')
+    set(gca, 'XTick', 1:3, 'XTickLabel', group_str)
+    xlim([0 4])
+    ylim([0 inf])
+    title([group_str{i} '- n = ' num2str(length(ind_cell))])
+    ylabel('Normalized dF/F')
+    legend({'Running','Stationary'},'location','southeast')
+end
