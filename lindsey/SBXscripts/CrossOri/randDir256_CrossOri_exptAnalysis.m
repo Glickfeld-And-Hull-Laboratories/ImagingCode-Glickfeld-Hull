@@ -4,7 +4,7 @@ ds = 'CrossOriRandDir_16x16_ExptList';
 eval(ds)
 nexp = length(expt);
 
-for iexp = 2
+for iexp = 4
 
 frame_rate = 15;
 
@@ -28,6 +28,8 @@ load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 
 %%
+LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
+
 if doRedChannel == 0
     red_cells = [];
 end
@@ -65,7 +67,11 @@ all_resp_dir = [];
 all_resp_plaid = [];
 all_dir = [];
 all_plaid = [];
-
+if nStimDir == 16
+    orthog = [90 270];
+elseif nStimDir == 12
+    orthog = [120 240];
+end
 nStim = nStimDir;
 i = 1;
 for iDir1 = 1:nStimDir
@@ -94,10 +100,10 @@ for iDir1 = 1:nStimDir
                 all_dir = [all_dir iDir1.*ones(size(ind_use))];
                 [h_resp(:,iDir1), p_resp(:,iDir1)] = ttest(resp_cell{iDir1,iDir2},base_cell{iDir1,iDir2},'dim',2,'tail','right','alpha', 0.05./nStimDir);
             end
-            if stimDirs(iDir2)-stimDirs(iDir1) == 90 
+            if stimDirs(iDir2)-stimDirs(iDir1) == orthog(1) 
                 avg_resp_orthog(:,iDir1,1) = squeeze(mean(mean(data_dfof_tc(resp_win,:,ind_use),1)-mean(data_dfof_tc(base_win,:,ind_use),1),3));
                 avg_resp_orthog(:,iDir1,2) = squeeze(std(mean(data_dfof_tc(resp_win,:,ind_use),1)-mean(data_dfof_tc(base_win,:,ind_use),1),[],3)./sqrt(length(ind_use)));
-            elseif stimDirs(iDir2)-stimDirs(iDir1) == 270
+            elseif stimDirs(iDir2)-stimDirs(iDir1) == orthog(2)
                 avg_resp_orthog(:,iDir2,1) = squeeze(mean(mean(data_dfof_tc(resp_win,:,ind_use),1)-mean(data_dfof_tc(base_win,:,ind_use),1),3));
                 avg_resp_orthog(:,iDir2,2) = squeeze(std(mean(data_dfof_tc(resp_win,:,ind_use),1)-mean(data_dfof_tc(base_win,:,ind_use),1),[],3)./sqrt(length(ind_use)));
             end
@@ -126,6 +132,7 @@ resp_ind_anova = find(p_anova_dir<0.05);
 avg_resp_dir_tc_all =  reshape(avg_resp_dir_tc, [prewin_frames+postwin_frames nCells nStimDir*nMaskDir]);
 
 stimDirs_temp = [stimDirs 360];
+shift = nStimDir/2;
 f(1) = figure;
 i = 1;
 n=1;
@@ -144,18 +151,19 @@ for iCell = 1:length(resp_ind_anova)
 %     i = 1+i;
     
     subplot(6,6,i)
-    errorbar(1:nStimDir, diag(squeeze(avg_resp_dir(iC,:,:,1))), diag(squeeze(avg_resp_dir(iC,:,:,2))))
+    [max_val max_ind] = max(diag(squeeze(avg_resp_dir(iC,:,:,1))));
+    errorbar(1:nStimDir, circshift(diag(squeeze(avg_resp_dir(iC,:,:,1))),shift-max_ind,1), circshift(diag(squeeze(avg_resp_dir(iC,:,:,2))),shift-max_ind,1))
     hold on
-    errorbar(1:nStimDir, squeeze(circshift(avg_resp_orthog(iC,:,1),2,2)), squeeze(circshift(avg_resp_orthog(iC,:,2),2,2)))
-    set(gca,'XtickLabel',stimDirs)
+    errorbar(1:nStimDir, squeeze(circshift(avg_resp_orthog(iC,:,1),shift-max_ind+2,2)), squeeze(circshift(avg_resp_orthog(iC,:,2),shift-max_ind+2,2)))
+    set(gca,'XTick',1:2:nStimDir,'XtickLabel',stimDirs(1:2:end))
+    xlim([0 nStimDir+1])
     title(num2str(iC))
     i = 1+i;
-    [max_val max_ind] = max(diag(squeeze(avg_resp_dir(iC,:,:,1))));
-    temp_sq = squeeze(circshift(circshift(avg_resp_dir(iC,:,:,1),8-max_ind,2),8-max_ind,3));
+    temp_sq = squeeze(circshift(circshift(avg_resp_dir(iC,:,:,1),shift-max_ind,2),shift-max_ind,3));
     subplot(6,6,i)
     imagesc(smooth2(flipud(temp_sq),'gauss',[3 3],3./sqrt(12)))
     axis square
-    set(gca, 'XTick',1:4:16,'XTickLabels',stimDirs(1:4:16)-180,'YTick',1:4:16,'YTickLabels',fliplr(stimDirs_temp(5:4:end)-180))
+    set(gca, 'XTick',1:nStimDir/4:nStimDir+1,'XTickLabels',stimDirs_temp(1:nStimDir/4:end)-180,'YTick',1:nStimDir/4:nStimDir+1,'YTickLabels',fliplr(stimDirs_temp(1:nStimDir/4:end)-180))
     i = 1+i;
 end
 movegui('center')
