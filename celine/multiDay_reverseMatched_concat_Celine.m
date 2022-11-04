@@ -1,4 +1,4 @@
-
+ 
 clear all; clear global; close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
@@ -7,7 +7,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %136 141 153 161 169 177 183 189
 
-sess_list = [196];%enter all the sessions you want to concatenate
+sess_list = [138 142 163 171 178 190];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -82,7 +82,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'input.mat'))
     load(fullfile(fn_multi,'locomotion.mat'))
     load(fullfile(fn_multi,'fluor_intensity.mat'))
-    %load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
+    load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -110,7 +110,7 @@ for iSess = 1:nSess
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
-%   redRsq_concat = [redRsq_concat,Rsq_red];
+    redRsq_concat = [redRsq_concat,Rsq_red];
     clear cons
 for id = 1:nd
         tc_trial_avrg_keep_allCon_stat_concat{id} =cat(2,tc_trial_avrg_keep_allCon_stat_concat{id},tc_trial_avrg_keep_allCon_stat{id}(:,:));
@@ -172,13 +172,13 @@ tc_red_se_stat = cell(1,nd); %same for red
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon),[],2);
-    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(green_ind_concat));
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_green,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_green,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(haveRunning_green));
     
-    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon),[],2);
-    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(red_ind_concat));
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_red,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_red,iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(haveRunning_red));
     
     clear green_std red_std
     end
@@ -206,7 +206,7 @@ hold on
 line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-title(['HT-',' n = ', num2str(length(green_ind_concat))])
+title(['HT-',' n = ', num2str(length(haveRunning_green))])
 ylabel('dF/F') 
 xlabel('s') 
 set(gca,'XColor', 'none','YColor','none')
@@ -225,7 +225,7 @@ hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 %ylabel('dF/F') 
 xlabel('s') 
-title(['HT+',' n = ', num2str(length(red_ind_concat))])
+title(['HT+',' n = ', num2str(length(haveRunning_red))])
 x0=5;
 y0=5;
 width=4;
@@ -537,17 +537,17 @@ sgtitle('time to half max (s), averaged over contrast')
 print(fullfile(fnout, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')
 
 %% response by condition
-a=mean(pref_responses_stat_concat{pre}(green_ind_concat,:), "omitnan");
-b=mean(pref_responses_loc_concat{pre}(green_ind_concat,:), "omitnan");
+a=mean(pref_responses_stat_concat{pre}(haveRunning_green,:), "omitnan");
+b=mean(pref_responses_loc_concat{pre}(haveRunning_green,:), "omitnan");
 
-c=mean(pref_responses_stat_concat{pre}(red_ind_concat,:), "omitnan");
-d=mean(pref_responses_loc_concat{pre}(red_ind_concat,:), "omitnan");
+c=mean(pref_responses_stat_concat{pre}(haveRunning_red,:), "omitnan");
+d=mean(pref_responses_loc_concat{pre}(haveRunning_red,:), "omitnan");
 
-e=mean(pref_responses_stat_concat{post}(green_ind_concat,:), "omitnan");
-f=mean(pref_responses_loc_concat{post}(green_ind_concat,:), "omitnan");
+e=mean(pref_responses_stat_concat{post}(haveRunning_green,:), "omitnan");
+f=mean(pref_responses_loc_concat{post}(haveRunning_green,:), "omitnan");
 
-g=mean(pref_responses_stat_concat{post}(red_ind_concat,:), "omitnan");
-h=mean(pref_responses_loc_concat{post}(red_ind_concat,:), "omitnan");
+g=mean(pref_responses_stat_concat{post}(haveRunning_red,:), "omitnan");
+h=mean(pref_responses_loc_concat{post}(haveRunning_red,:), "omitnan");
 
 responseByCond = horzcat([a';b'],[c';d'],[e';f'],[g';h']);
 clear a b c d e f g h

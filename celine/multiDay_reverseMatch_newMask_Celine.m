@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 196; %enter the post-DART day ID here
+day_id(1) = 209; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -55,10 +55,16 @@ masks = cell(1,nd);
 maskNP = cell(1,nd);
 red_ind = cell(1,nd);
 cellTCs_all = cell(1,nd);
+
+days_text = strcat('Reference day: ', string(day_id(1)), ' matched day: ', string(day_id(2)))
+
+fid = fopen('sessionsMatched.txt','wt');
+fprintf(fid, days_text);
+fclose(fid);
 %% load all data 
 runFolder = [];
 for id = 1:nd 
-    %clear global
+    clear global
     expDate = expt(day_id(id)).date;
     runs = eval(['expt(day_id(' num2str(id) ')).' cell2mat(dataStructLabels) '_runs']);
     nrun = length(runs);
@@ -116,12 +122,14 @@ clear input
 %% manual align
 corrmap_norm{1} = uint8((corrmap{1}./max(corrmap{1}(:))).*255);
 corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
+fov_norm{1} = uint8((fov_avg{1}./max(fov_avg{1}(:))).*255);
+fov_norm{2} = uint8((fov_avg{2}./max(fov_avg{2}(:))).*255);
 
 if exist(fullfile(fn_multi,'multiday_alignment.mat'))
     load(fullfile(fn_multi,'multiday_alignment.mat'))
 else
     [input_points_1, base_points_1] = cpselect(fov_red{2},fov_red{1},'Wait', true);
-    [input_points_2, base_points_2] = cpselect(fov_avg{2},fov_avg{1},'Wait', true);
+    [input_points_2, base_points_2] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
     [input_points_3, base_points_3] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
     input_points = [input_points_1; input_points_2; input_points_3];
     base_points = [base_points_1; base_points_2; base_points_3];
@@ -286,7 +294,7 @@ for icell = 1:nc
             imagesc(reg_max)
             title(num2str(r_max))
             drawnow
-           
+         
             prompt = 'Choose image: 1- Corr, 2- Avg/Red, 3- Max, 0- skip: ';
             x = input(prompt);
             switch x
@@ -376,9 +384,9 @@ print(fullfile(fn_multi,'masksAfterTransform.pdf'),'-dpdf','-fillpage')
 %%
 %old TCs
 
+
 match_ind = find([cellImageAlign.pass]);
 cellTCs_match{1} = cellTCs_all{1}(:,match_ind);
-
 
 %new TCs
 data_tc = stackGetTimeCourses(data{3}, mask_cell);
@@ -409,7 +417,7 @@ cellTCs_match{2} = npSub_tc;
 red_ind_match = ismember(match_ind,find(~isnan([cellImageAlign.r_red])));
 red_ind_all = red_ind;
 
-save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_ind_all','red_ind_match','match_ind','data_tc')
+save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_ind_all','red_ind_match','match_ind')
 save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','fov_red','dfmax','corrmap','masks','mask_np');
 
 clear data_reg_down data
