@@ -30,6 +30,15 @@ else
 end
 counterTimes = cell2mat(input.counterTimesUs);
 counterValues = cell2mat(input.counterValues);
+
+%solves issue of extra events from multiple runs
+diff_ind = find(diff(diff(counterValues))~=0);
+counterValues(diff_ind) = [];
+counterTimes(diff_ind) = [];
+diff_ind = find(diff(counterValues)<1);
+counterValues(diff_ind) = [];
+counterTimes(diff_ind) = [];
+
 wheelSpeedTimes = cell2mat(input.wheelSpeedTimesUs);
 wheelSpeedValues = cell2mat(input.wheelSpeedValues)./...
     (1000./(round(mean(diff(input.wheelSpeedTimesUs{1}))./1000,-1))); % math to correct for ticks/s correction in labjack plugin
