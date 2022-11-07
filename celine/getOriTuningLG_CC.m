@@ -1,7 +1,7 @@
 function [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCells,fitReliability,R_square,tuningTC,sharpness] = ...
-    getOriTuningLG(tc,mworks,downSampleFactor)
+    getOriTuningLG_CC(tc,mworks,downSampleFactor)
 
-nBoot = 1000;
+nBoot = 2;
 
 
 [nFrames,nCells] = size(tc);

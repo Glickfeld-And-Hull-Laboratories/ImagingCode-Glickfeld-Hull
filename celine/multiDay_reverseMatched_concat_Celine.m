@@ -1,12 +1,13 @@
-
+ 
 clear all; clear global; close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
-%131 133 138 142 163 171
-sess_list = [177 183];%enter all the sessions you want to concatenate
+%136 141 153 161 169 177 183 189
+
+sess_list = [138 142 163 171 178 190];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -55,6 +56,7 @@ dirs_concat=[];
 cons_concat=[];
 green_concat=[];
 red_concat=[];
+redRsq_concat=[];
 dfof_max_diff_concat=[];
 nKeep_concat=[];
 LMI_concat = cell(1,nd);
@@ -79,7 +81,8 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'resp_keep.mat'))
     load(fullfile(fn_multi,'input.mat'))
     load(fullfile(fn_multi,'locomotion.mat'))
-     load(fullfile(fn_multi,'fluor_intensity.mat'))
+    load(fullfile(fn_multi,'fluor_intensity.mat'))
+    load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -107,6 +110,7 @@ for iSess = 1:nSess
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
+    redRsq_concat = [redRsq_concat,Rsq_red];
     clear cons
 for id = 1:nd
         tc_trial_avrg_keep_allCon_stat_concat{id} =cat(2,tc_trial_avrg_keep_allCon_stat_concat{id},tc_trial_avrg_keep_allCon_stat{id}(:,:));
@@ -135,6 +139,7 @@ clear LMI RIx locCounts locResp locTCs statResp statTCs wheel_tc
 clear data_con_resp_keep data_dir_resp_keep data_rep_keep dfof_max_diff dfof_max_diff_raw explanation2 resp_max_keep data_resp_keep
 clear red_fluor_all red_fluor_match green_fluor_match green_fluor_match red_fluor_keep green_fluor_keep
 clear tc_trial_avrg_loc tc_trial_avrg_stat tc_trial_avrg_keep_allCond pref_responses_allCond
+clear linCellProps responseByCond responseByCondProps sig_corr_red Rsq_red
 
 red_ind_concat = find(red_concat);
 green_ind_concat = find(green_concat);
@@ -145,17 +150,15 @@ dirs=unique(dirs_concat);
 nDir=length(dirs);
 nKeep_total = sum(nKeep_concat);
 %% find cells that I have running data for on both days
-% haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
-% haveRunning_post = ~isnan(pref_responses_loc_concat{post});
-% haveRunning_both = find(haveRunning_pre.* haveRunning_post);
-% haveRunning_green = intersect(haveRunning_both, green_ind_concat);
-% haveRunning_red = intersect(haveRunning_both, red_ind_concat);
+haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
+haveRunning_post = ~isnan(pref_responses_loc_concat{post});
+haveRunning_both = find(haveRunning_pre.* haveRunning_post);
+haveRunning_green = intersect(haveRunning_both, green_ind_concat);
+haveRunning_red = intersect(haveRunning_both, red_ind_concat);
 
 
-% %%alternate for times when I know I don't have enough running data
-haveRunning_green = green_ind_concat;
-haveRunning_red = red_ind_concat;
-
+%I use only these cell when plotting locomotion trials, or when directly
+%comparing locomotion with stationary
 
 %% make figure with se shaded, one figure per contrast - stationary
 
@@ -180,7 +183,7 @@ for id = 1:nd
     clear green_std red_std
     end
 end
-z=double(nOn)/double(frame_rate)
+z=double(nOn)/double(frame_rate);
 
 %creat a time axis in seconds
 t=1:(size(tc_green_avrg_stat{1,1,1},1));
@@ -258,11 +261,11 @@ for id = 1:nd
 end
 
 
-%creat a time axis in seconds
+%create a time axis in seconds
 t=1:(size(tc_green_avrg_loc{1,1,1},1));
 t=(t-(double(stimStart)-1))/double(frame_rate);
 
-z=double(nOn)/double(frame_rate)
+z=double(nOn)/double(frame_rate);
 
 for iCon = 1:nCon
 figure
@@ -307,6 +310,89 @@ sgtitle(['running, contrast = ' num2str(cons(iCon))])
 print(fullfile(fnout,[num2str(cons(iCon)) '_loc_cellType_timecourses.pdf']),'-dpdf');
 end 
 clear txt1
+%% scatterplot of max df/f for day 1 vs day 2, and each subplot is one cell type
+green_ex_list=[]; %to highlight particular cells
+red_ex_list=[];
+
+for iCon = 1:nCon
+figure; movegui('center') 
+subplot(2,2,1)
+scatter((pref_responses_stat_concat{pre}(green_ind_concat,iCon)),(pref_responses_stat_concat{post}(green_ind_concat,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter((pref_responses_stat_concat{pre}(green_ex_list,iCon)),(pref_responses_stat_concat{post}(green_ex_list,iCon)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(pref_responses_stat_concat{pre}(green_ind_concat,iCon)),nanmean(pref_responses_stat_concat{post}(green_ind_concat,iCon)),15,'r')
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 1])
+xlim([-.1 1])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+title('HT- stationary')
+axis square
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+hold off
+
+
+subplot(2,2,2)
+scatter((pref_responses_stat_concat{pre}(red_ind_concat,iCon)),(pref_responses_stat_concat{post}(red_ind_concat,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter((pref_responses_stat_concat{pre}(red_ex_list,iCon)),(pref_responses_stat_concat{post}(red_ex_list,iCon)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(pref_responses_stat_concat{pre}(red_ind_concat,iCon)),nanmean(pref_responses_stat_concat{post}(red_ind_concat)),15,'r')
+% ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .4])
+xlim([-.1 .4])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+title('HT+ stationary')
+axis square
+hold off
+
+subplot(2,2,3)
+scatter((pref_responses_loc_concat{pre}(haveRunning_green,iCon)),(pref_responses_loc_concat{post}(haveRunning_green,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(pref_responses_loc_concat{pre}(haveRunning_green,iCon)),nanmean(pref_responses_loc_concat{post}(haveRunning_green)),15,'r')
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 1.5])
+xlim([-.1 1.5])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+title('HT- running')
+axis square
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+hold off
+
+subplot(2,2,4)
+scatter((pref_responses_loc_concat{pre}(haveRunning_red,iCon)),(pref_responses_loc_concat{post}(haveRunning_red,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(pref_responses_loc_concat{pre}(haveRunning_red,iCon)),nanmean(pref_responses_loc_concat{post}(haveRunning_red,iCon)),15,'r')
+% ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+title('HT+ running')
+uistack(hline,'bottom');
+axis square
+hold off
+set(gca, 'TickDir', 'out')
+
+
+sgtitle(num2str(cons(iCon)))
+print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
+end
 %% make a plot of individual timecourses 
 
 setYmin = -.2; %indicate y axes you want
@@ -386,11 +472,11 @@ for id = 1:nd
                 halfMax = max(smoothData(3:length(smoothData)))/2;
                 tHalfMaxCell =double(min(find(smoothData>halfMax)))/double(frame_rate);
                 if rem(iCell, 10) == 0 
-%                 figure;plot(tempData)
-%                 hold on
-%                 plot(smoothData)
-%                 hold on
-%                 vline(min(find(smoothData>halfMax)))
+                figure;plot(tempData)
+                hold on
+                plot(smoothData)
+                hold on
+                vline(min(find(smoothData>halfMax)))
                 end
                 if length(tHalfMaxCell)>0
                     tHalfMaxTemp(iCell)=tHalfMaxCell;
@@ -412,8 +498,8 @@ scatter((tHalfMax{pre}(green_ind_concat)),(tHalfMax{post}(green_ind_concat)),'k'
 hold on
 ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
-ylim([0 2.5])
-xlim([0 2.5])
+% ylim([0 2.5])
+% xlim([0 2.5])
 refline(1)
 title('HT- ')
 axis square
@@ -432,8 +518,8 @@ scatter((tHalfMax{pre}(red_ind_concat)),(tHalfMax{post}(red_ind_concat)),'Marker
 hold on
 ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
-ylim([0 2.5])
-xlim([0 2.5])
+% ylim([0 2.5])
+% xlim([0 2.5])
 refline(1)
 title('HT+')
 axis square
@@ -449,88 +535,19 @@ clear txt1 NrPoints
 
 sgtitle('time to half max (s), averaged over contrast')
 print(fullfile(fnout, ['tHalfMax_crossDay.pdf']),'-dpdf','-bestfit')
-%% scatterplot of max df/f for day 1 vs day 2, and each subplot is one cell type
-green_ex_list=[]; %to highlight particular cells
-red_ex_list=[];
 
-for iCon = 1:nCon
-figure; movegui('center') 
-subplot(2,2,1)
-scatter((pref_responses_stat_concat{pre}(haveRunning_green,iCon)),(pref_responses_stat_concat{post}(haveRunning_green,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
-hold on
-scatter((pref_responses_stat_concat{pre}(green_ex_list,iCon)),(pref_responses_stat_concat{post}(green_ex_list,iCon)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
-hold on
-scatter(nanmean(pref_responses_stat_concat{pre}(haveRunning_green,iCon)),nanmean(pref_responses_stat_concat{post}(haveRunning_green,iCon)),15,'r*')
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
-ylim([-.1 1])
-xlim([-.1 1])
-refline(1)
-title('HT- stationary')
-axis square
-set(gca, 'TickDir', 'out')
-
-
-
-subplot(2,2,2)
-scatter((pref_responses_stat_concat{pre}(haveRunning_red,iCon)),(pref_responses_stat_concat{post}(haveRunning_red,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
-hold on
-scatter((pref_responses_stat_concat{pre}(red_ex_list,iCon)),(pref_responses_stat_concat{post}(red_ex_list,iCon)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
-hold on
-scatter(nanmean(pref_responses_stat_concat{pre}(haveRunning_red,iCon)),nanmean(pref_responses_stat_concat{post}(haveRunning_red)),15,'r*')
-% ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
-ylim([-.1 .5])
-xlim([-.1 .5])
-set(gca, 'TickDir', 'out')
-refline(1)
-title('HT+ stationary')
-axis square
-
-
-subplot(2,2,3)
-scatter((pref_responses_loc_concat{pre}(haveRunning_green,iCon)),(pref_responses_loc_concat{post}(haveRunning_green,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
-hold on
-scatter(nanmean(pref_responses_loc_concat{pre}(haveRunning_green,iCon)),nanmean(pref_responses_loc_concat{post}(haveRunning_green)),15,'r*')
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
-ylim([-.1 1.5])
-xlim([-.1 1.5])
-refline(1)
-title('HT- running')
-axis square
-set(gca, 'TickDir', 'out')
-
-subplot(2,2,4)
-scatter((pref_responses_loc_concat{pre}(haveRunning_red,iCon)),(pref_responses_loc_concat{post}(haveRunning_red,iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
-hold on
-scatter(nanmean(pref_responses_loc_concat{pre}(haveRunning_red,iCon)),nanmean(pref_responses_loc_concat{post}(haveRunning_red,iCon)),15,'r*')
-% ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
-ylim([-.1 .5])
-xlim([-.1 .5])
-
-refline(1)
-title('HT+ running')
-axis square
-
-set(gca, 'TickDir', 'out')
-
-sgtitle(num2str(cons(iCon)))
-print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
-end
 %% response by condition
-a=mean(pref_responses_stat_concat{pre}(green_ind_concat,:), "omitnan");
-b=mean(pref_responses_loc_concat{pre}(green_ind_concat,:), "omitnan");
+a=mean(pref_responses_stat_concat{pre}(haveRunning_green,:), "omitnan");
+b=mean(pref_responses_loc_concat{pre}(haveRunning_green,:), "omitnan");
 
-c=mean(pref_responses_stat_concat{pre}(red_ind_concat,:), "omitnan");
-d=mean(pref_responses_loc_concat{pre}(red_ind_concat,:), "omitnan");
+c=mean(pref_responses_stat_concat{pre}(haveRunning_red,:), "omitnan");
+d=mean(pref_responses_loc_concat{pre}(haveRunning_red,:), "omitnan");
 
-e=mean(pref_responses_stat_concat{post}(green_ind_concat,:), "omitnan");
-f=mean(pref_responses_loc_concat{post}(green_ind_concat,:), "omitnan");
+e=mean(pref_responses_stat_concat{post}(haveRunning_green,:), "omitnan");
+f=mean(pref_responses_loc_concat{post}(haveRunning_green,:), "omitnan");
 
-g=mean(pref_responses_stat_concat{post}(red_ind_concat,:), "omitnan");
-h=mean(pref_responses_loc_concat{post}(red_ind_concat,:), "omitnan");
+g=mean(pref_responses_stat_concat{post}(haveRunning_red,:), "omitnan");
+h=mean(pref_responses_loc_concat{post}(haveRunning_red,:), "omitnan");
 
 responseByCond = horzcat([a';b'],[c';d'],[e';f'],[g';h']);
 clear a b c d e f g h
@@ -553,16 +570,17 @@ pref_responses_allCon__rect{id}=pref_responses_allCon__stat_concat{1,id};
 pref_responses_allCon__rect{id}(pref_responses_allCon__rect{id}<0)=0;
 end
 
-resp_diff = (pref_responses_allCon__rect{post} - pref_responses_allCon__rect{pre})./pref_responses_allCon__rect{pre};
-%resp_diff = (pref_responses_allCon__stat_concat{1,post} - pref_responses_allCon__stat_concat{1,pre});
+resp_diff = (pref_responses_allCon__rect{post} - pref_responses_allCon__rect{pre})./(pref_responses_allCon__rect{post} + pref_responses_allCon__rect{pre});
+%resp_diff = (pref_responses_allCon__rect{post} - pref_responses_allCon__rect{pre})./(pref_responses_allCon__rect{pre});
+figure;
 scatter(red_fluor_concat(red_ind_concat),resp_diff(red_ind_concat),'MarkerEdgeColor', 'r','MarkerFaceColor','r')
 hold on
 scatter(red_fluor_concat(green_ind_concat),resp_diff(green_ind_concat),'MarkerEdgeColor', 'k','MarkerFaceColor','k')
 xlabel('Red fluorescence, norm')
-ylabel('[post-pre]/pre')
+ylabel('[post-pre]/[post+pre]')
 sgtitle('stationary, all contrasts')
 hold off
-%print(fullfile(fnout,'norm_red_fluor.pdf'),'-dpdf','-bestfit')
+print(fullfile(fnout,'norm_red_fluor.pdf'),'-dpdf','-bestfit')
 
 
 %
@@ -579,7 +597,7 @@ figure
 scatter(pref_responses_allCon__stat_concat{1,pre}(red_ind_concat),resp_diff(red_ind_concat),'MarkerEdgeColor', 'r','MarkerFaceColor','r')
 hold on
 scatter(pref_responses_allCon__stat_concat{1,pre}(green_ind_concat),resp_diff(green_ind_concat),'MarkerEdgeColor', 'k','MarkerFaceColor','k')
-ylabel('[post-pre]/pre')
+ylabel('[post-pre]/[post+pre]')
 xlabel('max response pre')
 sgtitle('stationary, all contrasts')
 hold off
@@ -851,3 +869,390 @@ writetable(conTable,fullfile(fnout,'conPref.csv'),'WriteRowNames',true)
 
 boxplot(pref_con_concat{pre},red_concat)
 boxplot(pref_con_concat{post},red_concat)
+
+%% making tc plots for low and high Rsq cells
+
+hi_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
+low_avrg_stat = cell(1,nd); %same for red
+hi_se_stat = cell(1,nd); %this will be the se across all green cells
+low_se_stat = cell(1,nd); %same for red
+
+
+
+for id = 1:nd
+    for iCon=1:nCon
+        
+    hi_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:, (red_ind_concat(find(redRsq_concat))),iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:, (red_ind_concat(find(redRsq_concat))),iCon),[],2);
+    hi_se_stat{id}(:,iCon)=green_std/sqrt(length( (red_ind_concat(find(redRsq_concat)))));
+    
+    low_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,(red_ind_concat(find(~redRsq_concat))),iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,(red_ind_concat(find(~redRsq_concat))),iCon),[],2);
+    low_se_stat{id}(:,iCon)=red_std/sqrt(length((red_ind_concat(find(~redRsq_concat)))));
+    
+    clear green_std red_std
+    end
+end
+z=double(nOn)/double(frame_rate);
+
+%creat a time axis in seconds
+t=1:(size(hi_avrg_stat{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+figure
+subplot(1,2,1) %for HT-
+
+
+
+ylim([-.02 .2]);
+hold on
+shadedErrorBar(t,hi_avrg_stat{pre}(:,iCon),hi_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,hi_avrg_stat{post}(:,iCon),hi_se_stat{post}(:,iCon),'b');
+hold on
+% line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
+% hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['HT+ high R^2',' n = ', num2str(length((red_ind_concat(find(redRsq_concat)))))])
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(1,2,2) %for HT+
+shadedErrorBar(t,low_avrg_stat{pre}(:,iCon),low_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,low_avrg_stat{post}(:,iCon),low_se_stat{post}(:,iCon),'b');
+ylim([-.02 .2]);
+hold on
+% line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
+% hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+%ylabel('dF/F') 
+xlabel('s') 
+title(['HT+ low R^2',' n = ', num2str(length((red_ind_concat(find(~redRsq_concat)))))])
+x0=5;
+y0=5;
+width=4;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
+
+sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_Rsq_timecourses.pdf']),'-dpdf');
+end 
+
+clear txt1 
+%% scatterplot of max df/f for day 1 vs day 2 for high and low Rsq red cells
+
+for iCon = 1:nCon
+figure; movegui('center') 
+subplot(1,2,1)
+scatter((pref_responses_stat_concat{pre}((red_ind_concat(find(redRsq_concat))),iCon)),(pref_responses_stat_concat{post}((red_ind_concat(find(redRsq_concat))),iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(pref_responses_stat_concat{pre}((red_ind_concat(find(redRsq_concat))),iCon)),nanmean(pref_responses_stat_concat{post}((red_ind_concat(find(redRsq_concat))),iCon)),15,'r*')
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+refline(1)
+title('HT+ high R^2')
+axis square
+set(gca, 'TickDir', 'out')
+
+
+
+subplot(1,2,2)
+scatter((pref_responses_stat_concat{pre}((red_ind_concat(find(~redRsq_concat))),iCon)),(pref_responses_stat_concat{post}((red_ind_concat(find(~redRsq_concat))),iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(pref_responses_stat_concat{pre}((red_ind_concat(find(~redRsq_concat))),iCon)),nanmean(pref_responses_stat_concat{post}((red_ind_concat(find(~redRsq_concat))))),15,'r*')
+% ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+set(gca, 'TickDir', 'out')
+refline(1)
+title('HT+ low R^2')
+axis square
+
+
+
+
+sgtitle(num2str(cons(iCon)))
+print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_Rsq.pdf']),'-dpdf','-bestfit')
+end
+
+%% to plot timecourses averaged over contrast
+
+tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_stat = cell(1,nd); %same for red
+tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
+tc_red_se_stat = cell(1,nd); %same for red
+iCon=1;
+
+
+for id = 1:nd
+   
+        
+    tc_green_avrg_stat{id}(:)=nanmean(tc_trial_avrg_keep_allCon_stat_concat{id}(:,green_ind_concat),2);
+    green_std=nanstd(tc_trial_avrg_keep_allCon_stat_concat{id}(:,green_ind_concat),[],2);
+    tc_green_se_stat{id}(:)=green_std/sqrt(length(green_ind_concat));
+    
+    tc_red_avrg_stat{id}(:)=nanmean(tc_trial_avrg_keep_allCon_stat_concat{id}(:,red_ind_concat),2);
+    red_std=nanstd(tc_trial_avrg_keep_allCon_stat_concat{id}(:,red_ind_concat),[],2);
+    tc_red_se_stat{id}(:)=red_std/sqrt(length(red_ind_concat));
+    
+    clear green_std red_std
+    
+end
+z=double(nOn)/double(frame_rate)
+
+%creat a time axis in seconds
+t=1:(size(tc_green_avrg_stat{1},2));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+
+figure
+subplot(1,2,1) %
+
+%ylim([-.02 .3]);
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{pre}(:),tc_green_se_stat{pre}(:),'k');
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{post}(:),tc_green_se_stat{post}(:),'b');
+hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['HT-',' n = ', num2str(length(green_ind_concat))])
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(1,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_stat{pre}(:),tc_red_se_stat{pre}(:),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_stat{post}(:),tc_red_se_stat{post}(:),'b');
+%ylim([-.02 .3]);
+hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+%ylabel('dF/F') 
+xlabel('s') 
+title(['HT+',' n = ', num2str(length(red_ind_concat))])
+x0=5;
+y0=5;
+width=4;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
+
+sgtitle(['stationary, all contrasts'])
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_stat_timecourses_allCon.pdf']),'-dpdf');
+
+
+clear txt1 
+%% all contrast timecourse running
+
+
+tc_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_loc = cell(1,nd); %same for red
+tc_green_se_loc = cell(1,nd); %this will be the se across all green cells
+tc_red_se_loc = cell(1,nd); %same for red
+iCon=1;
+
+
+for id = 1:nd
+   
+        
+    tc_green_avrg_loc{id}(:)=nanmean(tc_trial_avrg_keep_allCon_loc_concat{id}(:,haveRunning_green),2);
+    green_std=nanstd(tc_trial_avrg_keep_allCon_loc_concat{id}(:,haveRunning_green),[],2);
+    tc_green_se_loc{id}(:)=green_std/sqrt(length(haveRunning_green));
+    
+    tc_red_avrg_loc{id}(:)=nanmean(tc_trial_avrg_keep_allCon_loc_concat{id}(:,haveRunning_red),2);
+    red_std=nanstd(tc_trial_avrg_keep_allCon_loc_concat{id}(:,haveRunning_red),[],2);
+    tc_red_se_loc{id}(:)=red_std/sqrt(length(haveRunning_red));
+    
+    clear green_std red_std
+    
+end
+z=double(nOn)/double(frame_rate)
+
+%creat a time axis in seconds
+t=1:(size(tc_green_avrg_loc{1},2));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+
+figure
+subplot(1,2,1) %
+
+%ylim([-.02 .3]);
+hold on
+shadedErrorBar(t,tc_green_avrg_loc{pre}(:),tc_green_se_loc{pre}(:),'k');
+hold on
+shadedErrorBar(t,tc_green_avrg_loc{post}(:),tc_green_se_loc{post}(:),'b');
+hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['HT-',' n = ', num2str(length(haveRunning_green))])
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(1,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_loc{pre}(:),tc_red_se_loc{pre}(:),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_loc{post}(:),tc_red_se_loc{post}(:),'b');
+%ylim([-.02 .3]);
+hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+%ylabel('dF/F') 
+xlabel('s') 
+title(['HT+',' n = ', num2str(length(haveRunning_red))])
+x0=5;
+y0=5;
+width=4;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
+
+sgtitle(['Running, all contrasts'])
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_loc_timecourses_allCon.pdf']),'-dpdf');
+
+
+clear txt1 
+%% all contrast scatter
+green_ex_list=[]; %to highlight particular cells
+red_ex_list=[];
+
+
+figure; movegui('center') 
+subplot(2,2,1)
+scatter((tc_trial_avrg_keep_allCon_stat_concat{pre}(green_ind_concat)),(tc_trial_avrg_keep_allCon_stat_concat{post}(green_ind_concat)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter((tc_trial_avrg_keep_allCon_stat_concat{pre}(green_ex_list)),(tc_trial_avrg_keep_allCon_stat_concat{post}(green_ex_list)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(tc_trial_avrg_keep_allCon_stat_concat{pre}(green_ind_concat)),nanmean(tc_trial_avrg_keep_allCon_stat_concat{post}(green_ind_concat)),15,'k','MarkerFaceColor',[0 0 0])
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+% ylim([-.2 .6])
+% xlim([-.2 .6])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+title('HT- stationary')
+axis square
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+hold off
+
+
+subplot(2,2,2)
+scatter((tc_trial_avrg_keep_allCon_stat_concat{pre}(red_ind_concat)),(tc_trial_avrg_keep_allCon_stat_concat{post}(red_ind_concat)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter((tc_trial_avrg_keep_allCon_stat_concat{pre}(red_ex_list)),(tc_trial_avrg_keep_allCon_stat_concat{post}(red_ex_list)),10,'MarkerEdgeColor',[0 0 0],'MarkerFaceColor',[0 0 0],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(tc_trial_avrg_keep_allCon_stat_concat{pre}(red_ind_concat)),nanmean(tc_trial_avrg_keep_allCon_stat_concat{post}(red_ind_concat)),15,'k','MarkerFaceColor',[0 0 0])
+% ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.2 .2])
+xlim([-.2 .2])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+title('HT+ stationary')
+axis square
+hold off
+
+subplot(2,2,3)
+scatter((tc_trial_avrg_keep_allCon_loc_concat{pre}(haveRunning_green)),(tc_trial_avrg_keep_allCon_loc_concat{post}(haveRunning_green)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(tc_trial_avrg_keep_allCon_loc_concat{pre}(haveRunning_green)),nanmean(tc_trial_avrg_keep_allCon_loc_concat{post}(haveRunning_green)),15,'k','MarkerFaceColor',[0 0 0])
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.2 .6])
+xlim([-.2 .6])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+title('HT- running')
+axis square
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+hold off
+
+subplot(2,2,4)
+scatter((tc_trial_avrg_keep_allCon_loc_concat{pre}(haveRunning_red)),(tc_trial_avrg_keep_allCon_loc_concat{post}(haveRunning_red)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+scatter(nanmean(tc_trial_avrg_keep_allCon_loc_concat{pre}(haveRunning_red)),nanmean(tc_trial_avrg_keep_allCon_loc_concat{post}(haveRunning_red)),15,'k','MarkerFaceColor',[0 0 0])
+% ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.2 .2])
+xlim([-.2 .2])
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+title('HT+ running')
+uistack(hline,'bottom');
+axis square
+hold off
+set(gca, 'TickDir', 'out')
+
+
+print(fullfile(fnout,['allCon_maxResp_crossDay.pdf']),'-dpdf','-bestfit')
+%% to choose example cells
+cellList=[152]; %enter the cells you're interested in by their index wihtin the keep dataframe
+iCon = 2;
+
+place=1;
+figure
+for i=1:length(cellList)
+    for id = 1:nd
+        thisCell = cellList(i)
+        
+        temp_TCs=tc_trial_avrg_stat_concat{id}(:,thisCell,iCon); %pulls the selected trials for the selected cell. Shape is frames X trial
+       
+        subplot(length(cellList),nd,place)
+        if red_concat(thisCell)==1
+            plot(temp_TCs,'r')
+            ylim([-.2 .5]);
+        else
+            plot(temp_TCs,'k')
+            ylim([-.2 .5]);
+        end
+        title(string(thisCell));
+        line([0,2],[.45,.45])
+    place=place+1;
+    end
+    
+end
+
+
+c = linspace(1,10,length(cellList));
+figure
+scatter((pref_responses_stat_concat{pre}(cellList,iCon)),(pref_responses_stat_concat{post}(cellList,iCon)),[],c,'filled')
+ylabel('post-DART dF/F')
+xlabel('pre-DART  dF/F')
+ylim([-.1 .5])
+xlim([-.1 .5])
+colorbar
+
+refline(1)
+axis square
+

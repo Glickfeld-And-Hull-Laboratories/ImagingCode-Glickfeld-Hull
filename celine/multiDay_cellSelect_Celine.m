@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 184;
+day_id = 209;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -220,7 +220,7 @@ end
 % title('Comparing contrasts');
 
 data_ori_max = max(data_g_ori,[],3);
-data_dfof = cat(3, data_ori_max,data_g_ori);
+data_dfof = cat(3, data_ori_max,data_ori_max,data_ori_max,data_g_ori);
 figure; imagesc(data_ori_max); movegui('center');title('data ori max');
 clear data_g_dfof
 
@@ -338,6 +338,7 @@ mask_cell = bwlabel(mask_all);
 figure; imagesc(mask_cell) 
 
 nCells = max(mask_cell(:));
+%mask_label = ones(1,nCells); %this is for the EMX and similar lines only
 mask_label = zeros(1,nCells);
 for i = 1:nCells
     if mask_cell_red(find(mask_cell == i, 1))
@@ -407,7 +408,7 @@ h_all = sum(sum(h,2),3);
 
 resp=logical(h_all);
 red=mask_label';
-resp_red=resp.*red;
+resp_red=logical(resp.*red);
 sum(resp)
 sum(resp_red)
 
@@ -508,8 +509,8 @@ data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = mean(data_dfof_trial,3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(mean(data_dfof_trial,2));%average over trials, one row per cell
+tc_cell_avrg = mean(data_dfof_trial(:,:,:),3);%average pver cells, one row per trial
+tc_trial_avrg = squeeze(mean(data_dfof_trial(:,:,:),2));%average over trials, one row per cell
 tc_cell_trial_avrg = mean(tc_cell_avrg,2);%average over trials and cells
 
 figure;
@@ -525,16 +526,16 @@ ylim([-.04 .1])
 
 
 %% 
-figure;
-imagesc(data_avg);
-colormap gray
-title('average FOV');
-hold on
-bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
-bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
-hold off
+% figure;
+% imagesc(data_avg);
+% colormap gray
+% title('average FOV');
+% hold on
+% bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
+% bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+% hold off
 
 %% plotting contrast and ori functions for red cells only
 % if length(find(mask_label))<36

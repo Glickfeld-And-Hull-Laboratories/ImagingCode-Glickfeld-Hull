@@ -13,17 +13,17 @@ clear all
 clear global
 clc
 %% get path names
-date = '220428';
-ImgFolder = strvcat('003'); %could we use char() instead here?
-time = strvcat('1238');
-mouse = 'i2517';
-run = strvcat('001'); %multiple depths?***
+date = '220803';
+ImgFolder = strvcat('002'); %could we use char() instead here?
+time = strvcat('1620');
+mouse = 'i2066';
+run = strvcat('002'); %multiple depths?***
 nrun = size(ImgFolder,1); %what is this?***
-frame_rate = 15.5;
+frame_rate = 15;
 run_str = catRunName(ImgFolder, nrun);
 ref_str = catRunName(run, size(run,1)); %what is this?***
-tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
+tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\ACh\Data\2p_data';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\ACh\Analysis\2p_analysis';
 %fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load data
@@ -522,7 +522,7 @@ fov_norm{1}(fov_norm{1} > (brightnessScaleFactor*255)) = brightnessScaleFactor*2
 %1040 run
 irun = 1;
 WL = '1040'; 
-ImgFolder = strvcat('002'); %is this where we change the run?***
+ImgFolder = strvcat('001'); %is this where we change the run?***
 run = catRunName(ImgFolder, nrun);
 imgMatFile = [ImgFolder '_000_000.mat'];
 CD = fullfile(tj_fn, [mouse '\' date '_' mouse '\' ImgFolder(irun,:)]);

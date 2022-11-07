@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '220802';
-mouse = 'i2070';
-ImgFolder = '001';
-time = '1545';
+date = '221017';
+mouse = 'i2078';
+ImgFolder = '000';
+time = '0932';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -185,8 +185,8 @@ expt_input = concatenateDataBlocks(temp);
         xlabel('Azimuth');
         ylabel('Elevation');
         colorbar
-        caxis([0 pixThreshold/.4])
-        caxis([-0.1 0.1])
+        %caxis([0 pixThreshold/.4])
+        %caxis([-0.1 0.1])
     
     else
         data_tc = squeeze(mean(mean(data,1),2));

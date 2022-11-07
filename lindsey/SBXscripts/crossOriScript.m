@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDir_16x16_ExptList';
-iexp = 2; 
+ds = 'CrossOriRandDirTwoPhaseFF_ExptList';
+iexp = 4; 
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
@@ -92,7 +92,7 @@ nep = floor(size(data,3)./regIntv);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,50001:50500),3);
+data_avg = mean(data(:,:,45001:45500),3);
 if doPhaseAfterDir || doDirAfterPass
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);
@@ -311,12 +311,12 @@ if nStimDir > 1 & ~input.doTwoStimTogether
     end
     figure; 
     subplot(2,1,1); 
-    imagesc(mean(data_dfof(:,:,nStim1+1:1+nMaskDiff:end),3))
+    imagesc(mean(data_dfof(:,:,nStim1+1:1+nMaskDiff:end),3,"omitnan"))
     title('Grating')
     colormap gray
 %     clim([0 1])
     subplot(2,1,2); 
-    imagesc(mean(data_dfof(:,:,nStim1+2:1+nMaskDiff:end),3))
+    imagesc(mean(data_dfof(:,:,nStim1+2:1+nMaskDiff:end),3,"omitnan"))
     title('Plaid')
     colormap gray
 %     caxis([0 1])
@@ -374,6 +374,8 @@ print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_st
 
 if size(data_dfof,3)==256
     data_dfof = max(reshape(data_dfof,[sz(1) sz(2) 32 8]),[],4);
+elseif size(data_dfof,3)==144
+    data_dfof = max(reshape(data_dfof,[sz(1) sz(2) 24 6]),[],4);
 end
 
 data_dfof = cat(3, data_dfof, data_dfof_max);

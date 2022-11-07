@@ -1,10 +1,10 @@
 %% get path names
 close all;clear all;clc;
 
-ds = 'CrossOriRandDir_ExptList';
+ds = 'CrossOriRandDir_16x16_ExptList';
 eval(ds)
 nexp = length(expt);
-iexp = 49;
+iexp = 4;
 rc = behavConstsAV;
 
 %%
@@ -169,20 +169,26 @@ resp_win = [nOff+4:nOff+nOn];
 tt_dir = (1-nOff:nOn).*(1000/frameRateHz);
 
 data_dfof_stim_dir = zeros(nDir,nSF,nCells);
-h_dir = zeros(nDir,nSF,nCells);
-p_dir = zeros(nDir,nSF,nCells);
+h_dir_sf = zeros(nDir,nSF,nCells);
+p_dir_sf = zeros(nDir,nSF,nCells);
+h_dir = zeros(nDir,nCells);
+p_dir = zeros(nDir,nCells);
 trialInd = cell(nDir,nSF);
+trial_n = zeros(nDir,nSF);
 for iDir = 1:nDir
     ind_dir = find(dir_mat == dirs(iDir));
+    [h_dir(iDir,:) p_dir(iDir,:)] = ttest(data_dfof_resp(ind_dir,:), data_dfof_base(ind_dir,:),'dim',1, 'tail', 'right', 'alpha', 0.05./(nDir-1));
     for iSF = 1:nSF
         ind_SF = find(SF_mat == SFs(iSF));
         trialInd{iDir,iSF} = intersect(ind_dir,ind_SF);
+        trial_n(iDir,iSF) = length(trialInd{iDir,iSF});
         data_dfof_stim_dir(iDir, iSF, :) = mean(data_dfof_resp(trialInd{iDir,iSF},:),1);
-        [h_dir(iDir,iSF,:) p_dir(iDir,iSF,:)] = ttest(data_dfof_resp(trialInd{iDir,iSF},:), data_dfof_base(trialInd{iDir,iSF},:),'dim',1, 'tail', 'right', 'alpha', 0.05./((nDir.*nSF)-1));
+        [h_dir_sf(iDir,iSF,:) p_dir_sf(iDir,iSF,:)] = ttest(data_dfof_resp(trialInd{iDir,iSF},:), data_dfof_base(trialInd{iDir,iSF},:),'dim',1, 'tail', 'right', 'alpha', 0.05./(nDir-1));
     end
 end
 
-h_dir_all = find(sum(sum(h_dir,1),2));
+h_dir_sf_all = find(sum(sum(h_dir_sf,1),2));
+h_dir_all = find(sum(h_dir,1));
 
 [max_dir_val max_dir_ind] = max(squeeze(mean(data_dfof_stim_dir,2)),[],1);
 max_sf_val = zeros(1,nCells);
@@ -208,7 +214,7 @@ for iCell = 1:nCells
         g_fit{iCell}.rsquare = NaN;
     end
     subplot(7,7,start)
-    plot(log2(SFs),data_dfof_stim(max_dir_ind(iCell),:,iCell),'o')
+    plot(log2(SFs),data_dfof_stim_dir(max_dir_ind(iCell),:,iCell),'o')
     hold on
     if ~isnan(fit_out{iCell}.b1)
         plot(fit_out{iCell})
@@ -231,16 +237,57 @@ figure; movegui('center');
 RsqSF(find(RsqSF<0)) = 0;
 subplot(2,1,1); histogram(RsqSF(h_dir_all)); vline(0.8)
 ind_sf = intersect(find(RsqSF>0.8),h_dir_all); xlabel('Rsq')
-subplot(2,1,2); histogram(prefSF_cut(ind))
+subplot(2,1,2); histogram(prefSF_cut(ind_sf))
 set(gca, 'XTick', log2(SFs), 'XTickLabels', SFs)
-vline(mean(prefSF_cut(ind),2))
+vline(mean(prefSF_cut(ind_sf)))
 xlabel('SF (cpd)')
 
 suptitle([date ' ' mouse])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_SFfitDist.pdf']), '-dpdf')
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'SF_mat', 'SFs','nSF','dir_mat','dirs','nDir')
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_SFfits.mat']), 'fit_out','g_fit', 'prefSF', 'RsqSF','data_dfof_resp','data_dfof_stim','h_dir_all', 'h_dir', 'trialInd','max_sf_ind')
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_SFfits.mat']), 'fit_out','g_fit', 'prefSF', 'RsqSF','data_dfof_resp','data_dfof_resp','h_dir_all', 'h_dir', 'h_dir_sf_all','h_dir_sf', 'trialInd','max_sf_ind')
+
+%%
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_respData.mat']))
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_input.mat']))
+resp_ind_anova = intersect(h_dir_all,find(p_anova_dir<0.05));
+stimDirs = 0:30:330;
+stimDirs_temp = [stimDirs 360];
+nStimDir = length(stimDirs);
+shift = nStimDir/2;
+f(1) = figure;
+i = 1;
+n=1;
+for iCell = 1:length(resp_ind_anova)
+    iC = resp_ind_anova(iCell);
+    if i == 37
+        movegui('center')
+        orient(f(n),'landscape')
+        sgtitle([mouse ' ' date ' -SF = ' num2str(input.stimOneGratingSpatialFreqCPD)])
+        print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_CrossOri&SF_tuningCurves_' num2str(n) '.pdf']),'-dpdf','-bestfit')
+        n=1+n;
+        i = 1;
+        f(n) = figure;
+    end
+    [max_val max_ind] = max(diag(squeeze(avg_resp_dir(iC,:,:,1))));
+    temp_sq = squeeze(circshift(circshift(avg_resp_dir(iC,:,:,1),shift-max_ind,2),shift-max_ind,3));
+    subplot(6,6,i)
+    imagesc(smooth2(flipud(temp_sq),'gauss',[3 3],3./sqrt(12)))
+    axis square
+    set(gca, 'XTick',1:nStimDir/4:nStimDir+1,'XTickLabels',stimDirs_temp(1:nStimDir/4:end)-180,'YTick',1:nStimDir/4:nStimDir+1,'YTickLabels',fliplr(stimDirs_temp(1:nStimDir/4:end)-180))
+    title(num2str(iC))
+    i = 1+i;
+    subplot(6,6,i)
+    imagesc(smooth2(flipud(circshift(data_dfof_stim_dir(:,:,iCell)',shift-max_ind,2)),'gauss',[3 3],3./sqrt(12)))
+    set(gca, 'XTick',1:nStimDir/4:nStimDir+1,'XTickLabels',stimDirs_temp(1:nStimDir/4:end)-180,'YTick',1:nSF,'YTickLabels',fliplr(SFs))
+    i = 1+i;
+end
+movegui('center')
+orient(f(n),'landscape') 
+sgtitle([mouse ' ' date ' -SF = ' num2str(input.stimOneGratingSpatialFreqCPD)])
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_CrossOri&SF_tuningCurves_' num2str(n) '.pdf']),'-dpdf','-bestfit')
+        
 
 %%
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' co_run_str], [date '_' mouse '_' co_run_str '_dirAnalysis.mat']))
