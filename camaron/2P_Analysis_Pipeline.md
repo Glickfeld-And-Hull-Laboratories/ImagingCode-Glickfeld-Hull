@@ -71,7 +71,6 @@
     1. Inputs → TC_extraction outputs + expt_list_final
     2. Outpus → Single data structure:
         1. mouse_pooled_2AFC_2P_data.mat (expt_list_final, data_adapt_dfof_all, data_stim_df_all, adapt_and_stim_resp_ind_all, ori_bins …. …. …. … ) 
-4. “Analysis_script.m” # Post processing quantifications and plotting figures for a single mouse…
+4. **figs_2AFC_2P.m** # Post processing data and plotting figures for a single mouse…
     1. Inputs → mouse_pooled_2AFC_2P_data.mat
-    2. Quantifications…
-    3. Figures….
+    2. Figures….
