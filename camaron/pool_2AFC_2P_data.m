@@ -143,7 +143,7 @@ for i = 1:length(expt_list_final)
     
     % -----
     
-    % Masks (Interneurons)
+    % Masks (Interneurons)  - Dont forget to use these!
     b_mask_label_all{i} =  b_adapt_resp.mask_label;
     p_mask_label_all{i} =  p_adapt_resp.mask_label;
     
@@ -226,7 +226,6 @@ for i = 1:length(expt_list_final)
 end
 
 %% Pool mean cell activity across trials!
-% Remember that experiments are at different depths...
 % Uses local helper function; 'Run Section' to use.
 
 % All by condition
@@ -239,7 +238,7 @@ p_data_adapt_trial_mean = mean_cell_resp_by_trial(p_adapt_win_dfof_all_adapt);
 p_data_stim_control_trial_mean = mean_cell_resp_by_trial(p_stim_win_dfof_all_control);
 p_data_stim_adapt_trial_mean = mean_cell_resp_by_trial(p_stim_win_dfof_all_adapt);
 
-%% Responsive by condition
+% Responsive by condition
 
 b_adapt_sigDuringAdapt_adapt_trial_mean = mean_cell_resp_by_trial(b_adapt_sigDuringAdapt_adapt);
 b_stim_sigDuringControl_control_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringControl_control);
@@ -252,10 +251,7 @@ p_stim_sigDuringControl_control_trial_mean = mean_cell_resp_by_trial(p_stim_sigD
 p_stim_sigDuringControl_adapt_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringControl_adapt);
 p_stim_sigDuringAdapt_adapt_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringAdapt_adapt);
 
-
 % Responsive + tuned by condition 
-
-%% Responsive + tuned by condition 
 
 b_tuned_adapt_sigDuringAdapt_adapt_trial_mean = mean_tuned_cell_resp_by_trial(b_tuned_adapt_sigDuringAdapt_adapt);
 b_tuned_stim_sigDuringControl_control_trial_mean = mean_tuned_cell_resp_by_trial(b_tuned_stim_sigDuringControl_control);
@@ -268,8 +264,11 @@ p_tuned_stim_sigDuringControl_control_trial_mean = mean_tuned_cell_resp_by_trial
 p_tuned_stim_sigDuringControl_adapt_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringControl_adapt);
 p_tuned_stim_sigDuringAdapt_adapt_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringAdapt_adapt);
 
+% Reminder that experiments (cells) are at different depths...
 
-%% Get pooled cell counts for each condition before averaging across cell
+
+
+%% Get pooled cell counts for each condition before averaging across cell (uneccessary with TC_stats function)
 
 nAllCells = size(b_data_adapt_trial_mean,2);
 
@@ -296,24 +295,73 @@ for i = 1:length(ori_bins)
 end
 
 
+%% Cell average TC and SEM for each condition
+
+% All by condition
+b_data_adapt_stats = TC_stats(b_data_adapt_trial_mean, resp_win);
+b_data_stim_control_stats  = TC_stats(b_data_stim_control_trial_mean, resp_win);
+b_data_stim_adapt_stats  = TC_stats(b_data_stim_adapt_trial_mean, resp_win);
+
+p_data_adapt_stats  = TC_stats(p_data_adapt_trial_mean, resp_win);
+p_data_stim_control_stats  = TC_stats(p_data_stim_control_trial_mean, resp_win);
+p_data_stim_adapt_stats  = TC_stats(p_data_stim_adapt_trial_mean, resp_win);
+
+% Responsive by condition
+
+b_adapt_sigDuringAdapt_adapt_stats  = TC_stats(b_adapt_sigDuringAdapt_adapt_trial_mean, resp_win);
+b_stim_sigDuringControl_control_stats  = TC_stats(b_stim_sigDuringControl_control_trial_mean, resp_win);
+b_stim_sigDuringControl_adapt_stats  = TC_stats(b_stim_sigDuringControl_adapt_trial_mean, resp_win);
+b_stim_sigDuringAdapt_adapt_stats  = TC_stats(b_stim_sigDuringAdapt_adapt_trial_mean, resp_win);
+ 
+p_adapt_sigDuringAdapt_adapt_stats  = TC_stats(p_adapt_sigDuringAdapt_adapt_trial_mean, resp_win);
+p_stim_sigDuringControl_control_stats  = TC_stats(p_stim_sigDuringControl_control_trial_mean, resp_win);
+p_stim_sigDuringControl_adapt_stats  = TC_stats(p_stim_sigDuringControl_adapt_trial_mean, resp_win);
+p_stim_sigDuringAdapt_adapt_stats  = TC_stats(p_stim_sigDuringAdapt_adapt_trial_mean, resp_win);
+
+% Responsive + tuned by condition 
+for i = 1:4
+
+    b_tuned_adapt_sigDuringAdapt_adapt_stats(i)  = TC_stats(b_tuned_adapt_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
+    b_tuned_stim_sigDuringControl_control_stats(i)  = TC_stats(b_tuned_stim_sigDuringControl_control_trial_mean{i}, resp_win);
+    b_tuned_stim_sigDuringControl_adapt_stats(i)  = TC_stats(b_tuned_stim_sigDuringControl_adapt_trial_mean{i}, resp_win);
+    b_tuned_stim_sigDuringAdapt_adapt_stats(i)  = TC_stats(b_tuned_stim_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
+    
+    p_tuned_adapt_sigDuringAdapt_adapt_stats(i)  = TC_stats(p_tuned_adapt_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
+    p_tuned_stim_sigDuringControl_control_stats(i)  = TC_stats(p_tuned_stim_sigDuringControl_control_trial_mean{i}, resp_win);
+    p_tuned_stim_sigDuringControl_adapt_stats(i)  = TC_stats(p_tuned_stim_sigDuringControl_adapt_trial_mean{i}, resp_win);
+    p_tuned_stim_sigDuringAdapt_adapt_stats(i)  = TC_stats(p_tuned_stim_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
 
 
-%% Cell average dF/F and SEM for each condition
+end
+
+%% Cell average dF/F (during response window) and SEM for each condition (uneccessary with TC_stats function)
+%
+% mean(b_data_adapt_stats.mean_TC(resp_win))
+% OR?
+% 
+% win_Resp_by_cell = b_data_adapt_trial_mean(resp_win, :) % Responses in window by cell
+% win_Resp_by_cell_mean = mean(win_Resp_by_cell, 1) % average response in window by cell
+% avg_win_resp = mean(win_Resp_by_cell_mean) % grand average 
+
+%% Cell adapt index for each condition
+
+
 
 
 
 %% Most efficient way to clear uneeded variables and save the workspace?
-clearvars -except adaptor_vline adaptPeriodMsb_ind_sig_resp_adapt_all ...
-    b_adapt_trial_ind_all b_control_trial_ind_all b_adapt_win_dfof_all ...
-    b_stim_win_dfof_all b_mask_label_all b_ind_sig_resp_stim_control_all base_win ...
-    base_win_all dates dynAdaptFlashOff dynAdaptPeriodMs expt_list_final ...
-    mouse ori_bins p_ind_sig_resp_adapt_all p_adapt_trial_ind_all ...
-    p_control_trial_ind_all p_adapt_win_dfof_all p_stim_win_dfof_all ...
-    p_mask_label_all p_ind_sig_resp_stim_control_all resp_win resp_win_all ...
-    target_vline tuned_cells b_adapt_win_dfof_all_adapt ...
-    b_stim_win_dfof_all_control b_stim_win_dfof_all_adapt ...
-    p_adapt_win_dfof_all_adapt p_stim_win_dfof_all_control ...
-    p_stim_win_dfof_all_adapt z_pos_expt_list_final
+% 
+% clearvars -except adaptor_vline adaptPeriodMsb_ind_sig_resp_adapt_all ...
+%     b_adapt_trial_ind_all b_control_trial_ind_all b_adapt_win_dfof_all ...
+%     b_stim_win_dfof_all b_mask_label_all b_ind_sig_resp_stim_control_all base_win ...
+%     base_win_all dates dynAdaptFlashOff dynAdaptPeriodMs expt_list_final ...
+%     mouse ori_bins p_ind_sig_resp_adapt_all p_adapt_trial_ind_all ...
+%     p_control_trial_ind_all p_adapt_win_dfof_all p_stim_win_dfof_all ...
+%     p_mask_label_all p_ind_sig_resp_stim_control_all resp_win resp_win_all ...
+%     target_vline tuned_cells b_adapt_win_dfof_all_adapt ...
+%     b_stim_win_dfof_all_control b_stim_win_dfof_all_adapt ...
+%     p_adapt_win_dfof_all_adapt p_stim_win_dfof_all_control ...
+%     p_stim_win_dfof_all_adapt z_pos_expt_list_final
 
 
 
@@ -323,7 +371,7 @@ filename = [mouse '_pooled_2AFC_2P_data.mat'];
 save(filename)
 
 
-%% local functions
+%% Local functions
 
 function pooled_data = mean_cell_resp_by_trial(dFoF)
 % Finds mean cell activity across trials for all experiments
@@ -341,5 +389,40 @@ function pooled_tuned_data = mean_tuned_cell_resp_by_trial(tuned_data)
         data_set = tuned_data(:,bin);
         pooled_tuned_data{bin} = mean_cell_resp_by_trial(data_set);
     end
+end
+
+
+function data_struct = TC_stats(trial_averaged_data, time_win)
+    %TC mean, std, sem, cell count and more stats for a time X cell response matrix
+
+    data_mean = mean(trial_averaged_data,2);
+    data_std = std(trial_averaged_data, 0, 2);
+    data_count = size(trial_averaged_data,2);
+    data_sem = data_std / sqrt(data_count);
+
+    data_struct.count_cells = data_count;
+    data_struct.mean_TC = data_mean;
+    data_struct.std_TC = data_std;
+    data_struct.sem_TC = data_sem;
+
+    % If response window is given return cell average DF/F and sem...
+
+    if exist('time_win', 'var')
+
+        win_df_by_cell = trial_averaged_data(time_win, :); % Responses in window by cell
+        win_df_by_cell_mean = mean(win_df_by_cell, 1); % average response in window by cell (save this and below)
+        win_df_mean = mean(win_df_by_cell_mean); % grand average 
+        win_df_std = std(win_df_by_cell_mean);
+        win_df_sem = win_df_std / sqrt(data_count);
+
+        data_struct.time_win = time_win;
+        data_struct.mean_df_by_cell = win_df_by_cell_mean;
+        data_struct.mean_df = win_df_mean;
+        data_struct.std_df = win_df_std;
+        data_struct.sem_df = win_df_sem;        
+
+
+    end
+    
 end
 

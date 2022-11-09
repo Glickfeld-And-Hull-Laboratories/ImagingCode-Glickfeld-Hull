@@ -8,7 +8,7 @@ cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
 filename = [mouse '_pooled_2AFC_2P_data.mat'];
 load(filename)
 
-%% Percent responsive
+%% Percent responsive * Modify seciton to use 'stats' struct
 
 prcnt_adapt_sigDuringAdapt_b = b_adapt_sigDuringAdapt_nCells/nAllCells * 100;
 prcnt_stim_sigDuringControl_b = b_stim_sigDuringControl_nCells/nAllCells * 100;
@@ -111,10 +111,180 @@ linkaxes([ax4 ax5 ax6],'y')
 sgtitle([mouse ': ' num2str(nAllCells) ' total cells'])
 
 
-%% SAVE
+% SAVE
 
 fn = [mouse '_cell_responsiveness.pdf'];
 exportgraphics(gcf,fn)
+
+%% All cells dF/F
+
+f = figure()
+f.Position(3:4) = [840 630];
+tiledlayout(1,3)
+
+ax1 = nexttile;
+b = bar([b_data_adapt_stats.mean_df; p_data_adapt_stats.mean_df])
+ylabel('mean response')
+title("All cells, adaptor responses")
+xticklabels({'Active', 'Passive'})
+b.FaceColor = "flat";
+b.CData = [0 0.4470 0.7410; 0.6350 0.0780 0.1840];
+b.FaceAlpha = 0.9;
+set(gca, 'box', 'off')
+
+ax2 = nexttile;
+b = bar([b_data_stim_control_stats.mean_df; p_data_stim_control_stats.mean_df])
+ylabel('mean response')
+title("All cells, target responses; control trials")
+xticklabels({'Active', 'Passive'})
+b.FaceColor = "flat";
+b.CData = [0 0.4470 0.7410; 0.6350 0.0780 0.1840];
+b.FaceAlpha = 0.9;
+set(gca, 'box', 'off')
+
+
+ax3 = nexttile;
+b = bar([b_data_stim_adapt_stats.mean_df; p_data_stim_adapt_stats.mean_df])
+ylabel('mean response')
+title("All cells, target responses, adapt trials")
+xticklabels({'Active', 'Passive'})
+b.FaceColor = "flat";
+b.CData = [0 0.4470 0.7410; 0.6350 0.0780 0.1840];
+b.FaceAlpha = 0.9;
+set(gca, 'box', 'off')
+
+linkaxes([ax1 ax2 ax3],'y')
+
+fn = [mouse '_cell_responsiveness.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+%% plot traces with target, adapter vline, and respp window shaded
+
+
+
+
+%% Responsive by condition
+
+f = figure()
+f.Position(3:4) = [840 630];
+tiledlayout(2,2)
+
+ax1 = nexttile;
+b = bar([b_adapt_sigDuringAdapt_adapt_stats.mean_df; p_adapt_sigDuringAdapt_adapt_stats.mean_df])
+ylabel('mean response')
+title("Adapt win, SigDuringAdapt")
+xticklabels({'Active', 'Passive'})
+b.FaceColor = "flat";
+b.CData = [0 0.4470 0.7410; 0.6350 0.0780 0.1840];
+b.FaceAlpha = 0.9;
+set(gca, 'box', 'off')
+
+ax2 = nexttile;
+b = bar([b_stim_sigDuringControl_control_stats.mean_df; p_stim_sigDuringControl_control_stats.mean_df])
+ylabel('mean response')
+title("Target win, SigDuringControl, control trials")
+xticklabels({'Active', 'Passive'})
+b.FaceColor = "flat";
+b.CData = [0 0.4470 0.7410; 0.6350 0.0780 0.1840];
+b.FaceAlpha = 0.9;
+set(gca, 'box', 'off')
+
+
+ax3 = nexttile;
+b = bar([b_stim_sigDuringControl_adapt_stats.mean_df; p_stim_sigDuringControl_adapt_stats.mean_df])
+ylabel('mean response')
+title("Target win, SigDuringControl, adapt trials")
+xticklabels({'Active', 'Passive'})
+b.FaceColor = "flat";
+b.CData = [0 0.4470 0.7410; 0.6350 0.0780 0.1840];
+b.FaceAlpha = 0.9;
+set(gca, 'box', 'off')
+
+ax4 = nexttile;
+b = bar([b_stim_sigDuringAdapt_adapt_stats.mean_df; p_stim_sigDuringAdapt_adapt_stats.mean_df])
+ylabel('mean response')
+title("Target win, SigDuringAdapt, adapt trials")
+xticklabels({'Active', 'Passive'})
+b.FaceColor = "flat";
+b.CData = [0 0.4470 0.7410; 0.6350 0.0780 0.1840];
+b.FaceAlpha = 0.9;
+set(gca, 'box', 'off')
+
+linkaxes([ax1 ax2 ax3 ax4],'y')
+
+
+fn = [mouse '_cell_responsiveness.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+%% Responsive + tuned by condition 
+
+f = figure()
+f.Position(3:4) = [840 630];
+tiledlayout(2,2)
+
+for i = 1:4
+b_means(i) = b_tuned_adapt_sigDuringAdapt_adapt_stats(i).mean_df;
+p_means(i) = p_tuned_adapt_sigDuringAdapt_adapt_stats(i).mean_df;
+end
+
+ax1 = nexttile;
+b = bar([b_means; p_means]');
+ylabel('mean response')
+title("Adapt win, SigDuringAdapt")
+xticks([1 2 3 4])
+xticklabels({'0', '45', '90', '135'})
+set(gca, 'box', 'off')
+
+%--
+
+for i = 1:4
+b_means(i) = b_tuned_stim_sigDuringControl_control_stats(i).mean_df;
+p_means(i) = p_tuned_stim_sigDuringControl_control_stats(i).mean_df;
+end
+
+ax2 = nexttile;
+b = bar([b_means; p_means]');
+ylabel('mean response')
+title("Target win, SigDuringControl, control trials")
+xticks([1 2 3 4])
+xticklabels({'0', '45', '90', '135'})
+set(gca, 'box', 'off')
+
+%--
+
+for i = 1:4
+b_means(i) = b_tuned_stim_sigDuringControl_adapt_stats(i).mean_df;
+p_means(i) = p_tuned_stim_sigDuringControl_adapt_stats(i).mean_df;
+end
+
+ax3 = nexttile;
+b = bar([b_means; p_means]');
+ylabel('mean response')
+title("Target win, SigDuringControl, adapt trials")
+xticks([1 2 3 4])
+xticklabels({'0', '45', '90', '135'})
+set(gca, 'box', 'off')
+
+%--
+
+for i = 1:4
+b_means(i) = b_tuned_stim_sigDuringAdapt_adapt_stats(i).mean_df;
+p_means(i) = p_tuned_stim_sigDuringAdapt_adapt_stats(i).mean_df;
+end
+
+ax4 = nexttile;
+b = bar([b_means; p_means]');
+ylabel('mean response')
+title("Target win, SigDuringAdapt, adapt trials")
+xticks([1 2 3 4])
+xticklabels({'0', '45', '90', '135'})
+set(gca, 'box', 'off')
+
+linkaxes([ax1 ax2 ax3 ax4],'y')
+
+
+fn = [mouse '_cell_responsiveness.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
 
 
 
