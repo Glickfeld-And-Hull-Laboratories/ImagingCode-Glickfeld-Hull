@@ -91,8 +91,10 @@ for i = 1:length(expt_list_final)
     b_stim_win_dfof_all_adapt{i} = b_stim_resp.data_stim_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
 
     % anyalysis window used to determine responsive cells (save these)
-    base_win = b_stim_resp.base_win;
-    resp_win = b_stim_resp.resp_win;
+%     base_win = b_stim_resp.base_win;
+%     resp_win = b_stim_resp.resp_win;
+    base_win = [17 18 19 20 21]; % extended base win
+    resp_win = [23 24 25 26 27]; % extended resp win
     base_win_all = b_adapt_resp.base_win_all;
     resp_win_all = b_adapt_resp.resp_win_all;
 
@@ -194,30 +196,43 @@ for i = 1:length(expt_list_final)
     %% Segment cells from conditional dF/F by responsivitiy and tuning
 
     %Responsivity 
-    b_adapt_sigDuringAdapt_adapt{i} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_sig_resp_adapt_all{i},:); % adapt response, on adapt trials, with cells sig resposive during adaptorON condition
+    b_adapt_sigDuringAdapt_adapt{i} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_sig_resp_adapt_all{i},:); % adapt response, on adapt trials, with cells sig responsive during adaptorON condition
+
     b_stim_sigDuringControl_control{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_control_all{i},:); % stim response, on control trials, with cells sig during control condition
     b_stim_sigDuringControl_adapt{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_control_all{i},:); % stim response, on adapt trials, with cells sig resposive during control condition
-    b_stim_sigDuringAdapt_adapt{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_adapt_all{i},:); % stim response, on adapt trials, with cells sig resposive during adaptorON condition
+
+    b_stim_sigDuringAdapt_control{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_adapt_all{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    b_stim_sigDuringAdapt_adapt{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_adapt_all{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+
 
 
     p_adapt_sigDuringAdapt_adapt{i} = p_adapt_win_dfof_all_adapt{i}(:,p_ind_sig_resp_adapt_all{i},:);
+
     p_stim_sigDuringControl_control{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_control_all{i},:);
     p_stim_sigDuringControl_adapt{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_control_all{i},:);
-    p_stim_sigDuringAdapt_adapt{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all{i},:); % stim response, on adapt trials, with cells sig resposive during adaptorON condition
+
+    p_stim_sigDuringAdapt_control{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_adapt_all{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    p_stim_sigDuringAdapt_adapt{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
 
 
     %Responsivity + tuning 
 
     for bin = 1:length(tuned_cells(1,:))
         b_tuned_adapt_sigDuringAdapt_adapt{i, bin} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_tuned_sig_resp_adapt{bin},:); % adapt response, on adapt trials, with TUNED cells sig responsive during adaptorON condition
+
         b_tuned_stim_sigDuringControl_control{i, bin} = b_stim_win_dfof_all_control{i}(:,b_ind_tuned_sig_resp_stim_control{bin},:); % stim response, on control trials, with TUNED cells sig responsive during control condition
         b_tuned_stim_sigDuringControl_adapt{i, bin} = b_stim_win_dfof_all_adapt{i}(:,b_ind_tuned_sig_resp_stim_control{bin},:); % stim response, on adapt trials, with TUNED cells sig responsive during control condition
+
+        b_tuned_stim_sigDuringAdapt_control{i, bin} = b_stim_win_dfof_all_control{i}(:,b_ind_tuned_sig_resp_stim_adapt{bin},:); % stim response, on control trials, with TUNED cells sig responsive during adaptorON condition
         b_tuned_stim_sigDuringAdapt_adapt{i, bin} = b_stim_win_dfof_all_adapt{i}(:,b_ind_tuned_sig_resp_stim_adapt{bin},:); % stim response, on adapt trials, with TUNED cells sig responsive during adaptorON condition
 
 
         p_tuned_adapt_sigDuringAdapt_adapt{i, bin} = p_adapt_win_dfof_all_adapt{i}(:,p_ind_tuned_sig_resp_adapt{bin},:);
+
         p_tuned_stim_sigDuringControl_control{i, bin} = p_stim_win_dfof_all_control{i}(:,p_ind_tuned_sig_resp_stim_control{bin},:);
         p_tuned_stim_sigDuringControl_adapt{i, bin} = p_stim_win_dfof_all_adapt{i}(:,p_ind_tuned_sig_resp_stim_control{bin},:);
+
+        p_tuned_stim_sigDuringAdapt_control{i, bin} = p_stim_win_dfof_all_control{i}(:,p_ind_tuned_sig_resp_stim_adapt{bin},:); % stim response, on control trials, with TUNED cells sig responsive during adaptorON condition
         p_tuned_stim_sigDuringAdapt_adapt{i, bin} = p_stim_win_dfof_all_adapt{i}(:,p_ind_tuned_sig_resp_stim_adapt{bin},:); % stim response, on adapt trials, with TUNED cells sig responsive during adaptorON condition
 
     end
@@ -225,7 +240,7 @@ for i = 1:length(expt_list_final)
    
 end
 
-%% Pool mean cell activity across trials!
+%% Pool mean cell activity across trials
 % Uses local helper function; 'Run Section' to use.
 
 % All by condition
@@ -241,27 +256,39 @@ p_data_stim_adapt_trial_mean = mean_cell_resp_by_trial(p_stim_win_dfof_all_adapt
 % Responsive by condition
 
 b_adapt_sigDuringAdapt_adapt_trial_mean = mean_cell_resp_by_trial(b_adapt_sigDuringAdapt_adapt);
+
 b_stim_sigDuringControl_control_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringControl_control);
 b_stim_sigDuringControl_adapt_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringControl_adapt);
+
+b_stim_sigDuringAdapt_control_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringAdapt_control);
 b_stim_sigDuringAdapt_adapt_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringAdapt_adapt);
 
 
 p_adapt_sigDuringAdapt_adapt_trial_mean = mean_cell_resp_by_trial(p_adapt_sigDuringAdapt_adapt);
+
 p_stim_sigDuringControl_control_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringControl_control);
 p_stim_sigDuringControl_adapt_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringControl_adapt);
+
+p_stim_sigDuringAdapt_control_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringAdapt_control);
 p_stim_sigDuringAdapt_adapt_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringAdapt_adapt);
 
 % Responsive + tuned by condition 
 
 b_tuned_adapt_sigDuringAdapt_adapt_trial_mean = mean_tuned_cell_resp_by_trial(b_tuned_adapt_sigDuringAdapt_adapt);
+
 b_tuned_stim_sigDuringControl_control_trial_mean = mean_tuned_cell_resp_by_trial(b_tuned_stim_sigDuringControl_control);
 b_tuned_stim_sigDuringControl_adapt_trial_mean = mean_tuned_cell_resp_by_trial(b_tuned_stim_sigDuringControl_adapt);
+
+b_tuned_stim_sigDuringAdapt_control_trial_mean = mean_tuned_cell_resp_by_trial(b_tuned_stim_sigDuringAdapt_control);
 b_tuned_stim_sigDuringAdapt_adapt_trial_mean = mean_tuned_cell_resp_by_trial(b_tuned_stim_sigDuringAdapt_adapt);
 
 
 p_tuned_adapt_sigDuringAdapt_adapt_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_adapt_sigDuringAdapt_adapt);
+
 p_tuned_stim_sigDuringControl_control_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringControl_control);
 p_tuned_stim_sigDuringControl_adapt_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringControl_adapt);
+
+p_tuned_stim_sigDuringAdapt_control_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringAdapt_control);
 p_tuned_stim_sigDuringAdapt_adapt_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringAdapt_adapt);
 
 % Reminder that experiments (cells) are at different depths...
@@ -298,54 +325,53 @@ end
 %% Cell average TC and SEM for each condition
 
 % All by condition
-b_data_adapt_stats = TC_stats(b_data_adapt_trial_mean, resp_win);
-b_data_stim_control_stats  = TC_stats(b_data_stim_control_trial_mean, resp_win);
-b_data_stim_adapt_stats  = TC_stats(b_data_stim_adapt_trial_mean, resp_win);
+b_data_adapt_stats = TC_stats(b_data_adapt_trial_mean, base_win, resp_win);
+b_data_stim_control_stats  = TC_stats(b_data_stim_control_trial_mean, base_win, resp_win);
+b_data_stim_adapt_stats  = TC_stats(b_data_stim_adapt_trial_mean, base_win, resp_win);
 
-p_data_adapt_stats  = TC_stats(p_data_adapt_trial_mean, resp_win);
-p_data_stim_control_stats  = TC_stats(p_data_stim_control_trial_mean, resp_win);
-p_data_stim_adapt_stats  = TC_stats(p_data_stim_adapt_trial_mean, resp_win);
+p_data_adapt_stats  = TC_stats(p_data_adapt_trial_mean, base_win, resp_win);
+p_data_stim_control_stats  = TC_stats(p_data_stim_control_trial_mean, base_win, resp_win);
+p_data_stim_adapt_stats  = TC_stats(p_data_stim_adapt_trial_mean, base_win, resp_win);
 
 % Responsive by condition
 
-b_adapt_sigDuringAdapt_adapt_stats  = TC_stats(b_adapt_sigDuringAdapt_adapt_trial_mean, resp_win);
-b_stim_sigDuringControl_control_stats  = TC_stats(b_stim_sigDuringControl_control_trial_mean, resp_win);
-b_stim_sigDuringControl_adapt_stats  = TC_stats(b_stim_sigDuringControl_adapt_trial_mean, resp_win);
-b_stim_sigDuringAdapt_adapt_stats  = TC_stats(b_stim_sigDuringAdapt_adapt_trial_mean, resp_win);
+b_adapt_sigDuringAdapt_adapt_stats  = TC_stats(b_adapt_sigDuringAdapt_adapt_trial_mean, base_win, resp_win);
+
+b_stim_sigDuringControl_control_stats  = TC_stats(b_stim_sigDuringControl_control_trial_mean, base_win, resp_win);
+b_stim_sigDuringControl_adapt_stats  = TC_stats(b_stim_sigDuringControl_adapt_trial_mean, base_win, resp_win);
+
+b_stim_sigDuringAdapt_control_stats  = TC_stats(b_stim_sigDuringAdapt_control_trial_mean, base_win, resp_win);
+b_stim_sigDuringAdapt_adapt_stats  = TC_stats(b_stim_sigDuringAdapt_adapt_trial_mean, base_win, resp_win);
  
-p_adapt_sigDuringAdapt_adapt_stats  = TC_stats(p_adapt_sigDuringAdapt_adapt_trial_mean, resp_win);
-p_stim_sigDuringControl_control_stats  = TC_stats(p_stim_sigDuringControl_control_trial_mean, resp_win);
-p_stim_sigDuringControl_adapt_stats  = TC_stats(p_stim_sigDuringControl_adapt_trial_mean, resp_win);
-p_stim_sigDuringAdapt_adapt_stats  = TC_stats(p_stim_sigDuringAdapt_adapt_trial_mean, resp_win);
+p_adapt_sigDuringAdapt_adapt_stats  = TC_stats(p_adapt_sigDuringAdapt_adapt_trial_mean, base_win, resp_win);
+
+p_stim_sigDuringControl_control_stats  = TC_stats(p_stim_sigDuringControl_control_trial_mean, base_win, resp_win);
+p_stim_sigDuringControl_adapt_stats  = TC_stats(p_stim_sigDuringControl_adapt_trial_mean, base_win, resp_win);
+
+p_stim_sigDuringAdapt_control_stats  = TC_stats(p_stim_sigDuringAdapt_control_trial_mean, base_win, resp_win);
+p_stim_sigDuringAdapt_adapt_stats  = TC_stats(p_stim_sigDuringAdapt_adapt_trial_mean, base_win, resp_win);
 
 % Responsive + tuned by condition 
 for i = 1:4
 
-    b_tuned_adapt_sigDuringAdapt_adapt_stats(i)  = TC_stats(b_tuned_adapt_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
-    b_tuned_stim_sigDuringControl_control_stats(i)  = TC_stats(b_tuned_stim_sigDuringControl_control_trial_mean{i}, resp_win);
-    b_tuned_stim_sigDuringControl_adapt_stats(i)  = TC_stats(b_tuned_stim_sigDuringControl_adapt_trial_mean{i}, resp_win);
-    b_tuned_stim_sigDuringAdapt_adapt_stats(i)  = TC_stats(b_tuned_stim_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
+    b_tuned_adapt_sigDuringAdapt_adapt_stats(i)  = TC_stats(b_tuned_adapt_sigDuringAdapt_adapt_trial_mean{i}, base_win, resp_win);
+
+    b_tuned_stim_sigDuringControl_control_stats(i)  = TC_stats(b_tuned_stim_sigDuringControl_control_trial_mean{i}, base_win, resp_win);
+    b_tuned_stim_sigDuringControl_adapt_stats(i)  = TC_stats(b_tuned_stim_sigDuringControl_adapt_trial_mean{i}, base_win, resp_win);
+       
+    b_tuned_stim_sigDuringAdapt_control_stats(i)  = TC_stats(b_tuned_stim_sigDuringAdapt_control_trial_mean{i}, base_win, resp_win);
+    b_tuned_stim_sigDuringAdapt_adapt_stats(i)  = TC_stats(b_tuned_stim_sigDuringAdapt_adapt_trial_mean{i}, base_win, resp_win);
     
-    p_tuned_adapt_sigDuringAdapt_adapt_stats(i)  = TC_stats(p_tuned_adapt_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
-    p_tuned_stim_sigDuringControl_control_stats(i)  = TC_stats(p_tuned_stim_sigDuringControl_control_trial_mean{i}, resp_win);
-    p_tuned_stim_sigDuringControl_adapt_stats(i)  = TC_stats(p_tuned_stim_sigDuringControl_adapt_trial_mean{i}, resp_win);
-    p_tuned_stim_sigDuringAdapt_adapt_stats(i)  = TC_stats(p_tuned_stim_sigDuringAdapt_adapt_trial_mean{i}, resp_win);
+    p_tuned_adapt_sigDuringAdapt_adapt_stats(i)  = TC_stats(p_tuned_adapt_sigDuringAdapt_adapt_trial_mean{i}, base_win, resp_win);
+
+    p_tuned_stim_sigDuringControl_control_stats(i)  = TC_stats(p_tuned_stim_sigDuringControl_control_trial_mean{i}, base_win, resp_win);
+    p_tuned_stim_sigDuringControl_adapt_stats(i)  = TC_stats(p_tuned_stim_sigDuringControl_adapt_trial_mean{i}, base_win, resp_win);
+
+    p_tuned_stim_sigDuringAdapt_control_stats(i)  = TC_stats(p_tuned_stim_sigDuringAdapt_control_trial_mean{i}, base_win, resp_win);
+    p_tuned_stim_sigDuringAdapt_adapt_stats(i)  = TC_stats(p_tuned_stim_sigDuringAdapt_adapt_trial_mean{i}, base_win, resp_win);
 
 
 end
-
-%% Cell average dF/F (during response window) and SEM for each condition (uneccessary with TC_stats function)
-%
-% mean(b_data_adapt_stats.mean_TC(resp_win))
-% OR?
-% 
-% win_Resp_by_cell = b_data_adapt_trial_mean(resp_win, :) % Responses in window by cell
-% win_Resp_by_cell_mean = mean(win_Resp_by_cell, 1) % average response in window by cell
-% avg_win_resp = mean(win_Resp_by_cell_mean) % grand average 
-
-%% Cell adapt index for each condition
-
-
 
 
 
@@ -392,37 +418,119 @@ function pooled_tuned_data = mean_tuned_cell_resp_by_trial(tuned_data)
 end
 
 
-function data_struct = TC_stats(trial_averaged_data, time_win)
+function data_struct = TC_stats(trial_averaged_data, base_win, resp_win)        
     %TC mean, std, sem, cell count and more stats for a time X cell response matrix
-
+    
     data_mean = mean(trial_averaged_data,2);
     data_std = std(trial_averaged_data, 0, 2);
     data_count = size(trial_averaged_data,2);
     data_sem = data_std / sqrt(data_count);
-
+    
     data_struct.count_cells = data_count;
     data_struct.mean_TC = data_mean;
     data_struct.std_TC = data_std;
     data_struct.sem_TC = data_sem;
+    
+    
+    %base_win
+    base_win_df_by_cell = trial_averaged_data(base_win, :); % Responses in baseline window by cell
+    base_win_df_by_cell_mean = mean(base_win_df_by_cell, 1); % average response in window by cell (save this and below)
+   
+    data_struct.base_win_df_by_cell_mean = base_win_df_by_cell_mean;
+    
+    %resp_win
+    resp_win_df_by_cell = trial_averaged_data(resp_win, :); % Responses in response window by cell
+    resp_win_df_by_cell_mean = mean(resp_win_df_by_cell, 1); % average response in window by cell (save this and below)
 
-    % If response window is given return cell average DF/F and sem...
+    data_struct.resp_win_df_by_cell_mean = resp_win_df_by_cell_mean;
+    
+    % delta f by cell - cell mean of resp - mean of base win
+    delta_df = resp_win_df_by_cell_mean - base_win_df_by_cell_mean;
 
-    if exist('time_win', 'var')
+        
+    %stats
+    delta_df_mean = mean(delta_df); % grand average 
+    delta_df_std = std(delta_df);
+    delta_df_sem = delta_df_std / sqrt(data_count);
+    
+    data_struct.base_win = base_win;
+    data_struct.resp_win = resp_win;
 
-        win_df_by_cell = trial_averaged_data(time_win, :); % Responses in window by cell
-        win_df_by_cell_mean = mean(win_df_by_cell, 1); % average response in window by cell (save this and below)
-        win_df_mean = mean(win_df_by_cell_mean); % grand average 
-        win_df_std = std(win_df_by_cell_mean);
-        win_df_sem = win_df_std / sqrt(data_count);
 
-        data_struct.time_win = time_win;
-        data_struct.mean_df_by_cell = win_df_by_cell_mean;
-        data_struct.mean_df = win_df_mean;
-        data_struct.std_df = win_df_std;
-        data_struct.sem_df = win_df_sem;        
+    data_struct.delta_df_by_cell = delta_df;
+    data_struct.mean_delta_df = delta_df_mean;
+    data_struct.std_delta_df = delta_df_std;
+    data_struct.sem_delta_df = delta_df_sem;      
+
+
+    %delta f for each adaptor
+
+    %Basline/Responsive windows for each adaptor
+
+    if size(trial_averaged_data,1) == 100
+
+        base_win_each_adapt = zeros(4, length(base_win));
+        resp_win_each_adapt = zeros(4, length(resp_win));
+
+        for i = 2:4
+            base_win_each_adapt (1,:) = base_win;
+            base_win_each_adapt(i,:) = base_win_each_adapt(i-1,:) + 11;
+
+            resp_win_each_adapt (1,:) = resp_win;
+            resp_win_each_adapt(i,:) = resp_win_each_adapt(i-1,:) + 11;
+        end
+    
+        data_struct.base_win_each_adapt = base_win_each_adapt;
+        data_struct.resp_win_each_adapt = resp_win_each_adapt;
+
+
+        for i = 1:4
+            %base_win
+            base_win_each_adapt_df_by_cell = trial_averaged_data(base_win_each_adapt(i,:), :); % Responses in baseline window by cell
+            base_win_each_adapt_df_by_cell_mean(i,:) = mean(base_win_each_adapt_df_by_cell, 1); % average response in window by cell (save this and below)
+                  
+            %resp_win
+            resp_win_each_adapt_df_by_cell = trial_averaged_data(resp_win_each_adapt(i,:), :); % Responses in response window by cell
+            resp_win_each_adapt_df_by_cell_mean(i,:) = mean(resp_win_each_adapt_df_by_cell, 1); % average response in window by cell (save this and below)
+        
+            
+            % delta f by cell - cell mean of resp - mean of base win
+            delta_df_each_adapt(i,:) = resp_win_each_adapt_df_by_cell_mean(i,:) - base_win_each_adapt_df_by_cell_mean(i,:);
+
+            %stats
+            delta_df_each_adapt_mean(i) = mean(delta_df_each_adapt(i,:)); % grand average 
+            delta_df_each_adapt_std(i) = std(delta_df_each_adapt(i,:));
+            delta_df_each_adapt_sem(i) = delta_df_each_adapt_std(i) / sqrt(data_count);         
+
+
+        end
+
+        Response_A = resp_win_each_adapt_df_by_cell_mean(1,:);
+        Response_B = resp_win_each_adapt_df_by_cell_mean(2,:);
+        
+        Aix = Response_B./(Response_A+Response_B);
+        Aix_mean = mean(Aix);
+        Aix_std = std(Aix);
+        Aix_sem = Aix_std / sqrt(length(Aix));
+
+
+        
+        data_struct.base_win_each_adapt_df_by_cell_mean = base_win_each_adapt_df_by_cell_mean;
+        data_struct.resp_win_each_adapt_df_by_cell_mean = resp_win_each_adapt_df_by_cell_mean;
+
+        data_struct.delta_df_each_adapt_by_cell = delta_df_each_adapt;
+        data_struct.mean_delta_df_each_adapt = delta_df_each_adapt_mean;
+        data_struct.std_delta_df_each_adapt = delta_df_each_adapt_std;
+        data_struct.sem_delta_df_each_adapt = delta_df_each_adapt_sem; 
+        data_struct.Aix_by_cell = Aix;
+        data_struct.Aix_mean = Aix_mean;
+        data_struct.Aix_std = Aix_std;
+        data_struct.Aix_sem = Aix_sem;
+
 
 
     end
+    
     
 end
 
