@@ -145,10 +145,35 @@ for i = 1:length(expt_list_final)
     
     % -----
     
-    % Masks (Interneurons)  - Dont forget to use these!
+    % Masks (Interneurons)  - Dont forget to use these! (b and p mask label are
+    % the same)
     b_mask_label_all{i} =  b_adapt_resp.mask_label;
     p_mask_label_all{i} =  p_adapt_resp.mask_label;
+
+    ind_int{i} = find(b_mask_label_all{i}); 
+    ind_pyr{i} = find(~b_mask_label_all{i}); 
+
+    count_int(i) = length(ind_int{i});
+    count_pyr(i) = length(ind_pyr{i});
     
+    % index of responsive interneurons with masks 
+
+    b_ind_sig_resp_adapt_all_interneurons{i} = intersect(b_ind_sig_resp_adapt_all{i}, ind_int{i});
+    b_ind_sig_resp_stim_control_all_interneurons{i} = intersect(b_ind_sig_resp_stim_control_all{i}, ind_int{i});
+    b_ind_sig_resp_stim_adapt_all_interneurons{i} = intersect(b_ind_sig_resp_stim_adapt_all{i}, ind_int{i});
+
+    p_ind_sig_resp_adapt_all_interneurons{i} = intersect(p_ind_sig_resp_adapt_all{i}, ind_int{i});
+    p_ind_sig_resp_stim_control_all_interneurons{i} = intersect(p_ind_sig_resp_stim_control_all{i}, ind_int{i});
+    p_ind_sig_resp_stim_adapt_all_interneurons{i} = intersect(p_ind_sig_resp_stim_adapt_all{i}, ind_int{i});
+
+    b_ind_sig_resp_adapt_all_pyramidal{i} = intersect(b_ind_sig_resp_adapt_all{i}, ind_pyr{i});
+    b_ind_sig_resp_stim_control_all_interneuons_pyramidal{i} = intersect(b_ind_sig_resp_stim_control_all{i}, ind_pyr{i});
+    b_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i} = intersect(b_ind_sig_resp_stim_adapt_all{i}, ind_pyr{i});
+
+    p_ind_sig_resp_adapt_all_interneuons_pyramidal{i} = intersect(p_ind_sig_resp_adapt_all{i}, ind_pyr{i});
+    p_ind_sig_resp_stim_control_all_interneuons_pyramidal{i} = intersect(p_ind_sig_resp_stim_control_all{i}, ind_pyr{i});
+    p_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i} = intersect(p_ind_sig_resp_stim_adapt_all{i}, ind_pyr{i});
+
     % -----
     
     adaptor_vline = [20 31 42 53];
@@ -204,7 +229,7 @@ for i = 1:length(expt_list_final)
     b_stim_sigDuringAdapt_control{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_adapt_all{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
     b_stim_sigDuringAdapt_adapt{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_adapt_all{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
 
-
+    % ----
 
     p_adapt_sigDuringAdapt_adapt{i} = p_adapt_win_dfof_all_adapt{i}(:,p_ind_sig_resp_adapt_all{i},:);
 
@@ -215,7 +240,7 @@ for i = 1:length(expt_list_final)
     p_stim_sigDuringAdapt_adapt{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
 
 
-    %Responsivity + tuning 
+    % Responsivity + tuning 
 
     for bin = 1:length(tuned_cells(1,:))
         b_tuned_adapt_sigDuringAdapt_adapt{i, bin} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_tuned_sig_resp_adapt{bin},:); % adapt response, on adapt trials, with TUNED cells sig responsive during adaptorON condition
@@ -236,6 +261,41 @@ for i = 1:length(expt_list_final)
         p_tuned_stim_sigDuringAdapt_adapt{i, bin} = p_stim_win_dfof_all_adapt{i}(:,p_ind_tuned_sig_resp_stim_adapt{bin},:); % stim response, on adapt trials, with TUNED cells sig responsive during adaptorON condition
 
     end
+
+    % Responsivity + cell class (interneuron)
+    b_adapt_sigDuringAdapt_adapt_interneurons{i} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_sig_resp_adapt_all_interneurons{i},:); % adapt response, on adapt trials, with cells sig responsive during adaptorON condition
+
+    b_stim_sigDuringControl_control_interneurons{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_control_all_interneurons{i},:); % stim response, on control trials, with cells sig during control condition
+    b_stim_sigDuringControl_adapt_interneurons{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_control_all_interneurons{i},:); % stim response, on adapt trials, with cells sig resposive during control condition
+
+    b_stim_sigDuringAdapt_control_interneurons{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_adapt_all_interneurons{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    b_stim_sigDuringAdapt_adapt_interneurons{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_adapt_all_interneurons{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+    % ----
+    p_adapt_sigDuringAdapt_adapt_interneurons{i} = p_adapt_win_dfof_all_adapt{i}(:,p_ind_sig_resp_adapt_all_interneurons{i},:);
+
+    p_stim_sigDuringControl_control_interneurons{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_control_all_interneurons{i},:);
+    p_stim_sigDuringControl_adapt_interneurons{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_control_all_interneurons{i},:);
+
+    p_stim_sigDuringAdapt_control_interneurons{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_adapt_all_interneurons{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    p_stim_sigDuringAdapt_adapt_interneurons{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all_interneurons{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+
+    % Responsivity + cell class (pyramidal)
+    b_adapt_sigDuringAdapt_adapt_pyramidal{i} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_sig_resp_adapt_all_pyramidal{i},:); % adapt response, on adapt trials, with cells sig responsive during adaptorON condition
+
+    b_stim_sigDuringControl_control_pyramidal{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:); % stim response, on control trials, with cells sig during control condition
+    b_stim_sigDuringControl_adapt_pyramidal{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:); % stim response, on adapt trials, with cells sig resposive during control condition
+
+    b_stim_sigDuringAdapt_control_pyramidal{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    b_stim_sigDuringAdapt_adapt_pyramidal{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+    % ----
+    p_adapt_sigDuringAdapt_adapt_pyramidal{i} = p_adapt_win_dfof_all_adapt{i}(:,p_ind_sig_resp_adapt_all_interneuons_pyramidal{i},:);
+
+    p_stim_sigDuringControl_control_pyramidal{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:);
+    p_stim_sigDuringControl_adapt_pyramidal{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:);
+
+    p_stim_sigDuringAdapt_control_pyramidal{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    p_stim_sigDuringAdapt_adapt_pyramidal{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+
 
    
 end
@@ -291,13 +351,52 @@ p_tuned_stim_sigDuringControl_adapt_trial_mean = mean_tuned_cell_resp_by_trial(p
 p_tuned_stim_sigDuringAdapt_control_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringAdapt_control);
 p_tuned_stim_sigDuringAdapt_adapt_trial_mean = mean_tuned_cell_resp_by_trial(p_tuned_stim_sigDuringAdapt_adapt);
 
-% Reminder that experiments (cells) are at different depths...
+
+
+% Responsive + cell class (interneuron)
+b_adapt_sigDuringAdapt_adapt_interneurons_trial_mean = mean_cell_resp_by_trial(b_adapt_sigDuringAdapt_adapt_interneurons);
+
+b_stim_sigDuringControl_control_interneurons_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringControl_control_interneurons);
+b_stim_sigDuringControl_adapt_interneurons_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringControl_adapt_interneurons);
+
+b_stim_sigDuringAdapt_control_interneurons_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringAdapt_control_interneurons);
+b_stim_sigDuringAdapt_adapt_interneurons_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringAdapt_adapt_interneurons);
+% ----
+p_adapt_sigDuringAdapt_adapt_interneurons_trial_mean = mean_cell_resp_by_trial(p_adapt_sigDuringAdapt_adapt_interneurons);
+
+p_stim_sigDuringControl_control_interneurons_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringControl_control_interneurons);
+p_stim_sigDuringControl_adapt_interneurons_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringControl_adapt_interneurons);
+
+p_stim_sigDuringAdapt_control_interneurons_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringAdapt_control_interneurons);
+p_stim_sigDuringAdapt_adapt_interneurons_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringAdapt_adapt_interneurons);
+
+% Responsive + cell class (pyramidal)
+b_adapt_sigDuringAdapt_adapt_pyramidal_trial_mean = mean_cell_resp_by_trial(b_adapt_sigDuringAdapt_adapt_pyramidal);
+
+b_stim_sigDuringControl_control_pyramidal_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringControl_control_pyramidal);
+b_stim_sigDuringControl_adapt_pyramidal_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringControl_adapt_pyramidal);
+
+b_stim_sigDuringAdapt_control_pyramidal_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringAdapt_control_pyramidal);
+b_stim_sigDuringAdapt_adapt_pyramidal_trial_mean = mean_cell_resp_by_trial(b_stim_sigDuringAdapt_adapt_pyramidal);
+% ----
+p_adapt_sigDuringAdapt_adapt_pyramidal_trial_mean = mean_cell_resp_by_trial(p_adapt_sigDuringAdapt_adapt_pyramidal);
+
+p_stim_sigDuringControl_control_pyramidal_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringControl_control_pyramidal);
+p_stim_sigDuringControl_adapt_pyramidal_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringControl_adapt_pyramidal);
+
+p_stim_sigDuringAdapt_control_pyramidal_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringAdapt_control_pyramidal);
+p_stim_sigDuringAdapt_adapt_pyramidal_trial_mean = mean_cell_resp_by_trial(p_stim_sigDuringAdapt_adapt_pyramidal);
+
+
+% Reminder that experiments (cells) are at different depths...Responsive by depth
 
 
 
 %% Get pooled cell counts for each condition before averaging across cell (uneccessary with TC_stats function)
 
 nAllCells = size(b_data_adapt_trial_mean,2);
+nInt = sum(count_int);
+nPyr = sum(count_pyr);
 
 b_adapt_sigDuringAdapt_nCells = size(b_adapt_sigDuringAdapt_adapt_trial_mean,2);
 b_stim_sigDuringControl_nCells = size(b_stim_sigDuringControl_control_trial_mean,2);
@@ -335,7 +434,7 @@ p_data_stim_adapt_stats  = TC_stats(p_data_stim_adapt_trial_mean, base_win, resp
 
 % Responsive by condition
 
-b_adapt_sigDuringAdapt_adapt_stats  = TC_stats(b_adapt_sigDuringAdapt_adapt_trial_mean, base_win, resp_win);
+b_adapt_sigDuringAdapt_adapt_stats = TC_stats(b_adapt_sigDuringAdapt_adapt_trial_mean, base_win, resp_win);
 
 b_stim_sigDuringControl_control_stats  = TC_stats(b_stim_sigDuringControl_control_trial_mean, base_win, resp_win);
 b_stim_sigDuringControl_adapt_stats  = TC_stats(b_stim_sigDuringControl_adapt_trial_mean, base_win, resp_win);
@@ -373,6 +472,39 @@ for i = 1:4
 
 end
 
+% Responsive + cell class (interneuron)
+b_adapt_sigDuringAdapt_adapt_interneurons_stats = TC_stats(b_adapt_sigDuringAdapt_adapt_interneurons_trial_mean, base_win, resp_win);
+
+b_stim_sigDuringControl_control_interneurons_stats = TC_stats(b_stim_sigDuringControl_control_interneurons_trial_mean, base_win, resp_win);
+b_stim_sigDuringControl_adapt_interneurons_stats = TC_stats(b_stim_sigDuringControl_adapt_interneurons_trial_mean, base_win, resp_win);
+
+b_stim_sigDuringAdapt_control_interneurons_stats = TC_stats(b_stim_sigDuringAdapt_control_interneurons_trial_mean, base_win, resp_win);
+b_stim_sigDuringAdapt_adapt_interneurons_stats = TC_stats(b_stim_sigDuringAdapt_adapt_interneurons_trial_mean, base_win, resp_win);
+% ----
+p_adapt_sigDuringAdapt_adapt_interneurons_stats = TC_stats(p_adapt_sigDuringAdapt_adapt_interneurons_trial_mean, base_win, resp_win);
+
+p_stim_sigDuringControl_control_interneurons_stats = TC_stats(p_stim_sigDuringControl_control_interneurons_trial_mean, base_win, resp_win);
+p_stim_sigDuringControl_adapt_interneurons_stats = TC_stats(p_stim_sigDuringControl_adapt_interneurons_trial_mean, base_win, resp_win);
+
+p_stim_sigDuringAdapt_control_interneurons_stats = TC_stats(p_stim_sigDuringAdapt_control_interneurons_trial_mean, base_win, resp_win);
+p_stim_sigDuringAdapt_adapt_interneurons_stats = TC_stats(p_stim_sigDuringAdapt_adapt_interneurons_trial_mean, base_win, resp_win);
+
+% Responsive + cell class (pyramidal)
+b_adapt_sigDuringAdapt_adapt_pyramidal_stats = TC_stats(b_adapt_sigDuringAdapt_adapt_pyramidal_trial_mean, base_win, resp_win);
+
+b_stim_sigDuringControl_control_pyramidal_stats = TC_stats(b_stim_sigDuringControl_control_pyramidal_trial_mean, base_win, resp_win);
+b_stim_sigDuringControl_adapt_pyramidal_stats = TC_stats(b_stim_sigDuringControl_adapt_pyramidal_trial_mean, base_win, resp_win);
+
+b_stim_sigDuringAdapt_control_pyramidal_stats = TC_stats(b_stim_sigDuringAdapt_control_pyramidal_trial_mean, base_win, resp_win);
+b_stim_sigDuringAdapt_adapt_pyramidal_stats = TC_stats(b_stim_sigDuringAdapt_adapt_pyramidal_trial_mean, base_win, resp_win);
+% ----
+p_adapt_sigDuringAdapt_adapt_pyramidal_stats = TC_stats(p_adapt_sigDuringAdapt_adapt_pyramidal_trial_mean, base_win, resp_win);
+
+p_stim_sigDuringControl_control_pyramidal_stats = TC_stats(p_stim_sigDuringControl_control_pyramidal_trial_mean, base_win, resp_win);
+p_stim_sigDuringControl_adapt_pyramidal_stats = TC_stats(p_stim_sigDuringControl_adapt_pyramidal_trial_mean, base_win, resp_win);
+
+p_stim_sigDuringAdapt_control_pyramidal_stats = TC_stats(p_stim_sigDuringAdapt_control_pyramidal_trial_mean, base_win, resp_win);
+p_stim_sigDuringAdapt_adapt_pyramidal_stats = TC_stats(p_stim_sigDuringAdapt_adapt_pyramidal_trial_mean, base_win, resp_win);
 
 
 %% Most efficient way to clear uneeded variables and save the workspace?
@@ -416,7 +548,6 @@ function pooled_tuned_data = mean_tuned_cell_resp_by_trial(tuned_data)
         pooled_tuned_data{bin} = mean_cell_resp_by_trial(data_set);
     end
 end
-
 
 function data_struct = TC_stats(trial_averaged_data, base_win, resp_win)        
     %TC mean, std, sem, cell count and more stats for a time X cell response matrix

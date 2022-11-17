@@ -3,10 +3,10 @@
 %% Load data...
 % Save/load appropriate vars - pool_2AFC_2P_data.m
 
-% mouse = 'i475'
-% cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
-% filename = [mouse '_pooled_2AFC_2P_data.mat'];
-% load(filename)
+mouse = 'i475'
+cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
+filename = [mouse '_pooled_2AFC_2P_data.mat'];
+load(filename)
 
 %% Percent responsive * Modify seciton to use 'stats' struct
 
@@ -216,7 +216,7 @@ ax1 = nexttile;
 data = [b_adapt_sigDuringAdapt_adapt_stats.Aix_mean; p_adapt_sigDuringAdapt_adapt_stats.Aix_mean];
 sem = [b_adapt_sigDuringAdapt_adapt_stats.Aix_sem; p_adapt_sigDuringAdapt_adapt_stats.Aix_sem];
 barplot_w_sem(data, sem)
-ylabel('avg Aix')
+ylabel('mean Aix (B/(A+B))')
 title("Adapt win, SigDuringAdapt")
 xticklabels({'Active', 'Passive'})
 
@@ -234,7 +234,7 @@ data = [b_means; p_means]';
 sem = [b_sems; p_sems]';
 
 barplot_w_sem(data, sem)
-ylabel('avg Aix')
+ylabel('mean Aix (B/(A+B))')
 title("Adapt win, SigDuringAdapt")
 xticks([1 2 3 4])
 xticklabels({'0', '45', '90', '135'})
@@ -526,6 +526,116 @@ linkaxes([ax3 ax4],'y')
 
 fn = [mouse '_cell_responsiveness.pdf'];
 exportgraphics(gcf,fn, 'Append', true)
+
+%% 12. Responsive interneruons
+
+f = figure();
+f.Position(3:4) = [840 840];
+tiledlayout(3,2)
+
+
+ax1 = nexttile(1,[1,2]);
+plot_adapt_TC_bp(b_adapt_sigDuringAdapt_adapt_interneurons_stats, p_adapt_sigDuringAdapt_adapt_interneurons_stats, resp_win)
+title("Adapt win, INT: SigDuringAdapt")
+
+ax2 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringControl_control_interneurons_stats, p_stim_sigDuringControl_control_interneurons_stats, resp_win)
+title("Stim win, INT: SigDuringControl, control trials")
+
+ax3 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringControl_adapt_interneurons_stats, p_stim_sigDuringControl_adapt_interneurons_stats, resp_win)
+title("Stim win, INT: SigDuringControl, adapt trials")
+
+ax4 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringAdapt_control_interneurons_stats, p_stim_sigDuringAdapt_control_interneurons_stats, resp_win)
+title("Stim win, INT: SigDuringAdapt, control trials,")
+
+ax5 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringAdapt_adapt_interneurons_stats, p_stim_sigDuringAdapt_adapt_interneurons_stats, resp_win)
+title("Stim win, INT: SigDuringAdapt, adapt trials")
+
+fn = [mouse '_cell_responsiveness.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+
+%% 13. Responsive pyramidal
+
+f = figure();
+f.Position(3:4) = [840 840];
+tiledlayout(3,2)
+
+
+ax1 = nexttile(1,[1,2]);
+plot_adapt_TC_bp(b_adapt_sigDuringAdapt_adapt_pyramidal_stats, p_adapt_sigDuringAdapt_adapt_pyramidal_stats, resp_win)
+title("Adapt win, Pyr: SigDuringAdapt")
+
+ax2 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringControl_control_pyramidal_stats, p_stim_sigDuringControl_control_pyramidal_stats, resp_win)
+title("Stim win, Pyr: SigDuringControl, control trials")
+
+ax3 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringControl_adapt_pyramidal_stats, p_stim_sigDuringControl_adapt_pyramidal_stats, resp_win)
+title("Stim win, Pyr: SigDuringControl, adapt trials")
+
+ax4 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringAdapt_control_pyramidal_stats, p_stim_sigDuringAdapt_control_pyramidal_stats, resp_win)
+title("Stim win, Pyr: SigDuringAdapt, control trials,")
+
+ax5 = nexttile;
+plot_targ_TC_bp(b_stim_sigDuringAdapt_adapt_pyramidal_stats, p_stim_sigDuringAdapt_adapt_pyramidal_stats, resp_win)
+title("Stim win, Pyr: SigDuringAdapt, adapt trials")
+
+linkaxes([ax2 ax3],'y')
+linkaxes([ax4 ax5],'y')
+ 
+fn = [mouse '_cell_responsiveness.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+%% 14. Adaptor responses across cell type
+
+f = figure();
+f.Position(3:4) = [840 630];
+tiledlayout(2,2)
+
+ax1 = nexttile;
+data = [b_adapt_sigDuringAdapt_adapt_interneurons_stats.mean_delta_df; p_adapt_sigDuringAdapt_adapt_interneurons_stats.mean_delta_df];
+sem = [b_adapt_sigDuringAdapt_adapt_interneurons_stats.sem_delta_df; p_adapt_sigDuringAdapt_adapt_interneurons_stats.sem_delta_df];
+barplot_w_sem(data, sem)
+ylabel('avg change in amplitude')
+title("INT: Adapt win, SigDuringAdapt")
+xticklabels({'Active', 'Passive'})
+
+ax2 = nexttile;
+data = [b_adapt_sigDuringAdapt_adapt_pyramidal_stats.mean_delta_df; p_adapt_sigDuringAdapt_adapt_pyramidal_stats.mean_delta_df];
+sem = [b_adapt_sigDuringAdapt_adapt_pyramidal_stats.sem_delta_df; p_adapt_sigDuringAdapt_adapt_pyramidal_stats.sem_delta_df];
+barplot_w_sem(data, sem)
+ylabel('avg change in amplitude')
+title("Pyr: Adapt win, SigDuringAdapt")
+xticklabels({'Active', 'Passive'})
+
+ax3 = nexttile;
+data = [b_adapt_sigDuringAdapt_adapt_interneurons_stats.Aix_mean; p_adapt_sigDuringAdapt_adapt_interneurons_stats.Aix_mean];
+sem = [b_adapt_sigDuringAdapt_adapt_interneurons_stats.Aix_sem; p_adapt_sigDuringAdapt_adapt_interneurons_stats.Aix_sem];
+barplot_w_sem(data, sem)
+ylabel('mean Aix (B/(A+B))')
+title("INT: Adapt win, SigDuringAdapt")
+xticklabels({'Active', 'Passive'})
+
+ax4 = nexttile;
+data = [b_adapt_sigDuringAdapt_adapt_pyramidal_stats.Aix_mean; p_adapt_sigDuringAdapt_adapt_pyramidal_stats.Aix_mean];
+sem = [b_adapt_sigDuringAdapt_adapt_pyramidal_stats.Aix_sem; p_adapt_sigDuringAdapt_adapt_pyramidal_stats.Aix_sem];
+barplot_w_sem(data, sem)
+ylabel('mean Aix (B/(A+B))')
+title("Pyr: Adapt win, SigDuringAdapt")
+xticklabels({'Active', 'Passive'})
+
+linkaxes([ax1 ax2],'y')
+linkaxes([ax3 ax4],'y')
+
+fn = [mouse '_cell_responsiveness.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+
 
 %% Local Functions
 
