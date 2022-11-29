@@ -16,7 +16,7 @@ load(filename, "expt_list_final", "z_pos_good_list")
 z_pos_expt_list_final = z_pos_good_list(:,ia);
 
 
-
+% Break data into trial conditions and get indices of cells of interest 
 for i = 1:length(expt_list_final)
     %% Get Dataset info
     
@@ -62,6 +62,23 @@ for i = 1:length(expt_list_final)
     % Pool indices of tuned Cells
     tuned_cells(i,:) = ori_tuning_info.tunedCells;  
     ori_bins = [0 45 90 135]; % for tuned cells 
+
+   %% find trials for each target - for target analysis 
+
+    tOris = b_stim_data.tOris;
+    tGratingOri_b = b_stim_data.tGratingOri;
+    tGratingOri_p = p_stim_data.tGratingOri;
+    
+    
+    %     Ori_trial_ind_b = cell(length(expt_list_final), length(tOris));
+    %     Ori_trial_ind_p = cell(length(expt_list_final), length(tOris));
+    
+    
+    for k = 1:length(tOris)
+        Ori_trial_ind_b{i,k} = find(tGratingOri_b == (tOris(k)));
+        Ori_trial_ind_p{i,k} = find(tGratingOri_p == (tOris(k)));
+    
+    end
     
     
     %% Pool TCs and trial indices for conditions
@@ -89,6 +106,8 @@ for i = 1:length(expt_list_final)
     b_adapt_win_dfof_all_adapt{i} = b_adapt_resp.data_adapt_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
     b_stim_win_dfof_all_control{i} = b_stim_resp.data_stim_dfof(:, :, control_trial_ind); % Expt(i) = [trial_time X nCells X Control_Trials]
     b_stim_win_dfof_all_adapt{i} = b_stim_resp.data_stim_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
+    b_stim_win_dfof_all_both_con{i} = b_stim_resp.data_stim_dfof; % Expt(i) = [trial_time X nCells X Adapt_Trials]
+
 
     % anyalysis window used to determine responsive cells (save these)
 %     base_win = b_stim_resp.base_win;
@@ -105,6 +124,12 @@ for i = 1:length(expt_list_final)
     b_ind_sig_resp_adapt_all{i} = find_respCells(b_adapt_win_dfof_all_adapt{i}, base_win, resp_win);
     b_ind_sig_resp_stim_control_all{i} = find_respCells(b_stim_win_dfof_all_control{i}, base_win, resp_win);
     b_ind_sig_resp_stim_adapt_all{i} = find_respCells(b_stim_win_dfof_all_adapt{i}, base_win, resp_win); % 
+    b_ind_sig_resp_stim_both_con{i} = find_respCells(b_stim_win_dfof_all_both_con{i}, base_win, resp_win); % 
+
+
+    [target_data_b(i,:), target_ori_data_adapt_b(i,:), target_ori_data_control_b(i,:)] = split_data_by_target_ori(b_stim_win_dfof_all_both_con{i}, Ori_trial_ind_b(i,:), adapt_trial_ind, control_trial_ind);
+
+    
     % Index of sig responsive cells when adaptor is on, for use when
     % looking at cell percentages.
 
@@ -133,6 +158,8 @@ for i = 1:length(expt_list_final)
     p_adapt_win_dfof_all_adapt{i} = p_adapt_resp.data_adapt_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
     p_stim_win_dfof_all_control{i} = p_stim_resp.data_stim_dfof(:, :, control_trial_ind); % Expt(i) = [trial_time X nCells X Control_Trials]
     p_stim_win_dfof_all_adapt{i} = p_stim_resp.data_stim_dfof(:, :, adapt_trial_ind); % Expt(i) = [trial_time X nCells X Adapt_Trials]
+    p_stim_win_dfof_all_both_con{i} = p_stim_resp.data_stim_dfof; % Expt(i) = [trial_time X nCells X Adapt_Trials]
+
     
     % find index of responsive cells
     p_ind_sig_resp_adapt_fromTC(i) = p_adapt_resp.adapt_resp_ind; % 
@@ -141,7 +168,51 @@ for i = 1:length(expt_list_final)
     p_ind_sig_resp_adapt_all{i} = find_respCells(p_adapt_win_dfof_all_adapt{i}, base_win, resp_win);
     p_ind_sig_resp_stim_control_all{i} = find_respCells(p_stim_win_dfof_all_control{i}, base_win, resp_win);
     p_ind_sig_resp_stim_adapt_all{i} = find_respCells(p_stim_win_dfof_all_adapt{i}, base_win, resp_win); % 
+    p_ind_sig_resp_stim_both_con{i} = find_respCells(p_stim_win_dfof_all_both_con{i}, base_win, resp_win); % 
 
+
+    [target_data_p(i,:), target_ori_data_adapt_p(i,:), target_ori_data_control_p(i,:)] = split_data_by_target_ori(p_stim_win_dfof_all_both_con{i}, Ori_trial_ind_p(i,:), adapt_trial_ind, control_trial_ind);
+
+ 
+%%
+
+
+
+    
+    %% Intersect indices across conditions
+
+   %Find cells responsive target during adapt and control conditions (do
+    %for passive as well), then intersection across conditions (behaving, passive)
+    
+
+%     b_ind_sig_resp_adapt_stim_union = union(b_ind_sig_resp_adapt_all{i}, b_ind_sig_resp_stim_both_con{i});
+%     
+%     p_ind_sig_resp_adapt_stim_union = union(p_ind_sig_resp_adapt_all{i}, p_ind_sig_resp_stim_both_con{i});
+
+    bp_ind_sig_resp_stim_intersect{i} = intersect(b_ind_sig_resp_stim_both_con{i}, p_ind_sig_resp_stim_both_con{i}); % Use intersection
+
+%     bp_ind_sig_resp_adapt_stim_intersect{i} = intersect(b_ind_sig_resp_adapt_stim_union, p_ind_sig_resp_adapt_stim_union); % Use intersection
+%     bp_ind_sig_resp_adapt_stim_union{i} = union(b_ind_sig_resp_adapt_stim_union, p_ind_sig_resp_adapt_stim_union);
+
+
+    %Find intersection of cells responsive to adaptors across conditions
+    %(behaving, passive), for Aix, across oris if possible...
+
+    bp_ind_sig_resp_adapt_intersect{i} = intersect(b_ind_sig_resp_adapt_all{i}, p_ind_sig_resp_adapt_all{i}); % Use itersection
+%     bp_ind_sig_resp_adapt_union{i} = union(b_ind_sig_resp_adapt_all{i}, p_ind_sig_resp_adapt_all{i});
+
+
+%%
+
+% count_items(bp_ind_sig_resp_adapt_stim_union)
+% count_items(bp_ind_sig_resp_adapt_stim_intersect)
+% 
+% count_items(bp_ind_sig_resp_adapt_intersect)
+% count_items(bp_ind_sig_resp_adapt_union)
+% 
+% count_items(b_ind_sig_resp_adapt_all)
+% count_items(p_ind_sig_resp_adapt_all)
+%%
     
     % -----
     
@@ -166,18 +237,27 @@ for i = 1:length(expt_list_final)
     p_ind_sig_resp_stim_control_all_interneurons{i} = intersect(p_ind_sig_resp_stim_control_all{i}, ind_int{i});
     p_ind_sig_resp_stim_adapt_all_interneurons{i} = intersect(p_ind_sig_resp_stim_adapt_all{i}, ind_int{i});
 
+    %--cells active across conditions 
+    bp_ind_sig_resp_stim_intersect_interneurons{i} = intersect(bp_ind_sig_resp_stim_intersect{i}, ind_int{i});
+    bp_ind_sig_resp_adapt_intersect_interneurons{i} = intersect(bp_ind_sig_resp_adapt_intersect{i}, ind_int{i});
+
+    %---- pyramidal
+
     b_ind_sig_resp_adapt_all_pyramidal{i} = intersect(b_ind_sig_resp_adapt_all{i}, ind_pyr{i});
-    b_ind_sig_resp_stim_control_all_interneuons_pyramidal{i} = intersect(b_ind_sig_resp_stim_control_all{i}, ind_pyr{i});
-    b_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i} = intersect(b_ind_sig_resp_stim_adapt_all{i}, ind_pyr{i});
+    b_ind_sig_resp_stim_control_all_pyramidal{i} = intersect(b_ind_sig_resp_stim_control_all{i}, ind_pyr{i});
+    b_ind_sig_resp_stim_adapt_all_pyramidal{i} = intersect(b_ind_sig_resp_stim_adapt_all{i}, ind_pyr{i});
 
-    p_ind_sig_resp_adapt_all_interneuons_pyramidal{i} = intersect(p_ind_sig_resp_adapt_all{i}, ind_pyr{i});
-    p_ind_sig_resp_stim_control_all_interneuons_pyramidal{i} = intersect(p_ind_sig_resp_stim_control_all{i}, ind_pyr{i});
-    p_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i} = intersect(p_ind_sig_resp_stim_adapt_all{i}, ind_pyr{i});
+    p_ind_sig_resp_adapt_all_pyramidal{i} = intersect(p_ind_sig_resp_adapt_all{i}, ind_pyr{i});
+    p_ind_sig_resp_stim_control_all_pyramidal{i} = intersect(p_ind_sig_resp_stim_control_all{i}, ind_pyr{i});
+    p_ind_sig_resp_stim_adapt_all_pyramidal{i} = intersect(p_ind_sig_resp_stim_adapt_all{i}, ind_pyr{i});
 
-    % -----
-    
-    adaptor_vline = [20 31 42 53];
-    target_vline = 64;
+    %--cells active across conditions 
+    bp_ind_sig_resp_stim_intersect_pyramidal{i} = intersect(bp_ind_sig_resp_stim_intersect{i}, ind_pyr{i});
+    bp_ind_sig_resp_adapt_intersect_pyramidal{i} = intersect(bp_ind_sig_resp_adapt_intersect{i}, ind_pyr{i});
+
+
+
+   
    
     %% Equality test - for significance
 
@@ -206,6 +286,9 @@ for i = 1:length(expt_list_final)
         p_ind_tuned_sig_resp_stim_control{bin} = intersect(p_ind_sig_resp_stim_control_all{i}, tuned_cells{i, bin});
         p_ind_tuned_sig_resp_stim_adapt{bin} = intersect(p_ind_sig_resp_stim_adapt_all{i}, tuned_cells{i, bin});
 
+        bp_ind_tuned_sig_resp_stim_intersect{bin} = intersect(bp_ind_sig_resp_stim_intersect{i}, tuned_cells{i, bin});
+        bp_ind_tuned_sig_resp_adapt_intersect{bin} = intersect(bp_ind_sig_resp_adapt_intersect{i}, tuned_cells{i, bin});
+
     end
 
     b_ind_tuned_sig_resp_adapt_all{i} = b_ind_tuned_sig_resp_adapt;
@@ -217,8 +300,16 @@ for i = 1:length(expt_list_final)
     p_ind_tuned_sig_resp_stim_control_all{i} = p_ind_tuned_sig_resp_stim_control;
     p_ind_tuned_sig_resp_stim_adapt_all{i} = p_ind_tuned_sig_resp_stim_adapt;
 
+    bp_ind_tuned_sig_resp_stim_intersect_all = bp_ind_tuned_sig_resp_stim_intersect;
+    bp_ind_tuned_sig_resp_adapt_intersect_all = bp_ind_tuned_sig_resp_adapt_intersect;
 
-    %% Segment cells from conditional dF/F by responsivitiy and tuning
+
+
+
+%% Segment cells from conditional dF/F by responsivitiy and tuning
+
+
+
 
     %Responsivity 
     b_adapt_sigDuringAdapt_adapt{i} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_sig_resp_adapt_all{i},:); % adapt response, on adapt trials, with cells sig responsive during adaptorON condition
@@ -238,6 +329,7 @@ for i = 1:length(expt_list_final)
 
     p_stim_sigDuringAdapt_control{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_adapt_all{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
     p_stim_sigDuringAdapt_adapt{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+
 
 
     % Responsivity + tuning 
@@ -282,23 +374,113 @@ for i = 1:length(expt_list_final)
     % Responsivity + cell class (pyramidal)
     b_adapt_sigDuringAdapt_adapt_pyramidal{i} = b_adapt_win_dfof_all_adapt{i}(:,b_ind_sig_resp_adapt_all_pyramidal{i},:); % adapt response, on adapt trials, with cells sig responsive during adaptorON condition
 
-    b_stim_sigDuringControl_control_pyramidal{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:); % stim response, on control trials, with cells sig during control condition
-    b_stim_sigDuringControl_adapt_pyramidal{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:); % stim response, on adapt trials, with cells sig resposive during control condition
+    b_stim_sigDuringControl_control_pyramidal{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_control_all_pyramidal{i},:); % stim response, on control trials, with cells sig during control condition
+    b_stim_sigDuringControl_adapt_pyramidal{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_control_all_pyramidal{i},:); % stim response, on adapt trials, with cells sig resposive during control condition
 
-    b_stim_sigDuringAdapt_control_pyramidal{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
-    b_stim_sigDuringAdapt_adapt_pyramidal{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+    b_stim_sigDuringAdapt_control_pyramidal{i} = b_stim_win_dfof_all_control{i}(:,b_ind_sig_resp_stim_adapt_all_pyramidal{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    b_stim_sigDuringAdapt_adapt_pyramidal{i} = b_stim_win_dfof_all_adapt{i}(:,b_ind_sig_resp_stim_adapt_all_pyramidal{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
     % ----
-    p_adapt_sigDuringAdapt_adapt_pyramidal{i} = p_adapt_win_dfof_all_adapt{i}(:,p_ind_sig_resp_adapt_all_interneuons_pyramidal{i},:);
+    p_adapt_sigDuringAdapt_adapt_pyramidal{i} = p_adapt_win_dfof_all_adapt{i}(:,p_ind_sig_resp_adapt_all_pyramidal{i},:);
 
-    p_stim_sigDuringControl_control_pyramidal{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:);
-    p_stim_sigDuringControl_adapt_pyramidal{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_control_all_interneuons_pyramidal{i},:);
+    p_stim_sigDuringControl_control_pyramidal{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_control_all_pyramidal{i},:);
+    p_stim_sigDuringControl_adapt_pyramidal{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_control_all_pyramidal{i},:);
 
-    p_stim_sigDuringAdapt_control_pyramidal{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
-    p_stim_sigDuringAdapt_adapt_pyramidal{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all_interneuons_pyramidal{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+    p_stim_sigDuringAdapt_control_pyramidal{i} = p_stim_win_dfof_all_control{i}(:,p_ind_sig_resp_stim_adapt_all_pyramidal{i},:); % stim response, on control trials, with cells sig responsive during adaptorON condition
+    p_stim_sigDuringAdapt_adapt_pyramidal{i} = p_stim_win_dfof_all_adapt{i}(:,p_ind_sig_resp_stim_adapt_all_pyramidal{i},:); % stim response, on adapt trials, with cells sig responsive during adaptorON condition
+
+
+%% NEW DATA SEGEMENTS (Intersect Passive and behaving responsive cells)
+
+    %Responsivity
+
+    %Adapt adapt (adapt intersect)
+    b_adapt{i} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect{i},:);
+    p_adapt{i} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect{i},:);
+
+    
+    %Target Adapt (target intersect)
+    b_targ_adapt{i} = b_stim_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_stim_intersect{i},:);
+    p_targ_adapt{i} = p_stim_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_stim_intersect{i},:);
+
+    %Target Control (target intersect)
+    b_targ_control{i} = b_stim_win_dfof_all_control{i}(:,bp_ind_sig_resp_stim_intersect{i},:);
+    p_targ_control{i} = p_stim_win_dfof_all_control{i}(:,bp_ind_sig_resp_stim_intersect{i},:);
+   
+%     %AIX (adapt intersect)
+%     b_adapt_AIX{i} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect{i},:);
+%     p_adapt_AIX{i} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect{i},:);
+    
+
+    %Responsivity + tuning (few cells...)
+    for bin = 1:length(tuned_cells(1,:))
+
+
+        %Adapt adapt (all intersect for amplitude)
+        b_adapt_AIX_tuned{i, bin} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_tuned_sig_resp_adapt_intersect_all{bin},:);
+        p_adapt_AIX_tuned{i, bin} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_tuned_sig_resp_adapt_intersect_all{bin},:);
+
+        
+        %Target Adapt (amplitude)
+        b_targ_adapt_tuned{i, bin} = b_stim_win_dfof_all_adapt{i}(:,bp_ind_tuned_sig_resp_stim_intersect_all{bin},:);
+        p_targ_adapt_tuned{i, bin} = p_stim_win_dfof_all_adapt{i}(:,bp_ind_tuned_sig_resp_stim_intersect_all{bin},:);
+    
+        %Target Control (amplitude)
+        b_targ_control_tuned{i, bin} = b_stim_win_dfof_all_control{i}(:,bp_ind_tuned_sig_resp_stim_intersect_all{bin},:);
+        p_targ_control_tuned{i, bin} = p_stim_win_dfof_all_control{i}(:,bp_ind_tuned_sig_resp_stim_intersect_all{bin},:);
+       
+%         %AIX (adapt intersect)
+%         b_adapt_AIX_tuned{i, bin} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_tuned_sig_resp_adapt_intersect_all{bin},:);
+%         p_adapt_AIX_tuned{i, bin} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_tuned_sig_resp_adapt_intersect_all{bin},:);
+
+    end
+
+    %Responsivity + cell class (interneuron)
+
+     %Adapt adapt (all intersect for amplitude)
+    b_adapt_int{i} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_interneurons{i},:);
+    p_adapt_int{i} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_interneurons{i},:);
+    
+    
+    %Target Adapt (amplitude)
+    b_targ_adapt_int{i} = b_stim_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_stim_intersect_interneurons{i},:);
+    p_targ_adapt_int{i} = p_stim_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_stim_intersect_interneurons{i},:);
+
+    %Target Control (amplitude)
+    b_targ_control_int{i} = b_stim_win_dfof_all_control{i}(:,bp_ind_sig_resp_stim_intersect_interneurons{i},:);
+    p_targ_control_int{i} = p_stim_win_dfof_all_control{i}(:,bp_ind_sig_resp_stim_intersect_interneurons{i},:);
+   
+%     %AIX (adapt intersect)
+%     b_adapt_AIX_int{i} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_interneurons{i},:);
+%     p_adapt_AIX_int{i} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_interneurons{i},:);
+%     
+    
+
+    %Responsivity + cell class (pyramidal)
+
+    %Adapt adapt (all intersect for amplitude)
+    b_adapt_pyr{i} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_pyramidal{i},:);
+    p_adapt_pyr{i} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_pyramidal{i},:);
+
+    
+    %Target Adapt (amplitude)
+    b_targ_adapt_pyr{i} = b_stim_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_stim_intersect_pyramidal{i},:);
+    p_targ_adapt_pyr{i} = p_stim_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_stim_intersect_pyramidal{i},:);
+
+    %Target Control (amplitude)
+    b_targ_control_pyr{i} = b_stim_win_dfof_all_control{i}(:,bp_ind_sig_resp_stim_intersect_pyramidal{i},:);
+    p_targ_control_pyr{i} = p_stim_win_dfof_all_control{i}(:,bp_ind_sig_resp_stim_intersect_pyramidal{i},:);
+   
+%     %AIX (adapt intersect)
+%     b_adapt_AIX_pyr{i} = b_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_pyramidal{i},:);
+%     p_adapt_AIX_pyr{i} = p_adapt_win_dfof_all_adapt{i}(:,bp_ind_sig_resp_adapt_intersect_pyramidal{i},:);
 
 
    
+
+
 end
+adaptor_vline = [20 31 42 53];
+target_vline = 64;
 
 %% Pool mean cell activity across trials
 % Uses local helper function; 'Run Section' to use.
@@ -390,6 +572,7 @@ p_stim_sigDuringAdapt_adapt_pyramidal_trial_mean = mean_cell_resp_by_trial(p_sti
 
 % Reminder that experiments (cells) are at different depths...Responsive by depth
 
+% use mean_cell_resp with tc_stats to find new segemnts...
 
 
 %% Get pooled cell counts for each condition before averaging across cell (uneccessary with TC_stats function)
@@ -506,6 +689,60 @@ p_stim_sigDuringControl_adapt_pyramidal_stats = TC_stats(p_stim_sigDuringControl
 p_stim_sigDuringAdapt_control_pyramidal_stats = TC_stats(p_stim_sigDuringAdapt_control_pyramidal_trial_mean, base_win, resp_win);
 p_stim_sigDuringAdapt_adapt_pyramidal_stats = TC_stats(p_stim_sigDuringAdapt_adapt_pyramidal_trial_mean, base_win, resp_win);
 
+%%
+% NEW CELL SEGMENT (intersections) STATS
+
+%Adapt adapt (all intersect for amplitude)
+b_adapt_stats = TC_stats(mean_cell_resp_by_trial(b_adapt), base_win, resp_win);
+p_adapt_stats = TC_stats(mean_cell_resp_by_trial(p_adapt), base_win, resp_win);
+
+%Target Adapt (amplitude)
+
+b_targ_adapt_stats = TC_stats(mean_cell_resp_by_trial(b_targ_adapt), base_win, resp_win);
+p_targ_adapt_stats = TC_stats(mean_cell_resp_by_trial(p_targ_adapt), base_win, resp_win);
+
+%Target Control (amplitude)
+
+b_targ_control_stats = TC_stats(mean_cell_resp_by_trial(b_targ_control), base_win, resp_win);
+p_targ_control_stats = TC_stats(mean_cell_resp_by_trial(p_targ_control), base_win, resp_win);
+
+% 
+% %AIX (adapt intersect)
+% 
+% b_adapt_AIX_stats = TC_stats(mean_cell_resp_by_trial(b_adapt_AIX), base_win, resp_win);
+% p_adapt_AIX_stats = TC_stats(mean_cell_resp_by_trial(p_adapt_AIX), base_win, resp_win);
+
+%%  Apply cell segment and Pool data by target orientation (for target condition)
+% [target_data_p(i,:), target_ori_data_adapt_p(i,:), target_ori_data_control_p(i,:)]
+% [target_data_b(i,:), target_ori_data_adapt_b(i,:), target_ori_data_control_b(i,:)]
+% bp_ind_sig_resp_stim_intersect - index to use
+
+pooled_target_ori_data_all_b = mean_cell_resp_by_trial_target_ori(target_data_b, bp_ind_sig_resp_stim_intersect);
+pooled_target_ori_data_all_p = mean_cell_resp_by_trial_target_ori(target_data_p, bp_ind_sig_resp_stim_intersect);
+
+pooled_target_ori_data_adapt_b = mean_cell_resp_by_trial_target_ori(target_ori_data_adapt_b, bp_ind_sig_resp_stim_intersect);
+pooled_target_ori_data_adapt_p = mean_cell_resp_by_trial_target_ori(target_ori_data_adapt_p, bp_ind_sig_resp_stim_intersect);
+
+pooled_target_ori_data_control_b = mean_cell_resp_by_trial_target_ori(target_ori_data_control_b, bp_ind_sig_resp_stim_intersect);
+pooled_target_ori_data_control_p = mean_cell_resp_by_trial_target_ori(target_ori_data_control_p, bp_ind_sig_resp_stim_intersect);
+
+
+
+%% Get stats for target data
+
+for i = 1:length(pooled_target_ori_data_control_b)
+    b_target_ori_data_all_stats(i) = TC_stats(pooled_target_ori_data_all_b{i}, base_win, resp_win);
+    p_target_ori_data_all_stats(i) = TC_stats(pooled_target_ori_data_all_p{i}, base_win, resp_win);
+
+    b_target_ori_data_adapt_stats(i) = TC_stats(pooled_target_ori_data_adapt_b{i}, base_win, resp_win);
+    p_target_ori_data_adapt_stats(i) = TC_stats(pooled_target_ori_data_adapt_p{i}, base_win, resp_win);
+
+    b_target_ori_data_control_stats(i) = TC_stats(pooled_target_ori_data_control_b{i}, base_win, resp_win);
+    p_target_ori_data_control_stats(i) = TC_stats(pooled_target_ori_data_control_p{i}, base_win, resp_win);
+
+end
+
+% tOris
 
 %% Most efficient way to clear uneeded variables and save the workspace?
 % 
@@ -529,139 +766,14 @@ filename = [mouse '_pooled_2AFC_2P_data.mat'];
 save(filename)
 
 
-%% Local functions
+%% Local functions (most copied to individual scripts)
 
-function pooled_data = mean_cell_resp_by_trial(dFoF)
-% Finds mean cell activity across trials for all experiments
-    pooled_data = [];
-    for i = 1:length(dFoF)
-        data = dFoF{i};
-        mean_data = mean(data, 3, 'omitnan');
-        pooled_data = cat(2, pooled_data, mean_data);
-    end
-end
-
-function pooled_tuned_data = mean_tuned_cell_resp_by_trial(tuned_data)
-    pooled_tuned_data = {};
-    for bin = 1:4
-        data_set = tuned_data(:,bin);
-        pooled_tuned_data{bin} = mean_cell_resp_by_trial(data_set);
-    end
-end
-
-function data_struct = TC_stats(trial_averaged_data, base_win, resp_win)        
-    %TC mean, std, sem, cell count and more stats for a time X cell response matrix
-    
-    data_mean = mean(trial_averaged_data,2);
-    data_std = std(trial_averaged_data, 0, 2);
-    data_count = size(trial_averaged_data,2);
-    data_sem = data_std / sqrt(data_count);
-    
-    data_struct.count_cells = data_count;
-    data_struct.mean_TC = data_mean;
-    data_struct.std_TC = data_std;
-    data_struct.sem_TC = data_sem;
-    
-    
-    %base_win
-    base_win_df_by_cell = trial_averaged_data(base_win, :); % Responses in baseline window by cell
-    base_win_df_by_cell_mean = mean(base_win_df_by_cell, 1); % average response in window by cell (save this and below)
-   
-    data_struct.base_win_df_by_cell_mean = base_win_df_by_cell_mean;
-    
-    %resp_win
-    resp_win_df_by_cell = trial_averaged_data(resp_win, :); % Responses in response window by cell
-    resp_win_df_by_cell_mean = mean(resp_win_df_by_cell, 1); % average response in window by cell (save this and below)
-
-    data_struct.resp_win_df_by_cell_mean = resp_win_df_by_cell_mean;
-    
-    % delta f by cell - cell mean of resp - mean of base win
-    delta_df = resp_win_df_by_cell_mean - base_win_df_by_cell_mean;
-
-        
-    %stats
-    delta_df_mean = mean(delta_df); % grand average 
-    delta_df_std = std(delta_df);
-    delta_df_sem = delta_df_std / sqrt(data_count);
-    
-    data_struct.base_win = base_win;
-    data_struct.resp_win = resp_win;
-
-
-    data_struct.delta_df_by_cell = delta_df;
-    data_struct.mean_delta_df = delta_df_mean;
-    data_struct.std_delta_df = delta_df_std;
-    data_struct.sem_delta_df = delta_df_sem;      
-
-
-    %delta f for each adaptor
-
-    %Basline/Responsive windows for each adaptor
-
-    if size(trial_averaged_data,1) == 100
-
-        base_win_each_adapt = zeros(4, length(base_win));
-        resp_win_each_adapt = zeros(4, length(resp_win));
-
-        for i = 2:4
-            base_win_each_adapt (1,:) = base_win;
-            base_win_each_adapt(i,:) = base_win_each_adapt(i-1,:) + 11;
-
-            resp_win_each_adapt (1,:) = resp_win;
-            resp_win_each_adapt(i,:) = resp_win_each_adapt(i-1,:) + 11;
-        end
-    
-        data_struct.base_win_each_adapt = base_win_each_adapt;
-        data_struct.resp_win_each_adapt = resp_win_each_adapt;
-
-
-        for i = 1:4
-            %base_win
-            base_win_each_adapt_df_by_cell = trial_averaged_data(base_win_each_adapt(i,:), :); % Responses in baseline window by cell
-            base_win_each_adapt_df_by_cell_mean(i,:) = mean(base_win_each_adapt_df_by_cell, 1); % average response in window by cell (save this and below)
-                  
-            %resp_win
-            resp_win_each_adapt_df_by_cell = trial_averaged_data(resp_win_each_adapt(i,:), :); % Responses in response window by cell
-            resp_win_each_adapt_df_by_cell_mean(i,:) = mean(resp_win_each_adapt_df_by_cell, 1); % average response in window by cell (save this and below)
-        
-            
-            % delta f by cell - cell mean of resp - mean of base win
-            delta_df_each_adapt(i,:) = resp_win_each_adapt_df_by_cell_mean(i,:) - base_win_each_adapt_df_by_cell_mean(i,:);
-
-            %stats
-            delta_df_each_adapt_mean(i) = mean(delta_df_each_adapt(i,:)); % grand average 
-            delta_df_each_adapt_std(i) = std(delta_df_each_adapt(i,:));
-            delta_df_each_adapt_sem(i) = delta_df_each_adapt_std(i) / sqrt(data_count);         
-
-
-        end
-
-        Response_A = resp_win_each_adapt_df_by_cell_mean(1,:);
-        Response_B = resp_win_each_adapt_df_by_cell_mean(2,:);
-        
-        Aix = Response_B./(Response_A+Response_B);
-        Aix_mean = mean(Aix);
-        Aix_std = std(Aix);
-        Aix_sem = Aix_std / sqrt(length(Aix));
-
-
-        
-        data_struct.base_win_each_adapt_df_by_cell_mean = base_win_each_adapt_df_by_cell_mean;
-        data_struct.resp_win_each_adapt_df_by_cell_mean = resp_win_each_adapt_df_by_cell_mean;
-
-        data_struct.delta_df_each_adapt_by_cell = delta_df_each_adapt;
-        data_struct.mean_delta_df_each_adapt = delta_df_each_adapt_mean;
-        data_struct.std_delta_df_each_adapt = delta_df_each_adapt_std;
-        data_struct.sem_delta_df_each_adapt = delta_df_each_adapt_sem; 
-        data_struct.Aix_by_cell = Aix;
-        data_struct.Aix_mean = Aix_mean;
-        data_struct.Aix_std = Aix_std;
-        data_struct.Aix_sem = Aix_sem;
-
-
-
-    end
-    
-    
-end
-
+% function count_items(cell_array)
+%     
+%     for i = 1:length(cell_array)
+%         count(i) = length(cell_array{i});
+%     end
+%     
+%     total = sum(count);
+%     disp(total)
+% end

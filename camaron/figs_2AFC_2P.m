@@ -635,6 +635,156 @@ linkaxes([ax3 ax4],'y')
 fn = [mouse '_cell_responsiveness.pdf'];
 exportgraphics(gcf,fn, 'Append', true)
 
+%% NEW Segment Plots
+
+%% 1. plot traces with target, adapter vline, and resp window shaded
+
+% All cells
+f = figure();
+f.Position(3:4) = [1050 525];
+tiledlayout(1,3)
+
+ax1 = nexttile;
+plot_adapt_TC_bp(b_adapt_stats, p_adapt_stats, resp_win)
+title("Adaptor responses")
+
+ax2 = nexttile;
+plot_targ_TC_bp(b_targ_adapt_stats, p_targ_adapt_stats, resp_win)
+title("Target responses, adapt trials")
+
+ax3 = nexttile;
+plot_targ_TC_bp(b_targ_control_stats, p_targ_control_stats, resp_win)
+title("Target responses; control trials")
+
+
+linkaxes([ax1 ax2 ax3],'y')
+
+fn = [mouse '_cell_responsiveness_new_segment.pdf'];
+exportgraphics(gcf,fn)
+
+%% 2. dF/F
+
+f = figure();
+f.Position(3:4) = [840 630];
+tiledlayout(1,3)
+
+ax1 = nexttile;
+data = [b_adapt_stats.mean_delta_df; p_adapt_stats.mean_delta_df];
+sem = [b_adapt_stats.sem_delta_df; p_adapt_stats.sem_delta_df];
+barplot_w_sem(data, sem)
+ylabel('avg change in amplitude')
+title("Adaptor responses")
+xticklabels({'Active', 'Passive'})
+
+ax2 = nexttile;
+data = [b_targ_adapt_stats.mean_delta_df; p_targ_adapt_stats.mean_delta_df];
+sem = [b_targ_adapt_stats.sem_delta_df; p_targ_adapt_stats.sem_delta_df];
+barplot_w_sem(data, sem)
+ylabel('avg change in amplitude')
+title("Target responses, adapt trials")
+xticklabels({'Active', 'Passive'})
+
+
+ax3 = nexttile;
+data = [b_targ_control_stats.mean_delta_df; p_targ_control_stats.mean_delta_df];
+sem = [b_targ_control_stats.sem_delta_df; p_targ_control_stats.sem_delta_df];
+barplot_w_sem(data, sem)
+ylabel('avg change in amplitude')
+title("Target responses; control trials")
+xticklabels({'Active', 'Passive'})
+
+
+linkaxes([ax1 ax2 ax3],'y')
+
+fn = [mouse '_cell_responsiveness_new_segment.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+%% 3. plot traces with target, adapter vline, and resp window shaded
+
+% % All cells
+% f = figure();
+% f.Position(3:4) = [1050 525];
+% % tiledlayout(1,3)
+% 
+% ax1 = nexttile;
+% plot_adapt_TC_bp(b_adapt_AIX_stats, p_adapt_AIX_stats, resp_win)
+% title("Adaptor responses - adapt resp cells only")
+% 
+% fn = [mouse '_cell_responsiveness_new_segment.pdf'];
+% exportgraphics(gcf,fn, 'Append', true)
+
+%% 4. Adaptor index (B / (A+B))
+
+f = figure();
+f.Position(3:4) = [840 630];
+
+data = [b_adapt_stats.Aix_mean; p_adapt_stats.Aix_mean];
+sem = [b_adapt_stats.Aix_sem; p_adapt_stats.Aix_sem];
+barplot_w_sem(data, sem)
+ylabel('mean Aix (B/(A+B))')
+title("AIX(B/(A+B)")
+xticklabels({'Active', 'Passive'})
+
+
+fn = [mouse '_cell_responsiveness_new_segment.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+%% 5. Distribition of Adaptor index (B / (A+B))
+
+f = figure();
+f.Position(3:4) = [840 630];
+% tiledlayout(1,2)
+
+% nexttile
+data = [b_adapt_stats.Aix_by_cell; p_adapt_stats.Aix_by_cell];
+scatter(data(1,:), data(2,:))
+ylabel('passive')
+title("Scatter AIX (B/(A+B))")
+xlabel('behaving')
+refline(1)
+
+fn = [mouse '_cell_responsiveness_new_segment.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+%% 6. Adaptor index (B /A))
+
+f = figure();
+f.Position(3:4) = [840 630];
+
+data = [b_adapt_stats.Aix_alt_mean; p_adapt_stats.Aix_alt_mean];
+sem = [b_adapt_stats.Aix_alt_sem; p_adapt_stats.Aix_alt_sem];
+barplot_w_sem(data, sem)
+ylabel('mean Aix (B/A)')
+title("AIX(B/A)")
+xticklabels({'Active', 'Passive'})
+
+
+fn = [mouse '_cell_responsiveness_new_segment.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+%% 7. Distribition of Adaptor index (B /A)
+
+f = figure();
+f.Position(3:4) = [840 630];
+% tiledlayout(1,2)
+
+% nexttile
+data = [b_adapt_stats.Aix_alt; p_adapt_stats.Aix_alt];
+scatter(data(1,:), data(2,:))
+ylabel('passive')
+title("Scatter AIX (B/A)")
+xlabel('behaving')
+refline(1)
+
+fn = [mouse '_cell_responsiveness_new_segment.pdf'];
+exportgraphics(gcf,fn, 'Append', true)
+
+
+
+
+
+
+
 
 
 %% Local Functions
