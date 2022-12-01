@@ -6,7 +6,7 @@ clc
 dataset = 'oriAdapt_V1';
 eval(dataset);
 
-mouse = 'i475'; % indicate mouse data to pool
+mouse = 'i472'; % indicate mouse data to pool
 cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
 filename = [mouse '_image_matching.mat'];
 load(filename, "expt_list_final", "z_pos_good_list")
@@ -65,9 +65,18 @@ for i = 1:length(expt_list_final)
 
    %% find trials for each target - for target analysis 
 
-    tOris = b_stim_data.tOris;
     tGratingOri_b = b_stim_data.tGratingOri;
     tGratingOri_p = p_stim_data.tGratingOri;
+
+    tOris_b = unique(tGratingOri_b);
+    tOris_p = unique(tGratingOri_p);
+
+        
+    if ~isequal(tOris_b, tOris_p) 
+
+        tOris = intersect(tOris_b,tOris_p);
+    end
+
     
     
     %     Ori_trial_ind_b = cell(length(expt_list_final), length(tOris));
@@ -79,6 +88,13 @@ for i = 1:length(expt_list_final)
         Ori_trial_ind_p{i,k} = find(tGratingOri_p == (tOris(k)));
     
     end
+
+    % if one of the two conditions (active, behaving) is missing target
+    % orientations, use only orientations present in both
+
+
+
+
     
     
     %% Pool TCs and trial indices for conditions
@@ -744,7 +760,8 @@ end
 
 % tOris
 
-%% Most efficient way to clear uneeded variables and save the workspace?
+%% Most efficient way to clear uneeded variables and save key variables from the workspace?
+% Saving everything for now...
 % 
 % clearvars -except adaptor_vline adaptPeriodMsb_ind_sig_resp_adapt_all ...
 %     b_adapt_trial_ind_all b_control_trial_ind_all b_adapt_win_dfof_all ...
@@ -757,7 +774,6 @@ end
 %     b_stim_win_dfof_all_control b_stim_win_dfof_all_adapt ...
 %     p_adapt_win_dfof_all_adapt p_stim_win_dfof_all_control ...
 %     p_stim_win_dfof_all_adapt z_pos_expt_list_final
-
 
 
 %%

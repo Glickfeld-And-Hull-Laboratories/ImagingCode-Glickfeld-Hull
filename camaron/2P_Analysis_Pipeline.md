@@ -4,10 +4,10 @@
 
 1. **oriAdapt_V1_cam.m** # structure containing info for each experiment
 2. **SingleChannelTC_2AFC_OriAdapt_udpated.m** AND **SingleChannelTC_2AFC_OriAdapt_passive_only.m** (for naive mice) 
-    1. Doing many things...see below:
-    Input -> raw imaging and behavior data for a single session
+    1. Input -> raw imaging and behavior data for a single session
     Output -> Behaving, Direction Tuning, Passive info
-    2. Used in conjunction with **RegistrationPathways.m (PUSH TO GIT)** for days with signal interference
+    2. Used in conjunction with **RegistrationPathways.m** for days with signal interference/bad looking registration
+    3. Key inputs/outputs:
 
 ```markdown
  # Behaving Image
@@ -56,21 +56,20 @@
 
 ```
 
-1. **genExptListFromStruct.m** # Get good TC extractions with including behaving, passive, direction tuning, FB OFF, and s > 0.8
-    1. **PUSH TO GIT**
-    2. Input - > Data struct, behavior input.mat
-    3. Output → good_expt_list.mat (mouse_expts, mouse_good_list, …, …)
+1. **genExptListFromStruct.m** # Get good TC extractions with including behaving, passive, direction tuning, FB OFF, and s > 0.8 (can modify to pull experiments that meet parameters of interest)
+    1. Input - > Data struct, behavior input.mat
+    2. Output → good_expt_list.mat (mouse_expts, mouse_good_list, …, …)
 2. **FOV_analysis.m**  # Plot image FOVs to view imaging sessions at different depths with non-overlapping and responsive cells for each mouse
-    1. **PUSH TO GIT**
-    2. Input → good_expt_list.mat, raw image files, _redData.mat, _mask_cell.mat, adaptResp.mat, stimResp.mat
+    1. Input → good_expt_list.mat, raw image files, _redData.mat, _mask_cell.mat, adaptResp.mat, stimResp.mat
         1. intermediate → adapt_and_stim_resp_ind = union(adapt_resp_ind{:}, stim_resp_ind);
-    3. output → 
+    2. output → 
         1. mouse FOV_analysis.pdf
         2. mouse _image_matching.mat (expt_list_final)
 3. **pool_2AFC_2P_data.m** # pool 2AFC responses by mouse and create structure containing everything needed for final analysis 
     1. Inputs → TC_extraction outputs + expt_list_final
-    2. Outpus → Single data structure:
-        1. mouse_pooled_2AFC_2P_data.mat (expt_list_final, data_adapt_dfof_all, data_stim_df_all, adapt_and_stim_resp_ind_all, ori_bins …. …. …. … ) 
-4. **figs_2AFC_2P.m** # Post processing data and plotting figures for a single mouse…
+    2. Outputs → Main output is single data structure for each condition “condition_TC_stats”
+    3. **Add zpos for each experiment to output
+    4. **Add dec time response…
+4. **figs_2AFC_2P.m / figs_2AFC_2P_intersected_cells**  # Post processing data and plotting figures for a single mouse…
     1. Inputs → mouse_pooled_2AFC_2P_data.mat
-    2. Figures….
+    2. Outputs → Figures….

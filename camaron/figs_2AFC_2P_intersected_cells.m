@@ -1,7 +1,7 @@
 %% Load data...
 % Save/load appropriate vars - pool_2AFC_2P_data.m
 
-mouse = 'i475'
+mouse = 'i472'
 cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
 filename = [mouse '_pooled_2AFC_2P_data.mat'];
 load(filename)
@@ -164,8 +164,12 @@ close(f)
 %% 7. Target Time courses (adapt, control)
 
 f = figure(7);
-f.Position(3:4) = [840 630];
-tiledlayout(2, 6)
+f.Position(3:4) = [1040 630];
+if length(tOris) == 6
+    tiledlayout(2, 6)
+else
+    tiledlayout(2,8)
+end
 
 for i = 1:length(b_target_ori_data_adapt_stats)
     nexttile
@@ -187,7 +191,7 @@ linkaxes([h(1), h(2), h(3), h(4), h(5), h(6),...
 sgtitle(['Target response, adapt v control, ' num2str(b_target_ori_data_adapt_stats(1).count_cells) ' cells'])
 
 
-
+% 
 fn = [mouse '_cell_responsiveness_new_segment.pdf'];
 exportgraphics(gcf,fn, 'Append', true)
 close(f)
@@ -197,7 +201,11 @@ close(f)
 
 f = figure(8);
 f.Position(3:4) = [840 630];
-tiledlayout(2, 6)
+if length(tOris) == 6
+    tiledlayout(2, 6)
+else
+    tiledlayout(2,8)
+end
 
 for i = 1:length(b_target_ori_data_adapt_stats)
     nexttile;

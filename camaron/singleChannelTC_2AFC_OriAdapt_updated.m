@@ -1,4 +1,4 @@
-%%
+%% RUN BY SECTION, DO NOT RUN ALL
 close all
 clearvars
 clc
@@ -6,7 +6,7 @@ clc
 dataset = 'oriAdapt_V1_cam';
 eval(dataset); % run file to load expt.structure
 
-iexp = 43; % Enter experiment number from oriAdapt_V1
+iexp = 43; % Enter experiment number from oriAdapt_V1_cam
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 CM_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron';
@@ -20,33 +20,24 @@ end
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 
-
-
-
-
 %% Get imaging data (data, nframes, adapt_input)
 tic
 data = [];
 clear temp
 offset = 0;
 
-
-
-
 % load data
 nrun = size(expt(iexp).runs,1);
 for irun = 1:nrun
     CD = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).runs(irun,:)];
     cd(CD);
-    imgMatFile = [expt(iexp).runs(irun,:) expt(iexp).runs_suffix(irun,:) '.mat']; % DONE; Make variable to pull for oriAdapt_V1 that points to imgMatFile of restarted runs (ex: 001_000_001)
+    imgMatFile = [expt(iexp).runs(irun,:) expt(iexp).runs_suffix(irun,:) '.mat'];
     load(imgMatFile);
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' expt(iexp).mouse '-' expt(iexp).date '-' expt(iexp).time_mat(irun,:) '.mat'];
     load(fName);
     
     nframes = [input.counterValues{end}(end) info.config.frames];
-
   
-    
     if min(nframes)<input.counterValues{end}(end)
         ntrials = size(input.trialOutcomeCell,2);
         for itrial = ntrials:-1:1
@@ -89,7 +80,6 @@ clear temp
 fprintf('Runs loaded\n')
 toc
 
-
 %% Choose register interval
 stack_spacing = 10000; % Number of frames in each image stack
 nep = floor(size(data,3)./stack_spacing);
@@ -128,9 +118,6 @@ print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_'
 
 clearvars nep n n2
 
-%% If unstable, use different registration pathway...
-
-% CODE GOES HERE
 
 %% Register Red to green (green_data_avg, red_data_avg)
 
@@ -197,6 +184,13 @@ if ~isempty(expt(iexp).redImg)
     clearvars sz rgb
 end 
 
+%% If image is unstable, use different registration pathway.
+
+% Open and run each section of the following script. Be sure to make image
+% selection before end.
+
+% open RegistrationPathways.m
+
 %% Counter check
 ntrials = size(adapt_input.tGratingContrast,2);
 counterVals = [];
@@ -257,8 +251,6 @@ if exist(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse 
 end
 
 nframes = [adapt_input.counterValues{end}(end) info.config.frames];
-
-
 
 if exist([data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).runs(irun,:) '\' [expt(iexp).runs(irun,:) expt(iexp).runs_suffix(irun,:) '.ephys']]);
     photoData = [];
@@ -405,8 +397,6 @@ data_dfof_max = max(data_dfof,[],3);
 figure; imagesc(data_dfof_max)
 data_dfof = cat(3,data_dfof_max,data_dfof);
 
-
-
 %% direction tuning
 clear data_targ data_adapt data_f
 dir_str = ['runs-' expt(iexp).dirtuning];
@@ -441,9 +431,7 @@ else
     save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_str], [date '_' mouse '_' dir_str '_reg_shifts.mat']), 'out', 'data_avg')
     clear data
     
-   %%
-
-
+%%
 %     filename = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\'  expt(iexp).dirtuning '\' [expt(iexp).dirtuning '_000_000.ephys']];
 %     % photodiode check
 %     if exist(filename)
@@ -483,7 +471,6 @@ else
 end
 
 data_dfof = cat(3,cat(3,data_dfof,max(dir_dfof_all,[],3)),dir_dfof_all);
-
 
 %% cell segmentation  
 if exist(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
@@ -1167,7 +1154,6 @@ for iOri = 1:naOri
 end
 print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_avgResp_Adapt&Target.pdf']), '-dpdf','-bestfit')
 
-
 adapt_cyc_resp = zeros(nCells,nTrials,4);
 for IN = 1:2
     for i = 1:4
@@ -1319,8 +1305,6 @@ ylabel('nCells')
 %Check oris and binning for 210506
 
 print(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_str], [date '_' mouse '_' dir_str '_prefOri_v_tuned.pdf']),'-dpdf','-fillpage')
-
-
 
 save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' dir_str], [date '_' mouse '_' dir_str '_oriTuningInfo.mat']),...
     'prefOri', 'prefOri_bootdiff', 'ind_theta90', 'tunedCells', 'edges');
@@ -1804,15 +1788,11 @@ if ~isempty(expt(iexp).pass_run)
         end
     end
 
-
     save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str '_adaptResp.mat']), 'mask_label', 'data_adapt_dfof', 'adapt_cyc_resp', 'base_win_all', 'resp_win_all','adapt_resp_ind')
     save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str '_stimResp.mat']), 'stim_resp', 'data_stim_dfof', 'stim_resp_ind', 'base_win', 'resp_win');
     save(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' pass_str], [date '_' mouse '_' pass_str '_stimData.mat']), 'tGratingOri', 'tOris', 'aGratingOri', 'aOris', 'aGratingContrast', 'ind_cond', 'SIx');
 
 end
-% save(fullfile(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Analysis\2P\210625_i472\210625_i472_runs-002' '_adaptResp.mat']), 'mask_label', 'data_adapt_dfof', 'adapt_cyc_resp', 'base_win_all', 'resp_win_all','adapt_resp_ind')
-% save(fullfile(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Analysis\2P\210625_i472\210625_i472_runs-002' '_stimResp.mat']), 'stim_resp', 'data_stim_dfof', 'stim_resp_ind', 'base_win', 'resp_win');
-% save(fullfile(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron\Analysis\2P\210625_i472\210625_i472_runs-002' '_stimData.mat']), 'tGratingOri', 'tOris', 'aGratingOri', 'aOris', 'aGratingContrast', 'ind_cond', 'SIx', 'MIx');
 
 
     

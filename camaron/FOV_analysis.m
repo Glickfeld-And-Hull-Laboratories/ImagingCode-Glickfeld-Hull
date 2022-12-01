@@ -1,9 +1,7 @@
-%% Make subplot of FOVs sorted by depth with sg title as MOUSE #
-% and each figure title as EXP - z_pos 
+%% Make subplot of FOVs sorted by depth with title as MOUSE #
+% and each figure title as EXP - z_pos. Identify images with most
+% non-overlapping cells
 
-
-
-% close all
 clearvars
 clc
 %% Load experiment info
@@ -12,44 +10,16 @@ eval(dataset); % run file to load expt.structure
 
 load('Z:\All_Staff\home\camaron\Analysis\2P\good_expt_list.mat')
 
-
-% i475_expts = 30:79;
-% i472_expts = 80:131;
-
 z_pos = [];
 
 
+%% Choose list of experiments to view images
 
-
-
-% %%
-% % Get good extractions with passive and direction tuning
-% i475_good_list = [];
-% i472_good_list = [];
-% 
-% for i = i475_expts
-%     if expt(i).TCs_extracted == 1 & ~isempty(expt(i).pass_run) & ~isempty(expt(i).dirtuning) 
-%         i475_good_list = [i475_good_list i];
-%     end
-% end
-% 
-% for i = i472_expts
-%     if expt(i).TCs_extracted == 1 & ~isempty(expt(i).pass_run) & ~isempty(expt(i).dirtuning) 
-%         i472_good_list = [i472_good_list i];
-%     end
-% end
-
-%%
-
-list = i475_good_list;
+% list = i475_good_list;
 % list = i472_good_list;
-
+list = i1402_expts;
 
 for iexp = list
-
-    
-
-    % iexp = [35, 45]; % Enter experiment number from oriAdapt_V1
     
     LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
     CM_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\camaron';
@@ -63,14 +33,12 @@ for iexp = list
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
 
-    %%
+    %% Load image data
     CD = [data_base '\Data\2P_images\' expt(iexp).mouse '\' expt(iexp).date '\' expt(iexp).runs(1,:)];
     cd(CD);
     imgMatFile = [expt(iexp).runs(1,:) expt(iexp).runs_suffix(1,:) '.mat']; % DONE; Make variable to pull for oriAdapt_V1 that points to imgMatFile of restarted runs (ex: 001_000_001)
     load(imgMatFile);
     z_pos = [z_pos info.config.knobby.pos.z];
-
-    
 
 end
 
@@ -79,7 +47,7 @@ z_pos_good_list = [list; z_pos];
 z_pos_good_list = flip(sortrows(z_pos_good_list', 2))';
 
 
-    %% Make subplot 
+%% Make subplots 
 
 % figure;
 [n, n2] = subplotn(length(list));
@@ -105,21 +73,18 @@ for i = 1:length(z_pos_good_list)
     
     %%
     % load redData.mat
-    % load('Z:\All_Staff\home\camaron\Analysis\2P\201109_i475\201109_i475_runs-001\201109_i475_runs-001_redData.mat', 'red_data_avg', 'green_data_avg')
     load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_redData.mat']), 'green_data_avg', 'red_data_avg')
     
     %load mask_cell_red
     load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
-    % load('Z:\All_Staff\home\camaron\Analysis\2P\201109_i475\201109_i475_runs-001\201109_i475_runs-001_mask_cell.mat', 'mask_cell_red', 'mask_np')
 
-    %load responsived cells
+    %load responsive cells
     load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptResp.mat']), 'adapt_resp_ind')
     load(fullfile([data_base '\Analysis\2P'], [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimResp.mat']), 'stim_resp_ind');
 
-%%
+    %% Find all responsive cells
     adapt_and_stim_resp_ind = union(adapt_resp_ind{:}, stim_resp_ind);
     resp_cell{i} = adapt_and_stim_resp_ind;
-
 
     cells = unique(mask_cell);
     cells = cells(2:end);
@@ -130,13 +95,10 @@ for i = 1:length(z_pos_good_list)
     
     mask_cell_resp = mask_cell;
     
-    
     for j = 1:length(no_resp)
         cell_num = no_resp(j);
         mask_cell_resp(mask_cell_resp == cell_num) = 0;
     end
-
-
     
     %%
 %     imagesc(red_data_avg), colormap gray; caxis([200 1000]);
@@ -147,13 +109,9 @@ for i = 1:length(z_pos_good_list)
     all_mask_cell{i} = mask_cell;
     all_mask_cell_resp{i} = mask_cell_resp;
 
-% 
 %     sgtitle([mouse ' w/ data__dfof__max'] )
 %     imagesc(data_dfof_max)
 %     title([num2str(iexp) ' @ z= ' num2str(z_pos)])
-
-   
-    
 
 %     hold on
 %     bound = cell2mat(bwboundaries(mask_cell_red(:,:,1))); % 
@@ -169,32 +127,22 @@ depth_list = z_pos_good_list(2,:);
 
 % img_cell
 
-groups = {0} % fill the cel lwith something to start, remove at the end
+groups = {0} % fill the cell with something to start, remove at the end
 exp_ids = z_pos_good_list(1,:)
-margin = 25; % for range of values
-
-
+margin = 25; % for range of z values to create groups
 
 for i = 1:length(z_pos_good_list(2,:)) % for each item in list
-    %if any items are between current image and +- 25um of this image depth, put into same group
+    %if any items are between current image and +- margin of this image depth, put into same group
     % if current image is already in a group, skip that image
     if ~ismember(exp_ids(i), groups{end})
-
         curr_img_depth = z_pos_good_list(2,i);
-    
         tf = (curr_img_depth-margin < z_pos_good_list(2,:)) & (z_pos_good_list(2,:) < curr_img_depth+margin);
-    
         groups{end+1} = exp_ids(tf);
     end
-
-   
-
 end
 
 groups(1) = []; % remove placeholder value 
-    
 
- 
 
 %% Once each group is obtained, show groups (with multiple values)
 matched_groups = [];
@@ -220,7 +168,9 @@ for i = 1:length(groups)
         end
         
         shg % Show current figure
-        formatSpec = "Create array of %d increasing values for images [%s] (E.g [1 1 2 3]): ";
+        % option to create prompt so that user can input values to choose
+        % images, currently obsolete in this pipline
+%         formatSpec = "Create array of %d increasing values for images [%s] (E.g [1 1 2 3]): ";
 %         prompt = sprintf(formatSpec, length(groups{i}), num2str(groups{i}));
 %         x = input(prompt);
           x = 0; % place holder while testing
@@ -240,9 +190,7 @@ close all
 
 %% View groups from saved file - Plot and Save %% Show Masks with significantly responsive cells
 
-
 % load('Z:\All_Staff\home\camaron\Analysis\2P\i475_image_matching.mat')
-
 
 exp_ids = z_pos_good_list(1,:);
 depth_list = z_pos_good_list(2,:);
@@ -277,7 +225,7 @@ for i = 1:length(groups)
             s = s+1;
         end
 
-%         exportgraphics(gcf,fn,'Append', true)
+        exportgraphics(gcf,fn,'Append', true)
 
 
         figure(); % Reminder! These masks are for cells that are sig responsive to the adaptor or target?
@@ -293,7 +241,7 @@ for i = 1:length(groups)
             s = s+1;
         end
         
-%         exportgraphics(gcf,fn,'Append', true)
+        exportgraphics(gcf,fn,'Append', true)
 
 
         figure();
@@ -313,7 +261,7 @@ for i = 1:length(groups)
             s = s+1;
         end
 
-%         exportgraphics(gcf,fn,'Append', true)
+        exportgraphics(gcf,fn,'Append', true)
 
 
 
@@ -324,26 +272,25 @@ end
 
 %% Next decisions must be made for matching data regarding whether to: keep one/toss others OR match cells and merge trials OR Merge cells across datasets
 
-%Select days with greates number of non-overlapping cells, filter others
+%Select days with greatest number of non-overlapping cells, filter others
 %from groups -> this becomes final expt list 
 
-% Harcoding for now...use abstract method to acomplish this! % use matched_group_index
+% Harcoding for now...use algo to acomplish this! % use
+% matched_group_index...
 
+% SELECT BEST IMAGE FROM EACH GROUP!
 groups_updated = groups;
-groups_updated{2} = [42];
-groups_updated{5} = [61];
-groups_updated{7} = [72];
-
+groups_updated{3} = [120]; % [] value is expt num
+groups_updated{4} = [110];
+% groups_updated{7} = [72];
 
 % output final expt list
 
 expt_list_final = cell2mat(groups_updated);
 
-
+cd(['Z:\All_Staff\home\camaron\Analysis\2P\' mouse])
 filename = [mouse '_image_matching.mat'];
 save(filename, "expt_list_final", '-append')
-
-
 
 % dataset = 'oriAdapt_V1_cam';
 % eval(dataset); % run file to load expt.structure
@@ -368,9 +315,4 @@ save(filename, "expt_list_final", '-append')
 % end
 
 % Check behavior (selectivity) for these days
-
-
-%% Testing block
-
-
 
