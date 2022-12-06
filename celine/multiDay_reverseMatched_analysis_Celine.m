@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds);
 
 %      
-day_id = 209; %enter post-DART day
+day_id = 206; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now

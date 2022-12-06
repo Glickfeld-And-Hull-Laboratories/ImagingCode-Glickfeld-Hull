@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 209;
+day_id = 215;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -228,7 +228,7 @@ clear data_g_dfof
 data_g_down = stackGroupProject(data_g_reg,100);
 corrImg = getPixelCorrelationImage(data_g_down);
 figure; imagesc(corrImg); movegui('center');title('pixel correlation');
-data_dfof = cat(3, data_dfof, data_avg,corrImg);
+data_dfof = cat(3, data_dfof, data_avg,data_avg,corrImg,corrImg);
 clear data_g_down
 
 
@@ -321,6 +321,9 @@ if ~isempty(expt(day_id).redChannelRun)
     end
 end
 
+%this version does not pad the red cells
+
+
 mask_cell_red = bwlabel(mask_all);
 mask_data = data_dfof; %this is the registered data from the 920 run
 %after making masks for all the red cells, go through different stimuli and
@@ -348,6 +351,18 @@ end
 
 mask_np = imCellNeuropil(mask_cell, 3, 5);
 save(fullfile(fnout, 'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
+
+
+rgb = zeros(sz(1),sz(2),3);
+    rgb(:,:,1) = redChImg./max(redChImg(:));
+    rgb(:,:,2) = regImg./max(regImg(:));
+    figure; image(rgb);  movegui('center')
+
+hold on
+bound = cell2mat(bwboundaries(mask_cell_red));
+plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+hold off
+
 
 %% extract timecourses
 

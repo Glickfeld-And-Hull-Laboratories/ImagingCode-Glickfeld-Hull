@@ -3,7 +3,7 @@
 
 %% sort TCs into day 1 and day 2, only good cells
 %sort into day 1 and day 2, only want red cells
-red_TCs = {cellTCs_all{1}(:,red_d1), cellTCs_all{2}(:,red_d2)};
+red_TCs = {cellTCs_match{1}(:,red_ind_keep), cellTCs_match{2}(:,red_ind_keep)};
 
 
 %% spontaneous activity for red cells

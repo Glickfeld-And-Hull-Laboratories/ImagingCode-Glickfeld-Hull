@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 209; %enter the refrence day ID here
+day_id(1) = 214; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -57,7 +57,7 @@ red_ind = cell(1,nd);
 cellTCs_all = cell(1,nd);
 
 days_text = strcat('Reference day: ', string(day_id(1)), ' matched day: ', string(day_id(2)))
-
+cd(fn_multi)
 fid = fopen('sessionsMatched.txt','wt');
 fprintf(fid, days_text);
 fclose(fid);

@@ -1,6 +1,13 @@
 %% looking at wheel speed
 
-[wheel_speed] = wheelSpeedCalc(input,32,'purple');
+[wheel_speed] = wheelSpeedCalc(input,32,'orange');
+%arguments for wheelSpeedCals:  the name of your mWorks input
+%structure (by default, it's just called "input"; the number of clicks in a
+%rotation of the encoderm which is 32; which wheel you used, because thye
+%are different sizes so a full rotation corresponds to a different distance
+%of running depending on which wheel. %orange is teh hard plastic organe or
+%blue ones, "purple" is the spongey purple one, "red" is the tilted red
+%plastic one.
 figure; plot(wheel_speed)
 wheel_tc = zeros(nOns+nOffs, nTrials);
 for iTrial = 1:nTrials
@@ -11,7 +18,5 @@ figure; movegui('center')
 plot(wheel_trial_avg)
 
 RIx = wheel_trial_avg>0.5;
-ind1 = find(wheel_trial_avg<=0);
-ind2 = find(wheel_trial_avg>0 & wheel_trial_avg<0.2);
-ind3 = find(wheel_trial_avg>=0.2);
+
 
