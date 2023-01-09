@@ -11,15 +11,16 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '221104';
+date = '230106';
 ImgFolder = '001';
-time = '1230';
+time = '1650';
 mouse = 'i1377';
 frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
 
+fprintf([datemouse '\n'])
 %Load 2P data
 %Load mworks data- this has information about experiment (e.g. the visual stimuli presented and synchronization with the microscope)
 fName = fullfile(mworks_fn, ['data-' mouse '-' date '-' time '.mat']);
@@ -404,7 +405,7 @@ end
 data = load(fullfile(data_fn,mouse,date,ImgFolder,[ImgFolder '_000_000_eye.mat']));
 data=squeeze(data.data);
 [data_crop rect] = cropEyeData(data); 
-eyeData = extractEyeData(data_crop,[3 25]);
+eyeData = extractEyeData(data_crop,[3 15]);
 pupil_tc = sqrt(eyeData.Area/pi);
 pupil_tc = pupil_tc(1:size(npSub_tc,1));
 
