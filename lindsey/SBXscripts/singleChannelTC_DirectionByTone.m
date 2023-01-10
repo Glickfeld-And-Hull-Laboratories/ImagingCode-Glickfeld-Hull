@@ -11,10 +11,10 @@ mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '230106';
+date = '230110';
 ImgFolder = '001';
 time = '1650';
-mouse = 'i1377';
+mouse = 'i1378';
 frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
