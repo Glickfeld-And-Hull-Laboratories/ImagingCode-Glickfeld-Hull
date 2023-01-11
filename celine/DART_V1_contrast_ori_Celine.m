@@ -6080,3 +6080,32 @@ expt(217).contrastxori_time = {'1717'};
 expt(217).data_loc = 'ACh';
 expt(217).wheelColor = 'orange';
 %
+%% i2073 
+expt(218).SubNum = 'i2073';
+expt(218).mouse = 'i2073';
+expt(218).date = '220311';
+expt(218).folder = '2P';
+expt(218).img_loc  = {'V1';'L2/3'};
+expt(218).z = 182
+expt(218).obj = '16x';
+expt(218).zoom = 2;
+expt(218).frame_rate = 15;
+expt(218).multiday_timesincedrug_hours = 'baseline'
+expt(218).multiday_matchdays = [];
+expt(218).regImgStartFrame = '';
+expt(218).motionThreshold = 0.05;
+expt(218).areaBorders = 0;
+expt(218).img_strct  = {'cells'};
+expt(218).indicator = {'virus';'GCaMP8f'};
+expt(218).drug = 'DART2.0-atropine';
+expt(218).greenredsimultaneous = 1;
+expt(218).greenChannelLabel = 'ANY';
+expt(218).redChannelLabel = '';
+expt(218).redChannelTag = {'tdTomato','HT'};
+expt(218).redChannelRun = '001';
+expt(218).rettuning = {};
+expt(218).contrastxori_runs = {'003'};
+expt(218).contrastxori_time = {'1000'};
+expt(218).data_loc = 'ACh';
+expt(218).wheelColor = 'orange';
+%
