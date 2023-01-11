@@ -5,13 +5,13 @@ clc
 %%
 %find folders to load and experiment info
 
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P'; %folder to load files from
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\Analysis\2P'; %folder to load files from
 newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\Arc_Multi_Day_Comparisons'; %folder to save files to
 dataset = 'exp_list_arc_tjw'; %experiment list to pick files from
 eval(dataset); %load dataset
-d1 = 1; %day 1 in expt list
-d2 = 2; %day 2 in expt list
-d3 = 3; %day 3 in expt list
+d1 = 64; %day 1 in expt list
+d2 = 65; %day 2 in expt list
+d3 = 66; %day 3 in expt list
 mouse = expt(d1).mouse; %mouse
 ref_str = 'runs-003'; %string on file name to load
 ref_str_d1 = ['runs-',expt(d1).runs]; %need to fix this part***
@@ -87,6 +87,10 @@ title('Day 3');
 tuned_d1 = d1_ori.ind_theta90;
 tuned_d2 = d2_ori.ind_theta90;
 tuned_d3 = d3_ori.ind_theta90;
+lax_tuned_matched_d2 = find(ismember(match_d2, tuned_d1) | ismember(match_d2, tuned_d2));
+lax_tuned_matched_d3 = find(ismember(match_d3, tuned_d1) | ismember(match_d3, tuned_d3));
+
+%the below criteria might be too strict
 tuned_matched_d2 = find(ismember(match_d2, tuned_d1) & ismember(match_d2, tuned_d2));
 tuned_matched_d3 = find(ismember(match_d3, tuned_d1) & ismember(match_d3, tuned_d3));
 
@@ -108,7 +112,7 @@ xticks(0:20:180);
 yticks(0:20:180);
 line = refline(1,0);
 line.Color = 'k';
-legend(['Not Tuned (n = ', num2str(length(match_d2)-length(tuned_matched_d2)), ')'], ['Tuned (n = ', num2str(length(tuned_matched_d2)), ')'], 'Location', 'northwest')
+legend(['Not Well-Fit (n = ', num2str(length(match_d2)-length(tuned_matched_d2)), ')'], ['Well-Fit (n = ', num2str(length(tuned_matched_d2)), ')'], 'Location', 'northwest')
 subplot(2,1,2);
 scatter(prefori_d1_d3_match,prefori_d3_match);
 hold on
@@ -123,14 +127,14 @@ yticks(0:20:180);
 refline(1,0);
 line = refline(1,0);
 line.Color = 'k';
-legend(['Not Tuned (n = ', num2str(length(match_d3)-length(tuned_matched_d3)), ')'], ['Tuned (n = ', num2str(length(tuned_matched_d3)), ')'], 'Location', 'northwest')
+legend(['Not Well-Fit (n = ', num2str(length(match_d3)-length(tuned_matched_d3)), ')'], ['Well-Fit (n = ', num2str(length(tuned_matched_d3)), ')'], 'Location', 'northwest')
 
 if str2double(expt(d1).img_day) == 1
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_multi_day_matches.pdf']), '-dpdf', '-bestfit')
-    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_ori_changes.mat']), 'prefori_d1_d2_match', 'prefori_d1_d3_match', 'prefori_d2_match', 'prefori_d3_match', 'tuned_matched_d2', 'tuned_matched_d3')
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_change_ori_scatter.pdf']), '-dpdf', '-bestfit')
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_ori_changes.mat']), 'prefori_d1_d2_match', 'prefori_d1_d3_match', 'prefori_d2_match', 'prefori_d3_match', 'lax_tuned_matched_d2', 'lax_tuned_matched_d3')
 else
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_multi_day_matches_2.pdf']), '-dpdf', '-bestfit')
-        save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_ori_changes_2.mat']), 'prefori_d1_d2_match', 'prefori_d1_d3_match', 'prefori_d2_match', 'prefori_d3_match', 'tuned_matched_d2', 'tuned_matched_d3')
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_change_ori_scatter_2.pdf']), '-dpdf', '-bestfit')
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_ori_changes_2.mat']), 'prefori_d1_d2_match', 'prefori_d1_d3_match', 'prefori_d2_match', 'prefori_d3_match', 'lax_tuned_matched_d2', 'lax_tuned_matched_d3')
 
 end
 
@@ -157,34 +161,28 @@ dscore_prefori_d3_match = abs(dscore_prefori_d3_match-prefori_d3_match);
 
 
 
-d_score_d1_d2 = abs(dscore_prefori_d1_d2_match(tuned_matched_d2)-dscore_prefori_d2_match(tuned_matched_d2));
-d_score_d1_d3 = abs(dscore_prefori_d1_d3_match(tuned_matched_d3)-dscore_prefori_d3_match(tuned_matched_d3));
+d_score_prefori_d1_d2 = abs(dscore_prefori_d1_d2_match(lax_tuned_matched_d2)-dscore_prefori_d2_match(lax_tuned_matched_d2));
+d_score_prefori_d1_d3 = abs(dscore_prefori_d1_d3_match(lax_tuned_matched_d3)-dscore_prefori_d3_match(lax_tuned_matched_d3));
 
-d_scores_all = [d_score_d1_d2, d_score_d1_d3];
-
-
-if str2double(expt(d1).img_day) == 1
-    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_d_scores.mat']), 'd_scores_all', 'd_score_d1_d2', 'd_score_d1_d3')
-else
-    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_d_scores_2.mat']), 'd_scores_all', 'd_score_d1_d2', 'd_score_d1_d3')
-end
+d_scores_prefori_all = [d_score_prefori_d1_d2, d_score_prefori_d1_d3];
 
 figure; 
-h=cdfplot(d_score_d1_d2);
+h=cdfplot(d_score_prefori_d1_d2);
 hold on
-j=cdfplot(d_score_d1_d3);
+j=cdfplot(d_score_prefori_d1_d3);
 set(h, 'LineStyle', '-', 'Color', 'b');
 set(j, 'LineStyle', '--', 'Color', 'b');
 hold off
-legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend(['Day 1 vs. Day 2 (n = ', num2str(length(d_score_prefori_d1_d2)), ')'], ['Day 1 vs. Day 3 (n = ', num2str(length(d_score_prefori_d1_d3)), ')'], 'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
 xlabel('Change in Pref Ori')
 xlim([0 90]);
 title([mouse, ' ', img_area, ' ', img_layer], 'Interpreter', 'None');
 
 if str2double(expt(d1).img_day) == 1
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_ori.pdf']), '-dpdf', '-bestfit')
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_ori_cdf.pdf']), '-dpdf', '-bestfit')
 else
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_ori_2.pdf']), '-dpdf', '-bestfit')
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_ori_cdf_2.pdf']), '-dpdf', '-bestfit')
 
 end
 
@@ -208,13 +206,13 @@ scatter(k_d1_d2_match(tuned_matched_d2),k_d2_match(tuned_matched_d2),'r');
 hold off
 xlabel('Day 1 k Value');
 ylabel('Day 2 k Value');
-%xlim([0,180]);
-%ylim([0,180]);
+xlim([0,30]);
+ylim([0,30]);
 %xticks(0:20:180);
 %yticks(0:20:180);
 line = refline(1,0);
 line.Color = 'k';
-legend(['Not Tuned (n = ', num2str(length(match_d2)-length(tuned_matched_d2)), ')'], ['Tuned (n = ', num2str(length(tuned_matched_d2)), ')'], 'Location', 'northwest')
+legend(['Not Well-Fit (n = ', num2str(length(match_d2)-length(tuned_matched_d2)), ')'], ['Well-Fit (n = ', num2str(length(tuned_matched_d2)), ')'], 'Location', 'northwest')
 subplot(2,1,2);
 scatter(k_d1_d3_match,k_d3_match);
 hold on
@@ -222,26 +220,27 @@ scatter(k_d1_d3_match(tuned_matched_d3),k_d3_match(tuned_matched_d3),'r');
 hold off
 xlabel('Day 1 k Value');
 ylabel('Day 3 k Value');
-%xlim([0,180]);
-%ylim([0,180]);
+xlim([0,30]);
+ylim([0,30]);
 %xticks(0:20:180);
 %yticks(0:20:180);
 refline(1,0);
 line = refline(1,0);
 line.Color = 'k';
-legend(['Not Tuned (n = ', num2str(length(match_d3)-length(tuned_matched_d3)), ')'], ['Tuned (n = ', num2str(length(tuned_matched_d3)), ')'], 'Location', 'northwest')
+legend(['Not Well-Fit (n = ', num2str(length(match_d3)-length(tuned_matched_d3)), ')'], ['Well-Fit (n = ', num2str(length(tuned_matched_d3)), ')'], 'Location', 'northwest')
 
 if str2double(expt(d1).img_day) == 1
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k.pdf']), '-dpdf', '-bestfit')
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k_scatter.pdf']), '-dpdf', '-bestfit')
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_k_changes.mat']), 'k_d1_d2_match', 'k_d1_d3_match', 'k_d2_match', 'k_d3_match')
 else
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k_2.pdf']), '-dpdf', '-bestfit')
-
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k_scatter_2.pdf']), '-dpdf', '-bestfit')
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_k_changes_2.mat']), 'k_d1_d2_match', 'k_d1_d3_match', 'k_d2_match', 'k_d3_match')
 end
 
 %d1_2
-dscore_k_d1_d2_match = abs(k_d1_d2_match(tuned_matched_d2)-k_d2_match(tuned_matched_d2));
+dscore_k_d1_d2_match = abs(k_d1_d2_match(lax_tuned_matched_d2)-k_d2_match(lax_tuned_matched_d2));
 %d1_d3
-dscore_k_d1_d3_match = abs(k_d1_d3_match(tuned_matched_d3)-k_d3_match(tuned_matched_d3));
+dscore_k_d1_d3_match = abs(k_d1_d3_match(lax_tuned_matched_d3)-k_d3_match(lax_tuned_matched_d3));
 
 figure; 
 h=cdfplot(dscore_k_d1_d2_match);
@@ -250,57 +249,96 @@ j=cdfplot(dscore_k_d1_d3_match);
 set(h, 'LineStyle', '-', 'Color', 'b');
 set(j, 'LineStyle', '--', 'Color', 'b');
 hold off
-legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend(['Day 1 vs. Day 2 (n = ', num2str(length(dscore_k_d1_d2_match)), ')'], ['Day 1 vs. Day 3 (n = ', num2str(length(dscore_k_d1_d3_match)), ')'], 'Location', 'best')
 xlabel('Change in k Value')
 %xlim([0 90]);
 title([mouse, ' ', img_area, ' ', img_layer], 'Interpreter', 'None');
 
-%% MAX VALUES - START HERE - NEED TO SAVE ABOVE OUTPUT AND DO THE SAME FOR MAX VALS THEN WORK ON POOLING
+if str2double(expt(d1).img_day) == 1
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k_cdf.pdf']), '-dpdf', '-bestfit')
+else
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k_cdf_2.pdf']), '-dpdf', '-bestfit')
+end
+
+%% MAX VALUES
 
 %find pref oris of matched cells for d1 and d2
-k_d1_d2_match = d1_k_max.k1(1,match_d2);
-k_d2_match = d2_k_max.k1(1,match_d2);
+max_d1_d2_match = d1_k_max.max_dfof(1,match_d2);
+max_d2_match = d2_k_max.max_dfof(1,match_d2);
 
 %find pref oris of matched cells for d1 and d2
-k_d1_d3_match = d1_k_max.k1(1,match_d3);
-k_d3_match = d1_k_max.k1(1,match_d3);
+max_d1_d3_match = d1_k_max.max_dfof(1,match_d3);
+max_d3_match = d3_k_max.max_dfof(1,match_d3);
 
 
 figure('Position', [400 10 650 800]);
 sgtitle([mouse, ' ', img_area, ' ', img_layer], 'Interpreter', 'None');
 subplot(2,1,1);
-scatter(k_d1_d2_match,k_d2_match);
+scatter(max_d1_d2_match,max_d2_match);
 hold on
-scatter(k_d1_d2_match(tuned_matched_d2),k_d2_match(tuned_matched_d2),'r');
+scatter(max_d1_d2_match(tuned_matched_d2),max_d2_match(tuned_matched_d2),'r');
 hold off
-xlabel('Day 1 k Value');
-ylabel('Day 2 k Value');
-%xlim([0,180]);
-%ylim([0,180]);
+xlabel('Day 1 Max dF/F Value');
+ylabel('Day 2 Max dF/F Value');
+xlim([0,1]);
+ylim([0,1]);
 %xticks(0:20:180);
 %yticks(0:20:180);
 line = refline(1,0);
 line.Color = 'k';
-legend(['Not Tuned (n = ', num2str(length(match_d2)-length(tuned_matched_d2)), ')'], ['Tuned (n = ', num2str(length(tuned_matched_d2)), ')'], 'Location', 'northwest')
+legend(['Not Well-Fit (n = ', num2str(length(match_d2)-length(tuned_matched_d2)), ')'], ['Well-Fit (n = ', num2str(length(tuned_matched_d2)), ')'], 'Location', 'northwest')
 subplot(2,1,2);
-scatter(k_d1_d3_match,k_d3_match);
+scatter(max_d1_d3_match,max_d3_match);
 hold on
-scatter(k_d1_d3_match(tuned_matched_d3),k_d3_match(tuned_matched_d3),'r');
+scatter(max_d1_d3_match(tuned_matched_d3),max_d3_match(tuned_matched_d3),'r');
 hold off
-xlabel('Day 1 k Value');
-ylabel('Day 3 k Value');
-%xlim([0,180]);
-%ylim([0,180]);
+xlabel('Day 1 Max dF/F Value');
+ylabel('Day 3 Max dF/F Value');
+xlim([0,1]);
+ylim([0,1]);
 %xticks(0:20:180);
 %yticks(0:20:180);
 refline(1,0);
 line = refline(1,0);
 line.Color = 'k';
-legend(['Not Tuned (n = ', num2str(length(match_d3)-length(tuned_matched_d3)), ')'], ['Tuned (n = ', num2str(length(tuned_matched_d3)), ')'], 'Location', 'northwest')
+legend(['Not Well-Fit (n = ', num2str(length(match_d3)-length(tuned_matched_d3)), ')'], ['Well-Fit (n = ', num2str(length(tuned_matched_d3)), ')'], 'Location', 'northwest')
 
 if str2double(expt(d1).img_day) == 1
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k.pdf']), '-dpdf', '-bestfit')
-else
-    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_k_2.pdf']), '-dpdf', '-bestfit')
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_max_scatter.pdf']), '-dpdf', '-bestfit')
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_max_changes.mat']), 'max_d1_d2_match', 'max_d1_d3_match', 'max_d2_match', 'max_d3_match')
 
+else
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_max_scatter_2.pdf']), '-dpdf', '-bestfit')
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_max_changes_2.mat']), 'max_d1_d2_match', 'max_d1_d3_match', 'max_d2_match', 'max_d3_match')
+
+end
+
+%d1_2
+dscore_max_d1_d2_match = abs(max_d1_d2_match(lax_tuned_matched_d2)-max_d2_match(lax_tuned_matched_d2));
+%d1_d3
+dscore_max_d1_d3_match = abs(max_d1_d3_match(lax_tuned_matched_d3)-max_d3_match(lax_tuned_matched_d3));
+
+figure; 
+h=cdfplot(dscore_max_d1_d2_match);
+hold on
+j=cdfplot(dscore_max_d1_d3_match);
+set(h, 'LineStyle', '-', 'Color', 'b');
+set(j, 'LineStyle', '--', 'Color', 'b');
+hold off
+legend(['Day 1 vs. Day 2 (n = ', num2str(length(dscore_max_d1_d2_match)), ')'], ['Day 1 vs. Day 3 (n = ', num2str(length(dscore_max_d1_d3_match)), ')'], 'Location', 'best')
+xlabel('Change in Max dF/F Value')
+%xlim([0 90]);
+title([mouse, ' ', img_area, ' ', img_layer], 'Interpreter', 'None');
+
+if str2double(expt(d1).img_day) == 1
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_max_cdf.pdf']), '-dpdf', '-bestfit')
+else
+    print(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW_change_max_cdf_2.pdf']), '-dpdf', '-bestfit')
+end
+
+%%
+if str2double(expt(d1).img_day) == 1
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_d_scores.mat']), 'd_score_prefori_d1_d2', 'd_score_prefori_d1_d3', 'dscore_k_d1_d2_match', 'dscore_k_d1_d3_match', 'dscore_max_d1_d2_match', 'dscore_max_d1_d3_match')
+else
+    save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_RW', '_d_scores_2.mat']), 'd_score_prefori_d1_d2', 'd_score_prefori_d1_d3', 'dscore_k_d1_d2_match', 'dscore_k_d1_d3_match', 'dscore_max_d1_d2_match', 'dscore_max_d1_d3_match')
 end
