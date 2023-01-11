@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 215;
+day_id = 218;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -301,11 +301,23 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
 elseif ~exist('redChImg')
     redChImg = zeros(size(regImg));
 end
+
+
+%create red image where any pixel value above a certain percentile of the max is set to 90%
+%of the max - removing the highest 10% of pixel values to create a lower
+%contrast image for segmenting
+threshPercentile = 99;
+
+highValues = find(redChImg>prctile(redChImg,threshPercentile,'all'));
+redThresh = redChImg;
+redThresh(highValues)=prctile(redChImg,threshPercentile,'all');
+
+
 clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redThresh,redThresh,redThresh); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
@@ -354,7 +366,7 @@ save(fullfile(fnout, 'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_cell_red'
 
 
 rgb = zeros(sz(1),sz(2),3);
-    rgb(:,:,1) = redChImg./max(redChImg(:));
+    rgb(:,:,1) = redChImg./(max(redChImg(:))*.2);
     rgb(:,:,2) = regImg./max(regImg(:));
     figure; image(rgb);  movegui('center')
 
