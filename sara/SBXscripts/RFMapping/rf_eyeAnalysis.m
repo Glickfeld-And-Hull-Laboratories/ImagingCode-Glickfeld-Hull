@@ -6,7 +6,7 @@ rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 %%
-for iexp = 1
+for iexp = 3
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
@@ -212,11 +212,10 @@ print(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
      %reset frame counter    
      if exist('input.cStimOneOn', 'var')
         cStimOn = celleqel2mat_padded(input.cStimOneOn);
-     else
-         counter = celleqel2mat_padded(input.counter);
-         cStimOn = counter + 1 - double(nOn+nOff); %magic number
+     else 
+         cStimOn = (nOff + 1):(nOff+nOn):nFrames;
      end 
-
+        
      if ~exist('prewin_frames', 'var')   
         prewin_frames = nOff;
         postwin_frames = nOn;
