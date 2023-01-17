@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '220606';
-mouse = 'i1372';
+date = '230116';
+mouse = 'i1374';
 ImgFolder = '001';
-time = '1428';
+time = '1423';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -152,9 +152,12 @@ expt_input = concatenateDataBlocks(temp);
         xlabel('Azimuth');
         ylabel('Elevation');
         colorbar
+%         caxis("auto")
+%         clim([0 pixThreshold/.4])
+%         clim([-0.1 0.1])
         caxis([0 pixThreshold/.4])
         caxis([-0.1 0.1])
-    
+
     else
         data_tc = squeeze(mean(mean(data,1),2));
         data_tr = reshape(data_tc,[nOn+nOff, ntrials]);
