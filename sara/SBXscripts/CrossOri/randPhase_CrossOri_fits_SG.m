@@ -1,22 +1,22 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_15Hz_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList_SG';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
-ex_exp = [5 12 13];
+% ex_exp = [5 12 13];
 nanframes = zeros(1,nexp);
 max_dist = 2;
 
-for iexp =  7  %setdiff(1:nexp, ex_exp)
+for iexp =  47  %setdiff(1:nexp, ex_exp)
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     area = expt(iexp).img_loc{1};
     ImgFolder = expt(iexp).coFolder;
     time = expt(iexp).coTime;
     nrun = length(ImgFolder);
-    run_str = catRunName(cell2mat(ImgFolder), nrun);
+    run_str = 'runs-002';
     
         if strcmp(expt(iexp).saveLoc,'sara')
             base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
@@ -209,7 +209,7 @@ end
 
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_15Hz_ExptList';
+ds = 'CrossOriRandPhase_15Hz_ExptList_SG';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
@@ -218,7 +218,7 @@ ex_exp = [5 12 13];
 nanframes = zeros(1,nexp);
 max_dist = 2;
 
-for iexp = setdiff(1:nexp, ex_exp)
+for iexp = [46]
     
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
@@ -226,7 +226,7 @@ for iexp = setdiff(1:nexp, ex_exp)
         ImgFolder = expt(iexp).coFolder;
         time = expt(iexp).coTime;
         nrun = length(ImgFolder);
-        run_str = catRunName(cell2mat(ImgFolder), nrun);
+        run_str = 'runs-002';
 
 
         if strcmp(expt(iexp).saveLoc,'sara')

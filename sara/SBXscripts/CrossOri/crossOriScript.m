@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
 ds = 'CrossOriRandPhase_15Hz_ExptList_SG';
-iexp = 20; 
+iexp = 36; 
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
@@ -93,7 +93,7 @@ nep = floor(size(data,3)./regIntv);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,20001:20500),3);
+data_avg = mean(data(:,:,15001:15500),3);
 if doPhaseAfterDir || doDirAfterPass
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);
@@ -144,6 +144,7 @@ if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
     [rg_out rg_reg] = stackRegister(data_red_g,data_avg);
     [rr_out rr_reg] = stackRegister_MA(data_red_r,[],[],rg_out);
 
+    
     data_red_avg = mean(rr_reg,3);
     figure; imagesc(data_red_avg);
     
@@ -424,6 +425,7 @@ end
 clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg data_resp data_resp_dfof bwout
 
  %% neuropil subtraction
+ 
 if ~doPhaseAfterDir & ~doDirAfterPass
     mask_np = imCellNeuropil(mask_cell, 3, 5);
     save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')
