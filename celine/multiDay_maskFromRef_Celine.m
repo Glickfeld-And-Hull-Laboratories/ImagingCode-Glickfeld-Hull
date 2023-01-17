@@ -8,9 +8,9 @@ eval(ds);
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 166;
+day_id = 186;
 
-refFolder = '003'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION, 
+refFolder = '002'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION, 
 %TO IMPORT MASKS FROM
 
 

@@ -4,20 +4,21 @@
 %response plasticity/stability to tuning
 clear all;
 clear global;
+close all;
 clc;
 %% get path names D2
-ref_date = '220318';
-date = '220324';
-time = strvcat('1542');
+ref_date = '221220';
+date = '221227';
+time = strvcat('1057');
 alignToRef = 1;
 ImgFolder = strvcat('001');
-mouse = 'i1370';
+mouse = 'i2538';
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
-ref_str = 'runs-001';
+ref_str = 'runs-002';
 run_str = catRunName(ImgFolder, nrun);
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
 %fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load and register - same as d1 code
@@ -30,7 +31,8 @@ for irun = 1:nrun
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
-    fName = fullfile(behav_fn, ['data-i' '''' mouse '''' '-' date '-' time(irun,:) '.mat']);
+%     fName = fullfile(behav_fn, ['data-i' '''' mouse '''' '-' date '-' time(irun,:) '.mat']);
+    fName = fullfile(behav_fn, ['data-'  mouse  '-' date '-' time(irun,:) '.mat']); %find behavior data
     load(fName);
 
     nframes = info.config.frames;
@@ -71,7 +73,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((
 
 %% Register data - identify clearest stack and align frames to that
 
-data_avg = mean(data(:,:,8001:8500),3); 
+data_avg = mean(data(:,:,24001:26500),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -104,8 +106,9 @@ if isfield(input, 'nScansOn')
     if nOn>29
         sz = size(data_reg);
 %         make data_tr smaller for dfof images to not use all of the memory
+        data_tr = reshape(single(data_reg(:,:,1:28800)),[sz(1), sz(2), nOn+nOff, 320]);
 
-        data_tr = reshape(single(data_reg(:,:,1:nframes)),[sz(1), sz(2), nOn+nOff, ntrials]);
+%         data_tr = reshape(single(data_reg(:,:,1:nframes)),[sz(1), sz(2), nOn+nOff, ntrials]);
 
         data_f = mean(double(data_tr(:,:,nOff/2:nOff,:)),3);
         data_df = bsxfun(@minus, double(data_tr), data_f); 
@@ -228,7 +231,8 @@ inputD1 = load(fullfile(fnout, [ref_date '_' mouse], [ref_date '_' mouse '_' ref
 
 fov_avg{1} = shiftsD1.data_reg_avg; %d1 fov across all frames
 dfmax{1} = dfofD1.data_dfof_max; %d1 max
-cellTCs_all{1} = TCs_D1.npSub_tc; %np-subtracted TC from d1
+% cellTCs_all{1} = TCs_D1.npSub_tc; %np-subtracted TC from d1
+cellTCs_all{1} = TCs_D1.cellTCs_match{2};
 input_temp(1) = inputD1; %input (behavioral setup) from d1
 corrmap{1} = pixelD1.pix; %pix corr from d1
 masks{1} = maskD1.mask_cell; %cell mask from d1
@@ -396,6 +400,7 @@ for icell = 1:nc %for each cell
             imagesc(reg_max)
             title(num2str(r_max))
             prompt = 'Choose image: 1- Corr, 2- Avg/Red, 3- Max, 0- skip: ';
+            drawnow
             x = input(prompt); %this is why we cleared input above?***
             switch x %switch between cases
                 case 0 %if 0 then no shift made and pass is = to false

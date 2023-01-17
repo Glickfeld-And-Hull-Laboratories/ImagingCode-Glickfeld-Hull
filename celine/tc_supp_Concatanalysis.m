@@ -20,9 +20,8 @@ beh_prefix = strcat('Z:\Behavior\Data\data-');
 beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
-run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
-datemouserun = [date '_' mouse '_' run_str];
+datemouserun = [date '_' mouse '_' ImgFolder];
 
 
 load('TCs.mat');
@@ -52,9 +51,8 @@ beh_prefix = strcat('Z:\Behavior\Data\data-');
 beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
-run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
-datemouserun = [date '_' mouse '_' run_str];
+datemouserun = [date '_' mouse '_' ImgFolder];
 
 
 load('TCs.mat');
@@ -82,9 +80,8 @@ beh_prefix = strcat('Z:\Behavior\Data\data-');
 beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
-run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
-datemouserun = [date '_' mouse '_' run_str];
+datemouserun = [date '_' mouse '_' ImgFolder];
 
 
 load('TCs.mat');
@@ -113,9 +110,9 @@ beh_prefix = strcat('Z:\Behavior\Data\data-');
 beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
-run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
-datemouserun = [date '_' mouse '_' run_str];
+datemouserun = [date '_' mouse '_' ImgFolder];
+
 
 
 load('TCs.mat');
@@ -143,9 +140,9 @@ beh_prefix = strcat('Z:\Behavior\Data\data-');
 beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
-run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
-datemouserun = [date '_' mouse '_' run_str];
+datemouserun = [date '_' mouse '_' ImgFolder];
+
 
 
 load('TCs.mat');
@@ -187,8 +184,8 @@ figure;
         
         for iCon = 1:nCons
 
-        temp_mean = nanmean(meanTC_byCondition(:,iSize,iCon,:),4);
-        temp_se = std(meanTC_byCondition(:,iSize,iCon,:),[],4)/sqrt(nCells);
+        temp_mean = mean(meanTC_byCondition(:,iSize,iCon,:),4,'omitnan');
+        temp_se = std(meanTC_byCondition(:,iSize,iCon,:),[],4,'omitnan')/sqrt(nCells);
 
         subplot(n,n2,x)
 
@@ -226,11 +223,11 @@ figure;
         
         for iCon = 1:nCons
         
-        temp_mean = nanmean(TC_byConditionLoc(:,iSize,iCon,:),4);
-        temp_se = nanstd(TC_byConditionLoc(:,iSize,iCon,:),[],4)/sqrt(nCells);
+        temp_mean = mean(TC_byConditionLoc(:,iSize,iCon,:),4,'omitnan');
+        temp_se = std(TC_byConditionLoc(:,iSize,iCon,:),[],4,'omitnan')/sqrt(nCells);
         
-        temp_mean2 = nanmean(TC_byConditionStat(:,iSize,iCon,:),4);
-        temp_se2 = nanstd(TC_byConditionStat(:,iSize,iCon,:),[],4)/sqrt(nCells);
+        temp_mean2 = mean(TC_byConditionStat(:,iSize,iCon,:),4,'omitnan');
+        temp_se2 = std(TC_byConditionStat(:,iSize,iCon,:),[],4,'omitnan')/sqrt(nCells);
 
         subplot(n,n2,x)
 
@@ -264,7 +261,7 @@ figure;
 
         subplot(n,n2,x)
         
-        x_axis = [nanmean(responseWins(1,iSize,iCon,:)),nanmean(responseWins(2,iSize,iCon,:)),nanmean(responseWins(3,iSize,iCon,:))];
+        x_axis = [mean(responseWins(1,iSize,iCon,:),'omitnan'),mean(responseWins(2,iSize,iCon,:),'omitnan'),mean(responseWins(3,iSize,iCon,:),'omitnan')];
         y = [std(responseWins(1,iSize,iCon,:))/sqrt(size(responseWins,4)),std(responseWins(2,iSize,iCon,:))/sqrt(size(responseWins,4)),std(responseWins(3,iSize,iCon,:))/sqrt(size(responseWins,4))];
 
         labs =categorical({'Win1','Win2','Win3'});
