@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 214; %enter the refrence day ID here
+day_id(1) = 222; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -212,6 +212,19 @@ goodCells = goodCells & ...
     % fine register each cell    
 mask_exp = zeros(size(fov_avg{1}));
 mask_all = zeros(size(fov_avg{1}));
+
+threshPercentile = 99;
+
+thresholdedRed=cell(1,3);
+for i=1:3
+    currentRed=fov_red{i};
+    highValues = find(currentRed>prctile(currentRed,threshPercentile,'all'));
+    redThresh = currentRed;
+    redThresh(highValues)=prctile(currentRed,threshPercentile,'all');
+    thresholdedRed{i}=redThresh;
+end
+
+
             
 start = 1;
 for icell = 1:nc
@@ -244,10 +257,10 @@ for icell = 1:nc
         [reg_corr, shift_corr] = shift_opt(day2_cell_corr,day1_cell_corr,2);
         r_corr = corr(reg_corr(:),day1_cell_corr(:));
         if red_ind{1}(icell)
-            day1_red_avg = fov_red{1}(...
+            day1_red_avg = thresholdedRed{1}(...
             yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
             xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-            day2_red_avg = fov_red{3}(...
+            day2_red_avg = thresholdedRed{3}(...
             yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
             xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
             [red_reg_avg, shift_red] = shift_opt(double(day2_red_avg),double(day1_red_avg),2);
@@ -306,7 +319,7 @@ for icell = 1:nc
                     shifts = shift_corr;
                 case 2
                     if red_ind{1}(icell)
-                        img_select = fov_red{3};
+                        img_select = thresholdedRed{3};
                         shifts = shift_red;
                     else
                         img_select = fov_avg{3};

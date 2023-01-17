@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-day_id = 217; %enter post-DART day
+day_id = 222; %enter post-DART day
 %day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
@@ -51,10 +51,10 @@ imagesc(redChImg), colormap gray; caxis([200 1000]);
 hold on
 bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',1); 
-hold on;
-cell_stats=regionprops(mask_all_OG);
-bound = cell2mat(bwboundaries(mask_all_OG(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',1);
+% hold on;
+% cell_stats=regionprops(mask_all_OG);
+% bound = cell2mat(bwboundaries(mask_all_OG(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',1);
 
 % 
 % for iC = 1:max(max(mask_cell_red))

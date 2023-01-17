@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 218;
+day_id = 222;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -311,7 +311,8 @@ threshPercentile = 99;
 highValues = find(redChImg>prctile(redChImg,threshPercentile,'all'));
 redThresh = redChImg;
 redThresh(highValues)=prctile(redChImg,threshPercentile,'all');
-
+figure; imagesc(redChImg);colormap gray;
+figure; imagesc(redThresh);colormap gray;
 
 clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
@@ -366,7 +367,7 @@ save(fullfile(fnout, 'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_cell_red'
 
 
 rgb = zeros(sz(1),sz(2),3);
-    rgb(:,:,1) = redChImg./(max(redChImg(:))*.2);
+    rgb(:,:,1) = redChImg./(max(redChImg(:))*.5);
     rgb(:,:,2) = regImg./max(regImg(:));
     figure; image(rgb);  movegui('center')
 
@@ -536,8 +537,8 @@ data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = mean(data_dfof_trial(:,:,:),3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(mean(data_dfof_trial(:,:,:),2));%average over trials, one row per cell
+tc_cell_avrg = mean(data_dfof_trial(:,:,resp),3);%average pver cells, one row per trial
+tc_trial_avrg = squeeze(mean(data_dfof_trial(:,:,resp),2));%average over trials, one row per cell
 tc_cell_trial_avrg = mean(tc_cell_avrg,2);%average over trials and cells
 
 figure;

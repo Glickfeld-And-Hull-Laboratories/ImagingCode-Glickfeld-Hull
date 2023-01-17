@@ -8,7 +8,7 @@ eval(ds);
 % 136 141 161 153 169 183 177 189
 % 131 133 138 142 163 171 178 190 24 hour
 % 206 210 214 atropine
-sess_list = [133 138 142 163 171 178 190];%enter all the sessions you want to concatenate
+sess_list = [222];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -28,7 +28,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
             end
 clear x prompt
 
-targetCon = [.5 1]%what contrast to extract for all data - must be one that all datasets had
+targetCon = [.25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 
 frame_rate = 15;
 
@@ -76,8 +76,8 @@ R_values_concat=[];
 wheel_corr_concat=cell(1,nd);
 meanF_concat=cell(1,nd);
 mean_green_concat=cell(1,nd);
-norm_dir_resp_stat_concat = cell(1,nd);
-norm_dir_resp_loc_concat = cell(1,nd);
+%norm_dir_resp_stat_concat = cell(1,nd);
+%norm_dir_resp_loc_concat = cell(1,nd);
 % pref_dir_concat=cell(1,nd);
 
 
@@ -129,8 +129,8 @@ for iSess = 1:nSess
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
-    %redR_concat = [redR_concat,R_red];
-    %R_values_concat = [R_values_concat, R_p_values];
+    redR_concat = [redR_concat,R_red];
+    R_values_concat = [R_values_concat, R_p_values];
 %     statCounts = [statCounts,trialCounts.preStat(1);trialCounts.postStat(1)];
 %     locCounts = [locCounts,trialCounts.preLoc(1);trialCounts.postLoc(1)]
     clear cons
@@ -149,9 +149,9 @@ for iSess = 1:nSess
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
        meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
-       norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
-       norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
-       %pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
+%        %norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
+%        norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
+%        pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
 %       mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
         clear meanF
     end
@@ -508,7 +508,7 @@ figure
 subplot(1,2,1) %for the first day
 
 
-%ylim([-.02 .3]);
+ylim([-.02 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon),tc_green_se_loc{pre}(:,iCon),'k');
 hold on
@@ -527,7 +527,7 @@ subplot(1,2,2) %for the second day
 shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon),tc_red_se_loc{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon),tc_red_se_loc{post}(:,iCon),'b');
-%ylim([-.02 .3]);
+ylim([-.02 .3]);
 hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
@@ -714,15 +714,15 @@ red_dir_se_stat = cell(1,nd); %same for red
 
 for id = 1:nd
    
-    green_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(green_all,:),1);
-    green_std=nanstd(norm_dir_resp_stat_concat{id}(green_all,:),[],1);
-    green_dir_se_stat{id}=green_std/sqrt(length(green_all));
+    green_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(green_ind_concat,:),1);
+    green_std=nanstd(norm_dir_resp_stat_concat{id}(green_ind_concat,:),[],1);
+    green_dir_se_stat{id}=green_std/sqrt(length(green_ind_concat));
     green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
     green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
     
-    red_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(red_all,:),1);
-    red_std=nanstd(norm_dir_resp_stat_concat{id}(red_all,:),[],1);
-    red_dir_se_stat{id}=red_std/sqrt(length(red_all));
+    red_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(red_ind_concat,:),1);
+    red_std=nanstd(norm_dir_resp_stat_concat{id}(red_ind_concat,:),[],1);
+    red_dir_se_stat{id}=red_std/sqrt(length(red_ind_concat));
     red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
     red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
     clear green_std red_std
@@ -754,7 +754,7 @@ for id = 1:nd
 end
 
 
-%% 
+
 figure
 subplot(2,2,1)
 errorbar(dirs_for_plotting,green_dir_avrg_stat{pre},green_dir_se_stat{pre},'k')
@@ -1027,8 +1027,8 @@ line([mean_pre, mean_pre],[(mean_post-stderror_post),(mean_post+stderror_post)],
 
 %ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
-% ylim([0 2.15])
-% xlim([0 2.15])
+ylim([0 2.15])
+xlim([0 2.15])
 hline=refline(1)
 hline.Color = 'k';
 hline.LineStyle = ':';
@@ -1670,7 +1670,7 @@ sgtitle('mean raw F over all frames')
 
 print(fullfile(fnout,['rawF_compare.pdf']),'-dpdf','-bestfit')
 
-%% make figure with se shaded, compared stationary and loc for
+%% make figure with se shaded, compared stationary and loc for each day
 
 z=double(nOn)/double(frame_rate);
 
@@ -1715,7 +1715,7 @@ height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 set(gca,'XColor', 'none','YColor','none')
 
-sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
+sgtitle(['-HTP, contrast = ' num2str(cons(iCon))])
 
 print(fullfile(fnout,[num2str(cons(iCon)) '_locVsStat_pyr_timecourses.pdf']),'-dpdf');
 end 
@@ -1760,7 +1760,7 @@ height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 set(gca,'XColor', 'none','YColor','none')
 
-sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
+sgtitle(['+HTP, contrast = ' num2str(cons(iCon))])
 
 print(fullfile(fnout,[num2str(cons(iCon)) '_locVsStat_HT_timecourses.pdf']),'-dpdf');
 end 
