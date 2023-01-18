@@ -7,14 +7,14 @@
 %% get path names
 clear all;clc;
 
-mouse = 'WK24';
-date = '220721';
+mouse = 'WK29';
+date = '230117';
 ImgFolder = char('001');
 doRed = 'true';
-RedImgFolder = char('004');
-time = char('1023');
+RedImgFolder = char('002');
+time = char('1000');
 doFromRef = 0;
-ref = char('002');
+ref = char('000');
 nrun = size(ImgFolder,1);
 frame_rate = 30;
 run_str = ['runs-' ImgFolder];
@@ -537,7 +537,7 @@ if doRed
         rgb(:,:,2) = reg_avg./max(reg_avg(:));
         figure; image(rgb);  movegui('center')
         title('Green-920 + Red-1040')
-        print(fullfile(fnout,'red_green_FOV.pdf'),'-dpdf','-bestfit')
+        print(fullfile(fnOut,'red_green_FOV.pdf'),'-dpdf','-bestfit')
     
         
         save('redImage','redChImg')

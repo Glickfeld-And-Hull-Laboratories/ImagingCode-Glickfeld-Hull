@@ -4,10 +4,10 @@ clear all; clear global; close all
 %identifying animal and run
 
 
-mouse = 'WK24';
-date = '220721';
-time = char('1106');
-ImgFolder = char('002');
+mouse = 'WK29';
+date = '230117';
+time = char('1045');
+ImgFolder = char('003');
 RetImgFolder = char('001');
 
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
@@ -187,7 +187,7 @@ figure;
         hold on
         shadedErrorBar(t,temp_mean2,temp_se2,'r');
         hold on
-        fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
         hold on
         fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
         hold on
@@ -276,8 +276,8 @@ RIx = wheel_trial_avg>2; %.55 is the noise level in the wheel movement
 mean(RIx)
 
 %%
-TC_byConditionLoc=nan(nOn+nOff,nSizes,nCons,length(interNrns));
-TC_byConditionStat=nan(nOn+nOff,nSizes,nCons,length(interNrns));
+TC_byConditionLoc_INs=nan(nOn+nOff,nSizes,nCons,length(interNrns));
+TC_byConditionStat_INs=nan(nOn+nOff,nSizes,nCons,length(interNrns));
 
 [n n2] = subplotn(nSizes*nCons);
 x=1;
@@ -290,14 +290,62 @@ figure;
         inds4=intersect(inds3,find(RIx));
         inds5=intersect(inds3,setdiff(1:nTrials,find(RIx)));
         temp_trials = squeeze(nanmean(data_tc_trial(:,inds4,interNrns),2));
-        TC_byConditionLoc(:,iSize,iCon,:)=temp_trials;
+        TC_byConditionLoc_INs(:,iSize,iCon,:)=temp_trials;
         temp_mean = nanmean(temp_trials,2);
         temp_se = std(temp_trials,[],2)/sqrt(length(interNrns));
         
         temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds5,interNrns),2));
-        TC_byConditionStat(:,iSize,iCon,:)=temp_trials2;
+        TC_byConditionStat_INs(:,iSize,iCon,:)=temp_trials2;
         temp_mean2 = nanmean(temp_trials2,2);
         temp_se2 = std(temp_trials2,[],2)/sqrt(length(interNrns));
+
+        subplot(n,n2,x)
+
+        shadedErrorBar(t,temp_mean,temp_se,'b');
+        hold on
+        shadedErrorBar(t,temp_mean2,temp_se2);
+        hold on
+        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        ylim([-.03 .1])
+        xlim([-2 2])
+        
+        hline(0)
+        hold off
+        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+        x=x+1;
+        end
+        
+
+    end
+  
+sgtitle([mouse, ', ', num2str(length(interNrns)),' INs'])
+
+
+TC_byConditionLoc_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells));
+TC_byConditionStat_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells));
+
+[n n2] = subplotn(nSizes*nCons);
+x=1;
+figure;
+    for iSize = 1:nSizes %loop through the sizes
+        inds1 = find(tSize == Sizes(iSize)); %find trials with that size
+        for iCon = 1:nCons
+        inds2 = find(tCons == Cons(iCon));
+        inds3 = intersect(inds1,inds2);
+        inds4=intersect(inds3,find(RIx));
+        inds5=intersect(inds3,setdiff(1:nTrials,find(RIx)));
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds4,pyrCells),2));
+        TC_byConditionLoc_Pyr(:,iSize,iCon,:)=temp_trials;
+        temp_mean = nanmean(temp_trials,2);
+        temp_se = std(temp_trials,[],2)/sqrt(length(pyrCells));
+        
+        temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds5,pyrCells),2));
+        TC_byConditionStat_Pyr(:,iSize,iCon,:)=temp_trials2;
+        temp_mean2 = nanmean(temp_trials2,2);
+        temp_se2 = std(temp_trials2,[],2)/sqrt(length(pyrCells));
 
         subplot(n,n2,x)
 
@@ -321,9 +369,10 @@ figure;
 
     end
   
-sgtitle([mouse, ', ', num2str(length(interNrns)),' INs'])
+sgtitle([mouse, ', ', num2str(length(pyrCells)),' Pyr'])
 
-%save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder,'TCs.mat'),'TC_byConditionStat','TC_byConditionLoc','meanTC_byCondition')
+
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder,'TCs.mat'),'TC_byConditionStat_INs','TC_byConditionLoc_INs','meanTC_byCondition')
 %%  ratio of dF/F in response window vs. late window(s)
 responseWins = nan(3,nSizes,nCons,length(goodFitResp));
 

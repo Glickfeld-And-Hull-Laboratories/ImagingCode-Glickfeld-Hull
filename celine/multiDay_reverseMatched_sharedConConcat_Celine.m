@@ -8,7 +8,7 @@ eval(ds);
 % 136 141 161 153 169 183 177 189
 % 131 133 138 142 163 171 178 190 24 hour
 % 206 210 214 atropine
-sess_list = [222];%enter all the sessions you want to concatenate
+sess_list = [138 142 163 171 178 190];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -2091,7 +2091,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 sgtitle(['stationary, all keep cells' ])
 
-print(fullfile(fnout,[num2str(cons(iCon)) 'contrast_resposnse.pdf']),'-dpdf');
+print(fullfile(fnout,['contrast_resposnse.pdf']),'-dpdf');
 
 
 
