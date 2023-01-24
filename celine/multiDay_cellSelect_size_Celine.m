@@ -1,14 +1,14 @@
 clear all; clear global;  close all
 clc
-%ds = 'con_size_nonDART'
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
-dataStructLabels = {'contrastxori'};
-rc = behavConstsDART; %directories
+
+ds = 'DART_V1_direction_ori_Celine'; %dataset info
+dataStructLabels = {'directionxori'};
+rc = behavdirstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 223;
+day_id = 225;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -166,13 +166,13 @@ end
 %     clear data_r clear data_r_reg
 % end
     
-% find activated cells
+%% find activated cells
 %find number of frames per trial and temporarily reshape data into trials
 %overal goal here is to get green data in terms of df/f
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
-ntrials = size(input.tGratingContrast,2);
+ntrials = size(input.tGratingDirectionDeg,2);
 %ntrials = 374;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
@@ -180,45 +180,45 @@ data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
 data_g_dfof = (data_g_on-data_g_f)./data_g_f;
 clear data_g_trial data_g_on data_g_f
 
-%find the different contrasts and sizes
-tCon = celleqel2mat_padded(input.tGratingContrast(1:ntrials));
-%tCon = tCon(1:160);
-cons = unique(tCon);
-nCon = length(cons);
-ind_con = find(tCon == max(cons(:)));
+%find the different directions and sizes
+tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:ntrials));
+dirs = unique(tDir);
+nDir = length(dirs);
 
 tSize = cell2mat(input.tGratingDiameterDeg);
 sizes = unique(tSize);
 nSize = length(sizes);
-ind_con = find(tCon == max(sizes(:)));
+ind_dir = find(tDir == max(sizes(:)));
 tSize = cell2mat(input.tGratingDiameterDeg);
 
 data_g_size = zeros(sz(1),sz(2), nSize);
-data_temp = zeros(sz(1),sz(2), nSize, nCon);
+data_temp = zeros(sz(1),sz(2), nSize, nDir);
 [n n2] = subplotn(nSize);
 figure; movegui('center');
-for iSize = 1:nSize %for every size
-    data_g_con = zeros(sz(1),sz(2), nCon); %make a data frame is the size of one imaging frame X the number of contrasts
-    for iCon = 1:nCon %for every contrast
-        ind_con = find(tCon == cons(iCon)); %find the indices of trials with that contrast
-        ind_size = intersect(ind_con, find(tSize == sizes(iSize)));%find ind of intersection between that contrast and the size we're looking at
-        data_g_con(:,:,iCon) = mean(data_g_dfof(:,:,ind_size),3); %pull out all those trials and average over the trials
-        data_temp(:,:,iSize,iCon) = mean(data_g_dfof(:,:,ind_size),3);
+
+    for iSize = 1:nSize %for every size
+        data_g_dir = zeros(sz(1),sz(2), nDir); %make a data frame is the size of one imaging frame X the number of directions
+        for iDir = 1:nDir %for every direction
+            ind_dir = find(tDir == dirs(iDir)); %find the indices of trials with that direction
+            ind_size = intersect(ind_dir, find(tSize == sizes(iSize)));%find ind of intersection between that direction and the size we're looking at
+            data_g_dir(:,:,iDir) = mean(data_g_dfof(:,:,ind_size),3); %pull out all those trials and average over the trials
+            data_temp(:,:,iSize,iDir,nDir) = mean(data_g_dfof(:,:,ind_size),3);
+        end
+    
+        data_g_size(:,:,iSize) = max(data_g_dir,[],3); %find the direction with the max response for that size
+        subplot(n,n2,iSize)
+        imagesc(data_g_size(:,:,iSize))
+        title(num2str(sizes(iSize)))
     end
-    data_g_size(:,:,iSize) = max(data_g_con,[],3); %find the contrast with the max response for that size
-    subplot(n,n2,iSize)
-    imagesc(data_g_size(:,:,iSize))
-    title(num2str(sizes(iSize)))
-end
 
 %make a colored image comparing cell activity at the low (1-2), medium (3)
-%and high (4-5) contrasts. There is a non-linear relationship between
-%contrast and cells activated due to surround suppression. 
+%and high (4-5) directions. There is a non-linear relationship between
+%direction and cells activated due to surround suppression. 
 % rgb(:,:,1) = squeeze(max(mean(data_temp(:,:,:,1:2),4),[],3));
 % rgb(:,:,2) = squeeze(max(mean(data_temp(:,:,:,3),4),[],3));
 % rgb(:,:,3) = squeeze(max(mean(data_temp(:,:,:,4:5),4),[],3));
 % figure;  movegui('center'); imagesc(rgb./max(max(rgb(:,:,3)))); 
-% title('Comparing contrasts');
+% title('Comparing directions');
 
 data_size_max = max(data_g_size,[],3);
 data_dfof = cat(3, data_size_max,data_size_max,data_size_max,data_g_size);
@@ -306,7 +306,7 @@ end
 
 %create red image where any pixel value above a certain percentile of the max is set to 90%
 %of the max - removing the highest 10% of pixel values to create a lower
-%contrast image for segmenting
+%direction image for segmenting
 threshPercentile = 99;
 
 highValues = find(redChImg>prctile(redChImg,threshPercentile,'all'));
@@ -416,20 +416,20 @@ data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), d
 
 %split into baseline and response windows, run paired t-test to see if
 %cells have a significant response (elevation in df/f comapred to baseline)
-%for any sizes/contrasts
-resp_win = nOff+2:nOn+nOff;
+%for any sizes/directions
+resp_win = nOff:nOn+nOff;
 base_win = nOff/2:nOff;
-data_resp = zeros(nCells, nSize, nCon,2);
-h = zeros(nCells, nSize, nCon);
-p = zeros(nCells, nSize, nCon);
+data_resp = zeros(nCells, nSize, nDir,2);
+h = zeros(nCells, nSize, nDir);
+p = zeros(nCells, nSize, nDir);
 for iSize = 1:nSize
     ind_size = find(tSize == sizes(iSize));
-    for iCon = 1:nCon
-        ind_con = find(tCon == cons(iCon));
-        ind = intersect(ind_size,ind_con); %for every size and then every contrast, find trials with that con/size combination
-        data_resp(:,iSize,iCon,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
-        data_resp(:,iSize,iCon,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-        [h(:,iSize,iCon), p(:,iSize,iCon)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nSize.*3-1));
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        ind = intersect(ind_size,ind_dir); %for every size and then every direction, find trials with that dir/size combination
+        data_resp(:,iSize,iDir,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
+        data_resp(:,iSize,iDir,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
+        [h(:,iSize,iDir), p(:,iSize,iDir)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nSize.*3-1));
     end
 end
 %%
@@ -450,7 +450,7 @@ else
     tot = 36;
 end
 
-% plot size tuning at each contrast
+% plot size tuning at each direction
 figure;
 movegui('center')
 start = 1;
@@ -462,8 +462,8 @@ for iCell = 1:nCells
     end
     subplot(n,n2,start)
     %if find(find(h_all)==iCell)
-        for iCon = 1:nCon
-            errorbar(sizes, data_resp(iCell,:,iCon,1), data_resp(iCell,:,iCon,2),'-o')
+        for iDir = 1:nDir
+            errorbar(sizes, data_resp(iCell,:,iDir,1), data_resp(iCell,:,iDir,2),'-o')
             hold on
         end
         if find(find(mask_label)==iCell)
@@ -475,7 +475,7 @@ for iCell = 1:nCells
     [max_val, pref_size(1,iCell)] = max(mean(data_resp(iCell,:,:,1),3),[],2);
 end
 
-% plots contrast preference at preferred size
+% plots direction preference at preferred size
 figure;
 movegui('center')
 start = 1;
@@ -486,7 +486,7 @@ for iCell = 1:nCells
     end
     subplot(n,n2,start)
     if find(find(h_all)==iCell)
-        errorbar(cons, squeeze(data_resp(iCell,pref_size(iCell),:,1)), squeeze(data_resp(iCell,pref_size(iCell),:,2)),'-o')
+        errorbar(dirs, squeeze(data_resp(iCell,pref_size(iCell),:,1)), squeeze(data_resp(iCell,pref_size(iCell),:,2)),'-o')
         if find(find(mask_label)==iCell)
             title('R')
         end

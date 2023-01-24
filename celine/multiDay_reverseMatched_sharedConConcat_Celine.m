@@ -903,7 +903,26 @@ hold on
 scatter(responseByCond(4:6,1),responseByCond(4:6,2),'MarkerEdgeColor', 'k','MarkerFaceColor', 'k')
 hold on
 scatter(responseByCond(4:6,3),responseByCond(4:6,4),'MarkerEdgeColor','b','MarkerFaceColor','b')
+set(gca,'TickDir','out')
+xlabel('Mean Pyr dF/F')
+ylabel('Mean SOM dF/F')
+title('Mean response to different conditions')
 print(fullfile(fnout, ['responseByCondition.pdf']),'-dpdf','-bestfit')
+%%
+figure;
+scatter(cons,mean(pref_responses_stat_concat{pre}(red_all,:), "omitnan"),"k")
+hold on
+scatter(cons,mean(pref_responses_stat_concat{post}(red_all,:), "omitnan"),"b")
+hold on 
+scatter(cons,mean(pref_responses_loc_concat{pre}(red_all,:), "omitnan"),"k",'MarkerFaceColor', 'k')
+hold on
+scatter(cons,mean(pref_responses_loc_concat{post}(red_all,:), "omitnan"),"b",'MarkerFaceColor', 'b')
+set(gca,'TickDir','out')
+
+xlabel('Contrast')
+ylabel('Mean SOM dF/F')
+title('Mean response vs contrast')
+hold off
 %% calculate fract chage
 
 
