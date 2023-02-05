@@ -1,14 +1,14 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_direction_ori_Celine'; %dataset info
-dataStructLabels = {'directionxori'};
-rc = behavdirstsDART; %directories
+ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+dataStructLabels = {'contrastxori'};
+rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 225;
+day_id = 227;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -211,19 +211,13 @@ figure; movegui('center');
         title(num2str(sizes(iSize)))
     end
 
-%make a colored image comparing cell activity at the low (1-2), medium (3)
-%and high (4-5) directions. There is a non-linear relationship between
-%direction and cells activated due to surround suppression. 
-% rgb(:,:,1) = squeeze(max(mean(data_temp(:,:,:,1:2),4),[],3));
-% rgb(:,:,2) = squeeze(max(mean(data_temp(:,:,:,3),4),[],3));
-% rgb(:,:,3) = squeeze(max(mean(data_temp(:,:,:,4:5),4),[],3));
-% figure;  movegui('center'); imagesc(rgb./max(max(rgb(:,:,3)))); 
-% title('Comparing directions');
+%print image
 
 data_size_max = max(data_g_size,[],3);
 data_dfof = cat(3, data_size_max,data_size_max,data_size_max,data_g_size);
 figure; imagesc(data_size_max); movegui('center');title('data size max');
 clear data_g_dfof
+
 
 %get pixel correlation image, another method to identify cells
 data_g_down = stackGroupProject(data_g_reg,100);
@@ -517,10 +511,10 @@ plot(tc_trial_avrg, 'LineWidth',.005,'color',[.25 .25 .25]);
 hold on;
 plot(tc_cell_trial_avrg, 'LineWidth',2, 'color','k');
 hold on;
-vline(60,'g')
+vline(nOff,'g')
 title('');
 hold off
-ylim([-.04 .1])
+ylim([-.02 .18])
 
 
 

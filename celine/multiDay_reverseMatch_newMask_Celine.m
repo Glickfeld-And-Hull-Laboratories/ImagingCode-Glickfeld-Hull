@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 223; %enter the refrence day ID here
+day_id(1) = 227; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -273,7 +273,7 @@ for icell = 1:nc
         end
         
         [max_val max_ind] = max([r_avg r_max r_corr r_red]);
-        if max_val>0.55 & (r_corr>0.4 || r_red>0.4 || r_max>0.4)
+        if max_val>0.1 & (r_corr>0.1 || r_red>0.1 || r_max>0.1)
             pass = true;
             figure;
             movegui('center')

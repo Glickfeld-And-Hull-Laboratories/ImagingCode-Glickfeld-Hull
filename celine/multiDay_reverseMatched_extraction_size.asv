@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-day_id = 226; %enter post-DART day
+day_id = 227; %enter post-DART day
 %day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
@@ -161,9 +161,7 @@ p_match = cell(1,nd);
 h_all_match = cell(1,nd);
 resp_match = cell(1,nd);
 pref_ori_match = cell(1,nd);
-pref_size_match{id} = cell(1,nd);
 data_ori_resp_match = cell(1,nd);
-data_size_resp_match = cell(1,nd);
 
 %rect_dfof_trial=data_dfof_trial_match;
 %rect_dfof_trial(find(rect_dfof_trial<0))=0;
@@ -200,8 +198,8 @@ for id = 1:nd
     data_size_resp = zeros(nCells,nSize); %at pref ori
     data_orth_resp=zeros(nCells,1);
     for iCell = 1:nCells
-          [max_val, pref_ori(1,iCell)] = max(max(data_resp(iCell,:,:,1),[],2));
-          [max_val_size, pref_size(1,iCell)] = max(max(data_resp(iCell,:,:,1),[],3)); 
+          [max_val, pref_ori(1,iCell)] = max(max(resp_sig(iCell,:,:),[],2));
+          [max_val_size, pref_size(1,iCell)] = max(max(resp_sig(iCell,:,:),[],3)); 
           data_ori_resp(iCell,:)=data_resp(iCell,pref_size(iCell),:,1);
           data_size_resp(iCell,:)=data_resp(iCell,:,pref_ori(iCell),1);
           
@@ -214,9 +212,7 @@ p_match{id} = p;
 h_all_match{id} = h_pass;
 resp_match{id} = resp;
 pref_ori_match{id} = pref_ori;
-pref_size_match{id} = pref_size;
 data_ori_resp_match{id} = data_ori_resp;
-data_size_resp_match{id} = data_size_resp;
 % data_orth_resp_match{id}=data_orth_resp;
 %  
 end
@@ -294,11 +290,11 @@ clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_res
 
 for iSize = 1:nSize
     figure;
-    scatter((data_size_resp_match{pre}(green_ind_match_list,iSize)),(data_size_resp_match{post}(green_ind_match_list,iSize)));
+    scatter(mean(data_resp_match{pre}(green_ind_match_list,iSize,:,1),3),mean(data_resp_match{post}(green_ind_match_list,iSize,:,1),3));
     hold on
-    scatter((data_size_resp_match{pre}(red_ind_match_list,iSize)),(data_size_resp_match{post}(red_ind_match_list,iSize)));
-    axMax =  max(max(mean(data_size_resp_match{pre}(:,iSize,:,1),3),mean(data_size_resp_match{post}(:,iSize,:,1),3)));
-    axMin =  min(min(mean(data_size_resp_match{pre}(:,iSize,:,1),3),mean(data_size_resp_match{post}(:,iSize,:,1),3)));
+    scatter(mean(data_resp_match{pre}(red_ind_match_list,iSize,:,1),3),mean(data_resp_match{post}(red_ind_match_list,iSize,:,1),3),'r');
+    axMax =  max(max(mean(data_resp_match{pre}(:,iSize,:,1),3),mean(data_resp_match{post}(:,iSize,:,1),3)));
+    axMin =  min(min(mean(data_resp_match{pre}(:,iSize,:,1),3),mean(data_resp_match{post}(:,iSize,:,1),3)));
     xlim([axMin axMax]);
     ylim([axMin axMax]);
     xlabel('Pre');

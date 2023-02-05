@@ -8,7 +8,7 @@ eval(ds);
 % 136 141 161 153 169 183 177 189
 % 131 133 138 142 163 171 178 190 24 hour
 % 206 210 214 atropine
-sess_list = [138 142 163 171 178 190];%enter all the sessions you want to concatenate
+sess_list = [221];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -76,9 +76,9 @@ R_values_concat=[];
 wheel_corr_concat=cell(1,nd);
 meanF_concat=cell(1,nd);
 mean_green_concat=cell(1,nd);
-%norm_dir_resp_stat_concat = cell(1,nd);
-%norm_dir_resp_loc_concat = cell(1,nd);
-% pref_dir_concat=cell(1,nd);
+norm_dir_resp_stat_concat = cell(1,nd);
+norm_dir_resp_loc_concat = cell(1,nd);
+pref_dir_concat=cell(1,nd);
 
 
 for iSess = 1:nSess
@@ -149,10 +149,10 @@ for iSess = 1:nSess
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
        meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
-%        %norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
-%        norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
-%        pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
-%       mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
+       norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
+       norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
+       pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
+      mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
         clear meanF
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
@@ -679,7 +679,7 @@ writetable(responseTable,fullfile(fnout,[num2str(targetCon) 'responseTable.csv']
 dirResp_for_plotting=cell(1,nd);
 %adjusting the normalized response matrix for plotting
 for id = 1:nd
-    dirResp_for_plotting{id}=norm_dir_resp_concat{id}; %copy the normalized response matrix for that day
+    dirResp_for_plotting{id}=norm_dir_resp_stat_concat{id}; %copy the normalized response matrix for that day
     dirResp_for_plotting{id}(:,nDir+1)=dirResp_for_plotting{id}(:,1); %take the first element and re-paste it onto the end
 
 end
@@ -706,6 +706,7 @@ sgtitle("Normalized direction tuning, averaged over contrast")
 
 %% linear direction plot 
 
+dirs_for_plotting=dirs-180;
 
 green_dir_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 red_dir_avrg_stat = cell(1,nd); %same for red
@@ -759,30 +760,6 @@ figure
 subplot(2,2,1)
 errorbar(dirs_for_plotting,green_dir_avrg_stat{pre},green_dir_se_stat{pre},'k')
 hold on
-errorbar(dirs_for_plotting,green_dir_avrg_loc{pre},green_dir_se_loc{pre},'m')
-title('-HTP, pre')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-ylabel('dF/F')
-xlabel('normalized direction')
-ylim([0 .25])
-
-subplot(2,2,2)
-errorbar(dirs_for_plotting,green_dir_avrg_stat{post},green_dir_se_stat{post},'k')
-hold on
-errorbar(dirs_for_plotting,green_dir_avrg_loc{post},green_dir_se_loc{post},'m')
-title('-HTP, post')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('normalized direction')
-ylim([0 .25])
-
-
-subplot(2,2,3)
-errorbar(dirs_for_plotting,green_dir_avrg_stat{pre},green_dir_se_stat{pre},'k')
-hold on
 errorbar(dirs_for_plotting,green_dir_avrg_stat{post},green_dir_se_stat{post},'b')
 title('-HTP, stationary')
 set(gca, 'TickDir', 'out')
@@ -790,9 +767,21 @@ axis square
 box off
 ylabel('dF/F')
 xlabel('normalized direction')
-ylim([0 .25])
+%ylim([0 .25])
 
-subplot(2,2,4)
+subplot(2,2,2)
+errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
+hold on
+errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
+title('+HTP, stationary')
+set(gca, 'TickDir', 'out')
+axis square
+box off
+xlabel('normalized direction')
+%ylim([0 .25])
+
+
+subplot(2,2,3)
 errorbar(dirs_for_plotting,green_dir_avrg_loc{pre},green_dir_se_loc{pre},'k')
 hold on
 errorbar(dirs_for_plotting,green_dir_avrg_loc{post},green_dir_se_loc{post},'b')
@@ -801,7 +790,18 @@ set(gca, 'TickDir', 'out')
 axis square
 box off
 xlabel('normalized direction')
-ylim([0 .25])
+%ylim([0 .25])
+
+subplot(2,2,4)
+errorbar(dirs_for_plotting,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
+hold on
+errorbar(dirs_for_plotting,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
+title('+HTP, running')
+set(gca, 'TickDir', 'out')
+axis square
+box off
+xlabel('normalized direction')
+%ylim([0 .25])
 
 sgtitle("Normalized direction tuning for -HTP Putative Pyr cells")
 
@@ -908,7 +908,7 @@ xlabel('Mean Pyr dF/F')
 ylabel('Mean SOM dF/F')
 title('Mean response to different conditions')
 print(fullfile(fnout, ['responseByCondition.pdf']),'-dpdf','-bestfit')
-%%
+%% plotting vs contrast
 figure;
 scatter(cons,mean(pref_responses_stat_concat{pre}(red_all,:), "omitnan"),"k")
 hold on
@@ -1124,6 +1124,17 @@ lsline()
 
 print(fullfile(fnout,[ 'r_vs_LMI.pdf']),'-dpdf');
 
+%% looking at R value and change in R value
+figure;
+scatter(R_values_concat(1,:),R_values_concat(3,:));
+xlabel("Pre R value");
+ylabel("Post R value");
+xlim([-.25 1])
+ylim([-.25 1])
+
+figure;
+scatter(R_values_concat(1,:),abs(R_values_concat(3,:)-R_values_concat(1,:)));
+
 %% making tc plots for low and high R cells
 highRInds=red_ind_concat(find(redR_concat)); %find the indices of red cells with high R
 lowRInds=red_ind_concat(find(~redR_concat)); %find the indices of red cells with low R
@@ -1134,7 +1145,7 @@ lowRInds=red_ind_concat(find(~redR_concat)); %find the indices of red cells with
 % lowRsqInds=red_ind_concat(find(mean_green_concat{pre}<median(mean_green_concat{pre}))); %find the indices of red cells with low R
 
 
-%%
+%% stat high and low R
 hi_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 low_avrg_stat = cell(1,nd); %same for red
 hi_se_stat = cell(1,nd); %this will be the se across all green cells
