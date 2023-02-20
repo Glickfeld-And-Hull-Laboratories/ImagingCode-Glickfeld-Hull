@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 227; %enter the refrence day ID here
+day_id(1) = 236; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -217,11 +217,12 @@ threshPercentile = 99;
 
 thresholdedRed=cell(1,3);
 for i=1:3
-    currentRed=fov_red{i};
-    highValues = find(currentRed>prctile(currentRed,threshPercentile,'all'));
-    redThresh = currentRed;
-    redThresh(highValues)=prctile(currentRed,threshPercentile,'all');
-    thresholdedRed{i}=redThresh;
+%     currentRed=fov_red{i};
+%     highValues = find(currentRed>prctile(currentRed,threshPercentile,'all'));
+%     redThresh = currentRed;
+%     redThresh(highValues)=prctile(currentRed,threshPercentile,'all');
+%     thresholdedRed{i}=redThresh;
+    thresholdedRed{i}=fov_red{i};
 end
 
 

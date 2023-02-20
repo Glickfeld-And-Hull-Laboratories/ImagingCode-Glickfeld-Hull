@@ -808,17 +808,10 @@ sig_corr_red = R_p_values(2,:)<0.05;
 R_red =  R_p_values(1,:)>.5;
 
 %%
-scatter(pref_responses_stat{pre}(red_ind_keep),R_p_values(1,:),'k')
-ylabel('Max dF/F') 
-xlabel('R') 
-
-%
 figure;
-subplot(1,2,1)
 scatter(green_trialResp{pre},red_trialResp{pre},10,'MarkerEdgeColor','k')
 ylabel('SOM activity')
 xlabel('Pyr activity')
-%title('stationary')
 % ylim([-.05 .15])
 % xlim([-.05 .35])
 hold on
@@ -853,16 +846,6 @@ linCellProps(6,2)=max(green_trialResp{post});
 set(gca, 'TickDir', 'out')
 
 
-subplot(1,2,2)
-scatter(green_trialResp{pre},red_trialResp{pre},10,'MarkerEdgeColor','k')
-ylabel('SOM activity')
-xlabel('Pyr activity')
-title('running')
-% ylim([-.05 .15])
-% xlim([-.05 .35])
-hold on
-scatter(green_trialResp{post},red_trialResp{post},10,'MarkerEdgeColor','b')
-hold on
 
 idx = isnan(red_trialResp{pre});
 linfit = polyfit(green_trialResp{pre}(~idx),red_trialResp{pre}(~idx),1);
@@ -942,6 +925,7 @@ responseByCondProps(5,1)=min(responseByCond(:,1));
 responseByCondProps(6,1)=max(responseByCond(:,1));
 hold on
 
+figure;
 scatter(responseByCond(:,3),responseByCond(:,4),'b')
 hold on
 linfit = polyfit(responseByCond(:,3),responseByCond(:,4),1);

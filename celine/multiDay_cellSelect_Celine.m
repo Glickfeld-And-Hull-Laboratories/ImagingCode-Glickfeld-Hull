@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 223;
+day_id = 238;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -138,7 +138,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
     for i = 1:nep 
         subplot(n,n2,i); 
         imagesc(mean(data_g(:,:,1+((i-1)*3000):500+((i-1)*3000)),3)); 
-        title([num2str(1+((i-1)*3000)) '-' num2str(500+((i-1)*30000))]); 
+        title([num2str(1+((i-1)*3000)) '-' num2str(50+((i-1)*30000))]); 
         colormap gray; 
         clim([100 3000]); 
     end
@@ -146,7 +146,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
     
     regImgStartFrame = input('Enter Registration Image Start Frame, ENTER INTO DS:');
     
-    regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
+    regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+49)),3);
     [outs,data_g_reg] = stackRegister(data_g,regImg);
     data_avg = mean(data_g_reg,3);
     figure;imagesc(data_avg);colormap gray; truesize; clim([100 3000]);
@@ -318,7 +318,7 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redThresh,redThresh,redThresh); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that

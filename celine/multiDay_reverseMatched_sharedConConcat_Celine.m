@@ -6,9 +6,9 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 % 136 141 161 153 169 183 177 189
-% 131 133 138 142 163 171 178 190 24 hour
+%  138 142 163 171 178 190 24 hour
 % 206 210 214 atropine
-sess_list = [221];%enter all the sessions you want to concatenate
+sess_list = [236];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -152,7 +152,7 @@ for iSess = 1:nSess
        norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
        norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
        pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
-      mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
+      %mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
         clear meanF
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
@@ -267,7 +267,7 @@ t=(t-(double(stimStart)-1))/double(frame_rate);
 
 figure
 subplot(1,2,1) %for the first day
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{pre}(:,1),tc_green_se_stat{pre}(:,1),'g');
 hold on
@@ -291,7 +291,7 @@ hold on
 shadedErrorBar(t,tc_green_avrg_stat{post}(:,2),tc_green_se_stat{post}(:,2),'b');
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{post}(:,3),tc_green_se_stat{post}(:,3),'c');
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
@@ -316,7 +316,7 @@ print(fullfile(fnout,[num2str(cons(iCon)) 'Pyr_contrast_tc.pdf']),'-dpdf');
 
 figure
 subplot(1,2,1) %for the first day
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 shadedErrorBar(t,tc_red_avrg_stat{pre}(:,1),tc_red_se_stat{pre}(:,1),'g');
 hold on
@@ -340,7 +340,7 @@ hold on
 shadedErrorBar(t,tc_red_avrg_stat{post}(:,2),tc_red_se_stat{post}(:,2),'b');
 hold on
 shadedErrorBar(t,tc_red_avrg_stat{post}(:,3),tc_red_se_stat{post}(:,3),'c');
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
@@ -396,7 +396,7 @@ subplot(1,2,1) %for the first day
 
 
 
-ylim([-.05 .2]);
+ylim([-.05 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'k');
 hold on
@@ -416,7 +416,7 @@ subplot(1,2,2) %for the second day
 shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
-ylim([-.05 .2]);
+ylim([-.05 .3]);
 hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
@@ -508,7 +508,7 @@ figure
 subplot(1,2,1) %for the first day
 
 
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon),tc_green_se_loc{pre}(:,iCon),'k');
 hold on
@@ -527,7 +527,7 @@ subplot(1,2,2) %for the second day
 shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon),tc_red_se_loc{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon),tc_red_se_loc{post}(:,iCon),'b');
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
@@ -970,6 +970,34 @@ er.LineStyle = 'none';
 
 hold off
 print(fullfile(fnout,[num2str(cons(iCon)), '_raw_change_resp.pdf']),'-dpdf','-bestfit')
+%% comparing R value to change in dF/F
+
+%averaging over contrasts -  baseline R value vs. raw change
+figure;
+scatter(R_values_concat(1,:),(mean(raw_diff(red_ind_concat,:),2)));
+xlabel("Baseline R")
+ylabel("Raw post-pre")
+set(gca,'TickDir','out')
+box off
+title("Averaged over contrast")
+
+%averaging over contrasts -  baseline R value vs. fractional change
+figure;
+scatter(R_values_concat(1,:),(mean(fract_diff(red_ind_concat,:),2)));
+xlabel("Baseline R")
+ylabel("Fractional post-pre")
+set(gca,'TickDir','out')
+box off
+title("Averaged over contrast")
+
+%only 25% contrast -  baseline R value vs. fractional change
+figure;
+scatter(R_values_concat(1,:),fract_diff(red_ind_concat,1));
+xlabel("Baseline R")
+ylabel("Fractional post-pre")
+set(gca,'TickDir','out')
+box off
+title("25% contrast")
 
 %% time to peak - this is combining running, stationary, and all stimulus conditions
 
@@ -1126,14 +1154,35 @@ print(fullfile(fnout,[ 'r_vs_LMI.pdf']),'-dpdf');
 
 %% looking at R value and change in R value
 figure;
+subplot(2,1,1)
+histogram(R_values_concat(1,:))
+xlim([-1 1])
+subplot(2,1,2)
+histogram(R_values_concat(3,:))
+xlim([-1 1])
+
+
+figure;
+subplot(2,1,1)
 scatter(R_values_concat(1,:),R_values_concat(3,:));
 xlabel("Pre R value");
 ylabel("Post R value");
 xlim([-.25 1])
 ylim([-.25 1])
+lsline
+refline(1)
+axis square
+set(gca, 'TickDir', 'out')
 
-figure;
-scatter(R_values_concat(1,:),abs(R_values_concat(3,:)-R_values_concat(1,:)));
+subplot(2,1,2)
+scatter(R_values_concat(1,:),(R_values_concat(3,:)-R_values_concat(1,:)));
+xlabel("Pre R value");
+ylabel("raw delta R value");
+ylim([-1 1])
+lsline
+axis square
+set(gca, 'TickDir', 'out')
+print(fullfile(fnout,['changeInR.pdf']),'-dpdf');
 
 %% making tc plots for low and high R cells
 highRInds=red_ind_concat(find(redR_concat)); %find the indices of red cells with high R
@@ -1183,7 +1232,7 @@ subplot(1,2,1) %for -HTP
 
 
 
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 shadedErrorBar(t,hi_avrg_stat{pre}(:,iCon),hi_se_stat{pre}(:,iCon),'k');
 hold on
@@ -1204,7 +1253,7 @@ subplot(1,2,2) %for +HTP
 shadedErrorBar(t,low_avrg_stat{pre}(:,iCon),low_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,low_avrg_stat{post}(:,iCon),low_se_stat{post}(:,iCon),'b');
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 % line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
 % hold on
@@ -1340,7 +1389,7 @@ subplot(1,2,1) %for -HTP
 
 
 
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 shadedErrorBar(t,hi_avrg_loc{pre}(:,iCon),hi_se_loc{pre}(:,iCon),'k');
 hold on
@@ -1361,7 +1410,7 @@ subplot(1,2,2) %for +HTP
 shadedErrorBar(t,low_avrg_loc{pre}(:,iCon),low_se_loc{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,low_avrg_loc{post}(:,iCon),low_se_loc{post}(:,iCon),'b');
-ylim([-.02 .3]);
+ylim([-.02 .5]);
 hold on
 % line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
 % hold on
@@ -1823,7 +1872,7 @@ for iCon = 1:nCon
 figure;
 subplot(1,2,1) %for the first day
 
-%ylim([-.02 .3]);
+%ylim([-.02 .5]);
 hold on
 shadedErrorBar(t,sub_tc_green_avrg_stat(:,iCon),sub_tc_green_se_stat(:,iCon),'k');
 hold on
@@ -1904,7 +1953,7 @@ subplot(1,2,1) %for the first day
 
 
 
-ylim([-.05 .2]);
+ylim([-.05 .3]);
 hold on
 shadedErrorBar(t,tc_green_avrg_subtracted{pre}(:,iCon),tc_green_se_subtracted{pre}(:,iCon),'k');
 hold on
@@ -1924,7 +1973,7 @@ subplot(1,2,2) %for the second day
 shadedErrorBar(t,tc_red_avrg_subtracted{pre}(:,iCon),tc_red_se_subtracted{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_subtracted{post}(:,iCon),tc_red_se_subtracted{post}(:,iCon),'b');
-ylim([-.05 .2]);
+ylim([-.05 .3]);
 hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
@@ -2067,7 +2116,7 @@ hold on
 
 %er = errorbar(x,y,errlow,errhigh);
 
-%%
+%% plot contrast response
 
 conResp_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(1,nd); %same for red
@@ -2079,7 +2128,7 @@ conResp_red_se_stat = cell(1,nd); %same for red
 for id = 1:nd
    
         
-    conResp_green_avrg_stat{id}=nanmean(pref_responses_stat_concat{id}(green_ind_concat,:),1);
+    conResp_green_avrg_stat{id}=nanmean(pref_responses_stat_concat{id}(green_ind_concat ,:),1);
     green_std=nanstd(pref_responses_stat_concat{id}(green_ind_concat,:),1);
     conResp_green_se_stat{id}=green_std/sqrt(length(green_ind_concat));
     
@@ -2100,7 +2149,8 @@ errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'b');
 title(['-HTP',' n = ', num2str(length(green_ind_concat))])
 ylabel('dF/F, pref ori') 
 xlabel('contrast') 
-
+set(gca, 'TickDir', 'out')
+box off
 
 subplot(1,2,2) %for the second day
 errorbar(cons,conResp_red_avrg_stat{pre},conResp_red_se_stat{pre},'k');
@@ -2109,7 +2159,8 @@ errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
 title(['+HTP',' n = ', num2str(length(red_ind_concat))])
 ylabel('dF/F, pref ori') 
 xlabel('contrast') 
-
+set(gca, 'TickDir', 'out')
+box off
 
 x0=5;
 y0=5;

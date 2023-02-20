@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-day_id = 226; %enter post-DART day
+day_id = 231; %enter post-DART day
 %day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
@@ -354,8 +354,8 @@ end
 red_fluor_keep=red_fluor_match(keep_cells);
 green_fluor_keep=green_fluor_match(keep_cells);
 
-conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
-writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
+%conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
+%writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
 save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
 
 %% looking at wheel speed
@@ -383,6 +383,9 @@ for id = 1:nd
 end
 
 %% narrow down to the stimuli preferred for each cell each day
+
+%this code needs to be cleaned
+
 %we will get one tc per cell per contrast. This represents that cell's tc
 %averaged over trials at the preferred orientation, at each contrast
 %only include stationary trials
@@ -404,14 +407,14 @@ for id = 1:nd
     temp_tc_loc=nan((nOn+nOff),nKeep,nCon);
     temp_pref_responses_stat=zeros(nKeep,nCon,1);
     temp_pref_responses_loc=zeros(nKeep,nCon,1);
-    for iSize = 1:nCon
-        for iOri=1:nKeep
+    for iSize = 1:nSize
+        for iCell=1:nKeep
             
             temp_TCs=data_trial_keep{id}(:,:,iOri); %only pulling from dfof data of keep cells
             tOri=tOri_match{id}(1:nTrials(id));
-            tSize=tOri_match{id}(1:nTrials(id));
+            tSize=tSize_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
-            temp_ori= pref_ori_keep{id}(iOri); %find the preferred ori of this cell (already in degrees)
+            temp_ori= pref_ori_keep{id}(iCell); %find the preferred ori of this cell (already in degrees)
             ori_inds = find(tSize==temp_ori); %these are the trials at that ori
             con_inds=find(tOri==cons(iSize));
             stat_inds = find(~RIx{id});
