@@ -1,5 +1,5 @@
 % function [prefori_d1_d2_match_tune, prefori_d2_match_tune, d_scores_all, k_d1_d2_match, k_d2_match, dscore_k_d1_d2_match, max_d1_d2_match, max_d2_match, dscore_max_d1_d2_match] = tjgetmatchingoris(d1_ori, d2_ori, d2_matches, d1_k_max, d2_k_max)
-function [a, b, c, d, e, f, g, h, i] = tjgetmatchingoris(d1_ori, d2_ori, d2_matches, d1_k_max, d2_k_max)
+function [a, b, c, d, e, f, g, h, i j] = tjgetmatchingoris(d1_ori, d2_ori, d2_matches, d1_k_max, d2_k_max)
 
 %find tuned cells for each day and cells that are matched across days adn
 %tuned on at least one
@@ -71,4 +71,5 @@ f = dscore_k_d1_d2_match;
 g = max_d1_d2_match;
 h = max_d2_match;
 i = dscore_max_d1_d2_match;
+j = matched_d1_d2_all_tuned;
 end

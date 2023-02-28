@@ -5,11 +5,11 @@ close all
 
 %%
 %dataset = 'exp_list_arc_tjw'; %experiment list to pick files from
-% dataset = 'exp_list_tjw'; %experiment list to pick files from
+%dataset = 'exp_list_tjw'; %experiment list to pick files from
 % dataset = 'exp_list_darklight_tjw';
 dataset = 'exp_list_darklight_actual_tjw';
 eval(dataset); %load dataset
-d1 = 14; %from expt list
+d1 = 21; %from expt list
 mouse = expt(d1).mouse; %mouse
 ref_str = ['runs-' expt(d1).runs];
 img_area = expt(d1).img_loc{1};
@@ -60,8 +60,6 @@ max_dfof = max_dfof(1,:);
 
 save(fullfile(fnout, [date '_' mouse '_' ref_str '_k_and_max_vals.mat']),'k1','max_dfof')
 
-
-%%
 %%
 dir_mat = cell2mat(input.tGratingDirectionDeg);
 ori_mat = dir_mat;
