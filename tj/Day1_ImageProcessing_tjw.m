@@ -14,17 +14,18 @@ clear global
 close all
 clc
 %% get path names
-date = '221209';
+date = '230120';
 ImgFolder = strvcat('001'); %could we use char() instead here?
-time = strvcat('0917');
-mouse = 'i2538';
+time = strvcat('0659');
+mouse = 'i2543';
 run = strvcat('001'); %multiple depths?***
 nrun = size(ImgFolder,1); %what is this?***
 frame_rate = 15;
 run_str = catRunName(ImgFolder, nrun);
 ref_str = catRunName(run, size(run,1)); %what is this?***
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
+%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\Day1_recycled';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load data
 data = [];
@@ -94,7 +95,7 @@ end
 %frames; what about pixel 1,2 etc.
 %% Register data
 
-data_avg = mean(data(:,:,34001:34500),3); %mean of pixel values over selected range of frames
+data_avg = mean(data(:,:,32001:32500),3); %mean of pixel values over selected range of frames
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str])) %if this folder exists)
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat'])) %load this mat file

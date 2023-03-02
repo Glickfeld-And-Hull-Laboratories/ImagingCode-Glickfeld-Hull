@@ -446,7 +446,7 @@ end
 %changed from RT_this_session>1200 to RT_this_session>1000 ***changing this
 %to 720 for length of stim display
          %miss_rate_this_session = length(find(RT_this_session>1200))/(numTrials-1);
-         miss_rate_this_session = length(find(RT_this_session>720))/(numTrials-1);
+         miss_rate_this_session = length(find(RT_this_session>720))/(num_trials_b1);
 
 
 %changed from 200<RT_this_session<500 to 200<RT_this_session<1000
@@ -454,7 +454,7 @@ end
          hit_RT_this_session = RT_this_session(RT_this_session>200 & RT_this_session<720);
         if bxData.doBlock2 ==1
 %changed from RT_this_session>1400 to RT_this_session>1000      ????? ***changed this to 720       
-            miss_rate_this_session_b2 = (length(find(RT_this_session_block2>720))+no_lick_trials_b2) / num_trials_b2;
+            miss_rate_this_session_b2 = (length(find(RT_this_session_block2>720))) / num_trials_b2;
 %changed from 200<RT_this_session<1400 to 200<RT_this_session<1000
 %***changed this to be between 200 and 720 too
          hit_RT_this_session_block2 = RT_this_session_block2(RT_this_session_block2>200 & RT_this_session_block2<720);
@@ -911,7 +911,7 @@ xlim([0.8 length(miss_rates)+0.2]);
 end 
 
 savefig([summaryFigs, '\', thisMouse, '_RT_RTstd_misses_TFT']);
-saveas(tempFig,[summaryFigs, thisMouse, '_RT_RTstd_misses_TFT.pdf']);
+print(tempFig,[summaryFigs, thisMouse, '_RT_RTstd_misses_TFT.pdf'], '-dpdf', '-bestfit');
 
 %% 
 if length(days_divider_inx) > 0
