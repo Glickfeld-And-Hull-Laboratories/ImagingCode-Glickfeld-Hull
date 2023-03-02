@@ -4,29 +4,29 @@ clear all global
 clc
 
 %Path names
-fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
+fn_base = findIsilon;
 lg_fn = fullfile(fn_base, 'home\lindsey');
 data_fn = fullfile(lg_fn, 'Data\2P_images');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '220905';
-ImgFolder = '001';
-time = '1125';
-mouse = 'i1377';
+date = '230222';
+ImgFolder = '003';
+time = '1543';
+mouse = 'i2902';
 
-ds = 'SFxDir_ExptList';
-eval(ds)
+% ds = 'SFxDir_ExptList';
+% eval(ds)
+% 
+% iexp = 11;
+% 
+% mouse = expt(iexp).mouse;
+% date = expt(iexp).date;
+% time = cell2mat(expt(iexp).sfTime);
+% ImgFolder = cell2mat(expt(iexp).sfFolder);
 
-iexp = 11;
-
-mouse = expt(iexp).mouse;
-date = expt(iexp).date;
-time = cell2mat(expt(iexp).sfTime);
-ImgFolder = cell2mat(expt(iexp).sfFolder);
-
-frame_rate = 15;
+frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
