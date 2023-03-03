@@ -8,7 +8,8 @@ eval(ds);
 % 136 141 161 153 169 183 177 189
 %  138 142 163 171 178 190 24 hour
 % 206 210 214 atropine
-sess_list = [236];%enter all the sessions you want to concatenate
+% 201 197
+sess_list = [138 142 163 171 178 190];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -129,8 +130,8 @@ for iSess = 1:nSess
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
-    redR_concat = [redR_concat,R_red];
-    R_values_concat = [R_values_concat, R_p_values];
+%    redR_concat = [redR_concat,R_red];
+ %   R_values_concat = [R_values_concat, R_p_values];
 %     statCounts = [statCounts,trialCounts.preStat(1);trialCounts.postStat(1)];
 %     locCounts = [locCounts,trialCounts.preLoc(1);trialCounts.postLoc(1)]
     clear cons
@@ -149,8 +150,8 @@ for iSess = 1:nSess
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
        meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
-       norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
-       norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
+%       norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
+ %      norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
        pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
       %mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
         clear meanF
@@ -189,10 +190,12 @@ end
 clear haveRunning_pre haveRunning_post haveRunning_both
 
 
-% %%alternate for times when I know I don't have enough running data
-% haveRunning_green = green_ind_concat;
-% haveRunning_red = red_ind_concat;
 
+% for iCon =1:nCon
+% 
+% haveRunning_green{iCon} = green_ind_concat;
+% haveRunning_red{iCon} = red_ind_concat;
+% end
 
 %get an array with indices for each mouse
 mouseInds=cell(1,nSess);
@@ -554,30 +557,30 @@ red_ex_list=[];
 
 for iCon = 1:nCon
 figure; movegui('center') 
-subplot(2,2,1)
-scatter((pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
-hold on
-mean_pre = nanmean(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon));
-mean_post = nanmean(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon));
-scatter(mean_pre,mean_post,20,'r','filled');
-stderror_pre= std(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
-stderror_post= std(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
-line([(mean_pre-stderror_pre),(mean_pre+stderror_pre)],[mean_post, mean_post],'Color','black','LineWidth',2);
-line([mean_pre, mean_pre],[(mean_post-stderror_post),(mean_post+stderror_post)],'Color','blue','LineWidth',2);
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
-limMin=min(min(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),min(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)));
-limMax=max(max(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),max(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)));
-ylim([limMin limMax])
-xlim([limMin limMax])
-hline=refline(1);
-hline.Color = 'k';
-hline.LineStyle = ':';
-title('-HTP stationary')
-axis square
-set(gca, 'TickDir', 'out')
-uistack(hline,'bottom');
-hold off
+% subplot(2,2,1)
+% scatter((pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+% hold on
+% mean_pre = nanmean(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon));
+% mean_post = nanmean(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon));
+% scatter(mean_pre,mean_post,20,'r','filled');
+% stderror_pre= std(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
+% stderror_post= std(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
+% line([(mean_pre-stderror_pre),(mean_pre+stderror_pre)],[mean_post, mean_post],'Color','black','LineWidth',2);
+% line([mean_pre, mean_pre],[(mean_post-stderror_post),(mean_post+stderror_post)],'Color','blue','LineWidth',2);
+% ylabel('post-DART dF/F')
+% xlabel('pre-DART  dF/F')
+% limMin=min(min(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),min(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)));
+% limMax=max(max(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),max(pref_responses_stat_concat{post}(haveRunning_green{iCon},iCon)));
+% ylim([limMin limMax])
+% xlim([limMin limMax])
+% hline=refline(1);
+% hline.Color = 'k';
+% hline.LineStyle = ':';
+% title('-HTP stationary')
+% axis square
+% set(gca, 'TickDir', 'out')
+% uistack(hline,'bottom');
+% hold off
 
 
 subplot(2,2,2)
@@ -604,30 +607,30 @@ title('+HTP stationary')
 axis square
 hold off
 
-subplot(2,2,3)
-scatter((pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)),(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
-hold on
-mean_pre = nanmean(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon));
-mean_post = nanmean(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon));
-scatter(mean_pre,mean_post,20,'r','filled');
-stderror_pre= std(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
-stderror_post= std(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
-line([(mean_pre-stderror_pre),(mean_pre+stderror_pre)],[mean_post, mean_post],'Color','black','LineWidth',2);
-line([mean_pre, mean_pre],[(mean_post-stderror_post),(mean_post+stderror_post)],'Color','blue','LineWidth',2);
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
-limMin=min(min(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)),min(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)));
-limMax=max(max(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)),max(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)));
-ylim([limMin limMax])
-xlim([limMin limMax])
-hline=refline(1);
-hline.Color = 'k';
-hline.LineStyle = ':';
-title('-HTP running')
-axis square
-set(gca, 'TickDir', 'out')
-uistack(hline,'bottom');
-hold off
+% subplot(2,2,3)
+% scatter((pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)),(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+% hold on
+% mean_pre = nanmean(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon));
+% mean_post = nanmean(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon));
+% scatter(mean_pre,mean_post,20,'r','filled');
+% stderror_pre= std(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
+% stderror_post= std(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)) / sqrt( length(haveRunning_green{iCon}));
+% line([(mean_pre-stderror_pre),(mean_pre+stderror_pre)],[mean_post, mean_post],'Color','black','LineWidth',2);
+% line([mean_pre, mean_pre],[(mean_post-stderror_post),(mean_post+stderror_post)],'Color','blue','LineWidth',2);
+% ylabel('post-DART dF/F')
+% xlabel('pre-DART  dF/F')
+% limMin=min(min(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)),min(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)));
+% limMax=max(max(pref_responses_loc_concat{pre}(haveRunning_green{iCon},iCon)),max(pref_responses_loc_concat{post}(haveRunning_green{iCon},iCon)));
+% ylim([limMin limMax])
+% xlim([limMin limMax])
+% hline=refline(1);
+% hline.Color = 'k';
+% hline.LineStyle = ':';
+% title('-HTP running')
+% axis square
+% set(gca, 'TickDir', 'out')
+% uistack(hline,'bottom');
+% hold off
 
 subplot(2,2,4)
 scatter((pref_responses_loc_concat{pre}(haveRunning_red{iCon},iCon)),(pref_responses_loc_concat{post}(haveRunning_red{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
@@ -1048,8 +1051,8 @@ line([(mean_pre-stderror_pre),(mean_pre+stderror_pre)],[mean_post, mean_post],'C
 line([mean_pre, mean_pre],[(mean_post-stderror_post),(mean_post+stderror_post)],'Color','blue','LineWidth',2);
 ylabel('post-DART half-max(s)')
 xlabel('pre-DART half-max(s)')
-% ylim([0 2.15])
-% xlim([0 2.15])
+ylim([0 2.15])
+xlim([0 2.15])
 hline=refline(1);
 hline.Color = 'k';
 hline.LineStyle = ':';
@@ -1759,7 +1762,7 @@ t=(t-(double(stimStart)-1))/double(frame_rate);
 
 for iCon = 1:nCon
 figure
-ylim([-.05 .4])
+
 subplot(1,2,1) %for the first day
 shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'k');
 hold on
@@ -1768,8 +1771,8 @@ hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-title(['-HTP post-DART',' n = ', num2str(length(haveRunning_green{iCon}))])
-
+title(['-HTP pre-DART',' n = ', num2str(length(haveRunning_green{iCon}))])
+ylim([-.05 .4])
 ylabel('dF/F') 
 xlabel('s') 
 set(gca,'XColor', 'none','YColor','none')
@@ -1787,6 +1790,7 @@ line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
 title(['-HTP post-DART',' n = ', num2str(length(haveRunning_green{iCon}))])
+ylim([-.05 .4])
 x0=5;
 y0=5;
 width=4;
@@ -1804,7 +1808,7 @@ end
 
 for iCon = 1:nCon
 figure
-ylim([-.05 .4])
+
 subplot(1,2,1) %for the first day
 shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
 hold on
@@ -1813,8 +1817,8 @@ hold on
 line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-title(['+HTP post-DART',' n = ', num2str(length(haveRunning_red{iCon}))])
-
+title(['+HTP pre-DART',' n = ', num2str(length(haveRunning_red{iCon}))])
+ylim([-.05 .4])
 ylabel('dF/F') 
 xlabel('s') 
 set(gca,'XColor', 'none','YColor','none')
@@ -1832,6 +1836,7 @@ line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
 title(['+HTP post-DART',' n = ', num2str(length(haveRunning_red{iCon}))])
+ylim([-.05 .4])
 x0=5;
 y0=5;
 width=4;
@@ -1861,7 +1866,7 @@ tc_subtracted_stat = tc_trial_avrg_stat_concat{pre}-tc_trial_avrg_stat_concat{po
     clear green_std red_std
     end
 
-%%
+%
 z=double(nOn)/double(frame_rate);
 
 %creat a time axis in seconds
@@ -2134,7 +2139,7 @@ for id = 1:nd
     
     conResp_red_avrg_stat{id}=nanmean(pref_responses_stat_concat{id}(red_ind_concat,:),1);
     red_std=nanstd(pref_responses_stat_concat{id}(red_ind_concat,:),1);
-    conResp_red_se_stat{id}=green_std/sqrt(length(red_ind_concat));
+    conResp_red_se_stat{id}=red_std/sqrt(length(red_ind_concat));
     
     clear green_std red_std
  
