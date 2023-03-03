@@ -867,3 +867,63 @@ expt(51).z = 216.4;
 expt(51).obj = '16x';
 expt(51).zoom = 2.0;
 expt(51).wheel = 1;
+%% i2512 - KRAB - LacZ Day 1 in V1
+expt(52).mouse = 'i2512';
+expt(52).sex = 'male';
+expt(52).date = '220322';
+expt(52).ref_date = '220322';
+expt(52).img_day = '1';
+expt(52).img_loc  = {'V1';'L2_3'};
+expt(52).img_strct  = {'cells'};
+expt(52).green_indicator = {'AAV';'GCaMP7f'};
+expt(52).red_indicator = {'LacZ-gRNA';'tdTomato'};
+expt(52).driver = 'KRAB';
+expt(52).time_mat = ['1409'];
+expt(52).runs = ['003'];
+expt(52).nrun = size(expt(52).runs,1);
+expt(52).folder = 'tj';
+expt(52).z = 236.71;
+expt(52).obj = '16x';
+expt(52).zoom = 2.0;
+expt(52).wheel = 1;
+
+%% i2512 - KRAB - LacZ Day 2 in V1
+expt(53).mouse = 'i2512';
+expt(53).sex = 'male';
+expt(53).date = '220324';
+expt(53).ref_date = '220322';
+expt(53).img_day = '2';
+expt(53).img_loc  = {'V1';'L2_3'};
+expt(53).img_strct  = {'cells'};
+expt(53).green_indicator = {'AAV';'GCaMP7f'};
+expt(53).red_indicator = {'LacZ-gRNA';'tdTomato'};
+expt(53).driver = 'KRAB';
+expt(53).time_mat = ['1224'];
+expt(53).runs = ['003'];
+expt(53).nrun = size(expt(1).runs,1);
+expt(53).folder = 'tj';
+expt(53).z = 235.15;
+expt(53).obj = '16x';
+expt(53).zoom = 2.0;
+expt(53).wheel = 1;
+
+%% i2512 - KRAB - LacZ Day 3 in V1
+expt(54).mouse = 'i2512';
+expt(54).sex = 'male';
+expt(54).date = '220329';
+expt(54).ref_date = '220322';
+expt(54).img_day = '3';
+expt(54).img_loc  = {'V1';'L2_3'};
+expt(54).img_strct  = {'cells'};
+expt(54).green_indicator = {'AAV';'GCaMP7f'};
+expt(54).red_indicator = {'LacZ-gRNA';'tdTomato'};
+expt(54).driver = 'KRAB';
+expt(54).time_mat = ['1224'];
+expt(54).runs = ['003'];
+expt(54).nrun = size(expt(1).runs,1);
+expt(54).folder = 'tj';
+expt(54).z = 235.93;
+expt(54).obj = '16x';
+expt(54).zoom = 2.0;
+expt(54).wheel = 1;
+

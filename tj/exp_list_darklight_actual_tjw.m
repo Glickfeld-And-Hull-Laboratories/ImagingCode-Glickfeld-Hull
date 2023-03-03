@@ -243,6 +243,127 @@ expt(14).z = 327.24;
 expt(14).obj = '16x';
 expt(14).zoom = 2.0;
 
+%% i2543 - C57 - Baseline1
+expt(15).mouse = 'i2543';
+expt(15).sex = 'male';
+expt(15).date = '230113';
+expt(15).ref_date = '230113';
+expt(15).img_point = '1';
+expt(15).img_loc  = {'V1';'L2_3'};
+expt(15).img_strct  = {'cells'};
+expt(15).green_indicator = {'AAV';'GCaMP7f'};
+expt(15).time_mat = ['0840'];
+expt(15).runs = ['001'];
+expt(15).nrun = size(expt(15).runs,1);
+expt(15).folder = 'tj';
+expt(15).z = 194.53;
+expt(15).obj = '16x';
+expt(15).zoom = 2.0;
+
+%% i2543 - C57 - Baseline1+4d
+expt(16).mouse = 'i2543';
+expt(16).sex = 'male';
+expt(16).date = '230117';
+expt(16).ref_date = '230113';
+expt(16).img_point = '2';
+expt(16).img_loc  = {'V1';'L2_3'};
+expt(16).img_strct  = {'cells'};
+expt(16).green_indicator = {'AAV';'GCaMP7f'};
+expt(16).time_mat = ['0737'];
+expt(16).runs = ['001'];
+expt(16).nrun = size(expt(16).runs,1);
+expt(16).folder = 'tj';
+expt(16).z = 211.71;
+expt(16).obj = '16x';
+expt(16).zoom = 2.0;
+
+%% i2543 - C57 - Baseline2
+expt(17).mouse = 'i2543';
+expt(17).sex = 'male';
+expt(17).date = '230120';
+expt(17).ref_date = '230113';
+expt(17).img_point = '3';
+expt(17).img_loc  = {'V1';'L2_3'};
+expt(17).img_strct  = {'cells'};
+expt(17).green_indicator = {'AAV';'GCaMP7f'};
+expt(17).time_mat = ['0659'];
+expt(17).runs = ['001'];
+expt(17).nrun = size(expt(17).runs,1);
+expt(17).folder = 'tj';
+expt(17).z = 193.75;
+expt(17).obj = '16x';
+expt(17).zoom = 2.0;
+
+%% i2543 - C57 - Baseline2 + 4hr 
+expt(18).mouse = 'i2543';
+expt(18).sex = 'male';
+expt(18).date = '230120';
+expt(18).ref_date = '230120';
+expt(18).img_point = '4';
+expt(18).img_loc  = {'V1';'L2_3'};
+expt(18).img_strct  = {'cells'};
+expt(18).green_indicator = {'AAV';'GCaMP7f'};
+expt(18).time_mat = ['1050'];
+expt(18).runs = ['002'];
+expt(18).nrun = size(expt(18).runs,1);
+expt(18).folder = 'tj';
+expt(18).z = 188.28;
+expt(18).obj = '16x';
+expt(18).zoom = 2.0;
+
+%% i2543 - C57 - Post dark
+expt(19).mouse = 'i2543';
+expt(19).sex = 'male';
+expt(19).date = '230124';
+expt(19).ref_date = '230120';
+expt(19).img_point = '5';
+expt(19).img_loc  = {'V1';'L2_3'};
+expt(19).img_strct  = {'cells'};
+expt(19).green_indicator = {'AAV';'GCaMP7f'};
+expt(19).time_mat = ['0743'];
+expt(19).runs = ['001'];
+expt(19).nrun = size(expt(19).runs,1);
+expt(19).folder = 'tj';
+expt(19).z = 189.06;
+expt(19).obj = '16x';
+expt(19).zoom = 2.0;
+
+%% i2543 - C57 - Post dark + 4hr light
+expt(20).mouse = 'i2543';
+expt(20).sex = 'male';
+expt(20).date = '230124';
+expt(20).ref_date = '230124';
+expt(20).img_point = '6';
+expt(20).img_loc  = {'V1';'L2_3'};
+expt(20).img_strct  = {'cells'};
+expt(20).green_indicator = {'AAV';'GCaMP7f'};
+expt(20).time_mat = ['1132'];
+expt(20).runs = ['002'];
+expt(20).nrun = size(expt(20).runs,1);
+expt(20).folder = 'tj';
+expt(20).z = 188.28;
+expt(20).obj = '16x';
+expt(20).zoom = 2.0;
+
+%% i2543 - C57 - Post dark + 7d light
+expt(21).mouse = 'i2543';
+expt(21).sex = 'male';
+expt(21).date = '230127';
+expt(21).ref_date = '230124';
+expt(21).img_point = '7';
+expt(21).img_loc  = {'V1';'L2_3'};
+expt(21).img_strct  = {'cells'};
+expt(21).green_indicator = {'AAV';'GCaMP7f'};
+expt(21).time_mat = ['0805'];
+expt(21).runs = ['001'];
+expt(21).nrun = size(expt(21).runs,1);
+expt(21).folder = 'tj';
+expt(21).z = 195.31;
+expt(21).obj = '16x';
+expt(21).zoom = 2.0;
+
+
+
 
 
 

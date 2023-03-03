@@ -5,7 +5,9 @@ clc
 close all
 
 
-%need to do pref ori and individuals
+%need to do add k and max change plots!
+%something went wrong - the cell counts are not the same as before I added
+%the k and max changes - check that part
 %%
 fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P'; %folder to load files from
 newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\darklight\multi_day'; %folder to load files 
@@ -26,7 +28,7 @@ base1_mouse_id_all = [];
 base1_avgtuningcurve_all = [];
 
 
-base1 = [1 8];
+base1 = [1 1+7 1+14];
 
 for isess = base1
     mouse = expt(isess).mouse;
@@ -56,6 +58,23 @@ end
 base1_avgtuningcurve_all = [base1_avgtuningcurve_all]';
 
 base1_tuning_width_all = rad2deg(acos((1./base1_k_tuned_green_all) .* log((exp(base1_k_tuned_green_all)./2) + (exp(-base1_k_tuned_green_all)./2))));
+
+%%
+sz = size(base1_avgtuningcurve_all);
+sz1 = sz(1);
+sz2 = sz(2);
+
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if base1_avgtuningcurve_all(i,j) > 0.5
+            base1_avgtuningcurve_all(i,:) = [];
+        elseif base1_avgtuningcurve_all(i,j) < -0.5
+            base1_avgtuningcurve_all(i,:) = [];
+        end
+    end
+end 
+
+
 %%
 %baseline1 + 4d
 base1_4d_ori_all = [];
@@ -66,7 +85,7 @@ base1_4d_mouse_id_all = [];
 base1_4d_avgtuningcurve_all = [];
 
 
-base1_4d = [2 9];
+base1_4d = [2 2+7 2+14];
 
 for isess = base1_4d
     mouse = expt(isess).mouse;
@@ -98,6 +117,20 @@ base1_4d_avgtuningcurve_all = [base1_4d_avgtuningcurve_all]';
 base1_4d_tuning_width_all = rad2deg(acos((1./base1_4d_k_tuned_green_all) .* log((exp(base1_4d_k_tuned_green_all)./2) + (exp(-base1_4d_k_tuned_green_all)./2))));
 
 %%
+sz = size(base1_4d_avgtuningcurve_all);
+sz1 = sz(1);
+sz2 = sz(2);
+
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if base1_4d_avgtuningcurve_all(i,j) > 0.5
+            base1_4d_avgtuningcurve_all(i,:) = [];
+        elseif base1_4d_avgtuningcurve_all(i,j) < -0.5
+            base1_4d_avgtuningcurve_all(i,:) = [];
+        end
+    end
+end    
+%%
 %baseline2
 base2_ori_all = [];
 base2_k_max_all = [];
@@ -107,7 +140,7 @@ base2_mouse_id_all = [];
 base2_avgtuningcurve_all = [];
 
 
-base2 = [3 10];
+base2 = [3 3+7 3+14];
 
 for isess = base2
     mouse = expt(isess).mouse;
@@ -139,6 +172,22 @@ base2_avgtuningcurve_all = [base2_avgtuningcurve_all]';
 base2_tuning_width_all = rad2deg(acos((1./base2_k_tuned_green_all) .* log((exp(base2_k_tuned_green_all)./2) + (exp(-base2_k_tuned_green_all)./2))));
 
 %%
+sz = size(base2_avgtuningcurve_all);
+sz1 = sz(1);
+sz2 = sz(2);
+
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if base2_avgtuningcurve_all(i,j) > 0.5
+            base2_avgtuningcurve_all(i,:) = [];
+        elseif base2_avgtuningcurve_all(i,j) < -0.5
+            base2_avgtuningcurve_all(i,:) = [];
+        end
+    end
+end 
+
+
+%%
 %baseline2 + 4hr
 base2_4hr_ori_all = [];
 base2_4hr_k_max_all = [];
@@ -148,7 +197,7 @@ base2_4hr_mouse_id_all = [];
 base2_4hr_avgtuningcurve_all = [];
 
 
-base2_4hr = [4 11];
+base2_4hr = [4 4+7 4+14];
 
 for isess = base2_4hr
     mouse = expt(isess).mouse;
@@ -180,6 +229,24 @@ base2_4hr_avgtuningcurve_all = [base2_4hr_avgtuningcurve_all]';
 base2_4hr_tuning_width_all = rad2deg(acos((1./base2_4hr_k_tuned_green_all) .* log((exp(base2_4hr_k_tuned_green_all)./2) + (exp(-base2_4hr_k_tuned_green_all)./2))));
 
 %%
+sz = size(base2_4hr_avgtuningcurve_all);
+sz1 = sz(1);
+sz2 = sz(2);
+
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if base2_4hr_avgtuningcurve_all(i,j) > 0.5
+            base2_4hr_avgtuningcurve_all(i,:) = [];
+        elseif base2_4hr_avgtuningcurve_all(i,j) < -0.5
+            base2_4hr_avgtuningcurve_all(i,:) = [];
+        end
+    end
+end 
+
+
+
+
+%%
 %postdark + 15min
 post_dark_ori_all = [];
 post_dark_k_max_all = [];
@@ -189,7 +256,7 @@ post_dark_mouse_id_all = [];
 post_dark_avgtuningcurve_all = [];
 
 
-post_dark = [5 12];
+post_dark = [5 5+7 5+14];
 
 for isess = post_dark
     mouse = expt(isess).mouse;
@@ -221,6 +288,23 @@ post_dark_avgtuningcurve_all = [post_dark_avgtuningcurve_all]';
 post_dark_tuning_width_all = rad2deg(acos((1./post_dark_k_tuned_green_all) .* log((exp(post_dark_k_tuned_green_all)./2) + (exp(-post_dark_k_tuned_green_all)./2))));
 
 %%
+sz = size(post_dark_avgtuningcurve_all);
+sz1 = sz(1);
+sz2 = sz(2);
+
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if post_dark_avgtuningcurve_all(i,j) > 0.5
+            post_dark_avgtuningcurve_all(i,:) = [];
+        elseif post_dark_avgtuningcurve_all(i,j) < -0.5
+            post_dark_avgtuningcurve_all(i,:) = [];
+        end
+    end
+end 
+
+
+
+%%
 %post 4hr light
 post_light_ori_all = [];
 post_light_k_max_all = [];
@@ -230,7 +314,7 @@ post_light_mouse_id_all = [];
 post_light_avgtuningcurve_all = [];
 
 
-post_light = [6 13];
+post_light = [6 6+7 6+14];
 
 for isess = post_light
     mouse = expt(isess).mouse;
@@ -262,6 +346,23 @@ post_light_avgtuningcurve_all = [post_light_avgtuningcurve_all]';
 post_light_tuning_width_all = rad2deg(acos((1./post_light_k_tuned_green_all) .* log((exp(post_light_k_tuned_green_all)./2) + (exp(-post_light_k_tuned_green_all)./2))));
 
 %%
+sz = size(post_light_avgtuningcurve_all);
+sz1 = sz(1);
+sz2 = sz(2);
+
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if post_light_avgtuningcurve_all(i,j) > 0.5
+            post_light_avgtuningcurve_all(i,:) = [];
+        elseif post_light_avgtuningcurve_all(i,j) < -0.5
+            post_light_avgtuningcurve_all(i,:) = [];
+        end
+    end
+end 
+
+
+
+%%
 %post 4hr light + 7d
 post_light_7d_ori_all = [];
 post_light_7d_k_max_all = [];
@@ -271,7 +372,7 @@ post_light_7d_mouse_id_all = [];
 post_light_7d_avgtuningcurve_all = [];
 
 
-post_light_7d = [7 14];
+post_light_7d = [7 7+7 7+14];
 
 for isess = post_light_7d
     mouse = expt(isess).mouse;
@@ -301,6 +402,23 @@ end
 post_light_7d_avgtuningcurve_all = [post_light_7d_avgtuningcurve_all]';
 
 post_light_7d_tuning_width_all = rad2deg(acos((1./post_light_7d_k_tuned_green_all) .* log((exp(post_light_7d_k_tuned_green_all)./2) + (exp(-post_light_7d_k_tuned_green_all)./2))));
+
+%%
+sz = size(post_light_7d_avgtuningcurve_all);
+sz1 = sz(1);
+sz2 = sz(2);
+
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if post_light_7d_avgtuningcurve_all(i,j) > 0.5
+            post_light_7d_avgtuningcurve_all(i,:) = [];
+        elseif post_light_7d_avgtuningcurve_all(i,j) < -0.5
+            post_light_7d_avgtuningcurve_all(i,:) = [];
+        end
+    end
+end 
+
+
 
 %%
 figure; 
@@ -388,7 +506,7 @@ pref_dscores_all = [];
 k_scores = [];
 max_scores = [];
 
-list = [1 8];
+list = [1 1+7 1+14];
 for iexp = list
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
@@ -411,6 +529,7 @@ pref_d_3_4_all = [];
 pref_d_4_5_all = [];
 pref_d_5_6_all = [];
 pref_d_5_7_all = [];
+mouse_id_1_2_all = [];
 
 
 for idata = 1:length(pref_dscores_all)
@@ -427,6 +546,7 @@ for idata = 1:length(pref_dscores_all)
     pref_d_5_7 = pref_dscores_all(idata).d_score_prefori_5_7_match;
     pref_d_5_7_all = [pref_d_5_7_all pref_d_5_7];
 end
+
 
 %%
 figure; 
@@ -448,6 +568,247 @@ title('Change in Pref Ori');
 legend(['Baseline1 to Baseline1 + 4d'], ['Baseline1 to Baseline2'], ['Baseline2 to Baseline2 + 4hr'], ['Baseline2 + 4hr to Post Dark'], ['Post Dark to Post Light 4hr'], ['Post Dark to Post Light 7d'])
 hold off
 print(fullfile(realfnout, ['pooldarklight_allpoints_change_pref_cdf.pdf']), '-dpdf', '-bestfit')
+
+%%
+%Jeon paper comparison
+
+%img_point: 1 = baseline1, 2 = baseline1 + 4d, 3 = baseline2, 4 = baseline2
+%+ 4hrs, 5 = post 4d dark, 6 = post dark + 4hrs, 7 = post dark + 7d
+
+figure; 
+% h=cdfplot(pref_d_1_2_all);
+% set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+j=cdfplot(pref_d_1_3_all);
+set(j, 'LineStyle', '-', 'Color', [.15 .15 .15], 'LineWidth',2);
+hold on
+% k=cdfplot(pref_d_3_4_all);
+% set(k, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
+l=cdfplot(pref_d_4_5_all);
+set(l, 'LineStyle', '-', 'Color', [.45 .45 .45], 'LineWidth',2);
+% m=cdfplot(pref_d_5_6_all);
+% set(m, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
+n=cdfplot(pref_d_5_7_all);
+set(n, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+xlabel('Change in Pref Ori')
+title('Change in Pref Ori');
+legend(['Baseline1 to Baseline2'], ['Baseline2 to Post Dark'], ['Post Dark to Post Light 7d'], 'Location', 'best')
+hold off
+print(fullfile(realfnout, ['pooldarklight_allpoints_Jeon_change_pref_cdf.pdf']), '-dpdf', '-bestfit')
+
+%%
+%2 session comparisons using only cells matched to those days
+
+comparison_ids_all = [];
+comparison_pref_dscores_all = [];
+
+list = [1 1+7 1+14];
+for iexp = list
+    mouse = expt(iexp).mouse;
+    date = expt(iexp).date;
+    img_area = expt(iexp).img_loc{1};
+    img_layer = expt(iexp).img_loc{2};
+    comparison_ids = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'id_matches']));
+    %comparison_ids_all = [comparison_ids_all comparison_ids];
+    comparison_pref_dscores_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'same_cell_dscores']));
+    comparison_pref_dscores_all = [comparison_pref_dscores_all comparison_pref_dscores_ses_all];
+%     k_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'RW_k_changes']));
+%     k_scores = [k_scores k_ses_all];
+%     max_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'RW_max_changes']));
+%     max_scores = [max_scores max_ses_all];
+end
+
+%%
+
+comparison_pref_d_1_2_all = [];
+comparison_pref_d_1_3_all = [];
+comparison_pref_d_3_4_all = [];
+comparison_pref_d_4_5_all = [];
+comparison_pref_d_5_6_all = [];
+comparison_pref_d_5_7_all = [];
+
+comparison_k_d_1_2_all = [];
+comparison_k_d_1_3_all = [];
+comparison_k_d_3_4_all = [];
+comparison_k_d_4_5_all = [];
+comparison_k_d_5_6_all = [];
+comparison_k_d_5_7_all = [];
+
+comparison_max_d_1_2_all = [];
+comparison_max_d_1_3_all = [];
+comparison_max_d_3_4_all = [];
+comparison_max_d_4_5_all = [];
+comparison_max_d_5_6_all = [];
+comparison_max_d_5_7_all = [];
+
+
+
+
+for idata = 1:length(comparison_pref_dscores_all)
+    comparison_pref_d_1_2 = comparison_pref_dscores_all(idata).comparison_d_score_prefori_1_2;
+    comparison_pref_d_1_2_all = [comparison_pref_d_1_2_all comparison_pref_d_1_2];
+    comparison_pref_d_1_3 = comparison_pref_dscores_all(idata).comparison_d_score_prefori_1_3;
+    comparison_pref_d_1_3_all = [comparison_pref_d_1_3_all comparison_pref_d_1_3];
+    comparison_pref_d_3_4 = comparison_pref_dscores_all(idata).comparison_d_score_prefori_3_4;
+    comparison_pref_d_3_4_all = [comparison_pref_d_3_4_all comparison_pref_d_3_4];
+    comparison_pref_d_4_5 = comparison_pref_dscores_all(idata).comparison_d_score_prefori_4_5;
+    comparison_pref_d_4_5_all = [comparison_pref_d_4_5_all comparison_pref_d_4_5];
+    comparison_pref_d_5_6 = comparison_pref_dscores_all(idata).comparison_d_score_prefori_5_6;
+    comparison_pref_d_5_6_all = [comparison_pref_d_5_6_all comparison_pref_d_5_6];
+    comparison_pref_d_5_7 = comparison_pref_dscores_all(idata).comparison_d_score_prefori_5_7;
+    comparison_pref_d_5_7_all = [comparison_pref_d_5_7_all comparison_pref_d_5_7];
+
+    comparison_k_d_1_2 = comparison_pref_dscores_all(idata).comparison_d_score_k_1_2;
+    comparison_k_d_1_2_all = [comparison_k_d_1_2_all comparison_k_d_1_2];
+    comparison_k_d_1_3 = comparison_pref_dscores_all(idata).comparison_d_score_k_1_3;
+    comparison_k_d_1_3_all = [comparison_k_d_1_3_all comparison_k_d_1_3];
+    comparison_k_d_3_4 = comparison_pref_dscores_all(idata).comparison_d_score_k_3_4;
+    comparison_k_d_3_4_all = [comparison_k_d_3_4_all comparison_k_d_3_4];
+    comparison_k_d_4_5 = comparison_pref_dscores_all(idata).comparison_d_score_k_4_5;
+    comparison_k_d_4_5_all = [comparison_k_d_4_5_all comparison_k_d_4_5];
+    comparison_k_d_5_6 = comparison_pref_dscores_all(idata).comparison_d_score_k_5_6;
+    comparison_k_d_5_6_all = [comparison_k_d_5_6_all comparison_k_d_5_6];
+    comparison_k_d_5_7 = comparison_pref_dscores_all(idata).comparison_d_score_k_5_7;
+    comparison_k_d_5_7_all = [comparison_k_d_5_7_all comparison_k_d_5_7];
+
+    comparison_max_d_1_2 = comparison_pref_dscores_all(idata).comparison_d_score_max_1_2;
+    comparison_max_d_1_2_all = [comparison_max_d_1_2_all comparison_max_d_1_2];
+    comparison_max_d_1_3 = comparison_pref_dscores_all(idata).comparison_d_score_max_1_3;
+    comparison_max_d_1_3_all = [comparison_max_d_1_3_all comparison_max_d_1_3];
+    comparison_max_d_3_4 = comparison_pref_dscores_all(idata).comparison_d_score_max_3_4;
+    comparison_max_d_3_4_all = [comparison_max_d_3_4_all comparison_max_d_3_4];
+    comparison_max_d_4_5 = comparison_pref_dscores_all(idata).comparison_d_score_max_4_5;
+    comparison_max_d_4_5_all = [comparison_max_d_4_5_all comparison_max_d_4_5];
+    comparison_max_d_5_6 = comparison_pref_dscores_all(idata).comparison_d_score_max_5_6;
+    comparison_max_d_5_6_all = [comparison_max_d_5_6_all comparison_max_d_5_6];
+    comparison_max_d_5_7 = comparison_pref_dscores_all(idata).comparison_d_score_max_5_7;
+    comparison_max_d_5_7_all = [comparison_max_d_5_7_all comparison_max_d_5_7];
+
+
+
+    
+end
+
+
+%%
+%subplot comparisons of two sessions - need to add legend, titles, etc.
+%also work on adding k and max changes
+
+figure;
+sgtitle('Pref Ori Changes')
+subplot(2,2,1)
+h=cdfplot(comparison_pref_d_1_2_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_pref_d_4_5_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_pref_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_pref_d_4_5_all)), ')'], 'Location', 'southeast')
+hold off
+
+
+subplot(2,2,2)
+h=cdfplot(comparison_pref_d_3_4_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_pref_d_5_6_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_pref_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_pref_d_5_6_all)), ')'], 'Location', 'southeast')
+hold off
+
+subplot(2,2,3)
+h=cdfplot(comparison_pref_d_1_3_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_pref_d_5_7_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1 - Base2 (n= ', num2str(length(comparison_pref_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_pref_d_5_7_all)), ')'], 'Location', 'southeast')
+hold off
+print(fullfile(realfnout, ['pooled_comparison_prefori_change.pdf']), '-dpdf', '-bestfit')
+
+
+
+figure;
+sgtitle('k Changes')
+subplot(2,2,1)
+h=cdfplot(comparison_k_d_1_2_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_k_d_4_5_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_k_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_k_d_4_5_all)), ')'], 'Location', 'southeast')
+hold off
+
+
+subplot(2,2,2)
+h=cdfplot(comparison_k_d_3_4_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_k_d_5_6_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_k_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_k_d_5_6_all)), ')'], 'Location', 'southeast')
+hold off
+
+subplot(2,2,3)
+h=cdfplot(comparison_k_d_1_3_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_k_d_5_7_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1 - Base2 (n= ', num2str(length(comparison_k_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_k_d_5_7_all)), ')'], 'Location', 'southeast')
+hold off
+print(fullfile(realfnout, ['pooled_comparison_k_change.pdf']), '-dpdf', '-bestfit')
+
+
+figure;
+sgtitle('Max dF/F Changes')
+subplot(2,2,1)
+h=cdfplot(comparison_max_d_1_2_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_max_d_4_5_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_max_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_max_d_4_5_all)), ')'], 'Location', 'southeast')
+hold off
+
+
+subplot(2,2,2)
+h=cdfplot(comparison_max_d_3_4_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_max_d_5_6_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_max_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_max_d_5_6_all)), ')'], 'Location', 'southeast')
+hold off
+
+subplot(2,2,3)
+h=cdfplot(comparison_max_d_1_3_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_max_d_5_7_all);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1 - Base2 (n= ', num2str(length(comparison_max_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_max_d_5_7_all)), ')'], 'Location', 'southeast')
+hold off
+print(fullfile(realfnout, ['pooled_comparison_max_change.pdf']), '-dpdf', '-bestfit')
+
+
+
+
+%%
+k_s_pref_1 = kstest2(comparison_pref_d_1_2_all, comparison_pref_d_4_5_all)
+k_s_pref_2 = kstest2(comparison_pref_d_3_4_all, comparison_pref_d_5_6_all)
+k_s_pref_3 = kstest2(comparison_pref_d_1_3_all, comparison_pref_d_5_7_all)
+
+k_s_k_1 = kstest2(comparison_k_d_1_2_all, comparison_k_d_4_5_all)
+k_s_k_2 = kstest2(comparison_k_d_3_4_all, comparison_k_d_5_6_all)
+k_s_k_3 = kstest2(comparison_k_d_1_3_all, comparison_k_d_5_7_all)
+
+k_s_max_1 = kstest2(comparison_max_d_1_2_all, comparison_max_d_4_5_all)
+k_s_max_2 = kstest2(comparison_max_d_3_4_all, comparison_max_d_5_6_all)
+k_s_max_3 = kstest2(comparison_max_d_1_3_all, comparison_max_d_5_7_all)
+
+
+%%
+
+
 
 %%
 %indexing - use find
@@ -488,7 +849,7 @@ o=cdfplot(post_light_7d_tuning_width_all(i2537_index_post_light_7d));
 set(o, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 xlabel('Tuning Width Values')
 title('Tuning Width Values');
-legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'])
+legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'], 'Location','best')
 
  
 subplot(1,2,2)
@@ -509,6 +870,156 @@ o=cdfplot(post_light_7d_tuning_width_all(i2538_index_post_light_7d));
 set(o, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 xlabel('Tuning Width Values')
 title('Tuning Width Values');
-legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'])
+legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'], 'Location','best')
 hold off
+print(fullfile(realfnout, ['pooldarklight_individual_tuningwidth_cdf.pdf']), '-dpdf', '-bestfit')
+
+
+figure; 
+subplot(1,2,1)
+h=cdfplot(base1_max_tuned_green_all(i2537_index_base1));
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(base1_4d_max_tuned_green_all(i2537_index_base1_4d));
+set(j, 'LineStyle', '-', 'Color', [.15 .15 .15], 'LineWidth',2);
+k=cdfplot(base2_max_tuned_green_all(i2537_index_base2));
+set(k, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
+l=cdfplot(base2_4hr_max_tuned_green_all(i2537_index_base2_4hr));
+set(l, 'LineStyle', '-', 'Color', [.45 .45 .45], 'LineWidth',2);
+m=cdfplot(post_dark_max_tuned_green_all(i2537_index_post_dark));
+set(m, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
+n=cdfplot(post_light_max_tuned_green_all(i2537_index_post_light));
+set(n, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+o=cdfplot(post_light_7d_max_tuned_green_all(i2537_index_post_light_7d));
+set(o, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
+xlabel('Max dF/F Values');
+xlim([0 1]);
+title('Max dF/F Values');
+legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'], 'Location','best')
+
+ 
+subplot(1,2,2)
+h=cdfplot(base1_max_tuned_green_all(i2538_index_base1));
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(base1_4d_max_tuned_green_all(i2538_index_base1_4d));
+set(j, 'LineStyle', '-', 'Color', [.15 .15 .15], 'LineWidth',2);
+k=cdfplot(base2_max_tuned_green_all(i2538_index_base2));
+set(k, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
+l=cdfplot(base2_4hr_max_tuned_green_all(i2538_index_base2_4hr));
+set(l, 'LineStyle', '-', 'Color', [.45 .45 .45], 'LineWidth',2);
+m=cdfplot(post_dark_max_tuned_green_all(i2538_index_post_dark));
+set(m, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
+n=cdfplot(post_light_max_tuned_green_all(i2538_index_post_light));
+set(n, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+o=cdfplot(post_light_7d_max_tuned_green_all(i2538_index_post_light_7d));
+set(o, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
+xlabel('Max dF/F Values');
+xlim([0 1]);
+title('Max dF/F Values');
+legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'], 'Location','best')
+hold off
+print(fullfile(realfnout, ['pooldarklight_individual_maxdfof_cdf.pdf']), '-dpdf', '-bestfit')
+
+
+
+%%
+%2537
+figure;
+subplot(1,2,1)
+fast_errbar(1:8,base1_avgtuningcurve_all(i2537_index_base1,:),1,'color',[0 0 0]);
+hold on;
+fast_errbar(1:8,base1_4d_avgtuningcurve_all(i2537_index_base1_4d,:),1,'color',[.15 .15 .15]);
+fast_errbar(1:8,base2_avgtuningcurve_all(i2537_index_base2,:),1,'color',[.3 .3 .3]); 
+fast_errbar(1:8,base2_4hr_avgtuningcurve_all(i2537_index_base2_4hr,:),1,'color',[.45 .45 .45]); 
+fast_errbar(1:8,post_dark_avgtuningcurve_all(i2537_index_post_dark,:),1,'color',[.6 .6 .6]); 
+fast_errbar(1:8,post_light_avgtuningcurve_all(i2537_index_post_light,:),1,'color',[.75 .75 .75]); 
+fast_errbar(1:8,post_light_7d_avgtuningcurve_all(i2537_index_post_light_7d,:),1,'color',[.9 .9 .9]);
+xlabel('Orientation')
+ylabel('dF/F')
+legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'], 'Location','best')
+hold off
+
+%2538
+subplot(1,2,2)
+fast_errbar(1:8,base1_avgtuningcurve_all(i2538_index_base1,:),1,'color',[0 0 0]);
+hold on;
+fast_errbar(1:8,base1_4d_avgtuningcurve_all(i2538_index_base1_4d,:),1,'color',[.15 .15 .15]);
+fast_errbar(1:8,base2_avgtuningcurve_all(i2538_index_base2,:),1,'color',[.3 .3 .3]); 
+fast_errbar(1:8,base2_4hr_avgtuningcurve_all(i2538_index_base2_4hr,:),1,'color',[.45 .45 .45]); 
+fast_errbar(1:8,post_dark_avgtuningcurve_all(i2538_index_post_dark,:),1,'color',[.6 .6 .6]); 
+fast_errbar(1:8,post_light_avgtuningcurve_all(i2538_index_post_light,:),1,'color',[.75 .75 .75]); 
+fast_errbar(1:8,post_light_7d_avgtuningcurve_all(i2538_index_post_light_7d,:),1,'color',[.9 .9 .9]);
+xlabel('Orientation')
+ylabel('dF/F')
+legend(['Baseline1'], ['Baseline1 + 4d'], ['Baseline2'], ['Baseline2 + 4hr'], ['Post Dark 15min'], ['Post Light 4hr'], ['Post Light + 7d'], 'Location','best')
+hold off
+
+print(fullfile(realfnout, ['pooldarklight_individual_avgtuning_cdf.pdf']), '-dpdf', '-bestfit')
+
+
+
+
+
+%%
+%cell ids for each matched condition and each mouse
+i2537_match_cell_ids = [42 39 18 19 15 23];
+i2538_match_cell_ids = [32 34 14 17 17 22];
+
+pref_d_i2537_1_2 = pref_d_1_2_all(1:i2537_match_cell_ids(1));
+pref_d_i2537_1_3 = pref_d_1_3_all(1:i2537_match_cell_ids(2));
+pref_d_i2537_3_4 = pref_d_3_4_all(1:i2537_match_cell_ids(3));
+pref_d_i2537_4_5 = pref_d_4_5_all(1:i2537_match_cell_ids(4));
+pref_d_i2537_5_6 = pref_d_5_6_all(1:i2537_match_cell_ids(5));
+pref_d_i2537_5_7 = pref_d_5_7_all(1:i2537_match_cell_ids(6));
+
+pref_d_i2538_1_2 = pref_d_1_2_all(1:i2538_match_cell_ids(1));
+pref_d_i2538_1_3 = pref_d_1_3_all(1:i2538_match_cell_ids(2));
+pref_d_i2538_3_4 = pref_d_3_4_all(1:i2538_match_cell_ids(3));
+pref_d_i2538_4_5 = pref_d_4_5_all(1:i2538_match_cell_ids(4));
+pref_d_i2538_5_6 = pref_d_5_6_all(1:i2538_match_cell_ids(5));
+pref_d_i2538_5_7 = pref_d_5_7_all(1:i2538_match_cell_ids(6));
+
+%%
+%these are wrong - it is basically the same cells for both mice
+figure; 
+h=cdfplot(pref_d_i2537_1_2);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(pref_d_i2537_1_3);
+set(j, 'LineStyle', '-', 'Color', [.15 .15 .15], 'LineWidth',2);
+k=cdfplot(pref_d_i2537_3_4);
+set(k, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
+l=cdfplot(pref_d_i2537_4_5);
+set(l, 'LineStyle', '-', 'Color', [.45 .45 .45], 'LineWidth',2);
+m=cdfplot(pref_d_i2537_5_6);
+set(m, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
+n=cdfplot(pref_d_i2537_5_7);
+set(n, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+xlabel('Change in Pref Ori')
+title('Change in Pref Ori');
+legend(['Baseline1 to Baseline1 + 4d'], ['Baseline1 to Baseline2'], ['Baseline2 to Baseline2 + 4hr'], ['Baseline2 + 4hr to Post Dark'], ['Post Dark to Post Light 4hr'], ['Post Dark to Post Light 7d'])
+hold off
+%print(fullfile(realfnout, ['pooldarklight_allpoints_change_pref_cdf.pdf']), '-dpdf', '-bestfit')
+
+figure; 
+h=cdfplot(pref_d_i2538_1_2);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(pref_d_i2538_1_3);
+set(j, 'LineStyle', '-', 'Color', [.15 .15 .15], 'LineWidth',2);
+k=cdfplot(pref_d_i2538_3_4);
+set(k, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
+l=cdfplot(pref_d_i2538_4_5);
+set(l, 'LineStyle', '-', 'Color', [.45 .45 .45], 'LineWidth',2);
+m=cdfplot(pref_d_i2538_5_6);
+set(m, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
+n=cdfplot(pref_d_i2538_5_7);
+set(n, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+xlabel('Change in Pref Ori')
+title('Change in Pref Ori');
+legend(['Baseline1 to Baseline1 + 4d'], ['Baseline1 to Baseline2'], ['Baseline2 to Baseline2 + 4hr'], ['Baseline2 + 4hr to Post Dark'], ['Post Dark to Post Light 4hr'], ['Post Dark to Post Light 7d'])
+hold off
+%print(fullfile(realfnout, ['pooldarklight_allpoints_change_pref_cdf.pdf']), '-dpdf', '-bestfit')
+
 

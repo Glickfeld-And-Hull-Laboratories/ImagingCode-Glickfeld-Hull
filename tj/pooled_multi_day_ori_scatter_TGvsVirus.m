@@ -13,7 +13,7 @@ dataset = 'exp_list_tjw'; %experiment list to pick files from
 eval(dataset); %load dataset
 
 %%
-% ref_str = 'runs-001';
+%ref_str = 'runs-001';
 d1_ori_all = [];
 d2_ori_all = [];
 d3_ori_all = [];
@@ -32,10 +32,14 @@ d1_max_tuned_all = [];
 d1_k_max_all = [];
 d2_k_all = [];
 d2_max_all = [];
+d2_k_tuned_all = [];
+d2_max_tuned_all = [];
 d2_k_max_all = [];
 d3_k_all = [];
 d3_max_all = [];
 d3_k_max_all = [];
+d3_k_tuned_all = [];
+d3_max_tuned_all = [];
 
 
 TG_d1_ori_all = [];
@@ -56,20 +60,29 @@ TG_d1_max_tuned_all = [];
 TG_d1_k_max_all = [];
 TG_d2_k_all = [];
 TG_d2_max_all = [];
+TG_d2_k_tuned_all = [];
+TG_d2_max_tuned_all = [];
 TG_d2_k_max_all = [];
 TG_d3_k_all = [];
 TG_d3_max_all = [];
 TG_d3_k_max_all = [];
+TG_d3_k_tuned_all = [];
+TG_d3_max_tuned_all = [];
+
+d1_avgtuningcurve_all = [];
+d2_avgtuningcurve_all = [];
+d3_avgtuningcurve_all = [];
+
+TG_d1_avgtuningcurve_all = [];
+TG_d2_avgtuningcurve_all = [];
+TG_d3_avgtuningcurve_all = [];
 
 
-
-%no running wheel data here
-
-d1 = [1 7 13 16 19 22 25];
+d1 = [1 7 13 16 19 22 25 34 37];
 d2 = d1+1;
 d3 = d2+1;
 
-TG_d1 = [28 31 40 43];
+TG_d1 = [28 31 40 43 46 49];
 TG_d2 = TG_d1+1;
 TG_d3 = TG_d2+1;
 
@@ -87,7 +100,7 @@ d1_max_tuned_all = [];
 
 %virus d1
 for isess = d1
-    ref_str = ['runs-' expt(isess).runs]; 
+    ref_str = ['runs-' expt(isess).runs];
     mouse = expt(isess).mouse;
     date = expt(isess).date;
     img_area = expt(isess).img_loc{1};
@@ -95,6 +108,7 @@ for isess = d1
     d1_ori = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'oriTuningInfo.mat']));
     d1_ori_all = [d1_ori_all d1_ori];
     d1_k_max = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'k_and_max_vals.mat']));
+    d1_newavg = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_newAvg.mat']));
     d1_k_max_all = [d1_k_max_all d1_k_max];
     d1_k = d1_k_max.k1;
     d1_k_all = [d1_k_all d1_k];
@@ -106,13 +120,83 @@ for isess = d1
     d1_max_tuned_index = d1_ori.ind_theta90;
     d1_max_tuned = d1_k_max.max_dfof(d1_max_tuned_index);
     d1_max_tuned_all = [d1_max_tuned_all d1_max_tuned];
-
+    d1_avgtuningcurve = d1_newavg.newAvg(d1_k_tuned_index,:)';
+    d1_avgtuningcurve_all = [d1_avgtuningcurve_all d1_avgtuningcurve];
 end
 
+d1_avgtuningcurve_all = [d1_avgtuningcurve_all]';
+
+d1_tuning_width_all = rad2deg(acos((1./d1_k_tuned_all) .* log((exp(d1_k_tuned_all)./2) + (exp(-d1_k_tuned_all)./2))));
+
 %%
-%TG
+%virus d2
+for isess = d2
+    ref_str = ['runs-' expt(isess).runs];
+    mouse = expt(isess).mouse;
+    date = expt(isess).date;
+    img_area = expt(isess).img_loc{1};
+    img_layer = expt(isess).img_loc{2};
+    d2_ori = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'oriTuningInfo.mat']));
+    d2_ori_all = [d2_ori_all d2_ori];
+    d2_k_max = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'k_and_max_vals.mat']));
+    d2_newavg = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_newAvg.mat']));
+    d2_k_max_all = [d2_k_max_all d2_k_max];
+    d2_k = d2_k_max.k1;
+    d2_k_all = [d2_k_all d2_k];
+    d2_k_tuned_index = d2_ori.ind_theta90;
+    d2_k_tuned = d2_k_max.k1(d2_k_tuned_index);
+    d2_k_tuned_all = [d2_k_tuned_all d2_k_tuned];
+    d2_max = d2_k_max.max_dfof;
+    d2_max_all = [d2_max_all d2_max];
+    d2_max_tuned_index = d2_ori.ind_theta90;
+    d2_max_tuned = d2_k_max.max_dfof(d2_max_tuned_index);
+    d2_max_tuned_all = [d2_max_tuned_all d2_max_tuned];
+    d2_avgtuningcurve = d2_newavg.newAvg(d2_k_tuned_index,:)';
+    d2_avgtuningcurve_all = [d2_avgtuningcurve_all d2_avgtuningcurve];
+end
+
+d2_avgtuningcurve_all = [d2_avgtuningcurve_all]';
+
+d2_tuning_width_all = rad2deg(acos((1./d2_k_tuned_all) .* log((exp(d2_k_tuned_all)./2) + (exp(-d2_k_tuned_all)./2))));
+
+
+%%
+%virus d3
+for isess = d3
+    ref_str = ['runs-' expt(isess).runs];
+    mouse = expt(isess).mouse;
+    date = expt(isess).date;
+    img_area = expt(isess).img_loc{1};
+    img_layer = expt(isess).img_loc{2};
+    d3_ori = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'oriTuningInfo.mat']));
+    d3_ori_all = [d3_ori_all d3_ori];
+    d3_k_max = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'k_and_max_vals.mat']));
+    d3_newavg = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_newAvg.mat']));
+    d3_k_max_all = [d3_k_max_all d3_k_max];
+    d3_k = d3_k_max.k1;
+    d3_k_all = [d3_k_all d3_k];
+    d3_k_tuned_index = d3_ori.ind_theta90;
+    d3_k_tuned = d3_k_max.k1(d3_k_tuned_index);
+    d3_k_tuned_all = [d3_k_tuned_all d3_k_tuned];
+    d3_max = d3_k_max.max_dfof;
+    d3_max_all = [d3_max_all d3_max];
+    d3_max_tuned_index = d3_ori.ind_theta90;
+    d3_max_tuned = d3_k_max.max_dfof(d3_max_tuned_index);
+    d3_max_tuned_all = [d3_max_tuned_all d3_max_tuned];
+    d3_avgtuningcurve = d3_newavg.newAvg(d3_k_tuned_index,:)';
+    d3_avgtuningcurve_all = [d3_avgtuningcurve_all d3_avgtuningcurve];
+end
+
+d3_avgtuningcurve_all = [d3_avgtuningcurve_all]';
+
+d3_tuning_width_all = rad2deg(acos((1./d3_k_tuned_all) .* log((exp(d3_k_tuned_all)./2) + (exp(-d3_k_tuned_all)./2))));
+
+
+
+%%
+%TG d1
 for isess = TG_d1
-    ref_str = ['runs-' expt(isess).runs]; 
+    ref_str = ['runs-' expt(isess).runs];
     mouse = expt(isess).mouse;
     date = expt(isess).date;
     img_area = expt(isess).img_loc{1};
@@ -120,6 +204,7 @@ for isess = TG_d1
     TG_d1_ori = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'oriTuningInfo.mat']));
     TG_d1_ori_all = [TG_d1_ori_all TG_d1_ori];
     TG_d1_k_max = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'k_and_max_vals.mat']));
+    TG_d1_newavg = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_newAvg.mat']));
     TG_d1_k_max_all = [TG_d1_k_max_all TG_d1_k_max];
     TG_d1_k = TG_d1_k_max.k1;
     TG_d1_k_all = [TG_d1_k_all TG_d1_k];
@@ -131,32 +216,152 @@ for isess = TG_d1
     TG_d1_max_tuned_index = TG_d1_ori.ind_theta90;
     TG_d1_max_tuned = TG_d1_k_max.max_dfof(TG_d1_max_tuned_index);
     TG_d1_max_tuned_all = [TG_d1_max_tuned_all TG_d1_max_tuned];
+    TG_d1_avgtuningcurve = TG_d1_newavg.newAvg(TG_d1_k_tuned_index,:)';
+    TG_d1_avgtuningcurve_all = [TG_d1_avgtuningcurve_all TG_d1_avgtuningcurve];
+
 end
+
+TG_d1_avgtuningcurve_all = [TG_d1_avgtuningcurve_all]';
+
+TG_d1_tuning_width_all = rad2deg(acos((1./TG_d1_k_tuned_all) .* log((exp(TG_d1_k_tuned_all)./2) + (exp(-TG_d1_k_tuned_all)./2))));
+
+%%
+%TG d2
+for isess = TG_d2
+    ref_str = ['runs-' expt(isess).runs];
+    mouse = expt(isess).mouse;
+    date = expt(isess).date;
+    img_area = expt(isess).img_loc{1};
+    img_layer = expt(isess).img_loc{2};
+    TG_d2_ori = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'oriTuningInfo.mat']));
+    TG_d2_ori_all = [TG_d2_ori_all TG_d2_ori];
+    TG_d2_k_max = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'k_and_max_vals.mat']));
+    TG_d2_newavg = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_newAvg.mat']));
+    TG_d2_k_max_all = [TG_d2_k_max_all TG_d2_k_max];
+    TG_d2_k = TG_d2_k_max.k1;
+    TG_d2_k_all = [TG_d2_k_all TG_d2_k];
+    TG_d2_k_tuned_index = TG_d2_ori.ind_theta90;
+    TG_d2_k_tuned = TG_d2_k_max.k1(TG_d2_k_tuned_index);
+    TG_d2_k_tuned_all = [TG_d2_k_tuned_all TG_d2_k_tuned];
+    TG_d2_max = TG_d2_k_max.max_dfof;
+    TG_d2_max_all = [TG_d2_max_all TG_d2_max];
+    TG_d2_max_tuned_index = TG_d2_ori.ind_theta90;
+    TG_d2_max_tuned = TG_d2_k_max.max_dfof(TG_d2_max_tuned_index);
+    TG_d2_max_tuned_all = [TG_d2_max_tuned_all TG_d2_max_tuned];
+    TG_d2_avgtuningcurve = TG_d2_newavg.newAvg(TG_d2_k_tuned_index,:)';
+    TG_d2_avgtuningcurve_all = [TG_d2_avgtuningcurve_all TG_d2_avgtuningcurve];
+
+end
+
+TG_d2_avgtuningcurve_all = [TG_d2_avgtuningcurve_all]';
+
+TG_d2_tuning_width_all = rad2deg(acos((1./TG_d2_k_tuned_all) .* log((exp(TG_d2_k_tuned_all)./2) + (exp(-TG_d2_k_tuned_all)./2))));
+
+%%
+%TG d3
+for isess = TG_d3
+    ref_str = ['runs-' expt(isess).runs];
+    mouse = expt(isess).mouse;
+    date = expt(isess).date;
+    img_area = expt(isess).img_loc{1};
+    img_layer = expt(isess).img_loc{2};
+    TG_d3_ori = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'oriTuningInfo.mat']));
+    TG_d3_ori_all = [TG_d3_ori_all TG_d3_ori];
+    TG_d3_k_max = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_' 'k_and_max_vals.mat']));
+    TG_d3_newavg = load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_newAvg.mat']));
+    TG_d3_k_max_all = [TG_d3_k_max_all TG_d3_k_max];
+    TG_d3_k = TG_d3_k_max.k1;
+    TG_d3_k_all = [TG_d3_k_all TG_d3_k];
+    TG_d3_k_tuned_index = TG_d3_ori.ind_theta90;
+    TG_d3_k_tuned = TG_d3_k_max.k1(TG_d3_k_tuned_index);
+    TG_d3_k_tuned_all = [TG_d3_k_tuned_all TG_d3_k_tuned];
+    TG_d3_max = TG_d3_k_max.max_dfof;
+    TG_d3_max_all = [TG_d3_max_all TG_d3_max];
+    TG_d3_max_tuned_index = TG_d3_ori.ind_theta90;
+    TG_d3_max_tuned = TG_d3_k_max.max_dfof(TG_d3_max_tuned_index);
+    TG_d3_max_tuned_all = [TG_d3_max_tuned_all TG_d3_max_tuned];
+    TG_d3_avgtuningcurve = TG_d3_newavg.newAvg(TG_d3_k_tuned_index,:)';
+    TG_d3_avgtuningcurve_all = [TG_d3_avgtuningcurve_all TG_d3_avgtuningcurve];
+
+end
+
+TG_d3_avgtuningcurve_all = [TG_d3_avgtuningcurve_all]';
+
+TG_d3_tuning_width_all = rad2deg(acos((1./TG_d3_k_tuned_all) .* log((exp(TG_d3_k_tuned_all)./2) + (exp(-TG_d3_k_tuned_all)./2))));
+
+
+
 
 
 
 %%
+
 %MAX DF/F
 %all mice all (red and green cells)
 figure; 
 h=cdfplot(d1_max_tuned_all);
 hold on
 j=cdfplot(TG_d1_max_tuned_all);
-% k=cdfplot(RW_d1_max_tuned_all);
-% l=cdfplot(RW_d1_max_tuned_all);
+% k=cdfplot(TG_d1_max_tuned_all);
+% l=cdfplot(TG_d1_max_tuned_all);
 set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
 set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
 % set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
 % set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
 hold off
 %legend(['Arc Red (n = ', num2str(length(d1_max_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d1_max_tuned_all)), ')'], ...
-%    ['RW Red (n = ', num2str(length(RW_d1_max_tunedall)), ')'], ['RW Green (n = ', num2str(length(RW_d1_max_tuned_all)), ')'],'Location', 'best')
+%    ['TG Red (n = ', num2str(length(TG_d1_max_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d1_max_tuned_all)), ')'],'Location', 'best')
 % legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
-legend('Virus', 'TG', 'Location', 'best')
+legend(['Virus (n = ', num2str(length(d1_max_tuned_all)), ')'], ['TG (n = ', num2str(length(TG_d1_max_tuned_all)), ')'], 'Location', 'best')
 xlabel('Max dF/F Values')
-% xlim([0 1]);
+xlim([0 1]);
 title('Day 1 Max dF/F Values');
-print(fullfile(newfnout, ['virus v TG', '_maxdfof_cdf.pdf']), '-dpdf', '-bestfit')
+print(fullfile(newfnout, ['tj all mice all cells', '_d1_maxdfof_cdf.pdf']), '-dpdf', '-bestfit')
+
+%MAX DF/F
+%all mice all (red and green cells)
+figure; 
+h=cdfplot(d2_max_tuned_all);
+hold on
+j=cdfplot(TG_d2_max_tuned_all);
+% k=cdfplot(TG_d1_max_tuned_all);
+% l=cdfplot(TG_d1_max_tuned_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
+hold off
+%legend(['Arc Red (n = ', num2str(length(d1_max_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d1_max_tuned_all)), ')'], ...
+%    ['TG Red (n = ', num2str(length(TG_d1_max_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d1_max_tuned_all)), ')'],'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend(['Virus (n = ', num2str(length(d2_max_tuned_all)), ')'], ['TG (n = ', num2str(length(TG_d2_max_tuned_all)), ')'], 'Location', 'best')
+xlabel('Max dF/F Values')
+xlim([0 1]);
+title('Day 2 Max dF/F Values');
+print(fullfile(newfnout, ['tj all mice all cells', '_d2_maxdfof_cdf.pdf']), '-dpdf', '-bestfit')
+
+%MAX DF/F
+%all mice all (red and green cells)
+figure; 
+h=cdfplot(d3_max_tuned_all);
+hold on
+j=cdfplot(TG_d3_max_tuned_all);
+% k=cdfplot(TG_d1_max_tuned_all);
+% l=cdfplot(TG_d1_max_tuned_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
+hold off
+%legend(['Arc Red (n = ', num2str(length(d1_max_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d1_max_tuned_all)), ')'], ...
+%    ['TG Red (n = ', num2str(length(TG_d1_max_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d1_max_tuned_all)), ')'],'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend(['Virus (n = ', num2str(length(d3_max_tuned_all)), ')'], ['TG (n = ', num2str(length(TG_d3_max_tuned_all)), ')'], 'Location', 'best')
+xlabel('Max dF/F Values')
+xlim([0 1]);
+title('Day 3 Max dF/F Values');
+print(fullfile(newfnout, ['tj all mice all cells', '_d3_maxdfof_cdf.pdf']), '-dpdf', '-bestfit')
+
 
 
 
@@ -167,28 +372,146 @@ figure;
 h=cdfplot(d1_k_tuned_all);
 hold on
 j=cdfplot(TG_d1_k_tuned_all);
-% k=cdfplot(RW_d1_k_tuned_all);
-% l=cdfplot(RW_d1_k_tuned_all);
+% k=cdfplot(TG_d1_k_tuned_all);
+% l=cdfplot(TG_d1_k_tuned_all);
 set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
 set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
 % set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
 % set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
 hold off
 %legend(['Arc Red (n = ', num2str(length(d1_k_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d1_k_tuned_all)), ')'], ...
-%    ['RW Red (n = ', num2str(length(RW_d1_k_tunedall)), ')'], ['RW Green (n = ', num2str(length(RW_d1_k_tuned_all)), ')'],'Location', 'best')
+%    ['TG Red (n = ', num2str(length(TG_d1_k_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d1_k_tuned_all)), ')'],'Location', 'best')
 % legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
 legend('Virus', 'TG', 'Location', 'best')
 xlabel('k Values')
 xlim([0 30]);
 title('Day 1 K Values');
-print(fullfile(newfnout, ['virus v TG', '_k_cdf.pdf']), '-dpdf', '-bestfit')
+print(fullfile(newfnout, ['tj all mice all cells', '_d1_k_cdf.pdf']), '-dpdf', '-bestfit')
+
+%K VALS
+%all mice all (red and green) cells
+figure; 
+h=cdfplot(d2_k_tuned_all);
+hold on
+j=cdfplot(TG_d2_k_tuned_all);
+% k=cdfplot(TG_d2_k_tuned_all);
+% l=cdfplot(TG_d2_k_tuned_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
+hold off
+%legend(['Arc Red (n = ', num2str(length(d2_k_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d2_k_tuned_all)), ')'], ...
+%    ['TG Red (n = ', num2str(length(TG_d2_k_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d2_k_tuned_all)), ')'],'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend('Virus', 'TG', 'Location', 'best')
+xlabel('k Values')
+xlim([0 30]);
+title('Day 2 K Values');
+print(fullfile(newfnout, ['tj all mice all cells', '_d2_k_cdf.pdf']), '-dpdf', '-bestfit')
+
+%K VALS
+%all mice all (red and green) cells
+figure; 
+h=cdfplot(d3_k_tuned_all);
+hold on
+j=cdfplot(TG_d3_k_tuned_all);
+% k=cdfplot(TG_d3_k_tuned_all);
+% l=cdfplot(TG_d3_k_tuned_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
+hold off
+%legend(['Arc Red (n = ', num2str(length(d3_k_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d3_k_tuned_all)), ')'], ...
+%    ['TG Red (n = ', num2str(length(TG_d3_k_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d3_k_tuned_all)), ')'],'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend('Virus', 'TG', 'Location', 'best')
+xlabel('k Values')
+xlim([0 30]);
+title('Day 3 K Values');
+print(fullfile(newfnout, ['tj all mice all cells', '_d3_k_cdf.pdf']), '-dpdf', '-bestfit')
+
+
+%%
+%tuning width 
+%all mice all (red and green) cells
+figure; 
+h=cdfplot(d1_tuning_width_all);
+hold on
+j=cdfplot(TG_d1_tuning_width_all);
+% k=cdfplot(TG_d1_k_tuned_all);
+% l=cdfplot(TG_d1_k_tuned_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
+hold off
+%legend(['Arc Red (n = ', num2str(length(d1_k_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d1_k_tuned_all)), ')'], ...
+%    ['TG Red (n = ', num2str(length(TG_d1_k_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d1_k_tuned_all)), ')'],'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend('Virus', 'TG', 'Location', 'best')
+xlabel('Tuning Width Values')
+%xlim([0 30]);
+title('Day 1 Tuning Width Values');
+print(fullfile(newfnout, ['tj all mice all cells', '_d1_tuning_width_cdf.pdf']), '-dpdf', '-bestfit')
+
+%tuning width 
+%all mice all (red and green) cells
+figure; 
+h=cdfplot(d2_tuning_width_all);
+hold on
+j=cdfplot(TG_d2_tuning_width_all);
+% k=cdfplot(TG_d2_k_tuned_all);
+% l=cdfplot(TG_d2_k_tuned_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
+hold off
+%legend(['Arc Red (n = ', num2str(length(d2_k_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d2_k_tuned_all)), ')'], ...
+%    ['TG Red (n = ', num2str(length(TG_d2_k_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d2_k_tuned_all)), ')'],'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend('Virus', 'TG', 'Location', 'best')
+xlabel('Tuning Width Values')
+%xlim([0 30]);
+title('Day 2 Tuning Width Values');
+print(fullfile(newfnout, ['tj all mice all cells', '_d2_tuning_width_cdf.pdf']), '-dpdf', '-bestfit')
+
+%tuning width 
+%all mice all (red and green) cells
+figure; 
+h=cdfplot(d3_tuning_width_all);
+hold on
+j=cdfplot(TG_d3_tuning_width_all);
+% k=cdfplot(TG_d3_k_tuned_all);
+% l=cdfplot(TG_d3_k_tuned_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% set(k, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% set(l, 'LineStyle', '--', 'Color', 'g', 'LineWidth',2);
+hold off
+%legend(['Arc Red (n = ', num2str(length(d3_k_tunedall)), ')'], ['Arc Green (n = ', num2str(length(d3_k_tuned_all)), ')'], ...
+%    ['TG Red (n = ', num2str(length(TG_d3_k_tunedall)), ')'], ['TG Green (n = ', num2str(length(TG_d3_k_tuned_all)), ')'],'Location', 'best')
+% legend(['Day 1 v Day 2'; 'Day 1 v Day 3'])
+legend('Virus', 'TG', 'Location', 'best')
+xlabel('Tuning Width Values')
+%xlim([0 30]);
+title('Day 3 Tuning Width Values');
+print(fullfile(newfnout, ['tj all mice all cells', '_d3_tuning_width_cdf.pdf']), '-dpdf', '-bestfit')
+
+
+
 
 
 
 %%
 %K-S tests
-k_s_max_v_TG = kstest2(d1_max_tuned_all, TG_d1_max_tuned_all);
-k_s_k_v_TG = kstest2(d1_k_tuned_all, TG_d1_k_tuned_all);
+k_s_d1 = [kstest2(d1_max_tuned_all, TG_d1_max_tuned_all), kstest2(d1_k_tuned_all, TG_d1_k_tuned_all), kstest2(d1_tuning_width_all, TG_d1_tuning_width_all)]
+k_s_d2 = [kstest2(d2_max_tuned_all, TG_d2_max_tuned_all), kstest2(d2_k_tuned_all, TG_d2_k_tuned_all), kstest2(d2_tuning_width_all, TG_d2_tuning_width_all)]
+k_s_d3 = [kstest2(d3_max_tuned_all, TG_d3_max_tuned_all), kstest2(d3_k_tuned_all, TG_d3_k_tuned_all), kstest2(d3_tuning_width_all, TG_d3_tuning_width_all)]
+
+
 
 
 %% 

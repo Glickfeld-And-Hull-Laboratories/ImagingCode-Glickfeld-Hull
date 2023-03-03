@@ -3,19 +3,19 @@ close all
 clear all global
 
 %Path names
-fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
-cam_fn = fullfile(fn_base, 'home\camaron');
-lg_fn = fullfile(fn_base, 'home\lindsey');
-data_fn = fullfile(lg_fn, 'Data\2P_images');
-mworks_fn = fullfile(fn_base, 'Behavior\Data');
-fnout = fullfile(lg_fn, 'Analysis\2P');
+
+fn_base = findIsilon;
+lg_fn = fullfile(fn_base, 'home', 'lindsey');
+data_fn = fullfile(lg_fn, 'Data', '2P_images');
+mworks_fn = fullfile(fn_base, 'Behavior', 'Data');
+fnout = fullfile(lg_fn, 'Analysis', '2P');
 
 %Specific experiment information
-date = '220908';
-ImgFolder = '001';
-time = '1051';
-mouse = 'i1376';
-frame_rate = 15;
+date = '230222';
+ImgFolder = '002';
+time = '1531';
+mouse = 'i2902';
+frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -295,7 +295,7 @@ figure;
 movegui('center')
 for iCell = 1:nCells
     if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.pdf']),'-dpdf','-bestfit')
         figure;movegui('center');
         start = 1;
         n = n+1;
@@ -305,7 +305,7 @@ for iCell = 1:nCells
     title(['R = ' num2str(h_all_ori(iCell))])
     start = start +1;
 end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.pdf']),'-dpdf','-bestfit')
 
  b_ori = zeros(1,nCells);
     k1_ori = zeros(1,nCells);

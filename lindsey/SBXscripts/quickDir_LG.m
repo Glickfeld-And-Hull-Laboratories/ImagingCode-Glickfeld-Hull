@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '221216';
-mouse = 'i2900';
-ImgFolder = '004';
-time = ['1554'];
+date = '230222';
+mouse = 'i2902';
+ImgFolder = '002';
+time = ['1531'];
 doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -30,7 +30,7 @@ for irun = 1:nrun
     load(fName);
     
     nframes = info.config.frames;
-    nframes = 4050;
+    %nframes = 4050;
     nframes = input.counterValues{end}(end);
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
