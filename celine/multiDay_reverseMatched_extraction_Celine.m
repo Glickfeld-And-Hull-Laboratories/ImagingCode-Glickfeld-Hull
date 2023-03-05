@@ -245,7 +245,12 @@ for id = 1:nd
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
     for iCell = 1:nCells
-          [max_val, pref_dir(1,iCell)] = max(max(resp_sig(iCell,:,:),[],3));
+          [max_val, pref_dir(1,iCell)] = max(max(resp_sig(iCell,:,:),[],3)); 
+          %the indexing seems weird here, but its becuase we first find the
+          %maximum value for each direction by taking the max across
+          %contrasts, then we fine the maximum of those max's. So we use
+          %the contrast index to eventually get max direction and vice
+          %versa.
           [max_val_con, pref_con(1,iCell)] = max(max(resp_sig(iCell,:,:),[],2)); 
           stat_dir_resp(iCell,:)=mean(stat_resp(iCell,:,:),3);
           loc_dir_resp(iCell,:)=mean(loc_resp(iCell,:,:),3);
