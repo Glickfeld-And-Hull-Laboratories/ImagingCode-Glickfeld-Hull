@@ -6,10 +6,10 @@
 
 %% get path names
 clear all;clc;
-mouse = 'WK20';
-date = '220514';
-time = char('1353');
-ImgFolder = char('002');
+mouse = 'WK29';
+date = '230117';
+time = char('1045');
+ImgFolder = char('003');
 RetImgFolder = char('001');
 
 
@@ -19,7 +19,7 @@ ref = char('001');
 
 nrun = size(ImgFolder,1);
 frame_rate = 30;
-run_str = catRunName(ImgFolder, nrun);
+run_str = ['runs-' ImgFolder];
 
 fprintf(['2p_analysis imaging size tuning analysis - by KM, Glickfeld Lab\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
 for irun=1:nrun
@@ -109,7 +109,7 @@ end
 
 %% Register data
 
-chooseInt = 2; %nep/2
+chooseInt = 25; %nep/2
 
 fprintf('\nBegin registering...\n')
 if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\2p_analysis_analysis\2p_analysis', mouse, date, ImgFolder), 'dir')
@@ -343,7 +343,8 @@ save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\ce
 
 %RetImgFolder = char('001','002','003');
 nret = size(RetImgFolder,1);
-ret_str = catRunName(RetImgFolder, nret);
+
+ret_str = ['runs-' RetImgFolder];
 fprintf(['Loading masks from retinotopy runs: ' ret_str '\n'])
 
 % loads 'mask_cell', 'mask_np'

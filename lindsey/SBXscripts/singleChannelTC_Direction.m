@@ -3,19 +3,19 @@ close all
 clear all global
 
 %Path names
-fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
-cam_fn = fullfile(fn_base, 'home\camaron');
-lg_fn = fullfile(fn_base, 'home\lindsey');
-data_fn = fullfile(lg_fn, 'Data\2P_images');
-mworks_fn = fullfile(fn_base, 'Behavior\Data');
-fnout = fullfile(lg_fn, 'Analysis\2P');
+
+fn_base = findIsilon;
+lg_fn = fullfile(fn_base, 'home', 'lindsey');
+data_fn = fullfile(lg_fn, 'Data', '2P_images');
+mworks_fn = fullfile(fn_base, 'Behavior', 'Data');
+fnout = fullfile(lg_fn, 'Analysis', '2P');
 
 %Specific experiment information
-date = '220120';
-ImgFolder = '003';
-time = '1742';
-mouse = 'i1368';
-frame_rate = 15;
+date = '230222';
+ImgFolder = '002';
+time = '1531';
+mouse = 'i2902';
+frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -102,6 +102,8 @@ ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one val
 sz = size(data_reg);
 %        Each trial has nOff frames followed by nOn frames, so can reshape stack so nYpix x nXpix x nFrames/Trial (nOn+nOff) x nTrials
 data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
+data_tr_inv = mean(mean(data_tr(:,:,nOff/2:nOff,:),3),4)-mean(mean(data_tr(:,:,nOff+1:nOn+nOff,:),3),4);
+
 fprintf(['Size of data_tr is ' num2str(size(data_tr))])
 %    b. Find baseline F from last half of off period- avoids decay of previous on trial
 data_f = mean(data_tr(:,:,nOff/2:nOff,:),3); 
@@ -124,6 +126,10 @@ for idir = 1:nDirs
     subplot(n,n2,idir)
     imagesc(data_dfof_avg(:,:,idir))
 end
+
+data_dfof_avg = cat(3,data_reg_avg,data_dfof_avg);
+data_dfof_avg = cat(3,data_dfof_avg,data_tr_inv);
+
 clear data_dfof
 %        Filtering data helps make cells more visible for selection
 myfilter = fspecial('gaussian',[20 20], 0.5);
@@ -289,7 +295,7 @@ figure;
 movegui('center')
 for iCell = 1:nCells
     if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.pdf']),'-dpdf','-bestfit')
         figure;movegui('center');
         start = 1;
         n = n+1;
@@ -299,7 +305,7 @@ for iCell = 1:nCells
     title(['R = ' num2str(h_all_ori(iCell))])
     start = start +1;
 end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.mat']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.pdf']),'-dpdf','-bestfit')
 
  b_ori = zeros(1,nCells);
     k1_ori = zeros(1,nCells);
@@ -336,7 +342,7 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' nu
         stim_DSI(1,iCell) = (max_val-min_val)./(max_val+min_val);
         
     end
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','k1_ori','stim_DSI','stim_OSI','R_square_ori')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','k1_ori','b_ori','R1_ori','u1_ori','stim_DSI','stim_OSI','R_square_ori')
 
 %% F1/F0 analysis
 tf = input.gratingTemporalFreqCPS;

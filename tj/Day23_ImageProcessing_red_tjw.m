@@ -6,18 +6,18 @@ clear all;
 clear global;
 clc;
 %% get path names D2
-ref_date = '220413';
-date = '220419';
-time = strvcat('1220');
+ref_date = '210809';
+date = '210813';
+time = strvcat('1114');
 alignToRef = 1;
 ImgFolder = strvcat('003');
-mouse = 'i2515';
+mouse = 'i1805';
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
 ref_str = 'runs-003';
 run_str = catRunName(ImgFolder, nrun);
-tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
+tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\2P_Imaging';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\grace\Analysis\2P';
 %fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load and register - same as d1 code
@@ -71,7 +71,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((
 
 %% Register data - identify clearest stack and align frames to that
 
-data_avg = mean(data(:,:,34001:34500),3); 
+data_avg = mean(data(:,:,24001:24500),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -313,7 +313,7 @@ print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' 
 %fov_avg{2} is the NON-shifted d2/3 data
 %fov_avg{3} is the shifted d2/3 data
 
-%% make new cell masks for D2
+% make new cell masks for D2
 clear input %why? -> i think it is used below***
 % size of cell box
 close all
@@ -406,6 +406,7 @@ for icell = 1:nc %for each cell
             imagesc(reg_max)
             title(num2str(r_max))
             prompt = 'Choose image: 1- Corr, 2- Avg/Red, 3- Max, 0- skip: ';
+            drawnow
             x = input(prompt); %this is why we cleared input above?***
             switch x %switch between cases
                 case 0 %if 0 then no shift made and pass is = to false

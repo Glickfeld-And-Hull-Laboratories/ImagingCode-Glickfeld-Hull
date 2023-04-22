@@ -6,7 +6,8 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = 133; %enter post-DART day
+%      
+day_id = 206; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -66,25 +67,69 @@ nOff = input(1).nScansOff;
 %% plot trial-by-trial activity in green vs red cell
 
 trialResp=cell(1,2);
-green_trialResp=cell(2,2);
-red_trialResp=cell(2,2);
+green_trialResp=cell(1,2);
+red_trialResp=cell(1,2);
 linCellProps = nan(6,4);
 
 for id = 1:nd
-trialResp{id} = mean(data_trial_keep{id}(stimStart:(stimStart+nOn),:,:),1);
-green_trialResp{1,id}=mean(trialResp{id}(:,~RIx{id},green_ind_keep),3);
-green_trialResp{2,id}=mean(trialResp{id}(:,RIx{id},green_ind_keep),3);
-red_trialResp{1,id}=mean(trialResp{id}(:,~RIx{id},red_ind_keep),3);
-red_trialResp{2,id}=mean(trialResp{id}(:,RIx{id},red_ind_keep),3);
+trialResp{id} = mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1);
+green_trialResp{id}=mean(trialResp{id}(:,:,green_ind_keep),3);
+
+red_trialResp{id}=mean(trialResp{id}(:,:,red_ind_keep),3);
+
 end
+
+% figure;
+% subplot(2,2,1);
+% plot(green_trialResp{pre});
+% title('green pre');
+% ylabel('trial');
+% xlabel('mean dF/F over cells');
+% subplot(2,2,2);
+% plot(green_trialResp{post});
+% title('green post');
+% subplot(2,2,3);
+% plot(red_trialResp{pre});
+% title('red pre');
+% subplot(2,2,4);
+% plot(red_trialResp{post});
+% title('red post');
+
+
+for iCell = 1:length(red_ind_keep)
+    cellID=red_ind_keep(iCell)
+    thisCell_pre=mean(trialResp{pre}(:,:,cellID),3); 
+    thisCell_post=mean(trialResp{post}(:,:,cellID),3); 
+    figure
+    scatter(green_trialResp{pre},thisCell_pre, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+    hold on
+    scatter(green_trialResp{pre},thisCell_post,'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+    h = lsline;
+    set(h(1),'color','k')
+    set(h(1),'color','b')
+    
+    [R,p]=corrcoef(green_trialResp{pre},thisCell_pre);
+    txt2 = ['HT+ ' num2str(length(red_ind_keep))];
+    title([num2str(cellID) ' R= ' num2str(R(2))]);
+    R_p_values(1,iCell)=R(2);
+    R_p_values(2,iCell)=p(2);
+
+end
+
+sig_corr_red = R_p_values(2,:)<0.05;
+Rsq_red =  R_p_values(1,:)>.5;
+%%
+scatter(pref_responses_stat{pre}(red_ind_keep),R_p_values(1,:),'k')
+ylabel('Max dF/F') 
+xlabel('R^2') 
 
 %
 figure;
-subplot(1,2,1)
+% subplot(1,2,1)
 scatter(green_trialResp{1,pre},red_trialResp{1,pre},10,'MarkerEdgeColor','k')
 ylabel('SOM activity')
 xlabel('Pyr activity')
-title('stationary')
+%title('stationary')
 % ylim([-.05 .15])
 % xlim([-.05 .35])
 hold on
@@ -118,43 +163,43 @@ linCellProps(5,2)=min(green_trialResp{1,post});
 linCellProps(6,2)=max(green_trialResp{1,post});
 set(gca, 'TickDir', 'out')
 
-
-subplot(1,2,2)
-scatter(green_trialResp{2,pre},red_trialResp{2,pre},10,'MarkerEdgeColor','k')
-ylabel('SOM activity')
-xlabel('Pyr activity')
-title('running')
-% ylim([-.05 .15])
-% xlim([-.05 .35])
-hold on
-scatter(green_trialResp{2,post},red_trialResp{2,post},10,'MarkerEdgeColor','b')
-hold on
-
-idx = isnan(red_trialResp{2,pre});
-linfit = polyfit(green_trialResp{2,pre}(~idx),red_trialResp{2,pre}(~idx),1);
-y1 = polyval(linfit,green_trialResp{2,pre});
-plot(green_trialResp{2,pre},y1,'k');
-[R,p]=corrcoef(green_trialResp{2,pre}(~idx),red_trialResp{2,pre}(~idx)); 
-linCellProps(1,3)=linfit(1); %slope
-linCellProps(2,3)=linfit(2); %intercept
-linCellProps(3,3)=R(2);
-linCellProps(4,3)=p(2);
-linCellProps(5,3)=min(green_trialResp{2,pre});
-linCellProps(6,3)=max(green_trialResp{2,pre});
-
-
-hold on
-idx2 = isnan(red_trialResp{2,post});
-linfit1 = polyfit(green_trialResp{2,post}(~idx2),red_trialResp{2,post}(~idx2),1);
-y2 = polyval(linfit,green_trialResp{2,post});
-plot(green_trialResp{2,post},y2,'b');
-[R,p]=corrcoef(green_trialResp{2,post}(~idx2),red_trialResp{2,post}(~idx2)); 
-linCellProps(1,4)=linfit(1); %slope
-linCellProps(2,4)=linfit(2); %intercept
-linCellProps(3,4)=R(2);
-linCellProps(4,4)=p(2);
-linCellProps(5,4)=min(green_trialResp{2,post});
-linCellProps(6,4)=max(green_trialResp{2,post});
+% 
+% subplot(1,2,2)
+% scatter(green_trialResp{2,pre},red_trialResp{2,pre},10,'MarkerEdgeColor','k')
+% ylabel('SOM activity')
+% xlabel('Pyr activity')
+% title('running')
+% % ylim([-.05 .15])
+% % xlim([-.05 .35])
+% hold on
+% scatter(green_trialResp{2,post},red_trialResp{2,post},10,'MarkerEdgeColor','b')
+% hold on
+% 
+% idx = isnan(red_trialResp{2,pre});
+% linfit = polyfit(green_trialResp{2,pre}(~idx),red_trialResp{2,pre}(~idx),1);
+% y1 = polyval(linfit,green_trialResp{2,pre});
+% plot(green_trialResp{2,pre},y1,'k');
+% [R,p]=corrcoef(green_trialResp{2,pre}(~idx),red_trialResp{2,pre}(~idx)); 
+% linCellProps(1,3)=linfit(1); %slope
+% linCellProps(2,3)=linfit(2); %intercept
+% linCellProps(3,3)=R(2);
+% linCellProps(4,3)=p(2);
+% linCellProps(5,3)=min(green_trialResp{2,pre});
+% linCellProps(6,3)=max(green_trialResp{2,pre});
+% 
+% 
+% hold on
+% idx2 = isnan(red_trialResp{2,post});
+% linfit1 = polyfit(green_trialResp{2,post}(~idx2),red_trialResp{2,post}(~idx2),1);
+% y2 = polyval(linfit1,green_trialResp{2,post});
+% plot(green_trialResp{2,post},y2,'b');
+% [R,p]=corrcoef(green_trialResp{2,post}(~idx2),red_trialResp{2,post}(~idx2)); 
+% linCellProps(1,4)=linfit1(1); %slope
+% linCellProps(2,4)=linfit1(2); %intercept
+% linCellProps(3,4)=R(2);
+% linCellProps(4,4)=p(2);
+% linCellProps(5,4)=min(green_trialResp{2,post});
+% linCellProps(6,4)=max(green_trialResp{2,post});
 
 sgtitle('Average response for each trial')
 x0=5;
@@ -169,12 +214,15 @@ print(fullfile(fn_multi_analysis,[ 'HT_Pyr_relationship.pdf']),'-dpdf');
 
 %% response by condition for cells matched across all conditions
 % find cells that I ahve running data for on both days
-haveRunning_pre = ~isnan(pref_responses_loc{pre});
-haveRunning_post = ~isnan(pref_responses_loc{post});
-haveRunning_both = find(haveRunning_pre.* haveRunning_post);
-haveRunning_green = intersect(haveRunning_both, green_ind_keep);
-haveRunning_red = intersect(haveRunning_both, red_ind_keep);
+% haveRunning_pre = ~isnan(pref_responses_loc{pre});
+% haveRunning_post = ~isnan(pref_responses_loc{post});
+% haveRunning_both = find(haveRunning_pre.* haveRunning_post);
+% green_ind_keep = intersect(haveRunning_both, green_ind_keep);
+% red_ind_keep = intersect(haveRunning_both, red_ind_keep);
 
+
+green_ind_keep = green_ind_keep;
+red_ind_keep = red_ind_keep;
 
 responseByCond = nan((nCon*2),4);
 
@@ -185,8 +233,8 @@ for iCon = 1:nCon
         counter=counter+2
     end
     
-    responseByCond(counter,:)=[mean(pref_responses_stat{pre}(haveRunning_green,iCon), "omitnan") mean(pref_responses_stat{pre}(haveRunning_red,iCon), "omitnan") mean(pref_responses_stat{post}(haveRunning_green,iCon), "omitnan") mean(pref_responses_stat{post}(haveRunning_red,iCon), "omitnan")]
-    responseByCond((counter+1),:)=[mean(pref_responses_loc{pre}(haveRunning_green,iCon), "omitnan") mean(pref_responses_loc{pre}(haveRunning_red,iCon), "omitnan") mean(pref_responses_loc{post}(haveRunning_green,iCon), "omitnan") mean(pref_responses_loc{post}(haveRunning_red,iCon), "omitnan")]
+    responseByCond(counter,:)=[mean(pref_responses_stat{pre}(green_ind_keep,iCon), "omitnan") mean(pref_responses_stat{pre}(red_ind_keep,iCon), "omitnan") mean(pref_responses_stat{post}(green_ind_keep,iCon), "omitnan") mean(pref_responses_stat{post}(red_ind_keep,iCon), "omitnan")]
+    responseByCond((counter+1),:)=[mean(pref_responses_loc{pre}(green_ind_keep,iCon), "omitnan") mean(pref_responses_loc{pre}(red_ind_keep,iCon), "omitnan") mean(pref_responses_loc{post}(green_ind_keep,iCon), "omitnan") mean(pref_responses_loc{post}(red_ind_keep,iCon), "omitnan")]
 
 end
 
@@ -219,7 +267,8 @@ responseByCondProps(4,2)=p(2);
 responseByCondProps(5,2)=min(responseByCond(:,3));
 responseByCondProps(6,2)=max(responseByCond(:,3));
 
-save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'linCellProps','responseByCond','responseByCondProps')
+save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'linCellProps','responseByCond','responseByCondProps','sig_corr_red','Rsq_red','R_p_values')
+
 
 clear R p x0 y0 y1 y2 linfit
 %% make figure with se shaded, averaging over contrasts and stationary vs. running
@@ -244,7 +293,7 @@ for id = 1:nd
 end
 
 
-%creat a time axis in seconds
+%create a time axis in seconds
 t=1:(size(tc_green_avrg{1},2));
 t=(t-(double(stimStart)-1))/double(frame_rate);
 
@@ -288,25 +337,30 @@ clear txt1 txt2
 
 %% make figure with se shaded, one figure per contrast - stationary
 
+
+
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_stat = cell(1,nd); %same for red
 tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
 tc_red_se_stat = cell(1,nd); %same for red
 
+
+
 for id = 1:nd
     for iCon=1:nCon
+        
     tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat{id}(:,green_ind_keep,iCon),2);
-    green_std=std(tc_trial_avrg_stat{id}(:,green_ind_keep,iCon),[],2);
+    green_std=nanstd(tc_trial_avrg_stat{id}(:,green_ind_keep,iCon),[],2);
     tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(green_ind_keep));
     
     tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat{id}(:,red_ind_keep,iCon),2);
-    red_std=std(tc_trial_avrg_stat{id}(:,red_ind_keep,iCon),[],2);
+    red_std=nanstd(tc_trial_avrg_stat{id}(:,red_ind_keep,iCon),[],2);
     tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(red_ind_keep));
     
     clear green_std red_std
     end
 end
-
+z=double(nOn)/double(frame_rate)
 
 %creat a time axis in seconds
 t=1:(size(tc_green_avrg_stat{1,1,1},1));
@@ -316,39 +370,54 @@ for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
 
-shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'r');
-ylim([-.02 .3]);
+
+
+%ylim([-.02 .3]);
 hold on
-shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon));
-title(['Stationary, pre-DART contrast = ' num2str(cons(iCon))])
-txt1 = ['HT- ' num2str(length(green_ind_keep))];
-text(-1.5,0.25,txt1);
-txt2 = ['HT+ ' num2str(length(red_ind_keep))];
-text(-1.5,0.23,txt2,'Color','r');
+shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon),'b');
+hold on
+% line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
+% hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['HT-',' n = ', num2str(length(green_ind_keep))])
 ylabel('dF/F') 
 xlabel('s') 
-
-axis square
+set(gca,'XColor', 'none','YColor','none')
 
 
 subplot(1,2,2) %for the second day
-shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'r');
-ylim([-.02 .3]);
+shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
 hold on
-shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon));
-ylabel('dF/F') 
+shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
+%ylim([-.02 .3]);
+hold on
+% line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
+% hold on
+line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+%ylabel('dF/F') 
 xlabel('s') 
-title(['Stationary,post-DART contrast = ' num2str(cons(iCon))])
-axis square
+title(['HT+',' n = ', num2str(length(red_ind_keep))])
 x0=5;
 y0=5;
-width=6;
+width=4;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
 
-print(fullfile(fn_multi_analysis,[num2str(cons(iCon)) '_stat_timecourses.pdf']),'-dpdf');
+sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_stat_cellType_timecourses.pdf']),'-dpdf');
 end 
-clear txt1 txt2
+
+clear txt1 
+
+
 
 %% make figure with se shaded, one figure per contrast - running
 
@@ -1038,6 +1107,7 @@ print(fullfile(fn_multi_analysis,'HT-_frac_change_map.pdf'),'-dpdf','-bestfit')
 
 
 % spatial distribution vs. raw DART effect
+figure;
 imagesc(keep_masks_raw_change_red)
 colorbar
 title('Spatial distribution of cells by raw change from DART, HT+')
@@ -1537,53 +1607,47 @@ title('day 2')
 refline(1)
 %% example cell tcs - this is to pull out some individual example cell traces
 %
-cellList=[49 93]; %enter the cells you're interested in by their index wihtin the keep dataframe
-
+cellList=[35,58]; %enter the cells you're interested in by their index wihtin the keep dataframe
+iCon=2
 place=1;
-figure
+
 for i=1:length(cellList)
+    figure
     for id = 1:nd
         thisCell = cellList(i)
+
         %only pulling from dfof data of keep cells
         tCon=tCon_match{id}(1:nTrials(id));
         tDir=tDir_match{id}(1:nTrials(id));
         %identify the trials where ori = pref ori
-        temp_ori= pref_ori_keep{id}(thisCell); %find the preferred ori of this cell and convert to degrees
+        temp_ori= pref_dir_keep{id}(thisCell); %find the preferred ori of this cell and convert to degrees
         ori_inds = find(tDir==temp_ori); %these are the trials at that ori
-        temp_con = pref_con_keep{id}(thisCell);%find the preferred contrast of this cell and convert to contrast value
+        temp_con = cons(2);%find the preferred contrast of this cell and convert to contrast value
         con_inds=find(tCon==temp_con);
         temp_trials = intersect(ori_inds, con_inds);
         temp_trials(temp_trials==160)=[]
+        temp_trials = intersect(temp_trials, find(~RIx{id}))
         temp_TCs=data_trial_keep{id}(:,temp_trials,thisCell); %pulls the selected trials for the selected cell. Shape is frames X trial
         thisCellMean = mean(temp_TCs,2);
         thisCellSE=std(temp_TCs')/sqrt(length(temp_trials));
-        subplot(length(cellList),nd,place)
-        if red_keep_logical(thisCell)==1
-            shadedErrorBar(t,thisCellMean,thisCellSE,'r')
-            ylim([-.2 .5]);
-        else
+        
+        if id==pre
             shadedErrorBar(t,thisCellMean,thisCellSE,'k')
             ylim([-.2 .5]);
+        elseif id==post
+            shadedErrorBar(t,thisCellMean,thisCellSE,'b')
+            ylim([-.2 .5]);
         end
+        hold on
         title(string(thisCell));
-        line([0,2],[.45,.45])
+        %line([0,2],[.45,.45])
     place=place+1;
     end
-    
+    hold off
 end
 
 
-c = linspace(1,10,length(cellList));
-figure
-scatter((pref_responses_stat{pre}(cellList,iCon)),(pref_responses_stat{post}(cellList,iCon)),[],c,'filled')
-ylabel('post-DART dF/F')
-xlabel('pre-DART  dF/F')
-ylim([-.1 .5])
-xlim([-.1 .5])
-colorbar
 
-refline(1)
-axis square
 
 %%
 figure;
@@ -1686,4 +1750,84 @@ figure; image(rgb);  movegui('center')
 hold on
 bound = cell2mat(bwboundaries(keep_masks(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+%% correlating fullTC with full wheel time
+%maybe normalize the tc's
 
+wheel_corr = cell(1,nd);
+
+
+for id = 1:nd
+    clean_wheel_speed{id}=wheel_speed{id};
+    clean_wheel_speed{id}(find(abs(clean_wheel_speed{id})<4.884))=0;
+    clean_wheel_speed{id}=downsample(clean_wheel_speed{id},10);
+    clean_fullTC{id}=downsample(fullTC_keep{id},10);
+    for iCell = 1:nKeep
+        fullTC_keep_norm{id}(:,iCell) = clean_fullTC{id}(:,iCell) - mean(clean_fullTC{id}(:,iCell));
+        wheel_corr{id}(iCell)=corr(clean_fullTC{id}(:,iCell),clean_wheel_speed{id}');
+    end
+end
+%%
+
+
+figure;
+subplot(2,1,1)
+plot(fullTC_keep_norm{pre}(3000:4000,red_ind_keep))
+subplot(2,1,2)
+plot(clean_wheel_speed{pre}(3000:4000))
+sgtitle('pre-DART HT+')
+
+
+figure;
+subplot(2,1,1)
+plot(fullTC_keep_norm{post}(3000:4000,red_ind_keep))
+subplot(2,1,2)
+plot(clean_wheel_speed{post}(3000:4000))
+sgtitle('post-DART HT+')
+
+% figure;
+% subplot(2,1,1)
+% plot(fullTC_keep_norm{pre}(:,green_ind_keep))
+% subplot(2,1,2)
+% plot(clean_wheel_speed{pre})
+% sgtitle('pre-DART HT-')
+% 
+% figure;
+% subplot(2,1,1)
+% plot(fullTC_keep_norm{post}(:,green_ind_keep))
+% subplot(2,1,2)
+% plot(clean_wheel_speed{post})
+% sgtitle('post-DART HT-')
+% %,'Color',[0, 0, 0, 0.1]
+%%
+
+
+for iRed = 1:length(red_ind_keep)
+    iCell = red_ind_keep(iRed)
+    figure;
+    scatter(clean_wheel_speed{pre},clean_fullTC{pre}(:,iCell),'k')
+    hold on;
+    scatter(clean_wheel_speed{post},clean_fullTC{post}(:,iCell),'b')
+    ylabel("F")
+    xlabel("Running speed")
+    title("example HT+")
+end
+%%
+figure;subplot(1,2,1);
+scatter(wheel_corr{pre}(green_ind_keep),wheel_corr{post}(green_ind_keep));title('HT-');axis square;
+%ylim([-.2 .4]);xlim([-.2 .4]);
+ylabel("post-DART");xlabel("pre-DART");
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+subplot(1,2,2);
+scatter(wheel_corr{pre}(red_ind_keep),wheel_corr{post}(red_ind_keep));title('HT+');axis square;
+%ylim([0 .4]);xlim([0 .4]);
+ylabel("post-DART");xlabel("pre-DART");
+hline=refline(1);
+hline.Color = 'k';
+hline.LineStyle = ':';
+set(gca, 'TickDir', 'out')
+uistack(hline,'bottom');
+sgtitle("Correlation with wheel speed")

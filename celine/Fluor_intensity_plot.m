@@ -1,15 +1,19 @@
-data_2055 = table2array(i2055intensity);
-data_2056 = table2array(i2056intensity);
+data_2065 = table2array(i2065intensity);
+data_2066 = table2array(i2066intensity);
+data_2067 = table2array(i2067intensity);
 
 figure;
-semilogx(data_2055(:,1),data_2055(:,4),'-o')
+
+plot(data_2065(:,1),data_2065(:,6),'-o')
 hold on
-semilogx(data_2056(:,1),data_2056(:,4),'-o')
+plot(data_2066(:,1),data_2066(:,6),'-o')
+hold on
+plot(data_2067(:,1),data_2067(:,6),'-o')
 legend
-ylim([0 1])
+%ylim([0 1])
 set(gca, 'TickDir', 'out')
 xlabel('Hours since infusion')
-ylabel('Normalized fluorescence intensity')
+ylabel('fluorescence intensity [bsln norm than subtract]')
 hold off
 box off
 

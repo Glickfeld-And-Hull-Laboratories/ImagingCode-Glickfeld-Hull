@@ -1,0 +1,62 @@
+expt = [];
+frameRateHz = 15.5;
+%% i2537 - C57 - Baseline in V1
+expt(1).mouse = 'i2537';
+expt(1).sex = 'male';
+expt(1).date = '221128';
+expt(1).ref_date = '221128';
+expt(1).img_day = '1';
+expt(1).img_loc  = {'V1';'L2_3'};
+expt(1).img_strct  = {'cells'};
+expt(1).green_indicator = {'AAV';'GCaMP7f'};
+expt(1).red_indicator = {'LacZ-gRNA';'tdTomato'};
+expt(1).driver = 'KRAB';
+expt(1).time_mat = ['1407'];
+expt(1).runs = ['001'];
+expt(1).nrun = size(expt(1).runs,1);
+expt(1).folder = 'tj';
+expt(1).z = 230.46;
+expt(1).obj = '16x';
+expt(1).zoom = 2.0;
+expt(1).wheel = 1;
+%% i2538 - C57 - Baseline in V1
+expt(2).mouse = 'i2538';
+expt(2).sex = 'male';
+expt(2).date = '221128';
+expt(2).ref_date = '221128';
+expt(2).img_day = '1';
+expt(2).img_loc  = {'V1';'L2_3'};
+expt(2).img_strct  = {'cells'};
+expt(2).green_indicator = {'AAV';'GCaMP7f'};
+expt(2).red_indicator = {'LacZ-gRNA';'tdTomato'};
+expt(2).driver = 'KRAB';
+expt(2).time_mat = ['1454'];
+expt(2).runs = ['001'];
+expt(2).nrun = size(expt(2).runs,1);
+expt(2).folder = 'tj';
+expt(2).z = 310.15;
+expt(2).obj = '16x';
+expt(2).zoom = 2.0;
+expt(2).wheel = 1;
+%% i2537 - C57 - Post-Dark in V1
+expt(3).mouse = 'i2537';
+expt(3).sex = 'male';
+expt(3).date = '221202';
+expt(3).ref_date = '221202';
+expt(3).img_day = '1';
+expt(3).img_loc  = {'V1';'L2_3'};
+expt(3).img_strct  = {'cells'};
+expt(3).green_indicator = {'AAV';'GCaMP7f'};
+expt(3).red_indicator = {'LacZ-gRNA';'tdTomato'};
+expt(3).driver = 'KRAB';
+expt(3).time_mat = ['1454'];
+expt(3).runs = ['001'];
+expt(3).nrun = size(expt(3).runs,1);
+expt(3).folder = 'tj';
+expt(3).z = 310.15;
+expt(3).obj = '16x';
+expt(3).zoom = 2.0;
+expt(3).wheel = 1;
+
+
+

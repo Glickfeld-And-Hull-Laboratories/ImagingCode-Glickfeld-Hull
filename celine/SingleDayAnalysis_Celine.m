@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 125;
+day_id = 245;
 % identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -39,9 +39,7 @@ tOri = tDir;
 tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;
 oris = unique(tOri);
 nOri = length(oris);
-ntrials = 160;
-tCon = tCon(1:160);
-tDir = tDir(1:160);
+
 %%
 
 % % % plot cells with ID numbers to see if there are any you want to get ride of
@@ -138,7 +136,7 @@ data_orth_resp=zeros(nCells,1);
           orth_ori(iCell)=pref_ori(iCell)-4;
       end
       data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
-      data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
+%       data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
       data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
 end
 
@@ -203,77 +201,59 @@ writetable(countsTable,fullfile(fn,'counts.csv'),'WriteRowNames',true)
 % hist(pref_con_converted(:,RedAll))
 % print(fullfile(fn,['pref_con_hist']),'-dpdf');
 %% narrow down to the preferred ori and preferred contrast for each cell
-tc_trial_avrg=nan(nOn+nOff,nCells);
-for i=1:nCells
-    temp_TCs=data_dfof_trial(:,:,i);
-    %identify the trials where ori = pref ori
-    temp_ori = oris(pref_ori(i)); %find the preferred ori of this cell and convert to degrees
-    ori_inds = find(tDir==temp_ori); %these are the trials at that ori
-    %identify which contrasts the cell responded to
-    %temp_h = squeeze(h(i,pref_ori(i),:)); %pull out the h values for the preferred ori and this cell only
-    %temp_cons = (temp_h').*cons;
-    %temp_cons(temp_cons==0)=[];
-    temp_con = cons(pref_con(i));
-    con_inds=find(tCon==temp_con);
-    temp_trials = intersect(ori_inds, con_inds);
-    tc_trial_avrg(:,i)=mean(temp_TCs(:,temp_trials),2);
-    
+tc_trial_avrg=cell(1,nCon);
+
+for iCon = 1:nCon
+
+    tc_trial_avrg_temp=nan(nOn+nOff,nCells);
+    for i=1:nCells
+        temp_TCs=data_dfof_trial(:,:,i);
+        %identify the trials where ori = pref ori
+        temp_ori = oris(pref_ori(i)); %find the preferred ori of this cell and convert to degrees
+        ori_inds = find(tDir==temp_ori); %these are the trials at that ori
+        %identify which contrasts the cell responded to
+        %temp_h = squeeze(h(i,pref_ori(i),:)); %pull out the h values for the preferred ori and this cell only
+        %temp_cons = (temp_h').*cons;
+        %temp_cons(temp_cons==0)=[];
+        con_inds=find(tCon==cons(iCon));
+        temp_trials = intersect(ori_inds, con_inds);
+        tc_trial_avrg_temp(:,i)=mean(temp_TCs(:,temp_trials),2);
+        
+    end
+tc_trial_avrg{iCon}=tc_trial_avrg_temp;
 end
 
 %% plotting
 %tc_trial_avrg = squeeze(mean(data_dfof_trial,2));%average over trials, one row per cell
 
+for iCon = 1:nCon
+    tc_green = tc_trial_avrg{iCon}(:,GreenResp);
+    tc_red = tc_trial_avrg{iCon}(:,RedResp);
+    tc_green_avrg=cell(1,2);
+    tc_red_avrg=cell(1,2);
+    tc_green_avrg{1} = mean(tc_green,2);%average tc for responsive green cells
+    tc_green_avrg{2}=std(tc_green,[],2);
+    tc_red_avrg{1} = mean(tc_red,2); %average tc for all red cells
+    tc_red_avrg{2}=std(tc_red,[],2);
+    
+    %convert to se 
+    tc_green_avrg{2} = tc_green_avrg{2}/sqrt(size(GreenResp,1));
+    tc_red_avrg{2} = tc_red_avrg{2}/sqrt(size(RedResp,1));
+    
+    
+    
+    figure
+    x=1:(size(tc_green,1));
+    x=(x-30)/15;
+    shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'r');
+    %plot(x,tc_red,'r');
+    ylim([-.05 .3]);
+    hold on
+    shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
+    title(num2str(cons(iCon)));
+    saveas(gcf,fullfile(fn,['contrast_',num2str(cons(iCon)), '_tcPlot.jpg']));
 
-tc_green = tc_trial_avrg(:,GreenResp);
-tc_red = tc_trial_avrg(:,RedAll);
-tc_green_avrg=cell(1,2);
-tc_red_avrg=cell(1,2);
-tc_green_avrg{1} = mean(tc_green,2);%average tc for responsive green cells
-tc_green_avrg{2}=std(tc_green,[],2);
-tc_red_avrg{1} = mean(tc_red,2); %average tc for all red cells
-tc_red_avrg{2}=std(tc_red,[],2);
-
-%convert to se 
-tc_green_avrg{2} = tc_green_avrg{2}/sqrt(size(GreenResp,1));
-tc_red_avrg{2} = tc_red_avrg{2}/sqrt(size(RedAll,2));
-%%
-figure;
-plot(tc_green_avrg{1}, 'LineWidth',.005,'color',[.05 .5 .05]);
-%ylim([-.04 .2]);
-hold on;
-plot(tc_red_avrg{1}, 'LineWidth',.005,'color',[.5 .05 .05]);
-title('Timecourses for preffered stimuli');
-hold off
-print(fullfile(fn,['tc_avrgs']),'-dpdf');
-%saveas(gcf,fullfile(fn_collect,[mouse '-' date '-sup-tc_avrgs.jpg']));
-
-
-
-%% make figure with se shaded
-
-figure
-x=1:(size(tc_green,1));
-x=(x-30)/15;
-%shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'r');
-plot(x,tc_red,'r');
-%ylim([-.02 .35]);
-ylim([-.05 .3]);
-hold on
-shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
-title('responsive green and all red');
-saveas(gcf,fullfile(fn,[mouse '-' date 'tcPlot_indiv.jpg']));
-
-
-figure
-x=1:(size(tc_green,1));
-x=(x-30)/15;
-shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'r');
-%plot(x,tc_red,'r');
-ylim([-.05 .3]);
-hold on
-shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
-title('responsive green and all red');
-saveas(gcf,fullfile(fn,[mouse '-' date 'tcPlot.jpg']));
+end
 
 %% to see what the red cells look like individually
 figure;

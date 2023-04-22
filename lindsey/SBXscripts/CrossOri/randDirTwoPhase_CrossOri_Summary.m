@@ -1,15 +1,14 @@
 clear all; close all; clc;
 doRedChannel = 0;
-ds = 'CrossOriRandDirTwoPhase_ExptList';
+ds = 'CrossOriRandDirTwoPhaseFF_ExptList';
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 summaryDir = fullfile(LG_base, 'Analysis', '2P', 'CrossOri', 'RandDirSummary');
+svName = 'randDirTwoPhaseFF';
 str = {'hiSF','lowSF'};
-
-
 
 area_list = strvcat('V1');%,'LM');%,'AL','RL','PM');
 narea = 1;%length(area_list);
@@ -18,65 +17,102 @@ driver = 'SLC';
 for a = 2
     SFs = [0.1 0.05];
     ind = find([expt.SF] == SFs(a));
-for iA = 1:narea
-    area = area_list(iA,:);
-    Zc_all = [];
-    Zp_all = [];
-    totCells = 0;
-    resp_ind_all = [];
-    resp_ind_dir_all = [];
-    resp_ind_plaid_all = [];
-    mouse_list = [];
-    avg_resp_dir_all = [];
-    plaid_corr_all = [];
-    plaid_corr_rand_all = [];
-    component_all = [];
-    pattern_all = [];
+    for iA = 1:narea
+        area = area_list(iA,:);
+        Zc_all = [];
+        Zp_all = [];
+        totCells = 0;
+        resp_ind_all = [];
+        resp_ind_dir_all = [];
+        resp_ind_plaid_all = [];
+        mouse_list = [];
+        avg_resp_dir_all = [];
+        plaid_corr_all = [];
+        plaid_corr_rand_all = [];
+        component_all = [];
+        pattern_all = [];
+        stimOSI_all = [];
+        stimDSI_all = [];
+        plaid_SI_all = [];
     
-for i = 1:length(ind)
-    iexp = ind(i);
-    if strcmp(expt(iexp).img_loc, area) & strcmp(expt(iexp).driver,driver)
-    mouse = expt(iexp).mouse;
-    mouse_list = strvcat(mouse_list, mouse);
-    date = expt(iexp).date;
-    ImgFolder = expt(iexp).coFolder;
-    time = expt(iexp).coTime;
-    nrun = length(ImgFolder);
-    run_str = catRunName(ImgFolder, nrun);
+        for i = 1:length(ind)
+            iexp = ind(i);
+            if strcmp(expt(iexp).img_loc, area) & strcmp(expt(iexp).driver,driver)
+                mouse = expt(iexp).mouse;
+                mouse_list = strvcat(mouse_list, mouse);
+                date = expt(iexp).date;
+                ImgFolder = expt(iexp).coFolder;
+                time = expt(iexp).coTime;
+                nrun = length(ImgFolder);
+                run_str = catRunName(ImgFolder, nrun);
+            
+                fprintf([mouse ' ' date '\n'])
+            
+                % load data
+            
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']));
+                load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']));
+            
+                fprintf(['n = ' num2str(nCells) '\n'])
+              
+                Zc_all = [Zc_all Zc];
+                Zp_all = [Zp_all Zp];
+                component_all = [component_all; component];
+                pattern_all = [pattern_all; pattern];
+                
+                
+                avg_resp_ori = squeeze(mean(reshape(avg_resp_dir, [nCells nStimDir./2 2 2 2 2]),3));
+                avg_resp_ori_rect = avg_resp_ori;
+                avg_resp_ori_rect(find(avg_resp_ori<0)) = 0;
+                avg_resp_dir_rect = avg_resp_dir;
+                avg_resp_dir_rect(find(avg_resp_dir<0)) = 0;
+                nStimOri = size(avg_resp_ori,2);
+                stim_OSI = zeros(1,nCells);
+                stim_DSI = zeros(1,nCells);
+                for iCell = 1:nCells
+                    [max_val max_ind] = max(avg_resp_dir_rect(iCell,:,1,1,1));
+                    opp_ind = max_ind+(nStimDir/2);
+                    opp_ind(find(opp_ind>nStimDir)) = opp_ind(find(opp_ind>nStimDir))-nStimDir;
+                    opp_val = avg_resp_dir_rect(iCell,opp_ind,1,1,1);
+                    stim_DSI(iCell) = (max_val-opp_val)./(max_val+opp_val);
+                    [max_val max_ind] = max(avg_resp_ori_rect(iCell,:,1,1));
+                    stim_prefOri(iCell) = stimDirs(max_ind);
+                    null_ind = max_ind+(nStimOri./2);
+                    null_ind(find(null_ind>nStimOri)) = null_ind(find(null_ind>nStimDir/2))-nStimOri;
+                    min_val = avg_resp_ori_rect(iCell,null_ind,1,1);
+                    stim_OSI(iCell) = (max_val-min_val)./(max_val+min_val);
+                end
+                save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'component','pattern','Rp', 'Rc', 'Zp', 'Zc', 'plaid_SI', 'plaid_SI_45','h_plaid_SI', 'nCells','resp_stim_prefDir','resp_mask_prefDir','resp_plaid_prefDir','resp_stim_45Dir','resp_mask_45Dir','resp_plaid_45Dir','plaid_corr','plaid_corr_rand','stim_OSI','stim_DSI');
 
-    fprintf([mouse ' ' date '\n'])
+                stimOSI_all = [stimOSI_all stim_OSI];
+                stimDSI_all = [stimDSI_all stim_DSI];
+                plaid_SI_all = [plaid_SI_all plaid_SI];
+                
+                avg_resp_dir_all = cat(1,avg_resp_dir_all,avg_resp_dir);
+                plaid_corr_all = [plaid_corr_all plaid_corr];
+                plaid_corr_rand_all = [plaid_corr_rand_all plaid_corr_rand];
+                
+                resp_ind = find(sum(sum(sum(h_resp,2),3),4));
+                resp_ind_dir = find(sum(h_resp(:,:,1,1),2));
+                resp_ind_plaid = find(sum(sum(h_resp(:,:,:,2),2),3));
+            
+                resp_ind_all = [resp_ind_all resp_ind'+totCells];
+                resp_ind_dir_all = [resp_ind_dir_all resp_ind_dir'+totCells];
+                resp_ind_plaid_all = [resp_ind_plaid_all resp_ind_plaid'+totCells];
 
-    %% load data
-
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']));
-    
-    fprintf(['n = ' num2str(nCells) '\n'])
-  
-    Zc_all = [Zc_all Zc];
-    Zp_all = [Zp_all Zp];
-    component_all = [component_all; component];
-    pattern_all = [pattern_all; pattern];
-    
-    avg_resp_dir_all = cat(1,avg_resp_dir_all,avg_resp_dir);
-    plaid_corr_all = [plaid_corr_all plaid_corr];
-    plaid_corr_rand_all = [plaid_corr_rand_all plaid_corr_rand];
-    
-    resp_ind = find(sum(sum(sum(h_resp,2),3),4));
-    resp_ind_dir = find(sum(h_resp(:,:,1,1),2));
-    resp_ind_plaid = find(sum(sum(h_resp(:,:,:,2),2),3));
-
-    resp_ind_all = [resp_ind_all resp_ind'+totCells];
-    resp_ind_dir_all = [resp_ind_dir_all resp_ind_dir'+totCells];
-    resp_ind_plaid_all = [resp_ind_plaid_all resp_ind_plaid'+totCells];
-
-    totCells = totCells+nCells;
-
+                %permutation test between phases
+            
+                totCells = totCells+nCells;
+        
+            end
+        end
     end
 end
+save(fullfile(summaryDir,[svName '_Summary_' str{a} '_' area '_' driver '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','plaid_corr_rand_all','avg_resp_dir_all','component_all','stimOSI_all','stimDSI_all', 'plaid_SI_all', 'stimDirs')
 
-save(fullfile(summaryDir,['randDirTwoPhase_Summary_' str{a} '_' area '_' driver '.mat']),'mouse_list','Zc_all','Zp_all','resp_ind_all','resp_ind_dir_all','resp_ind_plaid_all', 'plaid_corr_all','avg_resp_dir_all','component_all','stimDirs')
+
 
 %%
 ZcZp_diff = Zc_all-Zp_all;
@@ -132,8 +168,8 @@ ylabel(['Zp (' num2str(maskPhas(2)) ' deg)'])
 ylim([-4 8])
 xlim([-4 8])
 refline(1)
-suptitle(['RandDir Two Phase - ' str{a} ' cells- n = ' num2str(length(resp_ind_all))])
-print(fullfile(summaryDir, ['randDirTwoPhase_ZpZcSummary_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
+sgtitle(['RandDir Two Phase - ' str{a} ' cells- n = ' num2str(length(resp_ind_all))])
+print(fullfile(summaryDir, [svName '_ZpZcSummary_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
 
 
 %%
@@ -199,8 +235,8 @@ title('')
 % ylim([-8 8])
 % axis square
 % refline(1)
-suptitle([str{a} ' cells- n = ' num2str(length(resp_ind_all))])
-print(fullfile(summaryDir, ['randDirTwoPhase_CorrHist_allCells_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
+sgtitle([str{a} ' cells- n = ' num2str(length(resp_ind_all))])
+print(fullfile(summaryDir, [svName '_CorrHist_allCells_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
 
 figure; movegui('center');
 subplot(3,2,1)
@@ -235,8 +271,8 @@ subplot(3,2,5)
 pie([null_ZpZp null_ZpZc null_ZpZn],{'Zp-Zp','Zc-Zp','Zp-Zn'})
 subplot(3,2,6)
 pie([null_ZcZc null_ZcZp null_ZcZn],{'Zc-Zc','Zc-Zp','Zc-Zn'})
-suptitle([str{a} ' cells'])
-print(fullfile(summaryDir, ['randDirTwoPhase_Pies_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
+sgtitle([str{a} ' cells'])
+print(fullfile(summaryDir, [svName '_Pies_' str{a} '_' area '.pdf']),'-dpdf', '-fillpage')
 
 min_val = align_resp_dir(:,1,1,1);
 DSI = (max_val-min_val)./(max_val+min_val);
@@ -339,8 +375,8 @@ for i = 1:16
     rlim([0 r_max])
     title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
 end
-suptitle('Zc cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
-print(fullfile(summaryDir, ['randDirTwoPhase_ZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+sgtitle('Zc cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
+print(fullfile(summaryDir, [svName '_ZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
 
 figure; movegui('center')
 for i = 1:16
@@ -355,8 +391,8 @@ for i = 1:16
     rlim([0 r_max])
     title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
 end
-suptitle('Zp cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
-print(fullfile(summaryDir, ['randDirTwoPhase_ZpCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+sgtitle('Zp cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
+print(fullfile(summaryDir, [svName '_ZpCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
 
 
 ZcZp_ind = unique([intersect(ind1,ind4), intersect(ind2,ind3)]);
@@ -380,8 +416,8 @@ for i = 1:n
     rlim([0 r_max])
     title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
 end
-suptitle('Zc to Zp cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
-print(fullfile(summaryDir, ['randDirTwoPhase_ZcToZpCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+sgtitle('Zc to Zp cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
+print(fullfile(summaryDir, [svName '_ZcToZpCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
 
 ZcZp_ind_Zp0 = intersect(ind1,ZcZp_ind);
 if length(ZcZp_ind_Zp0)<16
@@ -402,11 +438,15 @@ for i = 1:n
     rlim([0 r_max])
     title({['Zc0=' num2str(chop(Zc_all(1,iC),2)) ';Zc90=' num2str(chop(Zc_all(2,iC),2))], ['Zp0=' num2str(chop(Zp_all(1,iC),2)) '; Zp90=' num2str(chop(Zp_all(2,iC),2))]})
 end
-suptitle('Zp to Zc cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
-print(fullfile(summaryDir, ['randDirTwoPhase_ZpToZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+sgtitle('Zp to Zc cells- Blue: pattern; Red: component; Yellow: plaid 0; Purple: plaid 90')
+print(fullfile(summaryDir, [svName '_ZpToZcCells_' str{a} '_' area '_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
+
+figure; 
+corr_diff = plaid_corr_rand_all-plaid_corr_all;
+scatter(ZcZp_diff(resp_ind_all),corr_diff(resp_ind_all))
 
 %% population tuning
-%close all
+close all
 pop_resp_dir = nan(nStimDir,nStimDir,nMaskPhas,2,2);
 pop_resp_comp = nan(nStimDir,nStimDir,2);
 resp_dir_align = nan(nStimDir,nStimDir,nMaskPhas,2,2);
@@ -508,13 +548,13 @@ end
 
 figure(1)
 movegui('center')
-suptitle({['Blue- pattern; Red- component; Yellow- plaid0; Purple- plaid90'], ['Cell #s- ' num2str(ind_n)]})
-print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_errorbar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
+sgtitle({['Blue- pattern; Red- component; Yellow- plaid0; Purple- plaid90'], ['Cell #s- ' num2str(ind_n)]})
+print(fullfile(summaryDir, [svName '_populationTuning_errorbar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
 
 figure(2)
 movegui('center')
-suptitle({['Blue- pattern; Red- component; Yellow- plaid0; Purple- plaid90'], ['Cell #s- ' num2str(ind_n)]})
-print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_polar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
+sgtitle({['Blue- pattern; Red- component; Yellow- plaid0; Purple- plaid90'], ['Cell #s- ' num2str(ind_n)]})
+print(fullfile(summaryDir, [svName '_populationTuning_polar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
     
 pop_resp_dir_Zc0 = nan(nStimDir,nStimDir,nMaskPhas,2,2);
 pop_resp_dir_Zc90 = nan(nStimDir,nStimDir,nMaskPhas,2,2);
@@ -782,13 +822,10 @@ end
 
 figure(3)
 movegui('center')
-suptitle({['Top Row: Zc Cells- ' num2str(length(Zc_use))], ['Bottom Row: Zp Cells- ' num2str(length(Zp_use))]})
-print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_ZpZcCells_errorbar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
+sgtitle({['Top Row: Zc Cells- ' num2str(length(Zc_use))], ['Bottom Row: Zp Cells- ' num2str(length(Zp_use))]})
+print(fullfile(summaryDir, [svName '_populationTuning_ZpZcCells_errorbar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
 
 figure(4)
 movegui('center')
-suptitle({['Top Row: Zc Cells- ' num2str(length(Zc_use))], ['Bottom Row: Zp Cells- ' num2str(length(Zp_use))]})
-print(fullfile(summaryDir, ['randDirTwoPhase_populationTuning_ZpZcCells_polar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')
-
-end
-end
+sgtitle({['Top Row: Zc Cells- ' num2str(length(Zc_use))], ['Bottom Row: Zp Cells- ' num2str(length(Zp_use))]})
+print(fullfile(summaryDir, [svName '_populationTuning_ZpZcCells_polar' str{a} '_' area '.pdf']),'-dpdf','-bestfit')

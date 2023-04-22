@@ -7,18 +7,20 @@
 %% get path names
 clear all;clc;
 
-mouse = 'WK20';
-date = '220514';
-ImgFolder = char('001');
-time = char('1317');
+mouse = 'i2091';
+date = '230227';
+ImgFolder = char('003');
+doRed = 'true';
+RedImgFolder = char('002');
+time = char('1500');
 doFromRef = 0;
-ref = char('001');
+ref = char('000');
 nrun = size(ImgFolder,1);
 frame_rate = 30;
-run_str = catRunName(ImgFolder, nrun);
+run_str = ['runs-' ImgFolder];
 
 fnOut_base = 'Z:\home\Celine\Analysis\2p_analysis\';
-run_str = catRunName(ImgFolder, 1);
+
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
 fnOut =fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis',mouse, date, ImgFolder)
@@ -105,7 +107,7 @@ end
 
 %% Register data
 
-chooseInt = 4; %nep/2 % interval chosen for data_avg =[epoch of choice]-1
+chooseInt = 11; %nep/2 % interval chosen for data_avg =[epoch of choice]-1
  
 fprintf('\nBegin registering...\n')
 if exist(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis',mouse, date, ImgFolder, [date '_' mouse '_' run_str]), 'dir')
@@ -476,11 +478,96 @@ if 0
     close(fig)
 end
 
+%% load red cells - NEED TO CONVERT FOR THIS SCRIPT
+
+if doRed
+        
+    CD = ['Z:\home\Celine\Data\2p_data\' mouse '\' date '\' RedImgFolder];
+    cd(CD);
+    imgMatFile = [RedImgFolder '_000_000.mat'];
+    
+    
+    
+    if exist('redImage.mat')
+        load('redImage.mat')
+    else
+        load(imgMatFile);
+    
+        fprintf(['Reading red run ' '- ' num2str(info.config.frames) ' frames \r\n'])
+        data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);
+        if size(data_temp,1) == 2
+            data_rg = squeeze(data_temp(1,:,:,:));
+            data_rr = squeeze(data_temp(2,:,:,:));
+        else
+            data_rr = squeeze(data_temp(1,:,:,:));
+        end
+        clear data_temp
+    
+        if exist('redChImg')
+            [out, data_rr_reg] = stackRegister(stackGroupProject(data_rr,100), redChImg);
+            redChImg = mean(data_rr_reg,3);
+        elseif info.config.pmt0_gain>0.5 %if there is a green channel in this run, it gets registered to the registration image from green channel from the 920 run
+            %data_rr = padarray(data_rr,9,0,'pre');
+            reg_avg = mean(data_reg,3); %get an average of the registered green data to use as a target
+            redAvg = mean(data_rr,3);
+            [out, data_rr_reg] = stackRegister(data_rr,redAvg);
+            [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out);
+            redChImgTemp = mean(data_rr_reg,3); 
+            rg_avg = mean(data_rg_reg,3);
+            [out2, ~] = stackRegister(rg_avg,data_avg);
+            [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2);
+            
+    %         [out, data_rg_reg] = stackRegister(data_rg,data_avg); %register the green channel from the 1040 run to the green channel from the 920 run
+    %         [~, data_rr_reg]=stackRegister_MA(data_rr,[],[],out); %use those shifts to register the red 1040 run
+    %         redChImg = mean(data_rr_reg,3);
+            
+            
+        else %if there is no green channel in this run
+            reg_avg = mean(data_reg,3);%get an average of the registered green data to use as a target
+            redAvg = mean(data_rr,3);
+            [out, data_rr_reg] = stackRegister(data_rr,redAvg);
+            redChImgTemp = mean(data_rr_reg,3);
+            [~,redChImg] = stackRegister(redChImgTemp,data_avg);
+        end
+        
+        figure; colormap gray; imagesc(redChImg);  movegui('center');title('registration image for red channel');
+       
+        rgb = zeros(sz(1),sz(2),3);
+        rgb(:,:,1) = redChImg./max(redChImg(:));
+        rgb(:,:,2) = reg_avg./max(reg_avg(:));
+        figure; image(rgb);  movegui('center')
+        title('Green-920 + Red-1040')
+        print(fullfile(fnOut,'red_green_FOV.pdf'),'-dpdf','-bestfit')
+    
+        
+        save('redImage','redChImg')
+
+    end
+    clear data_rr data_rg data_rg_reg data_rr_reg
+end
 %% cell segmentation
 % here use GUI to select cells
+ if doRed %if there is a red run, segment the red cells
+    redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
+    mask_exp = zeros(sz(1),sz(2));
+    mask_all = zeros(sz(1), sz(2));
+    %find and label the red cells - this is the first segmentation figure that
+    %comes up
+    
+        for iStim=1:size(redForSegmenting,3)
+            mask_data_temp=redForSegmenting(:,:,iStim);
+            mask_data_temp(find(mask_exp >= 1)) = 0;
+            bwout = imCellEditInteractiveLG(mask_data_temp);
+            mask_all = mask_all+bwout;
+            mask_exp = imCellBuffer(mask_all,3)+mask_all;
+            close all
+        end
+    
+mask_cell_red = bwlabel(mask_all);
+ end
 
 fprintf('\nBegin cell segmentation...')
-mask_all = zeros(sz(1), sz(2));
+
 mask_exp = mask_all;
 mask_data = data_dfof_avg;
 if reduceFlag
@@ -563,8 +650,23 @@ end
 set(gcf, 'Position', [0 0 800 1000]);
 print(fullfile('\home\celine\Analysis\2P_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_FOV_overlay.pdf']), '-dpdf')
 
+if doRed %if there is a red run, identify which of all the masks correspond with red cells
+
+    mask_label = zeros(1,nCells);
+    for i = 1:nCells
+        if mask_cell_red(find(mask_cell == i, 1))
+            mask_label(1,i) = 1;
+        end
+    end
+
+end
+
 mask_np = imCellNeuropil(mask_cell, 3, 5);
-save(fullfile('\home\celine\Analysis\2P_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_mask_cell.mat']), 'mask_cell', 'mask_np', '-v7.3')
+if doRed
+    save(fullfile('\home\celine\Analysis\2P_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_mask_cell.mat']), 'mask_cell_red','mask_label','mask_cell', 'mask_np', '-v7.3')
+else
+    save(fullfile('\home\celine\Analysis\2P_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_mask_cell.mat']),'mask_cell', 'mask_np', '-v7.3')
+end
 fprintf('Neuropil mask generated\n')
 
 % clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir

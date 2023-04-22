@@ -1,6 +1,6 @@
 clc; clear all; close all;
-ds = 'CrossOriRandPhase_15Hz_ExptList';
-iexp = 17; 
+ds = 'RFMapping_15Hz_ExptList_SG';
+iexp = 3; 
 eval(ds)
 
 frame_rate = params.frameRate;
@@ -14,7 +14,8 @@ ImgFolder = expt(iexp).rfFolder;
 time = expt(iexp).rfTime;
 
 nrun = length(ImgFolder);
-run_str = catRunName(cell2mat(ImgFolder), nrun);
+% run_str = catRunName(cell2mat(ImgFolder), nrun);
+run_str = 'runs-002'
 
 base = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\' expt(iexp).saveLoc];
 
@@ -77,7 +78,7 @@ nep = floor(size(data,3)./regIntv);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,30001:30500),3);
+data_avg = mean(data(:,:,20001:20500),3);
 
 if exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
@@ -90,7 +91,7 @@ else
 end
 
 % test stability
-figure; for i = 1:nep; subplot00(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); end
+figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); end
 print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_byFrame.pdf']),'-dpdf', '-bestfit')
 movegui('center')
 figure; imagesq(mean(data_reg(:,:,1:regIntv),3)); truesize;
@@ -133,10 +134,13 @@ Phas = unique(stimPhas);
 nPhas = length(Phas);
 
 
+
+
 nStim = nEl*nAz*nPhas;
 data_dfof = nan(sz(1),sz(2),nStim);
 stim_list = nan(nStim,3);
 start = 1;
+
 for ip = 1:nPhas
     ind_p = find(stimPhas == Phas(ip));
     figure;
@@ -158,14 +162,17 @@ for ip = 1:nPhas
     movegui('center')
 end
 
-
-
-szSq = 2; %size of square side length
+szSq = 3; %size of square side length
 nSq = (nAz*nEl)/(szSq*szSq);
 if rem(nAz, szSq) ~= 0
     fprintf('*Error: mismatched square size*\n')
     stop
+elseif rem(nEl, szSq) ~= 0
+    fprintf('*Error: mismatched square size*\n')
+    stop
 end
+
+
 
 stimSq = flip(reshape(1:(nEl*nAz), nEl, nAz).',1);
 stimlist = [];
@@ -196,7 +203,7 @@ print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_st
 
 data_dfof = cat(3, data_dfof, data_dfof_max);
 
-save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'nOn', 'nOff', 'nTrials', 'stimEl', 'stimAz', 'stimPhas', 'El', 'Az', 'Phas', 'nEl', 'nAz', 'nPhas', 'nStim', 'stim_list', 'listSqs', 'frame_rate', 'nTrials')
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'nOn', 'nOff', 'stimEl', 'stimAz', 'stimPhas', 'El', 'Az', 'Phas', 'nEl', 'nAz', 'nPhas', 'nStim', 'stim_list', 'listSqs', 'frame_rate', 'nTrials')
 
 %% cell segmentation 
 

@@ -8,10 +8,10 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(1) = 170; %enter the post-DART day ID here
+day_id(1) = 186; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
-ref_day = 169;
+ref_day = 183;
 
 nd = length(day_id);
 brightnessScaleFactor = 0.3;

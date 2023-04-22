@@ -7,7 +7,7 @@ nexp = size(expt,2);
 
 frame_rate = 15;
 
-for iexp  = 1
+iexp  = 3;
 %%
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
@@ -57,8 +57,8 @@ base_cell = cell(nPhas, nEl, nAz);
 resp_cell= cell(nPhas, nEl, nAz);
 trialInd = cell(nPhas, nEl, nAz);
 trialsperstim = zeros(nPhas, nEl, nAz);
-base_win = nOff-ceil(frame_rate/2):nOff;
-resp_win = nOn:(nOn+nOff);
+base_win = 1:nOff;
+resp_win = nOff:(nOn+nOff);
 
 data_dfof_con_tc_avg = nan(nOn+nOff, nCells, nPhas, nEl, nAz);
 
@@ -104,34 +104,7 @@ for ip = 1:nPhas
     indInt = intersect(indOn,indOff);
 end
 
-%anova instead of ttest
-stimSq = flip(reshape(1:(nEl*nAz), nEl, nAz).',1);
-stimSq1 = flip(reshape(stimSq, nEl, []));
-
-cellOn = squeeze(resp_cell(1,:,:));
-
-% skel = cell(275,40);
-% for i = 1:(nEl*nAz)
-%     skel = [skel; resp_cellre{i}];
-% end
-
-
-resp_cellre = reshape(resp_cell, ip, nEl*nAz);
-maxlength = max(cellfun(@numel, resp_cellre));
-
-
-% for ic = 1:nCells
-%     for ip = 1:nPhas
-%        for iE = 1:nEl
-%            for iA = 1:nAz
-%               resp_cell{ip,iE,iA} = squeeze(mean(data_dfof_tc(resp_win,:,ind),1));
-%               resp_cellre = reshape(resp_cell, ip, nEl*nAz);
-%               [p_resp] = anova1(resp_cellre(ip,:)
-
-              
-
-
-
+%% looking at RFs of cells that were significantly responsive (ttest) to at least one location on either subfield n=270
 
 cellOn = squeeze(resp_cell_m(1,:,:));
 cellOn = cat(3,cellOn{:});
@@ -147,14 +120,14 @@ a = squeeze(cellOn(i,:,:));
 
 figure;
 s = 1;
-for i = 15
-    subplot(1,2,s)
+for i = 1:3
+    subplot(1,6,s)
     h = heatmap(squeeze(cellOn(i,:,:)), 'ColorMap', flipud(autumn), 'CellLabelColor', 'none');
     h.Title = 'On';
     h.GridVisible ='off';
     
 
-    subplot(1,2,s+1)
+    subplot(1,6,s+1)
     h = heatmap(squeeze(cellOff(i,:,:)), 'ColorMap', flipud(summer), 'CellLabelColor', 'none');
     h.Title = 'Off';
     h.GridVisible = 'off';
@@ -166,7 +139,7 @@ end
     imagesc(squeeze(cellOn(15,:,:)))
 
 
-%looking at intersect only:
+%% looking cells that were significantly responsive (ttest) to at least one location on both subfields n=151
 
 
 
@@ -183,20 +156,17 @@ cellOff = cellOff(indInt,:,:);
 
 figure;
 s = 1;
-for i = 41:52
-    subplot(6,4,s)
+for i = 150
+    subplot(1,2,s)
     h = heatmap(squeeze(cellOn(i,:,:)), 'ColorMap', parula);
     h.Title = 'On';
     
-    subplot(6,4,s+1)
+    subplot(1,2,s+1)
     h = heatmap(squeeze(cellOff(i,:,:)), 'ColorMap', parula);
     h.Title = 'Off';
     movegui('center')
     s=s+2;
-end 
-
-
-
+end
     print(fullfile(summaryDir, ['_heatmaps.pdf']),'-dpdf', '-fillpage')
 
 
@@ -211,12 +181,132 @@ for i = 56
 %     a.FaceColor = 'interp';
     s=s+2;
 end 
-    
 
 
+%% testing significance with an ANOVA
 
-%need to change variables saved
-save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'data_dfof_con_ph_tc_avg', 'resp_cell','base_cell', 'data_dfof_tc', 'resp_ind', 'resptest_ind', 'respmask_ind', 'respplaid_ind', 'preftest_ind', 'prefmask_ind', 'prefplaid_ind', 'preftestonly_ind', 'prefmaskonly_ind', 'prefplaidonly_ind', 'tt', 'frame_rate','resp_ind_f');
-save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'base_win', 'stimCon_all', 'maskCon_all', 'maskPhas_all', 'stimCons', 'maskCons', 'maskPhas', 'nStimCon', 'nMaskCon', 'nMaskPhas','TF_all','nTF','TFs');
+if exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']),'file')
+    load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']));
+else
+    for ip = 1:nPhas
+        if ip == 1
+            cellOn = squeeze(resp_cell(ip,:,:)); %6x6 cell array with nCells by nTrials in each cell 
+            cellOnr = reshape(cellOn, nEl*nAz, []); %reshape into 36x1
+            [nrow, ncols] = cellfun(@size, cellOnr); %how many rows and columns are in each cell
+            maxLength = max(ncols);
 
+            cellOnMat = zeros(maxLength, nEl*nAz);
+            p_resp = zeros(nCells, 1);  %anova outputs one pvalue per run (some group is significantly different from some other group)
+            for i = 1:nCells       %pad the column of each cell with NaNs such that all cells are now the same size
+                cellOnPad = cellfun(@(x)[(x(i,1:end)) nan(1,maxLength-size(x,2))],cellOnr,'UniformOutput', false);
+                for ii = 1:nEl*nAz      %pull each cell and turn it into columns in a matrix (number of trials by number of stimulus locations)
+                cellOnMat(:,ii) = [cellOnPad{ii}'];
+                end    
+                [p_resp(i,:) tbl] = anova1(cellOnMat);    %anova1 assumes columns are groups unless told otherwise
+                fprintf([num2str(i) ' of ' num2str(nCells) '\n'])
+                close all
+            end
+            indOn05 = find(p_resp<0.05);
+            indOn01 = find(p_resp<0.01);
+            indOn001 = find(p_resp<0.001);
+        end
+        if ip == 2
+            cellOff = squeeze(resp_cell(ip,:,:)); %6x6 cell array with nCells by nTrials in each cell 
+            cellOffr = reshape(cellOff, nEl*nAz, []); %reshape into 36x1
+            [nrow, ncols] = cellfun(@size, cellOffr); %how many rows and columns are in each cell
+            maxLength = max(ncols);
+
+            cellOffMat = zeros(maxLength, nEl*nAz);
+            p_resp = zeros(nCells, 1);  %anova outputs one pvalue per run (some group is significantly different from some other group)
+            for i = 1:nCells       %pad the column of each cell with NaNs such that all cells are now the same size
+                cellOffPad = cellfun(@(x)[(x(i,1:end)) nan(1,maxLength-size(x,2))],cellOffr,'UniformOutput', false);
+                for ii = 1:nEl*nAz      %pull each cell and turn it into columns in a matrix (number of trials by number of stimulus locations)
+                cellOffMat(:,ii) = [cellOffPad{ii}'];
+                end    
+                [p_resp(i,:) tbl] = anova1(cellOffMat);    %anova1 assumes columns are groups unless told otherwise
+                fprintf([num2str(i) ' of ' num2str(nCells) '\n'])
+                close all
+            end
+            indOff05 = find(p_resp<0.05);
+            indOff01 = find(p_resp<0.01);
+            indOff001 = find(p_resp<0.001);        
+        end
+    end
 end
+
+indIntA = intersect(indOn01, indOff01);
+
+cellOn = squeeze(resp_cell_m(1,:,:));
+cellOn = cat(3,cellOn{:});
+cellOn = reshape(cellOn, nCells, nEl, nAz);
+dfofInd = [];
+for i = 1:length(cellOn)
+    x = reshape(squeeze(cellOn(i,:,:)), nEl*nAz, []);
+    if max(x) >= 0.05
+        dfofInd = [dfofInd; i];
+    else
+    end
+end
+index = intersect(dfofInd, indIntA);     
+cellOn = cellOn(index,:,:);
+cellOnMax = max(cellOn, [], 2:3);
+
+cellOff = squeeze(resp_cell_m(2,:,:));
+cellOff = cat(3,cellOff{:});
+cellOff = reshape(cellOff, nCells, nEl, nAz);
+cellOff = cellOff(index,:,:);
+cellOffMax = max(cellOff, [], 2:3);
+
+cellMax = max(cellOnMax,cellOffMax);
+% cellNorm = (cellOn./abs(cellOnMax)) - (cellOff./abs(cellOffMax));
+cellNorm = (cellOn - cellOff)./abs(cellOffMax);
+% cellNorm = cellOn - cellOff;
+
+
+figure;
+s = 1;
+for i = 1:45
+    subplot(5,9,s)
+%     myfilter = fspecial('gaussian',[20 20], 0.5);
+%     cellNormGauss = imfilter(squeeze(cellNorm(i,:,:)), myfilter);
+%     imagesc(cellNormGauss);
+    imagesc(squeeze(cellNorm(i,:,:)), [-1.5 1.5]);
+    colormap(redblue)
+    title = ({['Cell #', num2str(i)]});
+    movegui('center')
+    s = s + 1;
+end
+    print(fullfile(summaryDir, ['_ANOVA_heatmaps.pdf']),'-dpdf', '-fillpage')
+
+
+
+
+%% save variables
+
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'data_dfof_con_tc_avg', 'resp_cell','base_cell', 'data_dfof_tc', 'indResp', 'indInt',  'indOn05', 'indOff05', 'indOn01', 'indOff01', 'indOn001', 'indOff001', 'frame_rate');
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'resp_win', 'base_win', 'cStimOff', 'nStimCon', 'trialsperstim', 'stim_list', 'El', 'Az', 'Phas', 'nEl', 'nAz', 'nPhas', 'stimEl', 'stimAz', 'stimPhas');
+
+
+%% looking into mworks randomization limit
+
+[nrow, ncols] = cellfun(@size, trialInd);
+ncolsOn = squeeze(ncols(1,:,:));
+ncolsOff = squeeze(ncols(2,:,:));
+
+figure;
+subplot(1,3,1)
+    histogram(ncolsOff)
+    hold on
+    histogram(ncolsOn)
+    xlabel('number of trial repeats')
+    ylabel('number of locations (81 total)')
+    title('Frequency of trial repeats')
+    legend('nOff', 'nOn')
+subplot(1,3,2)
+    heatmap(ncolsOff)
+    title('nOff')
+subplot(1,3,3)
+    heatmap(ncolsOn)
+    title('nOn')
+
+

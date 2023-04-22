@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '220519';
-mouse = 'i1369';
-ImgFolder = '001';
-time = '1553';
+date = '230301';
+mouse = 'i2091';
+ImgFolder = '000';
+time = '1059';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -23,7 +23,7 @@ for irun = 1:nrun
     if strcmp(rc.name,'ashle')
     CD = ['Z:\home\ashley\data\' mouse '\two-photon imaging\' date '\' ImgFolder(irun,:)];
     elseif strcmp(rc.name,'celine')
-    CD = ['Z:\home\celine\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
+    CD = ['Z:\home\ACh\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
     elseif strcmp(rc.name,'tw299')
     CD = ['Z:\All_Staff\home\tj\2p_Imaging\' mouse '\' datemouse '\' ImgFolder(irun,:)];
     else

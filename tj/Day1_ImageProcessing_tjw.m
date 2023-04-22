@@ -11,20 +11,21 @@
 %clear workspace
 clear all
 clear global
+close all
 clc
 %% get path names
-date = '220428';
-ImgFolder = strvcat('003'); %could we use char() instead here?
-time = strvcat('1238');
-mouse = 'i2517';
+date = '230120';
+ImgFolder = strvcat('001'); %could we use char() instead here?
+time = strvcat('0659');
+mouse = 'i2543';
 run = strvcat('001'); %multiple depths?***
 nrun = size(ImgFolder,1); %what is this?***
-frame_rate = 15.5;
+frame_rate = 15;
 run_str = catRunName(ImgFolder, nrun);
 ref_str = catRunName(run, size(run,1)); %what is this?***
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P';
-%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\tutorial';
+%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\Day1_recycled';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load data
 data = [];
@@ -36,7 +37,8 @@ for irun = 1:nrun %**what is this for? multiple depths?
     cd(CD); %set CD
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat']; %add the 0s to the imaging file
     load(imgMatFile); %**load this file from CD?
-    fName = fullfile(behav_fn, ['data-i' '''' mouse '''' '-' date '-' time(irun,:) '.mat']); %find behavior data
+%     fName = fullfile(behav_fn, ['data-i' '''' mouse '''' '-' date '-' time(irun,:) '.mat']); %find behavior data
+    fName = fullfile(behav_fn, ['data-'  mouse  '-' date '-' time(irun,:) '.mat']); %find behavior data
     load(fName); %load behavior data
     
     %input is behavioral parameters
@@ -93,7 +95,7 @@ end
 %frames; what about pixel 1,2 etc.
 %% Register data
 
-data_avg = mean(data(:,:,22001:22500),3); %mean of pixel values over selected range of frames
+data_avg = mean(data(:,:,32001:32500),3); %mean of pixel values over selected range of frames
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str])) %if this folder exists)
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat'])) %load this mat file
@@ -633,6 +635,7 @@ for icell = 1:nc
             title('Red')
             
             prompt = 'Choose one: 1- good, 2-okay, 3- none: ';
+            drawnow
             x = input(prompt);
             switch x
                 case 1

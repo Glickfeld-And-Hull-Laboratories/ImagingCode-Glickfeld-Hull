@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 175;
+day_id = 239;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -105,15 +105,15 @@ for irun = 1:nruns
         data_g = data_temp_g;
         clear data_temp_g
         if info.config.pmt1_gain > 0.5
-            %data_r = data_temp_r;
-            %clear data_temp_r
+            data_r = data_temp_r;
+            clear data_temp_r
         end
     else
         data_g = cat(3, data_g, data_temp_g);
         clear data_temp_g
         if info.config.pmt1_gain > 0.5
-            %data_r = cat(3, data_r, data_temp_r);
-            %clear data_temp_r
+            data_r = cat(3, data_r, data_temp_r);
+            clear data_temp_r
         end
     end
 end
@@ -138,13 +138,15 @@ else %if not, must register. Start by showing average for each of four 500-frame
     for i = 1:nep 
         subplot(n,n2,i); 
         imagesc(mean(data_g(:,:,1+((i-1)*3000):500+((i-1)*3000)),3)); 
-        title([num2str(1+((i-1)*3000)) '-' num2str(500+((i-1)*30000))]); 
+        title([num2str(1+((i-1)*3000)) '-' num2str(50+((i-1)*30000))]); 
         colormap gray; 
         clim([100 3000]); 
     end
+    drawnow;
     
     regImgStartFrame = input('Enter Registration Image Start Frame, ENTER INTO DS:');
-    regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
+    
+    regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+49)),3);
     [outs,data_g_reg] = stackRegister(data_g,regImg);
     data_avg = mean(data_g_reg,3);
     figure;imagesc(data_avg);colormap gray; truesize; clim([100 3000]);
@@ -218,7 +220,7 @@ end
 % title('Comparing contrasts');
 
 data_ori_max = max(data_g_ori,[],3);
-data_dfof = cat(3, data_ori_max,data_g_ori);
+data_dfof = cat(3, data_ori_max,data_ori_max,data_ori_max,data_g_ori);
 figure; imagesc(data_ori_max); movegui('center');title('data ori max');
 clear data_g_dfof
 
@@ -226,10 +228,10 @@ clear data_g_dfof
 data_g_down = stackGroupProject(data_g_reg,100);
 corrImg = getPixelCorrelationImage(data_g_down);
 figure; imagesc(corrImg); movegui('center');title('pixel correlation');
-data_dfof = cat(3, data_dfof, corrImg);
+data_dfof = cat(3, data_dfof, data_avg,data_avg,corrImg,corrImg);
 clear data_g_down
 
-data_dfof = cat(3, data_dfof,data_avg);
+
 
 %% load red cells
 %this is where we use the 1040, 1000-frame run
@@ -264,13 +266,19 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
         [out, data_rr_reg] = stackRegister(stackGroupProject(data_rr,100), redChImg);
         redChImg = mean(data_rr_reg,3);
     elseif info.config.pmt0_gain>0.5 %if there is a green channel in this run, it gets registered to the registration image from green channel from the 920 run
-       redAvg = mean(data_rr,3);
+        %data_rr = padarray(data_rr,9,0,'pre');
+        redAvg = mean(data_rr,3);
         [out, data_rr_reg] = stackRegister(data_rr,redAvg);
         [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out);
         redChImgTemp = mean(data_rr_reg,3); 
         rg_avg = mean(data_rg_reg,3);
         [out2, ~] = stackRegister(rg_avg,data_avg);
         [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2);
+        
+%         [out, data_rg_reg] = stackRegister(data_rg,data_avg); %register the green channel from the 1040 run to the green channel from the 920 run
+%         [~, data_rr_reg]=stackRegister_MA(data_rr,[],[],out); %use those shifts to register the red 1040 run
+%         redChImg = mean(data_rr_reg,3);
+        
         
     else %if there is no green channel in this run
         redAvg = mean(data_rr,3);
@@ -293,11 +301,24 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
 elseif ~exist('redChImg')
     redChImg = zeros(size(regImg));
 end
+
+
+%create red image where any pixel value above a certain percentile of the max is set to 90%
+%of the max - removing the highest 10% of pixel values to create a lower
+%contrast image for segmenting
+threshPercentile = 99;
+
+highValues = find(redChImg>prctile(redChImg,threshPercentile,'all'));
+redThresh = redChImg;
+redThresh(highValues)=prctile(redChImg,threshPercentile,'all');
+figure; imagesc(redChImg);colormap gray;
+figure; imagesc(redThresh);colormap gray;
+
 clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-%redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
@@ -313,9 +334,12 @@ if ~isempty(expt(day_id).redChannelRun)
     end
 end
 
+%this version does not pad the red cells
+
+
 mask_cell_red = bwlabel(mask_all);
 mask_data = data_dfof; %this is the registered data from the 920 run
-%after making masks for all the red cellfs, go through different stimuli and
+%after making masks for all the red cells, go through different stimuli and
 %identify cells that are visible for each
 
 for iStim = 1:size(data_dfof,3)
@@ -330,6 +354,7 @@ mask_cell = bwlabel(mask_all);
 figure; imagesc(mask_cell) 
 
 nCells = max(mask_cell(:));
+%mask_label = ones(1,nCells); %this is for the EMX and similar lines only
 mask_label = zeros(1,nCells);
 for i = 1:nCells
     if mask_cell_red(find(mask_cell == i, 1))
@@ -339,6 +364,18 @@ end
 
 mask_np = imCellNeuropil(mask_cell, 3, 5);
 save(fullfile(fnout, 'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
+
+
+rgb = zeros(sz(1),sz(2),3);
+    rgb(:,:,1) = redChImg./(max(redChImg(:))*.5);
+    rgb(:,:,2) = regImg./max(regImg(:));
+    figure; image(rgb);  movegui('center')
+
+hold on
+bound = cell2mat(bwboundaries(mask_cell_red));
+plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+hold off
+
 
 %% extract timecourses
 
@@ -399,7 +436,7 @@ h_all = sum(sum(h,2),3);
 
 resp=logical(h_all);
 red=mask_label';
-resp_red=resp.*red;
+resp_red=logical(resp.*red);
 sum(resp)
 sum(resp_red)
 
@@ -500,8 +537,8 @@ data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = mean(data_dfof_trial,3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(mean(data_dfof_trial,2));%average over trials, one row per cell
+tc_cell_avrg = mean(data_dfof_trial(:,:,resp),3);%average pver cells, one row per trial
+tc_trial_avrg = squeeze(mean(data_dfof_trial(:,:,resp),2));%average over trials, one row per cell
 tc_cell_trial_avrg = mean(tc_cell_avrg,2);%average over trials and cells
 
 figure;
@@ -517,16 +554,16 @@ ylim([-.04 .1])
 
 
 %% 
-figure;
-imagesc(data_avg);
-colormap gray
-title('average FOV');
-hold on
-bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
-bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
-hold off
+% figure;
+% imagesc(data_avg);
+% colormap gray
+% title('average FOV');
+% hold on
+% bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
+% bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+% hold off
 
 %% plotting contrast and ori functions for red cells only
 % if length(find(mask_label))<36
