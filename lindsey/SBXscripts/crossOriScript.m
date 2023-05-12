@@ -1,7 +1,8 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandDirTwoPhaseFF_ExptList';
-iexp = 4; 
+ds = 'CrossOri_V1dendrites_ExptList';
+iexp = 2; 
+doDirAfterPhase = 0;
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
@@ -18,6 +19,12 @@ if doPhaseAfterDir
     ref_str = catRunName(cell2mat(ImgFolder), nrun);
     ImgFolder = expt(iexp).copFolder;
     time = expt(iexp).copTime;
+elseif doDirAfterPhase
+    ImgFolder = expt(iexp).coFolder;
+    nrun = length(ImgFolder);
+    ref_str = catRunName(cell2mat(ImgFolder), nrun);
+    ImgFolder = expt(iexp).codFolder;
+    time = expt(iexp).codTime;
 elseif doDirAfterPass
     ImgFolder = expt(iexp).passFolder;
     nrun = length(ImgFolder);
@@ -39,7 +46,7 @@ for irun=1:nrun
     fprintf([ImgFolder{irun} ' - ' time{irun} '\n'])
 end
 
-%% load and register
+%% load data
 tic
 data = [];
 clear temp
@@ -86,29 +93,59 @@ clear temp
 toc
 
 % Choose register interval
-regIntv = 5000;
+regIntv = 1000;
 nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
 %% Register data
-data_avg = mean(data(:,:,45001:45500),3);
-if doPhaseAfterDir || doDirAfterPass
+
+if doPhaseAfterDir || doDirAfterPhase || doDirAfterPass
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
-    [out, data_reg] = stackRegister(data,data_avg);
-    mkdir(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
-    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
-    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    if exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+        load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
+        [outs, data_reg] = stackRegister_MA(data,[],[],out);
+    else
+        [out, data_reg] = stackRegister(data,data_avg);
+        mkdir(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
+        save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+        save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
+    end
 elseif exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     [outs, data_reg] = stackRegister_MA(data,[],[],out);
 else
+    totframes = size(data,3);
+    nframes = 500; %nframes to average for target
+    nep = 9;
+    nskip = floor(totframes./nep); %nframes to skip for each average
+    [n, n2] = subplotn(nep); 
+    figure('units','normalized','outerposition',[0 0 1 1]);
+    for i = 1:nep 
+        subplot(n,n2,i); 
+        imagesc(mean(data(:,:,1+((i-1)*nskip):nframes+((i-1)*nskip)),3)); 
+        title([num2str(1+((i-1)*nskip)) '-' num2str(nframes+((i-1)*nskip))]); 
+    end
+    
+    %    b. GUI to select target image- choose one that is sharp and close to center of stack
+    f=gcf;
+    w = waitforbuttonpress; %click on subplot
+    if w == 0
+        axesClicked = gca;
+        allAxes = flipud(findobj(f.Children,'Type','axes'));
+        numClicked = find(axesClicked==allAxes);
+        close all
+    end
+    fprintf(['Selected subplot ' num2str(numClicked)])
+    %    c. Create target image
+    data_avg = mean(data(:,:,1+((numClicked-1)*nskip):nframes+((numClicked-1)*nskip)),3); %average 500 frames to make target
     [out, data_reg] = stackRegister(data,data_avg);
     mkdir(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
     save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
     save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
 
+data_reg_avg = mean(data_reg,3);
 % test stability
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); end
 print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_byFrame.pdf']),'-dpdf', '-bestfit')
@@ -127,7 +164,7 @@ rg(:,:,2) = last./max(last(:));
 figure; image(rg)
 movegui('center')
 %% if red channel data
-if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)
+if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPhase & ~doDirAfterPass)
     ImgFolderRed = expt(iexp).redImg;
     CD = [base '\Data\2P_images\' mouse '\' date '\' ImgFolderRed{1}];
     cd(CD);
@@ -389,7 +426,7 @@ end
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', 'maskCon_all', 'stimCon_all', 'stimCons', 'maskCons', 'nStimCon', 'nMaskCon', 'stimDir_all', 'stimDirs', 'nStimDir', 'maskDir_all', 'maskDirs', 'nMaskDir', 'maskPhas_all', 'maskPhas', 'nMaskPhas', 'maskDiff_all','maskDiffs','nMaskDiff','SF_all', 'SFs', 'nSF','TF_all', 'TFs', 'nTF', 'frame_rate', 'nTrials')
 
 %% cell segmentation 
-if ~doPhaseAfterDir & ~doDirAfterPass
+if ~doPhaseAfterDir & ~doDirAfterPhase & ~doDirAfterPass
     mask_exp = zeros(sz(1),sz(2));
     mask_all = zeros(sz(1), sz(2));
     mask_data = data_dfof;
@@ -429,7 +466,7 @@ end
 clear data_adapt data_adapt_dfof data_test data_test_dfof data_test_avg data_resp data_resp_dfof bwout
 
  %% neuropil subtraction
-if ~doPhaseAfterDir & ~doDirAfterPass
+if ~doPhaseAfterDir & ~doDirAfterPhase & ~doDirAfterPass
     mask_np = imCellNeuropil(mask_cell, 3, 5);
     save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np', 'red_cells')
 else
@@ -465,7 +502,11 @@ clear data_reg data_reg_down
 
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc', 'nCells', 'sz')
 
-clear data_tc data_tc_down np_tc np_tc_down mask_np mask_cell
+clear data_tc data_tc_down np_tc np_tc_down mask_np
 
-
+if strcmp(expt(iexp).img_strct,'dendrites')
+    figure; image(imShade(data_reg_avg,mask_cell))
+    truesize
+    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_cellMaskFOV.pdf']),'-dpdf','-bestfit')
+end
  
