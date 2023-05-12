@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '230222';
-mouse = 'i2902';
-ImgFolder = '002';
-time = ['1531'];
+date = '230331';
+mouse = 'i2905';
+ImgFolder = '001';
+time = ['1606'];
 doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -76,7 +76,7 @@ expt_input = concatenateDataBlocks(temp);
 %     data = squeeze(data(1,:,:,:));
     
     if doReg
-    data_avg = mean(data(:,:,1000:1500),3);
+    data_avg = mean(data(:,:,1:500),3);
     [out data_reg] = stackRegister(data,data_avg);
     data = data_reg;
     clear data_reg

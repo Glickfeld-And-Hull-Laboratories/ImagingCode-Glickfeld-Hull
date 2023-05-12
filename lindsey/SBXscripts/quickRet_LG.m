@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '230222';
-mouse = 'i2902';
+date = '230410';
+mouse = 'i2905';
 ImgFolder = '001';
-time = ['1517'];
+time = ['1614'];
 doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -28,7 +28,7 @@ for irun = 1:nrun
     load(fName);
     
     nframes = info.config.frames;
-    nframes = 4050;
+    %nframes = 4050;
     nframes = input.counterValues{end}(end);
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
@@ -123,7 +123,8 @@ expt_input = concatenateDataBlocks(temp);
         %data_dfof_avg_all = squeeze(mean(data_dfof_avg(:,:,nOff:nOff+nOn,:),3));
 
 %         img_avg_resp = zeros(1,nStim);
-        figure; 
+        figure;
+        movegui('center')
         for i = 1:nStim
             subplot(length(Els),length(Azs),i); 
             imagesc(data_dfof_avg_all(:,:,i)); 
@@ -142,7 +143,8 @@ expt_input = concatenateDataBlocks(temp);
             img_thresh(img>pixThreshold) = img(img>pixThreshold);
             img_avg_resp(i) = mean(img(img(:)>pixThreshold));
         end
-        figure
+        figure;
+        movegui('center')
         heatmap = imagesc(fliplr(rot90(reshape(img_avg_resp,length(Els),length(Azs)),3)));
         heatmap.Parent.YTick = 1:length(Els);
         heatmap.Parent.YTickLabel = strread(num2str(Els),'%s');    
@@ -175,6 +177,7 @@ expt_input = concatenateDataBlocks(temp);
             end
         end
         figure;
+        movegui('center')
         ax=gca;
         imagesc(respMap);
         ax.XTickLabel = Azs;
@@ -186,6 +189,7 @@ expt_input = concatenateDataBlocks(temp);
     end
     
     figure; imagesc(mean(data,3));
+    movegui('center')
     axis off
     title([mouse ' ' date])
     print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')

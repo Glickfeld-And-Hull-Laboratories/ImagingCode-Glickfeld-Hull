@@ -11,10 +11,10 @@ mworks_fn = fullfile(fn_base, 'Behavior', 'Data');
 fnout = fullfile(lg_fn, 'Analysis', '2P');
 
 %Specific experiment information
-date = '230222';
-ImgFolder = '002';
-time = '1531';
-mouse = 'i2902';
+date = '230331';
+ImgFolder = '001';
+time = '1721';
+mouse = 'i2905';
 frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
@@ -44,7 +44,7 @@ data = squeeze(data);
 %1. Find a stable target
 %    a. Plot average of 500 frames throughout stack
 nframes = 500; %nframes to average for target
-nskip = 5000; %nframes to skip for each average
+nskip = double(ceil(totframes/5)); %nframes to skip for each average
 
 nep = floor(size(data,3)./nskip);
 [n, n2] = subplotn(nep); 
@@ -238,7 +238,7 @@ figure;
 movegui('center')
 for iCell = 1:nCells
     if start>25
-        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
         figure;movegui('center');
         start = 1;
         n = n+1;
@@ -248,7 +248,7 @@ for iCell = 1:nCells
     title(['R = ' num2str(h_all_dir(iCell))])
     start = start +1;
 end
-print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.mat']),'-dpdf','-bestfit')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningDir' num2str(n) '.pdf']),'-dpdf','-bestfit')
 
 %plot significant cells
 start=1;
@@ -344,6 +344,19 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' nu
     end
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_oriResp.mat']), 'data_dfof_dir', 'data_dfof_ori','base_win','resp_win','h_dir','k1_ori','b_ori','R1_ori','u1_ori','stim_DSI','stim_OSI','R_square_ori')
 
+%% orientation maps
+dfof_norm = data_dfof_avg_all(:,:,2:nOri+1)./max(max(data_dfof_avg_all(:,:,2:nOri+1),[],1),[],2);
+cmap = hsv(8);
+ori_map = zeros(sz(1),sz(2),3);
+for i = 1:sz(1)
+    for j = 1:sz(2)
+        if i > 2 & i < sz(1)-1 & j > 2 & j < sz(2)-1
+            [val, ind] = max(mean(mean(dfof_norm(i-1:i+1,j-1:j+1,:),1),2),[],3);
+            ori_map(i,j,:) = cmap(ind,:).*val;
+        end
+    end
+end
+imagesc(ori_map)
 %% F1/F0 analysis
 tf = input.gratingTemporalFreqCPS;
 data_dfof = permute(data_dfof,[1 3 2]);
