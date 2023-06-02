@@ -412,6 +412,8 @@ tc_trial_avrg_keep_allCond=cell(1,nd);
 pref_responses_stat = cell(1,nd);
 pref_responses_loc = cell(1,nd);
 pref_responses_allCond = cell(1,nd);
+pref_peak_stat  = cell(1,nd);
+pref_peak_loc  = cell(1,nd);
 pref_allTrials_stat=cell(nCon,nd);
 pref_allTrials_loc=cell(nCon,nd);
 trialCounts=cell(2,nd);
@@ -457,7 +459,10 @@ for id = 1:nd
             temp_pref_responses_loc(i,iCon)=nanmean(temp_all_loc{i},2);
             temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials1),1),2);
 
-            temp_pref_peal_stat(i,iCon)=nanmean(temp_all_stat{i},2);
+            %to get peak values, take the max value of each trails and then
+            %find the mean of those max values across trials
+            temp_pref_peak_stat(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_stat)));
+            temp_pref_peak_loc(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_loc)));
             
             temp_tc_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat),2);
             temp_tc_loc(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_loc),2);
@@ -482,7 +487,10 @@ rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of abo
 pref_responses_stat{id} = temp_pref_responses_stat;
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
-clear temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
+pref_peak_stat{id}=temp_pref_peak_stat;
+pref_peak_loc{id}=temp_pref_peak_loc;
+
+clear temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
 end
 
 trialCountTable = table([mean(trialCounts{1,2});std(trialCounts{1,2})],[mean(trialCounts{2,2});std(trialCounts{2,2})],[mean(trialCounts{1,1});std(trialCounts{1,1})],[mean(trialCounts{2,1});std(trialCounts{2,1})],'VariableNames',{'pre stat' 'pre loc' 'post stat' 'post loc'}, 'RowNames',{'Mean'  'std'})
@@ -684,7 +692,7 @@ save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat','pref_
     'tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match', ...
     'tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical', ...
     'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','ttest_results_loc','ttest_results_stat', ...
-    'ttest_results_allCon_stat','ttest_results_allCon_loc')
+    'ttest_results_allCon_stat','ttest_results_allCon_loc','pref_peak_stat','pref_peak_loc')
 
 
 %% make and save response matrix for keep cells

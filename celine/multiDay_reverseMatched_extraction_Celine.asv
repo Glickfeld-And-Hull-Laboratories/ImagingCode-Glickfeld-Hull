@@ -412,6 +412,7 @@ tc_trial_avrg_keep_allCond=cell(1,nd);
 pref_responses_stat = cell(1,nd);
 pref_responses_loc = cell(1,nd);
 pref_responses_allCond = cell(1,nd);
+pref_peak_stat  = cell(1,nd);
 pref_allTrials_stat=cell(nCon,nd);
 pref_allTrials_loc=cell(nCon,nd);
 trialCounts=cell(2,nd);
@@ -425,6 +426,9 @@ for id = 1:nd
     temp_pref_responses_stat=zeros(nKeep,nCon,1);
     temp_pref_responses_loc=zeros(nKeep,nCon,1);
     temp_pref_responses_allCond=zeros(nKeep,nCon,1);
+
+    temp_pref_peak_stat=zeros(nKeep,nCon,1);
+    temp_pref_peak_loc=zeros(nKeep,nCon,1);
     
     for iCon = 1:nCon % for each contrast'
         temp_all_stat=cell(1,nKeep);
@@ -453,6 +457,9 @@ for id = 1:nd
             temp_pref_responses_stat(i,iCon)=nanmean(temp_all_stat{i},2);
             temp_pref_responses_loc(i,iCon)=nanmean(temp_all_loc{i},2);
             temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials1),1),2);
+
+            temp_pref_peak_stat(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_stat)));
+            temp_pref_peak_loc(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_loc)));
             
             temp_tc_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat),2);
             temp_tc_loc(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_loc),2);
@@ -477,7 +484,10 @@ rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of abo
 pref_responses_stat{id} = temp_pref_responses_stat;
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
-clear temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
+pref_peak_stat{id}=temp_pref_peak_stat;
+pref_peak_loc{id}=temp_pref_peak_loc;
+
+clear temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
 end
 
 trialCountTable = table([mean(trialCounts{1,2});std(trialCounts{1,2})],[mean(trialCounts{2,2});std(trialCounts{2,2})],[mean(trialCounts{1,1});std(trialCounts{1,1})],[mean(trialCounts{2,1});std(trialCounts{2,1})],'VariableNames',{'pre stat' 'pre loc' 'post stat' 'post loc'}, 'RowNames',{'Mean'  'std'})
