@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds)
 
 
-day_id = 245;
+day_id = 280;
 % identifying animal and run
 mouse = expt(day_id).mouse;
 date = expt(day_id).date;
@@ -73,7 +73,7 @@ hold on
 bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
 bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+%plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
 print(fullfile(fn,['FOV_with_masks']),'-dpdf');
 
@@ -136,15 +136,15 @@ data_orth_resp=zeros(nCells,1);
           orth_ori(iCell)=pref_ori(iCell)-4;
       end
       data_ori_resp(iCell,:)=data_resp(iCell,:,pref_con(iCell),1);
-%       data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
+%      data_orth_resp(iCell,:)=mean(data_resp(iCell,orth_ori(iCell),:,1));
       data_con_resp(iCell,:)=data_resp(iCell,pref_ori(iCell),:,1);
 end
 
-%% calculating OSI 
-%OSI only seems to work on rectified dfof
-OSI1 = (max_val-data_orth_resp)./(max_val+data_orth_resp);
-movegui('center')
-hist(OSI1,20)
+% %% calculating OSI 
+% %OSI only seems to work on rectified dfof
+% OSI1 = (max_val-data_orth_resp)./(max_val+data_orth_resp);
+% movegui('center')
+% hist(OSI1)
 
 %% get basic counts
 green_inds = 1:nCells;
@@ -252,6 +252,51 @@ for iCon = 1:nCon
     shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
     title(num2str(cons(iCon)));
     saveas(gcf,fullfile(fn,['contrast_',num2str(cons(iCon)), '_tcPlot.jpg']));
+
+end
+
+
+%% plotting the contrasts together
+figure;
+for iCon = 1:nCon
+    tc_green = tc_trial_avrg{iCon}(:,GreenResp);
+    tc_red = tc_trial_avrg{iCon}(:,RedResp);
+    tc_green_avrg=cell(1,2);
+    tc_red_avrg=cell(1,2);
+    tc_green_avrg{1} = mean(tc_green,2);%average tc for responsive green cells
+    tc_green_avrg{2}=std(tc_green,[],2);
+    tc_red_avrg{1} = mean(tc_red,2); %average tc for all red cells
+    tc_red_avrg{2}=std(tc_red,[],2);
+    
+    %convert to se 
+    tc_green_avrg{2} = tc_green_avrg{2}/sqrt(size(GreenResp,1));
+    tc_red_avrg{2} = tc_red_avrg{2}/sqrt(size(RedResp,1));
+    
+
+    
+   
+    x=1:(size(tc_green,1));
+    x=(x-30)/15;
+    if iCon == 1
+        shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'b');
+        %shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2},'b');
+        hold on
+    elseif iCon== 2
+        shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'g');
+        %shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2},'g');
+        hold on
+    elseif iCon==3
+        shadedErrorBar(x,tc_red_avrg{1},tc_red_avrg{2},'c');
+        %shadedErrorBar(x,tc_red_avrg{1},tc_green_avrg{2},'c');
+        hold on
+    end
+    %plot(x,tc_red,'r');
+    ylim([-.05 .3]);
+    
+    
+    %shadedErrorBar(x,tc_green_avrg{1},tc_green_avrg{2});
+    
+    %saveas(gcf,fullfile(fn,['contrast_',num2str(cons(iCon)), '_tcPlot.jpg']));
 
 end
 

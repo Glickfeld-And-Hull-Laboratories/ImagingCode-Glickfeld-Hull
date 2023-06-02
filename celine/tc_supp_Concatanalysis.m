@@ -30,6 +30,9 @@ tempTC_loc1=TC_byConditionLoc;
 tempTC_stat1=TC_byConditionStat;
 load('responses.mat');
 temp_responseWins1 = responseWins;
+
+load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
+load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse,date,ori_run, [date '_' mouse '_runs-' ori_run '_prefOris.mat']))
 %% WK16
 
 mouse = 'WK16';

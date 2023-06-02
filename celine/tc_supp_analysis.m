@@ -3,12 +3,12 @@ clear all; clear global; close all
 
 %identifying animal and run
 
-mouse = 'WK29';
-date = '230117';
-time = char('1045');
-ImgFolder = char('003');
-RetImgFolder = char('001');
-
+mouse = 'i2091';
+date = '230227';
+time = char('1550');
+ImgFolder = char('004');
+RetImgFolder = char('003');
+ori_run=char('005');
 
 ref = char('001');
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
@@ -25,6 +25,7 @@ beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
 run_str = ['runs-' ImgFolder];
+ori_run_str = ['runs-' ori_run];
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
 
@@ -32,6 +33,9 @@ datemouserun = [date '_' mouse '_' run_str];
 load(fullfile([datemouserun '_TCs.mat']));
 % loads 'mask_cell', 'mask_np'
 load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse,date,RetImgFolder, [date '_' mouse '_runs-' RetImgFolder '_lbub_fits.mat']))
+load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
+load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse,date,ori_run, [date '_' mouse '_runs-' ori_run '_prefOris.mat']))
+% load in the ori preferences
 
 %NEED TO LOAD MASKS TO GET THE INDEXES OF RED CELLS
 ref = char('003');
@@ -101,7 +105,7 @@ h_all = sum(sum(h,2),3);
 resp_all=logical(h_all);
 % resp_small_highCon = logical(h(:,1,4));
 
-load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
+
 centeredResp=intersect(find(resp_all),centerCells);
 % smallResp=intersect(centeredResp,find(prefSize<4));
 % length(centeredResp)

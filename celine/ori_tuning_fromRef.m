@@ -1,14 +1,12 @@
-clear all;clc;
-mouse = 'WK19';
-date = '220418';
-time = char('1630');
-ImgFolder = char('003');
-RetImgFolder = char('001');
-
-
+clear all;clc;close all;
+mouse = 'WK16';
+date = '220315';
+time = char('1725');
+ImgFolder = char('005');
+RetImgFolder = char('003');
 
 doFromRef = 1;
-ref = char('001');
+ref = RetImgFolder;
 
 nrun = size(ImgFolder,1);
 frame_rate = 30;
@@ -168,7 +166,7 @@ else
     save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
     save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
-clear data % depending on memory
+% depending on memory
 %% check stability
 
 regIntv = 2000;
@@ -200,7 +198,7 @@ truesize;
 set(gcf, 'Position', [0 0 800 1000]);
 print(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_FOV_avg.pdf']))
 
-
+clear data 
 
 %% import masks from retinotopy run and apply to the registered data
 
@@ -295,18 +293,80 @@ save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\ce
 % get average response to each orientation for each cell
 % find max for each cell 
 
-
-nOn = input.nScansOn;
-nOff = input.nScansOff;
-
 tDir = celleqel2mat_padded(input.tGratingDirectionDeg);
 tOri = tDir;
 tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;
 
+tCon = celleqel2mat_padded(input.tGratingContrast);
+cons = unique(tCon);
+nCon = length(cons);
 oris = unique(tOri);
-nOri = length(oris);
+nOri = length(oris); %16 directions, so 8 orientations
 
 
+%getting df/f for each trial, using a baseline window
+data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);
+data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
+data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
+%split into baseline and response windows, run paired t-test to see if
+%cells have a significant response (elevation in df/f comapred to baseline)
+%for any orientations/contrasts
+resp_win = nOff+2:nOn+nOff;
+base_win = nOff/2:nOff;
+data_resp = zeros(nCells, nOri, nCon,2);
+h = zeros(nCells, nOri, nCon);
+p = zeros(nCells, nOri, nCon);
+for iOri = 1:nOri
+    ind_ori = find(tOri == oris(iOri));
+    for iCon = 1:nCon
+        ind_con = find(tCon == cons(iCon));
+        ind = intersect(ind_ori,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
+        data_resp(:,iOri,iCon,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
+        data_resp(:,iOri,iCon,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
+        [h(:,iOri,iCon), p(:,iOri,iCon)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nOri.*3-1));
+    end
+end
 
+prefOri = nan(1,nCells);
+resp_sig = data_resp(:,:,:,1).*h;
+for iCell = 1:nCells
+    [max_val, max_ind] = max(max( data_resp(iCell,:,:,1),[],3)); 
+    prefOri(1,iCell)=oris(max_ind);
+end
 
+save(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ImgFolder, [date '_' mouse '_' run_str '_prefOris.mat']), 'prefOri')
+
+%% need to add von Mises fit tunining preference
+
+% %% LG tuning fit
+% [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC]...
+%     = getOriTuningLG(npSub_tc,input,5);
+% %% extracting output from vonM fits
+% % the output is in a 181 orientations X 1001 bootstraps X nCells matrix,
+% % and there is a fitReliability output that tells the 90th percentile of
+% % the difference between the bootstrapped fits and the original fit.
+% % Ultimately I probably only want to take cells that have a fitReliability
+% % value below 22.5 but right now none of them do
+% median(fitReliability,2)
+% 
+% prefOris = nan(size(vonMisesFitAllCellsAllBoots,2),nCells);
+% ogFitPref = nan(1,nCells);
+% for i = 1:nCells
+%     for fit = 2:size(vonMisesFitAllCellsAllBoots,2)
+%         prefOris(fit,i) = mean(find(vonMisesFitAllCellsAllBoots(:,fit,i)==max(vonMisesFitAllCellsAllBoots(:,fit,i))));
+%         ogFitPref(i) = mean(find(vonMisesFitAllCellsAllBoots(:,1,i)==max(vonMisesFitAllCellsAllBoots(:,1,i))));
+%     end
+% end
+% meanPref = mean(prefOris,1);
+% %I now have meanPref which tells me the average orientation indicated by
+% %the 1000 bootstraps, and the max from the original fit. I'm not sure how
+% %to get the oringal U value, or the K value
+% vonMisesFitAllCells = squeeze(vonMisesFitAllCellsAllBoots(:,1,:)); % takes just the first of the bootstraps, which is the original fit 
+% [maxResp prefOri] = max(vonMisesFitAllCells,[],1);
+% 
+% %combine max Resp, prefOri, and fit reliability 
+% vonM_output = [maxResp; prefOri;fitReliability];
+% 
+% save(fullfile(fn,'vonM_fits.mat'),'vonMisesFitAllCells');
+% save(fullfile(fn,'vonM_output.mat'),'vonM_output');

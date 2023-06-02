@@ -20,9 +20,21 @@ if expt(day_id).multiday_timesincedrug_hours>0
 else
     dart_str = 'control';
 end
+prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
+            x = input(prompt);
+            switch x
+                case 0
+                    pre=1; %baeline session, used as reference, is in the 1st position
+                    post=2;
+                    "baseline used as reference"
+                case 1
+                  pre=2;
+                  post=1; %post-DART session, used as reference, is in the 1st position  
+                  "post-DART used as reference"
+            end
+clear x prompt
 
-pre=2;
-post=1;
+
 fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
@@ -86,7 +98,7 @@ nOff = input(1).nScansOff;
 tCon_match = cell(1,nd);
 tDir_match = cell(1,nd);
 tOri_match = cell(1,nd);
-iSize_math = cell(1,nd);
+tSize_match = cell(1,nd);
 
 %find the contrasts, directions and orientations for each day
 %in case of instances where the number of trails actually collected was not
@@ -137,7 +149,7 @@ for id = 1:nd %cycle through days
     %end (padding is nans)
     cellTCs_match{id} = cellTCs_match{id}(stimStart:size(cellTCs_match{id},1),:);
     
-    cellTCs_match{id} = padarray(cellTCs_match{id},60,999,'post'); 
+    cellTCs_match{id} = padarray(cellTCs_match{id},30,999,'post'); %this is specific to imaging at 30hz
     
     cellTCs_match{id}(cellTCs_match{id}==999)=nan;
     nFrames = size(cellTCs_match{id},1);
@@ -166,7 +178,6 @@ for id = 1:nd
     wheel_speed{id} = wheelSpeedCalc(input(id),32,expt(allDays(1)).wheelColor); 
     nanmean(wheel_speed{id});
 end
-
 
 
 wheel_tc = cell(1,nd);
@@ -237,7 +248,9 @@ for id = 1:nd
     end 
     
     resp_sig = data_resp(:,:,:,:,1).*h; %make sure the call to data_resp here has the correct number of dimensions
-    h_pass = sum(sum(sum((h),2),3),4); 
+    %h_pass = (sum(sum(h(:,:,:,:),2),4));
+    h_pass = sum(h(:,:,:,1),2); %selects cells that are responsive to the smallest size stimulus
+    
     resp=logical(h_pass);
     
     pref_dir = zeros(1,nCells);
@@ -297,7 +310,7 @@ green_match_respd2 = intersect(green_ind_match_list,find(resp_match{1}==1));
 red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
 red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
 
-%%
+%
 %find cells that were active on at least one day
 resp_green_either_temp = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
 resp_red_either_temp = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
@@ -517,10 +530,10 @@ colormap gray
 %caxis([0.05 .3])
 title('average FOV reference day');
 hold on
-bound = cell2mat(bwboundaries(mask_match{1}(:,:,1)));
+bound = cell2mat(bwboundaries(mask_match{pre}(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
+bound = cell2mat(bwboundaries(mask_match{post}(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
-bound = cell2mat(bwboundaries(mask_match{2}(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
 hold off
 print(fullfile(fn_multi,'matchCells.pdf'),'-dpdf');
 
@@ -569,8 +582,7 @@ print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
 %% plotting some data
-pre=2;
-post=1;
+
 
 % make figure with se shaded, one figure per contrast - stationary
 
@@ -653,6 +665,87 @@ for iCon = 1:nCon
     end
 end 
 
+%% plots for running trials
+
+tc_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_loc = cell(1,nd); %same for red
+tc_green_se_loc = cell(1,nd); %this will be the se across all green cells
+tc_red_se_loc = cell(1,nd); %same for red
+
+
+
+for id = 1:nd
+  for iCon = 1:nCon
+      for iSize = 1:nSize
+        
+        tc_green_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc{id}(:,green_ind_keep,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_loc{id}(:,green_ind_keep,iCon,iSize),[],2);
+        tc_green_se_loc{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_keep));
+        
+        tc_red_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc{id}(:,red_ind_keep,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_loc{id}(:,red_ind_keep,iCon,iSize),[],2);
+        tc_red_se_loc{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_keep));
+        
+        clear green_std red_std
+      end 
+    end
+end
+
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_green_avrg_loc{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+    for iSize = 1:nSize
+    figure
+    subplot(1,2,1) %for the first day
+    
+    
+    
+    ylim([-.05 .45]);
+    hold on
+    shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon,iSize),tc_green_se_loc{pre}(:,iCon,iSize),'k');
+    hold on
+    shadedErrorBar(t,tc_green_avrg_loc{post}(:,iCon,iSize),tc_green_se_loc{post}(:,iCon,iSize),'b','transparent');
+    hold on
+    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    title(['-HTP',' n = ', num2str(length(green_ind_keep))])
+    
+    ylabel('dF/F') 
+    xlabel('s') 
+    set(gca,'XColor', 'none','YColor','none')
+    
+    
+    subplot(1,2,2) %+HTP
+    shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon,iSize),tc_red_se_loc{pre}(:,iCon,iSize),'k');
+    hold on
+    shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon,iSize),tc_red_se_loc{post}(:,iCon,iSize),'b');
+    ylim([-.05 .45]);
+    hold on
+    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    ylabel('dF/F') 
+    xlabel('s') 
+    title(['+HTP',' n = ', num2str(length(red_ind_keep))])
+    
+    x0=5;
+    y0=5;
+    width=4;
+    height=3;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    set(gca,'XColor', 'none','YColor','none')
+    
+    sgtitle(['running, con ' num2str(cons(iCon)) ' size ' num2str(sizes(iSize))])
+    
+    print(fullfile(fnout,[num2str(cons(iCon)) '_' num2str(sizes(iSize)) '_loc_cellType_timecourses.pdf']),'-dpdf');
+    end
+end 
+
 %%  plot size tuning for each cell pre and post
 
 if nKeep<36
@@ -666,7 +759,7 @@ end
 
 % plot size tuning averaged over contrast for +HTP
 figure;
-sgtitle('+HTP cells')
+sgtitle('+HTP cells stat')
 movegui('center')
 start = 1;
 for iRed = 1:length(red_ind_keep)
@@ -697,7 +790,7 @@ else
 end
 
 figure;
-sgtitle('-HTP cells')
+sgtitle('-HTP cells stat')
 movegui('center')
 start = 1;
 for iGreen = 1:length(green_ind_keep)
@@ -715,14 +808,66 @@ for iGreen = 1:length(green_ind_keep)
    start=start+1;     
 end
 
+
+% plot size tuning averaged over contrast for +HTP
+figure;
+sgtitle('+HTP cells loc')
+movegui('center')
+start = 1;
+for iRed = 1:length(red_ind_keep)
+    iCell = red_ind_keep(iRed)
+    if start>tot
+        figure; movegui('center')
+        sgtitle('+HTP')
+        start = 1;
+    end
+    subplot(n,n2,start)
+    plot(sizes,squeeze(mean(conBySize_resp_loc_keep{pre}(iCell,:,:),2)),'k');
+    hold on
+    plot(sizes,squeeze(mean(conBySize_resp_loc_keep{post}(iCell,:,:),2)),'b');
+    hold off
+   start=start+1;     
+end
+
+
+
+% plot size tuning averaged over contrast for -HTP
+if nKeep<36
+    [n n2] = subplotn(length(green_ind_keep));
+    tot = n.*n2;
+else
+    n = 6;
+    n2 = 6;
+    tot = 36;
+end
+
+figure;
+sgtitle('-HTP cells loc')
+movegui('center')
+start = 1;
+for iGreen = 1:length(green_ind_keep)
+    iCell = green_ind_keep(iGreen)
+    if start>tot
+        figure; movegui('center')
+        sgtitle('-HTP')
+        start = 1;
+    end
+    subplot(n,n2,start)
+    plot(sizes,squeeze(mean(conBySize_resp_loc_keep{pre}(iCell,:,:),2)),'k');
+    hold on
+    plot(sizes,squeeze(mean(conBySize_resp_loc_keep{post}(iCell,:,:),2)),'b');
+    hold off
+   start=start+1;     
+end
+
 %%
 figure;
-scatter(pref_size_keep{pre}(green_ind_keep),pref_size_keep{post}(green_ind_keep),'filled','g')
-hold on
-%scatter(pref_size_keep{pre}(red_ind_keep),pref_size_keep{post}(red_ind_keep),'filled','r')
+%scatter(pref_size_keep{pre}(green_ind_keep),pref_size_keep{post}(green_ind_keep),'filled','g')
+scatter(pref_size_keep{pre}(red_ind_keep),pref_size_keep{post}(red_ind_keep),'jitter','on', 'jitterAmount',1.5)
 xlim([0 50])
 ylim([0 50])
 axis square
 refline(1)
 
+size_pref_change=pref_size_keep{pre}(red_ind_keep)-pref_size_keep{post}(red_ind_keep);
 

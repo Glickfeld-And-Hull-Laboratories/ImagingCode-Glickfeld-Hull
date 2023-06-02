@@ -1,7 +1,5 @@
-function [counts] = spikesPerSweep(inputFile,nSweeps)
-    %UNTITLED3 Summary of this function goes here
-    %   Detailed explanation goes here
-    %read in file as "data"
+function [counts] = spikesPerSweep(dataIN,nSweeps)
+    inputFile = [dataIN,'.csv']
     fullData =readtable(inputFile);
     data=fullData(:,1);
     data=table2array(data);
@@ -18,5 +16,7 @@ function [counts] = spikesPerSweep(inputFile,nSweeps)
     box off
     xlabel("sweep")
     ylabel("# spikes")
+    print(fullfile([dataIN 'Spike_per_sweep.pdf']),'-dpdf','-bestfit')
+
 end
 

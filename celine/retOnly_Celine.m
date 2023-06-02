@@ -7,19 +7,19 @@
 %% get path names
 clear all;clc;
 
-mouse = 'i2091';
-date = '230227';
-ImgFolder = char('003');
+mouse = 'i2095';
+date = '230508';
+ImgFolder = char('006');
 doRed = 'true';
-RedImgFolder = char('002');
-time = char('1500');
+RedImgFolder = char('004');
+time = char('1123');
 doFromRef = 0;
 ref = char('000');
 nrun = size(ImgFolder,1);
 frame_rate = 30;
 run_str = ['runs-' ImgFolder];
 
-fnOut_base = 'Z:\home\Celine\Analysis\2p_analysis\';
+fnOut_base = 'Z:\home\ACh\Analysis\2p_analysis\';
 
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -37,7 +37,7 @@ trial_n = zeros(1,nrun);
 fprintf(['\nBegin reading ' num2str(nrun) ' runs...'])
 for irun = 1:nrun
     % load 2p imaging data
-    CD = ['Z:\home\Celine\Data\2p_data\' mouse '\' date '\' ImgFolder];
+    CD = ['Z:\home\ACh\Data\2p_data\' mouse '\' date '\' ImgFolder];
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     %imgMatFile = ['001_000_' ImgFolder(irun,:) '.mat']; % for bad file name
@@ -482,7 +482,7 @@ end
 
 if doRed
         
-    CD = ['Z:\home\Celine\Data\2p_data\' mouse '\' date '\' RedImgFolder];
+    CD = ['Z:\home\ACh\Data\2p_data\' mouse '\' date '\' RedImgFolder];
     cd(CD);
     imgMatFile = [RedImgFolder '_000_000.mat'];
     
@@ -595,6 +595,16 @@ for iStim = 1:size(mask_data,3)
     mask_exp = imCellBuffer(mask_all,3)+mask_all;
     close all
 end
+
+for iImg = 1:3
+    mask_data_temp =data_avg;
+    mask_data_temp(mask_exp >= 1) = 0;
+    bwout = imCellEditInteractive(mask_data_temp);
+    mask_all = mask_all+bwout;
+    mask_exp = imCellBuffer(mask_all,3)+mask_all;
+    close all
+end
+
 % by all trials
 % for iStim = 1:size(mask_data,3)
 %     fprintf(['Trial ' num2str(iStim) ' / ' num2str(size(mask_data,3)) '\n'])

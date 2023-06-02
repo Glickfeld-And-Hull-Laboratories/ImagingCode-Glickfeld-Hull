@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 239;
+day_id = 288;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -21,7 +21,7 @@ runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
 times = eval(['expt(day_id).' cell2mat(dataStructLabels) '_time']);
 nruns = length(runs);
 runFolder = [];
-for irun = 1:nruns
+for irun = 1:nruns 
     imgFolder = runs{irun};
     if nruns == 1
         runFolder = imgFolder;
@@ -31,7 +31,7 @@ for irun = 1:nruns
     elseif irun < nruns
         runFolder = [runFolder '_' imgFolder];
         fName = [imgFolder '_000_000'];
-    else
+        else1
         runFolder = [runFolder '_' imgFolder];
         fnout = fullfile(fn,runFolder);
         mkdir(fullfile(fn,runFolder))
@@ -117,7 +117,7 @@ for irun = 1:nruns
         end
     end
 end
-
+%%
 % register data for each day
 %reg green data
 
@@ -137,7 +137,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
     movegui('center')
     for i = 1:nep 
         subplot(n,n2,i); 
-        imagesc(mean(data_g(:,:,1+((i-1)*3000):500+((i-1)*3000)),3)); 
+        imagesc(mean(data_g(:,:,1+((i-1)*3000):100+((i-1)*3000)),3)); 
         title([num2str(1+((i-1)*3000)) '-' num2str(50+((i-1)*30000))]); 
         colormap gray; 
         clim([100 3000]); 
@@ -373,16 +373,18 @@ rgb = zeros(sz(1),sz(2),3);
 
 hold on
 bound = cell2mat(bwboundaries(mask_cell_red));
-plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+%plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 hold off
 
 
 %% extract timecourses
+%data_g_reg = registered full image stack
+%mask_cells = set of masks you segmented
 
-
-data_tc = stackGetTimeCourses(data_g_reg, mask_cell);
+data_tc = stackGetTimeCourses(data_g_reg, mask_cell); %data_tc timecourses of registered data based on masks you made
 nCells = size(data_tc,2);
 data_tc_down = stackGetTimeCourses(stackGroupProject(data_g_reg,5), mask_cell);
+%stackGetTimecourses = fxn to turn masks and image stack into TCs
 clear np_tc np_tc_down
 sz = size(data_g_reg);
 down = 5;

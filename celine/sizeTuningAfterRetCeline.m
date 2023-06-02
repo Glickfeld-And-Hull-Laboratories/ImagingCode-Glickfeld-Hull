@@ -6,16 +6,14 @@
 
 %% get path names
 clear all;clc;
-mouse = 'WK29';
-date = '230117';
-time = char('1045');
-ImgFolder = char('003');
-RetImgFolder = char('001');
-
-
+mouse = 'i2095';
+date = '230508';
+time = char('1206');
+ImgFolder = char('007');
+RetImgFolder = char('006');
 
 doFromRef = 1;
-ref = char('001');
+ref = RetImgFolder;
 
 nrun = size(ImgFolder,1);
 frame_rate = 30;
