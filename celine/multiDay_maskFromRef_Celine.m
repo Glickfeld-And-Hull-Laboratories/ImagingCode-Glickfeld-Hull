@@ -8,9 +8,9 @@ eval(ds);
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 186;
+day_id = 289;
 
-refFolder = '002'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION, 
+refFolder = '005'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION, 
 %TO IMPORT MASKS FROM
 
 
@@ -433,7 +433,7 @@ data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = mean(data_dfof_trial,3);%average pver cells, one row per trial
+tc_cell_avrg = mean(data_dfof_trial(:,:,resp),3);%average pver cells, one row per trial
 tc_trial_avrg = squeeze(mean(data_dfof_trial,2));%average over trials, one row per cell
 tc_cell_trial_avrg = mean(tc_cell_avrg,2);%average over trials and cells
 
@@ -445,7 +445,7 @@ hold on;
 vline(60,'g')
 title('');
 hold off
-ylim([-.04 .1])
+%ylim([-.04 .1])
 
 
 
@@ -457,7 +457,7 @@ title('average FOV');
 hold on
 bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
-bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
-plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+% bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
+% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
 

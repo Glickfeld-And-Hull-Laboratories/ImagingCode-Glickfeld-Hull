@@ -1,20 +1,21 @@
 function [x_um,y_um,sb_img_50um] = scalebarCalib(exptDateYYMMDD, obj, img, zm)%% for 30 Hz imaging on 2P
 
 d = datestr(datenum(num2str(exptDateYYMMDD,'%d'),'yymmdd'),'yymmdd');
+dprime = str2num(d(1:2));
 if strcmp(obj,'16x')
-    if any(strcmp({'14','15','16'},d(1:2)))
+    if dprime<=16
         % 16x 2014 - 2016
         x_um = 555;
         y_um = 233;
-    elseif any(strcmp({'17','18','19','20'},d(1:2)))
+    elseif dprime>16
         % 16x 2017-2019
         x_um = 1030;
         y_um = 581;
     end
 elseif strcmp(obj,'25x')
-    if any(strcmp({'14','15'},d(1:2)))
+    if dprime<=15
         error('scale info not available for this date')
-    elseif any(strcmp({'16','17','18','19'},d(1:2)))
+    elseif dprime>16
         % 25x 2017-2019
         x_um = 673; 
         y_um = 382;

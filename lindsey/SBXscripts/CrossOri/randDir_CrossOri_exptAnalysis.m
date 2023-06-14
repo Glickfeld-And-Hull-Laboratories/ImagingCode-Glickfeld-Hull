@@ -116,8 +116,8 @@ figure;
 movegui('center')
 start = 1;
 n = 1;
-for iC = 1:length(resp_ind)
-    iCell = resp_ind(iC);
+for iC = 1:nCells
+    iCell = iC; %resp_ind(iC);
     if start>25
         sgtitle([date ' ' mouse ' Direction Tuning'])
         print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_dirTuning_' num2str(n) '.pdf']),'-dpdf', '-fillpage')
@@ -145,8 +145,8 @@ sgtitle([date ' ' mouse ' Direction Tuning'])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidResp_dirTuning_' num2str(n) '.pdf']),'-dpdf', '-fillpage')       
 
 int = unique(diff(stimDirs));
-component = avg_resp_dir(:,:,1,1)+circshift(avg_resp_dir(:,:,1,1),-90./int,2);
-pattern = circshift(avg_resp_dir(:,:,1,1),-45./int,2);
+component = avg_resp_dir(:,:,1,1)+circshift(avg_resp_dir(:,:,1,1),-maskDiffs./int,2);
+pattern = circshift(avg_resp_dir(:,:,1,1),-(maskDiffs/2)./int,2);
 
 comp_corr = zeros(1,nCells);
 patt_corr = zeros(1,nCells);
@@ -174,7 +174,7 @@ plotZcZpBorders
 sgtitle([date ' ' mouse])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_ZcZp.pdf']),'-dpdf', '-fillpage')       
 
-
+%%
 
 ind = find(Zp>1);
 figure; 

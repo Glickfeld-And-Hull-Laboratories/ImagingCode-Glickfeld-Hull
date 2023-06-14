@@ -3,13 +3,14 @@ clear all; clear global; close all
 
 %identifying animal and run
 
+mouse = 'i2091';
+date = '230227';
+time = char('1550');
+ImgFolder = char('004');
+RetImgFolder = char('003');
+ori_run=char('005');
 
-mouse = 'WK29';
-date = '230117';
-time = char('1045');
-ImgFolder = char('003');
-RetImgFolder = char('001');
-
+ref = char('001');
 frame_rate = 30; %enter the frame rate, or I can edit this to enter the stimulus duration
 
 
@@ -24,6 +25,7 @@ beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
 load(beh_file); %load the mworks behavioral file
 
 run_str = ['runs-' ImgFolder];
+ori_run_str = ['runs-' ori_run];
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
 
@@ -31,9 +33,12 @@ datemouserun = [date '_' mouse '_' run_str];
 load(fullfile([datemouserun '_TCs.mat']));
 % loads 'mask_cell', 'mask_np'
 load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse,date,RetImgFolder, [date '_' mouse '_runs-' RetImgFolder '_lbub_fits.mat']))
+load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
+load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse,date,ori_run, [date '_' mouse '_runs-' ori_run '_prefOris.mat']))
+% load in the ori preferences
 
 %NEED TO LOAD MASKS TO GET THE INDEXES OF RED CELLS
-ref = char('001');
+ref = char('003');
 load(fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2p_analysis', mouse, date, ref, [date '_' mouse '_runs-' ref '_mask_cell.mat']))
 %% convert to trials
 nOn = input.nScansOn;
@@ -100,8 +105,8 @@ h_all = sum(sum(h,2),3);
 resp_all=logical(h_all);
 % resp_small_highCon = logical(h(:,1,4));
 
-load([date '_' mouse '_' run_str '_centerCells.mat']); %load the centerCells matrix
-% centeredResp=intersect(find(resp_all),centerCells);
+
+centeredResp=intersect(find(resp_all),centerCells);
 % smallResp=intersect(centeredResp,find(prefSize<4));
 % length(centeredResp)
 goodFitResp=intersect(find(resp_all),goodfit_ind);
@@ -200,7 +205,7 @@ figure;
         x=x+1;
         end
         
-
+clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
     end
   
 sgtitle([mouse, ', ', num2str(length(goodFitResp)),' cells'])
@@ -421,39 +426,50 @@ figure;
   
 sgtitle([mouse, ', ', num2str(length(goodFitResp)),' cells'])
 
-%% 
+%% making seperate matrices for cells with different RF center distances
 DistCutoffs=[0,5,10,20];
 
-[n n2] = subplotn(1*(length(DistCutoffs)-1));
-x=1;
-figure;
     for iDist = 1:(length(DistCutoffs)-1) %loop through the sizes
           minDist=DistCutoffs(iDist);
           maxDist=DistCutoffs(iDist+1);
          
-          cellIndsTemp=find(keepDists>minDist & keepDists<maxDist)
-        inds1 = find(tSize == Sizes(5)); %find trials with that size
-        inds2 = find(tCons == Cons(4));
-        inds = intersect(inds1,inds2);
-        temp_trials = squeeze(nanmean(data_tc_trial(:,inds,cellIndsTemp),2));
-        temp_mean = nanmean(temp_trials,2);
-        temp_se = std(temp_trials,[],2)/sqrt(length(cellIndsTemp));
-
-        subplot(n,n2,x)
-
-        shadedErrorBar(t(60:90),temp_mean(60:90),temp_se(60:90));
-        hold on
-        fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
-        hold on
-        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
-        hold on
-        ylim([-.03 .1])
-        xlim([-2 2])
+        cellIndsTemp=find(keepDists>minDist & keepDists<maxDist);
+        meanTC_byCondition=nan(nOn+nOff,nSizes,nCons,length(cellIndsTemp));
+        figure;
+        [n n2] = subplotn(nSizes*nCons);
+        x=1;
+        for iSize = 1:nSizes %loop through the sizes
+                inds1 = find(tSize == Sizes(iSize)); %find trials with that size
+                for iCon = 1:nCons
+                inds2 = find(tCons == Cons(iCon));
+                inds = intersect(inds1,inds2);
+                temp_trials1 = squeeze(nanmean(data_tc_trial(:,inds,cellIndsTemp),2));
+                meanTC_byCondition(:,iSize,iCon,:)=temp_trials1;
+                temp_mean1 = nanmean(temp_trials1,2);
+                temp_se1 = std(temp_trials1,[],2)/sqrt(length(cellIndsTemp));
         
-        hline(0)
-        hold off
-        title([num2str(minDist) ' to ' num2str(maxDist) ', n = ' num2str(length(cellIndsTemp))] )        
-        x=x+1;
+                subplot(n,n2,x)
+        
+                shadedErrorBar(t,temp_mean1,temp_se1);
+
+                hold on
+                %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+                hold on
+                fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+                hold on
+                ylim([-.03 .1])
+                xlim([-2 2])
+                
+                hline(0)
+                hold off
+                title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+                x=x+1;
+               sgtitle([num2str(minDist) ' to ' num2str(maxDist) ', n = ' num2str(length(cellIndsTemp))] ) 
+              
+            end
+        
+
+    end
  
         
 

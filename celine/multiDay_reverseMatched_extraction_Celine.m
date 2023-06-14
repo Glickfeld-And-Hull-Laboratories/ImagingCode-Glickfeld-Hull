@@ -3,7 +3,7 @@ close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-rc =  behavConstsDART; %directories
+rc =  behavConstsDART; %directories178
 eval(ds);
 
 %day_id = 169; %enter post-DART day
@@ -20,9 +20,19 @@ if expt(day_id).multiday_timesincedrug_hours>0
 else
     dart_str = 'control';
 end
-
-pre=2;
-post=1;
+prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
+            x = input(prompt);
+            switch x
+                case 0
+                    pre=1; %baeline session, used as reference, is in the 1st position
+                    post=2;
+                    "baseline used as reference"
+                case 1
+                  pre=2;
+                  post=1; %post-DART session, used as reference, is in the 1st position  
+                  "post-DART used as reference"
+            end
+clear x prompt
 fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
@@ -161,7 +171,11 @@ for id = 1:nd
     wheel_speed{id} = wheelSpeedCalc(input(id),32,expt(allDays(1)).wheelColor); 
     nanmean(wheel_speed{id})
 end
-
+wheel_speed_clean = cell(1,nd);
+for id = 1:nd
+    wheel_speed_clean{id}=wheel_speed{id};
+    wheel_speed_clean{id}(abs(wheel_speed_clean{id})<4.89)=0;
+end
 
 
 wheel_tc = cell(1,nd);
@@ -171,7 +185,7 @@ RIx = cell(1,nd);
 for id = 1:nd
     wheel_tc{id}=zeros(nOn+nOff, nTrials(id));
     for iTrial = 1:nTrials(id)
-        wheel_tc{id}(:,iTrial) = wheel_speed{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
+        wheel_tc{id}(:,iTrial) = wheel_speed_clean{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
     end
     wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
     RIx{id} = wheel_trial_avg{id}>2; %.55 is the noise level in the wheel movement
@@ -181,7 +195,14 @@ end
 
 %% find significant responses and preferred stimuli
 
-resp_win = stimStart:stimEnd;
+%make data frames with mean response to all con X direction stimuli, and
+%use this to find significantly responsive cells and their preferred
+%direction. Also get dataframes of responses to all directions, avering
+%voer contrast, for each behavioral state
+
+%resp_win = stimStart:stimEnd; %% oringinal response window was the full
+%stim-on time
+resp_win = (stimStart+3):(stimEnd+3); %at 15 hz, 3 frames = ~200 ms
 base_win = 1: stimStart-1;
 
 %make cell arrays to keep everything in
@@ -219,6 +240,7 @@ for id = 1:nd
             ind_stat = intersect(ind, find(~RIx{id}));
             ind_loc = intersect(ind, find(RIx{id}));
             data_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
+            
             stat_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat,:),1),2));
             loc_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_loc,:),1),2));
             data_resp(:,iDir,iCon,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
@@ -237,15 +259,20 @@ for id = 1:nd
     h_pass = sum(sum((h),2),3); 
     resp=logical(h_pass);
     
-    pref_dir = zeros(1,nCells);
-    pref_con = zeros(1,nCells);
+    pref_dir = nan(1,nCells);
+    pref_con = nan(1,nCells);
     data_dir_resp = zeros(nCells,nDir); %at pref con
     data_con_resp = zeros(nCells,nCon); %at pref ori
     data_orth_resp=zeros(nCells,1);
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
     for iCell = 1:nCells
-          [max_val, pref_dir(1,iCell)] = max(max(resp_sig(iCell,:,:),[],3));
+          [max_val, pref_dir(1,iCell)] = max(max(resp_sig(iCell,:,:),[],3)); 
+          %the indexing seems weird here, but its becuase we first find the
+          %maximum value for each direction by taking the max across
+          %contrasts, then we fine the maximum of those max's. So we use
+          %the contrast index to eventually get max direction and vice
+          %versa.
           [max_val_con, pref_con(1,iCell)] = max(max(resp_sig(iCell,:,:),[],2)); 
           stat_dir_resp(iCell,:)=mean(stat_resp(iCell,:,:),3);
           loc_dir_resp(iCell,:)=mean(loc_resp(iCell,:,:),3);
@@ -371,9 +398,12 @@ mean(green_fluor_keep(green_ind_keep))
 mean(green_fluor_keep(red_ind_keep))
 
 %% narrow down to the stimuli preferred for each cell each day
-%we will get one tc per cell per contrast. This represents that cell's tc
+%We will get one tc per cell per contrast. This represents that cell's tc
 %averaged over trials at the preferred orientation, at each contrast
-%only include stationary trials
+%only include stationary trials. Will also save the trials at the preferred
+%direction for each contrast and stationary/running. 
+%Make dataframes of mean and peak response to the preferred direction for
+%each behavioral state.
 
 tc_trial_avrg_stat=cell(1,nd);
 tc_trial_avrg_loc=cell(1,nd);
@@ -382,6 +412,10 @@ tc_trial_avrg_keep_allCond=cell(1,nd);
 pref_responses_stat = cell(1,nd);
 pref_responses_loc = cell(1,nd);
 pref_responses_allCond = cell(1,nd);
+pref_peak_stat  = cell(1,nd);
+pref_peak_loc  = cell(1,nd);
+pref_allTrials_stat=cell(nCon,nd);
+pref_allTrials_loc=cell(nCon,nd);
 trialCounts=cell(2,nd);
 
 
@@ -392,8 +426,15 @@ for id = 1:nd
     temp_tc_loc=nan((nOn+nOff),nKeep,nCon);
     temp_pref_responses_stat=zeros(nKeep,nCon,1);
     temp_pref_responses_loc=zeros(nKeep,nCon,1);
-    for iCon = 1:nCon
-        for i=1:nKeep
+    temp_pref_responses_allCond=zeros(nKeep,nCon,1);
+
+    temp_pref_peak_stat=zeros(nKeep,nCon,1);
+    temp_pref_peak_loc=zeros(nKeep,nCon,1);
+    
+    for iCon = 1:nCon % for each contrast'
+        temp_all_stat=cell(1,nKeep);
+        temp_all_loc=cell(1,nKeep);
+        for i=1:nKeep %for each cell
             
             temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
             tCon=tCon_match{id}(1:nTrials(id));
@@ -407,22 +448,34 @@ for id = 1:nd
             temp_trials1 = intersect(dir_inds, con_inds); %preferred ori for this cell, looping through all cons
             temp_trials_stat = intersect(temp_trials1,stat_inds);
             temp_trials_loc = intersect(temp_trials1,loc_inds);
-            temp_pref_responses_stat(i,iCon)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,temp_trials_stat),1),2);
-            temp_pref_responses_loc(i,iCon)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,temp_trials_loc),1),2);
-            temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,temp_trials1),1),2);
+            
+            %saving the responses of all trials at the preferred direction,
+            %rather than averaging voer trials to get a single mean
+            %response
+            temp_all_stat{i} = nanmean(temp_TCs(resp_win,temp_trials_stat),1);
+            temp_all_loc{i} = nanmean(temp_TCs(resp_win,temp_trials_loc),1);
+
+            temp_pref_responses_stat(i,iCon)=nanmean(temp_all_stat{i},2);
+            temp_pref_responses_loc(i,iCon)=nanmean(temp_all_loc{i},2);
+            temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials1),1),2);
+
+            %to get peak values, take the max value of each trails and then
+            %find the mean of those max values across trials
+            temp_pref_peak_stat(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_stat)));
+            temp_pref_peak_loc(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_loc)));
             
             temp_tc_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat),2);
             temp_tc_loc(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_loc),2);
             temp_tc_allCond(:,i,iCon)=nanmean(temp_TCs(:,temp_trials1),2);%average over all trials regardless of stationary vs. locomotion
             rect_tc_trial_avrg=temp_tc_stat;
             rect_tc_trial_avrg(rect_tc_trial_avrg<0)=0;
-            
-            
+                        
             trialCounts{1,id}=[trialCounts{1,id},length(temp_trials_stat)];
             trialCounts{2,id}=[trialCounts{2,id},length(temp_trials_loc)];
             length(temp_trials1);
         end
-
+    pref_allTrials_stat{iCon,id}=temp_all_stat;
+    pref_allTrials_loc{iCon,id}=temp_all_loc;
     end
     
     
@@ -434,11 +487,95 @@ rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of abo
 pref_responses_stat{id} = temp_pref_responses_stat;
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
+pref_peak_stat{id}=temp_pref_peak_stat;
+pref_peak_loc{id}=temp_pref_peak_loc;
 
+clear temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
 end
 
 trialCountTable = table([mean(trialCounts{1,2});std(trialCounts{1,2})],[mean(trialCounts{2,2});std(trialCounts{2,2})],[mean(trialCounts{1,1});std(trialCounts{1,1})],[mean(trialCounts{2,1});std(trialCounts{2,1})],'VariableNames',{'pre stat' 'pre loc' 'post stat' 'post loc'}, 'RowNames',{'Mean'  'std'})
 writetable(trialCountTable,fullfile(fn_multi,'trialCounts.csv'),'WriteRowNames',true)
+%% ttests for significantly suppressed or facilitated cells
+nRed = length(red_ind_keep);
+
+ttest_results_stat = nan(nKeep,nCon,2);
+ttest_results_loc = nan(nKeep,nCon,2);
+
+ttest_results_allCon_stat=nan(nKeep,2);
+ttest_results_allCon_loc=nan(nKeep,2);
+
+for iRed = 1:nRed
+    i=red_ind_keep(iRed)
+    pre_data_allCon_stat=[];
+    post_data_allCon_stat=[];
+    pre_data_allCon_loc=[];
+    post_data_allCon_loc=[];
+    for iCon = 1:nCon
+        pre_data_stat=pref_allTrials_stat{iCon,pre}{i};
+        post_data_stat=pref_allTrials_stat{iCon,post}{i};
+
+        ttest_results_stat(i,iCon,1)=ttest2(pre_data_stat,post_data_stat,'tail','right','alpha',0.05); %test for suppression
+        ttest_results_stat(i,iCon,2)=ttest2(pre_data_stat,post_data_stat,'tail','left','alpha',0.05); %test for facilitation
+        pre_data_loc=pref_allTrials_loc{iCon,pre}{i};
+        post_data_loc=pref_allTrials_loc{iCon,post}{i};
+        ttest_results_loc(i,iCon,1)=ttest2(pre_data_loc,post_data_loc,'tail','right','alpha',0.05); %test for suppression
+        ttest_results_loc(i,iCon,2)=ttest2(pre_data_loc,post_data_loc,'tail','left','alpha',0.05); %test for facilitation
+
+        pre_data_allCon_stat=[pre_data_allCon_stat,pre_data_stat];
+        post_data_allCon_stat=[post_data_allCon_stat,post_data_stat];
+        
+        pre_data_allCon_loc=[pre_data_allCon_loc,pre_data_loc];
+        post_data_allCon_loc=[post_data_allCon_loc,post_data_loc];
+
+        clear pre_data_loc post_data_loc pre_data_stat post_data_stat
+    end
+    %do the ttest across contrasts
+    ttest_results_allCon_stat(i,1)=ttest2(pre_data_allCon_stat,post_data_allCon_stat,'tail','right','alpha',0.05); %test for suppression, stationary
+    ttest_results_allCon_stat(i,2)=ttest2(pre_data_allCon_stat,post_data_allCon_stat,'tail','left','alpha',0.05); %test for facilitation, stationary
+
+    ttest_results_allCon_loc(i,1)=ttest2(pre_data_allCon_loc,post_data_allCon_loc,'tail','right','alpha',0.05); %test for suppression, running
+    ttest_results_allCon_loc(i,2)=ttest2(post_data_allCon_loc,post_data_allCon_loc,'tail','left','alpha',0.05); %test for facilitation, running
+end
+
+%0.05
+
+
+
+%% randomly sampling pyramidal cells for trial-to-trial variability on the baseline day (here assumed to be day 2)
+% 
+% 
+% pyr_rand=randsample(green_ind_keep,6);
+% 
+% %looking at stationary trials, 100% contrast
+% figure; 
+% x=1;
+%     for iCell = 1:length(pyr_rand)
+%        i=pyr_rand(iCell)
+%             
+%         
+%         tCon=tCon_match{2}(1:nTrials(id));
+%         tDir=tDir_match{2}(1:nTrials(id));
+%         %identify the trials where ori = pref ori
+%         temp_dir= pref_dir_keep{2}(i); %find the preferred of this cell for the baseline day
+%         dir_inds = find(tDir==temp_dir); %these are the trials at that ori
+%         con_inds=find(tCon==1.000);
+%         stat_inds = find(~RIx{2});
+%         temp_trials1 = intersect(dir_inds, con_inds); %preferred ori for this cell, looping through all cons
+%         temp_trials_stat = intersect(temp_trials1,stat_inds);
+% 
+%         temp_TCs=data_trial_keep{2}(:,temp_trials_stat,i); %pull all frames from select trials for select cells
+%         
+%         subplot(2,3,x); plot(temp_TCs); box off;title(num2str(i))
+%         x=x+1
+%         
+% 
+%     end
+%    print(fullfile(fnout,[mouse, 'trial_Variability']),'-dpdf'); 
+% 
+% 
+% %%
+
+
 
 %%
 % all contrasts, stationary
@@ -458,8 +595,8 @@ for id = 1:nd
             dir_inds = find(tDir==temp_dir); %these are the trials at that ori
             inds=intersect(find(~RIx{id}),dir_inds);
 
-            pref_responses_temp(i)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,inds),1),2);
-            pref_sd_temp(i)=std(nanmean(temp_TCs(stimStart:stimEnd,inds),1));
+            pref_responses_temp(i)=nanmean(nanmean(temp_TCs(resp_win,inds),1),2);
+            pref_sd_temp(i)=std(nanmean(temp_TCs(resp_win,inds),1));
             tc_trial_avrg_temp(:,i)=nanmean(temp_TCs(:,inds),2);
         
 
@@ -489,8 +626,8 @@ for id = 1:nd
             dir_inds = find(tDir==temp_dir); %these are the trials at that ori
             inds=intersect(find(RIx{id}),dir_inds);
 
-            pref_responses_temp(i)=nanmean(nanmean(temp_TCs(stimStart:stimEnd,inds),1),2);
-            pref_sd_temp(i)=std(nanmean(temp_TCs(stimStart:stimEnd,inds),1));
+            pref_responses_temp(i)=nanmean(nanmean(temp_TCs(resp_win,inds),1),2);
+            pref_sd_temp(i)=std(nanmean(temp_TCs(resp_win,inds),1));
             tc_trial_avrg_temp(:,i)=nanmean(temp_TCs(:,inds),2);
         
 
@@ -550,8 +687,12 @@ end
 % end
 
 
-explanation1 = 'tc_trial_keep contains the timecourses for all "keep" cells for each day. The tOri_match and tCon_match data structures can be used to find trials of particular stim conditions within this. tc_trial_avrg_keep only has the timecourses averaged over tirals for each cell at its preferred orientation and at each contrast.';
-save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','fullTC_keep','pref_responses_stat','pref_responses_loc','resp_keep','tc_trial_avrg_keep_allCond','pref_responses_allCond','tc_trial_avrg_keep_allCon_stat','pref_responses_allCon_stat','tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match','tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical','green_ind_keep', 'red_ind_keep','stimStart')
+save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat','pref_responses_loc','resp_keep', ...
+    'tc_trial_avrg_keep_allCond','pref_responses_allCond','tc_trial_avrg_keep_allCon_stat','pref_responses_allCon_stat', ...
+    'tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match', ...
+    'tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical', ...
+    'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','ttest_results_loc','ttest_results_stat', ...
+    'ttest_results_allCon_stat','ttest_results_allCon_loc','pref_peak_stat','pref_peak_loc')
 
 
 %% make and save response matrix for keep cells
@@ -713,8 +854,8 @@ save(fullfile(fn_multi,'locomotion.mat'),'LMI','RIx','wheel_tc','wheel_speed','w
 %% comparing F and df/f for HT+ and HT-
 figure;
 subplot(1,2,1)
-dfof_pre = squeeze( nanmean(nanmean(data_dfof_trial_match{2}(resp_win,:,:),1),2)); %gets the average dfof during all stim on perdiods
-f_pre = nanmean(cellTCs_match{2},1)'; %gets the average fluorescence for the entire recording time
+dfof_pre = squeeze( nanmean(nanmean(data_dfof_trial_match{pre}(resp_win,:,:),1),2)); %gets the average dfof during all stim on perdiods
+f_pre = nanmean(cellTCs_match{pre},1)'; %gets the average fluorescence for the entire recording time
 scatter(f_pre,dfof_pre,'k')%plots all cells
 hold on
 scatter(f_pre(red_ind_match),dfof_pre(red_ind_match),'r') %replots only HT+ cells, now colored red
@@ -731,8 +872,8 @@ axis square
 hold off
 
 subplot(1,2,2)
-dfof_post = squeeze( nanmean(nanmean(data_dfof_trial_match{1}(resp_win,:,:),1),2)); %gets the average dfof during all stim on perdiods
-f_post = nanmean(cellTCs_match{1},1)'; %gets the average fluorescence for the entire recording time
+dfof_post = squeeze( nanmean(nanmean(data_dfof_trial_match{post}(resp_win,:,:),1),2)); %gets the average dfof during all stim on perdiods
+f_post = nanmean(cellTCs_match{post},1)'; %gets the average fluorescence for the entire recording time
 scatter(f_post,dfof_post,'k')%plots all cells
 hold on
 scatter(f_post(red_ind_match),dfof_post(red_ind_match),'r') %replots only HT+ cells, now colored red
@@ -758,9 +899,8 @@ linCellProps = nan(6,4);
 
 for id = 1:nd
 trialResp{id} = mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1);
-green_trialResp{id}=mean(trialResp{id}(:,:,green_ind_keep),3);
-
-red_trialResp{id}=mean(trialResp{id}(:,:,red_ind_keep),3);
+green_trialResp{id}=mean(trialResp{id}(:,:,green_ind_keep),3); %mean response of all green cells for each trial
+red_trialResp{id}=mean(trialResp{id}(:,:,red_ind_keep),3); %mean response of all red cells for each trial
 
 end
 
@@ -785,13 +925,13 @@ for iCell = 1:length(red_ind_keep)
     cellID=red_ind_keep(iCell)
     thisCell_pre=mean(trialResp{pre}(:,:,cellID),3); 
     thisCell_post=mean(trialResp{post}(:,:,cellID),3); 
-    figure
-    scatter(green_trialResp{pre},thisCell_pre, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-    hold on
-    scatter(green_trialResp{post},thisCell_post,'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-    h = lsline;
-    set(h(1),'color','k')
-    set(h(1),'color','b')
+%     figure
+%     scatter(green_trialResp{pre},thisCell_pre, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+%     hold on
+%     scatter(green_trialResp{post},thisCell_post,'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+%     h = lsline;
+%     set(h(1),'color','k')
+%     set(h(1),'color','b')
 %     
     [R1,p1]=corrcoef(green_trialResp{pre},thisCell_pre);
     [R2,p2]=corrcoef(green_trialResp{post},thisCell_post);
@@ -910,9 +1050,9 @@ for iCon = 1:nCon
 end
 
 responseByCondProps = nan(6,2);
-% figure;
-% scatter(responseByCond(:,1),responseByCond(:,2),'k')
-% hold on
+figure;
+scatter(responseByCond(:,1),responseByCond(:,2),'k')
+hold on
 linfit = polyfit(responseByCond(:,1),responseByCond(:,2),1);
 y1 = polyval(linfit,responseByCond(:,1));
 plot(responseByCond(:,1),y1,'k');
@@ -925,7 +1065,7 @@ responseByCondProps(5,1)=min(responseByCond(:,1));
 responseByCondProps(6,1)=max(responseByCond(:,1));
 hold on
 
-figure;
+
 scatter(responseByCond(:,3),responseByCond(:,4),'b')
 hold on
 linfit = polyfit(responseByCond(:,3),responseByCond(:,4),1);
@@ -964,5 +1104,6 @@ end
 save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'linCellProps','responseByCond','responseByCondProps','sig_corr_red','R_red','R_p_values','green_corrs','mean_green_corr')
 
 %clear red_ind_keep linCellProps responseByCond responseByCondProps sig_corr_red Rsq_red R_p_values green_corrs mean_green_corr
+
 
 

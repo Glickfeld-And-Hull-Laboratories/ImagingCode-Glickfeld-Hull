@@ -7,7 +7,7 @@ rc = behavConstsDART; %directories
 eval(ds);
 
 %      
-day_id = 206; %enter post-DART day
+day_id = 255; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -57,6 +57,7 @@ for id = 1:nd
     tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
 end
 oris = unique(tOri_match{post});
+dirs = unique(tDir_match{post});
 cons = unique(tCon_match{post});
 nOri = length(oris);
 nCon = length(cons);
@@ -1169,7 +1170,7 @@ for iCell = 1:nKeep
         subplot(n,n2,start)
 
         for iCon = 1:nCon
-            errorbar(oris, data_resp_keep{id}(iCell,:,iCon,1), data_resp_keep{id}(iCell,:,iCon,2),'-o')
+            errorbar(dirs, data_resp_keep{id}(iCell,:,iCon,1), data_resp_keep{id}(iCell,:,iCon,2),'-o')
             hold on
         end
         if ismember(iCell,red_ind_keep)

@@ -1,32 +1,32 @@
 %% Load, register, segment and neuropil correct 2P data
-close all
+close all hidden
 clear all global
 clc
 
 %Path names
-fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff';
+fn_base = findIsilon;
 lg_fn = fullfile(fn_base, 'home\lindsey');
 data_fn = fullfile(lg_fn, 'Data\2P_images');
 mworks_fn = fullfile(fn_base, 'Behavior\Data');
 fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
-date = '220905';
-ImgFolder = '001';
-time = '1125';
-mouse = 'i1377';
+date = '230501';
+ImgFolder = '003';
+time = '1550';
+mouse = 'i2905';
 
-ds = 'SFxDir_ExptList';
-eval(ds)
+% ds = 'SFxDir_ExptList';
+% eval(ds)
+% 
+% iexp = 11;
+% 
+% mouse = expt(iexp).mouse;
+% date = expt(iexp).date;
+% time = cell2mat(expt(iexp).sfTime);
+% ImgFolder = cell2mat(expt(iexp).sfFolder);
 
-iexp = 11;
-
-mouse = expt(iexp).mouse;
-date = expt(iexp).date;
-time = cell2mat(expt(iexp).sfTime);
-ImgFolder = cell2mat(expt(iexp).sfFolder);
-
-frame_rate = 15;
+frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -209,6 +209,10 @@ nMaskPix = 5; %thickness of neuropil ring in pixels
 nBuffPix = 3; %thickness of buffer between cell and ring
 mask_np = imCellNeuropil(mask_cell,nBuffPix,nMaskPix);
 
+figure; image(imShade(data_reg_avg,mask_cell))
+truesize
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellMaskFOV.pdf']),'-dpdf','-bestfit')
+
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'data_dfof_max', 'mask_cell', 'mask_np')
 clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
 
@@ -295,7 +299,17 @@ for iDir = 1:nDirs
         data_dfof_ori(:,iDir,2) = squeeze(std(mean(data_dfof(resp_win,ind_ori,:),1),[],2)./sqrt(length(ind_ori)));
     end
 end
-
+Dir_anova_pass = zeros(1,nCells);
+SF_anova_pass = zeros(1,nCells);
+for iC = 1:nCells
+    [P{iC} T{iC} stats{iC} Terms{iC}] = anovan(data_dfof_resp(:,iC),cat(2,Dir',SF_mat'));
+    if P{iC}(1)<0.05
+        Dir_anova_pass(iC) = 1;
+    end
+    if P{iC}(2)<0.05
+        SF_anova_pass(iC) = 1;
+    end
+end
 % figure;
 % [n1 n2] = subplotn(nCells);
 % for iC = 1:nCells
@@ -304,15 +318,15 @@ end
 %     title([num2str(chop(max(max(data_dfof_dir_sf(iC,:,:,1),[],2),[],3),2)) ' ' num2str(sum(sum(h_dir_sf(:,:,iC))))])
 %     set(gca,'XTickLabel',SFs,'YTickLabel',Dirs(2:2:end))
 % end
-% figure;
-% [n1 n2] = subplotn(nCells);
-% for iC = 1:nCells
-%     subplot(n1,n2,iC)
-%     for iDir = 1:nDirs
-%         errorbar(SFs,squeeze(data_dfof_dir_sf(iC,iDir,:,1)),squeeze(data_dfof_dir_sf(iC,iDir,:,2)))
-%         hold on
-%     end
-% end
+figure;
+[n1 n2] = subplotn(nCells);
+for iC = 1:nCells
+    subplot(n1,n2,iC)
+    for iDir = 1:nDirs
+        errorbar(SFs,squeeze(data_dfof_dir_sf(iC,iDir,:,1)),squeeze(data_dfof_dir_sf(iC,iDir,:,2)))
+        hold on
+    end
+end
 [val prefSF] = max(data_dfof_sf(:,:,1),[],2);
 [prefVal prefDir] = max(data_dfof_dir(:,:,1),[],2);
 oppDir = prefDir+nDirs/2;
@@ -322,40 +336,35 @@ prefVal(find(prefVal<0)) = 0;
 oppVal(find(oppVal<0)) = 0;
 DSI = (prefVal-oppVal)./(prefVal+oppVal);
 
-% figure;
-% [n1 n2] = subplotn(nCells);
-% for iC = 1:nCells
-%     subplot(n1,n2,iC)
-%     errorbar(SFs,squeeze(data_dfof_sf(iC,:,1)),squeeze(data_dfof_sf(iC,:,2)))
-%     hold on
-%     errorbar(SFs,squeeze(data_dfof_dir_sf(iC,prefDir(iC),:,1)),squeeze(data_dfof_dir_sf(iC,prefDir(iC),:,2)))
-%     title(num2str(SFs(prefSF(iC))))
-% end
-% 
-% figure;
-% [n1 n2] = subplotn(nCells);
-% for iC = 1:nCells
-%     subplot(n1,n2,iC)
-%     for iSF = 1:nSF
-%         errorbar(Dirs,data_dfof_dir_sf(iC,:,iSF,1),data_dfof_dir_sf(iC,:,iSF,2))
-%         hold on
-%     end
-% end
-% figure;
-% [n1 n2] = subplotn(nCells);
-% for iC = 1:nCells
-%     subplot(n1,n2,iC)
-%     errorbar(Dirs,squeeze(data_dfof_dir(iC,:,1)),squeeze(data_dfof_dir(iC,:,2)))
-%     hold on
-%     errorbar(Dirs,squeeze(data_dfof_dir_sf(iC,:,prefSF(iC),1)),squeeze(data_dfof_dir_sf(iC,:,prefSF(iC),2)))
-% end
-% 
-% figure;
-% [n1 n2] = subplotn(nCells);
-% for iC = 1:nCells
-%     subplot(n1,n2,iC)
-%     errorbar(Dirs(1:nDirs/2),squeeze(data_dfof_ori(iC,:,1)),squeeze(data_dfof_ori(iC,:,2)))
-% end
+figure;
+[n1 n2] = subplotn(nCells);
+for iC = 1:nCells
+    subplot(n1,n2,iC)
+    errorbar(SFs,squeeze(data_dfof_dir_sf(iC,prefDir(iC),:,1)),squeeze(data_dfof_dir_sf(iC,prefDir(iC),:,2)))
+    xlabel('SF')
+    ylabel('dF/F')
+end
+suptitle('SF tuning at preferred Dir')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_SFtun_prefDir.pdf']),'-dpdf','-bestfit')
+
+figure;
+[n1 n2] = subplotn(nCells);
+for iC = 1:nCells
+    subplot(n1,n2,iC)
+    errorbar(Dirs,squeeze(data_dfof_dir_sf(iC,:,prefSF(iC),1)),squeeze(data_dfof_dir_sf(iC,:,prefSF(iC),2)))
+    xlabel('Dir')
+    ylabel('dF/F')
+end
+suptitle('Dir tuning at preferred SF')
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_Dirtun_prefSF.pdf']),'-dpdf','-bestfit')
+
+
+figure;
+[n1 n2] = subplotn(nCells);
+for iC = 1:nCells
+    subplot(n1,n2,iC)
+    errorbar(Dirs(1:nDirs/2),squeeze(data_dfof_ori(iC,:,1)),squeeze(data_dfof_ori(iC,:,2)))
+end
 [prefVal prefOri] = max(data_dfof_ori(:,:,1),[],2);
 nOri = nDirs/2;
 orthOri = prefOri+nOri/2;
@@ -401,7 +410,7 @@ max_sf_val = zeros(1,nCells);
 max_sf_ind = zeros(1,nCells);
 fit_out = cell(1,nCells);
 g_fit = cell(1,nCells);
-prefSF = zeros(1,nCells);
+fitSF = zeros(1,nCells);
 figure; movegui('center')
 start = 1;
 if nCells<49
@@ -433,7 +442,7 @@ for iCell = 1:nCells
         if ~isnan(fit_out{iCell}.b1)
             plot(fit_out{iCell})
         end
-        prefSF(1,iCell)= fit_out{iCell}.b1;
+        fitSF(1,iCell)= fit_out{iCell}.b1;
         RsqSF(1,iCell)= g_fit{iCell}.rsquare;
         if find(h_dir_all == iCell)
             title('Sig')
@@ -444,7 +453,7 @@ for iCell = 1:nCells
         end
     else
         fit_out{iCell}.b1 = nan;
-        prefSF(1,iCell)= nan;
+        fitSF(1,iCell)= nan;
         RsqSF(1,iCell)= nan;
     end
     start = start+1;
@@ -462,9 +471,9 @@ for iCell = 1:nCells
     start = start+1;
 end
 
-prefSF_cut = prefSF;
-prefSF_cut(find(prefSF>max(log2(SFs)))) = max(log2(SFs));
-prefSF_cut(find(prefSF<min(log2(SFs)))) = min(log2(SFs));
+prefSF_cut = fitSF;
+prefSF_cut(find(fitSF>max(log2(SFs)))) = max(log2(SFs));
+prefSF_cut(find(fitSF<min(log2(SFs)))) = min(log2(SFs));
 figure; movegui('center');
 RsqSF(find(RsqSF<0)) = 0;
 subplot(2,1,1); histogram(RsqSF(h_dir_all),[0:.1:1.1]); vline(0.5)
@@ -478,7 +487,7 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun  '_SFfitDist.pdf'])
 
 
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData.mat']),'resp_win','base_win','resp_cell','base_cell','data_dfof_dir_sf','data_dfof_dir','data_dfof_sf','data_dfof_ori','h_dir_sf','prefSF','DSI','OSI')
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_SFfits.mat']), 'fit_out','g_fit', 'prefSF', 'RsqSF','data_dfof_resp','data_dfof_base','h_dir_all', 'h_dir', 'trialInd','max_sf_ind','max_dir_ind')
+save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_SFfits.mat']), 'fit_out','g_fit', 'prefSF', 'fitSF', 'RsqSF','data_dfof_resp','data_dfof_base','h_dir_all', 'h_dir', 'trialInd','max_sf_ind','max_dir_ind','SF_anova_pass','Dir_anova_pass')
 
 data_dfof_stim_dir_shift = zeros(size(data_dfof_stim_dir));
 for iCell = 1:nCells
@@ -495,6 +504,95 @@ title('Normalized')
 suptitle([date ' ' mouse])
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun  '_avgSFxDir.pdf']), '-dpdf')
 movegui('center')
+%%
+goodcells = find(SF_anova_pass+Dir_anova_pass);
+for iC = 1:nCells
+    if find(goodcells == iC)
+        tempmask = zeros(size(mask_cell));
+        tempmask(find(mask_cell == iC)) = iC;
+        figure;
+        subplot(2,1,1)
+        image(imShade(data_reg_avg,tempmask))
+        subplot(2,2,3)
+        errorbar(SFs,squeeze(data_dfof_dir_sf(iC,prefDir(iC),:,1)),squeeze(data_dfof_dir_sf(iC,prefDir(iC),:,2)))
+        xlabel('SF')
+        ylabel('dF/F')
+        subplot(2,2,4)
+        errorbar(Dirs,squeeze(data_dfof_dir_sf(iC,:,prefSF(iC),1)),squeeze(data_dfof_dir_sf(iC,:,prefSF(iC),2)))
+        xlabel('Dir')
+        ylabel('dF/F')
+        suptitle(['Cell ' num2str(iC)])
+        print(fullfile(fnout, datemouse, datemouserun, [datemouserun  '_TuningCell' num2str(iC) '.pdf']), '-dpdf')
+    end
+end
+
+%i2905 001 - 175:225,375:475
+%i2905 003 - 75:125,625:725
+figure;
+iC_use = [15 16];
+subplot(4,2,1)
+tempmask = zeros(size(mask_cell));
+tempmask(find(mask_cell == iC_use(1))) = iC_use(1);
+image(imShade(data_reg_avg(75:125,625:725),tempmask(75:125,625:725)))
+title(['Spine ' num2str(iC_use(1))])
+subplot(4,2,3)
+errorbar(SFs,squeeze(data_dfof_dir_sf(iC_use(1),prefDir(iC_use(1)),:,1)),squeeze(data_dfof_dir_sf(iC_use(1),prefDir(iC_use(1)),:,2)))
+xlabel('SF')
+ylabel('dF/F')
+ylim([-0.05 0.3])
+subplot(4,2,5)
+errorbar(Dirs,squeeze(data_dfof_dir_sf(iC_use(1),:,prefSF(iC_use(1)),1)),squeeze(data_dfof_dir_sf(iC_use(1),:,prefSF(iC_use(1)),2)))
+xlabel('Dir')
+ylabel('dF/F')
+ylim([-0.05 0.3])
+subplot(4,2,7)
+imagesc(squeeze(data_dfof_dir_sf(iC_use(1),:,:,1)))
+set(gca,'YTickLabels',Dirs(2:2:end), 'XTick', 1:nSF, 'XTickLabels', SFs)
+colormap gray
+subplot(4,2,2)
+tempmask = zeros(size(mask_cell));
+tempmask(find(mask_cell == iC_use(2))) = iC_use(2);
+image(imShade(data_reg_avg(75:125,625:725),tempmask(75:125,625:725)))
+title(['Spine ' num2str(iC_use(2))])
+subplot(4,2,4)
+errorbar(SFs,squeeze(data_dfof_dir_sf(iC_use(2),prefDir(iC_use(2)),:,1)),squeeze(data_dfof_dir_sf(iC_use(2),prefDir(iC_use(2)),:,2)))
+xlabel('SF')
+ylabel('dF/F')
+ylim([-0.015 0.1])
+subplot(4,2,6)
+errorbar(Dirs,squeeze(data_dfof_dir_sf(iC_use(2),:,prefSF(iC_use(2)),1)),squeeze(data_dfof_dir_sf(iC_use(2),:,prefSF(iC_use(2)),2)))
+xlabel('Dir')
+ylabel('dF/F')
+ylim([-0.015 0.1])
+subplot(4,2,8)
+imagesc(squeeze(data_dfof_dir_sf(iC_use(2),:,:,1)))
+set(gca,'YTickLabels',Dirs(2:2:end), 'XTick', 1:nSF, 'XTickLabels', SFs)
+colormap gray
+suptitle([mouse ' ' date ' ' ImgFolder])
+print(fullfile(fnout, datemouse, datemouserun, [datemouserun  '_exampleCells.pdf']), '-dpdf','-fillpage')
+
+tt = [1-nOff:nOn].*(1000/frame_rate);    
+start = 1;
+figure;
+for iDir = 1:nDirs
+    for iSF = 1:nSF
+        ind1 = find(Dir==Dirs(iDir));
+        ind2 = find(SF_mat==SFs(iSF));
+        ind_use = intersect(ind1,ind2); 
+        subplot(nDirs,nSF,start)
+        plot(tt, mean(data_dfof(:,ind_use,iC_use(1)),2),'k')
+        start = start+1;
+    end
+end
+figure;
+iDir = 2;
+iSF = 4;
+ind1 = find(Dir==Dirs(iDir));
+ind2 = find(SF_mat==SFs(iSF));
+ind_use = intersect(ind1,ind2); 
+plot(tt, data_dfof(:,ind_use,iC_use(2)),'k')
+        
+
 %% wheel data
 if ~exist(fullfile(fnout,datemouse,datemouserun,[datemouserun '_wheelSpeed.mat']))
     wheel_speed = wheelSpeedCalc(input,32,'orange');

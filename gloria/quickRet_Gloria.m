@@ -2,14 +2,14 @@ clear all
 clear all global
 close all
 
-date = '230410';
-mouse = 'i2905';
-ImgFolder = '001';
-time = ['1614'];
-doReg = 1;
+date = '230406';
+mouse = 'i2077';
+ImgFolder = '000';
+time = '1511';
+doReg = 0;
 nrun = size(ImgFolder,1);
-rc = behavConstsAV;
 subnum = mouse;
+datemouse = [date '_' mouse];
 
 run_str = ['runs-' ImgFolder(1,:)];
 if nrun>1
@@ -19,25 +19,23 @@ end
 data = [];
 clear temp
 for irun = 1:nrun
-
-    CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' mouse '\' date '\' ImgFolder(irun,:)];
+    CD = ['Z:\\All_Staff\home\ACh\Aging\data\2p\' mouse '\' date '\' ImgFolder(irun,:)];
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
-    load(fName);
-    
+
     nframes = info.config.frames;
-    %nframes = 4050;
-    nframes = input.counterValues{end}(end);
+    
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
 
     if size(data_temp,1) > 1
         data_temp = data_temp(1,:,:,:);
     end
-    
-    
+          
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' subnum '-' date '-' time(irun,:) '.mat'];
+
+    load(fName);
     expt_input = input;
     temp(irun) = expt_input;
     
@@ -45,18 +43,13 @@ for irun = 1:nrun
     nOff = temp(irun).nScansOff;
     ntrials = size(temp(irun).tGratingDirectionDeg,2);
     
-    
     if size(data_temp,1) == 2
         data_temp = data_temp(1,:,:,:);
     end
+
     data_temp = squeeze(data_temp);
-%     if nframes>ntrials*(nOn+nOff)
-%         data_temp = data_temp(:,:,1:ntrials*(nOn+nOff));
-%     elseif nframes<ntrials*(nOn+nOff)
-%         temp(irun) = trialChopper(temp(irun),1:ceil(nframes./(nOn+nOff)));
-%     end
-        
     data = cat(3,data,data_temp);
+
 end
 
 clear data_temp
@@ -119,12 +112,11 @@ expt_input = concatenateDataBlocks(temp);
         end
         clear data_dfof
         myfilter = fspecial('gaussian',[20 20], 0.5);
-        data_dfof_avg_all = squeeze(mean(imfilter(data_dfof_avg(:,:,nOff:nOff+nOn,:),myfilter),3));
-        %data_dfof_avg_all = squeeze(mean(data_dfof_avg(:,:,nOff:nOff+nOn,:),3));
-
+        %data_dfof_avg_all = squeeze(mean(imfilter(data_dfof_avg(:,:,nOff:75,:),myfilter),3));
+         data_dfof_avg_all = imgaussfilt(squeeze(mean(data_dfof_avg(:,:,nOff:nOff+nOn,:),3)),1.5);
+        
 %         img_avg_resp = zeros(1,nStim);
-        figure;
-        movegui('center')
+        figure; 
         for i = 1:nStim
             subplot(length(Els),length(Azs),i); 
             imagesc(data_dfof_avg_all(:,:,i)); 
@@ -133,18 +125,20 @@ expt_input = concatenateDataBlocks(temp);
 %             img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
             %clim([0 max(data_dfof_avg_all(:))./2])
         end
-            mkdir(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
-            print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')
-            pixThreshold = 0.2*max(data_dfof_avg_all(:));
-        img_avg_resp = zeros(1,nStim);
+
+mkdir(fullfile('Z:\\All_Staff\home\ACh\Aging\data\2p\', mouse, date, ImgFolder))
+print(fullfile('Z:\\All_Staff\home\ACh\Aging\data\2p\', mouse, date, ImgFolder,'quickRet.pdf'),'-dpdf','-fillpage')
+        
+      
+pixThreshold = 0.2*max(data_dfof_avg_all(:));
+img_avg_resp = zeros(1,nStim);
         for i = 1:nStim 
             img = data_dfof_avg_all(:,:,i);
             img_thresh = zeros(size(img));
             img_thresh(img>pixThreshold) = img(img>pixThreshold);
             img_avg_resp(i) = mean(img(img(:)>pixThreshold));
         end
-        figure;
-        movegui('center')
+        figure
         heatmap = imagesc(fliplr(rot90(reshape(img_avg_resp,length(Els),length(Azs)),3)));
         heatmap.Parent.YTick = 1:length(Els);
         heatmap.Parent.YTickLabel = strread(num2str(Els),'%s');    
@@ -154,7 +148,7 @@ expt_input = concatenateDataBlocks(temp);
         ylabel('Elevation');
         colorbar
         caxis([0 pixThreshold/.4])
-        caxis([-0.1 0.1])
+       % caxis([-0.1 0.1])
     
     else
         data_tc = squeeze(mean(mean(data,1),2));
@@ -177,7 +171,6 @@ expt_input = concatenateDataBlocks(temp);
             end
         end
         figure;
-        movegui('center')
         ax=gca;
         imagesc(respMap);
         ax.XTickLabel = Azs;
@@ -189,7 +182,6 @@ expt_input = concatenateDataBlocks(temp);
     end
     
     figure; imagesc(mean(data,3));
-    movegui('center')
     axis off
     title([mouse ' ' date])
-    print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
+    print(['Z:\\All_Staff\home\ACh\Aging\data\2p\','\' mouse, '\' date, '\' ImgFolder(irun,:), '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')

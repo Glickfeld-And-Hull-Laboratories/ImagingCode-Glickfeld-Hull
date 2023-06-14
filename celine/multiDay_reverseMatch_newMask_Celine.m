@@ -1,4 +1,4 @@
- clear all; clear global; close all
+clear all; clear global; close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 236; %enter the refrence day ID here
+day_id(1) = 289; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -120,6 +120,7 @@ input = input_temp;
 save(fullfile(fn_multi,'input.mat'),'input')
 clear input
 %% manual align
+
 corrmap_norm{1} = uint8((corrmap{1}./max(corrmap{1}(:))).*255);
 corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
 fov_norm{1} = uint8((fov_avg{1}./max(fov_avg{1}(:))).*255);
