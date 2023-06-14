@@ -781,7 +781,7 @@ expt(45).time_mat = ['0825'];
 expt(45).runs = ['001'];
 expt(45).nrun = size(expt(45).runs,1);
 expt(45).folder = 'tj';
-expt(45).z = 336.71;
+expt(45).z = 336;
 expt(45).obj = '16x';
 expt(45).zoom = 2.0;
 
@@ -835,24 +835,6 @@ expt(48).folder = 'tj';
 expt(48).z = 278.12;
 expt(48).obj = '16x';
 expt(48).zoom = 2.0;
-
-%% i2560 - PV/CBA - Post Dark 1 week
-expt(49).mouse = 'i2560';
-expt(49).sex = 'male';
-expt(49).date = '230602';
-expt(49).ref_date = '230513';
-expt(49).img_point = '4';
-expt(49).img_loc  = {'LM';'L2_3'};
-expt(49).img_strct  = {'cells'};
-expt(49).green_indicator = {'AAV';'GCaMP7f'};
-expt(49).time_mat = ['1016'];
-expt(49).runs = ['001'];
-expt(49).nrun = size(expt(49).runs,1);
-expt(49).folder = 'tj';
-expt(49).z = 285.15;
-expt(49).obj = '16x';
-expt(49).zoom = 2.0;
-
 
 
 

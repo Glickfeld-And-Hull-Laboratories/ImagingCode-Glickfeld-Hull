@@ -1,3 +1,7 @@
+%this script is used as part of the Arc imaging project to make it easier to identify cells that are
+%green and/or red on an individual mouse basis, to be used in subsequent analyses, via the variable
+%tj_matches
+%%
 clear all
 clc
 
@@ -14,7 +18,7 @@ img_folder = expt(d1).runs; %img folder of day 1
 time = expt(d1).time_mat;
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
-fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P', datemouse, datemouserun); %folder to load files from
+fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P', datemouse, datemouserun); %folder to load files from
 
 %%
 %load day 1 data
@@ -44,7 +48,7 @@ img_folder = expt(d2).runs; %img folder of day 1
 time = expt(d2).time_mat;
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
-fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P', datemouse, datemouserun); %folder to load files from
+fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P', datemouse, datemouserun); %folder to load files from
 
 load(fullfile(fnout, [datemouserun '_TCs.mat']))
 load(fullfile(fnout, [datemouserun '_multiday_alignment.mat']))
@@ -63,7 +67,7 @@ img_folder = expt(d3).runs; %img folder of day 1
 time = expt(d3).time_mat;
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
-fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P', datemouse, datemouserun); %folder to load files from
+fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P', datemouse, datemouserun); %folder to load files from
 
 load(fullfile(fnout, [datemouserun '_TCs.mat']))
 load(fullfile(fnout, [datemouserun '_multiday_alignment.mat']))

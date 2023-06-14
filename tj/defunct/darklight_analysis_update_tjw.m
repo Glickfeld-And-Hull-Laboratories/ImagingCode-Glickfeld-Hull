@@ -1,3 +1,8 @@
+%this script is the extended dark/light analysis paradigm, with 7 different imaging timepoints -
+%this was replaced by a more efficient 4 timepoint version, so although these data were analyzed I
+%will not comment this code
+
+%%
 %clear everything
 clear all
 clear all global
@@ -5,9 +10,6 @@ clc
 close all
 
 
-%need to do add k and max change plots!
-%something went wrong - the cell counts are not the same as before I added
-%the k and max changes - check that part
 %%
 fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P'; %folder to load files from
 newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\darklight\multi_day'; %folder to load files 
@@ -600,6 +602,7 @@ print(fullfile(realfnout, ['pooldarklight_allpoints_Jeon_change_pref_cdf.pdf']),
 
 comparison_ids_all = [];
 comparison_pref_dscores_all = [];
+comparison_max_all = [];
 
 list = [1 1+7 1+14];
 for iexp = list
@@ -611,11 +614,137 @@ for iexp = list
     %comparison_ids_all = [comparison_ids_all comparison_ids];
     comparison_pref_dscores_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'same_cell_dscores']));
     comparison_pref_dscores_all = [comparison_pref_dscores_all comparison_pref_dscores_ses_all];
+    comparison_max_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'same_cell_max_vals']));
+    comparison_max_all = [comparison_max_all comparison_max_ses_all];
+
+
 %     k_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'RW_k_changes']));
 %     k_scores = [k_scores k_ses_all];
 %     max_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'RW_max_changes']));
 %     max_scores = [max_scores max_ses_all];
 end
+
+%%
+
+comparison_max_1_2_all = [];
+comparison_max_2_1_all = [];
+comparison_max_1_3_all = [];
+comparison_max_3_1_all = [];
+comparison_max_3_4_all = [];
+comparison_max_4_3_all = [];
+comparison_max_4_5_all = [];
+comparison_max_5_4_all = [];
+comparison_max_5_6_all = [];
+comparison_max_6_5_all = [];
+comparison_max_5_7_all = [];
+comparison_max_7_5_all = [];
+
+
+for idata = 1:length(comparison_max_all)
+    comparison_max_1_2 = comparison_max_all(idata).comparison_max_1_2_match_tune;
+    comparison_max_1_2_all = [comparison_max_1_2_all comparison_max_1_2];
+    comparison_max_2_1 = comparison_max_all(idata).comparison_max_2_1_match_tune;
+    comparison_max_2_1_all = [comparison_max_2_1_all comparison_max_2_1];
+
+    comparison_max_1_3 = comparison_max_all(idata).comparison_max_1_3_match_tune;
+    comparison_max_1_3_all = [comparison_max_1_3_all comparison_max_1_3];
+    comparison_max_3_1 = comparison_max_all(idata).comparison_max_3_1_match_tune;
+    comparison_max_3_1_all = [comparison_max_3_1_all comparison_max_3_1];
+
+    comparison_max_3_4 = comparison_max_all(idata).comparison_max_3_4_match_tune;
+    comparison_max_3_4_all = [comparison_max_3_4_all comparison_max_3_4];
+    comparison_max_4_3 = comparison_max_all(idata).comparison_max_4_3_match_tune;
+    comparison_max_4_3_all = [comparison_max_4_3_all comparison_max_4_3];
+
+    comparison_max_4_5 = comparison_max_all(idata).comparison_max_4_5_match_tune;
+    comparison_max_4_5_all = [comparison_max_4_5_all comparison_max_4_5];
+    comparison_max_5_4 = comparison_max_all(idata).comparison_max_5_4_match_tune;
+    comparison_max_5_4_all = [comparison_max_5_4_all comparison_max_5_4];
+
+    comparison_max_5_6 = comparison_max_all(idata).comparison_max_5_6_match_tune;
+    comparison_max_5_6_all = [comparison_max_5_6_all comparison_max_5_6];
+    comparison_max_6_5 = comparison_max_all(idata).comparison_max_6_5_match_tune;
+    comparison_max_6_5_all = [comparison_max_6_5_all comparison_max_6_5];
+
+    comparison_max_5_7 = comparison_max_all(idata).comparison_max_5_7_match_tune;
+    comparison_max_5_7_all = [comparison_max_5_7_all comparison_max_5_7];
+    comparison_max_7_5 = comparison_max_all(idata).comparison_max_7_5_match_tune;
+    comparison_max_7_5_all = [comparison_max_7_5_all comparison_max_7_5];
+end
+
+%%
+
+fig = figure;
+%sgtitle('Max dF/F')
+%a = subplot(2,2,1)
+h=cdfplot(comparison_max_1_3_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_max_3_1_all);
+set(j, 'LineStyle', '--', 'Color', [.0 .0 .0], 'LineWidth',2);
+m=cdfplot(comparison_max_5_7_all);
+set(m, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+n=cdfplot(comparison_max_7_5_all);
+set(n, 'LineStyle', '--', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark + 7d'], 'Location', 'southeast')
+xlim([0 1])
+xlabel(['Max dF/F'])
+ylabel(['% of cells'])
+title(['7-day comparisons'])
+hold off
+print(fullfile(realfnout, ['pooled_comparison_max_7d.pdf']), '-dpdf', '-bestfit')
+
+
+fig = figure;
+%sgtitle('Max dF/F')
+%a = subplot(2,2,1)
+h=cdfplot(comparison_max_1_2_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_max_2_1_all);
+set(j, 'LineStyle', '--', 'Color', [.0 .0 .0], 'LineWidth',2);
+m=cdfplot(comparison_max_4_5_all);
+set(m, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+n=cdfplot(comparison_max_5_4_all);
+set(n, 'LineStyle', '--', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1'], ['Base1 + 4d'], ['Base2 + 4hr'], ['Post-dark'], 'Location', 'southeast')
+xlim([0 1])
+xlabel(['Max dF/F'])
+ylabel(['% of cells'])
+title(['4-day comparisons'])
+hold off
+print(fullfile(realfnout, ['pooled_comparison_max_4d.pdf']), '-dpdf', '-bestfit')
+
+
+fig = figure;
+%sgtitle('Max dF/F')
+%a = subplot(2,2,1)
+h=cdfplot(comparison_max_3_4_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(comparison_max_4_3_all);
+set(j, 'LineStyle', '--', 'Color', [.0 .0 .0], 'LineWidth',2);
+m=cdfplot(comparison_max_5_6_all);
+set(m, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+n=cdfplot(comparison_max_6_5_all);
+set(n, 'LineStyle', '--', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base2'], ['Base2 + 4hr'], ['Post-dark'], ['Post-dark + 4hr'], 'Location', 'southeast')
+xlim([0 1])
+xlabel(['Max dF/F'])
+ylabel(['% of cells'])
+title(['4-hour comparisons'])
+hold off
+print(fullfile(realfnout, ['pooled_comparison_max_4hr.pdf']), '-dpdf', '-bestfit')
+
+%%
+%ks tests for above
+[ks_1_3 ks_p_1_3] = kstest2(comparison_max_1_3_all, comparison_max_3_1_all)
+[ks_5_7 ks_p_5_7] = kstest2(comparison_max_5_7_all, comparison_max_7_5_all)
+[ks_1_2 ks_p_1_2] = kstest2(comparison_max_1_2_all, comparison_max_2_1_all)
+[ks_4_5 ks_p_4_5] = kstest2(comparison_max_4_5_all, comparison_max_5_4_all)
+[ks_3_4 ks_p_3_4] = kstest2(comparison_max_3_4_all, comparison_max_4_3_all)
+[ks_5_6 ks_p_5_6] = kstest2(comparison_max_5_6_all, comparison_max_6_5_all)
+
 
 %%
 
@@ -693,104 +822,204 @@ end
 %subplot comparisons of two sessions - need to add legend, titles, etc.
 %also work on adding k and max changes
 
-figure;
+fig=figure;
 sgtitle('Pref Ori Changes')
-subplot(2,2,1)
+a = subplot(2,2,1)
 h=cdfplot(comparison_pref_d_1_2_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_pref_d_4_5_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_pref_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_pref_d_4_5_all)), ')'], 'Location', 'southeast')
+legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_pref_d_1_2_all)), ')'], ['Base2 + 4hr - Post Dark (n= ', num2str(length(comparison_pref_d_4_5_all)), ')'], 'Location', 'best')
+xlim([0 90])
+xlabel([])
+ylabel([])
+title([])
 hold off
 
 
-subplot(2,2,2)
+b = subplot(2,2,2)
 h=cdfplot(comparison_pref_d_3_4_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_pref_d_5_6_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_pref_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_pref_d_5_6_all)), ')'], 'Location', 'southeast')
+legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_pref_d_3_4_all)), ')'], ['Post Dark - Post Dark + 4hr Light (n= ', num2str(length(comparison_pref_d_5_6_all)), ')'], 'Location', 'best')
+xlabel([])
+ylabel([])
+title([])
 hold off
 
-subplot(2,2,3)
+c = subplot(2,2,3)
 h=cdfplot(comparison_pref_d_1_3_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_pref_d_5_7_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base1 - Base2 (n= ', num2str(length(comparison_pref_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_pref_d_5_7_all)), ')'], 'Location', 'southeast')
+legend(['Base1 - Base2 (n= ', num2str(length(comparison_pref_d_1_3_all)), ')'], ['Post Dark - Post Dark + 7d Light (n= ', num2str(length(comparison_pref_d_5_7_all)), ')'], 'Location', 'best')
+xlabel([])
+ylabel([])
+title([])
 hold off
-print(fullfile(realfnout, ['pooled_comparison_prefori_change.pdf']), '-dpdf', '-bestfit')
+
+% d = subplot(2,2,4)
+% h=cdfplot(extra_comparison_pref_d_1_3_all);
+% set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+% hold on
+% j=cdfplot(extra_comparison_pref_d_6_7_all);
+% set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+% legend(['Base1 - Base2 (n= ', num2str(length(extra_comparison_pref_d_1_3_all)), ')'], ['Post Dark + 4hr - Post Dark + 7d Light (n= ', num2str(length(extra_comparison_pref_d_6_7_all)), ')'], 'Location', 'best')
+% xlabel([])
+% ylabel([])
+% title([])
+% hold off
+
+han=axes(fig,'visible','off'); 
+han.Title.Visible='on';
+han.XLabel.Visible='on';
+han.YLabel.Visible='on';
+linkaxes([a b c d],'xy')
+ylabel(han,'% of Cells');
+xlabel(han,'Change in Pref Ori');
 
 
+print(fullfile(realfnout, ['pooled_comparison_prefori_change.pdf']), '-dpdf', '-fillpage')
 
-figure;
+
+%%
+fig = figure;
 sgtitle('k Changes')
-subplot(2,2,1)
+a = subplot(2,2,1)
 h=cdfplot(comparison_k_d_1_2_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_k_d_4_5_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_k_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_k_d_4_5_all)), ')'], 'Location', 'southeast')
+%legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_k_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_k_d_4_5_all)), ')'], 'Location', 'best')
+%xlim([-30 30])
+xlabel([])
+ylabel([])
+title([])
 hold off
 
 
-subplot(2,2,2)
+b = subplot(2,2,2)
 h=cdfplot(comparison_k_d_3_4_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_k_d_5_6_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_k_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_k_d_5_6_all)), ')'], 'Location', 'southeast')
+%legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_k_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_k_d_5_6_all)), ')'], 'Location', 'best')
+xlabel([])
+ylabel([])
+title([])
 hold off
 
-subplot(2,2,3)
+c = subplot(2,2,3)
 h=cdfplot(comparison_k_d_1_3_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_k_d_5_7_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base1 - Base2 (n= ', num2str(length(comparison_k_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_k_d_5_7_all)), ')'], 'Location', 'southeast')
+%legend(['Base1 - Base2 (n= ', num2str(length(comparison_k_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_k_d_5_7_all)), ')'], 'Location', 'best')
 hold off
-print(fullfile(realfnout, ['pooled_comparison_k_change.pdf']), '-dpdf', '-bestfit')
+xlabel([])
+ylabel([])
+title([])
+
+% d = subplot(2,2,4)
+% h=cdfplot(extra_comparison_k_d_1_3_all);
+% set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+% hold on
+% j=cdfplot(extra_comparison_k_d_6_7_all);
+% set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+% %legend(['Base1 - Base2 (n= ', num2str(length(comparison_k_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_k_d_5_7_all)), ')'], 'Location', 'best')
+% hold off
+% xlabel([])
+% ylabel([])
+% title([])
+
+han=axes(fig,'visible','off'); 
+han.Title.Visible='on';
+han.XLabel.Visible='on';
+han.YLabel.Visible='on';
+% han.XLim([-30 30])
+linkaxes([a b c d],'xy')
+ylabel(han,'% of Cells');
+xlabel(han,'Change in k Value');
+xlim(han, [-30 30]);
+
+print(fullfile(realfnout, ['pooled_comparison_k_change.pdf']), '-dpdf', '-fillpage')
 
 
-figure;
+%%
+
+
+fig = figure;
 sgtitle('Max dF/F Changes')
-subplot(2,2,1)
+a = subplot(2,2,1)
 h=cdfplot(comparison_max_d_1_2_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_max_d_4_5_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_max_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_max_d_4_5_all)), ')'], 'Location', 'southeast')
+%legend(['Base1 - Base2 + 4d (n= ', num2str(length(comparison_max_d_1_2_all)), ')'], ['Base2 - Post Dark (n= ', num2str(length(comparison_max_d_4_5_all)), ')'], 'Location', 'southeast')
+xlim([-1 1])
+xlabel([])
+ylabel([])
+title([])
 hold off
 
 
-subplot(2,2,2)
+b = subplot(2,2,2)
 h=cdfplot(comparison_max_d_3_4_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_max_d_5_6_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_max_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_max_d_5_6_all)), ')'], 'Location', 'southeast')
+%legend(['Base2 - Base2 + 4hr (n= ', num2str(length(comparison_max_d_3_4_all)), ')'], ['Post Dark - Post Light 4hr (n= ', num2str(length(comparison_max_d_5_6_all)), ')'], 'Location', 'southeast')
+xlabel([])
+ylabel([])
+title([])
 hold off
 
-subplot(2,2,3)
+c = subplot(2,2,3)
 h=cdfplot(comparison_max_d_1_3_all);
 set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(comparison_max_d_5_7_all);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
-legend(['Base1 - Base2 (n= ', num2str(length(comparison_max_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_max_d_5_7_all)), ')'], 'Location', 'southeast')
+%legend(['Base1 - Base2 (n= ', num2str(length(comparison_max_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_max_d_5_7_all)), ')'], 'Location', 'southeast')
 hold off
-print(fullfile(realfnout, ['pooled_comparison_max_change.pdf']), '-dpdf', '-bestfit')
+xlabel([])
+ylabel([])
+title([])
+
+% d = subplot(2,2,4)
+% h=cdfplot(extra_comparison_max_d_1_3_all);
+% set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+% hold on
+% j=cdfplot(extra_comparison_max_d_6_7_all);
+% set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+% %legend(['Base1 - Base2 (n= ', num2str(length(comparison_max_d_1_3_all)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_max_d_5_7_all)), ')'], 'Location', 'southeast')
+% hold off
+% xlabel([])
+% ylabel([])
+% title([])
+
+han=axes(fig,'visible','off'); 
+han.Title.Visible='on';
+han.XLabel.Visible='on';
+han.YLabel.Visible='on';
+linkaxes([a b c d],'xy')
+ylabel(han,'% of Cells');
+xlabel(han,'Change in Max dF/F Value');
+
+print(fullfile(realfnout, ['pooled_comparison_max_change.pdf']), '-dpdf', '-fillpage')
 
 
-
+%%
+%could make scatters of the above info too
 
 %%
 k_s_pref_1 = kstest2(comparison_pref_d_1_2_all, comparison_pref_d_4_5_all)
@@ -805,11 +1034,130 @@ k_s_max_1 = kstest2(comparison_max_d_1_2_all, comparison_max_d_4_5_all)
 k_s_max_2 = kstest2(comparison_max_d_3_4_all, comparison_max_d_5_6_all)
 k_s_max_3 = kstest2(comparison_max_d_1_3_all, comparison_max_d_5_7_all)
 
+%max 1 and 3 are significant -> dark housing increases max; light
+%reintroduction for 1 week decreases it
+
+%%
+%extra comparison
+extra_comparison_pref_dscores_all = [];
+
+list = [1 1+7 1+14];
+for iexp = list
+    mouse = expt(iexp).mouse;
+    date = expt(iexp).date;
+    img_area = expt(iexp).img_loc{1};
+    img_layer = expt(iexp).img_loc{2};
+    extra_comparison_pref_dscores_ses_all = load(fullfile(newfnout, [mouse '_' img_area '_' img_layer '_' 'extra_comp']));
+    extra_comparison_pref_dscores_all = [extra_comparison_pref_dscores_all extra_comparison_pref_dscores_ses_all];
+end
+
+extra_comparison_pref_d_1_3_all = [];
+extra_comparison_pref_d_6_7_all = [];
+
+extra_comparison_k_d_1_3_all = [];
+extra_comparison_k_d_6_7_all = [];
+
+extra_comparison_max_d_1_3_all = [];
+extra_comparison_max_d_6_7_all = [];
+
+%%
+
+extra_comparison_max_1_3_all = [];
+extra_comparison_max_3_1_all = [];
+extra_comparison_max_6_7_all = [];
+extra_comparison_max_7_6_all = [];
+
+
+for idata = 1:length(extra_comparison_pref_dscores_all)
+ 
+    %d scores
+    extra_comparison_pref_d_1_3 = extra_comparison_pref_dscores_all(idata).extra_comparison_d_score_prefori_1_3;
+    extra_comparison_pref_d_1_3_all = [extra_comparison_pref_d_1_3_all extra_comparison_pref_d_1_3];
+    extra_comparison_pref_d_6_7 = extra_comparison_pref_dscores_all(idata).extra_comparison_d_score_prefori_6_7;
+    extra_comparison_pref_d_6_7_all = [extra_comparison_pref_d_6_7_all extra_comparison_pref_d_6_7];
+
+    
+    extra_comparison_k_d_1_3 = extra_comparison_pref_dscores_all(idata).extra_comparison_d_score_k_1_3;
+    extra_comparison_k_d_1_3_all = [extra_comparison_k_d_1_3_all extra_comparison_k_d_1_3];
+    extra_comparison_k_d_6_7 = extra_comparison_pref_dscores_all(idata).extra_comparison_d_score_k_6_7;
+    extra_comparison_k_d_6_7_all = [extra_comparison_k_d_6_7_all extra_comparison_k_d_6_7];
+
+   
+    extra_comparison_max_d_1_3 = extra_comparison_pref_dscores_all(idata).extra_comparison_d_score_max_1_3;
+    extra_comparison_max_d_1_3_all = [extra_comparison_max_d_1_3_all extra_comparison_max_d_1_3];
+    extra_comparison_max_d_6_7 = extra_comparison_pref_dscores_all(idata).extra_comparison_d_score_max_6_7;
+    extra_comparison_max_d_6_7_all = [extra_comparison_max_d_6_7_all extra_comparison_max_d_6_7];
+    
+    %regular max scores
+    extra_comparison_max_1_3 = extra_comparison_pref_dscores_all(idata).extra_comparison_max_1_3_match_tune;
+    extra_comparison_max_1_3_all = [extra_comparison_max_1_3_all extra_comparison_max_1_3];
+    extra_comparison_max_3_1 = extra_comparison_pref_dscores_all(idata).extra_comparison_max_3_1_match_tune;
+    extra_comparison_max_3_1_all = [extra_comparison_max_3_1_all extra_comparison_max_3_1];
+
+    extra_comparison_max_6_7 = extra_comparison_pref_dscores_all(idata).extra_comparison_max_6_7_match_tune;
+    extra_comparison_max_6_7_all = [extra_comparison_max_6_7_all extra_comparison_max_6_7];
+    extra_comparison_max_7_6 = extra_comparison_pref_dscores_all(idata).extra_comparison_max_7_6_match_tune;
+    extra_comparison_max_7_6_all = [extra_comparison_max_7_6_all extra_comparison_max_7_6];
+
+
+end
+
+
+%%
+fig = figure;
+%sgtitle('Max dF/F')
+%a = subplot(2,2,1)
+h=cdfplot(extra_comparison_max_1_3_all);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
+hold on
+j=cdfplot(extra_comparison_max_3_1_all);
+set(j, 'LineStyle', '--', 'Color', [.0 .0 .0], 'LineWidth',2);
+m=cdfplot(extra_comparison_max_6_7_all);
+set(m, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',2);
+n=cdfplot(extra_comparison_max_7_6_all);
+set(n, 'LineStyle', '--', 'Color', [.75 .75 .75], 'LineWidth',2);
+legend(['Base1'], ['Base2'], ['Post-dark + 4hr'], ['Post-dark + 7d'], 'Location', 'southeast')
+xlim([0 1])
+xlabel(['Max dF/F'])
+ylabel(['% of cells'])
+title(['7-day (extra) comparisons'])
+hold off
+print(fullfile(realfnout, ['pooled_extra_comparison_max_7d.pdf']), '-dpdf', '-bestfit')
 
 %%
 
 
+%%
+figure;
+cdfplot(extra_comparison_max_d_1_3_all)
+hold on
+cdfplot(extra_comparison_max_d_6_7_all)
 
+figure;
+cdfplot(extra_comparison_k_d_1_3_all)
+hold on
+cdfplot(extra_comparison_k_d_6_7_all)
+
+figure;
+cdfplot(extra_comparison_pref_d_1_3_all)
+hold on
+cdfplot(extra_comparison_pref_d_6_7_all)
+%%
+%%
+%%
+figure;
+subplot(3,2,1)
+scatter(comparison_pref_d_1_2_all, comparison_max_d_1_2_all)
+subplot(3,2,2)
+scatter(comparison_pref_d_4_5_all, comparison_max_d_4_5_all)
+subplot(3,2,3)
+scatter(comparison_pref_d_3_4_all, comparison_max_d_3_4_all)
+subplot(3,2,4)
+scatter(comparison_pref_d_5_6_all, comparison_max_d_5_6_all)
+subplot(3,2,5)
+scatter(comparison_pref_d_1_3_all, comparison_max_d_1_3_all)
+subplot(3,2,6)
+scatter(comparison_pref_d_5_7_all, comparison_max_d_5_7_all)
 %%
 %indexing - use find
 i2537_index_base1 = find(base1_mouse_id_all == 'i2537');

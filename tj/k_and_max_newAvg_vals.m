@@ -1,4 +1,7 @@
-% Extracting k value and max response from analyzed data
+% this is used for extracting avg tuning curve, k value, and max response from analyzed data,
+% regardless of experiment. this is performed on an individual animal basis, one session at a time
+
+%%
 clear all
 clc
 close all
@@ -9,7 +12,7 @@ close all
 % dataset = 'exp_list_darklight_tjw';
 dataset = 'exp_list_darklight_actual_tjw';
 eval(dataset); %load dataset
-d1 = 21; %from expt list
+d1 = 49; %from expt list
 mouse = expt(d1).mouse; %mouse
 ref_str = ['runs-' expt(d1).runs];
 img_area = expt(d1).img_loc{1};
@@ -23,6 +26,7 @@ fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home
 
 
 %%
+%load files
 CD = fnout; %finds current directory
 cd(CD); %sets current directory
 files = dir('*.mat');
@@ -34,7 +38,9 @@ files = dir('*.mat');
  end
  clear files, clear baseFileName, clear fullFileName, clear k
  
- %%
+%%
+%this part will do von mises fitting and identify the k and max values
+
 Dir = celleqel2mat_padded(input.tGratingDirectionDeg); %directions of each trial
 nDirs = unique(Dir); %how many directions
 Ori = Dir;
@@ -61,6 +67,7 @@ max_dfof = max_dfof(1,:);
 save(fullfile(fnout, [date '_' mouse '_' ref_str '_k_and_max_vals.mat']),'k1','max_dfof')
 
 %%
+%loading info for the avg tuning curves
 dir_mat = cell2mat(input.tGratingDirectionDeg);
 ori_mat = dir_mat;
 ori_mat(find(dir_mat>=180)) = ori_mat(dir_mat>=180)-180;
@@ -71,7 +78,7 @@ nDir = length(dirs);
 nCells = length(avgResponseEaOri);
 
 %%
-
+%avg tuning curve calculation
 [maxResp prefOri_ind] = max(avgResponseEaOri,[],2);
 newAvg = zeros(nCells,nOri);
 for iCell = 1:nCells
@@ -87,9 +94,11 @@ for iCell = 1:nCells
 end
 
 %%
+%plot avg tuning curve
 figure;
 fast_errbar(1:8,newAvg,1,'color',[0.3 0 0.5]);
 fix_axes(gcf,16,'Orientation','dF/F'); axis square
 
 %%
+%save avg tuning curve info
 save(fullfile(fnout, [date '_' mouse '_' ref_str '_newAvg.mat']),'newAvg')

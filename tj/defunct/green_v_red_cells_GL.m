@@ -1,3 +1,5 @@
+%this seems to be the same as green_v_red_cells so I am putting it in defunct
+%%
 clear all
 clc
 

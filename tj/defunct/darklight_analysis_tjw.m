@@ -1,3 +1,12 @@
+%this is a defunct script from an imaging paradigm that was not very useful involving the dark light
+%experiment, in which there were no time-matched comparisons to make - therefore, these data are not
+%useful and the script will not be well-commented
+
+%img_point: 1 = pre dark baseline, 2 = post dark, 3 = post 4hr light, 4 = 7
+%day light
+
+
+%%
 %clear everything
 clear all
 clear all global
