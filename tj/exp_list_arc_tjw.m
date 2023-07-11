@@ -1,3 +1,14 @@
+%This experiment list is used for the Arc imaging project, consisting of tj and grace's data from
+%KRAB mice injected into V1 with GCaMP7f in green and Arc promoter/enhancer (tj/grace, respectively)
+% or LacZ in red
+
+%the timeline consists of 3-session periods of comparison, where day 2 follows day 1 by 2(+/-1) days
+%and day 3 follows day 1 by 7(+/-1) days
+
+%a mouse that has imaging days 4,5,6 instead of 1,2,3 means that mouse was imaged for 2 separate
+%sets of 3-session periods
+
+%%
 expt = [];
 frameRateHz = 15.5;
 %% i2512 - KRAB - LacZ Day 1 in V1
@@ -399,7 +410,7 @@ expt(21).z = 165.62;
 expt(21).obj = '16x';
 expt(21).zoom = 2.0;
 expt(21).wheel = 1;
-%% i2515 - KRAB - ArcProm Day 4 in V1
+%% i2515 - KRAB - ArcProm Day 4 in V1 - VERY POOR MATCHING - DO NOT USE
 expt(22).mouse = 'i2515';
 expt(22).sex = 'male';
 expt(22).date = '220413';
@@ -418,7 +429,7 @@ expt(22).z = 175.00;
 expt(22).obj = '16x';
 expt(22).zoom = 2.0;
 expt(22).wheel = 1;
-%% i2515 - KRAB - ArcProm Day 5 in V1
+%% i2515 - KRAB - ArcProm Day 5 in V1- VERY POOR MATCHING - DO NOT USE
 expt(23).mouse = 'i2515';
 expt(23).sex = 'male';
 expt(23).date = '220415';
@@ -437,7 +448,7 @@ expt(23).z = 165.62;
 expt(23).obj = '16x';
 expt(23).zoom = 2.0;
 expt(23).wheel = 1;
-%% i2515 - KRAB - ArcProm Day 6 in V1
+%% i2515 - KRAB - ArcProm Day 6 in V1- VERY POOR MATCHING - DO NOT USE
 expt(24).mouse = 'i2515';
 expt(24).sex = 'male';
 expt(24).date = '220419';
@@ -570,7 +581,7 @@ expt(30).z = 163.28;
 expt(30).obj = '16x';
 expt(30).zoom = 2.0;
 expt(30).wheel = 1;
-%% i2516 - KRAB - ArcProm Day 4 in V1
+%% i2516 - KRAB - ArcProm Day 4 in V1- VERY POOR MATCHING - DO NOT USE
 expt(31).mouse = 'i2516';
 expt(31).sex = 'female';
 expt(31).date = '220511';
@@ -589,7 +600,7 @@ expt(31).z = 167.96;
 expt(31).obj = '16x';
 expt(31).zoom = 2.0;
 expt(31).wheel = 1;
-%% i2516 - KRAB - ArcProm Day 5 in V1
+%% i2516 - KRAB - ArcProm Day 5 in V1- VERY POOR MATCHING - DO NOT USE
 expt(32).mouse = 'i2516';
 expt(32).sex = 'female';
 expt(32).date = '220513';
@@ -608,7 +619,7 @@ expt(32).z = 167.96;
 expt(32).obj = '16x';
 expt(32).zoom = 2.0;
 expt(32).wheel = 1;
-%% i2516 - KRAB - ArcProm Day 6 in V1
+%% i2516 - KRAB - ArcProm Day 6 in V1- VERY POOR MATCHING - DO NOT USE
 expt(33).mouse = 'i2516';
 expt(33).sex = 'female';
 expt(33).date = '220524';

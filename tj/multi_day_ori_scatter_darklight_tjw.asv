@@ -590,17 +590,17 @@ comparison_d_score_max_5_6 = (comparison_max_5_6_match_tune-comparison_max_6_5_m
 
 
 %% EXTRA COMPARISON
-%base1 to base2 (5-6) vs postdark+4hr to postdarkd (5-7)
+%postdark+4h light to postdark+7d (5-6) vs postdark to postdark+7d (5-7)
 
 %find cell IDs for cells that are present in both comparison sets; i.e.
 %these are cells that are tuned and matched for each respective period AND
 %that can be identified between periods
-base1_base2_vs_postdarkplus4h_postdark7d_id = intersect(id_match_tune_1_3, id_match_tune_5_6);
+postdarkplus4h_postdark7d_vs_postdark_postdark7d_id = intersect(id_match_tune_5_6, id_match_tune_5_7);
 
 %we will load info here similar to what we did above
 
-d1 = 1; %base1 in expt list
-d2 = 3; %base2 in expt list
+d1 = 5; %base1 in expt list
+d2 = 6; %base2 in expt list
 mouse = expt(d1).mouse; 
 ref_str_d1 = ['runs-',expt(d1).runs];
 ref_str_d2 = ['runs-',expt(d2).runs]; 
@@ -624,7 +624,7 @@ d2_k_max = load(fullfile(fnout, [date_d2 '_' mouse], [date_d2 '_' mouse '_' ref_
 
 %do the same as above for the other comparison
 
-d3 = 6; %postdark in expt list
+d3 = 5; %postdark in expt list
 d4 = 7; %postdarkd in expt list
 mouse = expt(d3).mouse; 
 ref_str_d3 = ['runs-',expt(d3).runs];
@@ -649,68 +649,66 @@ d4_k_max = load(fullfile(fnout, [date_d4 '_' mouse], [date_d4 '_' mouse '_' ref_
 
 %find the pref oris for cells on the first comparison that can be found on
 %the second comparison as well
-extra_comparison_prefori_1_3_match_tune = d1_ori.prefOri(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
-extra_comparison_prefori_3_1_match_tune = d2_ori.prefOri(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
+extra_comparison_prefori_5_6_match_tune = d1_ori.prefOri(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
+extra_comparison_prefori_6_5_match_tune = d2_ori.prefOri(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
 
-extra_comparison_prefori_6_7_match_tune = d3_ori.prefOri(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
-extra_comparison_prefori_7_6_match_tune = d4_ori.prefOri(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
+extra_comparison_prefori_5_7_match_tune = d3_ori.prefOri(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
+extra_comparison_prefori_7_5_match_tune = d4_ori.prefOri(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
 
 %same as pref ori above but for k here and max below
-extra_comparison_k_1_3_match_tune = d1_k_max.k1(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
-extra_comparison_k_3_1_match_tune = d2_k_max.k1(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
+extra_comparison_k_5_6_match_tune = d1_k_max.k1(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
+extra_comparison_k_6_5_match_tune = d2_k_max.k1(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
 
-extra_comparison_k_6_7_match_tune = d3_k_max.k1(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
-extra_comparison_k_7_6_match_tune = d4_k_max.k1(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
+extra_comparison_k_5_7_match_tune = d3_k_max.k1(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
+extra_comparison_k_7_5_match_tune = d4_k_max.k1(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
 
-extra_comparison_max_1_3_match_tune = d1_k_max.max_dfof(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
-extra_comparison_max_3_1_match_tune = d2_k_max.max_dfof(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
+extra_comparison_max_5_6_match_tune = d1_k_max.max_dfof(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
+extra_comparison_max_6_5_match_tune = d2_k_max.max_dfof(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
 
-extra_comparison_max_6_7_match_tune = d3_k_max.max_dfof(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
-extra_comparison_max_7_6_match_tune = d4_k_max.max_dfof(1,base1_base2_vs_postdarkplus4h_postdark7d_id);
-
+extra_comparison_max_5_7_match_tune = d3_k_max.max_dfof(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
+extra_comparison_max_7_5_match_tune = d4_k_max.max_dfof(1,postdarkplus4h_postdark7d_vs_postdark_postdark7d_id);
 
 %%
 %now we take the info we got above and convert to change in pref ori
 %scores, change in k scores, and change in max scores
 
 %d1
-extra_comparison_dscore_prefori_d1_d2_match = double(extra_comparison_prefori_1_3_match_tune>90);
+extra_comparison_dscore_prefori_d1_d2_match = double(extra_comparison_prefori_5_6_match_tune>90);
 extra_comparison_dscore_prefori_d1_d2_match(extra_comparison_dscore_prefori_d1_d2_match>0) = 180;
-extra_comparison_dscore_prefori_d1_d2_match = abs(extra_comparison_dscore_prefori_d1_d2_match-extra_comparison_prefori_1_3_match_tune);
+extra_comparison_dscore_prefori_d1_d2_match = abs(extra_comparison_dscore_prefori_d1_d2_match-extra_comparison_prefori_5_6_match_tune);
 %d2
-extra_comparison_dscore_prefori_d2_match = double(extra_comparison_prefori_3_1_match_tune>90);
+extra_comparison_dscore_prefori_d2_match = double(extra_comparison_prefori_6_5_match_tune>90);
 extra_comparison_dscore_prefori_d2_match(extra_comparison_dscore_prefori_d2_match>0) = 180;
-extra_comparison_dscore_prefori_d2_match = abs(extra_comparison_dscore_prefori_d2_match-extra_comparison_prefori_3_1_match_tune);
+extra_comparison_dscore_prefori_d2_match = abs(extra_comparison_dscore_prefori_d2_match-extra_comparison_prefori_6_5_match_tune);
 
-extra_comparison_d_score_prefori_1_3 = abs(extra_comparison_dscore_prefori_d1_d2_match-extra_comparison_dscore_prefori_d2_match);
+extra_comparison_d_score_prefori_5_6 = abs(extra_comparison_dscore_prefori_d1_d2_match-extra_comparison_dscore_prefori_d2_match);
 
 
 %d3
-extra_comparison_dscore_prefori_d3_d4_match = double(extra_comparison_prefori_6_7_match_tune>90);
+extra_comparison_dscore_prefori_d3_d4_match = double(extra_comparison_prefori_5_7_match_tune>90);
 extra_comparison_dscore_prefori_d3_d4_match(extra_comparison_dscore_prefori_d3_d4_match>0) = 180;
-extra_comparison_dscore_prefori_d3_d4_match = abs(extra_comparison_dscore_prefori_d3_d4_match-extra_comparison_prefori_6_7_match_tune);
+extra_comparison_dscore_prefori_d3_d4_match = abs(extra_comparison_dscore_prefori_d3_d4_match-extra_comparison_prefori_5_7_match_tune);
 %d4
-extra_comparison_dscore_prefori_d4_match = double(extra_comparison_prefori_7_6_match_tune>90);
+extra_comparison_dscore_prefori_d4_match = double(extra_comparison_prefori_7_5_match_tune>90);
 extra_comparison_dscore_prefori_d4_match(extra_comparison_dscore_prefori_d4_match>0) = 180;
-extra_comparison_dscore_prefori_d4_match = abs(extra_comparison_dscore_prefori_d4_match-extra_comparison_prefori_7_6_match_tune);
+extra_comparison_dscore_prefori_d4_match = abs(extra_comparison_dscore_prefori_d4_match-extra_comparison_prefori_7_5_match_tune);
 
-extra_comparison_d_score_prefori_6_7 = abs(extra_comparison_dscore_prefori_d3_d4_match-extra_comparison_dscore_prefori_d4_match);
-
-
-
-extra_comparison_d_score_k_1_3 = (extra_comparison_k_1_3_match_tune-extra_comparison_k_3_1_match_tune);
-
-
-extra_comparison_d_score_k_6_7 = (extra_comparison_k_6_7_match_tune-extra_comparison_k_7_6_match_tune);
+extra_comparison_d_score_prefori_5_7 = abs(extra_comparison_dscore_prefori_d3_d4_match-extra_comparison_dscore_prefori_d4_match);
 
 
 
+extra_comparison_d_score_k_5_6 = (extra_comparison_k_5_6_match_tune-extra_comparison_k_6_5_match_tune);
 
-extra_comparison_d_score_max_1_3 = (extra_comparison_max_1_3_match_tune-extra_comparison_max_3_1_match_tune);
+
+extra_comparison_d_score_k_5_7 = (extra_comparison_k_5_7_match_tune-extra_comparison_k_7_5_match_tune);
 
 
-extra_comparison_d_score_max_6_7 = (extra_comparison_max_6_7_match_tune-extra_comparison_max_7_6_match_tune);
 
+
+extra_comparison_d_score_max_5_6 = (extra_comparison_max_5_6_match_tune-extra_comparison_max_6_5_match_tune);
+
+
+extra_comparison_d_score_max_5_7 = (extra_comparison_max_5_7_match_tune-extra_comparison_max_7_5_match_tune);
 
 
 
@@ -753,7 +751,7 @@ set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
 hold on
 j=cdfplot(comparison_d_score_prefori_5_7);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',1);
-legend(['Base1 - Base2 (n= ', num2str(length(comparison_d_score_prefori_1_3)), ')'], ['Post Dark - Post Light 7d (n= ', num2str(length(comparison_d_score_prefori_5_7)), ')'], 'Location', 'southeast')
+legend(['Base1 - Base2 (n= ', num2str(length(comparison_d_score_prefori_1_3)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_d_score_prefori_5_7)), ')'], 'Location', 'southeast')
 xlabel([])
 ylabel([])
 title([])
@@ -804,7 +802,7 @@ set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
 hold on
 j=cdfplot(comparison_d_score_k_5_7);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',1);
-legend(['Base1 - Base2 (n= ', num2str(length(comparison_d_score_k_1_3)), ')'], ['Post Dark - Post Light 7d (n= ', num2str(length(comparison_d_score_k_5_7)), ')'], 'Location', 'southeast')
+legend(['Base1 - Base2 (n= ', num2str(length(comparison_d_score_k_1_3)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_d_score_k_5_7)), ')'], 'Location', 'southeast')
 xlabel([])
 ylabel([])
 title([])
@@ -856,7 +854,7 @@ set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
 hold on
 j=cdfplot(comparison_d_score_max_5_7);
 set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',1);
-legend(['Base1 - Base2 (n= ', num2str(length(comparison_d_score_max_1_3)), ')'], ['Post Dark - Post Light 7d (n= ', num2str(length(comparison_d_score_max_5_7)), ')'], 'Location', 'southeast')
+legend(['Base1 - Base2 (n= ', num2str(length(comparison_d_score_max_1_3)), ')'], ['Post Light 4hr - Post Light 7d (n= ', num2str(length(comparison_d_score_max_5_7)), ')'], 'Location', 'southeast')
 xlabel([])
 ylabel([])
 title([])
@@ -871,6 +869,23 @@ ylabel(han,'% of Cells');
 xlabel(han,'Change in Max dF/F Value');
 
 print(fullfile(newfnout, [mouse,  '_comparison_max_change.pdf']), '-dpdf', '-bestfit')
+
+
+%%
+fig = figure;
+sgtitle('Pref Ori Changes')
+a=subplot(2,2,1)
+h=cdfplot(extra_comparison_d_score_prefori_5_6);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+hold on
+j=cdfplot(extra_comparison_d_score_prefori_5_7);
+set(j, 'LineStyle', '-', 'Color', [.75 .75 .75], 'LineWidth',1);
+legend(['Base1 - Base2 + 4d (n= ', num2str(length(extra_comparison_d_score_prefori_5_6)), ')'], ['Base2 - Post Dark (n= ', num2str(length(extra_comparison_d_score_prefori_5_7)), ')'], 'Location', 'southeast')
+xlim([0 90])
+xlabel([])
+ylabel([])
+title([])
+hold off
 
 
 
@@ -902,7 +917,7 @@ title('Baseline1 to Baseline2')
 f=subplot(3,2,6)
 scatter(comparison_k_5_7_match_tune, comparison_k_7_5_match_tune)
 refline(1,0)
-title('Postdark to Postdark7d')
+title('Postdark+4hr to Postdarkd')
 
 han=axes(fig,'visible','off'); 
 han.Title.Visible='on';
@@ -944,7 +959,7 @@ title('Baseline1 to Baseline2')
 f=subplot(3,2,6)
 scatter(comparison_max_5_7_match_tune, comparison_max_7_5_match_tune)
 refline(1,0)
-title('Postdark to Postdark7d')
+title('Postdark+4hr to Postdarkd')
 
 han=axes(fig,'visible','off'); 
 han.Title.Visible='on';
@@ -986,7 +1001,7 @@ title('Baseline1 to Baseline2')
 f=subplot(3,2,6)
 scatter(comparison_prefori_5_7_match_tune, comparison_prefori_7_5_match_tune)
 refline(1,1)
-title('Postdark to Postdark7d')
+title('Postdark+4hr to Postdarkd')
 
 han=axes(fig,'visible','off'); 
 han.Title.Visible='on';
@@ -1018,8 +1033,4 @@ save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_same_cell_prefo
     'comparison_prefori_3_4_match_tune', 'comparison_prefori_4_3_match_tune', 'comparison_prefori_5_6_match_tune', 'comparison_prefori_6_5_match_tune', 'comparison_prefori_1_3_match_tune', 'comparison_prefori_3_1_match_tune', ...
     'comparison_prefori_5_7_match_tune', 'comparison_prefori_7_5_match_tune')
 
-%%
-save(fullfile(newfnout, [mouse, '_', img_area, '_', img_layer, '_extra_comp.mat']),'extra_comparison_d_score_prefori_1_3', 'extra_comparison_d_score_prefori_6_7', 'extra_comparison_d_score_k_1_3', ...
-    'extra_comparison_d_score_k_6_7', 'extra_comparison_d_score_max_1_3', 'extra_comparison_d_score_max_6_7', 'extra_comparison_max_1_3_match_tune', 'extra_comparison_max_3_1_match_tune', ...
-    'extra_comparison_max_6_7_match_tune', 'extra_comparison_max_7_6_match_tune')
 

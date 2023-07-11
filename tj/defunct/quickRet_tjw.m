@@ -2,15 +2,15 @@ clear all
 clear all global
 close all
 
-date = '220706';
-mouse = 'i2519';
-ImgFolder = '001';
-time = '0825';
+date = '211213';
+mouse = 'tj_101321';
+ImgFolder = '002';
+time = '1412';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
-datemouse = [date '_' mouse];
+datemouse = [date '_' mouse]
 
 run_str = ['runs-' ImgFolder(1,:)];
 if nrun>1
@@ -20,7 +20,16 @@ end
 data = [];
 clear temp
 for irun = 1:nrun
-    CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_imaging\' mouse '\' datemouse '\' ImgFolder(irun,:)];
+    if strcmp(rc.name,'ashle')
+    CD = ['Z:\home\ashley\data\' mouse '\two-photon imaging\' date '\' ImgFolder(irun,:)];
+    elseif strcmp(rc.name,'celine')
+    CD = ['Z:\home\celine\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
+    elseif strcmp(rc.name,'tw299')
+    CD = ['Z:\All_Staff\home\tj\2p_Imaging\' mouse '\' datemouse '\' ImgFolder(irun,:)];
+    else
+    %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' mouse '\' date '\' ImgFolder(irun,:)];
+    CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' [date '_' mouse] '\' ImgFolder(irun,:)];
+    end
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
@@ -34,7 +43,16 @@ for irun = 1:nrun
         data_temp = data_temp(1,:,:,:);
     end
     
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' '''' mouse '''' '-' date '-' time(irun,:) '.mat'];
+    
+    if strcmp(rc.name,'ashle')        
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
+    elseif strcmp(rc.name,'celine')
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' subnum '-' date '-' time(irun,:) '.mat'];
+    elseif strcmp(rc.name,'tw299')
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
+    else
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse  date '-' time(irun,:) '.mat'];
+    end
     load(fName);
     expt_input = input;
     temp(irun) = expt_input;
@@ -129,11 +147,20 @@ expt_input = concatenateDataBlocks(temp);
 %             img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
             %clim([0 max(data_dfof_avg_all(:))./2])
         end
-            mkdir(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
-            print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')
+        if strcmp(rc.name,'linds')
+            mkdir(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
+            print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')
+        elseif strcmp(rc.name,'robin')
+            mkdir(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
+            print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')    
+        end
 
-
-       
+        if strcmp(rc.name,'ashle')
+            if ~exist(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
+                mkdir(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
+            end
+            print(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder,'quickRet.pdf'),'-dpdf','-fillpage')
+        end
         pixThreshold = 0.2*max(data_dfof_avg_all(:));
         img_avg_resp = zeros(1,nStim);
         for i = 1:nStim 
@@ -188,4 +215,8 @@ expt_input = concatenateDataBlocks(temp);
     figure; imagesc(mean(data,3));
     axis off
     title([mouse ' ' date])
-    print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
+    if strcmp(rc.name,'linds')
+    print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
+    elseif strcmp(rc.name,'robin')
+           print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
+    end
