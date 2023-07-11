@@ -6,7 +6,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 %260
-sess_list = [285];%enter all the sessions you want to concatenate
+sess_list = [285 300 295];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -192,13 +192,13 @@ for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
         
-        tc_green_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,pass_green,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,pass_green,iCon,iSize),[],2);
-        tc_green_se_stat{id}(:,iCon,iSize)=green_std/sqrt(length(pass_green));
+        tc_green_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_stat{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
         
-        tc_red_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,pass_red,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,pass_red,iCon,iSize),[],2);
-        tc_red_se_stat{id}(:,iCon,iSize)=red_std/sqrt(length(pass_red));
+        tc_red_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_stat{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
         
         clear green_std red_std
       end 
@@ -227,7 +227,7 @@ for iCon = 1:nCon
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-    title(['-HTP',' n = ', num2str(length(pass_green))])
+    title(['-HTP',' n = ', num2str(length(green_ind_concat))])
     
     ylabel('dF/F') 
     xlabel('s') 
@@ -245,7 +245,7 @@ for iCon = 1:nCon
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
     ylabel('dF/F') 
     xlabel('s') 
-    title(['+HTP',' n = ', num2str(length(pass_red))])
+    title(['+HTP',' n = ', num2str(length(red_ind_concat))])
     
     x0=5;
     y0=5;
@@ -357,15 +357,15 @@ sizeResp_red_se_stat = cell(1,nd); %same for red
 
 
 for id = 1:nd
-    green_data=squeeze(mean(conBySize_resp_stat_concat{id}(pass_green,:,:),2));%pulling the green cells and averaging over contrast
+    green_data=squeeze(mean(conBySize_resp_stat_concat{id}(green_ind_concat,:,:),2));%pulling the green cells and averaging over contrast
     sizeResp_green_avrg_stat{id}=nanmean(green_data,1);
     green_std=nanstd(green_data,1);
-    sizeResp_green_se_stat{id}=green_std/sqrt(length(pass_green));
+    sizeResp_green_se_stat{id}=green_std/sqrt(length(green_ind_concat));
     
-    red_data=squeeze(mean(conBySize_resp_stat_concat{id}(pass_red,:,:),2));%pulling the red cells and averaging over contrast
+    red_data=squeeze(mean(conBySize_resp_stat_concat{id}(red_ind_concat,:,:),2));%pulling the red cells and averaging over contrast
     sizeResp_red_avrg_stat{id}=nanmean(red_data,1);
     red_std=nanstd(red_data,1);
-    sizeResp_red_se_stat{id}=red_std/sqrt(length(pass_red));
+    sizeResp_red_se_stat{id}=red_std/sqrt(length(red_ind_concat));
     
     clear green_std red_std green_data red_data
  
@@ -402,7 +402,7 @@ subplot(2,2,1) %for the first day
 errorbar(sizes,sizeResp_green_avrg_stat{pre},sizeResp_green_se_stat{pre},'k');
 hold on
 errorbar(sizes,sizeResp_green_avrg_stat{post},sizeResp_green_se_stat{post},'b');
-title(['Stationary -HTP',' n = ', num2str(length(pass_green))])
+title(['Stationary -HTP',' n = ', num2str(length(green_ind_concat))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
@@ -412,7 +412,7 @@ subplot(2,2,2) %for the second day
 errorbar(sizes,sizeResp_red_avrg_stat{pre},sizeResp_red_se_stat{pre},'k');
 hold on
 errorbar(sizes,sizeResp_red_avrg_stat{post},sizeResp_red_se_stat{post},'b');
-title(['Stationary +HTP',' n = ', num2str(length(pass_red))])
+title(['Stationary +HTP',' n = ', num2str(length(red_ind_concat))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')

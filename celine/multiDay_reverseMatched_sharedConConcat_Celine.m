@@ -9,9 +9,9 @@ eval(ds);
 %  138 142 163 171 178 190 24 hour
 % 206 210 214 atropine
 % 201 197 emx forward matched
-% 2023 YM90K mice 235 240 249 252 255
-% capture > 2x
-sess_list = [142   178   190   240   249   252   255   284];%enter all the sessions you want to concatenate
+% 133 142 240 255 249 178 190 %high capture YM90K
+
+sess_list = [201 197 ];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -77,8 +77,8 @@ LMI_concat = cell(1,nd);
 data_resp_concat = cell(1,nd);
 red_fluor_concat=[];
 green_fluor_concat=[];
-redR_concat=[];
-R_values_concat=[];
+% redR_concat=[];
+% R_values_concat=[];
 wheel_corr_concat=cell(1,nd);
 meanF_concat=cell(1,nd);
 mean_green_concat=cell(1,nd);
@@ -109,7 +109,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'input.mat'))
     load(fullfile(fn_multi,'locomotion.mat'))
     load(fullfile(fn_multi,'fluor_intensity.mat'))
-    load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
+   load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
    
     
 
@@ -140,8 +140,8 @@ for iSess = 1:nSess
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
-    redR_concat = [redR_concat,R_red];
-    R_values_concat = [R_values_concat, R_p_values];
+%   redR_concat = [redR_concat,R_red];
+ %  R_values_concat = [R_values_concat, R_p_values];
     clear cons
     
     
@@ -163,7 +163,7 @@ for iSess = 1:nSess
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
-        mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
+      mean_green_concat{id}=cat(1,mean_green_concat{id},mean_green_corr(:,id));
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
             pref_allTrials_stat_concat{i,id}=[pref_allTrials_stat_concat{i,id},pref_allTrials_stat{iCon,id}];
@@ -202,14 +202,14 @@ mean(RIx_concat{post})
 
 
 
-%%
-% loop to add "b" to the end of mice IDs where I have more than one session
-% witht that mouse
-%set z to be the order position of first session that is at the earlier timepoint
-z = 12;
-for iMouse = z:nSess
-    mice{iMouse}=[mice{iMouse},'b'];
-end
+% %%
+% % loop to add "b" to the end of mice IDs where I have more than one session
+% % witht that mouse
+% %set z to be the order position of first session that is at the earlier timepoint
+% z = 12;
+% for iMouse = z:nSess
+%     mice{iMouse}=[mice{iMouse},'b'];
+% end
 %% find cells that I have running data for on both days
 haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
 
@@ -281,9 +281,9 @@ tc_red_se_stat = cell(1,nd); %same for red
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon},iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon},iCon),[],2);
-    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}));
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(green_ind_concat));
     
     tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon),2);
     red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon),[],2);
@@ -304,17 +304,17 @@ subplot(1,2,1) %for the first day
 
 
 
-ylim([-.02 .3]);
+ylim([-.02 .25]);;
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon),'b','transparent');
 hold on
-%line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-fill([.0 0 z z],[-.02 .3 .3 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .3 .3 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-title(['-HTP',' n = ', num2str(length(haveRunning_green{iCon}))])
+title(['-HTP',' n = ', num2str(length(green_ind_concat))])
 
 ylabel('dF/F') 
 xlabel('s') 
@@ -325,14 +325,14 @@ subplot(1,2,2) %for the second day
 shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
-ylim([-.02 .3]);
+ylim([-.02 .25]);;
 hold on
-%line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
-fill([.0 0 z z],[-.02 .3 .3 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
+fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .3 .3 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 title(['+HTP',' n = ', num2str(length(red_ind_concat))])
 
 x0=5;
@@ -383,14 +383,14 @@ subplot(1,2,1) %for the first day
 
 
 
-ylim([-.02 .3]);
+ylim([-.02 .25]);;
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon),'b','transparent');
 hold on
-%line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-fill([.0 0 z z],[-.02 .3 .3 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .25 .25 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 title(['-HTP',' n = ', num2str(length(haveRunning_green{iCon}))])
@@ -404,14 +404,14 @@ subplot(1,2,2) %for the second day
 shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
-ylim([-.02 .3]);
+ylim([-.02 .25]);;
 hold on
-%line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
-fill([.0 0 z z],[-.02 .3 .3 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
+fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .25 .25 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 title(['+HTP',' n = ', num2str(length(haveRunning_red{iCon}))])
 
 x0=5;
@@ -495,16 +495,16 @@ t=(t-(double(stimStart)-1))/double(frame_rate);
 for iCon = 1:nCon
 figure
 subplot(1,2,1) %for the first day
-fill([.0 0 z z],[-.02 .35 .35 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
-hold on
 shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon),tc_green_se_loc{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_green_avrg_loc{post}(:,iCon),tc_green_se_loc{post}(:,iCon),'b');
-ylim([-.02 .35]);
+ylim([-.02 .45]);;
 hold on
-%line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+hold on
+fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .45 .45 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 title(['-HTP',' n = ', num2str(length(haveRunning_green{iCon}))])
 ylabel('dF/F') 
 xlabel('s') 
@@ -512,16 +512,16 @@ set(gca,'XColor', 'none','YColor','none')
 
 
 subplot(1,2,2) %for the second day
-fill([.0 0 z z],[-.02 .35 .35 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
-hold on
 shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon),tc_red_se_loc{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon),tc_red_se_loc{post}(:,iCon),'b');
-ylim([-.02 .35]);
+ylim([-.02 .45]);;
 hold on
-%line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+hold on
+fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .45 .45 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 ylabel('dF/F') 
 xlabel('s') 
 title(['+HTP',' n = ', num2str(length(haveRunning_red{iCon}))])
@@ -1013,10 +1013,11 @@ fractFacil_allCond = sum(squeeze(mean(facilitated(:,:,red_ind_concat),1)),2)/len
 figure;
 bar(cons,[fractSupp_stat,fractFacil_stat])
 xticks([.25 .5 1])
-ylabel(["Fraction cells"]) 
+ylabel(["Fraction HTP+ cells"]) 
 xlabel('Contrast')
 set(gca,'TickDir','out')
 box off
+title('Stationary, all keep cell')
 
 
 %pull out red cells, get fractions that are suppressed vs. favilitated, for
@@ -1038,6 +1039,7 @@ box off
 set(gca,'TickDir','out')
 legend('Suppressed','Facilitated')
 ylabel('Fraction of +HTP cells')
+title('Cells matched across behavioral state w/in contrast')
 
 %looking at the value of the normalized difference for different conditions
 figure;
@@ -1077,24 +1079,38 @@ norm_diff_red_allKeep = nanmedian(norm_diff(1,:,red_ind_concat),3)
 figure;bar(cons,norm_diff_red_allKeep)
 
 figure;bar(cons,[norm_diff_red(1,:)',norm_diff_red(2,:)'])
-
+%%
 figure;
-boxplot((squeeze(mean(norm_diff(:,:,red_all),2)))');hold on;
-scatter([1 2],(squeeze(mean(norm_diff(:,:,red_all),2)))','jitter', 'on', 'jitterAmount',.1)
-ylim([-5 5])
+boxchart((squeeze(mean(norm_diff(:,:,red_ind_concat),2)))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75]);hold on;
+scatter([1 2],(squeeze(mean(norm_diff(:,:,red_ind_concat),2)))',"black",'jitter', 'on', 'jitterAmount',.1)
+ylim([-6 6])
 xticklabels({'Stationary','Running'})
-ylabel('Normalized change')
-title('Averaged over contrast')
+ylabel('(Post-Pre) / std dev Pre')
+title('Normalized change, averaged over contrast, all red keep')
 hold off
+set(gca,'TickDir','out')
+box off
 
 figure;
-boxplot(squeeze(mean(norm_diff(1,:,red_ind_concat),1))');hold on
-scatter([1 2 3],squeeze(norm_diff(1,:,red_ind_concat))','jitter', 'on', 'jitterAmount',.1)
+boxchart(squeeze(mean(norm_diff(1,:,red_ind_concat),1))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75]);
+hold on
+scatter([1 2 3],squeeze(norm_diff(1,:,red_ind_concat))',"black",'jitter', 'on', 'jitterAmount',.1)
+
 xticklabels({'25%','50%','100%'})
 ylim([-6 6])
 xlabel('Contrast')
-ylabel('Normalized change')
+ylabel('(Post-Pre) / std dev Pre')
+title('Normalized change, stationary, ')
 hold off
+set(gca,'TickDir','out')
+box off
+
+%%
+z=squeeze(norm_diff(1,:,red_ind_concat))';
+suppFacilColors = nan(size(z));
+
+suppFacilColors(suppFacilColors<1)=[0 0.4470 0.7410];
+
 
 %% comparing R value to change in dF/F
 
@@ -1317,8 +1333,8 @@ lowRInds=red_ind_concat(find(~redR_concat)); %find the indices of red cells with
 
 %alternative version with full TC correlation rather than stimulus response
 %correlation
-% highRsqInds=red_ind_concat(find(mean_green_concat{pre}>median(mean_green_concat{pre}))); %find the indices of red cells with high R
-% lowRsqInds=red_ind_concat(find(mean_green_concat{pre}<median(mean_green_concat{pre}))); %find the indices of red cells with low R
+% highRInds=red_ind_concat(find(mean_green_concat{pre}>median(mean_green_concat{pre}))); %find the indices of red cells with high R
+% lowRInds=red_ind_concat(find(mean_green_concat{pre}<median(mean_green_concat{pre}))); %find the indices of red cells with low R
 
 
 %% stat high and low R
@@ -1331,9 +1347,9 @@ low_se_stat = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high Rsq 
+   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high R 
    % and red cells that I have running data for on both days, for this contrast
-    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low Rsq 
+    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low R 
    % and red cells that I have running data for on both days, for this contrast
 
     hi_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:, redHigh,iCon),2);
@@ -1362,7 +1378,7 @@ subplot(1,2,1)
 shadedErrorBar(t,low_avrg_stat{pre}(:,iCon),low_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,low_avrg_stat{post}(:,iCon),low_se_stat{post}(:,iCon),'b');
-ylim([-.02 .15]);
+ylim([-.02 .25]);;
 hold on
 % line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
 % hold on
@@ -1376,7 +1392,7 @@ set(gca,'XColor', 'none','YColor','none')
 
 
 subplot(1,2,2) 
-ylim([-.02 .15]);
+ylim([-.02 .25]);;
 hold on
 shadedErrorBar(t,hi_avrg_stat{pre}(:,iCon),hi_se_stat{pre}(:,iCon),'k');
 hold on
@@ -1401,7 +1417,7 @@ set(gca,'XColor', 'none','YColor','none')
 
 sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
 
-print(fullfile(fnout,[num2str(cons(iCon)) 'stat_Rsq_timecourses.pdf']),'-dpdf');
+print(fullfile(fnout,[num2str(cons(iCon)) 'stat_R_timecourses.pdf']),'-dpdf');
 clear txt1 highRed lowRed
 end 
 
@@ -1409,9 +1425,9 @@ end
 %% scatterplot of max df/f for day 1 vs day 2 for high and low R red cells
 
 for iCon = 1:nCon
-   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high Rsq 
+   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high R 
    % and red cells that I have running data for on both days, for this contrast
-    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low Rsq 
+    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low R 
    % and red cells that I have running data for on both days, for this contrast
 
 
@@ -1465,7 +1481,7 @@ axis square
 
 
 sgtitle(num2str(cons(iCon)))
-print(fullfile(fnout,[num2str(cons(iCon)) 'stat_maxResp_Rsq.pdf']),'-dpdf','-bestfit')
+print(fullfile(fnout,[num2str(cons(iCon)) 'stat_maxResp_R.pdf']),'-dpdf','-bestfit')
 clear txt1 highRed lowRed
 end
 
@@ -1478,8 +1494,8 @@ p2*2
 clear h1 p1 h2 p2
 
 %% making tc plots for low and high R cells, running
-highRInds=red_ind_concat(find(redR_concat)); %find the indices of red cells with high Rsq
-lowRInds=red_ind_concat(find(~redR_concat)); %find the indices of red cells with low Rsq
+highRInds=red_ind_concat(find(redR_concat)); %find the indices of red cells with high R
+lowRInds=red_ind_concat(find(~redR_concat)); %find the indices of red cells with low R
 
 hi_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
 low_avrg_loc = cell(1,nd); %same for red
@@ -1490,9 +1506,9 @@ low_se_loc = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high Rsq 
+   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high R 
    % and red cells that I have running data for on both days, for this contrast
-    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low Rsq 
+    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low R 
    % and red cells that I have running data for on both days, for this contrast
 
     hi_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:, redHigh,iCon),2);
@@ -1519,7 +1535,7 @@ subplot(1,2,1) %for +HTP
 shadedErrorBar(t,low_avrg_loc{pre}(:,iCon),low_se_loc{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,low_avrg_loc{post}(:,iCon),low_se_loc{post}(:,iCon),'b');
-ylim([-.02 .2]);
+ylim([-.02 .5]);
 hold on
 line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
 hold on
@@ -1530,7 +1546,7 @@ title(['Weakly correlated',' n = ', num2str(length(redLow))])
 set(gca,'XColor', 'none','YColor','none')
 
 subplot(1,2,2) 
-ylim([-.02 .2]);
+ylim([-.02 .5]);
 hold on
 shadedErrorBar(t,hi_avrg_loc{pre}(:,iCon),hi_se_loc{pre}(:,iCon),'k');
 hold on
@@ -1554,17 +1570,17 @@ set(gca,'XColor', 'none','YColor','none')
 
 sgtitle(['running, contrast = ' num2str(cons(iCon))])
 
-print(fullfile(fnout,[num2str(cons(iCon)) 'loc_Rsq_timecourses.pdf']),'-dpdf');
+print(fullfile(fnout,[num2str(cons(iCon)) 'loc_R_timecourses.pdf']),'-dpdf');
 clear txt1 highRed lowRed
 end 
 
 
-%% scatterplot of max df/f for day 1 vs day 2 for high and low Rsq red cells, running
+%% scatterplot of max df/f for day 1 vs day 2 for high and low R red cells, running
 
 for iCon = 1:nCon
-   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high Rsq 
+   redHigh =  intersect(haveRunning_red{iCon},highRInds); %find intersection of red cells with high R 
    % and red cells that I have running data for on both days, for this contrast
-    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low Rsq 
+    redLow =  intersect(haveRunning_red{iCon},lowRInds); %find intersection of red cells with low R 
    % and red cells that I have running data for on both days, for this contrast
 
 
@@ -1618,7 +1634,7 @@ axis square
 
 
 sgtitle(num2str(cons(iCon)))
-print(fullfile(fnout,[num2str(cons(iCon)) 'loc_maxResp_Rsq.pdf']),'-dpdf','-bestfit')
+print(fullfile(fnout,[num2str(cons(iCon)) 'loc_maxResp_R.pdf']),'-dpdf','-bestfit')
 clear txt1 highRed lowRed
 end
 
@@ -1716,13 +1732,13 @@ y=z-1;
 for iCon = 1:nCon
 figure; movegui('center') 
 subplot(2,2,1)
-% scatter((green_means_stat{pre}(1:y,iCon)),(green_means_stat{post}(1:y,iCon)),10,'filled')
+% scatter((green_means_stat{pre}(:,iCon)),(green_means_stat{post}(:,iCon)),10,'filled')
 % hold on
 scatter((green_means_stat{pre}(z:nSess,iCon)),(green_means_stat{post}(z:nSess,iCon)),10,'filled')
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-ylim([0 .2])
-xlim([0 .2])
+% ylim([0 .2])
+% xlim([0 .2])
 hline=refline(1);
 hline.Color = 'k';
 hline.LineStyle = ':';
@@ -1734,7 +1750,7 @@ hold off
 
 
 subplot(2,2,2)
-% scatter(red_means_stat{pre}(1:y,iCon),red_means_stat{post}(1:y,iCon),10, 'filled')
+% scatter(red_means_stat{pre}(:,iCon),red_means_stat{post}(:,iCon),10, 'filled')
 % hold on
 scatter(red_means_stat{pre}(z:nSess,iCon),red_means_stat{post}(z:nSess,iCon),10,'filled')
 % ylabel('post-DART dF/F')
@@ -1751,7 +1767,7 @@ axis square
 hold off
 
 subplot(2,2,3)
-% scatter((green_means_loc{pre}(1:y,iCon)),(green_means_loc{post}(1:y,iCon)),10, 'filled')
+% scatter((green_means_loc{pre}(:,iCon)),(green_means_loc{post}(:,iCon)),10, 'filled')
 % hold on
 scatter((green_means_loc{pre}(z:nSess,iCon)),(green_means_loc{post}(z:nSess,iCon)),10,'filled')
 ylabel('post-DART dF/F')
@@ -1768,7 +1784,7 @@ uistack(hline,'bottom');
 hold off
 
 subplot(2,2,4)
-% scatter((red_means_loc{pre}(1:y,iCon)),(red_means_loc{post}(1:y,iCon)),10, 'filled')
+% scatter((red_means_loc{pre}(:,iCon)),(red_means_loc{post}(:,iCon)),10, 'filled')
 % hold on
 scatter((red_means_loc{pre}(z:nSess,iCon)),(red_means_loc{post}(z:nSess,iCon)),10,'filled')
 % ylabel('post-DART dF/F')
@@ -1791,7 +1807,7 @@ end
 
 %% compile capture values per imaging session
 %
-capture = getCaptureValues(mice);
+capture = getCaptureValues_annulus(mice);
 
 %what do the distributions look like?
 figure;
@@ -1806,28 +1822,22 @@ title('Fluor in CNTRL')
 set(gca, 'TickDir', 'out')
 box off
 subplot(2,2,3)
-histogram(capture(4,:),10)
-title('FOV - CNTRL')
-set(gca, 'TickDir', 'out')
-box off
-subplot(2,2,4)
-histogram(capture(6,:),10)
+histogram(capture(3,:),10)
 title('FOV / CNTRL')
 set(gca, 'TickDir', 'out')
 box off
 
-% identify the sessions with highest and lowest capture
-mice{find(capture(4,:)==max(capture(4,:)))}
-mice{find(capture(4,:)==min(capture(4,:)))}
 
-mice{find(capture(6,:)==max(capture(6,:)))}
-mice{find(capture(6,:)==min(capture(6,:)))}
+% identify the sessions with highest and lowest capture
+mice{find(capture(3,:)==max(capture(3,:)))}
+mice{find(capture(3,:)==min(capture(3,:)))}
+
 
 % do high capture vlaues have more to do with FOV being bright or control
 % being dim?
 figure;
 subplot(1,2,1)
-scatter(capture(1,:),capture(6,:))
+scatter(capture(1,:),capture(3,:))
 ylabel('Capture')
 xlabel('FOV intensity')
 set(gca, 'TickDir', 'out')
@@ -1835,7 +1845,7 @@ box off
 axis square
 
 subplot(1,2,2)
-scatter(capture(2,:),capture(6,:))
+scatter(capture(2,:),capture(3,:))
 ylabel('Capture')
 xlabel('CNTRL intensity')
 set(gca, 'TickDir', 'out')
@@ -1871,9 +1881,9 @@ histogram(red_loc_mouse_diff(:,1))
 for iCon=1:nCon
 figure
 subplot (2,2,1)
-scatter(capture(6,1:y),green_stat_mouse_diff(1:y,iCon),'filled')
+scatter(capture(3,:),green_stat_mouse_diff(:,iCon),'filled')
 hold on
-scatter(capture(6,z:nSess),green_stat_mouse_diff(z:nSess,iCon),'filled')
+%scatter(capture(3,z:nSess),green_stat_mouse_diff(z:nSess,iCon),'filled')
 xlabel('Capture')
 ylabel('Mean dFoF response (post-pre)')
 title('Pyr cells stationary')
@@ -1882,9 +1892,9 @@ hold off
 set(gca, 'TickDir', 'out')
 
 subplot(2,2,2)
-scatter(capture(6,1:y),red_stat_mouse_diff(1:y,iCon),'filled')
+scatter(capture(3,:),red_stat_mouse_diff(:,iCon),'filled')
 hold on
-scatter(capture(6,z:nSess),red_stat_mouse_diff(z:nSess,iCon),'filled')
+%scatter(capture(3,z:nSess),red_stat_mouse_diff(z:nSess,iCon),'filled')
 xlabel('Capture')
 ylabel('Mean dFoF response (post-pre)')
 title('SOM cells stationary')
@@ -1893,9 +1903,9 @@ hold off
 set(gca, 'TickDir', 'out')
 
 subplot (2,2,3)
-scatter(capture(6,1:y),green_loc_mouse_diff(1:y,iCon),'filled')
+scatter(capture(3,:),green_loc_mouse_diff(:,iCon),'filled')
 hold on
-scatter(capture(6,z:nSess),green_loc_mouse_diff(z:nSess,iCon),'filled')
+%scatter(capture(3,z:nSess),green_loc_mouse_diff(z:nSess,iCon),'filled')
 xlabel('Capture')
 ylabel('Mean dFoF response (post-pre)')
 title('Pyr cells running')
@@ -1904,9 +1914,9 @@ hold off
 set(gca, 'TickDir', 'out')
 
 subplot(2,2,4)
-scatter(capture(6,1:y),red_loc_mouse_diff(1:y,iCon),'filled')
+scatter(capture(3,:),red_loc_mouse_diff(:,iCon),'filled')
 hold on
-scatter(capture(6,z:nSess),red_loc_mouse_diff(z:nSess,iCon),'filled')
+%scatter(capture(3,z:nSess),red_loc_mouse_diff(z:nSess,iCon),'filled')
 xlabel('Capture')
 ylabel('Mean dFoF response (post-pre)')
 title('SOM cells running')
@@ -1922,22 +1932,22 @@ end
 
 captureByCell = [];
 for iSess = 1:nSess
-    temp = repmat(capture(6,iSess),[nKeep_concat(iSess),1]);
+    temp = repmat(capture(3,iSess),[nKeep_concat(iSess),1]);
     captureByCell=[captureByCell;temp];
 end
 
 %% scatterplot of max df/f for by capture 
 
-
-cutOff=median(captureByCell);
-
+cutOff=1.3;
+%cutOff=median(captureByCell);
+%green is above capture threshold, purple is below capture threshold
 for iCon = 1:nCon
 
 figure; movegui('center') 
 subplot(2,2,1)
 scatter((pref_responses_stat_concat{pre}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon)),(pref_responses_stat_concat{post}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon)),10,'MarkerEdgeColor',[.75 .5 .75],'MarkerFaceColor',[.75 .5 .75],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter((pref_responses_stat_concat{pre}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),(pref_responses_stat_concat{post}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
+% scatter((pref_responses_stat_concat{pre}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),(pref_responses_stat_concat{post}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
 
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
@@ -1958,7 +1968,7 @@ hold off
 subplot(2,2,2)
 scatter((pref_responses_stat_concat{pre}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon)),(pref_responses_stat_concat{post}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon)),10,'MarkerEdgeColor',[.75 .5 .75],'MarkerFaceColor',[.75 .5 .75],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter((pref_responses_stat_concat{pre}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),(pref_responses_stat_concat{post}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
+% scatter((pref_responses_stat_concat{pre}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),(pref_responses_stat_concat{post}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
 xlabel('pre-DART  dF/F')
 limMin=min(min(pref_responses_stat_concat{pre}(haveRunning_red{iCon},iCon)),min(pref_responses_stat_concat{post}(haveRunning_red{iCon},iCon)));
 limMax=max(max(pref_responses_stat_concat{pre}(haveRunning_red{iCon},iCon)),max(pref_responses_stat_concat{post}(haveRunning_red{iCon},iCon)));
@@ -1976,7 +1986,7 @@ hold off
 subplot(2,2,3)
 scatter((pref_responses_loc_concat{pre}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon)),(pref_responses_loc_concat{post}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon)),10,'MarkerEdgeColor',[.75 .5 .75],'MarkerFaceColor',[.75 .5 .75],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter((pref_responses_loc_concat{pre}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),(pref_responses_loc_concat{post}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
+% scatter((pref_responses_loc_concat{pre}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),(pref_responses_loc_concat{post}(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
 
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
@@ -1996,7 +2006,7 @@ hold off
 subplot(2,2,4)
 scatter((pref_responses_loc_concat{pre}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon)),(pref_responses_loc_concat{post}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon)),10,'MarkerEdgeColor',[.75 .5 .75],'MarkerFaceColor',[.75 .5 .75],'jitter', 'on', 'jitterAmount',.01)
 hold on
-scatter((pref_responses_loc_concat{pre}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),(pref_responses_loc_concat{post}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
+% scatter((pref_responses_loc_concat{pre}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),(pref_responses_loc_concat{post}(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon)),10,'MarkerEdgeColor',[.5 .75 .5],'MarkerFaceColor',[.5 .75 .5],'jitter', 'on', 'jitterAmount',.01)
 
 xlabel('pre-DART  dF/F')
 limMin=min(min(pref_responses_loc_concat{pre}(haveRunning_red{iCon},iCon)),min(pref_responses_loc_concat{post}(haveRunning_red{iCon},iCon)));
@@ -2015,12 +2025,12 @@ set(gca, 'TickDir', 'out')
 
 
 sgtitle(num2str(cons(iCon)))
-print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_MedianCapture.pdf']),'-dpdf','-bestfit')
+print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_lowCapture.pdf']),'-dpdf','-bestfit')
 end
 %% SOM/Pyr relationship session-by-session, with colorscale for capture
 
-lowCapture=find(capture(6,:)<cutOff);
-highCapture = find(capture(6,:)>=cutOff);
+lowCapture=find(capture(3,:)<cutOff);
+highCapture = find(capture(3,:)>=cutOff);
 
 for iCon=1:nCon
 figure
@@ -2056,7 +2066,7 @@ end
 %% timecourses seperated by capture
 
 
-make figure with se shaded, one figure per contrast - stationary
+%make figure with se shaded, one figure per contrast - stationary
 
 tc_green_avrg_stat = cell(1,nd); 
 tc_red_avrg_stat = cell(1,nd); 
@@ -2094,7 +2104,7 @@ for id = 1:nd
 end
 z=double(nOn)/double(frame_rate);
 
-create a time axis in seconds
+%create a time axis in seconds
 t=1:(size(tc_green_avrg_stat{1,1,1},1));
 t=(t-(double(stimStart)-1))/double(frame_rate);
 
@@ -2218,7 +2228,7 @@ for id = 1:nd
 end
 z=double(nOn)/double(frame_rate);
 
-create a time axis in seconds
+%create a time axis in seconds
 t=1:(size(tc_green_avrg_loc{1,1,1},1));
 t=(t-(double(stimStart)-1))/double(frame_rate);
 
@@ -2558,7 +2568,7 @@ set(gca,'XColor', 'none','YColor','none')
 hold on
 %print(fullfile(fnout,[num2str(cons(iCon)) '_stat_cellType_timecourses.pdf']),'-dpdf');
 end 
-%% comparing Rsq to full tc corre
+%% comparing R to full tc corre
 
 figure;scatter(mean_green_concat{pre},mean_green_concat{post})
 xlabel("full TC correlation to average Pyr TC, pre")
@@ -2801,6 +2811,8 @@ title(['-HTP',' n = ', num2str(length(green_ind_concat))])
 ylabel('dF/F, pref ori') 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
+xlim([0 1])
+xticks([.25 .5 1])
 box off
 
 subplot(1,2,2) %for the second day
@@ -2808,8 +2820,10 @@ errorbar(cons,conResp_red_avrg_stat{pre},conResp_red_se_stat{pre},'k');
 hold on
 errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
 title(['+HTP',' n = ', num2str(length(red_ind_concat))])
-ylabel('dF/F, pref ori') 
+
 xlabel('contrast') 
+xlim([0 1])
+xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
 box off
 
@@ -2858,6 +2872,8 @@ errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'b');
 title(['-HTP',' n = ', num2str(length(green_ind_concat))])
 ylabel('dF/F, pref ori') 
 xlabel('contrast') 
+xlim([0 1])
+xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
 box off
 
@@ -2866,7 +2882,9 @@ errorbar(cons,conResp_red_avrg_loc{pre},conResp_red_se_loc{pre},'k');
 hold on
 errorbar(cons,conResp_red_avrg_loc{post},conResp_red_se_loc{post},'b');
 title(['+HTP',' n = ', num2str(length(red_ind_concat))])
-ylabel('dF/F, pref ori') 
+ 
+xlim([0 1])
+xticks([.25 .5 1])
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
 box off
@@ -2976,7 +2994,7 @@ subplot(1,2,1) %for the first day
 
 
 
-ylim([-.02 .3]);
+ylim([-.02 .25]);;
 hold on
 shadedErrorBar(t,tc_green_avrg_allCondition{pre}(:,iCon),tc_green_se_allCondition{pre}(:,iCon),'k');
 hold on
@@ -2997,7 +3015,7 @@ subplot(1,2,2) %for the second day
 shadedErrorBar(t,tc_red_avrg_allCondition{pre}(:,iCon),tc_red_se_allCondition{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_allCondition{post}(:,iCon),tc_red_se_allCondition{post}(:,iCon),'b');
-ylim([-.02 .3]);
+ylim([-.02 .25]);;
 hold on
 %line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 hold on
@@ -3019,4 +3037,12 @@ sgtitle(['allConditionionary, contrast = ' num2str(cons(iCon))])
 print(fullfile(fnout,[num2str(cons(iCon)) '_allCondition_allKeep_timecourses.pdf']),'-dpdf');
 end ; 
 
+%% finding how the high and low R cells are distributed over epxeriments
+
+RbyExp = zeros(2,nSess);
+for iSess = 1:nSess
+    mouseIndsTemp = mouseInds{iSess};
+    RbyExp(1,iSess) = length(intersect(mouseIndsTemp,highRInds));
+    RbyExp(2,iSess) = length(intersect(mouseIndsTemp,lowRInds));
+end
 
