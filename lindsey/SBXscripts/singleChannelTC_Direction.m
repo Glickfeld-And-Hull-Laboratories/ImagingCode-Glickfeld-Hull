@@ -11,10 +11,10 @@ mworks_fn = fullfile(fn_base, 'Behavior', 'Data');
 fnout = fullfile(lg_fn, 'Analysis', '2P');
 
 %Specific experiment information
-date = '230331';
-ImgFolder = '001';
-time = '1721';
-mouse = 'i2905';
+date = '230607';
+ImgFolder = '004';
+time = '1610';
+mouse = 'i2906';
 frame_rate = 30;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
@@ -96,23 +96,45 @@ clear data
 %    a. Reshape data stack to segregate trials 
 %    First need to know how many frames per trial and how many trials
 
-nOn = input.nScansOn;
-nOff = input.nScansOff;
-ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one value per trial, so length = ntrials
-sz = size(data_reg);
-%        Each trial has nOff frames followed by nOn frames, so can reshape stack so nYpix x nXpix x nFrames/Trial (nOn+nOff) x nTrials
-data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
-data_tr_inv = mean(mean(data_tr(:,:,nOff/2:nOff,:),3),4)-mean(mean(data_tr(:,:,nOff+1:nOn+nOff,:),3),4);
+if isfield(input,'nScansOn')
+    nOn = input.nScansOn;
+    nOff = input.nScansOff;
+    ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one value per trial, so length = ntrials
+    sz = size(data_reg);
+    %        Each trial has nOff frames followed by nOn frames, so can reshape stack so nYpix x nXpix x nFrames/Trial (nOn+nOff) x nTrials
+    data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
+    data_tr_inv = mean(mean(data_tr(:,:,nOff/2:nOff,:),3),4)-mean(mean(data_tr(:,:,nOff+1:nOn+nOff,:),3),4);
+    %    b. Find baseline F from last half of off period- avoids decay of previous on trial
+    data_f = mean(data_tr(:,:,nOff/2:nOff,:),3);
+elseif isfield(input,'cStimOneOn')
+    ntrials = size(input.cStimOneOn,2);
+    sz = size(data_reg);
+    totFrames = frame_rate*(input.stimOneGratingOnTimeMs/1000)+frame_rate;
+    nOn = frame_rate*(input.stimOneGratingOnTimeMs/1000);
+    nOff = frame_rate;
+    data_tr = zeros(sz(1),sz(2),totFrames,ntrials);
+    cStimOneOn = celleqel2mat_padded(input.cStimOneOn);
+    for itrial = 1:ntrials
+        data_tr(:,:,:,itrial) = data_reg(:,:,cStimOneOn(itrial)-frame_rate+1:cStimOneOn(itrial)+frame_rate);
+    end
+    data_tr_inv = mean(mean(data_tr(:,:,(frame_rate/2)+1:frame_rate,:),3),4)-mean(mean(data_tr(:,:,frame_rate+1:frame_rate+nOn,:),3),4);
+    %    b. Find baseline F from last half of off period- avoids decay of previous on trial
+    data_f = mean(data_tr(:,:,frame_rate/2:frame_rate,:),3);
+end
+
 
 fprintf(['Size of data_tr is ' num2str(size(data_tr))])
-%    b. Find baseline F from last half of off period- avoids decay of previous on trial
-data_f = mean(data_tr(:,:,nOff/2:nOff,:),3); 
+ 
 %    c. Find dF/F for each trial
 data_df = bsxfun(@minus, double(data_tr), data_f); 
 data_dfof = bsxfun(@rdivide,data_df, data_f); 
 clear data_f data_df data_tr
 %    d. Find average dF/F for each stimulus condition (this is for an experiment with changing grating direction)
-tDir = celleqel2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
+if isfield(input,'tGratingDirectionDeg')
+    tDir = celleqel2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
+elseif isfield(input,'tStimOneGratingDirectionDeg')
+    tDir = celleqel2mat_padded(input.tStimOneGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials)
+end
 Dirs = unique(tDir);
 nDirs = length(Dirs);
 data_dfof_avg = zeros(sz(1),sz(2),nDirs); %create empty matrix with FOV for each direction: nYpix x nXPix x nDir
@@ -161,6 +183,9 @@ end
 mask_cell = bwlabel(mask_all); %turns logical into numbered cells
 figure;
 imagesc(mask_cell)
+
+figure; 
+imagesc(imShade(data_avg,mask_cell));
 %        c. Create neuropil masks (these are regions around each cell without overlap from neighboring cells)
 nMaskPix = 5; %thickness of neuropil ring in pixels
 nBuffPix = 3; %thickness of buffer between cell and ring
@@ -212,7 +237,15 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_
 %% make tuning curves
 base_win = nOff/2:nOff;
 resp_win = nOff+5:nOff+nOn;
-data_trial = reshape(npSub_tc, [nOn+nOff ntrials nCells]);
+if isfield(input,'nScansOn')
+    data_trial = reshape(npSub_tc, [nOn+nOff ntrials nCells]);
+elseif isfield(input,'cStimOneOn')
+    data_trial = zeros(nOn+nOff,nCells,ntrials);
+    for itrial = 1:ntrials
+        data_trial(:,:,itrial) = npSub_tc(cStimOneOn(itrial)-frame_rate+1:cStimOneOn(itrial)+frame_rate,:);
+    end
+    data_trial = permute(data_trial,[1 3 2]);
+end
 data_f = mean(data_trial(base_win,:,:),1);
 data_dfof = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
 
@@ -356,6 +389,7 @@ for i = 1:sz(1)
         end
     end
 end
+figure;
 imagesc(ori_map)
 %% F1/F0 analysis
 tf = input.gratingTemporalFreqCPS;

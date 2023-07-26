@@ -11,3 +11,7 @@ third/export_fig/.ignore/ghostscript.txt
 third/export_fig/.ignore/pdftops.txt
 
 camaron/update_passiveTC_with_photoframeFinder.m
+
+sara/SBXscripts/CrossOri/randPhase_CrossOri_fits_SG.asv
+
+*.asv

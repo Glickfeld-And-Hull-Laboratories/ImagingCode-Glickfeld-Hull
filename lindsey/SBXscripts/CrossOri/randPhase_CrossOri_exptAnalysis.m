@@ -228,22 +228,30 @@ end
 %% plots
 
 resp = squeeze(mean(data_dfof_con_ph_tc_avg(resp_win,:,:,:,:,:),1));
+resp_rect = resp;
+resp_rect(find(resp<0)) = 0;
+MI = squeeze((resp_rect(:,2,2,:,1)-(resp_rect(:,1,2,1,1)+resp_rect(:,2,1,1,1)))./(resp_rect(:,2,2,:,1)+(resp_rect(:,1,2,1,1)+resp_rect(:,2,1,1,1))));
 for i = 1:nCells
    figure;
    start = 1;
    subplot(3,4,start)
    shadedErrorBar(tt,squeeze(data_dfof_con_ph_tc_avg(:,i,1,2,1,1)),squeeze(data_dfof_con_ph_tc_avg(:,i,1,2,1,2)))
-   ylim([-0.1 0.3])
+   ylim([-0.1 0.75])
    title('test')
    subplot(3,4,start+1)
-   shadedErrorBar(tt,squeeze(data_dfof_con_ph_tc_avg(:,i,2,1,1,1)),squeeze(data_dfof_con_ph_tc_avg(:,i,1,2,1,2)))
-   ylim([-0.1 0.3])
+   shadedErrorBar(tt,squeeze(data_dfof_con_ph_tc_avg(:,i,2,1,1,1)),squeeze(data_dfof_con_ph_tc_avg(:,i,2,1,1,2)))
+   ylim([-0.1 0.75])
    title('mask')
    for ip = 1:nMaskPhas
        subplot(3,4,start+1+ip)
-       shadedErrorBar(tt,squeeze(data_dfof_con_ph_tc_avg(:,i,2,2,ip,1)),squeeze(data_dfof_con_ph_tc_avg(:,i,1,2,1,2)))
-       ylim([-0.1 0.3])
+       shadedErrorBar(tt,squeeze(data_dfof_con_ph_tc_avg(:,i,2,2,ip,1)),squeeze(data_dfof_con_ph_tc_avg(:,i,2,2,ip,2)))
+       ylim([-0.1 0.75])
    end
+   subplot(3,2,6)
+   plot(maskPhas,MI(i,:))
+   ylim([-1 1])
+   xlabel('Mask phase')
+   ylabel('MI')
    suptitle(['Cell #' num2str(i)])
    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_cell' num2str(i) '_TCs.pdf']),'-dpdf','-fillpage')
 end

@@ -12,7 +12,7 @@ fnout = fullfile(lg_fn, 'Analysis\2P');
 
 %Specific experiment information
 date = '230501';
-ImgFolder = '003';
+ImgFolder = '001';
 time = '1550';
 mouse = 'i2905';
 
