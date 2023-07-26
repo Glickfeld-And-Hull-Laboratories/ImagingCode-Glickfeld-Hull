@@ -18,7 +18,7 @@ fnout = fullfile(rc.achAnalysis,mouse);
 if expt(day_id).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
 else
-    dart_str = 'control';
+    dart_str = 'control';2
 end
 prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
             x = input(prompt);

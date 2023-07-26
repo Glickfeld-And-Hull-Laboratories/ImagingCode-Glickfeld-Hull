@@ -1,3 +1,6 @@
+%I am honestly not sure why this code was written, so it is going in the defunct folder
+
+%%
 %clear everything
 clear all
 clear all global

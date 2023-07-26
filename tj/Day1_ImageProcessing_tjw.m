@@ -14,29 +14,29 @@ clear global
 close all
 clc
 %% get path names
-date = '230120';
-ImgFolder = strvcat('001'); %could we use char() instead here?
-time = strvcat('0659');
-mouse = 'i2543';
-run = strvcat('001'); %multiple depths?***
-nrun = size(ImgFolder,1); %what is this?***
+date = '230513';
+ImgFolder = strvcat('001'); 
+time = strvcat('0931');
+mouse = 'i2560';
+run = strvcat('001'); 
+nrun = size(ImgFolder,1);
 frame_rate = 15;
 run_str = catRunName(ImgFolder, nrun);
-ref_str = catRunName(run, size(run,1)); %what is this?***
+ref_str = catRunName(run, size(run,1)); 
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-%fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\Day1_recycled';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
+% fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\Day1_recycled';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load data
 data = [];
 clear temp
 trial_n = [];
 offset = 0;
-for irun = 1:nrun %**what is this for? multiple depths?
-    CD = fullfile(tj_fn, [mouse '\' date '_' mouse '\' ImgFolder(irun,:)]); %identify current dierectory; **why is this subset?
+for irun = 1:nrun 
+    CD = fullfile(tj_fn, [mouse '\' date '_' mouse '\' ImgFolder(irun,:)]); %change current dierectory;
     cd(CD); %set CD
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat']; %add the 0s to the imaging file
-    load(imgMatFile); %**load this file from CD?
+    load(imgMatFile); %**load this file from CD
 %     fName = fullfile(behav_fn, ['data-i' '''' mouse '''' '-' date '-' time(irun,:) '.mat']); %find behavior data
     fName = fullfile(behav_fn, ['data-'  mouse  '-' date '-' time(irun,:) '.mat']); %find behavior data
     load(fName); %load behavior data
@@ -50,7 +50,7 @@ for irun = 1:nrun %**what is this for? multiple depths?
     %nPMT x nYpix x nXpix x nframes
     
     
-    temp(irun) = input; %what does temp() do? why not just use input?***
+    temp(irun) = input; 
     if isfield(input, 'nScansOn') %checks that nScansOn is in input var
         nOn = temp(irun).nScansOn; %find nOn in input
         nOff = temp(irun).nScansOff; %find nOff in input
@@ -65,13 +65,13 @@ for irun = 1:nrun %**what is this for? multiple depths?
         end
     end
     
-    offset = offset+nframes; %not sure what this is
+    offset = offset+nframes; 
 
-    data_temp = squeeze(data_temp); %does it need squeezed again?***
-    data = cat(3,data,data_temp); %concatenate data and data_temp along 3rd dimension; why?***
-    trial_n = [trial_n nframes]; %?***
+    data_temp = squeeze(data_temp); 
+    data = cat(3,data,data_temp); %concatenate data and data_temp along 3rd dimension
+    trial_n = [trial_n nframes]; 
 end
-input = concatenateDataBlocks(temp); %combines mat files; why?***
+input = concatenateDataBlocks(temp); %combines mat files; 
 clear data_temp
 %clear temp
 
@@ -95,7 +95,7 @@ end
 %frames; what about pixel 1,2 etc.
 %% Register data
 
-data_avg = mean(data(:,:,32001:32500),3); %mean of pixel values over selected range of frames
+data_avg = mean(data(:,:,34001:34500),3); %mean of pixel values over selected range of frames
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str])) %if this folder exists)
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat'])) %load this mat file
@@ -114,7 +114,7 @@ end
 
 
 %% test stability
-figure; imagesq(data_reg_avg); truesize; %why not imagesc?; avg pixel value of all frames registered***
+figure; imagesq(data_reg_avg); truesize; % avg pixel value of all frames registered***
 print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf','-bestfit') %save as pdf that fits the page
 
 %% PART 3: Find activated cells %%
@@ -124,7 +124,7 @@ print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' 
 %we will create a cell mask to help with this process
 %goal is to get cells that are significantly responsive to stimuli
 
-%max by trial type    -> ?***
+
 %calculating trial level data, f, df, and df/f values
 if isfield(input, 'nScansOn') %this is the same as above
     nOn = input.nScansOn; %same as above
@@ -132,16 +132,14 @@ if isfield(input, 'nScansOn') %this is the same as above
     if nOn>29
         sz = size(data_reg);
 %         make data_tr smaller for dfof images to not use all of the memory
-%         -> is this still a concern?***
         data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]); %trial level data - now a 4d structure
-        data_tr = data_tr(:,:,nOff/2:end,:);
         data_f = single(mean(data_tr(:,:,1:nOff/2,:),3)); %avg across last half of OFF frames (baseline)
         data_df = single(data_tr)-data_f;
         clear data_tr
         %data_df = bsxfun(@minus, double(data_tr), data_f); %baseline subtracted trial data
         data_dfof = bsxfun(@rdivide,data_df, data_f); %divide to standardize
         clear data_f data_df
-    else %not sure what this part is for***
+    else 
         sz = size(data_reg);
         data_tr = zeros(sz(1),sz(2), 100, ntrials-1); 
         for itrial = 1:ntrials-1
@@ -154,22 +152,22 @@ if isfield(input, 'nScansOn') %this is the same as above
     end
 end
 
-if input.doDirStim % ? ***
+if input.doDirStim 
 %     obtaining avg and max dfof images for each dir
     Dir = cell2mat_padded(input.tGratingDirectionDeg); %transforms cell array into matrix (1 x ntrials) with dir for each trial
-    Dir = Dir(1:ntrials); % ?****
+    Dir = Dir(1:ntrials); 
     Dirs = unique(Dir); %what are all the dirs possible
     data_dfof_avg = zeros(sz(1),sz(2),length(Dirs));
     nDirs = length(Dirs); %how mmay directions
     [n n2] = subplotn(nDirs); %find optimal subplot number for ndirs
     figure;
     for idir = 1:length(Dirs) %for each direction
-        if nOn>29 % ?***
+        if nOn>29 
             ind = find(Dir(1:160) == Dirs(idir)); %find trial numbers of that dir
         else
             ind = find(Dir(1:ntrials-1) == Dirs(idir));
         end
-        data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff/2+1:nOn+nOff/2,ind),3),4); %avg across ON frames and trials for each dir
+        data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %avg across ON frames and trials for each dir
         subplot(n,n2,idir)
         imagesc(data_dfof_avg(:,:,idir)) %plot image avg for each dir
     end
@@ -180,7 +178,7 @@ if input.doDirStim % ? ***
     
 %     average dfof image for each direction
     figure; 
-    Stims = Dirs; %this seems redundant
+    Stims = Dirs; 
     nStim = length(Dirs);
     [n n2] = subplotn(nDirs);
     data_dfof_avg_ori = zeros(sz(1), sz(2), nDirs/2);
@@ -191,7 +189,7 @@ if input.doDirStim % ? ***
         title(num2str(Dirs(i))) %titles each
         colormap(gray) %grayscale
         if i<(nDirs/2)+1
-            data_dfof_avg_ori(:,:,i) = mean(data_dfof_avg_all(:,:,[i i+nDirs/2]),3); %not understanding how this cuts dir down to ori***
+            data_dfof_avg_ori(:,:,i) = mean(data_dfof_avg_all(:,:,[i i+nDirs/2]),3); 
         end
     end
     print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_16Stim.pdf']), '-dpdf')
@@ -210,7 +208,7 @@ if input.doDirStim % ? ***
     imagesc(max(data_dfof_avg_ori,[],3)) %show max and add to subplot
     title('dfof Max')
     axis off
-    data_dfof = cat(3,data_dfof_avg_ori,max(data_dfof_avg_ori,[],3)); %concatenate avg ori and max along 3rd dimension?***
+    data_dfof = cat(3,data_dfof_avg_ori,max(data_dfof_avg_ori,[],3)); %concatenate avg ori and max along 3rd dimension
     print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_activeCells.pdf']), '-dpdf')
 
     figure;
@@ -237,8 +235,8 @@ for iStim = 1:size(data_dfof_avg_all,3) %for each dir
   mask_exp = imCellBuffer(mask_all,3)+mask_all; %creates buffer around cells to reduce fusing 2 together
   close all
 end
-mask_cell = bwlabel(mask_all); %turn logical into numbered cells -> rather than saying there is a cell here, what number is it (?)
-figure; imagesc(mask_cell) %colored image of each cell as different color***might want to save this
+mask_cell = bwlabel(mask_all); %turn logical into numbered cells -> rather than saying there is a cell here, what number is it
+figure; imagesc(mask_cell) %colored image of each cell as different color
 
 
 figure; 
@@ -247,7 +245,7 @@ for i = 1:nStim;
     subplot(n,n2,i); 
     shade_img = imShade(data_dfof_avg_all(:,:,i), mask_all); %shade grayscale image with mask
     imagesc(shade_img)
-    if input.doSizeStim %? is this for different stim sizes?***
+    if input.doSizeStim 
     title([num2str(szs(i)) ' deg'])
     elseif input.doRetStim %?
         title([num2str(Stims(i,:))])
@@ -264,16 +262,15 @@ save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' m
 
 % creating pixel correlation image from a smaller data reg stack -> ?***
 data_reg_3hz = stackGroupProject(data_reg,5); %averaging every 5 frames for less noisy stack
-pix = getPixelCorrelationImage(data_reg_3hz); %how much each pixel is correlated with surrounding? -> could save this figure**
+pix = getPixelCorrelationImage(data_reg_3hz); %how much each pixel is correlated with surrounding?
 pix(isnan(pix))=0;
 save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pixel.mat']),'pix')
 
 %clear data_reg_3hz data_dfof data_dfof_avg max_dfof mask_data mask_all mask_2 data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
 %% neuropil subtraction
-%data_tc will be a time course following each cell -> is this the F values
-%of that set of pixels over time?***
-data_tc = stackGetTimeCourses(data_reg, mask_cell); %pixel intensities of stack based on mask; what does this figure show***
-data_tc_down = stackGetTimeCourses(stackGroupProject(data_reg,5), mask_cell); %downsampled version of above -> why***
+%data_tc will be a time course following each cell 
+data_tc = stackGetTimeCourses(data_reg, mask_cell); %pixel intensities of stack based on mask
+data_tc_down = stackGetTimeCourses(stackGroupProject(data_reg,5), mask_cell); %downsampled version of above
 nCells = size(data_tc,2); %number of cells
 sz = size(data_reg);
 down = 5;
@@ -295,7 +292,7 @@ end
 ii= 0.01:0.01:1; %potential weights for skew
 x = zeros(length(ii), nCells);
 for i = 1:100
-    x(i,:) = skewness(data_tc_down-tcRemoveDC(np_tc_down*ii(i))); %having hard time with this -> multiply by each weight and measure skew?
+    x(i,:) = skewness(data_tc_down-tcRemoveDC(np_tc_down*ii(i))); 
 end
 [max_skew ind] =  max(x,[],1); %find max skew and value
 np_w = 0.01*ind; %convert to decimal
@@ -322,11 +319,11 @@ if isfield(input, 'nScansOn')
     if nOn>29
         data_mat = zeros(nOn+nOff, nCells, ntrials);
         for itrial = 1:ntrials
-            data_mat(:,:,itrial) = npSub_tc(1+((itrial-1).*(nOn+nOff)):(itrial.*(nOn+nOff)),:); %another way of using reshape? -> manually entering frames to pick
+            data_mat(:,:,itrial) = npSub_tc(1+((itrial-1).*(nOn+nOff)):(itrial.*(nOn+nOff)),:); 
         end
         data_f = mean(data_mat(nOff/2:nOff,:,:),1);
     else
-        data_mat = zeros(100, nCells, ntrials-1); %?***
+        data_mat = zeros(100, nCells, ntrials-1); 
         for itrial = 1:ntrials-1
             data_mat(:,:,itrial) = npSub_tc(((itrial-1)*(nOn+nOff))+71:170+((itrial-1)*(nOn+nOff)),:);
         end
@@ -349,7 +346,7 @@ if isfield(input, 'nScansOn')
     max_dir = zeros(nCells,1);
     figure;
     for i = 1:nCells
-        if ~sum(no_match==i) %not getting this?***
+        if ~sum(no_match==i) 
         subplot(n, n2, i)
             for idir = 1:ndir %for each dir
                 if nOn>29
@@ -405,7 +402,7 @@ if isfield(input, 'nScansOn')
                 [h_ori(i,iori), p_ori(i,iori)] = ttest(resp(i,ind), base(i,ind),'tail','right','alpha', 0.05/(nori-1));
                 if h_ori(i,iori)
                     errorbar(Oris(iori), mean(resp(i,ind)-base(i,ind),2),std(resp(i,ind)-base(i,ind),[],2)./sqrt(length(ind)),'or')
-                else %should this be avg resp or avg resp-base?***
+                else 
                     errorbar(Oris(iori), mean(resp(i,ind)-base(i,ind),2),std(resp(i,ind)-base(i,ind),[],2)./sqrt(length(ind)),'ok')
                 end
                 ori_resp(i,iori) = mean(resp(i,ind)-base(i,ind),2);
@@ -429,14 +426,13 @@ if isfield(input, 'nScansOn')
     save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_trialData.mat']),'data_dfof','max_dir','h_dir', 'h_ori', 'max_ori','good_ind','dir_resp')
 end
 
-%% ori fitting
+%% ori fitting - getting a von Mises fit over our raw data to calculate theoretical pref ori
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 dir_mat = celleqel2mat_padded(input.tGratingDirectionDeg);
 nTrials = length(dir_mat);
 input.trialSinceReset = nTrials;
 
-%does this have to be downsampled?***
 down = 10;
 nframes = size(npSub_tc,1)./down;
 nCells = size(npSub_tc,2);
@@ -444,21 +440,20 @@ data_tc_down = squeeze(mean(reshape(npSub_tc, [down,nframes,nCells]),1));
 tuningDownSampFactor = down;
 
 [avgResponseEaOri,semResponseEaOri,vonMisesFitAllCellsAllBoots,fitReliability,R_square,tuningTC] = ...
-    getOriTuningLG(data_tc_down,input,tuningDownSampFactor); %function to save space***
+    getOriTuningLG(data_tc_down,input,tuningDownSampFactor); 
     vonMisesFitAllCells = squeeze(vonMisesFitAllCellsAllBoots(:,1,:));
-%what is tuningTC structure?***
-%what is fit reliability?***
+
 
 save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_oriTuningAndFits.mat']),...
             'avgResponseEaOri','semResponseEaOri','vonMisesFitAllCellsAllBoots','fitReliability','R_square', 'tuningTC')
 
-%%
+%% plotting the ori tuning curves - the von Mises fit is overlaying the raw data
 dir_mat = celleqel2mat_padded(input.tGratingDirectionDeg);
 ori_mat = dir_mat;
 ori_mat(dir_mat>=180) = ori_mat(dir_mat>=180)-180;
 oris = unique(ori_mat);
 figure; 
-if nCells<49 %dont understand this reasoning?***
+if nCells<49 
     [n n2] = subplotn(nCells);
 else
     [n, n2] = subplotn(49);
@@ -491,14 +486,14 @@ print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' 
 prefOri = squeeze(prefOri)-1;
 prefOri_bootdiff = abs(prefOri(2:end,:)-prefOri(1,:));
 prefOri_bootdiff(find(prefOri_bootdiff>90)) = 180-prefOri_bootdiff(find(prefOri_bootdiff>90));
-ind_theta90 = find(prctile(prefOri_bootdiff,90,1)<22.5);
+ind_theta90 = find(prctile(prefOri_bootdiff,90,1)<22.5); %this is an index of cells w/ reliable fit over bootstraps
 edges = [0 22.5:45:180]; 
-[bin ind_bin] = histc(prefOri(1,:),edges); %how many pref oris are between 0-22.5? 22.5-67.5? etc.*
+[bin ind_bin] = histc(prefOri(1,:),edges); %how many pref oris are between 0-22.5? 22.5-67.5? etc.* - this is not really used
 ind_bin(find(ind_bin==5)) = 1;
 bin(1) = bin(1)+bin(5);
 bin(5) = [];
 
-tunedCells = cell(1,length(bin)); %what is this cutting down on?*** ***
+tunedCells = cell(1,length(bin)); 
 for i = 1:length(bin)
     tunedCells{i} = intersect(find(ind_bin==i),ind_theta90);
 end
@@ -506,9 +501,11 @@ end
 save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_oriTuningInfo.mat']),...
     'prefOri', 'prefOri_bootdiff', 'ind_theta90', 'tunedCells');
 
-%% identify cells that are red
+%% identify cells that are red - skip this if only imaging green cells
+%If you imaged w/ 2 colors, you should have a snapshot for green, a snapshot for red, and the full
+%run for green (which was analyzed above)
 
-% rename variables
+% rename variables from green imaging 
 fov_avg{1} = data_reg_avg;
 dfmax{1} = data_dfof_max;
 corrmap{1} = pix;
@@ -519,45 +516,35 @@ fov_norm{1} = uint8((fov_avg{1}./max(fov_avg{1}(:))).*255);
 fov_norm{1}(fov_norm{1} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
 
 % process the red channel from a 1000 frame run
-% select the correct date = either "1" for D1 or "2" for D2/3
 
-%1040 run
+%1040 run - make sure to set the right image folder
 irun = 1;
 WL = '1040'; 
-ImgFolder = strvcat('002'); %is this where we change the run?***
+ImgFolder = strvcat('002'); %
 run = catRunName(ImgFolder, nrun);
 imgMatFile = [ImgFolder '_000_000.mat'];
 CD = fullfile(tj_fn, [mouse '\' date '_' mouse '\' ImgFolder(irun,:)]);
 cd(CD);
 load(imgMatFile);
-% fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
-data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames); %why subset 1:11 here?***
+data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames); 
 mkdir(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run]));
 
+%below is the best pipeline to register the red imaging snapshot with the green from the full run
+%for maximal red/green cell matching
 if size(data_temp,1)>1
 data_1040_green = squeeze(data_temp(1,:,:,:)); %PMT 0 (green)
 data_1040_red = squeeze(data_temp(2,:,:,:)); %PMT 1 (red)
 [out_1040_red_regtoself data_1040_red_regtoself] = stackRegister(data_1040_red,mean(data_1040_red,3)); %register 1040 red channel to self
-[out_1040_green_regtomaingreen data_1040_green_regtomaingreen] = stackRegister(data_1040_green,data_reg_avg);
-[out_1040_red_regto1040green data_red_regto1040green] = stackRegister_MA(mean(data_1040_red_regtoself,3),[],[],out_1040_green_regtomaingreen);
+[out_1040_green_regtomaingreen data_1040_green_regtomaingreen] = stackRegister(data_1040_green,data_reg_avg); %register 1040 green to master green
+[out_1040_red_regto1040green data_red_regto1040green] = stackRegister_MA(mean(data_1040_red_regtoself,3),[],[],out_1040_green_regtomaingreen); %red registered to 1040 green
 data_red_regto1040green_avg = mean(data_red_regto1040green,3);
-
-%do the line below registered to data_reg_avg***
-%[out data_g_reg] = stackRegister(data_rg,mean(data_rg,3)); %method 1
-%[out2 data_r_reg] = stackRegister_MA(data_rr,[],[],out); %method 1
-%[out3 data_g_reg_avg] = stackRegister(mean(data_g_reg,3),data_reg_avg); 
-%[out4 data_r_reg_avg] = stackRegister_MA(mean(data_rr,3),[],[],out3);
-
-
 red = data_red_regto1040green_avg;
-%greenChImg = mean(data_g_reg,3);
-%clear data_temp 
 fov_red{1} = uint8((red./max(red(:))).*255);
 end
 
 
 
-%% select red cells
+%% select red cells - this will produce a new index of which cells were red (and green)
 % size of cell box
 clear input
 close all

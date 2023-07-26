@@ -15,8 +15,9 @@ function [counts] = spikesPerSweep(dataIN,nSweeps)
     set(gca, 'TickDir', 'out')
     box off
     xlabel("sweep")
-    ylabel("# spikes")
-    print(fullfile([dataIN 'Spike_per_sweep.pdf']),'-dpdf','-bestfit')
+    ylabel("# events")
+    %ylim([0 50])
+    print(fullfile([dataIN 'events_per_sweep.pdf']),'-dpdf','-bestfit')
 
 end
 

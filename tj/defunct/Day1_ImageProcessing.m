@@ -1,3 +1,6 @@
+%this is the script i received from grace that she used to process her day 1 imaging data for the
+%arc project. it is going in the defunct folder since i adapted my own with comments
+%%
 clear all
 clear global
 %% get path names

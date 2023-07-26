@@ -1,3 +1,7 @@
+%This experiment list is from the defunctportion of the dark light experiment where there are not
+%useful comparisons to make due to the lack of standardization between control and experiment
+%periods
+%%
 expt = [];
 frameRateHz = 15.5;
 %img_point: 1 = pre dark baseline, 2 = post dark, 3 = post 4hr light, 4 = 7

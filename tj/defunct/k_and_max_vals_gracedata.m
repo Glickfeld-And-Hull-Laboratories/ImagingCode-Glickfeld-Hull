@@ -1,3 +1,6 @@
+%this seems to be the same as k_and_max_newAvg_vals script except it is missing new avg
+%calculations, so it is goin in defunct folder
+%%
 % Extracting k value and max response from analyzed data
 clear all
 clc
