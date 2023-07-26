@@ -1,9 +1,0 @@
-m = @(pars,angle) Gauss_dir_LG(pars,angle);
-%s.x0 =  [min(data(:,ind_bestSFTF)) OriStatKO.R_best_dir OriStatKO.R_null_dir s.y(OriStatKO.best_dir).*pi./180 2*pi];
-
-s.x0 =  [min(data2(:,ind_bestSFTF)) OriStatKO.R_best_ori OriStatKO.R_null_ori s.y(OriStatKO.best_ori).*pi./180 pi];
-s.ub = [3 3 3 2*pi 2*pi];
-s.lb = [0 0 0 0 pi/4];
-options = optimset('Display', 'off');
-[x2,Resnorm]  = lsqcurvefit(@Gaussfit,s.x0,s.y ,data2(:,ind_bestSFTF)');
-temp(index) = cell2struct({x2,Resnorm},names,2);

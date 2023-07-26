@@ -1,8 +1,0 @@
-currentdir = pwd;
-cd([currentdir,'\code\core\'])
-svnroot = [currentdir,'\code'];
-ijroot = 'C:\Program Files\ImageJ';
-coreInitJavaPath(svnroot,ijroot);
-coreInitMatlabPath(svnroot,ijroot);
-
-addpath(genpath([currentdir,'\code\users\aaron\CurrentWorkingSet']));
