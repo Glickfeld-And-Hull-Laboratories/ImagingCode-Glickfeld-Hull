@@ -21,10 +21,10 @@ function [rad centroid] = alignEyeData(Eye_data,input);
         cStimOn = celleqel2mat_padded(input.cStimOneOn);
         prewin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
         postwin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
-    else
-        cStimOn = input.nFramesOff+1:input.nFramesOff+input.nFramesOn:nFrames;
-        prewin_frames = input.nFramesOn;
-        postwin_frames = input.nFramesOn;
+    elseif isfield(input,'nScansOn')
+        cStimOn = input.nScansOff+1:input.nScansOff+input.nScansOn:input.counterValues{end}(end);
+        prewin_frames = input.nScansOn;
+        postwin_frames = input.nScansOn;
     end
     
     nTrials = size(cStimOn,2);
