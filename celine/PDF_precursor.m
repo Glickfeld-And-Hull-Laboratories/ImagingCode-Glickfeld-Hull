@@ -9,7 +9,7 @@ eval('DART_V1_contrast_ori_Celine;')
 % 201 197 emx forward matched
 % 133 142 240 255 249 178 190 %high capture YM90K
 
-sess_list = [178 190 294];%enter all the sessions you want to concatenate
+sess_list = [183 177 189];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
