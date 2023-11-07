@@ -1,11 +1,10 @@
-clear all
-clear all global
+
 close all
 
-date = '230413';
-mouse = 'i2075';
-ImgFolder = '005';
-time = '1111';
+date = '231103';
+mouse = 'i2132';
+ImgFolder = '003';
+time = '1452';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -20,22 +19,13 @@ end
 data = [];
 clear temp
 for irun = 1:nrun
-    if strcmp(rc.name,'ashle')
-    CD = ['Z:\home\ashley\data\' mouse '\two-photon imaging\' date '\' ImgFolder(irun,:)];
-    elseif strcmp(rc.name,'celine')
-    CD = ['Z:\home\ACh\Data\2p_data\' mouse '\' date '\' ImgFolder(irun,:)];
-    elseif strcmp(rc.name,'tw299')
-    CD = ['Z:\All_Staff\home\tj\2p_Imaging\' mouse '\' datemouse '\' ImgFolder(irun,:)];
-    else
-    %CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' mouse '\' date '\' ImgFolder(irun,:)];
-    CD = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images\' [date '_' mouse] '\' ImgFolder(irun,:)];
-    end
-    cd(CD);
+    CD = fullfile('Z:\home\ACh\Data\2p_data',mouse,date,ImgFolder(irun,:));
+    cd(CD)
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
 
     nframes = info.config.frames;
-    
+   
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
 
@@ -43,16 +33,8 @@ for irun = 1:nrun
         data_temp = data_temp(1,:,:,:);
     end
     
-    
-    if strcmp(rc.name,'ashle')        
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
-    elseif strcmp(rc.name,'celine')
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' subnum '-' date '-' time(irun,:) '.mat'];
-    elseif strcmp(rc.name,'tw299')
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
-    else
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse  date '-' time(irun,:) '.mat'];
-    end
+     fName = ['Z:\Behavior\Data\data-' subnum '-' date '-' time(irun,:) '.mat'];
+
     load(fName);
     expt_input = input;
     temp(irun) = expt_input;
@@ -98,7 +80,7 @@ expt_input = concatenateDataBlocks(temp);
     
     sz = size(data);
     data = data(:,:,1:(nOn+nOff)*ntrials);
-    if size(data,3) < 10000
+    if size(data,3) < 100000
        
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
@@ -150,21 +132,21 @@ expt_input = concatenateDataBlocks(temp);
             %clim([0 max(data_dfof_avg_all(:))./2])
         end
         
-        if strcmp(rc.name,'linds')
-            mkdir(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
-            print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')
-        elseif strcmp(rc.name,'robin')
-            mkdir(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
-            print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')    
-        end
-
-        if strcmp(rc.name,'ashle')
-            if ~exist(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
-                mkdir(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
-            end
-            print(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder,'quickRet.pdf'),'-dpdf','-fillpage')
-        end
-        
+%         if strcmp(rc.name,'linds')
+%             mkdir(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
+%             print(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')
+%         elseif strcmp(rc.name,'robin')
+%             mkdir(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
+%             print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')    
+%         end
+% 
+%         if strcmp(rc.name,'ashle')
+%             if ~exist(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
+%                 mkdir(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
+%             end
+%             print(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder,'quickRet.pdf'),'-dpdf','-fillpage')
+%         end
+%         
         
         pixThreshold = 0.2*max(data_dfof_avg_all(:));
         img_avg_resp = zeros(1,nStim);
@@ -220,8 +202,8 @@ expt_input = concatenateDataBlocks(temp);
     figure; imagesc(mean(data,3));
     axis off
     title([mouse ' ' date])
-    if strcmp(rc.name,'linds')
-    print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
-    elseif strcmp(rc.name,'robin')
-           print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
-    end
+%     if strcmp(rc.name,'linds')
+%     print(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
+%     elseif strcmp(rc.name,'robin')
+%            print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
+%     end

@@ -8,10 +8,10 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(1) = 295; %enter the post-DART day ID here
+day_id(1) = 330; %enter the post-DART day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
-ref_day = 294;
+ref_day = 329;
 
 nd = length(day_id);
 brightnessScaleFactor = 0.3;
@@ -80,20 +80,20 @@ for id = 1:nd
         load(fName)
         if nrun == 1
             load(fullfile(fnout,expDate,imgFolder,'regOuts&Img.mat'))
-            nframes = size(outs,1);
+            nFrames = size(outs,1);
             runFolder = imgFolder;
         else
-            nframes = info.config.nframes;
+            nFrames = info.config.nFrames;
             runFolder = [runFolder '_' imgFolder];
         end
-        nframes=10080; %if one of the datasets has the wrong frame number
+       
         fprintf(['Loading day ' num2str(id) ' data \n Mouse: ' expt(day_id(id)).mouse ' Date: ' expt(day_id(id)).date])
-        data_temp = sbxread(fName(1,1:11),0,nframes);
+        data_temp = sbxread(fName(1,1:11),0,nFrames);
         data_g = cat(3, data_g, squeeze(data_temp(1,:,:,:)));
         clear data_temp
         out_all = [out_all; outs];
     end
-    data_g = data_g(:,:,1:10080);%if one of the days is the wrong frame number
+    data_g = data_g(:,:,1:nFrames);%if one of the days is the wrong frame number
     [~,data{id}] = stackRegister_MA(data_g,[],[],double(out_all));
     data_avg = mean(data{id},3);
     figure; imagesc(data_avg); title(['Avg FOV day ' num2str(id)])
