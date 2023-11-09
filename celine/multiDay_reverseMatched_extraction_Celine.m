@@ -1,3 +1,4 @@
+
 clear all; clear global; 
 close all
 clc
@@ -18,7 +19,7 @@ fnout = fullfile(rc.achAnalysis,mouse);
 if expt(day_id).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
 else
-    dart_str = 'control';2
+    dart_str = 'control';
 end
 prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
             x = input(prompt);
@@ -39,6 +40,7 @@ cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
 %load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
+
 frame_rate = input.frameImagingRateMs;
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
@@ -51,6 +53,7 @@ fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
 cd(fn);
 load(fullfile(fn,'redImage.mat'));
 load(fullfile(fn,'mask_cell.mat'));
+
 
 %for each day individually, load the masks and red image for that day
     
@@ -86,7 +89,16 @@ clear red_fluor_all red_fluor_mask red_fluor_np
 %using the reference day
 green_fluor_match=mean(cellTCs_match{1},1);   
 
-
+%load in the pupil data for each day
+% pupil=cell(1,nd);
+% for id = 1:2 %currently only doing this for the baseline day
+%     mouse = expt(allDays(id)).mouse;
+%     date = expt(allDays(id)).date;
+%     imgFolder = expt(allDays(id)).contrastxori_runs{1};
+%     fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
+% 
+%    pupil{id}=load(fullfile(fn,'pupil.mat'));
+% end
 %% stimulus props
 
 nOn = input(1).nScansOn;
@@ -481,9 +493,9 @@ for id = 1:nd
     
 tc_trial_avrg_stat{id}=temp_tc_stat; %this is a cell array with one cell 
 tc_trial_avrg_loc{id}=temp_tc_loc;
-tc_trial_avrg_keep_allCond{id}=temp_tc_allCond;
+%tc_trial_avrg_keep_allCond{id}=temp_tc_allCond;
 %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
-rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
+%rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
 pref_responses_stat{id} = temp_pref_responses_stat;
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
@@ -890,136 +902,124 @@ axis square
 hold off
 print(fullfile(fn_multi, 'F_vs_dFoF.pdf'),'-dpdf');
 
-%% plot trial-by-trial activity in green vs red cell
-
-trialResp=cell(1,2);
-green_trialResp=cell(1,2);
-red_trialResp=cell(1,2);
-linCellProps = nan(6,4);
+%% get mean-subtracted trial responses
+trialResp=cell(1,nd); %raw trial responses for each cell 
+subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
+conditionMeans=cell(1,nd); %mean for each condition
 
 for id = 1:nd
-trialResp{id} = mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1);
-green_trialResp{id}=mean(trialResp{id}(:,:,green_ind_keep),3); %mean response of all green cells for each trial
-red_trialResp{id}=mean(trialResp{id}(:,:,red_ind_keep),3); %mean response of all red cells for each trial
 
+    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
+    subTrialResp{id} = nan(size(trialResp{id}));
+
+    conditionMeans{id}=nan(nDir,nCon,nKeep);
+
+    tCon = tCon_match{id}(:,1:nTrials(id));
+    tDir = tDir_match{id}(:,1:nTrials(id));
+
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        for iCon = 1:nCon
+            ind_con = find(tCon == cons(iCon));
+            inds1 = intersect(ind_dir,ind_con);
+            inds=intersect(inds1,stat_inds);
+            tempData=trialResp{id}(inds,:);
+            tempCellMeans=mean(tempData,1);
+            tempSubData = tempData - tempCellMeans;
+            subTrialResp{id}(inds,:)=tempSubData;
+            conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
+           
+        end
+    end
+subTrialResp{id}=subTrialResp{id}(stat_inds,:);
 end
 
-figure;
-subplot(2,2,1);
-plot(green_trialResp{pre});
-title('green pre');
-ylabel('trial');
-xlabel('mean dF/F over cells');
-subplot(2,2,2);
-plot(green_trialResp{post});
-title('green post');
-subplot(2,2,3);
-plot(red_trialResp{pre});
-title('red pre');
-subplot(2,2,4);
-plot(red_trialResp{post});
-title('red post');
 
 
-for iCell = 1:length(red_ind_keep)
-    cellID=red_ind_keep(iCell)
-    thisCell_pre=mean(trialResp{pre}(:,:,cellID),3); 
-    thisCell_post=mean(trialResp{post}(:,:,cellID),3); 
-%     figure
-%     scatter(green_trialResp{pre},thisCell_pre, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-%     hold on
-%     scatter(green_trialResp{post},thisCell_post,'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-%     h = lsline;
-%     set(h(1),'color','k')
-%     set(h(1),'color','b')
-%     
-    [R1,p1]=corrcoef(green_trialResp{pre},thisCell_pre);
-    [R2,p2]=corrcoef(green_trialResp{post},thisCell_post);
-    txt2 = ['HT+ ' num2str(length(red_ind_keep))];
-    title([num2str(cellID) ' R= ' num2str(R1(2))]);
-    R_p_values(1,iCell)=R1(2);
-    R_p_values(2,iCell)=p1(2);
-    R_p_values(3,iCell)=R2(2);
-    R_p_values(4,iCell)=p2(2);
+%% get correlation strucutre for noise correlation
 
+noiseCorr = cell(1,nd);
+
+for id=1:nd
+    noiseCorr{id}=nan(2,nKeep);
+
+    for iCell = 1:nKeep %change this to nKeep
+        thisCell=subTrialResp{id}(:,iCell);
+
+        %if this is a red cell, compare to all green cells
+        if ismember(iCell,red_ind_keep);
+            otherCells = green_ind_keep;;
+        else
+            otherCells = setdiff(green_ind_keep,iCell);
+        end
+        
+        otherCellsMean = mean(subTrialResp{id}(:,otherCells),2,"omitnan");
+        % 
+        % if id == pre
+        %     figure
+        %     scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+        %     hold on
+        %     h = lsline;
+        % else 
+        %     figure
+        %     scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+        %     hold on
+        %     h = lsline;
+        % end
+        % 
+
+         
+        [R,p]=corrcoef(otherCellsMean,thisCell);
+        title([' R= ' num2str(R(2))]);
+        
+        noiseCorr{id}(1,iCell)=R(2);
+        noiseCorr{id}(2,iCell)=p(2);
+    
+    end
+end
+%% get correlation strucutre for signal correlation
+sigCorr = cell(1,nd);
+
+
+for id=1:nd
+    sigCorr{id}=nan(2,nKeep);
+    tempconditionMeans=reshape(conditionMeans{id},(nCon*nDir),nKeep); %resahpe this into a vector for each cell
+    for iCell = 1:nKeep %change this to nKeep
+        thisCell=tempconditionMeans(:,iCell);
+
+        %if this is a red cell, compare to all green cells
+        if ismember(iCell,red_ind_keep);
+            otherCells = green_ind_keep;;
+        else
+            otherCells = setdiff(green_ind_keep,iCell);
+        end
+        
+        otherCellsMean = mean(tempconditionMeans(:,otherCells),2,"omitnan");
+        
+       % if id == pre
+       %      figure
+       %      scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+       %      hold on
+       %      h = lsline;
+       %  else 
+       %      figure
+       %      scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+       %      hold on
+       %      h = lsline;
+       %  end
+
+         
+        [R,p]=corrcoef(otherCellsMean,thisCell);
+        title([' R= ' num2str(R(2))]);
+        
+        sigCorr{id}(1,iCell)=R(2);
+        sigCorr{id}(2,iCell)=p(2);
+    
+    end
 end
 
-sig_corr_red = R_p_values(2,:)<0.05;
-R_red =  R_p_values(1,:)>.5;
-
-%%
-figure;
-scatter(green_trialResp{pre},red_trialResp{pre},10,'MarkerEdgeColor','k')
-ylabel('SOM activity')
-xlabel('Pyr activity')
-% ylim([-.05 .15])
-% xlim([-.05 .35])
-hold on
-scatter(green_trialResp{post},red_trialResp{post},10,'MarkerEdgeColor','b')
-hold on
 
 
-idx = isnan(red_trialResp{pre});
-linfit = polyfit(green_trialResp{pre}(~idx),red_trialResp{pre}(~idx),1);
-y1 = polyval(linfit,green_trialResp{pre});
-plot(green_trialResp{pre},y1,'k');
-[R,p]=corrcoef(green_trialResp{pre}(~idx),red_trialResp{pre}(~idx)); 
-linCellProps(1,1)=linfit(1); %slope
-linCellProps(2,1)=linfit(2); %intercept
-linCellProps(3,1)=R(2);
-linCellProps(4,1)=p(2);
-linCellProps(5,1)=min(green_trialResp{pre});
-linCellProps(6,1)=max(green_trialResp{pre});
-
-hold on
-idx2 = isnan(red_trialResp{post});
-linfit = polyfit(green_trialResp{post}(~idx2),red_trialResp{post}(~idx2),1);
-y2 = polyval(linfit,green_trialResp{post});
-plot(green_trialResp{post},y2,'b');
-[R,p]=corrcoef(green_trialResp{post}(~idx2),red_trialResp{post}(~idx2)); 
-linCellProps(1,2)=linfit(1); %slope
-linCellProps(2,2)=linfit(2); %intercept
-linCellProps(3,2)=R(2);
-linCellProps(4,2)=p(2);
-linCellProps(5,2)=min(green_trialResp{post});
-linCellProps(6,2)=max(green_trialResp{post});
-set(gca, 'TickDir', 'out')
-
-
-
-idx = isnan(red_trialResp{pre});
-linfit = polyfit(green_trialResp{pre}(~idx),red_trialResp{pre}(~idx),1);
-y1 = polyval(linfit,green_trialResp{pre});
-plot(green_trialResp{pre},y1,'k');
-[R,p]=corrcoef(green_trialResp{pre}(~idx),red_trialResp{pre}(~idx)); 
-linCellProps(1,3)=linfit(1); %slope
-linCellProps(2,3)=linfit(2); %intercept
-linCellProps(3,3)=R(2);
-linCellProps(4,3)=p(2);
-linCellProps(5,3)=min(green_trialResp{pre});
-linCellProps(6,3)=max(green_trialResp{pre});
-
-
-hold on
-idx2 = isnan(red_trialResp{post});
-linfit1 = polyfit(green_trialResp{post}(~idx2),red_trialResp{post}(~idx2),1);
-y2 = polyval(linfit1,green_trialResp{post});
-plot(green_trialResp{post},y2,'b');
-[R,p]=corrcoef(green_trialResp{post}(~idx2),red_trialResp{post}(~idx2)); 
-linCellProps(1,4)=linfit1(1); %slope
-linCellProps(2,4)=linfit1(2); %intercept
-linCellProps(3,4)=R(2);
-linCellProps(4,4)=p(2);
-linCellProps(5,4)=min(green_trialResp{post});
-linCellProps(6,4)=max(green_trialResp{post});
-
-sgtitle('Average response for each trial')
-x0=5;
-y0=5;
-width=5;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-set(gca, 'TickDir', 'out')
 
 
 
@@ -1031,9 +1031,6 @@ set(gca, 'TickDir', 'out')
 % green_ind_keep = intersect(haveRunning_both, green_ind_keep);
 % red_ind_keep = intersect(haveRunning_both, red_ind_keep);
 
-
-green_ind_keep = green_ind_keep;
-red_ind_keep = red_ind_keep;
 
 responseByCond = nan((nCon*2),4);
 
@@ -1079,31 +1076,88 @@ responseByCondProps(4,2)=p(2);
 responseByCondProps(5,2)=min(responseByCond(:,3));
 responseByCondProps(6,2)=max(responseByCond(:,3));
 
-save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'linCellProps','responseByCond','responseByCondProps','sig_corr_red','R_red','R_p_values')
+save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'responseByCond','responseByCondProps','conditionMeans','sigCorr','noiseCorr')
 
 
 clear R p x0 y0 y1 y2 linfit
-%%
+%% making dataframes for GLM
+
+trialRespFlat=cell(1,nd);
 for id = 1:nd
-corrmat{id} = corrcoef(fullTC_keep{id});
+    cellID=1:nKeep;
+    trialRespFlat{id}=repelem(cellID,nTrials(id))';
+    %cellID
+
+    % trialID = 1:nTrials(id);
+    % trialID = repmat(trialID,1,nKeep)';
+    % trialRespFlat{id}=cat(2,trialRespFlat{id},trialID);
+    % %tiral ID
+
+    dfof_temp=reshape(trialResp{id},nTrials(id)*nKeep,1);
+    trialRespFlat{id}=cat(2,trialRespFlat{id},dfof_temp);
+    %dfof
+
+    cellType_temp = repelem(red_keep_logical,nTrials(id))';
+    trialRespFlat{id}=cat(2,trialRespFlat{id},cellType_temp);
+    %cell type
+    
+    direction_temp = repmat(tDir_match{id},1,nKeep)';
+    trialRespFlat{id}=cat(2,trialRespFlat{id},direction_temp);
+    %direction
+
+    contrast_temp=repmat(tCon_match{id},1,nKeep)';
+    trialRespFlat{id}=cat(2,trialRespFlat{id},contrast_temp);
+    %contrast
+    
+    speed_temp=repmat(wheel_trial_avg{id},1,nKeep)';
+    trialRespFlat{id}=cat(2,trialRespFlat{id},speed_temp);
+    %wheel speed
+
+    pupil_temp = repmat(pupil{id}.rad.stim,1,nKeep)';
+    trialRespFlat{id}=cat(2,trialRespFlat{id},pupil_temp);
+    %pupil
+
+    %identify drug condition
+    if id==pre
+        day_temp = 0;
+    elseif id==post
+        day_temp=1;
+    end
+    day_temp = repelem(day_temp,nTrials(id)*nKeep,1);
+
+    trialRespFlat{id}=cat(2,trialRespFlat{id},day_temp);
+    %drug 
+
+    clear cellID dfof_temp cellType_temp direction_temp contrast_temp speed_temp pupil_temp day_temp
 end
 
-green_corrs=cell(1,nd);
-mean_green_corr=nan(length(red_ind_keep),id);
-for id = 1:nd
-temp=nan(length(red_ind_keep),length(green_ind_keep));
-for i=1:length(red_ind_keep)
-    cellID=red_ind_keep(i);
-    temp(i,:)=corrmat{id}(cellID,green_ind_keep);
-end
-green_corrs{id}=temp;
-mean_green_corr(:,id)=mean(green_corrs{id},2);
-end
+%to keep track of which column is which
+variableNames = {'cellID' 'dfof' 'cellType' 'direction' 'contrast' 'speed' 'pupil' 'day'};
+
+%turn it into an array
+trialRespFlat=vertcat(trialRespFlat{:});
+
+%make it into a table
+dataTable=array2table(trialRespFlat,"VariableNames",variableNames);  
+dataTable.day = categorical(dataTable.day,0:1,{'pre' 'post'});
+dataTable.cellType = categorical(dataTable.cellType,0:1,{'Pyr' 'SOM'});
+dataTable.cellID = categorical(dataTable.cellID);
+dataTable.mouseID = (repmat(mouse,size(dataTable,1),1));
+dataTable.drug = (repmat(expt(day_id).drug,size(dataTable,1),1));
+
+trialID= repmat(1:nTrials(1),1,nKeep)';
+trialID=repmat(trialID,2,1);
+dataTable.trialID=trialID;
+
+writetable(dataTable,fullfile(fn_multi,'dataTable.csv'),"WriteVariableNames",true)
+%% mixed effects model
+
+%lme = fitlme(dataTable,'dfof~cellType+contrast+speed+pupil+drug+(cellType*drug)+(1|mouseID)+(1|cellID)');
+% 
 
 
-save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'linCellProps','responseByCond','responseByCondProps','sig_corr_red','R_red','R_p_values','green_corrs','mean_green_corr')
 
-%clear red_ind_keep linCellProps responseByCond responseByCondProps sig_corr_red Rsq_red R_p_values green_corrs mean_green_corr
+
 
 
 

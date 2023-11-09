@@ -3,15 +3,27 @@ clc
 %ds = 'con_ori_nonDART'
 ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 300;
+day_id = 297;
 
 refFolder = '005'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION, 
 %TO IMPORT MASKS FROM
+
+
+if computer == 'GLNXA64'
+    isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
+    datapath = fullfile('/All_Staff/home/ACh/Data/2p_data');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
+    beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/');
+else
+    isilonName = '';
+    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    datapath = fullfile('/home/ACh/Data/2p_data');
+    beh_prefix = strcat('Z:\Behavior\Data\');
+end
 
 
 %% load data for day and register to the reference
@@ -19,8 +31,8 @@ refFolder = '005'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION,
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 
-fn = fullfile(rc.achAnalysis,mouse,expDate); %can make this flexible if folder structure is different
-mkdir(fn)
+fn = fullfile(isilonName,base,mouse,expDate); %can make this flexible if folder structure is different
+%mkdir(fn)
 fnref = fullfile(fn,refFolder);
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
 times = eval(['expt(day_id).' cell2mat(dataStructLabels) '_time']);
@@ -44,54 +56,23 @@ for irun = 1:nruns
     end
 
 
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        root = rc.data;
-        CD = fullfile(root,mouse,expDate,runFolder);
-        dat = 'data-';
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        root = rc.ashleyData;
-        CD = fullfile(root,mouse,'two-photon imaging', expDate,runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        root = rc.tammyData;
-        CD = fullfile(root, mouse, '2P',expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'celine')
-        root = rc.Data;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-';
-    end
-    cd(CD);
+    fn_in = fullfile(isilonName,datapath,mouse,expDate,imgFolder)
+    cd(fn_in);
 
     imgMatFile = [imgFolder '_000_000.mat'];
     load(imgMatFile);
     tHostname = lower(hostname);
     [s,tUsername] = dos('ECHO %USERNAME%');
-    switch tHostname
-        case {'nuke'}
-            if username == 'celine' 
-                fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
 
-            else
-                fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-            end
-        case{'nb-hubel'}
-                if username == 'cc735'
-                    fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                else
-                    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                 end
-    end
+    fName = (fullfile(beh_prefix,['data-' mouse '-' expDate '-' times{irun} '.mat']));
+    
+    load(fName);
     
     load(fName); %load the mworks behavioral file
 
-    temp(irun) = input; %load the data from the mworks file into temp
+    temp = input; %load the data from the mworks file into temp
     clear input
-    nframes = [temp(irun).counterValues{end}(end) info.config.frames];
+    nframes = [temp.counterValues{end}(end) info.config.frames];
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
 
@@ -228,16 +209,10 @@ if exist(fullfile(fnout,'redImage.mat'))
 elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find and load it
     redRun = expt(day_id).redChannelRun;
     imgMatFile = [redRun '_000_000.mat'];
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        cd(fullfile(root,mouse, expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        cd(fullfile(root,mouse,'two-photon imaging', expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        cd(fullfile(root, mouse, '2P',expDate, redRun));
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        cd(fullfile(root, mouse, expDate, redRun));
-    end
+
+    cd ..
+    cd(fullfile(redRun));
+    
     load(imgMatFile);
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])

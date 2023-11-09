@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 298;
+day_id = 349;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -267,13 +267,13 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
         redChImg = mean(data_rr_reg,3);
     elseif info.config.pmt0_gain>0.5 %if there is a green channel in this run, it gets registered to the registration image from green channel from the 920 run
         %data_rr = padarray(data_rr,9,0,'pre');
-        redAvg = mean(data_rr,3);
-        [out, data_rr_reg] = stackRegister(data_rr,redAvg);
-        [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out);
-        redChImgTemp = mean(data_rr_reg,3); 
-        rg_avg = mean(data_rg_reg,3);
-        [out2, ~] = stackRegister(rg_avg,data_avg);
-        [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2);
+        redAvg = mean(data_rr,3);%take the average of the red at 1040
+        [out, data_rr_reg] = stackRegister(data_rr,redAvg); %register red at 1040 to average of itself
+        [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out); %register green at 1040 using the shifts from the registration of the red at 1040
+        redChImgTemp = mean(data_rr_reg,3);  %take an average of the registered red at 1040
+        rg_avg = mean(data_rg_reg,3); %take an average of the registered green at 1040
+        [out2, ~] = stackRegister(rg_avg,data_avg); %register that green average to the registered data from my experimental run
+        [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2); %apply those shifts to the mean registered red at 1040
         
 %         [out, data_rg_reg] = stackRegister(data_rg,data_avg); %register the green channel from the 1040 run to the green channel from the 920 run
 %         [~, data_rr_reg]=stackRegister_MA(data_rr,[],[],out); %use those shifts to register the red 1040 run
@@ -328,7 +328,7 @@ if ~isempty(expt(day_id).redChannelRun)
         mask_data_temp=redForSegmenting(:,:,iStim);
         mask_data_temp(find(mask_exp >= 1)) = 0;
         bwout = imCellEditInteractiveLG(mask_data_temp);
-        mask_all = mask_all+bwout;
+        mask_all = mask_all+bwout; 
         mask_exp = imCellBuffer(mask_all,3)+mask_all;
         close all
     end

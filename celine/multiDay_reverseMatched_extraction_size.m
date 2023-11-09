@@ -369,7 +369,9 @@ pref_con_keep=cell(1,nd);
 resp_keep=cell(1,nd);
 conBySize_resp_stat_keep = cell(1,nd);
 conBySize_resp_loc_keep = cell(1,nd);
-pref_size_keep = cell(i,nd);
+pref_size_keep = cell(1,nd);
+h_keep=cell(1,nd);
+data_resp_keep=cell(1,nd);
 
 
 for id = 1:nd
@@ -384,10 +386,13 @@ for id = 1:nd
     conBySize_resp_stat_keep{id}=conBySize_resp_stat_match{id}(keep_cells,:,:);
     conBySize_resp_loc_keep{id}=conBySize_resp_loc_match{id}(keep_cells,:,:);
     data_resp_keep{id} = data_resp_match{id}(keep_cells,:,:,:);
+    h_keep{id}=h_match{id}(keep_cells,:,:,:);
 end
 
 red_fluor_keep=red_fluor_match(keep_cells);
 green_fluor_keep=green_fluor_match(keep_cells);
+
+
 
 conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
@@ -511,7 +516,7 @@ save(fullfile(fn_multi,'tc_keep.mat'),'explanation1','fullTC_keep','pref_respons
 
 
 explanation2 = 'data_resp_keep gives the df/f averaged over the full response window for all conditions in the form nCells X nOris X nCons X mean vs. std. resp_max_keep gives the df/f averaged over the full stim period for each cell at the preferred ori only, with a dimension for each contrast';
-save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','conBySize_resp_stat_keep','conBySize_resp_loc_keep')
+save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','conBySize_resp_stat_keep','conBySize_resp_loc_keep','h_keep')
 %% making mask maps for various measurements
 %show masks
 %get masks of matched cells
