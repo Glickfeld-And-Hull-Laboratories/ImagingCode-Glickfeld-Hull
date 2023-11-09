@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 300; %enter the refrence day ID here
+day_id(1) = 349; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -18,23 +18,21 @@ nd = length(day_id);
 brightnessScaleFactor = 0.3;
 mouse = expt(day_id(1)).mouse;
 
-if strcmp(expt(day_id(1)).data_loc,'lindsey')
-    root = fullfile(rc.data,mouse);
-elseif strcmp(expt(day_id(1)).data_loc,'ashley')
-    root = fullfile(rc.ashleyData,mouse,'two-photon imaging');
-elseif strcmp(expt(day_id(1)).data_loc,'tammy')
-        root = rc.tammyData;
-        expDate = expt(day_id(1)).date;
-        runFolder = expt(day_id(1)).contrastxori_runs;
-        dat = 'data-i';
-elseif strcmp(expt(day_id(1)).data_loc,'ACh')
-        root = rc.achData;
-        expDate = expt(day_id(1)).date;
-        runFolder = expt(day_id(1)).contrastxori_runs;
-        dat = 'data-i';
+
+if computer == 'GLNXA64'
+    isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
+    database = fullfile('/All_Staff/home/ACh/Data/2p_data');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
+    beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
+else
+    isilonName = 'duhs-user-nc1.dhe.duke.edu/';
+    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    database = fullfile('/home/ACh/Data/2p_data');
+   
+   beh_prefix = strcat('Z:\Behavior\Data\data-');
 end
 
-fnout = fullfile(rc.achAnalysis,mouse);
+fnout = fullfile(base,mouse);
 
 if expt(day_id(2)).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(1)).multiday_timesincedrug_hours) 'Hr'];
@@ -42,7 +40,7 @@ else
     dart_str = 'control';
 end
 
-fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(base,mouse,['multiday_' dart_str]);
 mkdir(fn_multi)
 data = cell(1,nd);
 fov_avg = cell(1,nd);
@@ -73,7 +71,7 @@ for id = 1:nd
     for irun = 1:nrun
         imgFolder = runs{irun};
         fName = [imgFolder '_000_000'];
-        cd(fullfile(root, mouse,expDate, imgFolder))
+        cd(fullfile(database, mouse,expDate, imgFolder))
         load(fName)
         if nrun == 1
             load(fullfile(fnout,expDate,imgFolder,'regOuts&Img.mat'))

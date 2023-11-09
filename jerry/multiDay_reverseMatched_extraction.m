@@ -89,16 +89,7 @@ clear red_fluor_all red_fluor_mask red_fluor_np
 %using the reference day
 green_fluor_match=mean(cellTCs_match{1},1);   
 
-%load in the pupil data for each day
-% pupil=cell(1,nd);
-% for id = 1:2 %currently only doing this for the baseline day
-%     mouse = expt(allDays(id)).mouse;
-%     date = expt(allDays(id)).date;
-%     imgFolder = expt(allDays(id)).contrastxori_runs{1};
-%     fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
-% 
-%    pupil{id}=load(fullfile(fn,'pupil.mat'));
-% end
+
 %% stimulus props
 
 nOn = input(1).nScansOn;
@@ -1080,80 +1071,6 @@ save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'responseByCond','responseByCo
 
 
 clear R p x0 y0 y1 y2 linfit
-%% making dataframes for GLM
-
-trialRespFlat=cell(1,nd);
-for id = 1:nd
-    cellID=1:nKeep;
-    trialRespFlat{id}=repelem(cellID,nTrials(id))';
-    %cellID
-
-    % trialID = 1:nTrials(id);
-    % trialID = repmat(trialID,1,nKeep)';
-    % trialRespFlat{id}=cat(2,trialRespFlat{id},trialID);
-    % %tiral ID
-
-    dfof_temp=reshape(trialResp{id},nTrials(id)*nKeep,1);
-    trialRespFlat{id}=cat(2,trialRespFlat{id},dfof_temp);
-    %dfof
-
-    cellType_temp = repelem(red_keep_logical,nTrials(id))';
-    trialRespFlat{id}=cat(2,trialRespFlat{id},cellType_temp);
-    %cell type
-    
-    direction_temp = repmat(tDir_match{id},1,nKeep)';
-    trialRespFlat{id}=cat(2,trialRespFlat{id},direction_temp);
-    %direction
-
-    contrast_temp=repmat(tCon_match{id},1,nKeep)';
-    trialRespFlat{id}=cat(2,trialRespFlat{id},contrast_temp);
-    %contrast
-    
-    speed_temp=repmat(wheel_trial_avg{id},1,nKeep)';
-    trialRespFlat{id}=cat(2,trialRespFlat{id},speed_temp);
-    %wheel speed
-
-    pupil_temp = repmat(pupil{id}.rad.stim,1,nKeep)';
-    trialRespFlat{id}=cat(2,trialRespFlat{id},pupil_temp);
-    %pupil
-
-    %identify drug condition
-    if id==pre
-        day_temp = 0;
-    elseif id==post
-        day_temp=1;
-    end
-    day_temp = repelem(day_temp,nTrials(id)*nKeep,1);
-
-    trialRespFlat{id}=cat(2,trialRespFlat{id},day_temp);
-    %drug 
-
-    clear cellID dfof_temp cellType_temp direction_temp contrast_temp speed_temp pupil_temp day_temp
-end
-
-%to keep track of which column is which
-variableNames = {'cellID' 'dfof' 'cellType' 'direction' 'contrast' 'speed' 'pupil' 'day'};
-
-%turn it into an array
-trialRespFlat=vertcat(trialRespFlat{:});
-
-%make it into a table
-dataTable=array2table(trialRespFlat,"VariableNames",variableNames);  
-dataTable.day = categorical(dataTable.day,0:1,{'pre' 'post'});
-dataTable.cellType = categorical(dataTable.cellType,0:1,{'Pyr' 'SOM'});
-dataTable.cellID = categorical(dataTable.cellID);
-dataTable.mouseID = (repmat(mouse,size(dataTable,1),1));
-dataTable.drug = (repmat(expt(day_id).drug,size(dataTable,1),1));
-
-trialID= repmat(1:nTrials(1),1,nKeep)';
-trialID=repmat(trialID,2,1);
-dataTable.trialID=trialID;
-
-writetable(dataTable,fullfile(fn_multi,'dataTable.csv'),"WriteVariableNames",true)
-%% mixed effects model
-
-%lme = fitlme(dataTable,'dfof~cellType+contrast+speed+pupil+drug+(cellType*drug)+(1|mouseID)+(1|cellID)');
-% 
 
 
 
