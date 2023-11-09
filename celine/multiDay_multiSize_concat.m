@@ -5,8 +5,9 @@ ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
-%260
-sess_list = [285 300 295];%enter all the sessions you want to concatenate
+%285 300 295 308 324 334 DART YM90K 
+% 299 289 304 312 320 330
+sess_list = [295 308 324 334];%enter1 all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -60,6 +61,7 @@ tc_trial_avrg_stat_concat=cell(1,nd);
 tc_trial_avrg_loc_concat=cell(1,nd);
 conBySize_resp_stat_concat=cell(1,nd);
 conBySize_resp_loc_concat=cell(1,nd);
+h_concat=cell(1,nd);
 
 for iSess = 1:nSess
     day_id = sess_list(iSess)
@@ -87,7 +89,7 @@ for iSess = 1:nSess
     for id = 1:nd
         tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:nTrials(id)));
         tSize_match{id} = celleqel2mat_padded(input(id).tGratingDiameterDeg(1:nTrials(id)));
- 
+         
     end
 
     cons = unique(tCon_match{post});
@@ -108,6 +110,7 @@ for iSess = 1:nSess
         tc_trial_avrg_loc_concat{id}=cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id});
         conBySize_resp_stat_concat{id}=cat(1,conBySize_resp_stat_concat{id},conBySize_resp_stat_keep{id});
         conBySize_resp_loc_concat{id}=cat(1,conBySize_resp_loc_concat{id},conBySize_resp_loc_keep{id});
+        h_concat{id}=cat(1,h_concat{id},h_keep{id});
     end
 
 end
@@ -122,7 +125,8 @@ nSize = length(sizes)
 nKeep_total = sum(nKeep_concat);
 
 clear data_resp_keep data_trial_keep green_ind_keep red_ind_keep conBySize_resp_loc_keep conBySize_resp_stat_keep tc_trial_avrg_stat tc_trial_avrg_loc conBySize_resp_loc_match conBySize_resp_stat_match red_keep_logical green_keep_logical pref_responses_stat pref_responses_loc resp_keep mouse pref_con_keep pref_dir_keep pref_size_keep explanation1 explanation2
-%% find cells that I have running and stationary data for on both days - these are called pass cells
+%% cell selection
+% find cells that I have running and stationary data for on both days - these are called pass cells
 
 haveRunning_pre=(logical(sum(sum(~isnan(conBySize_resp_loc_concat{pre}),3),2)==nSize)); %find cells that have a no NAN values for any sise (the total of non-NAN should == the number of size)
 haveRunning_post=(logical(sum(sum(~isnan(conBySize_resp_loc_concat{post}),3),2)==nSize));
@@ -132,11 +136,23 @@ haveStat_pre=(logical(sum(sum(~isnan(conBySize_resp_stat_concat{pre}),3),2)==nSi
 haveStat_post=(logical(sum(sum(~isnan(conBySize_resp_stat_concat{post}),3),2)==nSize));
 haveStat_both= find(haveStat_pre.* haveStat_post); %find cells that meet this criteria for both days - now in indices, not logical
 
-passCells = intersect(haveStat_both, haveRunning_both);
+runningCells = intersect(haveStat_both, haveRunning_both);
 
-pass_green = intersect(passCells, green_ind_concat);
-pass_red= intersect(passCells, red_ind_concat);
+%find cells responsive to a given size
+mySize = 1; %1 is the smallest size
+respToSizeBothDays = cell(1,nd);
+for id = 1:nd
+    respToSizeBothDays{id}=sum(h_concat{id}(:,:,:,mySize),2);
+end
+respToSmall = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
+runningMySize = intersect(runningCells,find(respToMySize));
+
+runningGreen = intersect(runningMySize, green_ind_concat);
+runningRed= intersect(runningMySize, red_ind_concat);
+
+statGreen = intersect(find(respToMySize),green_ind_concat);
+statRed = intersect(find(respToMySize),red_ind_concat);
 
 clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
 
@@ -151,13 +167,14 @@ end
 clear start iMouse
 % %%alternate for times when I know I don't have enough running data
 % pass_green = green_ind_concat;
-% pass_red = red_ind_concat;
+% runningRed = red_ind_concat;
 
 %find how many haveRunning red cells I got for each mouse
-cellCounts = nan(nSess,nCon);
+cellCounts = nan(nSess,2);
 mouseNames=[];
 for iMouse = 1:nSess
-   cellCounts(iMouse,1)=length(intersect(pass_red',(mouseInds{iMouse})));
+   cellCounts(iMouse,1)=length(intersect(runningRed',(mouseInds{iMouse})));
+   cellCounts(iMouse,2)=length(intersect(statRed',(mouseInds{iMouse})));
    mouseNames=[mouseNames, string(mice(iMouse,:))];
 end
 
@@ -165,7 +182,9 @@ end
 cellCountsGreen = nan(nSess,nCon);
 mouseNames=[];
 for iMouse = 1:nSess
-   cellCountsGreen(iMouse,1)=length(intersect(pass_green',(mouseInds{iMouse})));
+   cellCountsGreen(iMouse,1)=length(intersect(runningGreen',(mouseInds{iMouse})));
+   cellCountsGreen(iMouse,2)=length(intersect(statGreen',(mouseInds{iMouse})));
+
    mouseNames=[mouseNames, string(mice(iMouse,:))];
 end
 
@@ -192,13 +211,13 @@ for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
         
-        tc_green_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
-        tc_green_se_stat{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
+        tc_green_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,statGreen,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,statGreen,iCon,iSize),[],2);
+        tc_green_se_stat{id}(:,iCon,iSize)=green_std/sqrt(length(statGreen));
         
-        tc_red_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
-        tc_red_se_stat{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
+        tc_red_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,statRed,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,statRed,iCon,iSize),[],2);
+        tc_red_se_stat{id}(:,iCon,iSize)=red_std/sqrt(length(statRed));
         
         clear green_std red_std
       end 
@@ -227,7 +246,7 @@ for iCon = 1:nCon
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-    title(['-HTP',' n = ', num2str(length(green_ind_concat))])
+    title(['-HTP',' n = ', num2str(length(statGreen))])
     
     ylabel('dF/F') 
     xlabel('s') 
@@ -245,7 +264,7 @@ for iCon = 1:nCon
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
     ylabel('dF/F') 
     xlabel('s') 
-    title(['+HTP',' n = ', num2str(length(red_ind_concat))])
+    title(['+HTP',' n = ', num2str(length(statRed))])
     
     x0=5;
     y0=5;
@@ -275,13 +294,13 @@ for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
         
-        tc_green_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,pass_green,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,pass_green,iCon,iSize),[],2);
-        tc_green_se_loc{id}(:,iCon,iSize)=green_std/sqrt(length(pass_green));
+        tc_green_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),[],2);
+        tc_green_se_loc{id}(:,iCon,iSize)=green_std/sqrt(length(runningGreen));
         
-        tc_red_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,pass_red,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,pass_red,iCon,iSize),[],2);
-        tc_red_se_loc{id}(:,iCon,iSize)=red_std/sqrt(length(pass_red));
+        tc_red_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),[],2);
+        tc_red_se_loc{id}(:,iCon,iSize)=red_std/sqrt(length(runningRed));
         
         clear green_std red_std
       end 
@@ -310,7 +329,7 @@ for iCon = 1:nCon
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-    title(['-HTP',' n = ', num2str(length(pass_green))])
+    title(['-HTP',' n = ', num2str(length(runningGreen))])
     
     ylabel('dF/F') 
     xlabel('s') 
@@ -328,7 +347,7 @@ for iCon = 1:nCon
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
     ylabel('dF/F') 
     xlabel('s') 
-    title(['+HTP',' n = ', num2str(length(pass_red))])
+    title(['+HTP',' n = ', num2str(length(runningRed))])
     
     x0=5;
     y0=5;
@@ -357,15 +376,16 @@ sizeResp_red_se_stat = cell(1,nd); %same for red
 
 
 for id = 1:nd
-    green_data=squeeze(mean(conBySize_resp_stat_concat{id}(green_ind_concat,:,:),2));%pulling the green cells and averaging over contrast
+    green_data=squeeze(mean(conBySize_resp_stat_concat{id}(statGreen,:,:),2));%pulling the green cells and averaging over contrast
     sizeResp_green_avrg_stat{id}=nanmean(green_data,1);
     green_std=nanstd(green_data,1);
-    sizeResp_green_se_stat{id}=green_std/sqrt(length(green_ind_concat));
+    sizeResp_green_se_stat{id}=green_std/sqrt(length(statGreen));
     
-    red_data=squeeze(mean(conBySize_resp_stat_concat{id}(red_ind_concat,:,:),2));%pulling the red cells and averaging over contrast
+    
+    red_data=squeeze(mean(conBySize_resp_stat_concat{id}(statRed,:,:),2));%pulling the red cells and averaging over contrast
     sizeResp_red_avrg_stat{id}=nanmean(red_data,1);
     red_std=nanstd(red_data,1);
-    sizeResp_red_se_stat{id}=red_std/sqrt(length(red_ind_concat));
+    sizeResp_red_se_stat{id}=red_std/sqrt(length(statRed));
     
     clear green_std red_std green_data red_data
  
@@ -381,15 +401,15 @@ sizeResp_red_se_loc = cell(1,nd); %same for red
 
 
 for id = 1:nd
-    green_data=squeeze(mean(conBySize_resp_loc_concat{id}(pass_green,:,:),2));%pulling the green cells and averaging over contrast
+    green_data=squeeze(mean(conBySize_resp_loc_concat{id}(runningGreen,:,:),2));%pulling the green cells and averaging over contrast
     sizeResp_green_avrg_loc{id}=nanmean(green_data,1);
     green_std=nanstd(green_data,1);
-    sizeResp_green_se_loc{id}=green_std/sqrt(length(pass_green));
+    sizeResp_green_se_loc{id}=green_std/sqrt(length(runningGreen));
     
-    red_data=squeeze(mean(conBySize_resp_loc_concat{id}(pass_red,:,:),2));%pulling the red cells and averaging over contrast
+    red_data=squeeze(mean(conBySize_resp_loc_concat{id}(runningRed,:,:),2));%pulling the red cells and averaging over contrast
     sizeResp_red_avrg_loc{id}=nanmean(red_data,1);
     red_std=nanstd(red_data,1);
-    sizeResp_red_se_loc{id}=red_std/sqrt(length(pass_red));
+    sizeResp_red_se_loc{id}=red_std/sqrt(length(runningRed));
     
     clear green_std red_std green_data red_data
  
@@ -402,46 +422,50 @@ subplot(2,2,1) %for the first day
 errorbar(sizes,sizeResp_green_avrg_stat{pre},sizeResp_green_se_stat{pre},'k');
 hold on
 errorbar(sizes,sizeResp_green_avrg_stat{post},sizeResp_green_se_stat{post},'b');
-title(['Stationary -HTP',' n = ', num2str(length(green_ind_concat))])
+title(['Stationary -HTP, DART',' n = ', num2str(length(statGreen))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
+ylim([-.05 .2])
 
 subplot(2,2,2) %for the second day
 errorbar(sizes,sizeResp_red_avrg_stat{pre},sizeResp_red_se_stat{pre},'k');
 hold on
 errorbar(sizes,sizeResp_red_avrg_stat{post},sizeResp_red_se_stat{post},'b');
-title(['Stationary +HTP',' n = ', num2str(length(red_ind_concat))])
+title(['Stationary +HTP',' n = ', num2str(length(statRed))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
+ylim([-.05 .2])
 
 subplot(2,2,3) %for the first day
 errorbar(sizes,sizeResp_green_avrg_loc{pre},sizeResp_green_se_loc{pre},'k');
 hold on
 errorbar(sizes,sizeResp_green_avrg_loc{post},sizeResp_green_se_loc{post},'b');
-title(['Running -HTP',' n = ', num2str(length(pass_green))])
+title(['Running -HTP',' n = ', num2str(length(runningGreen))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
+ylim([-.05 .3])
 
 subplot(2,2,4) %for the second day
 errorbar(sizes,sizeResp_red_avrg_loc{pre},sizeResp_red_se_loc{pre},'k');
 hold on
 errorbar(sizes,sizeResp_red_avrg_loc{post},sizeResp_red_se_loc{post},'b');
-title(['Running +HTP',' n = ', num2str(length(pass_red))])
+title(['Running +HTP',' n = ', num2str(length(runningRed))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
+ylim([-.05 .3])
 
 x0=5;
 y0=5;
-width=4;
-height=3;
+width=6;
+height=6;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 
@@ -457,7 +481,7 @@ subplot(2,2,1) %for the first day
 errorbar(sizes,sizeResp_green_avrg_stat{pre},sizeResp_green_se_stat{pre},'k');
 hold on
 errorbar(sizes,sizeResp_green_avrg_loc{pre},sizeResp_green_se_loc{pre},'m');
-title(['Pre-DART -HTP',' n = ', num2str(length(pass_green))])
+title(['Pre-DART -HTP',' n = ', num2str(length(runningGreen))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
@@ -467,7 +491,7 @@ subplot(2,2,2) %for the second day
 errorbar(sizes,sizeResp_red_avrg_stat{pre},sizeResp_red_se_stat{pre},'k');
 hold on
 errorbar(sizes,sizeResp_red_avrg_loc{pre},sizeResp_red_se_loc{pre},'m');
-title(['Pre-DART +HTP',' n = ', num2str(length(pass_red))])
+title(['Pre-DART +HTP',' n = ', num2str(length(runningRed))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
@@ -478,7 +502,7 @@ subplot(2,2,3) %for the first day
 errorbar(sizes,sizeResp_green_avrg_stat{post},sizeResp_green_se_stat{post},'k');
 hold on
 errorbar(sizes,sizeResp_green_avrg_loc{post},sizeResp_green_se_loc{post},'m');
-title(['Post-DART -HTP',' n = ', num2str(length(pass_green))])
+title(['Post-DART -HTP',' n = ', num2str(length(runningGreen))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
@@ -488,7 +512,7 @@ subplot(2,2,4) %for the second day
 errorbar(sizes,sizeResp_red_avrg_stat{post},sizeResp_red_se_stat{post},'k');
 hold on
 errorbar(sizes,sizeResp_red_avrg_loc{post},sizeResp_red_se_loc{post},'m');
-title(['Post-DART +HTP',' n = ', num2str(length(pass_red))])
+title(['Post-DART +HTP',' n = ', num2str(length(runningRed))])
 ylabel('dF/F, pref dir') 
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')

@@ -186,12 +186,8 @@ s.Azhicut_10 = Azhicut_10;
 if PLOTIT_FIT == 1
     if start ==65
         set(gcf, 'Position', [0 0 800 1000]);
-        UN = username;
-        if UN(1:3) == 'kev'
-            fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\kevin\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_RFfits' num2str(ifig) '.pdf']);
-        elseif UN == 'cc735'
+
              fn_out =fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\celine\Analysis\2P_analysis', [date '_' mouse], [date '_' mouse '_' run_str])
-        else
         
             if exist('nDir','var') & nDir>1
                 fn_out = fullfile(fnout, datemouse, datemouserun, [datemouserun '_RFfits' num2str(ifig) '_dir' num2str(idir) '.pdf']);
