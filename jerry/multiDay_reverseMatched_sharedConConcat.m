@@ -7,7 +7,7 @@ dataStructLabels = {'contrastxori'};
 eval(ds);
 
 
-sess_list = [349];%enter all the sessions you want to concatenate
+sess_list = [351];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -42,7 +42,7 @@ if computer == 'GLNXA64'
     base = fullfile(isilonName, '/All_Staff/home/ACh/Data/2p_data');
     
 else
-    isilonName = 'Z:';
+    isilonName = 'G:';
     base = fullfile(isilonName, '\home\ACh\Analysis\2p_analysis');
       
 end
@@ -212,6 +212,12 @@ end
 
 clear haveRunning_pre haveRunning_post haveRunning_both
 
+%finds the cells that have running and stationary for all three contrasts
+green_all = intersect(haveRunning_green{1},haveRunning_green{2});
+green_all = intersect(green_all, haveRunning_green{3});
+
+red_all = intersect(haveRunning_red{1},haveRunning_red{2});
+red_all = intersect(red_all, haveRunning_red{3});
 
 % %for instances when I know I don't have enough running trials, just use
 % all keep cells.
@@ -607,7 +613,7 @@ end
 
 
 %%
-responseTable = table([nanmean(pref_responses_stat_concat{pre}(haveRunning_green));nanmean(pref_responses_stat_concat{post}(haveRunning_green))],[nanmean(pref_responses_stat_concat{pre}(haveRunning_red));nanmean(pref_responses_stat_concat{post}(haveRunning_red))],[nanmean(pref_responses_loc_concat{pre}(haveRunning_green));nanmean(pref_responses_loc_concat{post}(haveRunning_green))],[nanmean(pref_responses_loc_concat{pre}(haveRunning_red));nanmean(pref_responses_loc_concat{post}(haveRunning_red))],'VariableNames',{'Pyramidal cells stat'  '+HTP cells stat' 'Pyramidal cells loc'  '+HTP cells loc'}, 'RowNames',{'Pre'  'Post'})
+responseTable = table([nanmean(pref_responses_stat_concat{pre}(green_all));nanmean(pref_responses_stat_concat{post}(green_all))],[nanmean(pref_responses_stat_concat{pre}(red_all));nanmean(pref_responses_stat_concat{post}(red_all))],[nanmean(pref_responses_loc_concat{pre}(green_all));nanmean(pref_responses_loc_concat{post}(green_all))],[nanmean(pref_responses_loc_concat{pre}(red_all));nanmean(pref_responses_loc_concat{post}(red_all))],'VariableNames',{'Pyramidal cells stat'  '+HTP cells stat' 'Pyramidal cells loc'  '+HTP cells loc'}, 'RowNames',{'Pre'  'Post'})
 writetable(responseTable,fullfile(fnout,[num2str(targetCon) 'responseTable.csv']),'WriteRowNames',true)
 
 
@@ -829,7 +835,7 @@ title(['-HTP',' n = ', num2str(length(green_all))])
 ylabel('dF/F, pref ori') 
 xlabel('contrast') 
 xlim([0 1])
-ylim([0 .4])
+ylim([0 .5])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
 box off
@@ -839,7 +845,7 @@ errorbar(cons,conResp_red_avrg_loc{pre},conResp_red_se_loc{pre},'k');
 hold on
 errorbar(cons,conResp_red_avrg_loc{post},conResp_red_se_loc{post},'b');
 title(['+HTP',' n = ', num2str(length(red_all))])
- ylim([0 .4])
+ylim([0 .6])
 xlim([0 1])
 xticks([.25 .5 1])
 xlabel('contrast') 
@@ -859,12 +865,7 @@ sgtitle(['Running' ])
 print(fullfile(fnout,['loc_contrast_resposnse.pdf']),'-dpdf');
 
 %% response by condition
-%finds the cells that have running and stationary for all three contrasts
-green_all = intersect(haveRunning_green{1},haveRunning_green{2});
-green_all = intersect(green_all, haveRunning_green{3});
 
-red_all = intersect(haveRunning_red{1},haveRunning_red{2});
-red_all = intersect(red_all, haveRunning_red{3});
 
 
 a=mean(pref_responses_stat_concat{pre}(green_all,:), "omitnan");
