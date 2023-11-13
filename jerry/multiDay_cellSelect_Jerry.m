@@ -1,15 +1,15 @@
 clear all; clear global;  close all
 clc
 %ds = 'con_ori_nonDART'
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 352;
-%% load data for day
+day_id = 1;
+    %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
@@ -314,7 +314,7 @@ redThresh(highValues)=prctile(redChImg,threshPercentile,'all');
 figure; imagesc(redChImg);colormap gray;
 figure; imagesc(redThresh);colormap gray;
 
-clear data_rr data_rg data_rg_reg data_rr_reg
+%clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 

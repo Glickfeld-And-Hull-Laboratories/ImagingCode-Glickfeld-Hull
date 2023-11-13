@@ -2,7 +2,7 @@
 clear all; clear global; 
 close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);
