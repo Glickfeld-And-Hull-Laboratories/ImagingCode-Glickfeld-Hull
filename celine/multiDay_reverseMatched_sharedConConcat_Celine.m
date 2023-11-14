@@ -11,10 +11,11 @@ eval(ds);
 % 178 190 294 %good quality SOM YM90K
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
-%peg 303 311 319 329
-%Oct 2023 138 142 163 171 178 190 294 307 323 333
+%peg  303 311 319 329 355
+%Oct 2023: 138 142 163 171 178 190 294 307 323 333
 
-sess_list = [349];%enter all the sessions you want to concatenate
+
+sess_list = [303 311 319 329 355];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -103,12 +104,20 @@ noiseCorr_concat = cell(1,nd);
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
-dataTableConat=[];
+%dataTableConat=[];
+drug=cell(1,nSess);
 
+cellID_adjustment=0;
 for iSess = 1:nSess
     day_id = sess_list(iSess)
     mouse = expt(day_id).mouse;
     mice=[mice;mouse];
+    thisDrug = expt(day_id).drug;
+    drug{iSess}=thisDrug;
+
+    % if iSess > 1
+    %     cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
+    % end
 
     if expt(day_id).multiday_timesincedrug_hours>0
         dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
@@ -117,18 +126,19 @@ for iSess = 1:nSess
     end
     fn_multi = fullfile(base,mouse,['multiday_' dart_str]);
 
-    load(fullfile(fn_multi,'tc_keep.mat'))
-    load(fullfile(fn_multi,'resp_keep.mat'))
-    load(fullfile(fn_multi,'input.mat'))
-    load(fullfile(fn_multi,'locomotion.mat'))
-    load(fullfile(fn_multi,'fluor_intensity.mat'))
-    load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
-%    temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
-    
-    % temp_table.z_speed=zscor_xnan(temp_table.speed);
-    % temp_table.z_pupil=zscor_xnan(temp_table.pupil);
-    % 
-    % dataTableConat=[dataTableConat; temp_table];
+    load(fullfile(fn_multi,'tc_keep.mat'));
+    load(fullfile(fn_multi,'resp_keep.mat'));
+    load(fullfile(fn_multi,'input.mat'));
+    load(fullfile(fn_multi,'locomotion.mat'));
+    load(fullfile(fn_multi,'fluor_intensity.mat'));
+    load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
+   % temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
+   % 
+   %  temp_table.z_speed=zscor_xnan(temp_table.speed);
+   %  temp_table.z_pupil=zscor_xnan(temp_table.pupil);
+   %  temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
+   % 
+   %  dataTableConat=[dataTableConat; temp_table];
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -222,26 +232,8 @@ mean(RIx_concat{post})
 % for iMouse = z:nSess
 %     mice{iMouse}=[mice{iMouse},'b'];
 % end
-%% mixed model
 
-dataTableConat.day=categorical(dataTableConat.day);
-dataTableConat.mouseID=categorical(dataTableConat.mouseID);
-dataTableConat.cellID=categorical(dataTableConat.cellID);
-dataTableConat.cellType=categorical(dataTableConat.cellType);
-dataTableConat.drug = categorical(dataTableConat.drug);
-dataTableConat = sortrows(dataTableConat,"day","ascend");
 
-%lme = fitlme(dataTableConat,'dfof_perCent~cellType+contrast+z_speed+z_pupil+day+(cellType*day)+(1|mouseID)+(1|cellID:mouseID)');
-lme = fitlme(dataTableConat,'dfof~cellType+contrast+z_speed+z_pupil+day+drug+(cellType*day*drug)+(1|mouseID)+(1|cellID:mouseID)+(1|day:cellID)+(1|drug:cellID)');
-
-%% post-hoc comaparisons for mixed model
-%what is the mean df/f for each cell type on each day
-vars = ["dfof"];
-factors = ["drug","cellType","day"];
-meanScoresByFactor = varfun(@mean, ...
-                            dataTableConat, ...
-                            "InputVariables",vars, ...
-                            "GroupingVariables",factors)
 
 %% find cells that I have running data for on both days
 haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
@@ -303,6 +295,12 @@ cellCountTableGreen = table(cellCountsGreen, RowNames=mouseNames)
 writetable(cellCountTableRed,fullfile(fnout,['cellCounts.csv']),'WriteRowNames',true)
 writetable(cellCountTableGreen,fullfile(fnout,['cellCounts_Green.csv']),'WriteRowNames',true)
 clear cellCountsRed cellCountsGreen
+
+green_all = intersect(haveRunning_green{1},haveRunning_green{2});
+green_all = intersect(green_all, haveRunning_green{3});
+
+red_all = intersect(haveRunning_red{1},haveRunning_red{2});
+red_all = intersect(red_all, haveRunning_red{3});
 %% ALL KEEP CELLS
 
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
@@ -790,11 +788,7 @@ print(fullfile(fnout,['prefDir_change.pdf']),'-dpdf','-bestfit')
 
 %% response by condition
 %finds the cells that have running and stationary for all three contrasts
-green_all = intersect(haveRunning_green{1},haveRunning_green{2});
-green_all = intersect(green_all, haveRunning_green{3});
 
-red_all = intersect(haveRunning_red{1},haveRunning_red{2});
-red_all = intersect(red_all, haveRunning_red{3});
 
 
 a=mean(pref_responses_stat_concat{pre}(green_all,:), "omitnan");
@@ -915,7 +909,7 @@ for i = 1:nKeep_total
         %putting data into matrix
         norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
         norm_diff(2,iCon,i)=norm_diff_loc; %second is running
-clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc 
+clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
     end 
 end
 %remove any infiinty values resulting from divisions by zero, and turn
@@ -1568,30 +1562,78 @@ colorbar
 refline(1)
 axis square
 
-%% outputting dataframes for statistical analysis
+%% making normDiff table
 mouseID=[];
 for imouse =1:nSess
-   ID_string=string(mice(imouse,1:5));
+   ID_string=mouseNames(imouse);
    thisID = repelem(ID_string,nKeep_concat(imouse));
    mouseID=[mouseID,thisID];
 end
 mouseID=mouseID';
-%% 
-mouseIDcol=repmat(mouseID,2,1);
-days=[2 1];
-day=repelem(days,nKeep_total)';
-cell_type=repmat(red_concat,1,2)';
-stat_resp=reshape(cell2mat(pref_responses_stat_concat),[(2*nKeep_total),1]);
-loc_resp=reshape(cell2mat(pref_responses_loc_concat),[(2*nKeep_total),1]);
-half_max=reshape(cell2mat(tHalfMax),[(2*nKeep_total),1]);
-LMI=reshape(cell2mat(LMI_concat),[(2*nKeep_total),1]);
-green_col = repmat(green_fluor_concat,1,2)';
-red_col = repmat(red_fluor_concat,1,2)';
+
+mouseIDcol=repmat(mouseID,6,1);
+
+norm_diff_col1 = reshape(norm_diff, [2,3*nKeep_total]);
+norm_diff_col2 = reshape(norm_diff_col1, [1,6*nKeep_total])';
+
+consCol1 = repelem(cons,2);
+consCol2=repmat(consCol1, 1,nKeep_total)';
+
+cellID=1:nKeep_total;
+%cellID=cellID+315; %% to account for cells in the other condition
+cellID_col=repelem(cellID, 6)';
+
+cell_type_col=repelem(red_concat,1,6)';
+
+behState1 = repmat(["stat" "loc"],1,3);
+behState2=repmat(behState1,1,nKeep_total)';
+
+drug="DRT"; %%need to get drug coded correctly
+drugCol=repmat(drug,size(mouseIDcol));
+
+normDiff_output = table(mouseIDcol,cellID_col,cell_type_col,consCol2,behState2,drugCol,norm_diff_col2, ...
+    'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'behState' 'drug' 'normDiff'});
+
+writetable(normDiff_output,fullfile(fnout,'normDiff_output.csv'))
+
+%% making dfof output table
+mouseID=[];
+for imouse =1:nSess
+   ID_string=mouseNames(imouse);
+   thisID = repelem(ID_string,nKeep_concat(imouse));
+   mouseID=[mouseID,thisID];
+end
+mouseID=mouseID';
+
+dfof_stat_pre = reshape(pref_responses_stat_concat{pre},[3*nKeep_total,1]);
+dfof_stat_post = reshape(pref_responses_stat_concat{post},[3*nKeep_total,1]);
+dfof_loc_pre = reshape(pref_responses_loc_concat{pre},[3*nKeep_total,1]);
+dfof_loc_post = reshape(pref_responses_loc_concat{post},[3*nKeep_total,1]);
+
+dfof_col = vertcat(dfof_stat_pre,dfof_stat_post,dfof_loc_pre,dfof_loc_post);
+
+cellID=1:nKeep_total;
+cellID_col=repmat(cellID',12,1);
+cellID_col = cellID_col+622; %to account fro DRT cells
+
+mouseIDcol = repmat(mouseID,12,1);
+
+day1 = repelem(["pre" "post"],1,(3*nKeep_total))';
+day=repmat(day1,2,1);
+
+drug="PEG"; %%need to get drug coded correctly
+drugCol=repmat(drug,size(mouseIDcol));
+
+contrast1 = repelem(cons,nKeep_total)';
+contrast=repmat(contrast1,4,1);
+
+cell_type_col=repmat(red_concat,1,12)';
 
 
-output = table(mouseIDcol,day,cell_type,stat_resp,loc_resp,half_max,LMI,green_col,red_col);
+dfof_output = table(mouseIDcol,cellID_col,cell_type_col,contrast,drugCol,day,dfof_col, ...
+    'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'drug' 'day' 'dfof'});
 
-writetable(output,fullfile(fnout,[num2str(targetCon) '_output.csv']))
+writetable(dfof_output,fullfile(fnout,'dfof_PEG_output.csv'))
 
 %%
 stat_resp=cell2mat(pref_responses_stat_concat);

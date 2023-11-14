@@ -10,17 +10,13 @@ eval(ds);
 %day_id = 169; %enter post-DART day
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
-
 nd=2; %hardcoding the number of days for now
 
 mouse = expt(day_id).mouse;
 
-fnout = fullfile(rc.achAnalysis,mouse);
-if expt(day_id).multiday_timesincedrug_hours>0
-    dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
-else
-    dart_str = 'control';
-end
+
+dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
+
 prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
             x = input(prompt);
             switch x
@@ -90,15 +86,15 @@ clear red_fluor_all red_fluor_mask red_fluor_np
 green_fluor_match=mean(cellTCs_match{1},1);   
 
 %load in the pupil data for each day
-% pupil=cell(1,nd);
-% for id = 1:2 %currently only doing this for the baseline day
-%     mouse = expt(allDays(id)).mouse;
-%     date = expt(allDays(id)).date;
-%     imgFolder = expt(allDays(id)).contrastxori_runs{1};
-%     fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
-% 
-%    pupil{id}=load(fullfile(fn,'pupil.mat'));
-% end
+pupil=cell(1,nd);
+for id = 1:2
+    mouse = expt(allDays(id)).mouse;
+    date = expt(allDays(id)).date;
+    imgFolder = expt(allDays(id)).contrastxori_runs{1};
+    fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
+
+   pupil{id}=load(fullfile(fn,'pupil.mat'));
+end
 %% stimulus props
 
 nOn = input(1).nScansOn;
@@ -1080,7 +1076,7 @@ save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'responseByCond','responseByCo
 
 
 clear R p x0 y0 y1 y2 linfit
-%% making dataframes for GLM
+%% making dataframes for mixed model
 
 trialRespFlat=cell(1,nd);
 for id = 1:nd
