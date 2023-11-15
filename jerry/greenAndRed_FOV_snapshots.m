@@ -1,6 +1,6 @@
 
-mouse = 'i2132';
-date = '231103';
+mouse = 'i2133';
+date = '231115';
 redFolder = '001'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
 greenFolder = '000'; %enter the first three digits
@@ -48,7 +48,7 @@ data_r_reg_avg = mean(data_r_reg,3);
 cd(out_path);
 fig1=figure; imagesc(data_r_reg_avg); title([' ' depth ' red at 1040']); 
 colormap gray;
-caxis([100 800])
+caxis([300 800])
 print(fullfile(out_path, [date '_' mouse  '_red_FOV.pdf']),'-dpdf','-bestfit')
 saveas(fig1, 'redFOV.png')
 

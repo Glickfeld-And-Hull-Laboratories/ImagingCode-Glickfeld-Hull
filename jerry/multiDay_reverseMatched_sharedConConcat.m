@@ -7,7 +7,7 @@ dataStructLabels = {'contrastxori'};
 eval(ds);
 
 
-sess_list = [351];%enter all the sessions you want to concatenate
+sess_list = [2];%enter all the sessions you want to concatenate; ONLY ENTER THE REFERENCE DATE IF MATCHING
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -17,7 +17,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
             x = input(prompt);
             switch x
                 case 0
-                    pre=1; %baeline session, used as reference, is in the 1st position
+                    pre=1; %baseline session, used as reference, is in the 1st position
                     post=2;
                     "baseline used as reference"
                 case 1
