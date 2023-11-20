@@ -3,7 +3,7 @@
 %PEG has to go first. I have hardcoded to folders where these files are,
 %based on the data I'm including as of 11/12/2023
 clear all
-PEG_data=readtable(fullfile('Z:\home\ACh\Analysis\2p_analysis\concat303_311_319_329_355\14-Nov-2023','dfof_PEG_output.csv'));
+%PEG_data=readtable(fullfile('Z:\home\ACh\Analysis\2p_analysis\concat303_311_319_329_355\14-Nov-2023','normDiff_output.csv'));
 DRT_data = readtable(fullfile('Z:\home\ACh\Analysis\2p_analysis\concat138_142_163_171_178_190_294_307_323_333\12-Nov-2023','normDiff_output.csv'));
 
 dataTable=[PEG_data;DRT_data];
@@ -15,7 +15,7 @@ lme = fitlme(dataTable,'normDiff~cellType+contrast+behState+drug+(cellType*drug)
 lme
 %%
 vars = ["normDiff"];
-factors = ["drug","behState"];
+factors = ["cellType","contrast","behState"];
 meanScoresByFactor = varfun(@nanmean, ...
                             dataTable, ...
                             "InputVariables",vars, ...
