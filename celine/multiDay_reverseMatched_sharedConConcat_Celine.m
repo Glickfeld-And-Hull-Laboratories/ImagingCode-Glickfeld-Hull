@@ -11,10 +11,11 @@ eval(ds);
 % 178 190 294 %good quality SOM YM90K
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
-%peg 303 311 319 329
-%Oct 2023 138 142 163 171 178 190 294 307 323 333
+%peg  303 311 319 329 355
+%Oct 2023: 138 142 163 171 178 190 294 307 323 333
 
-sess_list = [349];%enter all the sessions you want to concatenate
+
+sess_list = [303 311 319 329 355];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -103,12 +104,20 @@ noiseCorr_concat = cell(1,nd);
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
-dataTableConat=[];
+%dataTableConat=[];
+drug=cell(1,nSess);
 
+cellID_adjustment=0;
 for iSess = 1:nSess
     day_id = sess_list(iSess)
     mouse = expt(day_id).mouse;
     mice=[mice;mouse];
+    thisDrug = expt(day_id).drug;
+    drug{iSess}=thisDrug;
+
+    % if iSess > 1
+    %     cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
+    % end
 
     if expt(day_id).multiday_timesincedrug_hours>0
         dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
@@ -117,18 +126,19 @@ for iSess = 1:nSess
     end
     fn_multi = fullfile(base,mouse,['multiday_' dart_str]);
 
-    load(fullfile(fn_multi,'tc_keep.mat'))
-    load(fullfile(fn_multi,'resp_keep.mat'))
-    load(fullfile(fn_multi,'input.mat'))
-    load(fullfile(fn_multi,'locomotion.mat'))
-    load(fullfile(fn_multi,'fluor_intensity.mat'))
-    load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
-%    temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
-    
-    % temp_table.z_speed=zscor_xnan(temp_table.speed);
-    % temp_table.z_pupil=zscor_xnan(temp_table.pupil);
-    % 
-    % dataTableConat=[dataTableConat; temp_table];
+    load(fullfile(fn_multi,'tc_keep.mat'));
+    load(fullfile(fn_multi,'resp_keep.mat'));
+    load(fullfile(fn_multi,'input.mat'));
+    load(fullfile(fn_multi,'locomotion.mat'));
+    load(fullfile(fn_multi,'fluor_intensity.mat'));
+    load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
+   % temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
+   % 
+   %  temp_table.z_speed=zscor_xnan(temp_table.speed);
+   %  temp_table.z_pupil=zscor_xnan(temp_table.pupil);
+   %  temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
+   % 
+   %  dataTableConat=[dataTableConat; temp_table];
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -222,28 +232,10 @@ mean(RIx_concat{post})
 % for iMouse = z:nSess
 %     mice{iMouse}=[mice{iMouse},'b'];
 % end
-%% mixed model
 
-dataTableConat.day=categorical(dataTableConat.day);
-dataTableConat.mouseID=categorical(dataTableConat.mouseID);
-dataTableConat.cellID=categorical(dataTableConat.cellID);
-dataTableConat.cellType=categorical(dataTableConat.cellType);
-dataTableConat.drug = categorical(dataTableConat.drug);
-dataTableConat = sortrows(dataTableConat,"day","ascend");
 
-%lme = fitlme(dataTableConat,'dfof_perCent~cellType+contrast+z_speed+z_pupil+day+(cellType*day)+(1|mouseID)+(1|cellID:mouseID)');
-lme = fitlme(dataTableConat,'dfof~cellType+contrast+z_speed+z_pupil+day+drug+(cellType*day*drug)+(1|mouseID)+(1|cellID:mouseID)+(1|day:cellID)+(1|drug:cellID)');
 
-%% post-hoc comaparisons for mixed model
-%what is the mean df/f for each cell type on each day
-vars = ["dfof"];
-factors = ["drug","cellType","day"];
-meanScoresByFactor = varfun(@mean, ...
-                            dataTableConat, ...
-                            "InputVariables",vars, ...
-                            "GroupingVariables",factors)
-
-%% find cells that I have running data for on both days
+%find cells that I have running data for on both days
 haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
 
 haveRunning_post = ~isnan(pref_responses_loc_concat{post});
@@ -303,6 +295,12 @@ cellCountTableGreen = table(cellCountsGreen, RowNames=mouseNames)
 writetable(cellCountTableRed,fullfile(fnout,['cellCounts.csv']),'WriteRowNames',true)
 writetable(cellCountTableGreen,fullfile(fnout,['cellCounts_Green.csv']),'WriteRowNames',true)
 clear cellCountsRed cellCountsGreen
+
+green_all = intersect(haveRunning_green{1},haveRunning_green{2});
+green_all = intersect(green_all, haveRunning_green{3});
+
+red_all = intersect(haveRunning_red{1},haveRunning_red{2});
+red_all = intersect(red_all, haveRunning_red{3});
 %% ALL KEEP CELLS
 
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
@@ -382,6 +380,7 @@ print(fullfile(fnout,[num2str(cons(iCon)) '_stat_allKeep_timecourses.pdf']),'-dp
 end ; 
 %% for the cells that have stationary and running
 
+
 % make figure with se shaded, one figure per contrast - stationary
 
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
@@ -394,11 +393,11 @@ tc_red_se_stat = cell(1,nd); %same for red
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon},iCon),2);
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_all,iCon),2);
     green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon},iCon),[],2);
     tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}));
     
-    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon},iCon),2);
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_all,iCon),2);
     red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon},iCon),[],2);
     tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}));
     
@@ -427,7 +426,7 @@ line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .25 .25 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-title(['-HTP',' n = ', num2str(length(haveRunning_green{iCon}))])
+title(['-HTP',' n = ', num2str(length(green_all))])
 
 ylabel('dF/F') 
 xlabel('s') 
@@ -446,7 +445,7 @@ line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .25 .25 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
-title(['+HTP',' n = ', num2str(length(haveRunning_red{iCon}))])
+title(['+HTP',' n = ', num2str(length(red_all))])
 
 x0=5;
 y0=5;
@@ -457,7 +456,7 @@ set(gca,'XColor', 'none','YColor','none')
 
 sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
 
-print(fullfile(fnout,[num2str(cons(iCon)) '_stat_cellType_timecourses.pdf']),'-dpdf');
+print(fullfile(fnout,[num2str(cons(iCon)) '_stat_all_timecourses.pdf']),'-dpdf');
 end 
 
 
@@ -471,11 +470,11 @@ tc_red_se_loc = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon},iCon),2);
+    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,green_all,iCon),2);
     green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon},iCon),[],2);
     tc_green_se_loc{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}));
     
-    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon},iCon),2);
+    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,red_all,iCon),2);
     red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon},iCon),[],2);
     tc_red_se_loc{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}));
     
@@ -502,7 +501,7 @@ hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 hold on
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .45 .45 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
-title(['-HTP',' n = ', num2str(length(haveRunning_green{iCon}))])
+title(['-HTP',' n = ', num2str(length(green_all))])
 ylabel('dF/F') 
 xlabel('s') 
 set(gca,'XColor', 'none','YColor','none')
@@ -521,7 +520,7 @@ hold on
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .45 .45 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 ylabel('dF/F') 
 xlabel('s') 
-title(['+HTP',' n = ', num2str(length(haveRunning_red{iCon}))])
+title(['+HTP',' n = ', num2str(length(red_all))])
 x0=5;
 y0=5;
 width=4;
@@ -530,7 +529,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 set(gca,'XColor', 'none','YColor','none')
 
 sgtitle(['running, contrast = ' num2str(cons(iCon))])
-print(fullfile(fnout,[num2str(cons(iCon)) '_loc_cellType_timecourses.pdf']),'-dpdf');
+print(fullfile(fnout,[num2str(cons(iCon)) '_loc_all_timecourses.pdf']),'-dpdf');
 end 
 clear txt1 txt2
 
@@ -648,21 +647,33 @@ clear mean_pre_stat mean_post_stat stderror_post stderror_pre
 end
 
 
-%% t-test for the lowest contrast
+%% t-test for day within each contrast
 
-[h1, p1]= ttest(pref_responses_stat_concat{pre}(haveRunning_green{1},1),pref_responses_stat_concat{post}(haveRunning_green{1},1));
-[h2,p2]= ttest(pref_responses_stat_concat{pre}(haveRunning_red{1},1),pref_responses_stat_concat{post}(haveRunning_red{1},1));
-[h3,p3]= ttest(pref_responses_loc_concat{pre}(haveRunning_green{1},1),pref_responses_loc_concat{post}(haveRunning_green{1},1));
-[h4,p4]= ttest(pref_responses_loc_concat{pre}(haveRunning_red{1},1),pref_responses_loc_concat{post}(haveRunning_red{1},1));
-
-%correct for four tests
-p1*4
-p2*4
-p3*4
-p4*4
+[h1, p1]= ttest2(pref_responses_stat_concat{pre}(red_all,1),pref_responses_stat_concat{post}(red_all,1));
+[h2,p2]= ttest2(pref_responses_stat_concat{pre}(red_all,2),pref_responses_stat_concat{post}(red_all,2));
+[h3,p3]= ttest2(pref_responses_stat_concat{pre}(red_all,3),pref_responses_stat_concat{post}(red_all,3));
+[h4,p4]= ttest2(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
+[h5,p5]= ttest2(pref_responses_loc_concat{pre}(red_all,2),pref_responses_loc_concat{post}(red_all,2));
+[h6,p6]= ttest2(pref_responses_loc_concat{pre}(red_all,3),pref_responses_loc_concat{post}(red_all,3));
 
 
-%clear h1 p1 h2 p2 h3 p3 h4 p4
+%correct for six tests
+table([p1*6 p2*6 p3*6],[p4*6 p5*6 p6*6])
+
+clear h1 p1 h2 p2 h3 p3 h4 p4
+
+[h1, p1]= ttest2(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
+[h2,p2]= ttest2(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
+[h3,p3]= ttest2(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
+[h4,p4]= ttest2(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
+[h5,p5]= ttest2(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
+[h6,p6]= ttest2(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
+
+
+%correct for six tests
+table([p1*6 p2*6 p3*6],[p4*6 p5*6 p6*6])
+
+clear h1 p1 h2 p2 h3 p3 h4 p4
 %%
 responseTable = table([nanmean(pref_responses_stat_concat{pre}(haveRunning_green));nanmean(pref_responses_stat_concat{post}(haveRunning_green))],[nanmean(pref_responses_stat_concat{pre}(haveRunning_red));nanmean(pref_responses_stat_concat{post}(haveRunning_red))],[nanmean(pref_responses_loc_concat{pre}(haveRunning_green));nanmean(pref_responses_loc_concat{post}(haveRunning_green))],[nanmean(pref_responses_loc_concat{pre}(haveRunning_red));nanmean(pref_responses_loc_concat{post}(haveRunning_red))],'VariableNames',{'Pyramidal cells stat'  '+HTP cells stat' 'Pyramidal cells loc'  '+HTP cells loc'}, 'RowNames',{'Pre'  'Post'})
 writetable(responseTable,fullfile(fnout,[num2str(targetCon) 'responseTable.csv']),'WriteRowNames',true)
@@ -790,11 +801,7 @@ print(fullfile(fnout,['prefDir_change.pdf']),'-dpdf','-bestfit')
 
 %% response by condition
 %finds the cells that have running and stationary for all three contrasts
-green_all = intersect(haveRunning_green{1},haveRunning_green{2});
-green_all = intersect(green_all, haveRunning_green{3});
 
-red_all = intersect(haveRunning_red{1},haveRunning_red{2});
-red_all = intersect(red_all, haveRunning_red{3});
 
 
 a=mean(pref_responses_stat_concat{pre}(green_all,:), "omitnan");
@@ -915,7 +922,7 @@ for i = 1:nKeep_total
         %putting data into matrix
         norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
         norm_diff(2,iCon,i)=norm_diff_loc; %second is running
-clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc 
+clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
     end 
 end
 %remove any infiinty values resulting from divisions by zero, and turn
@@ -932,9 +939,10 @@ facilitated = logical(norm_diff > 1);
 %pull out red cells, get fractions that are suppressed vs. favilitated,
 %stationary only, using all keep cells (i.e., not only the ones that have
 % %running trials
-fractSupp_stat = sum((squeeze(suppressed(1,:,:))),2)/nKeep_total;
-fractFacil_stat = sum((squeeze(facilitated(1,:,:))),2)/nKeep_total;
-
+%for all cells of all types
+% fractSupp_stat = sum((squeeze(suppressed(1,:,:))),2)/nKeep_total;
+% fractFacil_stat = sum((squeeze(facilitated(1,:,:))),2)/nKeep_total;
+%for red cells specifically
 % fractSupp_stat = sum((squeeze(suppressed(1,:,red_ind_concat))),2)/length(red_ind_concat);
 % fractFacil_stat = sum((squeeze(facilitated(1,:,red_ind_concat))),2)/length(red_ind_concat);
 
@@ -945,38 +953,41 @@ fractFacil_stat = sum((squeeze(facilitated(1,:,:))),2)/nKeep_total;
 % fractSupp_allCond = sum(squeeze(mean(suppressed(:,:,red_ind_concat),1)),2)/length(red_ind_concat);
 % fractFacil_allCond = sum(squeeze(mean(facilitated(:,:,red_ind_concat),1)),2)/length(red_ind_concat);
 
-figure;
-bar(cons,[fractSupp_stat fractFacil_stat],'stacked')
-xticks([.25 .5 1])
-ylabel(["Fraction HTP+ cells"]) 
-xlabel('Contrast')
-set(gca,'TickDir','out')
-box off
-title('Stationary, ')
 
 %pull out red cells, get fractions that are suppressed vs. favilitated, for
 %the red cells that have running trials at all contrasts
 fractSupp_red = nan(2,3);
 fractFacil_red = nan(2,3);
 for iCon = 1:nCon
-    fractSupp_red(:,iCon) = sum(((suppressed(:,iCon,haveRunning_red{iCon}))),3)/length(haveRunning_red{iCon});
-    fractFacil_red(:,iCon) = sum(((facilitated(:,iCon,haveRunning_red{iCon}))),3)/length(haveRunning_red{iCon});
+    fractSupp_red(:,iCon) = sum(((suppressed(:,iCon,red_all))),3)/length(red_all);
+    fractFacil_red(:,iCon) = sum(((facilitated(:,iCon,red_all))),3)/length(red_all);
 end
 
 
 %averaging over contrast
-supp_red = mean(fractSupp_red,2)
-facil_red = mean(fractFacil_red,2)
+supp_red_mean = mean(fractSupp_red,2)
+facil_red_mean = mean(fractFacil_red,2)
+
 
 
 figure;
+for iCon = 1:nCon
+    subplot(1,3,iCon)
+    bar([1,2],[fractSupp_red(1,iCon) fractFacil_red(1,iCon);fractSupp_red(2,iCon) fractFacil_red(2,iCon)],'stacked')
+    xticklabels({'Stationary','Running'})
+    ylabel(["Fraction HTP+ cells"]) 
+    set(gca,'TickDir','out')
+    box off
+    %ylim([0 .7])
 
-bar([1,2],[supp_red(1) facil_red(1);supp_red(2) facil_red(2)],'stacked')
-xticklabels({'Stationary','Running'})
-ylabel(["Fraction HTP+ cells"]) 
-set(gca,'TickDir','out')
-box off
-%ylim([0 .7])
+end
+sgtitle('fraction SST suppressed/facilitated by > 1std')
+x0=5;
+y0=5;
+width=9;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,[ 'factionSuppFacilBar.pdf']),'-dpdf','-bestfit')
 
 norm_diff_red_allKeep = nanmedian(norm_diff(1,:,red_ind_concat),3)
 
@@ -1009,6 +1020,7 @@ hold off
 set(gca,'TickDir','out')
 box off
 
+%print(fullfile(fnout,[ 'normDiff_by_behState.eps']),'-depsc')
 %% 
 redHigh_acrossCons = intersect(highRInds,red_ind_concat);
 redHigh_acrossCons = intersect(lowRInds,red_ind_concat);
@@ -1568,30 +1580,83 @@ colorbar
 refline(1)
 axis square
 
-%% outputting dataframes for statistical analysis
+%% making normDiff table
 mouseID=[];
 for imouse =1:nSess
-   ID_string=string(mice(imouse,1:5));
+   ID_string=mouseNames(imouse);
    thisID = repelem(ID_string,nKeep_concat(imouse));
    mouseID=[mouseID,thisID];
 end
 mouseID=mouseID';
-%% 
-mouseIDcol=repmat(mouseID,2,1);
-days=[2 1];
-day=repelem(days,nKeep_total)';
-cell_type=repmat(red_concat,1,2)';
-stat_resp=reshape(cell2mat(pref_responses_stat_concat),[(2*nKeep_total),1]);
-loc_resp=reshape(cell2mat(pref_responses_loc_concat),[(2*nKeep_total),1]);
-half_max=reshape(cell2mat(tHalfMax),[(2*nKeep_total),1]);
-LMI=reshape(cell2mat(LMI_concat),[(2*nKeep_total),1]);
-green_col = repmat(green_fluor_concat,1,2)';
-red_col = repmat(red_fluor_concat,1,2)';
+
+mouseIDcol=repmat(mouseID,6,1);
+
+norm_diff_col1 = reshape(norm_diff, [2,3*nKeep_total]);
+norm_diff_col2 = reshape(norm_diff_col1, [1,6*nKeep_total])';
+
+consCol1 = repelem(cons,2);
+consCol2=repmat(consCol1, 1,nKeep_total)';
+
+cellID=1:nKeep_total;
+%cellID=cellID+315; %% to account for cells in the other condition
+cellID_col=repelem(cellID, 6)';
+
+cell_type_col=repelem(red_concat,1,6)';
+
+behState1 = repmat(["stat" "loc"],1,3);
+behStateCol=repmat(behState1,1,nKeep_total)';
+
+drug="DRT"; %%need to get drug coded correctly
+drugCol=repmat(drug,size(mouseIDcol));
+
+normDiff_output = table(mouseIDcol,cellID_col,cell_type_col,consCol2,behStateCol,drugCol,norm_diff_col2, ...
+    'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'behState' 'drug' 'normDiff'});
+
+writetable(normDiff_output,fullfile(fnout,'normDiff_output.csv'))
+
+%% making dfof output table
+mouseID=[];
+for imouse =1:nSess
+   ID_string=mouseNames(imouse);
+   thisID = repelem(ID_string,nKeep_concat(imouse));
+   mouseID=[mouseID,thisID];
+end
+mouseID=mouseID';
+
+dfof_stat_pre = reshape(pref_responses_stat_concat{pre},[3*nKeep_total,1]);
+dfof_stat_post = reshape(pref_responses_stat_concat{post},[3*nKeep_total,1]);
+dfof_loc_pre = reshape(pref_responses_loc_concat{pre},[3*nKeep_total,1]);
+dfof_loc_post = reshape(pref_responses_loc_concat{post},[3*nKeep_total,1]);
+
+dfof_col = vertcat(dfof_stat_pre,dfof_stat_post,dfof_loc_pre,dfof_loc_post);
+
+cellID=1:nKeep_total;
+cellID_col=repmat(cellID',12,1);
+cellID_col = cellID_col+622; %to account fro DRT cells
+
+mouseIDcol = repmat(mouseID,12,1);
+
+day1 = repelem(["pre" "post"],1,(3*nKeep_total))';
+day=repmat(day1,2,1);
+
+drug="PEG"; %%need to get drug coded correctly
+drugCol=repmat(drug,size(mouseIDcol));
+
+contrast1 = repelem(cons,nKeep_total)';
+contrast=repmat(contrast1,4,1);
+
+cell_type_col=repmat(red_concat,1,12)';
+
+behStateCol = repelem(["stat" "loc"],1,(6*nKeep_total))';
 
 
-output = table(mouseIDcol,day,cell_type,stat_resp,loc_resp,half_max,LMI,green_col,red_col);
 
-writetable(output,fullfile(fnout,[num2str(targetCon) '_output.csv']))
+
+
+dfof_output = table(mouseIDcol,cellID_col,cell_type_col,contrast,behStateCol,drugCol,day,dfof_col, ...
+    'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'behState' 'drug' 'day' 'dfof'});
+
+writetable(dfof_output,fullfile(fnout,'dfof_PEG_output.csv'))
 
 %%
 stat_resp=cell2mat(pref_responses_stat_concat);
@@ -2696,12 +2761,12 @@ conResp_red_se_stat = cell(1,nd); %same for red
 for id = 1:nd
    
         
-    conResp_green_avrg_stat{id}=nanmean(pref_responses_stat_concat{id}(green_all,:),1);
-    green_std=nanstd(pref_responses_stat_concat{id}(green_all,:),1);
+    conResp_green_avrg_stat{id}=mean(pref_responses_stat_concat{id}(green_all,:),1,'omitnan');
+    green_std=std(pref_responses_stat_concat{id}(green_all,:),1,'omitnan');
     conResp_green_se_stat{id}=green_std/sqrt(length(green_all));
     
-    conResp_red_avrg_stat{id}=nanmean(pref_responses_stat_concat{id}(red_all,:),1);
-    red_std=nanstd(pref_responses_stat_concat{id}(red_all,:),1);
+    conResp_red_avrg_stat{id}=mean(pref_responses_stat_concat{id}(red_all,:),1,'omitnan');
+    red_std=std(pref_responses_stat_concat{id}(red_all,:),1,'omitnan');
     conResp_red_se_stat{id}=red_std/sqrt(length(red_all));
     
     clear green_std red_std

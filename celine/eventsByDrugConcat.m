@@ -68,6 +68,8 @@ box off
 %ylim([-5 400])
 xlim([0.5 2.5])
 
+print('epscCountByDrug.pdf','-dpdf','-bestfit')
+
 
 figure;
 scatter([1 2],cntrlAmps,'black')
@@ -84,3 +86,4 @@ set(gca,'TickDir','out')
 box off
 %ylim([-5 400])
 xlim([0.5 2.5])
+print('epscAmpByDrug.pdf','-dpdf','-bestfit')
