@@ -44,7 +44,7 @@ tc_avg = mean(mean(twtc_dfof(:,:,:),3),2); %avg across cells then trials
 tc_avg = squeeze(tc_avg');
 plot(tc_avg)
 % define response windows
-base_win = 31:60;
+base_win = 31:60; %WOULD BE BETTER NOT TO HARD CODE THESE, AND INSTEAD HAVE THEM BE RELATIVE TO NoN AND NoFF, EG resp_win = nOff+2:nOn+nOff;
 resp_win = 61:90;
 base = squeeze(mean(twtc_dfof(base_win,:,:),1))'; % calculate avg dfof in the base window...
 resp = squeeze(mean(twtc_dfof(resp_win,:,:),1))'; % ...then transpose to get ncell x ntrials
@@ -58,12 +58,17 @@ nStim = length(unique(ori));
 Stims = unique(ori);
 % Initiate empty arrays and for loops through unique orientations to compare average resp vs. base activity level (averaged over frames)
 % n = # of trials with the specified orientation in each for loop
-results = [];
+results = []; %IDEALLY WHEN INITIALIZING YOU SHOULD MAKE A MATRIX THAT IS ALREADY THE CORRECT DIMENTIONS; THIS WAY 1) IT RUNS FASTER AND 
+% 2) YOU KNOW IF SOMETHING IS WRONG BECAUSE YOU GET AN ERROR THAT THE
+% DIMENSIONS DON'T FIT. USUALLY YOU ONLY WANT TO INITIALIZE WITH [] IF YOU
+% HAVE A TYPE OF DATA THAT WONT GO INTO A MATRIX WELL OR YOU REALLY DON'T
+% KNOW WHAT THE FINAL DIMENSIONS WILL BE / YOU WANT IT TO BE VERY FELXIBLE,
+% SUCH AS IF YOUR CONCATENATING OVER DIFFERENT SESSIONS.
 pvals = [];
 ses = [];
 for i = 1:nStim
     ind = find(ori == Stims(i)); % find indices of trials with this ori
-    [result,pval,ci,stats] = ttest(base(:,ind),resp(:,ind),'Alpha',0.05/(length(unique(ori))),'Dim',2);
+    [result,pval,ci,stats] = ttest(base(:,ind),resp(:,ind),'Alpha',0.05/(length(unique(ori))),'Dim',2); %"(length(unique(ori)))" CAN BE REPLACED WITH nStims; 
     results = [results result];
     pvals = [pvals pval];
     sd = stats.sd;
@@ -81,6 +86,12 @@ for i = 1:length(results(:,1))
     end
 end
 
+%YOU CAN REPLACE THE LOOP ABOVE WITH A SINGLE LINE:
+%orisig_cells=logical(sum(results,2)). THIS DOES GIVE YOU A LOGICAL LIST OF
+%CELL IDS FOR CELLS THAT ARE RESPONSIVE, RATHER THAN A LIST OF THE ID
+%NUMBERS. OFTEN A LOGICAL IS EASIER TO DEAL WITH BUT IF YOU WANT A LIST OF
+%THE ID NUBERS YOU CAN USE "FIND"
+
 tot_nCells = length(base(:,1));
 fprintf([num2str(length(orisig_cells)) ' out of ' num2str(tot_nCells) ' cells are responsive to at least one orientation\n'])
 
@@ -88,7 +99,7 @@ fprintf([num2str(length(orisig_cells)) ' out of ' num2str(tot_nCells) ' cells ar
 % Average tuning curve for all cells in the FOV
 % (i.e. each cell's stimulus response to each orientation)
 % find average dfof in each orientation for every cell (output should be nCell x nOri)
-ori_dfof = [];
+ori_dfof = []; 
 for i = 1:nStim
     ind = find(ori == Stims(i));
     eachori_dfof = mean(resp(:,ind),2) - mean(base(:,ind),2);
@@ -136,7 +147,7 @@ boot_pref_ori = zeros(tot_nCells,nBoot); % preallocation for performance
 
 for v = 1:nBoot
     ori_iter = [];
-    for i = 1:nStim
+    for i = 1:nStim %DO YOU NEED TO DO THIS FOR EVERY LOOP? ISN'T IT THE SAME EACH TIME?
         ind = find(ori == Stims(i)); % find all trials with current ori
         ind_rd = randsample(ind,round(length(ind)/4*3),true);
         eachori = mean(resp(:,ind_rd),2) - mean(base(:,ind_rd),2);

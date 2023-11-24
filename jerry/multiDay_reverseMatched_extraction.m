@@ -8,7 +8,7 @@ rc =  behavConstsDART; %directories178
 eval(ds);
 
 %day_id = 169; %enter post-DART day
-day_id = input('Enter day id ');% alternative to run from command line.
+day_id = input('Enter day id ');% alternative to run from command line. REFERENCE DAY #
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
