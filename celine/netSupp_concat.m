@@ -145,7 +145,7 @@ dip =nan(nSizes,nCons,nCells);
 dip_peak_ratio =nan(nSizes,nCons,nCells);
 peak_time=nan(nSizes,nCons,nCells,4);
 resp_means = nan(nSizes,nCons,nCells,2);
-fwhm=nan(nSizes,1,nCells); %only for 80% contrast
+fwhm=nan(nSizes,nCons,nCells); %only for 80% contrast
 %first value will be the eary timepoint, second value will be the late
 %timepoint
 
@@ -181,7 +181,8 @@ for iSize = 1:nSizes %loop through the sizes
            peak_time(iSize,iCon, iCell,2)= t2(trough_time_temp);
 
                 if peak > 0
-                   if iCon == 4
+                   if iCon > 2
+                       
                        halfPeak = peak/2;
                        %find the frame of the half peak
                        half_peak_frame = find(traceInterp(stimStart_interp:peak_time_temp)>halfPeak,1,'first');
@@ -189,13 +190,15 @@ for iSize = 1:nSizes %loop through the sizes
                         %convert this to time
                        peak_time(iSize,iCon, iCell,3) = t2(half_peak_temp);
                         %find the frame of the equivalent point on the decay
-                       half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
-                       %look for the half decay anywhere after the peak, until the end of the trace
-                       half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
-                       peak_time(iSize,iCon, iCell,4) = t2(half_dacay_temp);
-                        %find the difference, in time, between the half decay
-                        %and the half peak
-                       fwhm(iSize,1,iCell)=t2(half_dacay_temp)-t2(half_peak_temp);
+                       if min(traceInterp(peak_time_temp:length(t2)))<halfPeak
+                           half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
+                           %look for the half decay anywhere after the peak, until the end of the trace
+                           half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
+                           peak_time(iSize,iCon, iCell,4) = t2(half_dacay_temp);
+                            %find the difference, in time, between the half decay
+                            %and the half peak
+                           fwhm(iSize,iCon,iCell)=t2(half_dacay_temp)-t2(half_peak_temp);
+                       end
         
                        % [minVal, endWin]=min(abs(t2-t(peak_time_temp))); %find the value in the interpoalted t vector that is closest to the time in the oringal t vector when the peak occurs
                        % half_peak_temp = find(traceInterp(stimStart_interp:endWin)>halfPeak,1,'first');
@@ -218,7 +221,7 @@ for iSize = 1:nSizes %loop through the sizes
             %rough is the minimum within the identified timebin, which is
             %locked to the time of the peak 
 
-            %resp_mean is the average response from 0 to 400 ms
+            %resp_mean is the average (:,:,:,1) or cumulative integral (:,:,:,2) response from 0 to 400 ms
            resp_means(iSize,iCon, iCell,1)=mean(thisTrace(stimStart:stimStart+12));
            resp_means(iSize,iCon, iCell,2)=max(cumtrapz(t(stimStart:stimStart+12),thisTrace(stimStart:stimStart+12)));
 
@@ -291,8 +294,9 @@ y0=1;
 width=5;
 height=8;
 set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('Stationary')
 
-sgtitle(['Stationary, ', num2str(length(centerPyr)),' Pyr cells, ',num2str(length(centerIN)),' SOM cells'])
+sgtitle(['Stationary, ', num2str(length(centerPyr)),' Pyr cells, ',num2str(length(centerIN)),' SST cells'])
 
 %% peak time traces
 
@@ -328,7 +332,7 @@ for iCon = 1:nCons
         hold on
 end
 
-title('Centered SOM cells')
+title('Centered SST cells')
 ylabel('Peak time')
 xlabel('Size')
 xticks(Sizes)
@@ -342,9 +346,9 @@ y0=5;
 width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height]);
+sgtitle('Stationary')
 
-
-print('Peak_time_plot.pdf', '-dpdf');
+print('Peak_time_bySizeandConstrast.pdf', '-dpdf');
 
 %% Trough time traces
 
@@ -380,7 +384,7 @@ for iCon = 1:nCons
         hold on
 end
 
-title('Centered SOM cells')
+title('Centered SST cells')
 ylabel('Trough time')
 xlabel('Size')
 xticks(Sizes)
@@ -394,126 +398,48 @@ y0=5;
 width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height]);
+sgtitle('Stationary')
 
 
-print('Trough_time_plot.pdf', '-dpdf');
+print('Trough_time_bySizeandConstrast.pdf', '-dpdf');
 
 
-%% peak time by size and depth, at 80% contrast
 
+% %% trough time heatmap
 % 
-% peak_time = nan(size(peak_time(:,4,:,1)));
-% for iCell = 1:nCells
-%     normMax = peak_time(1,4,iCell);
-%     peak_time(:,4,iCell)=peak_time(:,4,iCell,1)/normMax;
-% end
-
-
-figure;
-
-subplot(1,2,1)
-temp_mean1 = mean(peak_time(:,4,PyrDepth1,1),3,"omitnan");
-temp_se1 = std(peak_time(:,4,PyrDepth1,1),[],3,"omitnan")/sqrt(length(PyrDepth1));
-
-temp_mean2 = mean(peak_time(:,4,PyrDepth2,1),3,"omitnan");
-temp_se2 = std(peak_time(:,4,PyrDepth2,1),[],3,"omitnan")/sqrt(length(PyrDepth2));
-
-temp_mean3 = mean(peak_time(:,4,PyrDepth3,1),3,"omitnan");
-temp_se3 = std(peak_time(:,4,PyrDepth3,1),[],3,"omitnan")/sqrt(length(PyrDepth3));
-
-temp_mean4 = mean(peak_time(:,4,PyrDepth4,1),3,"omitnan");
-temp_se4 = std(peak_time(:,4,PyrDepth4,1),[],3,"omitnan")/sqrt(length(PyrDepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-legend('144-175','175-225','225-275','275-305')
-title("Pyr")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('Seconds')
-%ylim([0.4 1.1])
-
-
-subplot(1,2,2)
-
-temp_mean1 = mean(peak_time(:,4,INdepth1),3,"omitnan");
-temp_se1 = std(peak_time(:,4,INdepth1),[],3,"omitnan")/sqrt(length(INdepth1));
-
-temp_mean2 = mean(peak_time(:,4,INdepth2),3,"omitnan");
-temp_se2 = std(peak_time(:,4,INdepth2),[],3,"omitnan")/sqrt(length(INdepth2));
-
-temp_mean3 = mean(peak_time(:,4,INdepth3),3,"omitnan");
-temp_se3 = std(peak_time(:,4,INdepth3),[],3,"omitnan")/sqrt(length(INdepth3));
-
-temp_mean4 = mean(peak_time(:,4,INdepth4),3,"omitnan");
-temp_se4 = std(peak_time(:,4,INdepth4),[],3,"omitnan")/sqrt(length(INdepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-title("SOM")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('Seconds')
-%ylim([0 1.6])
-
-sgtitle('Peak time by depth')
-
-x0=1;
-y0=1;
-width=6;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-
-print('Peak_time_byDepth.pdf', '-dpdf');
-%% trough time heatmap
-
-figure; 
-subplot(2,1,2)
-heatmap(mean(peak_time(:,:,centerIN,2),3),'Colormap',winter,'ColorLimits',[.2 .3])
-title('Centered SOM cells trough time')
-ylabel('Size')
-xlabel('Contrast')
-
-
-subplot(2,1,1) 
-heatmap(mean(peak_time(:,:,centerPyr,2),3),'Colormap',winter,'ColorLimits',[.2 .3])
-title('Centered Pyr cells trough time')
-ylabel('Size')
-xlabel('Contrast')
-print('Trough_time_heatmap.pdf', '-dpdf');
+% figure; 
+% subplot(2,1,2)
+% heatmap(mean(peak_time(:,:,centerIN,2),3),'Colormap',winter,'ColorLimits',[.2 .3])
+% title('Centered SST cells trough time')
+% ylabel('Size')
+% xlabel('Contrast')
+% 
+% 
+% subplot(2,1,1) 
+% heatmap(mean(peak_time(:,:,centerPyr,2),3),'Colormap',winter,'ColorLimits',[.2 .3])
+% title('Centered Pyr cells trough time')
+% ylabel('Size')
+% xlabel('Contrast')
+% print('Trough_time_heatmap.pdf', '-dpdf');
 
 
 %% dip heatmap - the local decrease to the trough
-
-figure; 
-subplot(2,1,2) 
-heatmap(mean(dip(:,:,centerIN),3),'Colormap',winter,'ColorLimits',[-.026 -.016])
-title('Centered SOM cells dip (df/f)')
-ylabel('Size')
-xlabel('Contrast')
-
-
-subplot(2,1,1)  
-heatmap(mean(dip(:,:,centerPyr),3),'Colormap',winter,'ColorLimits',[-.026 -.016])
-title('Centered Pyr cells dip (df/f)')
-ylabel('Size')
-xlabel('Contrast')
-
-print('Dip_magnitude_heatmap.pdf', '-dpdf');
+% 
+% figure; 
+% subplot(2,1,2) 
+% heatmap(mean(dip(:,:,centerIN),3),'Colormap',winter,'ColorLimits',[-.026 -.016])
+% title('Centered SST cells dip (df/f)')
+% ylabel('Size')
+% xlabel('Contrast')
+% 
+% 
+% subplot(2,1,1)  
+% heatmap(mean(dip(:,:,centerPyr),3),'Colormap',winter,'ColorLimits',[-.026 -.016])
+% title('Centered Pyr cells dip (df/f)')
+% ylabel('Size')
+% xlabel('Contrast')
+% 
+% print('Dip_magnitude_heatmap.pdf', '-dpdf');
 
 %% analysis on peak
 PyrPeak1=peak_trough(:,:,centerPyr,1);
@@ -602,14 +528,14 @@ y0=1;
 width=5;
 height=8;
 set(gcf,'units','inches','position',[x0,y0,width,height])
-sgtitle(['Stationary, ', num2str(length(centerPyr)),' Pyr cells, ',num2str((length(centerIN))),' SOM cells'])
+sgtitle(['Stationary, ', num2str(length(centerPyr)),' Pyr cells, ',num2str((length(centerIN))),' SST cells'])
 print('Stationary_center_matrix.pdf', '-dpdf');
 
 %% centered cells running trials 
 %find out how many cells have running data in each condition
 locResp = squeeze(mean(TCs_loc(61:68,:,:,:),1));
-locCountPyr = sum(~isnan(locResp(:,:,centerPyr)),3);
-locCountSOM = sum(~isnan(locResp(:,:,centerIN)),3);
+locCountPyr = sum(~isnan(locResp(:,:,centerPyr)),3)
+locCountSST = sum(~isnan(locResp(:,:,centerIN)),3)
 %% plot running
 
 
@@ -626,7 +552,7 @@ figure;
 
 
         temp_mean2 = mean(TCs_loc(:,iSize,iCon,centerIN),4,"omitnan");
-        temp_se2 = std(TCs_loc(:,iSize,iCon,centerIN),[],4,"omitnan")/sqrt(locCountSOM(iSize,iCon));
+        temp_se2 = std(TCs_loc(:,iSize,iCon,centerIN),[],4,"omitnan")/sqrt(locCountSST(iSize,iCon));
 
         subplot(n,n2,x)
 
@@ -652,12 +578,10 @@ figure;
 clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
     end
   
-sgtitle(['Running, ~', num2str(round(mean(mean(locCountPyr)))),' Pyr cells, ~',num2str(round(mean(mean(locCountSOM)))),' SOM cells'])
+sgtitle(['Running, ~', num2str(round(mean(mean(locCountPyr)))),' Pyr cells, ~',num2str(round(mean(mean(locCountSST)))),' SST cells'])
 print('Running_center_matrix.pdf', '-dpdf');
 
 %% plot running averaging over contrast
-
-
 
 x=1;
 y=nSizes+1;
@@ -737,7 +661,7 @@ width=8;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
   
-%sgtitle(['Running, ~', num2str(round(mean(mean(locCountPyr)))),' Pyr cells, ~',num2str(round(mean(mean(locCountSOM)))),' SOM cells, averaged over contrast'])
+%sgtitle(['Running, ~', num2str(round(mean(mean(locCountPyr)))),' Pyr cells, ~',num2str(round(mean(mean(locCountSST)))),' SST cells, averaged over contrast'])
 print('Running_avrgOverContrast.pdf', '-dpdf');
 
 %% plot running averaging over size
@@ -828,8 +752,6 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print('Running_avrgOverSize.pdf', '-dpdf');
 %% size curve at each contrast based on peak
 
-
-
 figure;
 subplot(1,2,1)
 for iCon = 1:nCons
@@ -862,7 +784,7 @@ for iCon = 1:nCons
         hold on
 end
 
-title("Size tuning by contrast, SOM cells")
+title("Size tuning by contrast, SST cells")
 box off
 set(gca, 'TickDir', 'out')
 xticks(Sizes)
@@ -876,91 +798,10 @@ y0=5;
 width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('Stationary')
 
 
-print('SizeTuning_byContrast.pdf', '-dpdf');
-%% Size tuning at 80% contrast, separated by depth
-
-
-% 
-% peak_trough = nan(size(peak_trough(:,:,:,1)));
-% for iCell = 1:nCells
-%     normMax = peak_trough(1,4,iCell);
-%     peak_trough(:,4,iCell)=peak_trough(:,4,iCell,1)/normMax;
-% end
-
-
-figure;
-
-subplot(1,2,1)
-temp_mean1 = mean(peak_trough(:,4,PyrDepth1,1),3,"omitnan");
-temp_se1 = std(peak_trough(:,4,PyrDepth1,1),[],3,"omitnan")/sqrt(length(PyrDepth1));
-
-temp_mean2 = mean(peak_trough(:,4,PyrDepth2,1),3,"omitnan");
-temp_se2 = std(peak_trough(:,4,PyrDepth2,1),[],3,"omitnan")/sqrt(length(PyrDepth2));
-
-temp_mean3 = mean(peak_trough(:,4,PyrDepth3,1),3,"omitnan");
-temp_se3 = std(peak_trough(:,4,PyrDepth3,1),[],3,"omitnan")/sqrt(length(PyrDepth3));
-
-temp_mean4 = mean(peak_trough(:,4,PyrDepth4,1),3,"omitnan");
-temp_se4 = std(peak_trough(:,4,PyrDepth4,1),[],3,"omitnan")/sqrt(length(PyrDepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-legend('144-175','175-225','225-275','275-305')
-title("Pyr")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('df/f peak')
-%ylim([0.4 1.1])
-
-
-subplot(1,2,2)
-
-temp_mean1 = mean(peak_trough(:,4,INdepth1),3,"omitnan");
-temp_se1 = std(peak_trough(:,4,INdepth1),[],3,"omitnan")/sqrt(length(INdepth1));
-
-temp_mean2 = mean(peak_trough(:,4,INdepth2),3,"omitnan");
-temp_se2 = std(peak_trough(:,4,INdepth2),[],3,"omitnan")/sqrt(length(INdepth2));
-
-temp_mean3 = mean(peak_trough(:,4,INdepth3),3,"omitnan");
-temp_se3 = std(peak_trough(:,4,INdepth3),[],3,"omitnan")/sqrt(length(INdepth3));
-
-temp_mean4 = mean(peak_trough(:,4,INdepth4),3,"omitnan");
-temp_se4 = std(peak_trough(:,4,INdepth4),[],3,"omitnan")/sqrt(length(INdepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-title("SOM")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('df/f peak')
-%ylim([0 1.6])
-
-sgtitle('Size tuning by depth, peak')
-
-x0=1;
-y0=1;
-width=6;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-
-print('SizeTuning_byDepth_peak.pdf', '-dpdf');
-
+print('SizeTuning_byContrast_peak.pdf', '-dpdf');
 
 %% size curve at each contrast based on mean
 % cm = winter;
@@ -1000,7 +841,7 @@ for iCon = 1:nCons
 end
 lgd=legend(string(Cons))
 title(lgd,'Contrast')
-title("Size tuning by contrast, SOM cells")
+title("Size tuning by contrast, SST cells")
 box off
 set(gca, 'TickDir', 'out')
 xticks(Sizes)
@@ -1008,7 +849,7 @@ xlabel('Size')
 ylabel('df/f mean')
 ylim([0 .06])
 
-
+sgtitle('Stationary')
 x0=5;
 y0=5;
 width=6;
@@ -1016,204 +857,12 @@ height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print('SizeTuning_byContrast_means.pdf', '-dpdf');
 
-%% size tuning at 80% contrast by depth, mean
-
-
-
-resp_means = nan(size(resp_means(:,:,:,1)));
-for iCell = 1:nCells
-    normMax = resp_means(1,4,iCell);
-    resp_means(:,4,iCell)=resp_means(:,4,iCell,1)/normMax;
-end
-
-
-figure;
-
-subplot(1,2,1)
-temp_mean1 = mean(resp_means(:,4,PyrDepth1,1),3,"omitnan");
-temp_se1 = std(resp_means(:,4,PyrDepth1,1),[],3,"omitnan")/sqrt(length(PyrDepth1));
-
-temp_mean2 = mean(resp_means(:,4,PyrDepth2,1),3,"omitnan");
-temp_se2 = std(resp_means(:,4,PyrDepth2,1),[],3,"omitnan")/sqrt(length(PyrDepth2));
-
-temp_mean3 = mean(resp_means(:,4,PyrDepth3,1),3,"omitnan");
-temp_se3 = std(resp_means(:,4,PyrDepth3,1),[],3,"omitnan")/sqrt(length(PyrDepth3));
-
-temp_mean4 = mean(resp_means(:,4,PyrDepth4,1),3,"omitnan");
-temp_se4 = std(resp_means(:,4,PyrDepth4,1),[],3,"omitnan")/sqrt(length(PyrDepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-legend('144-175','175-225','225-275','275-305')
-title("Pyr")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('df/f mean')
-ylim([0.4 1.1])
-
-
-subplot(1,2,2)
-
-temp_mean1 = mean(resp_means(:,4,INdepth1),3,"omitnan");
-temp_se1 = std(resp_means(:,4,INdepth1),[],3,"omitnan")/sqrt(length(INdepth1));
-
-temp_mean2 = mean(resp_means(:,4,INdepth2),3,"omitnan");
-temp_se2 = std(resp_means(:,4,INdepth2),[],3,"omitnan")/sqrt(length(INdepth2));
-
-temp_mean3 = mean(resp_means(:,4,INdepth3),3,"omitnan");
-temp_se3 = std(resp_means(:,4,INdepth3),[],3,"omitnan")/sqrt(length(INdepth3));
-
-temp_mean4 = mean(resp_means(:,4,INdepth4),3,"omitnan");
-temp_se4 = std(resp_means(:,4,INdepth4),[],3,"omitnan")/sqrt(length(INdepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-title("SOM")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('df/f mean')
-ylim([0 1.6])
-
-sgtitle('Size tuning by depth, mean')
-
-x0=1;
-y0=1;
-width=6;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-
-print('SizeTuning_byDepth_means.pdf', '-dpdf');
-%% full width at half max
-
-figure;
-
-
-temp_mean1 = mean(fwhm(:,:,centerPyr),3,"omitnan");
-temp_se1 = std(fwhm(:,:,centerPyr),[],3,"omitnan")/sqrt(length(centerPyr));
-
-temp_mean2 = mean(fwhm(:,:,centerIN),3,"omitnan");
-temp_se2 = std(fwhm(:,:,centerIN),[],3,"omitnan")/sqrt(length(centerIN));
-
-errorbar(Sizes,temp_mean1,temp_se1);
-hold on
-errorbar(Sizes,temp_mean2,temp_se2);
-legend('Pyr','SOM')
-title("FWHM by size")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('seconds')
-
-print('FWHM_by_size.pdf', '-dpdf');
-
-
-%% full width at half max by depth
-
-% fwhm = nan(size(fwhm));
-% for iCell = 1:nCells
-%     normMax = fwhm(1,1,iCell);
-%     fwhm(:,:,iCell)=fwhm(:,:,iCell)/normMax;
-% end
-
-
-figure;
-
-subplot(1,2,1)
-temp_mean1 = mean(fwhm(:,:,PyrDepth1),3,"omitnan");
-temp_se1 = std(fwhm(:,:,PyrDepth1),[],3,"omitnan")/sqrt(length(PyrDepth1));
-
-temp_mean2 = mean(fwhm(:,:,PyrDepth2),3,"omitnan");
-temp_se2 = std(fwhm(:,:,PyrDepth2),[],3,"omitnan")/sqrt(length(PyrDepth2));
-
-temp_mean3 = mean(fwhm(:,:,PyrDepth3),3,"omitnan");
-temp_se3 = std(fwhm(:,:,PyrDepth3),[],3,"omitnan")/sqrt(length(PyrDepth3));
-
-temp_mean4 = mean(fwhm(:,:,PyrDepth4),3,"omitnan");
-temp_se4 = std(fwhm(:,:,PyrDepth4),[],3,"omitnan")/sqrt(length(PyrDepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-legend('144-175','175-225','225-275','275-305')
-title("Pyr")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('seconds')
-%ylim([0.4 1.1])
-
-
-subplot(1,2,2)
-
-temp_mean1 = mean(fwhm(:,:,INdepth1),3,"omitnan");
-temp_se1 = std(fwhm(:,:,INdepth1),[],3,"omitnan")/sqrt(length(INdepth1));
-
-temp_mean2 = mean(fwhm(:,:,INdepth2),3,"omitnan");
-temp_se2 = std(fwhm(:,:,INdepth2),[],3,"omitnan")/sqrt(length(INdepth2));
-
-temp_mean3 = mean(fwhm(:,:,INdepth3),3,"omitnan");
-temp_se3 = std(fwhm(:,:,INdepth3),[],3,"omitnan")/sqrt(length(INdepth3));
-
-temp_mean4 = mean(fwhm(:,:,INdepth4),3,"omitnan");
-temp_se4 = std(fwhm(:,:,INdepth4),[],3,"omitnan")/sqrt(length(INdepth4));
-
-errorbar(Sizes,temp_mean1,temp_se1,'k');
-hold on
-errorbar(Sizes,temp_mean2,temp_se2,'b');
-hold on
-errorbar(Sizes,temp_mean3,temp_se3,'m');
-hold on
-errorbar(Sizes,temp_mean4,temp_se4,'r');
-title("SOM")
-box off
-set(gca, 'TickDir', 'out')
-xticks(Sizes)
-xlabel('Size')
-ylabel('seconds')
-%ylim([0 1.6])
-
-sgtitle('FWHM by size and depth')
-
-x0=1;
-y0=1;
-width=6;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-
-print('FWHM_depth.pdf', '-dpdf');
-
-
-%% Contrast tuning by size
-
-
+%% Contrast tuning by size, based on peak
 figure;
 subplot(1,2,1)
 for iSize = 1:nSizes
         temp_mean1 = mean(peak_trough(iSize,:,centerPyr,1),3,"omitnan");
         temp_se1 = std(peak_trough(iSize,:,centerPyr,1),[],3,"omitnan")/sqrt(length(centerPyr));
-
-  
-
         errorbar(Cons,temp_mean1,temp_se1);
         hold on
 end
@@ -1227,9 +876,6 @@ xlabel('Contrast')
 ylabel('df/f peak')
 ylim([0 .13])
 
-
-
-
 subplot(1,2,2)
 for iSize = 1:nSizes
         temp_mean1 = mean(peak_trough(iSize,:,centerIN,1),3,"omitnan");
@@ -1240,7 +886,7 @@ for iSize = 1:nSizes
 end
 lgd=legend(string(Sizes),'location','best');
 title(lgd,'Size')
-title("Contrast tuning by contrast, SOM cells")
+title("Contrast tuning by contrast, SST cells")
 box off
 set(gca, 'TickDir', 'out')
 xticks(Cons)
@@ -1255,98 +901,6 @@ width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print('ContrastTuning_bySize.pdf', '-dpdf');
-
-
-%% EXPLORATORY VISUALIZATIONS BELOW
-
-%% make size X contrast matrix of average timecouses, seperated by cell type and condition
-
-
-
-
-[n n2] = subplotn(nSizes*nCons);
-x=1;
-figure;
-    for iSize = 1:nSizes %loop through the sizes
-        
-        for iCon = 1:nCons
-        
-        temp_mean1 = mean(TCs_stat(:,iSize,iCon,pyrCells),4,"omitnan");
-        temp_se1 = std(TCs_stat(:,iSize,iCon,pyrCells),[],4,"omitnan")/sqrt(length(pyrCells));
-
-
-        temp_mean2 = mean(TCs_stat(:,iSize,iCon,interNrns),4,"omitnan");
-        temp_se2 = std(TCs_stat(:,iSize,iCon,interNrns),[],4,"omitnan")/sqrt(length(interNrns));
-
-        subplot(n,n2,x)
-
-        shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
-        hold on
-        shadedErrorBar(t(:),temp_mean1,temp_se1);
-        hold on
-        alpha(.5)
-        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
-        hold on
-        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
-        hold on
-        ylim([-.03 .1])
-        xlim([-1 1])
-        box off
-        set(gca, 'TickDir', 'out')
-        hline(0)
-        hold off
-        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
-        x=x+1;
-        end
-        
-clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
-    end
-  
-sgtitle(['Stationary, ', num2str(length(pyrCells)),' Pyr cells, ',num2str(length(interNrns)),' SOM cells'])
-
- print('Stationary_matrix.pdf', '-dpdf');
-
-%% for running trials
-[n n2] = subplotn(nSizes*nCons);
-x=1;
-figure;
-    for iSize = 1:nSizes %loop through the sizes
-        
-        for iCon = 1:nCons
-        
-        temp_mean1 = mean(TCs_loc(:,iSize,iCon,pyrCells),4,"omitnan");
-        temp_se1 = std(TCs_loc(:,iSize,iCon,pyrCells),[],4,"omitnan")/sqrt(length(pyrCells));
-
-
-        temp_mean2 = mean(TCs_loc(:,iSize,iCon,interNrns),4,"omitnan");
-        temp_se2 = std(TCs_loc(:,iSize,iCon,interNrns),[],4,"omitnan")/sqrt(length(interNrns));
-
-        subplot(n,n2,x)
-
-        shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
-        hold on
-        shadedErrorBar(t(:),temp_mean1,temp_se1);
-        hold on
-        
-        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
-        hold on
-        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
-        hold on
-        ylim([-.03 .15])
-        xlim([-1 1])
-        box off
-        set(gca, 'TickDir', 'out')
-        hline(0)
-        hold off
-        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
-        x=x+1;
-        end
-        
-clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
-    end
-  
-sgtitle(['Running, ', num2str(length(pyrCells)),' Pyr cells, ',num2str(length(interNrns)),' SOM cells'])
-print('Running_matrix.pdf', '-dpdf');
 
 %% TC matrix separated by depth
 
@@ -1419,6 +973,1033 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 %sgtitle(['Pyr by depth ', num2str(length(PyrDepth1)),' deep cells, ',num2str(length(PyrDepth2)),' shallow cells'])
 
  print('Pyr_depth_matrix2.pdf', '-dpdf');
+%% peak time by size and depth, at 40% and 80% contrast
+
+% 
+% peak_time = nan(size(peak_time(:,4,:,1)));
+% for iCell = 1:nCells
+%     normMax = peak_time(1,4,iCell);
+%     peak_time(:,4,iCell)=peak_time(:,4,iCell,1)/normMax;
+% end
+
+
+for iCon = 3:4
+figure;
+
+subplot(1,2,1)
+     
+temp_mean1 = mean(peak_time(:,iCon,PyrDepth1,1),3,"omitnan");
+temp_se1 = std(peak_time(:,iCon,PyrDepth1,1),[],3,"omitnan")/sqrt(length(PyrDepth1));
+
+temp_mean2 = mean(peak_time(:,iCon,PyrDepth2,1),3,"omitnan");
+temp_se2 = std(peak_time(:,iCon,PyrDepth2,1),[],3,"omitnan")/sqrt(length(PyrDepth2));
+
+temp_mean3 = mean(peak_time(:,iCon,PyrDepth3,1),3,"omitnan");
+temp_se3 = std(peak_time(:,iCon,PyrDepth3,1),[],3,"omitnan")/sqrt(length(PyrDepth3));
+
+temp_mean4 = mean(peak_time(:,iCon,PyrDepth4,1),3,"omitnan");
+temp_se4 = std(peak_time(:,iCon,PyrDepth4,1),[],3,"omitnan")/sqrt(length(PyrDepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+legend('144-175','175-225','225-275','275-305')
+title("Pyr")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f mean')
+%ylim([0 .1])
+
+
+subplot(1,2,2)
+
+temp_mean1 = mean(peak_time(:,iCon,INdepth1,1),3,"omitnan");
+temp_se1 = std(peak_time(:,iCon,INdepth1,1),[],3,"omitnan")/sqrt(length(INdepth1));
+
+temp_mean2 = mean(peak_time(:,iCon,INdepth2,1),3,"omitnan");
+temp_se2 = std(peak_time(:,iCon,INdepth2,1),[],3,"omitnan")/sqrt(length(INdepth2));
+
+temp_mean3 = mean(peak_time(:,iCon,INdepth3,1),3,"omitnan");
+temp_se3 = std(peak_time(:,iCon,INdepth3,1),[],3,"omitnan")/sqrt(length(INdepth3));
+
+temp_mean4 = mean(peak_time(:,iCon,INdepth4,1),3,"omitnan");
+temp_se4 = std(peak_time(:,iCon,INdepth4,1),[],3,"omitnan")/sqrt(length(INdepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+title("SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('s')
+%ylim([0 .1])
+
+sgtitle(['Peak time by size and depth at ',num2str(Cons(iCon)), ' stationary'])
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(['PeakTime_byDepth_',num2str(Cons(iCon)), '.pdf'], '-dpdf');
+
+end
+%% Trough time by size and depth at 40% and 80% contrast
+
+% 
+% peak_time = nan(size(peak_time(:,4,:,2)));
+% for iCell = 1:nCells
+%     normMax = peak_time(1,4,iCell);
+%     peak_time(:,4,iCell)=peak_time(:,4,iCell,2)/normMax;
+% end
+
+
+for iCon = 3:4
+figure;
+
+subplot(1,2,1)
+     
+temp_mean1 = mean(peak_time(:,iCon,PyrDepth1,2),3,"omitnan");
+temp_se1 = std(peak_time(:,iCon,PyrDepth1,2),[],3,"omitnan")/sqrt(length(PyrDepth1));
+
+temp_mean2 = mean(peak_time(:,iCon,PyrDepth2,2),3,"omitnan");
+temp_se2 = std(peak_time(:,iCon,PyrDepth2,2),[],3,"omitnan")/sqrt(length(PyrDepth2));
+
+temp_mean3 = mean(peak_time(:,iCon,PyrDepth3,2),3,"omitnan");
+temp_se3 = std(peak_time(:,iCon,PyrDepth3,2),[],3,"omitnan")/sqrt(length(PyrDepth3));
+
+temp_mean4 = mean(peak_time(:,iCon,PyrDepth4,2),3,"omitnan");
+temp_se4 = std(peak_time(:,iCon,PyrDepth4,2),[],3,"omitnan")/sqrt(length(PyrDepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+legend('144-175','175-225','225-275','275-305')
+title("Pyr")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f mean')
+ylim([0.22 .3])
+
+
+subplot(1,2,2)
+
+temp_mean1 = mean(peak_time(:,iCon,INdepth1,2),3,"omitnan");
+temp_se1 = std(peak_time(:,iCon,INdepth1,2),[],3,"omitnan")/sqrt(length(INdepth1));
+
+temp_mean2 = mean(peak_time(:,iCon,INdepth2,2),3,"omitnan");
+temp_se2 = std(peak_time(:,iCon,INdepth2,2),[],3,"omitnan")/sqrt(length(INdepth2));
+
+temp_mean3 = mean(peak_time(:,iCon,INdepth3,2),3,"omitnan");
+temp_se3 = std(peak_time(:,iCon,INdepth3,2),[],3,"omitnan")/sqrt(length(INdepth3));
+
+temp_mean4 = mean(peak_time(:,iCon,INdepth4,2),3,"omitnan");
+temp_se4 = std(peak_time(:,iCon,INdepth4,2),[],3,"omitnan")/sqrt(length(INdepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+title("SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('s')
+ylim([0.22 .3])
+
+sgtitle(['Trough time by size and depth at ',num2str(Cons(iCon)), ' stationary'])
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(['TroughTime_byDepth_',num2str(Cons(iCon)), '.pdf'], '-dpdf');
+
+end
+
+%% Size tuning based on peak, separated by depth, at 80% contrast
+
+
+% 
+% peak_trough = nan(size(peak_trough(:,:,:,1)));
+% for iCell = 1:nCells
+%     normMax = peak_trough(1,4,iCell);
+%     peak_trough(:,4,iCell)=peak_trough(:,4,iCell,1)/normMax;
+% end
+
+
+for iCon = 3:4
+figure;
+
+subplot(1,2,1)
+     
+temp_mean1 = mean(resp_means(:,iCon,PyrDepth1,1),3,"omitnan");
+temp_se1 = std(resp_means(:,iCon,PyrDepth1,1),[],3,"omitnan")/sqrt(length(PyrDepth1));
+
+temp_mean2 = mean(resp_means(:,iCon,PyrDepth2,1),3,"omitnan");
+temp_se2 = std(resp_means(:,iCon,PyrDepth2,1),[],3,"omitnan")/sqrt(length(PyrDepth2));
+
+temp_mean3 = mean(resp_means(:,iCon,PyrDepth3,1),3,"omitnan");
+temp_se3 = std(resp_means(:,iCon,PyrDepth3,1),[],3,"omitnan")/sqrt(length(PyrDepth3));
+
+temp_mean4 = mean(resp_means(:,iCon,PyrDepth4,1),3,"omitnan");
+temp_se4 = std(resp_means(:,iCon,PyrDepth4,1),[],3,"omitnan")/sqrt(length(PyrDepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+legend('144-175','175-225','225-275','275-305')
+title("Pyr")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f peak')
+ylim([0 .09])
+
+
+subplot(1,2,2)
+
+temp_mean1 = mean(resp_means(:,iCon,INdepth1,1),3,"omitnan");
+temp_se1 = std(resp_means(:,iCon,INdepth1,1),[],3,"omitnan")/sqrt(length(INdepth1));
+
+temp_mean2 = mean(resp_means(:,iCon,INdepth2,1),3,"omitnan");
+temp_se2 = std(resp_means(:,iCon,INdepth2,1),[],3,"omitnan")/sqrt(length(INdepth2));
+
+temp_mean3 = mean(resp_means(:,iCon,INdepth3,1),3,"omitnan");
+temp_se3 = std(resp_means(:,iCon,INdepth3,1),[],3,"omitnan")/sqrt(length(INdepth3));
+
+temp_mean4 = mean(resp_means(:,iCon,INdepth4,1),3,"omitnan");
+temp_se4 = std(resp_means(:,iCon,INdepth4,1),[],3,"omitnan")/sqrt(length(INdepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+title("SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+
+ylim([0 .09])
+
+sgtitle(['Size tuning by depth, peak at ',num2str(Cons(iCon)), ' stationary'])
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(['SizeTuning_byDepth_peak_',num2str(Cons(iCon)), '.pdf'], '-dpdf');
+
+end
+
+
+
+%% Size tuning based on mean, separated by depth, at 40% and 80% contrast
+
+% 
+% resp_means = nan(size(resp_means(:,:,:,1)));
+% for iCell = 1:nCells
+%     normMax = resp_means(1,4,iCell);
+%     resp_means(:,4,iCell)=resp_means(:,4,iCell,1)/normMax;
+% end
+
+for iCon = 3:4
+figure;
+
+subplot(1,2,1)
+temp_mean1 = mean(resp_means(:,iCon,PyrDepth1,1),3,"omitnan");
+temp_se1 = std(resp_means(:,iCon,PyrDepth1,1),[],3,"omitnan")/sqrt(length(PyrDepth1));
+
+temp_mean2 = mean(resp_means(:,iCon,PyrDepth2,1),3,"omitnan");
+temp_se2 = std(resp_means(:,iCon,PyrDepth2,1),[],3,"omitnan")/sqrt(length(PyrDepth2));
+
+temp_mean3 = mean(resp_means(:,iCon,PyrDepth3,1),3,"omitnan");
+temp_se3 = std(resp_means(:,iCon,PyrDepth3,1),[],3,"omitnan")/sqrt(length(PyrDepth3));
+
+temp_mean4 = mean(resp_means(:,iCon,PyrDepth4,1),3,"omitnan");
+temp_se4 = std(resp_means(:,iCon,PyrDepth4,1),[],3,"omitnan")/sqrt(length(PyrDepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+legend('144-175','175-225','225-275','275-305')
+title("Pyr")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f mean')
+ylim([0 .09])
+
+
+subplot(1,2,2)
+
+temp_mean1 = mean(resp_means(:,iCon,INdepth1,1),3,"omitnan");
+temp_se1 = std(resp_means(:,iCon,INdepth1,1),[],3,"omitnan")/sqrt(length(INdepth1));
+
+temp_mean2 = mean(resp_means(:,iCon,INdepth2,1),3,"omitnan");
+temp_se2 = std(resp_means(:,iCon,INdepth2,1),[],3,"omitnan")/sqrt(length(INdepth2));
+
+temp_mean3 = mean(resp_means(:,iCon,INdepth3,1),3,"omitnan");
+temp_se3 = std(resp_means(:,iCon,INdepth3,1),[],3,"omitnan")/sqrt(length(INdepth3));
+
+temp_mean4 = mean(resp_means(:,iCon,INdepth4,1),3,"omitnan");
+temp_se4 = std(resp_means(:,iCon,INdepth4,1),[],3,"omitnan")/sqrt(length(INdepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+title("SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylim([0 .09])
+
+sgtitle(['Size tuning by depth, mean at ',num2str(Cons(iCon)), ' stationary'])
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(['SizeTuning_byDepth_means_',num2str(Cons(iCon)), '.pdf'], '-dpdf');
+
+end
+%% Size tuning based on integral, separated by depth, at 40% and 80% contrast
+
+for iCon = 3:4
+figure;
+
+subplot(1,2,1)
+     
+temp_mean1 = mean(resp_means(:,iCon,PyrDepth1,2),3,"omitnan");
+temp_se1 = std(resp_means(:,iCon,PyrDepth1,2),[],3,"omitnan")/sqrt(length(PyrDepth1));
+
+temp_mean2 = mean(resp_means(:,iCon,PyrDepth2,2),3,"omitnan");
+temp_se2 = std(resp_means(:,iCon,PyrDepth2,2),[],3,"omitnan")/sqrt(length(PyrDepth2));
+
+temp_mean3 = mean(resp_means(:,iCon,PyrDepth3,2),3,"omitnan");
+temp_se3 = std(resp_means(:,iCon,PyrDepth3,2),[],3,"omitnan")/sqrt(length(PyrDepth3));
+
+temp_mean4 = mean(resp_means(:,iCon,PyrDepth4,2),3,"omitnan");
+temp_se4 = std(resp_means(:,iCon,PyrDepth4,2),[],3,"omitnan")/sqrt(length(PyrDepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+legend('144-175','175-225','225-275','275-305')
+title("Pyr")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f integral')
+%ylim([0 .1])
+
+
+subplot(1,2,2)
+
+temp_mean1 = mean(resp_means(:,iCon,INdepth1,2),3,"omitnan");
+temp_se1 = std(resp_means(:,iCon,INdepth1,2),[],3,"omitnan")/sqrt(length(INdepth1));
+
+temp_mean2 = mean(resp_means(:,iCon,INdepth2,2),3,"omitnan");
+temp_se2 = std(resp_means(:,iCon,INdepth2,2),[],3,"omitnan")/sqrt(length(INdepth2));
+
+temp_mean3 = mean(resp_means(:,iCon,INdepth3,2),3,"omitnan");
+temp_se3 = std(resp_means(:,iCon,INdepth3,2),[],3,"omitnan")/sqrt(length(INdepth3));
+
+temp_mean4 = mean(resp_means(:,iCon,INdepth4,2),3,"omitnan");
+temp_se4 = std(resp_means(:,iCon,INdepth4,2),[],3,"omitnan")/sqrt(length(INdepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+title("SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+%ylim([0 .1])
+
+sgtitle(['Size tuning by depth, integral at ',num2str(Cons(iCon)), ' stationary'])
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(['SizeTuning_byDepth_integral_',num2str(Cons(iCon)), '.pdf'], '-dpdf');
+
+end
+
+
+%% full width at half max at 40% and 80% contrast 
+
+figure;
+for iCon=3:4
+
+subplot(1,2,iCon-2)
+temp_mean1 = mean(fwhm(:,iCon,centerPyr),3,"omitnan");
+temp_se1 = std(fwhm(:,iCon,centerPyr),[],3,"omitnan")/sqrt(length(centerPyr));
+
+temp_mean2 = mean(fwhm(:,iCon,centerIN),3,"omitnan");
+temp_se2 = std(fwhm(:,iCon,centerIN),[],3,"omitnan")/sqrt(length(centerIN));
+
+errorbar(Sizes,temp_mean1,temp_se1);
+hold on
+errorbar(Sizes,temp_mean2,temp_se2);
+legend('Pyr','SST')
+title(num2str(Cons(iCon)))
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('seconds')
+ylim([0.06 .2])
+
+end
+sgtitle("FWHM by size, stationary")
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print('FWHM_by_size.pdf', '-dpdf');
+
+
+%% full width at half max by depth
+
+% fwhm = nan(size(fwhm));
+% for iCell = 1:nCells
+%     normMax = fwhm(1,1,iCell);
+%     fwhm(:,:,iCell)=fwhm(:,:,iCell)/normMax;
+% end
+
+for iCon=3:4
+figure;
+
+subplot(1,2,1)
+temp_mean1 = mean(fwhm(:,iCon,PyrDepth1),3,"omitnan");
+temp_se1 = std(fwhm(:,iCon,PyrDepth1),[],3,"omitnan")/sqrt(length(PyrDepth1));
+
+temp_mean2 = mean(fwhm(:,iCon,PyrDepth2),3,"omitnan");
+temp_se2 = std(fwhm(:,iCon,PyrDepth2),[],3,"omitnan")/sqrt(length(PyrDepth2));
+
+temp_mean3 = mean(fwhm(:,iCon,PyrDepth3),3,"omitnan");
+temp_se3 = std(fwhm(:,iCon,PyrDepth3),[],3,"omitnan")/sqrt(length(PyrDepth3));
+
+temp_mean4 = mean(fwhm(:,iCon,PyrDepth4),3,"omitnan");
+temp_se4 = std(fwhm(:,iCon,PyrDepth4),[],3,"omitnan")/sqrt(length(PyrDepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+legend('144-175','175-225','225-275','275-305')
+title("Pyr")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('seconds')
+%ylim([0.4 1.1])
+
+
+subplot(1,2,2)
+
+temp_mean1 = mean(fwhm(:,iCon,INdepth1),3,"omitnan");
+temp_se1 = std(fwhm(:,iCon,INdepth1),[],3,"omitnan")/sqrt(length(INdepth1));
+
+temp_mean2 = mean(fwhm(:,iCon,INdepth2),3,"omitnan");
+temp_se2 = std(fwhm(:,iCon,INdepth2),[],3,"omitnan")/sqrt(length(INdepth2));
+
+temp_mean3 = mean(fwhm(:,iCon,INdepth3),3,"omitnan");
+temp_se3 = std(fwhm(:,iCon,INdepth3),[],3,"omitnan")/sqrt(length(INdepth3));
+
+temp_mean4 = mean(fwhm(:,iCon,INdepth4),3,"omitnan");
+temp_se4 = std(fwhm(:,iCon,INdepth4),[],3,"omitnan")/sqrt(length(INdepth4));
+
+errorbar(Sizes,temp_mean1,temp_se1,'k');
+hold on
+errorbar(Sizes,temp_mean2,temp_se2,'b');
+hold on
+errorbar(Sizes,temp_mean3,temp_se3,'m');
+hold on
+errorbar(Sizes,temp_mean4,temp_se4,'r');
+title("SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('seconds')
+%ylim([0 1.6])
+
+sgtitle(['FWHM by size and depth, ',num2str(Cons(iCon)), ' stationary'])
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(['FWHM_bySizeandDepth_',num2str(Cons(iCon)), '.pdf'], '-dpdf');
+
+
+end
+
+%% LINE PLOTS FOR RUNNING DATA
+%% find peak, trough and similar metrics
+
+
+
+%make an empty matrix for values
+peak_trough_loc =nan(nSizes,nCons,nCells,2);
+dip_loc =nan(nSizes,nCons,nCells);
+dip_peak_ratio_loc =nan(nSizes,nCons,nCells);
+peak_time_loc=nan(nSizes,nCons,nCells,4);
+resp_means_loc = nan(nSizes,nCons,nCells,2);
+fwhm_loc=nan(nSizes,nCons,nCells); 
+
+for iSize = 1:nSizes %loop through the sizes    
+    for iCon = 1:nCons
+        for iCell = 1:nCells
+           
+        if ~isnan(locResp(iSize,iCon,iCell))
+           thisTrace = TCs_loc(:,iSize,iCon,iCell);
+           %interpolate data
+           traceInterp=interp1(t,thisTrace,(t(1):0.01:t(123)));
+           %traceInterp=smoothdata(traceInterp,'movmean',3);
+           t2=t(1):0.01:t(123); % to get temporal values with the interpolated data
+           stimStart_interp=find(t2==0);
+           %find(t2==.2)
+
+           peak=max(traceInterp(stimStart_interp:stimStart_interp+20)); %find the max value within a set window
+           %currently set to 61 (stim onset) through 67, 200ms after stim
+           trough=min(traceInterp(stimStart_interp+20:stimStart_interp+30));
+           %search for the trough between 200 and 300 ms
+           
+%           (thisTrace(stimStart+6:stimStart+9));
+
+           
+           peak_time_temp = find(traceInterp==peak);
+
+           peakBin = [peak_time_temp-5,peak_time_temp+5]; %a ~100 ms bin around the peak
+           
+           trough_time_temp = find(traceInterp==trough);
+           troughBin = [trough_time_temp-7,trough_time_temp+7]; 
+
+           peak_time_loc(iSize,iCon, iCell,1)=t2(peak_time_temp);
+           peak_time_loc(iSize,iCon, iCell,2)= t2(trough_time_temp);
+
+                if peak > 0
+                   if iCon > 2
+                       
+                       halfPeak = peak/2;
+                       %find the frame of the half peak
+                       half_peak_frame = find(traceInterp(stimStart_interp:peak_time_temp)>halfPeak,1,'first');
+                       half_peak_temp = stimStart_interp+(half_peak_frame-1); %adjust this for the frame we started on
+                        %convert this to time
+                       peak_time_loc(iSize,iCon, iCell,3) = t2(half_peak_temp);
+                        %find the frame of the equivalent point on the decay
+                       if min(traceInterp(peak_time_temp:length(t2)))<halfPeak
+                           half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
+                           %look for the half decay anywhere after the peak, until the end of the trace
+                           half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
+                           peak_time_loc(iSize,iCon, iCell,4) = t2(half_dacay_temp);
+                            %find the difference, in time, between the half decay
+                            %and the half peak
+                           fwhm_loc(iSize,iCon,iCell)=t2(half_dacay_temp)-t2(half_peak_temp);
+                       end
+        
+                       % [minVal, endWin]=min(abs(t2-t(peak_time_temp))); %find the value in the interpoalted t vector that is closest to the time in the oringal t vector when the peak occurs
+                       % half_peak_temp = find(traceInterp(stimStart_interp:endWin)>halfPeak,1,'first');
+                       % peak_time(iSize,iCon, iCell,3) = t2(stimStart_interp+(half_peak_temp-1));
+        
+                    %dip is finding the local decrease within the general vicinty
+                    %of through
+                   end
+                end
+            dip_temp=trough-((traceInterp(troughBin(1))+traceInterp(troughBin(2)))/2);
+
+            dip_loc(iSize,iCon, iCell)=dip_temp;            
+            dip_peak_ratio_loc(iSize,iCon, iCell)=dip_temp/peak;
+           
+           %figure;plot(thisTrace);hold on; vline(peak_time_temp);vline(trough_time_temp);xlim([stimStart stimStart+15]);hold off
+          
+           peak_trough_loc(iSize,iCon, iCell,1)=peak;
+           %peak is the identified max
+           peak_trough_loc(iSize,iCon, iCell,2)=trough;
+            %rough is the minimum within the identified timebin, which is
+            %locked to the time of the peak 
+
+            %resp_mean is the average (:,:,:,1) or cumulative integral (:,:,:,2) response from 0 to 400 ms
+           resp_means_loc(iSize,iCon, iCell,1)=mean(thisTrace(stimStart:stimStart+12));
+           resp_means_loc(iSize,iCon, iCell,2)=max(cumtrapz(t(stimStart:stimStart+12),thisTrace(stimStart:stimStart+12)));
+
+
+           clear thisTrace peak peakBin troughBin dip_temp trough trough_time_temp peak_time_temp
+        end
+        end
+    end
+end
+
+
+%% look at the mean peak for each
+mean_peak_loc=(mean(peak_time_loc(:,:,centered,1),3,"omitmissing"));
+mean_halfPeak_loc=mean(peak_time_loc(:,:,centered,3),3,"omitmissing");
+mean_trough_loc=(mean(peak_time_loc(:,:,centered,2),3,"omitmissing"));
+mean_halfDecay_loc=(mean(peak_time_loc(:,:,centered,4),3,"omitmissing"));
+
+[n n2] = subplotn(nSizes*nCons);
+x=1;
+
+figure;
+    for iSize = 1:nSizes %loop through the sizes
+        
+        for iCon = 1:nCons
+
+        temp_peak=mean_peak_loc(iSize,iCon);
+        temp_halfPeak=mean_halfPeak_loc(iSize,iCon);
+        temp_trough=mean_trough_loc(iSize,iCon);
+        temp_halfDecay=mean_halfDecay_loc(iSize,iCon);
+        
+        temp_mean1 = mean(TCs_loc(:,iSize,iCon,centerPyr),4,"omitnan");
+        temp_se1 = std(TCs_loc(:,iSize,iCon,centerPyr),[],4,"omitnan")/sqrt(length(centerPyr));
+
+        temp_mean2 = mean(TCs_loc(:,iSize,iCon,centerIN),4,"omitnan");
+        temp_se2 = std(TCs_loc(:,iSize,iCon,centerIN),[],4,"omitnan")/sqrt(length(centerIN));
+
+        subplot(n,n2,x)
+  
+        hold on
+        shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
+        hold on
+        shadedErrorBar(t,temp_mean1,temp_se1);
+        hold on
+        alpha(.5)
+        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        %fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        ylim([-.03 .14])
+        xlim([-.25 .5])
+        vline(temp_halfPeak,'g')
+        vline(temp_peak,'b')
+        vline(temp_trough,'k')
+        vline(temp_halfDecay,'r')
+        box off
+        set(gca, 'TickDir', 'out')
+        hline(0)
+        hold off
+        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+        x=x+1;
+        end
+        
+clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
+    end
+  
+x0=1;
+y0=1;
+width=5;
+height=8;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+sgtitle(['Running, ~', num2str(round(mean(mean(locCountPyr)))),' Pyr cells, ~',num2str(round(mean(mean(locCountSST)))),' SST cells'])
+print('Running_peaks_labelled.pdf', '-dpdf');
+
+%% size curve at each contrast based on peak
+figure;
+subplot(1,2,1)
+for iCon = 1:nCons
+        temp_mean1 = mean(peak_trough_loc(:,iCon,centerPyr,1),3,"omitnan");
+        temp_se1 = std(peak_trough_loc(:,iCon,centerPyr,1),[],3,"omitnan")/sqrt(length(centerPyr));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+end
+
+lgd=legend(string(Cons))
+title(lgd,'Contrast')
+title("Size tuning by contrast, Pyr cells")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f peak')
+ylim([0 .16])
+
+
+
+
+subplot(1,2,2)
+for iCon = 1:nCons
+        temp_mean1 = mean(peak_trough_loc(:,iCon,centerIN,1),3,"omitnan");
+        temp_se1 = std(peak_trough_loc(:,iCon,centerIN,1),[],3,"omitnan")/sqrt(length(centerIN));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+end
+
+title("Size tuning by contrast, SST cells")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f peak')
+ylim([0 .13])
+
+
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('Running')
+
+print('SizeTuning_peak_Running.pdf', '-dpdf');
+
+%% size curve at each contrast based on mean
+figure;
+subplot(1,2,1)
+for iCon = 1:nCons
+        temp_mean1 = mean(resp_means_loc(:,iCon,centerPyr,1),3,"omitnan");
+        temp_se1 = std(resp_means_loc(:,iCon,centerPyr,1),[],3,"omitnan")/sqrt(length(centerPyr));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+end
+
+lgd=legend(string(Cons))
+title(lgd,'Contrast')
+title("Size tuning by contrast, Pyr cells")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f mean')
+ylim([-.005 .08])
+
+
+
+
+subplot(1,2,2)
+for iCon = 1:nCons
+        temp_mean1 = mean(resp_means_loc(:,iCon,centerIN,1),3,"omitnan");
+        temp_se1 = std(resp_means_loc(:,iCon,centerIN,1),[],3,"omitnan")/sqrt(length(centerIN));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+end
+
+title("Size tuning by contrast, SST cells")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f mean')
+ylim([-.005 .08])
+
+
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('Running')
+
+print('SizeTuning_mean_Running.pdf', '-dpdf');
+
+%%
+figure;
+for iCon=3:4
+
+subplot(1,2,iCon-2)
+temp_mean1 = mean(fwhm_loc(:,iCon,centerPyr),3,"omitnan");
+temp_se1 = std(fwhm_loc(:,iCon,centerPyr),[],3,"omitnan")/sqrt(length(centerPyr));
+
+temp_mean2 = mean(fwhm_loc(:,iCon,centerIN),3,"omitnan");
+temp_se2 = std(fwhm_loc(:,iCon,centerIN),[],3,"omitnan")/sqrt(length(centerIN));
+
+errorbar(Sizes,temp_mean1,temp_se1);
+hold on
+errorbar(Sizes,temp_mean2,temp_se2);
+legend('Pyr','SST')
+title(num2str(Cons(iCon)))
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('seconds')
+ylim([0.06 .25])
+
+end
+sgtitle("FWHM by size, running")
+
+x0=1;
+y0=1;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print('FWHM_by_size_running.pdf', '-dpdf');
+
+%% peak time traces
+
+figure; 
+subplot(1,2,1);
+%peak_time(:,:,centerIN,1)
+for iCon = 1:nCons
+        temp_mean1 = mean(peak_time_loc(:,iCon,centerPyr,1),3,"omitnan");
+        temp_se1 = std(peak_time_loc(:,iCon,centerPyr,1),[],3,"omitnan")/sqrt(length(centerPyr));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+        
+end
+
+title('Centered Pyr cells')
+ylabel('Peak time')
+xlabel('Size')
+xticks(Sizes)
+ylim([.1 .18])
+box off
+set(gca, 'TickDir', 'out')
+lgd=legend(string(Cons))
+title(lgd,'Contrast')
+
+subplot(1,2,2)
+%peak_time(:,:,centerIN,1)
+for iCon = 1:nCons
+        temp_mean1 = mean(peak_time_loc(:,iCon,centerIN,1),3,"omitnan");
+        temp_se1 = std(peak_time_loc(:,iCon,centerIN,1),[],3,"omitnan")/sqrt(length(centerIN));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+end
+
+title('Centered SST cells')
+ylabel('Peak time')
+xlabel('Size')
+xticks(Sizes)
+ylim([.1 .18])
+box off
+set(gca, 'TickDir', 'out')
+
+
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height]);
+sgtitle('Running')
+
+
+print('Peak_time_bySizeandConstrast_running.pdf', '-dpdf');
+
+%% peak time traces
+
+figure; 
+subplot(1,2,1);
+%peak_time(:,:,centerIN,1)
+for iCon = 1:nCons
+        temp_mean1 = mean(peak_time_loc(:,iCon,centerPyr,2),3,"omitnan");
+        temp_se1 = std(peak_time_loc(:,iCon,centerPyr,2),[],3,"omitnan")/sqrt(length(centerPyr));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+        
+end
+
+title('Centered Pyr cells')
+ylabel('Trough time')
+xlabel('Size')
+xticks(Sizes)
+ylim([.23 .3])
+box off
+set(gca, 'TickDir', 'out')
+lgd=legend(string(Cons))
+title(lgd,'Contrast')
+
+subplot(1,2,2)
+%peak_time(:,:,centerIN,1)
+for iCon = 1:nCons
+        temp_mean1 = mean(peak_time_loc(:,iCon,centerIN,2),3,"omitnan");
+        temp_se1 = std(peak_time_loc(:,iCon,centerIN,2),[],3,"omitnan")/sqrt(length(centerIN));
+
+        errorbar(Sizes,temp_mean1,temp_se1);
+        hold on
+end
+
+title('Centered SST cells')
+ylabel('Trough time')
+xlabel('Size')
+xticks(Sizes)
+ylim([.23 .3])
+box off
+set(gca, 'TickDir', 'out')
+
+
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height]);
+sgtitle('Running')
+
+
+print('Trough_time_bySizeandConstrast_running.pdf', '-dpdf');
+
+
+%% EXPLORATORY VISUALIZATIONS BELOW
+
+%% make size X contrast matrix of average timecouses, seperated by cell type and condition
+
+
+
+
+[n n2] = subplotn(nSizes*nCons);
+x=1;
+figure;
+    for iSize = 1:nSizes %loop through the sizes
+        
+        for iCon = 1:nCons
+        
+        temp_mean1 = mean(TCs_stat(:,iSize,iCon,pyrCells),4,"omitnan");
+        temp_se1 = std(TCs_stat(:,iSize,iCon,pyrCells),[],4,"omitnan")/sqrt(length(pyrCells));
+
+
+        temp_mean2 = mean(TCs_stat(:,iSize,iCon,interNrns),4,"omitnan");
+        temp_se2 = std(TCs_stat(:,iSize,iCon,interNrns),[],4,"omitnan")/sqrt(length(interNrns));
+
+        subplot(n,n2,x)
+
+        shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
+        hold on
+        shadedErrorBar(t(:),temp_mean1,temp_se1);
+        hold on
+        alpha(.5)
+        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        ylim([-.03 .1])
+        xlim([-1 1])
+        box off
+        set(gca, 'TickDir', 'out')
+        hline(0)
+        hold off
+        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+        x=x+1;
+        end
+        
+clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
+    end
+  
+sgtitle(['Stationary, ', num2str(length(pyrCells)),' Pyr cells, ',num2str(length(interNrns)),' SST cells'])
+
+ print('Stationary_matrix.pdf', '-dpdf');
+
+%% for running trials
+[n n2] = subplotn(nSizes*nCons);
+x=1;
+figure;
+    for iSize = 1:nSizes %loop through the sizes
+        
+        for iCon = 1:nCons
+        
+        temp_mean1 = mean(TCs_loc(:,iSize,iCon,pyrCells),4,"omitnan");
+        temp_se1 = std(TCs_loc(:,iSize,iCon,pyrCells),[],4,"omitnan")/sqrt(length(pyrCells));
+
+
+        temp_mean2 = mean(TCs_loc(:,iSize,iCon,interNrns),4,"omitnan");
+        temp_se2 = std(TCs_loc(:,iSize,iCon,interNrns),[],4,"omitnan")/sqrt(length(interNrns));
+
+        subplot(n,n2,x)
+
+        shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
+        hold on
+        shadedErrorBar(t(:),temp_mean1,temp_se1);
+        hold on
+        
+        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        ylim([-.03 .15])
+        xlim([-1 1])
+        box off
+        set(gca, 'TickDir', 'out')
+        hline(0)
+        hold off
+        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+        x=x+1;
+        end
+        
+clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
+    end
+  
+sgtitle(['Running, ', num2str(length(pyrCells)),' Pyr cells, ',num2str(length(interNrns)),' SST cells'])
+print('Running_matrix.pdf', '-dpdf');
+
+
 
 
 % 
@@ -1461,7 +2042,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 % clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
 %     end
 % 
-% sgtitle(['SOM by depth, ', num2str(length(INdepth1)),' deep cells, ',num2str(length(INdepth2)),' shallow cells (blue)'])
+% sgtitle(['SST by depth, ', num2str(length(INdepth1)),' deep cells, ',num2str(length(INdepth2)),' shallow cells (blue)'])
 % 
 % x0=1;
 % y0=1;
@@ -1469,7 +2050,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 % height=11;
 % set(gcf,'units','inches','position',[x0,y0,width,height])
 % 
-%  print('SOM_depth_matrix.pdf', '-dpdf');
+%  print('SST_depth_matrix.pdf', '-dpdf');
  
  %% peak time traces by depth +/- 200 microns
 
@@ -1513,7 +2094,7 @@ for iCon = 1:nCons
         hold on
 end
 
-title('Deep SOM cells')
+title('Deep SST cells')
 ylabel('Peak time')
 xlabel('Size')
 xticks(Sizes)
@@ -1550,7 +2131,7 @@ for iCon = 1:nCons
         hold on
 end
 
-title('Shallow SOM cells')
+title('Shallow SST cells')
 ylabel('Peak time')
 xlabel('Size')
 xticks(Sizes)
@@ -1609,7 +2190,7 @@ DistCutoffs=[0,10,20,100];
                     hold off
                     title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
                     x=x+1;
-                    sgtitle([num2str(minDist) ' to ' num2str(maxDist), ', ', num2str(length(PyrIndsTemp)),' Pyr cells, ',num2str(length(INIndsTemp)),' SOM cells'])
+                    sgtitle([num2str(minDist) ' to ' num2str(maxDist), ', ', num2str(length(PyrIndsTemp)),' Pyr cells, ',num2str(length(INIndsTemp)),' SST cells'])
                     clear temp_se2 temp_mean2 temp_se1 temp_mean1
             end
         
@@ -1663,7 +2244,7 @@ DistCutoffs=[0,10,20,100];
                     hold off
                     title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
                     x=x+1;
-                   sgtitle(['pref ori ', num2str(oris(iOri)) ', ', num2str(length(PyrIndsTemp)),' Pyr cells, ',num2str(length(INIndsTemp)),' SOM cells'] ) 
+                   sgtitle(['pref ori ', num2str(oris(iOri)) ', ', num2str(length(PyrIndsTemp)),' Pyr cells, ',num2str(length(INIndsTemp)),' SST cells'] ) 
               clear temp_se2 temp_mean2 temp_se1 temp_mean1
               
                 end
@@ -1719,7 +2300,7 @@ figure;
         set(gca, 'TickDir', 'out')
         hline(0)
         hold off
-        title([{num2str(length(thesePyr)) ' Pyr cells'} {num2str(length(theseIN)) ' SOM cells'}] )        
+        title([{num2str(length(thesePyr)) ' Pyr cells'} {num2str(length(theseIN)) ' SST cells'}] )        
         x=x+1;
         end
         
@@ -1790,7 +2371,7 @@ end
 
 lgd=legend(string(Cons))
 title(lgd,'Contrast')
-title("Size tuning by contrast, SOM cells")
+title("Size tuning by contrast, SST cells")
 box off
 set(gca, 'TickDir', 'out')
 xticks(Sizes)
