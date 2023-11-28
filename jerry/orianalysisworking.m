@@ -164,9 +164,11 @@ for v = 1:nBoot
     end    
 end
 
+
 %transpose pref_ori to nCell x 1
 pref_ori = pref_ori';
 
+%%
 %duplicate the column nBoot times for later array-wide arithmetic 
 %   calculation because every cell has the same
 %   non-bootstrapped pref_ori
