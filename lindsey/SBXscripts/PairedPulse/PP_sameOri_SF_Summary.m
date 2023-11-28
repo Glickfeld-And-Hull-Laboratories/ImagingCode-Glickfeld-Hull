@@ -7,13 +7,23 @@ summaryDir = fullfile(LG_base, 'Analysis', '2P', 'Adaptation', 'SFSummary');
 ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
+
+area = 'LM';
+area_ind = find(strcmp([expt.img_loc], 'LM'));
+randDir = 1;
+dir_ind = find([expt.randDir]==1);
+
+expt_use = intersect(area_ind,dir_ind);
+
 totCells = 0;
+resp_dfof_stim_all = [];
+h1_ori_all = [];
 norm_sf = [];
 norm_prefsf = [];
 norm_dir = [];
 norm_prefdir = [];
 
-for iexp = 1:nexp
+for iexp = expt_use
     if expt(iexp).randDir
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
@@ -25,6 +35,9 @@ for iexp = 1:nexp
         
         load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
     
+        resp_dfof_stim_all = cat(1, resp_dfof_stim_all, squeeze(resp_dfof_stim));
+        h1_ori_all = cat(1, h1_ori_all, h1_ori);
+
         norm_sf_all(:,end) =  norm_sf_all(:,end) + totCells;
         norm_prefsf_all(:,end) =  norm_prefsf_all(:,end) + totCells;
         norm_dir_all(:,end) =  norm_dir_all(:,end) + totCells;
@@ -42,8 +55,85 @@ end
 sfs = unique(norm_sf(:,2));
 oris = unique(norm_sf(:,3));
 
-figure(1)
-subplot(2,2,1)
+resp_ind = find(h1_ori_all<0.05/8);
+
+[max_val max_ori] = max(resp_dfof_stim_all(:,:,:,1),[],2);
+max_all =  max(max(resp_dfof_stim_all(:,:,:,1),[],2),[],3);
+resp_dfof_stim_all_shift = resp_dfof_stim_all;
+resp_dfof_stim_all_norm = resp_dfof_stim_all;
+resp_dfof_stim_all_norm_all = resp_dfof_stim_all;
+for iC = 1:totCells
+    for iSF = 1:3
+        resp_dfof_stim_all_shift(iC,:,iSF,:) = circshift(resp_dfof_stim_all(iC,:,iSF,:),5-max_ori(iC,1,iSF),2);
+        resp_dfof_stim_all_norm(iC,:,iSF,:) = resp_dfof_stim_all_shift(iC,:,iSF,:)./max_val(iC,1,iSF);
+    end
+    resp_dfof_stim_all_norm_all(iC,:,:,:) = resp_dfof_stim_all_shift(iC,:,:,:)./max_all(iC,:);
+end
+
+figure
+subplot(2,3,1)
+for iSF = 1:3
+    ind_use = find(sum(h1_ori_all(:,:,iSF),2));
+    errorbar(oris, squeeze(mean(resp_dfof_stim_all_norm(ind_use,:,iSF,1),1)), squeeze(std(resp_dfof_stim_all_norm(ind_use,:,iSF,1),[],1)./sqrt(length(ind_use))));
+    hold on
+    str{iSF} = [num2str(sfs(iSF)) 'cpd; n = ' num2str(length(ind_use))];
+end
+legend(str)
+ylim([0 1.5])
+xlabel('Orientation (deg)')
+ylabel('Normalized dF/F')
+subplot(2,3,2)
+for iSF = 1:3
+    ind_use = find(sum(h1_ori_all(:,:,iSF),2));
+    cdfplot(max_val(ind_use,iSF))
+    hold on
+end
+xlabel('max dF/F')
+OSI = (resp_dfof_stim_all_shift(:,5,:,1)-resp_dfof_stim_all_shift(:,1,:,1))./(resp_dfof_stim_all_shift(:,5,:,1)+resp_dfof_stim_all_shift(:,1,:,1));
+subplot(2,3,3)
+for iSF = 1:3
+    ind_use = find(sum(h1_ori_all(:,:,iSF),2));
+    cdfplot(OSI(ind_use,iSF))
+    hold on
+end
+xlabel('OSI')
+h1_all = squeeze(sum(h1_ori_all,2)>0);
+ind_match = find(sum(h1_all,2)==3);
+subplot(2,3,4)
+for iSF = 1:3
+    errorbar(oris, squeeze(mean(resp_dfof_stim_all_norm(ind_match,:,iSF,1),1)), squeeze(std(resp_dfof_stim_all_norm(ind_match,:,iSF,1),[],1)./sqrt(length(ind_match))));
+    hold on
+    str{iSF} = [num2str(sfs(iSF)) 'cpd; n = ' num2str(length(ind_match))];
+end
+legend(str)
+xlabel('Orientation (deg)')
+ylabel('Normalized dF/F')
+ylim([0 1.5])
+subplot(2,3,5)
+for iSF = 1:3
+    cdfplot(max_val(ind_match,iSF))
+    hold on
+end
+xlabel('max dF/F')
+OSI = (resp_dfof_stim_all_shift(:,5,:,1)-resp_dfof_stim_all_shift(:,1,:,1))./(resp_dfof_stim_all_shift(:,5,:,1)+resp_dfof_stim_all_shift(:,1,:,1));
+subplot(2,3,6)
+for iSF = 1:3
+    cdfplot(OSI(ind_match,iSF))
+    hold on
+end
+xlabel('OSI')
+suptitle(['LM- ' [expt(expt_use).mouse]])
+print('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Talks\LabMeeting\231128\tuningBySF.pdf','-dpdf','-bestfit')
+
+[max_val max_sf] = max(resp_dfof_stim_all_norm_all(:,5,:,1),[],3);
+figure; 
+subplot(2,3,1)
+histogram(max_sf(ind_use))
+set(gca, 'XTickLabel',sfs)
+ylabel('Number of cells')
+
+%figure;
+subplot(2,3,2)
 swarmchart(norm_sf(:,2), norm_sf(:,1),'k')
 set(gca,'XScale','log')
 xticks(sfs)
@@ -70,7 +160,7 @@ stats_all = table_all(ind,end);
 sigstar(groups_all,stats_all);
 
 
-subplot(2,2,2)
+subplot(2,3,3)
 swarmchart(norm_prefsf(:,2), norm_prefsf(:,1),'k')
 set(gca,'XScale','log')
 xticks(sfs)
@@ -142,8 +232,8 @@ groups_pref = mat2cell(oris(table_pref(ind,1:2)),ones(1,size(table_all(ind,:),1)
 stats_pref = table_pref(ind,end);
 
 sigstar(groups_pref,stats_pref);
-
-print(fullfile(summaryDir,'adaptationBySF.pdf'),'-dpdf','-bestfit');
+suptitle(area)
+print(fullfile(summaryDir,['adaptationBySF_' area '.pdf']),'-dpdf','-bestfit');
 
 uniqueCells = size(norm_prefsf,1);
 nboot = 1000;
@@ -186,5 +276,5 @@ hold on
 plot(mean(XData,1),YData,'r')
 xlabel('Absolute diff in adaptation from pref SF')
 ylabel('Fraction of cells')
-title([num2str(uniqueCells) ' cells; ' num2str(nexp) ' mice'])
-print(fullfile(summaryDir,'adaptationDiffFromPrefSF.pdf'),'-dpdf','-bestfit','-painters');
+title([area ': ' num2str(uniqueCells) ' cells; ' num2str(nexp) ' mice'])
+print(fullfile(summaryDir,['adaptationDiffFromPrefSF_' area '.pdf']),'-dpdf','-bestfit','-painters');
