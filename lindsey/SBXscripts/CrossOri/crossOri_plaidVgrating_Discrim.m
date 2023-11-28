@@ -13,22 +13,25 @@
 % expt = 'plaid_test';
 % 
 % mouse = 'i484';
-% date = {'210506','210507','210509','210510','210511','210512'};
-% time = {'1321','1326','1355','1258','1255','1258'};
-% tr_range = {444, 290,350,300,290,240};
+% %date = {'210506','210507'};
+% date = {'210509','210510','210511','210512'};
+% %time = {'1321','1326'};
+% time = {'1355','1258','1255','1258'};
+% tr_range = {444, 290};
+% tr_range = {350,300,290,240};
 % useFB = 1;
 % expt = 'plaid_train';
 % 
-% mouse = 'i485';
-% %date = {'210511','210512','210513','210514','210517','210518','210519'};
-% date = {'210520','210521','210524','210525','210526','210527','210528','210530','210601','210602','210603','210604'};
-% %time = {'1258','1302','1258','1336','1250','1332','1312'};
-% time = {'1318','1226','1203','1253','1144','1210','1110','1221','1130','1201','1150','1021'};
-% %tr_range = {270,235,328,340,235,210,220};
-% tr_range = {200,225,250,250,150,200,175,125,240,150,250,225};
-% useFB = 1;
-% expt = 'plaid_train';
-%  
+mouse = 'i485';
+%date = {'210511','210512','210513','210514','210517','210518','210519'};
+date = {'210520','210521','210524','210525','210526','210527','210528','210530','210601','210602','210603','210604'};
+%time = {'1258','1302','1258','1336','1250','1332','1312'};
+time = {'1318','1226','1203','1253','1144','1210','1110','1221','1130','1201','1150','1021'};
+%tr_range = {270,235,328,340,235,210,220};
+tr_range = {200,225,250,250,150,200,175,125,240,150,250,225};
+useFB = 1;
+expt = 'plaid_train';
+
 % mouse = 'i484';
 % date = {'210513'};
 % time = {'1255'};
@@ -128,12 +131,12 @@
 % useFB = 0;
 % expt = 'plaid_test';
 % 
-mouse = 'i785';
-date = {'211208','211210','211213','211214','211215','211216','211217','211220','211221','211222'};
-time = {'1139','1143','1124','1240','1003','1140','1101','1104','1120','1114'};
-tr_range = {190,180,170,[],225,260,180,210,190,230};
-useFB = 0;
-expt = 'plaid_test';
+% mouse = 'i785';
+% date = {'211208','211210','211213','211214','211215','211216','211217','211220','211221','211222'};
+% time = {'1139','1143','1124','1240','1003','1140','1101','1104','1120','1114'};
+% tr_range = {190,180,170,[],225,260,180,210,190,230};
+% useFB = 0;
+% expt = 'plaid_test';
 %%
 nd = length(date);
 start = 0;
@@ -462,8 +465,8 @@ start = start+1;
 end
 if sum(tMask2)
     sgtitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
-else
-    sgtitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
+% else
+%     sgtitle([mouse '- ' num2str(nd) ' sessions: ' num2str(sum(ntrials_grating)) ' grating trials; ' num2str(sum(ntrials_plaid)) ' plaid trials; ' num2str(sum(ntrials_plaid2)) ' type2 plaid trials'])
 end
 print(['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\Behavior\CrossOri\' mouse '_GratingPlaidComp_' expt '.pdf'],'-dpdf','-fillpage');
  
