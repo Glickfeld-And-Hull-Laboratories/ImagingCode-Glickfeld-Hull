@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_15Hz_ExptList';
-iexp = 16; 
+ds = 'CrossOriSingleStimRandDirAdapt_ExptList';
+iexp = 1; 
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
