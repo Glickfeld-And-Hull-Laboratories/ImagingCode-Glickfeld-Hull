@@ -1,7 +1,8 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+%ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds='ds_YM90K_DART.mat';
 dataStructLabels = {'contrastxori'};
 
 eval(ds);
@@ -11,11 +12,8 @@ eval(ds);
 % 178 190 294 %good quality SOM YM90K
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
-%peg  303 311 319 329 355
-%Oct 2023: 138 142 163 171 178 190 294 307 323 333
 
-
-sess_list = [303 311 319 329 355];%enter all the sessions you want to concatenate
+sess_list = [138 142 163 171 178 190 294 307 323 333];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -130,7 +128,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'resp_keep.mat'));
     load(fullfile(fn_multi,'input.mat'));
     load(fullfile(fn_multi,'locomotion.mat'));
-    load(fullfile(fn_multi,'fluor_intensity.mat'));
+%    load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
    % temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
    % 
@@ -199,8 +197,8 @@ for iSess = 1:nSess
         clear meanF
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
-    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
-    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
+%    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
+%    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
     
 
 end
@@ -393,11 +391,11 @@ tc_red_se_stat = cell(1,nd); %same for red
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_all,iCon),2);
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon},iCon),2);
     green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon},iCon),[],2);
     tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}));
     
-    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_all,iCon),2);
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon},iCon),2);
     red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon},iCon),[],2);
     tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}));
     
@@ -426,7 +424,7 @@ line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .25 .25 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-title(['-HTP',' n = ', num2str(length(green_all))])
+title(['-HTP',' n = ', num2str(length(haveRunning_green{iCon}))])
 
 ylabel('dF/F') 
 xlabel('s') 
@@ -445,7 +443,7 @@ line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 ylabel('dF/F') 
 xlabel('s') 
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .25 .25 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
-title(['+HTP',' n = ', num2str(length(red_all))])
+title(['+HTP',' n = ', num2str(length(haveRunning_red{iCon}))])
 
 x0=5;
 y0=5;
@@ -456,7 +454,7 @@ set(gca,'XColor', 'none','YColor','none')
 
 sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
 
-print(fullfile(fnout,[num2str(cons(iCon)) '_stat_all_timecourses.pdf']),'-dpdf');
+print(fullfile(fnout,[num2str(cons(iCon)) '_stat_timecourses.pdf']),'-dpdf');
 end 
 
 
@@ -470,11 +468,11 @@ tc_red_se_loc = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,green_all,iCon),2);
+    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon},iCon),2);
     green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon},iCon),[],2);
     tc_green_se_loc{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}));
     
-    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,red_all,iCon),2);
+    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon},iCon),2);
     red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon},iCon),[],2);
     tc_red_se_loc{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}));
     
@@ -501,7 +499,7 @@ hold on
 line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
 hold on
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .45 .45 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
-title(['-HTP',' n = ', num2str(length(green_all))])
+title(['-HTP',' n = ', num2str(length(haveRunning_green{iCon}))])
 ylabel('dF/F') 
 xlabel('s') 
 set(gca,'XColor', 'none','YColor','none')
@@ -520,7 +518,7 @@ hold on
 %fill([0.2 0.2 (z+.2) (z+.2)],[-.02 .45 .45 -.02],'k',FaceAlpha = 0.25,LineStyle='none')
 ylabel('dF/F') 
 xlabel('s') 
-title(['+HTP',' n = ', num2str(length(red_all))])
+title(['+HTP',' n = ', num2str(length(haveRunning_red{iCon}))])
 x0=5;
 y0=5;
 width=4;
@@ -529,7 +527,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 set(gca,'XColor', 'none','YColor','none')
 
 sgtitle(['running, contrast = ' num2str(cons(iCon))])
-print(fullfile(fnout,[num2str(cons(iCon)) '_loc_all_timecourses.pdf']),'-dpdf');
+print(fullfile(fnout,[num2str(cons(iCon)) '_loc_timecourses.pdf']),'-dpdf');
 end 
 clear txt1 txt2
 
@@ -1020,7 +1018,7 @@ hold off
 set(gca,'TickDir','out')
 box off
 
-%print(fullfile(fnout,[ 'normDiff_by_behState.eps']),'-depsc')
+print(fullfile(fnout,[ 'normDiff_by_behState.pdf']),'-dpdf')
 %% 
 redHigh_acrossCons = intersect(highRInds,red_ind_concat);
 redHigh_acrossCons = intersect(lowRInds,red_ind_concat);
@@ -1040,9 +1038,9 @@ box off
 %%
 figure;
 subplot(1,2,1)
-boxchart(squeeze(norm_diff(1,:,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75]);
+boxchart(squeeze(norm_diff(1,:,red_all))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75]);
 hold on
-scatter([1, 2, 3],squeeze(norm_diff(1,:,red_ind_concat))',"red",'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(norm_diff(1,:,red_all))',"red",'jitter', 'on', 'jitterAmount',.1)
 %scatter([1, 2, 3],squeeze(norm_diff(1,:,green_ind_concat))',"black",'jitter', 'on', 'jitterAmount',.1)
 %plot(squeeze(norm_diff(1,[1,3],red_ind_concat)))
 xticklabels({'25%','50%','100%'})
@@ -1055,9 +1053,9 @@ set(gca,'TickDir','out')
 box off
 
 subplot(1,2,2)
-boxchart(squeeze(norm_diff(1,:,green_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75]);
+boxchart(squeeze(norm_diff(1,:,green_all))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75]);
 hold on
-scatter([1, 2, 3],squeeze(norm_diff(1,:,green_ind_concat))',"black",'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(norm_diff(1,:,green_all))',"black",'jitter', 'on', 'jitterAmount',.1)
 %plot(squeeze(norm_diff(1,[1,3],red_ind_concat)))
 xticklabels({'25%','50%','100%'})
 ylim([-6 10])
@@ -1067,6 +1065,8 @@ title('-HTP')
 hold off
 set(gca,'TickDir','out')
 box off
+
+print(fullfile(fnout,[ 'normDiff_by_contrast.pdf']),'-dpdf')
 
 %%
 z=squeeze(norm_diff(1,:,red_ind_concat))';
@@ -1114,13 +1114,13 @@ clear tHalfMaxCell tHalfMaxTemp tempData smoothData halfMax
 
 figure; movegui('center') 
 subplot(1,2,1)
-scatter((tHalfMax{pre}(green_all)),(tHalfMax{post}(green_all)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.1)
+scatter((tHalfMax{pre}(green_ind_concat)),(tHalfMax{post}(green_ind_concat)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.1)
 hold on
-mean_pre_stat = mean(tHalfMax{pre}(green_all),"omitnan");
-mean_post_stat = mean(tHalfMax{post}(green_all),"omitnan");
+mean_pre_stat = mean(tHalfMax{pre}(green_ind_concat),"omitnan");
+mean_post_stat = mean(tHalfMax{post}(green_ind_concat),"omitnan");
 scatter(mean_pre_stat,mean_post_stat,20,'r','filled');
-stderror_pre= nanstd(tHalfMax{pre}(green_all)) / sqrt( length(green_all));
-stderror_post= nanstd(tHalfMax{post}(green_all)) / sqrt( length(green_all));
+stderror_pre= nanstd(tHalfMax{pre}(green_ind_concat)) / sqrt( length(green_ind_concat));
+stderror_post= nanstd(tHalfMax{post}(green_ind_concat)) / sqrt( length(green_ind_concat));
 line([(mean_pre_stat-stderror_pre),(mean_pre_stat+stderror_pre)],[mean_post_stat, mean_post_stat],'Color','black','LineWidth',2);
 line([mean_pre_stat, mean_pre_stat],[(mean_post_stat-stderror_post),(mean_post_stat+stderror_post)],'Color','blue','LineWidth',2);
 ylabel('post-DART half-max(s)')
@@ -1139,13 +1139,13 @@ hold off
 
 
 subplot(1,2,2)
-scatter((tHalfMax{pre}(red_all)),(tHalfMax{post}(red_all)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.1)
+scatter((tHalfMax{pre}(red_ind_concat)),(tHalfMax{post}(red_ind_concat)),10,'MarkerEdgeColor',[.4 .4 .4],'jitter', 'on', 'jitterAmount',.1)
 hold on
-mean_pre_stat = nanmean(tHalfMax{pre}(red_all));
-mean_post_stat = nanmean(tHalfMax{post}(red_all));
+mean_pre_stat = nanmean(tHalfMax{pre}(red_ind_concat));
+mean_post_stat = nanmean(tHalfMax{post}(red_ind_concat));
 scatter(mean_pre_stat,mean_post_stat,20,'r','filled');
-stderror_pre= nanstd(tHalfMax{pre}(red_all)) / sqrt( length(red_all));
-stderror_post= nanstd(tHalfMax{post}(red_all)) / sqrt( length(red_all));
+stderror_pre= nanstd(tHalfMax{pre}(red_ind_concat)) / sqrt( length(red_ind_concat));
+stderror_post= nanstd(tHalfMax{post}(red_ind_concat)) / sqrt( length(red_ind_concat));
 line([(mean_pre_stat-stderror_pre),(mean_pre_stat+stderror_pre)],[mean_post_stat, mean_post_stat],'Color','black','LineWidth',2);
 line([mean_pre_stat, mean_pre_stat],[(mean_post_stat-stderror_post),(mean_post_stat+stderror_post)],'Color','blue','LineWidth',2);
 
@@ -1777,7 +1777,7 @@ end
 
 %% compile capture values per imaging session
 %
-capture = getCaptureValues_annulus(mice);
+capture = getCaptureValues_annulus_peg(captureMice);
 
 %what do the distributions look like?
 figure;
@@ -1798,7 +1798,7 @@ histogram(capture(3,:),10)
 title('FOV / CNTRL')
 set(gca, 'TickDir', 'out')
 box off
-
+%%
 
 % identify the sessions with highest and lowest capture
 mice{find(capture(3,:)==max(capture(3,:)))}
