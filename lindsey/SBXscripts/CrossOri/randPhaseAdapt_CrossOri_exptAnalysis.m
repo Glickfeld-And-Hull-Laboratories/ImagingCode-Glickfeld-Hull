@@ -1,6 +1,6 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriSingleStimRandPhaseAdapt_ExptList';
+ds = 'CrossOriSingleStimRandDirAdapt_ExptList';
 
 rc = behavConstsAV;
 eval(ds)

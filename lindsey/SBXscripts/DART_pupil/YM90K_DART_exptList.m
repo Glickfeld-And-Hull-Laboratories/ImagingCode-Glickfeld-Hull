@@ -39,3 +39,10 @@ expt(6).runs = {'004','003'};
 expt(6).times = {'1257','1208'};
 expt(6).drug = 'PEG';
 
+%%
+expt(7).mouse = 'i2108';
+expt(7).dates = {'231011','231012'};
+expt(7).runs = {'005','004'};
+expt(7).times = {'1424','1109'};
+expt(7).drug = 'PEG';
+

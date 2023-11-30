@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '220818';
-ImgFolder = {'002'};
-time = strvcat('1116');
-mouse = 'i1365';
+date = '231117';
+ImgFolder = {'004'};
+time = strvcat('1642');
+mouse = 'i1386';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -127,7 +127,7 @@ elseif input.doRandDir & input.doRandSF
     data_dfof_stim = zeros(sz(1),sz(2),nOri*nSF);
     figure;
     it = 1;
-    n= nOri;
+    n= nOri+1;
     n2 = nSF;
     for io = 1:nOri
         ind = find(ori_mat == oris(io));
@@ -272,8 +272,8 @@ tc_two_f = mean(tc_two(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-base_win = 21:23;
-resp_win = 28:30;
+base_win = 22:24;
+resp_win = 30:32;
 figure;
 subplot(2,1,1)
 shadedErrorBar(1:100,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
@@ -371,9 +371,10 @@ if nISI>1
     end
     sgtitle([mouse ' ' date])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptISI.pdf']),'-dpdf','-fillpage')
-end
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'tc_one_dfof_all', 'tc_two_dfof_all', 'base_win', 'resp_win', 'tc_one_dfof_resp', 'tc_two_dfof_resp', 'resp_dfof_norm', 'tt1', 'tt2')
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'tISITime', 'ISIs', 'nISI')
 
-if nTime>1
+elseif nTime>1
     figure;
     tc_two_dfof_resp_stim = zeros(nCells,nTime+1);
     for it = 1:nTime
@@ -412,10 +413,10 @@ if nTime>1
     ylabel('Normalized dF/F')
     ylim([0 1.2])
     set(gca,'xscale','log')
-
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'tc_one_dfof_all', 'tc_two_dfof_all', 'base_win', 'resp_win', 'tc_one_dfof_resp', 'tc_two_dfof_resp', 'resp_dfof_norm', 'tt1', 'tt2')
+else
+    save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'tc_one_dfof_all', 'tc_two_dfof_all', 'base_win', 'resp_win', 'tc_one_dfof_resp', 'tc_two_dfof_resp', 'tt1', 'tt2')
 end
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'tc_one_dfof_all', 'tc_two_dfof_all', 'base_win', 'resp_win', 'tc_one_dfof_resp', 'tc_two_dfof_resp', 'resp_dfof_norm', 'tt1', 'tt2')
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'tISITime', 'ISIs', 'nISI')
 
 %%
 
@@ -491,6 +492,7 @@ if input.doRandSF & ~input.doRandDir
     xlabel('SF')
     ylabel('Norm resp')
     xlim([0 0.7])
+    set(gca,'XScale','log')
 
     subplot(1,2,2)
     scatter(sfs(pref_sf(ind_use)),norm_dfof_stim_pref(ind_use),'ok')
@@ -502,6 +504,7 @@ if input.doRandSF & ~input.doRandDir
     xlabel('Pref SF')
     ylabel('Norm resp')
     xlim([0 0.7])
+    set(gca,'XScale','log')
     sgtitle([mouse ' ' date '- ' num2str(length(ind_use)) ' resp cells'])
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_adaptBySF.pdf']),'-dpdf','-fillpage')
 
@@ -539,6 +542,14 @@ if input.doRandSF & input.doRandDir
         %title(num2str(sum(sum(h1_ori(iCell,:,:),2),3)>0))
         axis off
         clim([0 0.4])
+    end
+    
+    figure;
+    for iC = 1:length(resp_ind)
+        iCell = resp_ind(iC);
+        subplot(n,n2,iC)
+        plot(squeeze(resp_dfof_stim(iCell,:,:,1,1)))
+        %title(num2str(sum(sum(h1_ori(iCell,:,:),2),3)>0))
     end
 
     [pref_val pref_sf] = max(mean(resp_dfof_stim(:,:,:,1,1),2),[],3);
