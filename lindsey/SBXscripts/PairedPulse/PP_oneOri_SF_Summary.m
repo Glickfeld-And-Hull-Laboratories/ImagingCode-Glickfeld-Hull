@@ -7,6 +7,14 @@ summaryDir = fullfile(LG_base, 'Analysis', '2P', 'Adaptation', 'SFSummary');
 ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
+
+area = 'AL';
+area_ind = find(strcmp([expt.img_loc], area));
+randDir = 0;
+dir_ind = find([expt.randDir]==randDir);
+
+expt_use = intersect(area_ind,dir_ind);
+
 totCells = 0;
 norm_sf = [];
 norm_prefsf = [];
@@ -14,7 +22,7 @@ resp_pref = [];
 resp_var = [];
 ind_use = [];
 mice = [];
-for iexp = 1:nexp
+for iexp = expt_use
     if ~expt(iexp).randDir
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
@@ -31,15 +39,15 @@ for iexp = 1:nexp
         norm_prefsf_temp =  [norm_dfof_stim_pref sfs(pref_sf)'];
         resp_ind = find(sum(h1_ori,[2 3]));
         resp_dfof_pref = indOnly(resp_dfof_stim(:,:,1),pref_sf);
-        resp_var_pref = indOnly(resp_dfof_var(:,:,1),pref_sf);
+        %resp_var_pref = indOnly(resp_dfof_var(:,:,1),pref_sf);
         resp_pref_temp = [resp_dfof_pref sfs(pref_sf)'];
-        resp_var_temp = [resp_var_pref sfs(pref_sf)'];
+        %resp_var_temp = [resp_var_pref sfs(pref_sf)'];
         ind = intersect(resp_ind,find(resp_dfof_pref>0.05));
         ind_use = [ind_use; ind+totCells];
         norm_sf = [norm_sf; norm_sf_temp];
         norm_prefsf = [norm_prefsf; norm_prefsf_temp];
         resp_pref = [resp_pref; resp_pref_temp];
-        resp_var = [resp_var; resp_var_temp];
+        %resp_var = [resp_var; resp_var_temp];
     
         nCells = size(pref_sf,1);
         totCells = totCells+nCells;
@@ -48,7 +56,7 @@ for iexp = 1:nexp
 end
 
 %%
-save(fullfile(summaryDir,'adaptationBySF.mat'),'norm_sf', 'norm_prefsf', 'resp_pref', 'resp_var', 'ind_use', 'sfs')
+save(fullfile(summaryDir,['adaptationBySF_' area '.mat']),'norm_sf', 'norm_prefsf', 'resp_pref', 'resp_var', 'ind_use', 'sfs')
 
 
 figure(1)
@@ -128,21 +136,21 @@ ylabel('Normalized dF/F')
 xlim([0 1])
 ylim([0 1.5])
 
-subplot(3,2,5)
-swarmchart(resp_var(ind_use,2), resp_var(ind_use,1)./(resp_pref(ind_use,1).^2),'k')
-set(gca,'XScale','log')
-ylabel('Resp 1 variance/mean^2')
-xlabel('Spatial frequency')
-hold on
-ylim([0 10])
-xlim([0.02 1])
-title('Preferred')
-resp_snr_avg = zeros(length(sfs),2);
-for is = 1:length(sfs)
-    ind = intersect(ind_use,find(resp_var(:,2) == sfs(is)));
-    resp_snr_avg(is,:) = [mean(resp_var(ind,1)./(resp_pref(ind,1).^2),1,'omitnan') std(resp_var(ind,1)./(resp_pref(ind,1).^2),[],1,'omitnan')./sqrt(length(ind))];
-end
-errorbar(sfs,resp_snr_avg(:,1),resp_snr_avg(:,2),'or')
+% subplot(3,2,5)
+% swarmchart(resp_var(ind_use,2), resp_var(ind_use,1)./(resp_pref(ind_use,1).^2),'k')
+% set(gca,'XScale','log')
+% ylabel('Resp 1 variance/mean^2')
+% xlabel('Spatial frequency')
+% hold on
+% ylim([0 10])
+% xlim([0.02 1])
+% title('Preferred')
+% resp_snr_avg = zeros(length(sfs),2);
+% for is = 1:length(sfs)
+%     ind = intersect(ind_use,find(resp_var(:,2) == sfs(is)));
+%     resp_snr_avg(is,:) = [mean(resp_var(ind,1)./(resp_pref(ind,1).^2),1,'omitnan') std(resp_var(ind,1)./(resp_pref(ind,1).^2),[],1,'omitnan')./sqrt(length(ind))];
+% end
+% errorbar(sfs,resp_snr_avg(:,1),resp_snr_avg(:,2),'or')
 
 % resp_var_avg = zeros(length(sfs),2);
 % for is = 1:length(sfs)
@@ -155,18 +163,22 @@ errorbar(sfs,resp_snr_avg(:,1),resp_snr_avg(:,2),'or')
 % xlim([0 0.2])
 % ylim([0 1.5])
 
-subplot(3,2,6)
-errorbar(resp_snr_avg(:,1),norm_prefsf_avg(:,1),norm_prefsf_avg(:,2),norm_prefsf_avg(:,2),resp_snr_avg(:,2),resp_snr_avg(:,2),'o')
-xlabel('Resp 1 variance/mean^2')
-ylabel('Normalized dF/F')
-xlim([0 5])
-ylim([0 1.5])
-
-lm = fitlm(resp_snr_avg(:,1), norm_prefsf_avg(:,1));
+% subplot(3,2,6)
+% errorbar(resp_snr_avg(:,1),norm_prefsf_avg(:,1),norm_prefsf_avg(:,2),norm_prefsf_avg(:,2),resp_snr_avg(:,2),resp_snr_avg(:,2),'o')
+% xlabel('Resp 1 variance/mean^2')
+% ylabel('Normalized dF/F')
+% xlim([0 5])
+% ylim([0 1.5])
+% 
+% lm = fitlm(resp_snr_avg(:,1), norm_prefsf_avg(:,1));
 
 %sigstar(groups_pref,stats_pref);
-sgtitle([num2str(size(unique(mice),1)) ' mice; ' num2str(length(ind_use)) ' cells'])
-print(fullfile(summaryDir,'adaptationBySFonly.pdf'),'-dpdf','-bestfit');
+subplot(3,2,6)
+histogram(norm_prefsf(ind_use,2),'Normalization','probability')
+hold on
+cdfplot(norm_prefsf(ind_use,2))
+sgtitle([area ' ' num2str(size(unique(mice),1)) ' mice; ' num2str(length(ind_use)) ' cells'])
+print(fullfile(summaryDir,['adaptationBySFonly_' area '.pdf']),'-dpdf','-bestfit');
 
 % uniqueCells = size(norm_prefsf,1);
 % nboot = 1000;

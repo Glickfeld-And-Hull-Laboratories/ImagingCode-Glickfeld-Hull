@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
 ds = 'CrossOriSingleStimRandDirAdapt_ExptList';
-iexp = 4; 
+iexp = 5; 
 rc = behavConstsAV;
 eval(ds)
 
@@ -76,7 +76,7 @@ nep = floor(size(data,3)./step);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*step):500+((i-1)*step)),3)); title([num2str(1+((i-1)*step)) '-' num2str(500+((i-1)*step))]); colormap gray; clim([0 3000]); end
 
-data_avg = mean(data(:,:,50001:50500),3);
+data_avg = mean(data(:,:,60001:60500),3);
 %% Register data
 
 [out, data_reg] = stackRegister(data,data_avg);
