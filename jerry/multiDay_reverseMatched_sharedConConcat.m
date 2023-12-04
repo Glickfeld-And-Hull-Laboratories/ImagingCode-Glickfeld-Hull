@@ -7,7 +7,7 @@ dataStructLabels = {'contrastxori'};
 eval(ds);
 
 
-sess_list = [2 6];%enter all the sessions you want to concatenate; ONLY ENTER THE REFERENCE DATE IF MATCHING
+sess_list = [10];%enter all the sessions you want to concatenate; ONLY ENTER THE REFERENCE DATE IF MATCHING
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
