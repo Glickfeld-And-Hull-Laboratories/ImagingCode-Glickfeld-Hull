@@ -1,4 +1,4 @@
-function [p n1 n2 n3] = svganova(fn1,fn2,fn3);
+function [p comp_use n1 n2 n3] = svganova(fn1,fn2,fn3);
 %set your path to the folder with the .svg file
 %fn1 and fn2 are the names of the .svg files you want to compare
 %output is p of the ttest and n for the number of data points
@@ -22,23 +22,26 @@ group{2} = zeros(n2,1);
 fig = gcf;
 axObjs = fig.Children;
 dataObjs = axObjs.Children;
-for i = 1:n1
+for i = 1:n2
     yvals{2}(i,:) = mean(dataObjs(i).YData);
     group{2}(i,:) = 2;
 end
 
-svg3 = loadsvg(fn2,0.5,1);
+svg3 = loadsvg(fn3,0.5,1);
 n3 = size(svg3,2);
 yvals{3} = zeros(n3,1);
 group{3} = zeros(n3,1);
 fig = gcf;
 axObjs = fig.Children;
 dataObjs = axObjs.Children;
-for i = 1:n1
+for i = 1:n3
     yvals{3}(i,:) = mean(dataObjs(i).YData);
     group{3}(i,:) = 3;
 end
 
 y_all = [yvals{1};yvals{2};yvals{3}];
 group_all = [group{1};group{2};group{3}];
-p = anova1(y_all,group_all,"off");
+[p tab stats] = anova1(y_all,group_all,'off');
+
+comp = multcompare(stats,'Display','off');
+comp_use  = array2table(comp);

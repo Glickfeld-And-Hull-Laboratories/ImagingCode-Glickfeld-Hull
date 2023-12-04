@@ -52,4 +52,17 @@ expt(4).coFolder = {'002'};
 expt(4).coTime = {'1547'};
 expt(4).saveLoc = 'lindsey';
 
+%% i1380 231128 TF- 2Hz, 0.05cpd
+expt(5).mouse = 'i1380';
+expt(5).date = '231128';
+expt(5).img_loc  = {'V1';'L2/3'};
+expt(5).inj_loc = {'V1'};
+expt(5).z = -200;
+expt(5).img_strct  = {'cells'};
+expt(5).driver = {'SLC'};
+expt(5).indicator = {'tg';'GCaMP6s'};
+expt(5).coFolder = {'002'};
+expt(5).coTime = {'1539'};
+expt(5).saveLoc = 'lindsey';
+
 

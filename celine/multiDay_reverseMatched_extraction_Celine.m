@@ -34,47 +34,47 @@ fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
-%load(fullfile(fn_multi,'multiday_alignment.mat'))
+load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
 
 frame_rate = input.frameImagingRateMs;
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
 
-for id = 1 %currently only doing this for the baseline day
-mouse = expt(allDays(id)).mouse;
-date = expt(allDays(id)).date;
-imgFolder = expt(allDays(id)).contrastxori_runs{1};
-fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
-cd(fn);
-load(fullfile(fn,'redImage.mat'));
-load(fullfile(fn,'mask_cell.mat'));
+for id = 2 %currently only doing this for the baseline day
+    mouse = expt(allDays(id)).mouse;
+    date = expt(allDays(id)).date;
+    imgFolder = expt(allDays(id)).contrastxori_runs{1};
+    fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
+    cd(fn);
+    load(fullfile(fn,'redImage.mat'));
+    load(fullfile(fn,'mask_cell.mat'));
 
 
-%for each day individually, load the masks and red image for that day
-    
-    
-% cell_stats=regionprops(mask_cell_red);
-% figure; imagesc(redChImg), colormap gray; caxis([200 1000]);
-% hold on
-% bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
-% plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
-% for iC = 1:max(max(mask_cell_red))
-%     text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'red',...
-%             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
-%     
-% end
- 
-%use stackGetTimeCourses to extract the red fluorescence within each mask
-red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
-nCells=max(max(mask_cell));
-for i = 1:nCells
-red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
-end
+    %for each day individually, load the masks and red image for that day
 
-red_fluor_all = red_fluor_mask-red_fluor_np;
 
-% clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
+    % cell_stats=regionprops(mask_cell_red);
+    % figure; imagesc(redChImg), colormap gray; caxis([200 1000]);
+    % hold on
+    % bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
+    % plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
+    % for iC = 1:max(max(mask_cell_red))
+    %     text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'red',...
+    %             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
+    %     
+    % end
+
+    %use stackGetTimeCourses to extract the red fluorescence within each mask
+    red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
+    nCells=max(max(mask_cell));
+    for i = 1:nCells
+    red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
+    end
+
+    red_fluor_all = red_fluor_mask-red_fluor_np;
+
+    % clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
 end
 %using the reference day
 red_fluor_match=red_fluor_all(:,match_ind);
@@ -221,8 +221,8 @@ h_all_match = cell(1,nd);
 resp_match = cell(1,nd);
 pref_dir_match = cell(1,nd);
 pref_con_match = cell(1,nd);
-stat_dir_resp_match = cell(1,nd);
-loc_dir_resp_match = cell(1,nd);
+stat_resp_match = cell(1,nd);
+loc_resp_match = cell(1,nd);
 data_con_resp_match = cell(1,nd);
 
 %rect_dfof_trial=data_dfof_trial_match;
@@ -282,8 +282,6 @@ for id = 1:nd
           %the contrast index to eventually get max direction and vice
           %versa.
           [max_val_con, pref_con(1,iCell)] = max(max(resp_sig(iCell,:,:),[],2)); 
-          stat_dir_resp(iCell,:)=mean(stat_resp(iCell,:,:),3);
-          loc_dir_resp(iCell,:)=mean(loc_resp(iCell,:,:),3);
           data_con_resp(iCell,:)=data_resp(iCell,pref_dir(iCell),:,1);
           
 %       if pref_ori(iCell)<= nDir/2
@@ -303,8 +301,8 @@ h_all_match{id} = h_pass;
 resp_match{id} = resp;
 pref_dir_match{id} = pref_dir;
 pref_con_match{id} = pref_con;
-stat_dir_resp_match{id} = stat_dir_resp;
-loc_dir_resp_match{id} = loc_dir_resp;
+stat_resp_match{id} = stat_resp;
+loc_resp_match{id} = loc_resp;
 data_con_resp_match{id} = data_con_resp;
 % data_orth_resp_match{id}=data_orth_resp;
  
@@ -372,6 +370,8 @@ nGreen_keep_respd2 = length(green_match_respd2);%how many of those responded on 
 nRed_keep_respd1 = length(red_match_respd1); %how many of those responded on d1
 nRed_keep_respd2 = length(red_match_respd2);%how many of those responded on d2
 
+nRed_matched = sum(red_ind_match)
+
 
 % make table of values
 countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1],[nGreen_keep_respd2;nRed_keep_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
@@ -383,6 +383,8 @@ data_trial_keep=cell(1,nd);
 pref_dir_keep=cell(1,nd);
 pref_con_keep=cell(1,nd);
 resp_keep=cell(1,nd);
+stat_resp_keep=cell(1,nd);
+loc_resp_keep=cell(1,nd);
 
 
 for id = 1:nd
@@ -392,7 +394,8 @@ for id = 1:nd
     pref_con_keep{id} = pref_con_match{id}(:,keep_cells);
     pref_con_keep{id}=cons(pref_con_keep{id});
     resp_keep{id} = resp_match{id}(keep_cells);
-
+    stat_resp_keep{id} = stat_resp_match{id}(keep_cells,:,:);
+    loc_resp_keep{id} = loc_resp_match{id}(keep_cells,:,:);
 end
 
 red_fluor_keep=red_fluor_match(keep_cells);
@@ -503,87 +506,6 @@ end
 
 trialCountTable = table([mean(trialCounts{1,2});std(trialCounts{1,2})],[mean(trialCounts{2,2});std(trialCounts{2,2})],[mean(trialCounts{1,1});std(trialCounts{1,1})],[mean(trialCounts{2,1});std(trialCounts{2,1})],'VariableNames',{'pre stat' 'pre loc' 'post stat' 'post loc'}, 'RowNames',{'Mean'  'std'})
 writetable(trialCountTable,fullfile(fn_multi,'trialCounts.csv'),'WriteRowNames',true)
-%% ttests for significantly suppressed or facilitated cells
-nRed = length(red_ind_keep);
-
-ttest_results_stat = nan(nKeep,nCon,2);
-ttest_results_loc = nan(nKeep,nCon,2);
-
-ttest_results_allCon_stat=nan(nKeep,2);
-ttest_results_allCon_loc=nan(nKeep,2);
-
-for iRed = 1:nRed
-    i=red_ind_keep(iRed)
-    pre_data_allCon_stat=[];
-    post_data_allCon_stat=[];
-    pre_data_allCon_loc=[];
-    post_data_allCon_loc=[];
-    for iCon = 1:nCon
-        pre_data_stat=pref_allTrials_stat{iCon,pre}{i};
-        post_data_stat=pref_allTrials_stat{iCon,post}{i};
-
-        ttest_results_stat(i,iCon,1)=ttest2(pre_data_stat,post_data_stat,'tail','right','alpha',0.05); %test for suppression
-        ttest_results_stat(i,iCon,2)=ttest2(pre_data_stat,post_data_stat,'tail','left','alpha',0.05); %test for facilitation
-        pre_data_loc=pref_allTrials_loc{iCon,pre}{i};
-        post_data_loc=pref_allTrials_loc{iCon,post}{i};
-        ttest_results_loc(i,iCon,1)=ttest2(pre_data_loc,post_data_loc,'tail','right','alpha',0.05); %test for suppression
-        ttest_results_loc(i,iCon,2)=ttest2(pre_data_loc,post_data_loc,'tail','left','alpha',0.05); %test for facilitation
-
-        pre_data_allCon_stat=[pre_data_allCon_stat,pre_data_stat];
-        post_data_allCon_stat=[post_data_allCon_stat,post_data_stat];
-        
-        pre_data_allCon_loc=[pre_data_allCon_loc,pre_data_loc];
-        post_data_allCon_loc=[post_data_allCon_loc,post_data_loc];
-
-        clear pre_data_loc post_data_loc pre_data_stat post_data_stat
-    end
-    %do the ttest across contrasts
-    ttest_results_allCon_stat(i,1)=ttest2(pre_data_allCon_stat,post_data_allCon_stat,'tail','right','alpha',0.05); %test for suppression, stationary
-    ttest_results_allCon_stat(i,2)=ttest2(pre_data_allCon_stat,post_data_allCon_stat,'tail','left','alpha',0.05); %test for facilitation, stationary
-
-    ttest_results_allCon_loc(i,1)=ttest2(pre_data_allCon_loc,post_data_allCon_loc,'tail','right','alpha',0.05); %test for suppression, running
-    ttest_results_allCon_loc(i,2)=ttest2(post_data_allCon_loc,post_data_allCon_loc,'tail','left','alpha',0.05); %test for facilitation, running
-end
-
-%0.05
-
-
-
-%% randomly sampling pyramidal cells for trial-to-trial variability on the baseline day (here assumed to be day 2)
-% 
-% 
-% pyr_rand=randsample(green_ind_keep,6);
-% 
-% %looking at stationary trials, 100% contrast
-% figure; 
-% x=1;
-%     for iCell = 1:length(pyr_rand)
-%        i=pyr_rand(iCell)
-%             
-%         
-%         tCon=tCon_match{2}(1:nTrials(id));
-%         tDir=tDir_match{2}(1:nTrials(id));
-%         %identify the trials where ori = pref ori
-%         temp_dir= pref_dir_keep{2}(i); %find the preferred of this cell for the baseline day
-%         dir_inds = find(tDir==temp_dir); %these are the trials at that ori
-%         con_inds=find(tCon==1.000);
-%         stat_inds = find(~RIx{2});
-%         temp_trials1 = intersect(dir_inds, con_inds); %preferred ori for this cell, looping through all cons
-%         temp_trials_stat = intersect(temp_trials1,stat_inds);
-% 
-%         temp_TCs=data_trial_keep{2}(:,temp_trials_stat,i); %pull all frames from select trials for select cells
-%         
-%         subplot(2,3,x); plot(temp_TCs); box off;title(num2str(i))
-%         x=x+1
-%         
-% 
-%     end
-%    print(fullfile(fnout,[mouse, 'trial_Variability']),'-dpdf'); 
-% 
-% 
-% %%
-
-
 
 %%
 % all contrasts, stationary
@@ -699,8 +621,7 @@ save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat','pref_
     'tc_trial_avrg_keep_allCond','pref_responses_allCond','tc_trial_avrg_keep_allCon_stat','pref_responses_allCon_stat', ...
     'tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match', ...
     'tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical', ...
-    'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','ttest_results_loc','ttest_results_stat', ...
-    'ttest_results_allCon_stat','ttest_results_allCon_loc','pref_peak_stat','pref_peak_loc')
+    'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','pref_peak_stat','pref_peak_loc')
 
 
 %% make and save response matrix for keep cells
@@ -734,7 +655,7 @@ loc_dir_resp_keep = cell(1,nd);
 for id = 1:nd
     data_con_resp_keep{id} = data_con_resp_match{id}(keep_cells,:); 
     stat_dir_resp_keep{id} = stat_dir_resp_match{id}(keep_cells,:);
-    loc_dir_resp_keep{id} = loc_dir_resp_match{id}(keep_cells,:);
+    loc_dir_resp_keep{id} = loc_resp_match{id}(keep_cells,:);
 end
 
 %% make a reordered matrix of direction, where pref direction is now 0
@@ -743,14 +664,14 @@ norm_dir_resp_stat = cell(1,nd);
 norm_dir_resp_loc = cell(1,nd);
 
 for id = 1:nd
-    statMatrix = nan(size(stat_dir_resp_keep{id})); %make an empty matrix to hold the data for this day
-    locMatrix = nan(size(loc_dir_resp_keep{id}));
+    statMatrix = nan(nKeep,nDir,nCon); %make an empty matrix to hold the data for this day
+    locMatrix = nan(nKeep,nDir,nCon);
     for iCell = 1:nKeep
         thisPref=pref_dir_keep{id}(iCell);
         index=find(dirs==thisPref);
         newOrder=circshift(order,((index-1)*-1));
-        statMatrix(iCell,:)=stat_dir_resp_keep{id}(iCell,newOrder);
-        locMatrix(iCell,:)=loc_dir_resp_keep{id}(iCell,newOrder);
+        statMatrix(iCell,:,:)=stat_resp_keep{id}(iCell,newOrder,:);
+        locMatrix(iCell,:,:)=loc_resp_keep{id}(iCell,newOrder,:);
     end
     norm_dir_resp_stat{id}=statMatrix;
     norm_dir_resp_loc{id}=locMatrix;

@@ -8,10 +8,10 @@ ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
 
-area = 'LM';
-area_ind = find(strcmp([expt.img_loc], 'LM'));
+area = 'V1';
+area_ind = find(strcmp([expt.img_loc], area));
 randDir = 1;
-dir_ind = find([expt.randDir]==1);
+dir_ind = find([expt.randDir]==randDir);
 
 expt_use = intersect(area_ind,dir_ind);
 
@@ -123,7 +123,7 @@ for iSF = 1:3
 end
 xlabel('OSI')
 suptitle(['LM- ' [expt(expt_use).mouse]])
-print('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Talks\LabMeeting\231128\tuningBySF.pdf','-dpdf','-bestfit')
+%print('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Talks\LabMeeting\231128\tuningBySF.pdf','-dpdf','-bestfit')
 
 [max_val max_sf] = max(resp_dfof_stim_all_norm_all(:,5,:,1),[],3);
 figure; 
@@ -235,46 +235,46 @@ sigstar(groups_pref,stats_pref);
 suptitle(area)
 print(fullfile(summaryDir,['adaptationBySF_' area '.pdf']),'-dpdf','-bestfit');
 
-uniqueCells = size(norm_prefsf,1);
-nboot = 1000;
-match_cell_diff = cell(1,nboot);
-nonmatch_cell_diff = cell(1,nboot);
-for iboot = 1:nboot
-    match_cell_diff{iboot} = [];
-    nonmatch_cell_diff{iboot} = [];
-    for iC = 1:uniqueCells
-        iCell = norm_prefsf(iC,4);
-        ind = intersect(find(norm_sf(:,2) ~= norm_prefsf(iC,2)),find(norm_sf(:,4) == iCell));
-        if exist('ind')
-            if iboot == 1;
-                for i = 1:length(ind)
-                    match_cell_diff{iboot} = [match_cell_diff{iboot} abs(norm_sf(ind(i),1)-norm_prefsf(iC,1))];
-                end
-            end
-            ind_rand = randi(uniqueCells,length(ind));
-            for i = 1:length(ind_rand)
-                nonmatch_cell_diff{iboot} = [nonmatch_cell_diff{iboot} abs(norm_sf(ind_rand(i),1)-norm_prefsf(iC,1))];
-            end
-        end
-    end
-end
+% uniqueCells = size(norm_prefsf,1);
+% nboot = 1000;
+% match_cell_diff = cell(1,nboot);
+% nonmatch_cell_diff = cell(1,nboot);
+% for iboot = 1:nboot
+%     match_cell_diff{iboot} = [];
+%     nonmatch_cell_diff{iboot} = [];
+%     for iC = 1:uniqueCells
+%         iCell = norm_prefsf(iC,4);
+%         ind = intersect(find(norm_sf(:,2) ~= norm_prefsf(iC,2)),find(norm_sf(:,4) == iCell));
+%         if exist('ind')
+%             if iboot == 1;
+%                 for i = 1:length(ind)
+%                     match_cell_diff{iboot} = [match_cell_diff{iboot} abs(norm_sf(ind(i),1)-norm_prefsf(iC,1))];
+%                 end
+%             end
+%             ind_rand = randi(uniqueCells,length(ind));
+%             for i = 1:length(ind_rand)
+%                 nonmatch_cell_diff{iboot} = [nonmatch_cell_diff{iboot} abs(norm_sf(ind_rand(i),1)-norm_prefsf(iC,1))];
+%             end
+%         end
+%     end
+% end
 
-figure(2);
-H1 = cdfplot(match_cell_diff{1});
-YData = unique(H1.YData);
-np = length(YData);
-XData = zeros(nboot,np);
-hold on
-for iboot = 1:nboot
-    H2 = cdfplot(nonmatch_cell_diff{iboot});
-    set(H2,'Color',[0.5 0.5 0.5])
-    [tempy ind] = unique(H2.YData);
-    tempx = H2.XData(ind);
-    XData(iboot,:) = interp1(tempy,tempx,YData); 
-end
-hold on
-plot(mean(XData,1),YData,'r')
-xlabel('Absolute diff in adaptation from pref SF')
-ylabel('Fraction of cells')
-title([area ': ' num2str(uniqueCells) ' cells; ' num2str(nexp) ' mice'])
-print(fullfile(summaryDir,['adaptationDiffFromPrefSF_' area '.pdf']),'-dpdf','-bestfit','-painters');
+% figure(2);
+% H1 = cdfplot(match_cell_diff{1});
+% YData = unique(H1.YData);
+% np = length(YData);
+% XData = zeros(nboot,np);
+% hold on
+% for iboot = 1:nboot
+%     H2 = cdfplot(nonmatch_cell_diff{iboot});
+%     set(H2,'Color',[0.5 0.5 0.5])
+%     [tempy ind] = unique(H2.YData);
+%     tempx = H2.XData(ind);
+%     XData(iboot,:) = interp1(tempy,tempx,YData); 
+% end
+% hold on
+% plot(mean(XData,1),YData,'r')
+% xlabel('Absolute diff in adaptation from pref SF')
+% ylabel('Fraction of cells')
+% title([area ': ' num2str(uniqueCells) ' cells; ' num2str(nexp) ' mice'])
+% print(fullfile(summaryDir,['adaptationDiffFromPrefSF_' area '.pdf']),'-dpdf','-bestfit','-painters');

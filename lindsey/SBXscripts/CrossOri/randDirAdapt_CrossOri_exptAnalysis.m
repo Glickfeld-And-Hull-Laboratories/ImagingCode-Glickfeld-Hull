@@ -142,8 +142,8 @@ maxSig = indOnly(h_resp(:,:,1),maxDir);
 
 ind_DSI = find(DSI>0.5);
 ind_use = intersect(find(p_anova_dir<0.05),resp_ind_dir);
-ind_pref = intersect(resp_ind_dir, find(maxDir==12));
-ind_orth = intersect(resp_ind_dir, find(maxDir==4));
+ind_pref = intersect(resp_ind_dir, find(maxDir==1));
+ind_orth = intersect(resp_ind_dir, find(maxDir==8));
 ind_anova = find(p_anova_dir);
 
 avg_resp_dir_shift = avg_resp_dir;
@@ -159,7 +159,7 @@ for i = 1:length(resp)
     subplot(6,6,start)
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(resp(i),:,1,1,1),1) mean(avg_resp_dir(resp(i),1,1,1,1),1)])
     hold on
-    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift(resp_ind_dir(i),:,2,2,1),1) mean(avg_resp_dir_shift(resp_ind_dir(i),1,2,2,1),1)])
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift(resp_ind_dir(i),:,2,1,1),1) mean(avg_resp_dir_shift(resp_ind_dir(i),1,2,1,1),1)])
     start = start+1;
 end
 
@@ -323,7 +323,29 @@ figure;
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_use,:,2,1,1),1) mean(avg_resp_dir(ind_use,1,2,1,1),1)])
     hold on
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_use,:,2,2,1),1) mean(avg_resp_dir(ind_use,1,2,2,1),1)])
+    
 
+figure; 
+    subplot(1,2,1)
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_pref,:,1,1,1),1) mean(avg_resp_dir(ind_pref,1,1,1,1),1)])
+    hold on
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_pref,:,1,2,1),1) mean(avg_resp_dir(ind_pref,1,1,2,1),1)])
+    subplot(1,2,2)
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_pref,:,2,1,1),1) mean(avg_resp_dir(ind_pref,1,2,1,1),1)])
+    hold on
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_pref,:,2,2,1),1) mean(avg_resp_dir(ind_pref,1,2,2,1),1)])
+sgtitle(num2str(length(ind_pref)))
+
+figure; 
+    subplot(1,2,1)
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_orth,:,1,1,1),1) mean(avg_resp_dir(ind_orth,1,1,1,1),1)])
+    hold on
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_orth,:,1,2,1),1) mean(avg_resp_dir(ind_orth,1,1,2,1),1)])
+    subplot(1,2,2)
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_orth,:,2,1,1),1) mean(avg_resp_dir(ind_orth,1,2,1,1),1)])
+    hold on
+    polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir(ind_orth,:,2,2,1),1) mean(avg_resp_dir(ind_orth,1,2,2,1),1)])
+sgtitle(num2str(length(ind_orth)))
 
     ii = 6
 figure; 
