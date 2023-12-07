@@ -21,19 +21,39 @@ if expt(day_id).multiday_timesincedrug_hours>0
 else
     dart_str = 'control';
 end
-prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
-            x = input(prompt);
-            switch x
-                case 0
-                    pre=1; %baeline session, used as reference, is in the 1st position
-                    post=2;
-                    "baseline used as reference"
-                case 1
-                  pre=2;
-                  post=1; %post-DART session, used as reference, is in the 1st position  
-                  "post-DART used as reference"
-            end
-clear x prompt
+%find which session was the reference
+
+x1 = input('Which sesson was used as reference for matching: 0- baseline, 1- post-DART\n');
+switch x1
+    case 0
+        pre=1; %baeline session, used as reference, is in the 1st position
+        post=2;
+        "baseline used as reference"
+    case 1
+        pre=2;
+        post=1; %post-DART session, used as reference, is in the 1st position
+        "post-DART used as reference"
+    otherwise
+        msg = "Invalid user input when specifying reference day, session terminated. Re-run script to try again.";
+        error(msg)
+end
+
+%include EITHER cells responsive on at least one day OR on both days
+x2 = input('Choose to include: 0- cells responsive on at least one day OR 1- cells responsive on both days\n');
+switch x2
+    case 0
+        cells_inclu = 0;
+        'Cells responsive on at least one day will be included in analysis'
+    case 1
+        cells_inclu = 1;
+        'Only cells responsive on BOTH days will be included in analysis'
+    otherwise
+        msg = "Invalid user input when specifying cell inclusion, session terminated. Re-run script to try again.";
+        error(msg)
+end
+
+
+clear x1 x2 msg
 fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
@@ -168,6 +188,7 @@ clear  data_f_match cellstd
 % VALUES TO NAN
 
 %% looking at wheel speed
+"wheel speed info"
 wheel_speed = cell(1,nd);
 
 for id = 1:nd
@@ -195,6 +216,7 @@ for id = 1:nd
     mean(RIx{id})
 end
 
+'end of wheel speed info'
 
 %% find significant responses and preferred stimuli
 
@@ -270,17 +292,21 @@ for id = 1:nd
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
     for iCell = 1:nCells
+        %if max(max(resp_sig(iCell,:,:),[],3)) > 0
           [max_val, pref_dir(1,iCell)] = max(max(resp_sig(iCell,:,:),[],3)); 
           %the indexing seems weird here, but its becuase we first find the
           %maximum value for each direction by taking the max across
           %contrasts, then we fine the maximum of those max's. So we use
           %the contrast index to eventually get max direction and vice
           %versa.
+          %NOTE: when the cell is not responsive at all on a given day,
+          %this code defaults to assigning a preferred direction of 0.
+        
           [max_val_con, pref_con(1,iCell)] = max(max(resp_sig(iCell,:,:),[],2)); 
           stat_dir_resp(iCell,:)=mean(stat_resp(iCell,:,:),3);
           loc_dir_resp(iCell,:)=mean(loc_resp(iCell,:,:),3);
           data_con_resp(iCell,:)=data_resp(iCell,pref_dir(iCell),:,1);
-          
+        %end
 %       if pref_ori(iCell)<= nDir/2
 %           orth_ori(iCell)=pref_ori(iCell)+2;
 %       elseif pref_ori(iCell)>nOri/2
@@ -312,22 +338,32 @@ red_ind_match_list = find(red_ind_match==1);
 %this is a list of indices of all the green cells
 green_ind_match = ~(red_ind_match);
 green_ind_match_list = find(green_ind_match);
-
+%%
 
 %find cells that were matched and were active
-green_match_respd1 = intersect(green_ind_match_list,find(resp_match{2}==1));
-green_match_respd2 = intersect(green_ind_match_list,find(resp_match{1}==1));
+green_match_respd1 = intersect(green_ind_match_list,find(resp_match{pre}==1));
+green_match_respd2 = intersect(green_ind_match_list,find(resp_match{post}==1));
 
-red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
-red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
+red_match_respd1 = intersect(red_ind_match_list,find(resp_match{pre}==1));%this is for reverse matching
+red_match_respd2 = intersect(red_ind_match_list,find(resp_match{post}==1));
 
-%%
-%find cells that were active on at least one day
-resp_green_either_temp = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
-resp_red_either_temp = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
+% MAKE THIS INTO A SWITCH, WHERE THE USER ENTERS WHICH WAY TO SELECT CELLS
+% FOR INCLUSION; FOR EXAMPLE 0 FOR EITHER DAY, 1 FOR BOTH DAYS
+
+if cells_inclu == 0
+    %find cells that were active on at least one day
+    resp_green_either_temp = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
+    resp_red_either_temp = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
+elseif cells_inclu == 1    
+    %find the cells that were responsive on both days
+    resp_green_either_temp = intersect(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
+    resp_red_either_temp = intersect(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
+else
+    error('cell inclusion not specified')
+end
 
 keep_cells_temp = union(resp_green_either_temp,resp_red_either_temp);
-
+%%
 outliers=cell(1,nd);
 for id = 1:nd
   data_resp_keep_temp=data_resp_match{id}(keep_cells_temp,:,:,:,1);

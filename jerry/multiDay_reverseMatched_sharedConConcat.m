@@ -627,7 +627,8 @@ green_dir_se_stat = cell(1,nd); %this will be the se across all green cells
 red_dir_se_stat = cell(1,nd); %same for red
 
 for id = 1:nd
-   
+   % NOTE: add a cathc to only include cells that were responsive on each
+   % day
     green_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(green_ind_concat,:),1);
     green_std=nanstd(norm_dir_resp_stat_concat{id}(green_ind_concat,:),[],1);
     green_dir_se_stat{id}=green_std/sqrt(length(green_ind_concat));
