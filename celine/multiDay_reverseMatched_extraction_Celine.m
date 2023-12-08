@@ -41,7 +41,7 @@ frame_rate = input.frameImagingRateMs;
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
 
-for id = 2 %currently only doing this for the baseline day
+for id = post %currently only doing this for the baseline day
     mouse = expt(allDays(id)).mouse;
     date = expt(allDays(id)).date;
     imgFolder = expt(allDays(id)).contrastxori_runs{1};
@@ -87,7 +87,7 @@ green_fluor_match=mean(cellTCs_match{1},1);
 
 %load in the pupil data for each day
 pupil=cell(1,nd);
-for id = 1:2
+for id = 1:nd
     mouse = expt(allDays(id)).mouse;
     date = expt(allDays(id)).date;
     imgFolder = expt(allDays(id)).contrastxori_runs{1};
@@ -95,6 +95,22 @@ for id = 1:2
 
    pupil{id}=load(fullfile(fn,'pupil.mat'));
 end
+
+pupilBothDays =horzcat(pupil{pre}.rad.stim,pupil{post}.rad.stim); %combine all the pupil values for the two days
+pupilThreshold=prctile(pupilBothDays,70);
+plot(pupilBothDays); hline(pupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
+print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
+
+PIx = cell(1,nd); %pupil index for each day
+for id = 1:nd
+   PIx{id}=pupil{id}.rad.stim > pupilThreshold;
+   %PIx for each day is a logical of trials where the pupil diameter crossed
+   %the threshold, which is the 70th percentile for the two days combined
+   fprintf(['Pupil high: ' num2str(mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim > pupilThreshold)), 'omitmissing')), '   '])
+    %
+   fprintf(['Pupil low: ' num2str(mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim < pupilThreshold)), 'omitmissing')), '   '])
+end
+
 %% stimulus props
 
 nOn = input(1).nScansOn;
@@ -222,6 +238,8 @@ resp_match = cell(1,nd);
 pref_dir_match = cell(1,nd);
 pref_con_match = cell(1,nd);
 stat_resp_match = cell(1,nd);
+stat_hiPupil_match= cell(1,nd);
+stat_lowPupil_match= cell(1,nd);
 loc_resp_match = cell(1,nd);
 data_con_resp_match = cell(1,nd);
 
@@ -246,10 +264,14 @@ for id = 1:nd
             ind_con = find(tCon == cons(iCon));
             ind = intersect(ind_dir,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
             ind_stat = intersect(ind, find(~RIx{id}));
+            ind_stat_hiPupil = intersect(ind_stat, find(PIx{id}));
+            ind_stat_lowPupil = intersect(ind_stat, find(~PIx{id}));
             ind_loc = intersect(ind, find(RIx{id}));
             data_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
             
             stat_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat,:),1),2));
+            stat_resp_hiPupil(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_hiPupil,:),1),2));
+            stat_resp_lowPupil(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_lowPupil,:),1),2));
             loc_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_loc,:),1),2));
             data_resp(:,iDir,iCon,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
             [h(:,iDir,iCon), p(:,iDir,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nDir*nCon-1));
@@ -302,6 +324,8 @@ resp_match{id} = resp;
 pref_dir_match{id} = pref_dir;
 pref_con_match{id} = pref_con;
 stat_resp_match{id} = stat_resp;
+stat_hiPupil_match{id}=stat_resp_hiPupil;
+stat_lowPupil_match{id}= stat_resp_lowPupil;
 loc_resp_match{id} = loc_resp;
 data_con_resp_match{id} = data_con_resp;
 % data_orth_resp_match{id}=data_orth_resp;
@@ -417,10 +441,17 @@ mean(green_fluor_keep(red_ind_keep))
 %each behavioral state.
 
 tc_trial_avrg_stat=cell(1,nd);
+tc_trial_avrg_stat_hiPupil=cell(1,nd);
+tc_trial_avrg_stat_lowPupil=cell(1,nd);
+
 tc_trial_avrg_loc=cell(1,nd);
 rect_tc_trial_avrg_keep=cell(1,nd);
 tc_trial_avrg_keep_allCond=cell(1,nd);
+
 pref_responses_stat = cell(1,nd);
+pref_responses_stat_hiPupil = cell(1,nd);
+pref_responses_stat_lowPupil = cell(1,nd);
+
 pref_responses_loc = cell(1,nd);
 pref_responses_allCond = cell(1,nd);
 pref_peak_stat  = cell(1,nd);
@@ -428,19 +459,28 @@ pref_peak_loc  = cell(1,nd);
 pref_allTrials_stat=cell(nCon,nd);
 pref_allTrials_loc=cell(nCon,nd);
 trialCounts=cell(2,nd);
-
+nonPref_trial_avrg_stat=cell(1,nd);
+nonPref_trial_avrg_loc=cell(1,nd);
 
 for id = 1:nd
     trialCounts{1,id}=[];
     trialCounts{2,id}=[];
     temp_tc_stat=nan((nOn+nOff),nKeep,nCon);
+    temp_tc_stat_hiPupil=nan((nOn+nOff),nKeep,nCon);
+    temp_tc_stat_lowPupil=nan((nOn+nOff),nKeep,nCon);
+
     temp_tc_loc=nan((nOn+nOff),nKeep,nCon);
     temp_pref_responses_stat=zeros(nKeep,nCon,1);
+    temp_pref_responses_stat_hiPupil=zeros(nKeep,nCon,1);
+    temp_pref_responses_stat_lowPupil=zeros(nKeep,nCon,1);
     temp_pref_responses_loc=zeros(nKeep,nCon,1);
     temp_pref_responses_allCond=zeros(nKeep,nCon,1);
 
     temp_pref_peak_stat=zeros(nKeep,nCon,1);
     temp_pref_peak_loc=zeros(nKeep,nCon,1);
+
+    temp_nonPref_stat=nan((nOn+nOff),nKeep,nCon);
+    temp_nonPref_loc=nan((nOn+nOff),nKeep,nCon);
     
     for iCon = 1:nCon % for each contrast'
         temp_all_stat=cell(1,nKeep);
@@ -452,13 +492,29 @@ for id = 1:nd
             tDir=tDir_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
             temp_dir= pref_dir_keep{id}(i); %find the preferred ori of this cell (already in degrees)
-            dir_inds = find(tDir==temp_dir); %these are the trials at that ori
+            dir_inds = find(tDir==temp_dir); %these are the trials at that direction
             con_inds=find(tCon==cons(iCon));
             stat_inds = find(~RIx{id});
+            ind_stat_hiPupil = intersect(stat_inds, find(PIx{id}));
+            ind_stat_lowPupil = intersect(stat_inds, find(~PIx{id}));
+
             loc_inds = find(RIx{id});
             temp_trials1 = intersect(dir_inds, con_inds); %preferred ori for this cell, looping through all cons
             temp_trials_stat = intersect(temp_trials1,stat_inds);
+            temp_trials_stat_hiPupil = intersect(temp_trials1,ind_stat_hiPupil);
+            temp_trials_stat_lowPupil = intersect(temp_trials1,ind_stat_lowPupil);
+
             temp_trials_loc = intersect(temp_trials1,loc_inds);
+
+            position=find(dirs==temp_dir);
+            newDirs=circshift(dirs,4);
+            matchedDir=newDirs(position);
+            dir_inds2 = find(tDir~=temp_dir); 
+            dir_inds3 = find(tDir~=matchedDir); 
+            dir_inds4 = intersect(dir_inds2,dir_inds3);
+            temp_nonPref_trials_stat = intersect(dir_inds4,stat_inds);
+            temp_nonPref_trials_loc = intersect(dir_inds4,loc_inds);
+
             
             %saving the responses of all trials at the preferred direction,
             %rather than averaging voer trials to get a single mean
@@ -467,6 +523,9 @@ for id = 1:nd
             temp_all_loc{i} = nanmean(temp_TCs(resp_win,temp_trials_loc),1);
 
             temp_pref_responses_stat(i,iCon)=nanmean(temp_all_stat{i},2);
+            temp_pref_responses_stat_hiPupil(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_hiPupil),1),2);
+            temp_pref_responses_stat_lowPupil(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_lowPupil),1),2);
+
             temp_pref_responses_loc(i,iCon)=nanmean(temp_all_loc{i},2);
             temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials1),1),2);
 
@@ -476,10 +535,17 @@ for id = 1:nd
             temp_pref_peak_loc(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_loc)));
             
             temp_tc_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat),2);
+            
+            temp_tc_stat_hiPupil(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat_hiPupil),2);
+            temp_tc_stat_lowPupil(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat_lowPupil),2);
+
             temp_tc_loc(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_loc),2);
             temp_tc_allCond(:,i,iCon)=nanmean(temp_TCs(:,temp_trials1),2);%average over all trials regardless of stationary vs. locomotion
             rect_tc_trial_avrg=temp_tc_stat;
             rect_tc_trial_avrg(rect_tc_trial_avrg<0)=0;
+
+            temp_nonPref_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_nonPref_trials_stat),2);
+            temp_nonPref_loc(:,i,iCon)=nanmean(temp_TCs(:,temp_nonPref_trials_loc),2);
                         
             trialCounts{1,id}=[trialCounts{1,id},length(temp_trials_stat)];
             trialCounts{2,id}=[trialCounts{2,id},length(temp_trials_loc)];
@@ -491,17 +557,26 @@ for id = 1:nd
     
     
 tc_trial_avrg_stat{id}=temp_tc_stat; %this is a cell array with one cell 
+tc_trial_avrg_stat_hiPupil{id}=temp_tc_stat_hiPupil;
+tc_trial_avrg_stat_lowPupil{id}=temp_tc_stat_lowPupil;
+
 tc_trial_avrg_loc{id}=temp_tc_loc;
+
+nonPref_trial_avrg_stat{id} =temp_nonPref_stat;
+nonPref_trial_avrg_loc{id} = temp_nonPref_loc;
 %tc_trial_avrg_keep_allCond{id}=temp_tc_allCond;
 %per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
 %rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
 pref_responses_stat{id} = temp_pref_responses_stat;
+pref_responses_stat_hiPupil{id}=temp_pref_responses_stat_hiPupil;
+pref_responses_stat_lowPupil{id}=temp_pref_responses_stat_lowPupil
+
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
 pref_peak_stat{id}=temp_pref_peak_stat;
 pref_peak_loc{id}=temp_pref_peak_loc;
 
-clear temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
+clear temp_trials_stat_lowPupil temp_trials_stat_hiPupil temp_trials_stat temp_trials_loc temp_tc_stat_hiPupil temp_tc_stat_lowPupil temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
 end
 
 trialCountTable = table([mean(trialCounts{1,2});std(trialCounts{1,2})],[mean(trialCounts{2,2});std(trialCounts{2,2})],[mean(trialCounts{1,1});std(trialCounts{1,1})],[mean(trialCounts{2,1});std(trialCounts{2,1})],'VariableNames',{'pre stat' 'pre loc' 'post stat' 'post loc'}, 'RowNames',{'Mean'  'std'})
@@ -617,11 +692,11 @@ end
 % end
 
 
-save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat','pref_responses_loc','resp_keep', ...
+save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat','pref_responses_stat_hiPupil','pref_responses_stat_lowPupil','pref_responses_loc','resp_keep', ...
     'tc_trial_avrg_keep_allCond','pref_responses_allCond','tc_trial_avrg_keep_allCon_stat','pref_responses_allCon_stat', ...
     'tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match', ...
-    'tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical', ...
-    'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','pref_peak_stat','pref_peak_loc')
+    'tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_stat_hiPupil','tc_trial_avrg_stat_lowPupil','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical', ...
+    'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc')
 
 
 %% make and save response matrix for keep cells
@@ -650,12 +725,8 @@ dfof_max_diff_raw = (resp_max_keep{1}-resp_max_keep{2});
 
 %make a data frame for the keep cells only
 data_con_resp_keep = cell(1,nd);
-stat_dir_resp_keep = cell(1,nd);
-loc_dir_resp_keep = cell(1,nd);
 for id = 1:nd
     data_con_resp_keep{id} = data_con_resp_match{id}(keep_cells,:); 
-    stat_dir_resp_keep{id} = stat_dir_resp_match{id}(keep_cells,:);
-    loc_dir_resp_keep{id} = loc_resp_match{id}(keep_cells,:);
 end
 
 %% make a reordered matrix of direction, where pref direction is now 0
@@ -679,9 +750,9 @@ for id = 1:nd
 end
 
 
-%
+
 explanation2 = 'data_resp_keep gives the df/f averaged over the full response window for all conditions in the form nCells X nOris X nCons X mean vs. std. resp_max_keep gives the df/f averaged over the full stim period for each cell at the preferred ori only, with a dimension for each contrast';
-save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','stat_dir_resp_keep','norm_dir_resp_stat','loc_dir_resp_keep','norm_dir_resp_loc')
+%save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','norm_dir_resp_stat','loc_dir_resp_keep','norm_dir_resp_loc')
 %% making mask maps for various measurements
 %show masks
 %get masks of matched cells
@@ -1067,14 +1138,5 @@ trialID=repmat(trialID,2,1);
 dataTable.trialID=trialID;
 
 writetable(dataTable,fullfile(fn_multi,'dataTable.csv'),"WriteVariableNames",true)
-%% mixed effects model
-
-%lme = fitlme(dataTable,'dfof~cellType+contrast+speed+pupil+drug+(cellType*drug)+(1|mouseID)+(1|cellID)');
-% 
-
-
-
-
-
 
 

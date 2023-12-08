@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 359;
+day_id = 363;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -90,31 +90,31 @@ for irun = 1:nruns
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
 
-    if info.config.pmt1_gain > 0.5
+    % if info.config.pmt1_gain > 0.5
+    %     data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
+    %     data_temp_r = squeeze(data_temp_g(2,:,:,:));
+    %     data_temp_g = squeeze(data_temp_g(1,:,:,:));
+    % else
         data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
-        data_temp_r = squeeze(data_temp_g(2,:,:,:));
         data_temp_g = squeeze(data_temp_g(1,:,:,:));
-    else
-        data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
-        data_temp_g = squeeze(data_temp_g(1,:,:,:));
-    end
+    % end
 
     fprintf(['Loaded ' num2str(min(nframes)) ' frames \r\n'])
 
     if nruns == 1 || irun == 1
         data_g = data_temp_g;
         clear data_temp_g
-        if info.config.pmt1_gain > 0.5
-            data_r = data_temp_r;
-            clear data_temp_r
-        end
+        % if info.config.pmt1_gain > 0.5
+        %     data_r = data_temp_r;
+        %     clear data_temp_r
+        % end
     else
         data_g = cat(3, data_g, data_temp_g);
         clear data_temp_g
-        if info.config.pmt1_gain > 0.5
-            data_r = cat(3, data_r, data_temp_r);
-            clear data_temp_r
-        end
+        % if info.config.pmt1_gain > 0.5
+        %     data_r = cat(3, data_r, data_temp_r);
+        %     clear data_temp_r
+        % end
     end
 end
 %%

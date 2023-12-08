@@ -15,7 +15,7 @@ eval(ds);
 %Oct 2023: 138 142 163 171 178 190 294 307 323 333
 
 
-sess_list = [138 163 171 178 190 294 307 323 333 303 311 319 329 355];%enter all the sessions you want to concatenate
+sess_list = [138 163 171 178 190 294 307 323 333 303 311 319 329 355 359];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -77,6 +77,9 @@ nCon = length(targetCon)
 
 
 dataTableConat=[];
+nKeep_concat=[];
+red_concat = [];
+green_concat = [];
 
 cellID_adjustment=0;
 for iSess = 1:nSess
@@ -85,9 +88,9 @@ for iSess = 1:nSess
     thisDrug = expt(day_id).drug;
     drug{iSess}=thisDrug;
 
-    % if iSess > 1
-    %     cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
-    % end
+    if iSess > 1
+        cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
+    end
 
     if expt(day_id).multiday_timesincedrug_hours>0
         dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
@@ -107,13 +110,18 @@ for iSess = 1:nSess
 
     load(fullfile(fn_multi,'tc_keep.mat'));
     nKeep = size(tc_trial_avrg_stat{post},2);
-     nKeep_concat = [nKeep_concat,nKeep];
+    nKeep_concat = [nKeep_concat,nKeep];
+    red_concat = [red_concat, red_keep_logical];
+    green_concat = [green_concat, green_keep_logical];
+
 
 
 
 end
 %
 nKeep_total = sum(nKeep_concat);
+red_ind_concat = find(red_concat);
+green_ind_concat = find(green_concat);
 
 %% mixed model - making dataset
 
@@ -122,13 +130,15 @@ dataTableConat.mouseID=categorical(dataTableConat.mouseID);
 dataTableConat.cellID=categorical(dataTableConat.cell_ID_unique);
 dataTableConat.cellType=categorical(dataTableConat.cellType);
 dataTableConat.drug = categorical(dataTableConat.drug);
-% dataTableConat.z_speed=zscor_xnan(dataTableConat.speed);
-% dataTableConat.z_pupil=zscor_xnan(dataTableConat.pupil);
+dataTableConat.z_speed=zscor_xnan(dataTableConat.speed);
+dataTableConat.z_pupil=zscor_xnan(dataTableConat.pupil);
+
 
 %% mixed model on whole population
 
-lme = fitlme(dataTableConat,'dfof~cellType+contrast+speed+pupil+day+drug+(cellType*day*drug)+(1|mouseID)+(1|cell_ID_unique:mouseID)')
-%lme = fitlme(dataTableConat,'dfof~cellType+contrast+z_speed+z_pupil+day+drug+(cellType*day*drug)+(1|mouseID)+(1|cell_ID_unique:mouseID)+(1|day:cell_ID_unique)+(1|drug:cell_ID_unique)');
+%lme = fitlme(dataTableConat,'dfof~cellType+contrast+speed+pupil+day+drug+(cellType*day*drug)+(1|mouseID)+(1|cell_ID_unique:mouseID)')
+lme = fitlme(dataTableConat,['dfof~cellType+contrast+z_speed+z_pupil+day+drug+(cellType*day*drug)+' ...
+    '(1|mouseID)+(1|cell_ID_unique:mouseID)+(1|day:cell_ID_unique)+(1|drug:cell_ID_unique)'])
 
 %% post-hoc comaparisons for mixed model
 %what is the mean df/f for each cell type on each day
@@ -146,10 +156,25 @@ for iCell = 1:nKeep_total
     temp_data = dataTableConat(inds,:);
     lm_cell = fitlm(temp_data,'dfof~direction+contrast+z_speed+z_pupil+day');
     betas(iCell,:)=lm_cell.Coefficients.Estimate(2:6);
-    betas(iCell,5)=betas(iCell,5)*-1;
+    %betas(iCell,5)=betas(iCell,5)*-1;
 end
 
 %
 %betas: 1=direction, 2=contrast, 3=z-score speed, 4=z-score pupil, 5=day (pre/post),
+%%
+%make intersectional indices of cell type x drug
+DART_cells = unique(dataTableConat.cell_ID_unique(find(dataTableConat.drug=='YM90K-DART'))); %find the unique cell IDs in the rows of the table where drug is DART
+PEG_cells =  unique(dataTableConat.cell_ID_unique(find(dataTableConat.drug=='YM90K-PEG'))); %likewise for PEG
 
-figure; histogram(betas(green_ind_concat,5));hold on;histogram(betas(red_ind_concat,5));title('betas fore pre/post'); hold off
+DART_green = intersect(green_ind_concat,DART_cells);
+DART_red =  intersect(red_ind_concat,DART_cells);
+
+PEG_green = intersect(green_ind_concat,PEG_cells);
+PEG_red =  intersect(red_ind_concat,PEG_cells);
+
+
+figure; 
+subplot(2,1,1)
+histogram(betas(DART_green,5));hold on;histogram(betas(DART_red,5));title('betas fore pre/post'); title('DART');xlim([-.15 .15]);xlabel('beta for day');hold off
+subplot(2,1,2)
+histogram(betas(PEG_green,5));hold on;histogram(betas(PEG_red,5));title('betas fore pre/post'); title('PEG');xlim([-.15 .15]);xlabel('beta for day');hold off

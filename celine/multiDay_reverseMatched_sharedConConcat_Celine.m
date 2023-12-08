@@ -1,8 +1,8 @@
 
 clear all; clear global; close all
 clc
-%ds = 'DART_V1_contrast_ori_Celine'; %dataset info
-ds='ds_YM90K_DART.mat';
+ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+
 dataStructLabels = {'contrastxori'};
 
 eval(ds);
@@ -13,7 +13,7 @@ eval(ds);
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
 
-sess_list = [138 142 163 171 178 190 294 307 323 333];%enter all the sessions you want to concatenate
+sess_list = [303 311 319 329 355 359];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -75,12 +75,16 @@ nCon = length(targetCon)
 
 mice={};
 tc_trial_avrg_stat_concat=cell(1,nd);
+tc_trial_avrg_stat_hiPupil_concat=cell(1,nd);
+tc_trial_avrg_stat_lowPupil_concat=cell(1,nd);
 tc_trial_avrg_loc_concat=cell(1,nd);
 tc_trial_avrg_keep_allCond_concat=cell(1,nd);
 resp_keep_concat=cell(1,nd);
 resp_max_keep_concat=cell(1,nd);
 pref_responses_loc_concat=cell(1,nd);
 pref_responses_stat_concat=cell(1,nd);
+pref_responses_stat_hiPupil_concat=cell(1,nd);
+pref_responses_stat_lowPupil_concat=cell(1,nd);
 pref_responses_allCond_concat=cell(1,nd);
 RIx_concat=cell(1,nd);
 dirs_concat=[];
@@ -97,13 +101,18 @@ wheel_corr_concat=cell(1,nd);
 meanF_concat=cell(1,nd);
 norm_dir_resp_stat_concat = cell(1,nd);
 norm_dir_resp_loc_concat = cell(1,nd);
+pref_nonPref_stat_concat=cell(1,nd);
+pref_nonPref_loc_concat=cell(1,nd);
 pref_dir_concat=cell(1,nd);
 noiseCorr_concat = cell(1,nd);
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
-%dataTableConat=[];
+dataTableConat=[];
 drug=cell(1,nSess);
+
+nonPref_trial_avrg_stat_concat=cell(1,nd);
+nonPref_trial_avrg_loc_concat=cell(1,nd);
 
 cellID_adjustment=0;
 for iSess = 1:nSess
@@ -124,19 +133,19 @@ for iSess = 1:nSess
     end
     fn_multi = fullfile(base,mouse,['multiday_' dart_str]);
 
-    load(fullfile(fn_multi,'tc_keep.mat'));
+   load(fullfile(fn_multi,'tc_keep.mat'));
     load(fullfile(fn_multi,'resp_keep.mat'));
     load(fullfile(fn_multi,'input.mat'));
     load(fullfile(fn_multi,'locomotion.mat'));
-%    load(fullfile(fn_multi,'fluor_intensity.mat'));
+    load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
-   % temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
-   % 
-   %  temp_table.z_speed=zscor_xnan(temp_table.speed);
-   %  temp_table.z_pupil=zscor_xnan(temp_table.pupil);
-   %  temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
-   % 
-   %  dataTableConat=[dataTableConat; temp_table];
+    temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
+
+    temp_table.z_speed=zscor_xnan(temp_table.speed);
+    temp_table.z_pupil=zscor_xnan(temp_table.pupil);
+    temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
+
+    dataTableConat=[dataTableConat; temp_table];
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -160,7 +169,7 @@ for iSess = 1:nSess
     nOn = input(1).nScansOn;
     nOff = input(1).nScansOff;
     %start conatenating
-    dirs_concat = [dirs_concat,dirs]; %I will organize thisas rows so I can subsequently make sure everything matches
+    dirs_concat = [dirs_concat,dirs]; 
     cons_concat = [cons_concat,cons(sharedCon)];
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
@@ -172,13 +181,20 @@ for iSess = 1:nSess
     for id = 1:nd
         
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon));
+        tc_trial_avrg_stat_hiPupil_concat{id} = cat(2,tc_trial_avrg_stat_hiPupil_concat{id},tc_trial_avrg_stat_hiPupil{id}(:,:,sharedCon));
+        tc_trial_avrg_stat_lowPupil_concat{id} = cat(2,tc_trial_avrg_stat_lowPupil_concat{id},tc_trial_avrg_stat_lowPupil{id}(:,:,sharedCon));
         tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon));
-%        tc_trial_avrg_keep_allCond_concat{id} =cat(2,tc_trial_avrg_keep_allCond_concat{id},tc_trial_avrg_keep_allCond{id}(:,:,sharedCon));
+
+        nonPref_trial_avrg_stat_concat{id} =cat(2,nonPref_trial_avrg_stat_concat{id},nonPref_trial_avrg_stat{id}(:,:,sharedCon));
+        nonPref_trial_avrg_loc_concat{id} =cat(2,nonPref_trial_avrg_loc_concat{id},nonPref_trial_avrg_loc{id}(:,:,sharedCon));
+
         resp_keep_concat{id}=cat(1,resp_keep_concat{id},resp_keep{id});
         resp_max_keep_concat{id}=cat(1,resp_max_keep_concat{id},resp_max_keep{id}(:,sharedCon));
         LMI_concat{id}=cat(1,LMI_concat{id},LMI{id}(:,sharedCon));
         pref_responses_loc_concat{id}=cat(1,pref_responses_loc_concat{id},pref_responses_loc{id}(:,sharedCon));
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon));
+        pref_responses_stat_hiPupil_concat{id}=cat(1,pref_responses_stat_hiPupil_concat{id},pref_responses_stat_hiPupil{id}(:,sharedCon));
+        pref_responses_stat_lowPupil_concat{id}=cat(1,pref_responses_stat_lowPupil_concat{id},pref_responses_stat_lowPupil{id}(:,sharedCon));
         pref_responses_allCond_concat{id}=cat(1,pref_responses_allCond_concat{id},pref_responses_allCond{id}(:,sharedCon));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
@@ -186,6 +202,8 @@ for iSess = 1:nSess
         meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
+        pref_nonPref_stat_concat{id}=cat(1,pref_nonPref_stat_concat{id},pref_nonPref_stat{id});
+        pref_nonPref_loc_concat{id}=cat(1,pref_nonPref_loc_concat{id},pref_nonPref_loc{id});
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
         noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
         sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
@@ -194,12 +212,11 @@ for iSess = 1:nSess
             pref_allTrials_stat_concat{i,id}=[pref_allTrials_stat_concat{i,id},pref_allTrials_stat{iCon,id}];
             pref_allTrials_loc_concat{i,id}=[pref_allTrials_loc_concat{i,id},pref_allTrials_loc{iCon,id}];
         end
-        clear meanF
+        clear meanF i
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
-%    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
-%    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
-    
+   green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
+   red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
 
 end
 %
@@ -238,9 +255,9 @@ haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
 
 haveRunning_post = ~isnan(pref_responses_loc_concat{post});
 for iCon =1:nCon
-haveRunning_both{iCon}= find(haveRunning_pre(:,iCon).* haveRunning_post(:,iCon));
-haveRunning_green{iCon} = intersect(haveRunning_both{iCon}, green_ind_concat);
-haveRunning_red{iCon} = intersect(haveRunning_both{iCon}, red_ind_concat);
+    haveRunning_both{iCon}= find(haveRunning_pre(:,iCon).* haveRunning_post(:,iCon));
+    haveRunning_green{iCon} = intersect(haveRunning_both{iCon}, green_ind_concat);
+    haveRunning_red{iCon} = intersect(haveRunning_both{iCon}, red_ind_concat);
 end
 
 clear haveRunning_pre haveRunning_post haveRunning_both
@@ -375,7 +392,159 @@ set(gca,'XColor', 'none','YColor','none')
 sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
 
 print(fullfile(fnout,[num2str(cons(iCon)) '_stat_allKeep_timecourses.pdf']),'-dpdf');
-end ; 
+end 
+
+%% plot large pupil TCs
+
+tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_stat = cell(1,nd); %same for red
+tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
+tc_red_se_stat = cell(1,nd); %same for red
+
+
+
+for id = 1:nd
+    for iCon=1:nCon
+        
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_hiPupil_concat{id}(:,green_ind_concat,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_hiPupil_concat{id}(:,green_ind_concat,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(green_ind_concat));
+    
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_hiPupil_concat{id}(:,red_ind_concat,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_hiPupil_concat{id}(:,red_ind_concat,iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(red_ind_concat));
+    
+    clear green_std red_std
+    end
+end
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_green_avrg_stat{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+figure
+subplot(1,2,1) %for the first day
+
+
+
+ylim([-.02 .25]);;
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon),'b','transparent');
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['Pyr',' n = ', num2str(length(green_ind_concat))])
+
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(1,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
+ylim([-.02 .25]);;
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+ylabel('dF/F') 
+xlabel('s') 
+title(['SST',' n = ', num2str(length(red_ind_concat))])
+
+x0=5;
+y0=5;
+width=4;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
+
+sgtitle(['Large pupil stationary, contrast = ' num2str(cons(iCon))])
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_stat_hiPupil_timecourses.pdf']),'-dpdf');
+end  
+
+%% plot small pupil TCs
+
+tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_stat = cell(1,nd); %same for red
+tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
+tc_red_se_stat = cell(1,nd); %same for red
+
+
+
+for id = 1:nd
+    for iCon=1:nCon
+        
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_lowPupil_concat{id}(:,green_ind_concat,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_lowPupil_concat{id}(:,green_ind_concat,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(green_ind_concat));
+    
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_lowPupil_concat{id}(:,red_ind_concat,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_lowPupil_concat{id}(:,red_ind_concat,iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(red_ind_concat));
+    
+    clear green_std red_std
+    end
+end
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_green_avrg_stat{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+figure
+subplot(1,2,1) %for the first day
+
+
+
+ylim([-.02 .25]);;
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon),'b','transparent');
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['Pyr',' n = ', num2str(length(green_ind_concat))])
+
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(1,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
+ylim([-.02 .25]);;
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+ylabel('dF/F') 
+xlabel('s') 
+title(['SST',' n = ', num2str(length(red_ind_concat))])
+
+x0=5;
+y0=5;
+width=4;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
+
+sgtitle(['Small pupil stationary, contrast = ' num2str(cons(iCon))])
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_stat_lowPupil_timecourses.pdf']),'-dpdf');
+end  
 %% for the cells that have stationary and running
 
 
@@ -1580,7 +1749,7 @@ colorbar
 refline(1)
 axis square
 
-%% making normDiff table
+%% making normDiff output csv 
 mouseID=[];
 for imouse =1:nSess
    ID_string=mouseNames(imouse);
@@ -1591,28 +1760,34 @@ mouseID=mouseID';
 
 mouseIDcol=repmat(mouseID,6,1);
 
-norm_diff_col1 = reshape(norm_diff, [2,3*nKeep_total]);
-norm_diff_col2 = reshape(norm_diff_col1, [1,6*nKeep_total])';
+norm_diff_col1 = reshape(norm_diff(1,:,:), [1,3*nKeep_total]);
+norm_diff_col2 = reshape(norm_diff(2,:,:), [1,3*nKeep_total]);
+norm_diff_col3 = horzcat(norm_diff_col1,norm_diff_col2)';
+
+raw_diff_col1=reshape(raw_diff_stat, [1,3*nKeep_total]);
+raw_diff_col2=reshape(raw_diff_loc, [1,3*nKeep_total]);
+raw_diff_col3 = horzcat(raw_diff_col1,raw_diff_col2)';
 
 consCol1 = repelem(cons,2);
 consCol2=repmat(consCol1, 1,nKeep_total)';
 
 cellID=1:nKeep_total;
-%cellID=cellID+315; %% to account for cells in the other condition
+cellID=cellID+622; %% to account for cells in the other condition
 cellID_col=repelem(cellID, 6)';
 
 cell_type_col=repelem(red_concat,1,6)';
 
-behState1 = repmat(["stat" "loc"],1,3);
-behStateCol=repmat(behState1,1,nKeep_total)';
+behStateCol = repelem(["stat" "loc"],1,3*nKeep_total)';
 
-drug="DRT"; %%need to get drug coded correctly
+drug="PEG"; %%need to get drug coded correctly
 drugCol=repmat(drug,size(mouseIDcol));
 
-normDiff_output = table(mouseIDcol,cellID_col,cell_type_col,consCol2,behStateCol,drugCol,norm_diff_col2, ...
-    'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'behState' 'drug' 'normDiff'});
+DART_effect_output = table(mouseIDcol,cellID_col,cell_type_col,consCol2,behStateCol,drugCol,norm_diff_col3,raw_diff_col3, ...
+    'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'behState' 'drug' 'normDiff','rawDiff'});
 
-writetable(normDiff_output,fullfile(fnout,'normDiff_output.csv'))
+writetable(DART_effect_output,fullfile(fnout,'DART_effect_output.csv'))
+
+clear norm_diff_col1 norm_diff_col2 norm_diff_col3 raw_diff_col1 raw_diff_col2 raw_diff_col3 consCol1 consCol2 cell_type_col behStateCol mouseIDcol
 
 %% making dfof output table
 mouseID=[];
@@ -2874,6 +3049,117 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle(['Running' ])
 
 print(fullfile(fnout,['loc_contrast_resposnse.pdf']),'-dpdf');
+
+%%
+
+
+conResp_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
+conResp_red_avrg_stat = cell(1,nd); %same for red
+conResp_green_se_stat = cell(1,nd); %this will be the se across all green cells
+conResp_red_se_stat = cell(1,nd); %same for red
+
+
+
+for id = 1:nd
+   
+        
+    conResp_green_avrg_stat{id}=mean(pref_responses_stat_lowPupil_concat{id}(green_all,:),1,'omitnan');
+    green_std=std(pref_responses_stat_lowPupil_concat{id}(green_all,:),1,'omitnan');
+    conResp_green_se_stat{id}=green_std/sqrt(length(green_all));
+    
+    conResp_red_avrg_stat{id}=mean(pref_responses_stat_lowPupil_concat{id}(red_all,:),1,'omitnan');
+    red_std=std(pref_responses_stat_lowPupil_concat{id}(red_all,:),1,'omitnan');
+    conResp_red_se_stat{id}=red_std/sqrt(length(red_all));
+    
+    clear green_std red_std
+ 
+end
+
+
+figure
+subplot(2,2,1) %for the first day
+errorbar(cons,conResp_green_avrg_stat{pre},conResp_green_se_stat{pre},'k');
+hold on
+errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'b');
+title(['Small pupil Pyr',' n = ', num2str(length(green_all))])
+ylabel('dF/F, pref ori') 
+%xlabel('contrast') 
+set(gca, 'TickDir', 'out')
+xlim([0 1])
+ylim([0 .3])
+xticks([.25 .5 1])
+box off
+
+subplot(2,2,2) %for the second day
+errorbar(cons,conResp_red_avrg_stat{pre},conResp_red_se_stat{pre},'k');
+hold on
+errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
+title(['Small pupil SST',' n = ', num2str(length(red_all))])
+%xlabel('contrast') 
+xlim([0 1])
+ylim([0 .3])
+xticks([.25 .5 1])
+set(gca, 'TickDir', 'out')
+box off
+
+conResp_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
+conResp_red_avrg_loc = cell(1,nd); %same for red
+conResp_green_se_loc = cell(1,nd); %this will be the se across all green cells
+conResp_red_se_loc = cell(1,nd); %same for red
+
+
+
+for id = 1:nd
+   
+        
+    conResp_green_avrg_loc{id}=nanmean(pref_responses_stat_hiPupil_concat{id}(green_all ,:),1);
+    green_std=nanstd(pref_responses_stat_hiPupil_concat{id}(green_all,:),1);
+    conResp_green_se_loc{id}=green_std/sqrt(length(green_all));
+    
+    conResp_red_avrg_loc{id}=nanmean(pref_responses_stat_hiPupil_concat{id}(red_all,:),1);
+    red_std=nanstd(pref_responses_stat_hiPupil_concat{id}(red_all,:),1);
+    conResp_red_se_loc{id}=red_std/sqrt(length(red_all));
+    
+    clear green_std red_std
+ 
+end
+
+
+subplot(2,2,3) %for the first day
+errorbar(cons,conResp_green_avrg_loc{pre},conResp_green_se_loc{pre},'k');
+hold on
+errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'b');
+title(['Large pupil Pyr',' n = ', num2str(length(green_all))])
+ylabel('dF/F, pref ori') 
+xlabel('contrast') 
+xlim([0 1])
+ylim([0 .4])
+xticks([.25 .5 1])
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(2,2,4) 
+errorbar(cons,conResp_red_avrg_loc{pre},conResp_red_se_loc{pre},'k');
+hold on
+errorbar(cons,conResp_red_avrg_loc{post},conResp_red_se_loc{post},'b');
+title(['Large pupil SST',' n = ', num2str(length(red_all))])
+ ylim([0 .4])
+xlim([0 1])
+xticks([.25 .5 1])
+xlabel('contrast') 
+set(gca, 'TickDir', 'out')
+box off
+
+x0=5;
+y0=5;
+width=5;
+height=6;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+
+
+print(fullfile(fnout,['pupil_contrast_resposnse.pdf']),'-dpdf');
+
 
 %% anova on contrast response
 DARTeffect = pref_responses_stat_concat{pre}(red_ind_concat,:)-pref_responses_stat_concat{post}(red_ind_concat,:);

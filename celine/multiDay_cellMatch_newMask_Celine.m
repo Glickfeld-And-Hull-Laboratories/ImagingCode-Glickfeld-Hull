@@ -8,7 +8,7 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(2) = 359;
+day_id(2) = 363;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);
@@ -246,7 +246,7 @@ for icell = 1:nc
         end
         
         [max_val max_ind] = max([r_avg r_max r_corr r_red]);
-        if max_val>0.55 & (r_corr>0.4 || r_red>0.4 || r_max>0.4)
+        if max_val>0.1 & (r_corr>0.1 || r_red>0.1 || r_max>0.1)
             pass = true;
             figure;
             movegui('center')
