@@ -1,6 +1,6 @@
 clear all
 clear global
-sessList = [323];
+sessList = [303 311 319 329 355 359];
 %138 142 163 171 178 190 294 307 323 333
 %303 311 319 329 355 359
 
@@ -44,53 +44,9 @@ for iSess = 1: length(sessList)
     load(fullfile(fn_multi,'input.mat'))
     
     frame_rate = input.frameImagingRateMs;
-    % %% finding red fluorescence level
+
     allDays = [day_id,pre_day];
-    
-   
-for id = post %currently only doing this for the baseline day
-    mouse = expt(allDays(id)).mouse;
-    date = expt(allDays(id)).date;
-    imgFolder = expt(allDays(id)).contrastxori_runs{1};
-    fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
-    cd(fn);
-    load(fullfile(fn,'redImage.mat'));
-    load(fullfile(fn,'mask_cell.mat'));
-
-
-    %for each day individually, load the masks and red image for that day
-
-
-    % cell_stats=regionprops(mask_cell_red);
-    % figure; imagesc(redChImg), colormap gray; caxis([200 1000]);
-    % hold on
-    % bound = cell2mat(bwboundaries(mask_cell_red(:,:,1)));
-    % plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',.5); hold on;
-    % for iC = 1:max(max(mask_cell_red))
-    %     text(cell_stats(iC).Centroid(1), cell_stats(iC).Centroid(2), num2str(iC), 'Color', 'red',...
-    %             'Fontsize', 10, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle')
-    %     
-    % end
-
-    %use stackGetTimeCourses to extract the red fluorescence within each mask
-    red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
-    nCells=max(max(mask_cell));
-    for i = 1:nCells
-    red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
-    end
-
-    red_fluor_all = red_fluor_mask-red_fluor_np;
-
-    % clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
-end
-%using the reference day
-red_fluor_match=red_fluor_all(:,match_ind);
-z_red_fluor=zscore(red_fluor_match);
-load(fullfile(fn_multi,'multiday_alignment.mat'))
-clear red_fluor_all red_fluor_mask red_fluor_np
-% get green fluor level
-%using the reference day
-green_fluor_match=mean(cellTCs_match{1},1);   
+      
 
 %load in the pupil data for each day
 pupil=cell(1,nd);
@@ -104,20 +60,25 @@ for id = 1:nd
 end
 
 pupilBothDays =horzcat(pupil{pre}.rad.stim,pupil{post}.rad.stim); %combine all the pupil values for the two days
-pupilThreshold=prctile(pupilBothDays,70);
+pupilThreshold=prctile(pupilBothDays,50);
 plot(pupilBothDays); hline(pupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
 print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
 
+pupilMeans = nan(nd,2);
+pupilCounts = nan(nd,2);
 PIx = cell(1,nd); %pupil index for each day
 for id = 1:nd
+    
    PIx{id}=pupil{id}.rad.stim > pupilThreshold;
    %PIx for each day is a logical of trials where the pupil diameter crossed
    %the threshold, which is the 70th percentile for the two days combined
-   fprintf(['Pupil high: ' num2str(mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim > pupilThreshold)), 'omitmissing')), '   '])
-    %
-   fprintf(['Pupil low: ' num2str(mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim < pupilThreshold)), 'omitmissing')), '   '])
-end
+    pupilMeans(id,1)=mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim > pupilThreshold)), 'omitmissing');
+    pupilMeans(id,2)=mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim < pupilThreshold)), 'omitmissing');
+    pupilCounts(id,1)=sum(pupil{id}.rad.stim > pupilThreshold);
+    pupilCounts(id,2)=sum(pupil{id}.rad.stim < pupilThreshold);
 
+end
+save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','pupilCounts')
 %% stimulus props
 
 nOn = input(1).nScansOn;
@@ -161,24 +122,22 @@ data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however ma
 fractTimeActive_match = cell(1,nd);
 cellstd_match = cell(1,nd);
 for id = 1:nd %cycle through days
-    
+
   %nTrials(id) = length(tDir_match{id}); %use the list of direction by trial to figure out how many trials there are
    %currently the way I center the stim on period requires me to cut out
    %one trial, hence the -1
-   
+
     %for matched cell
     nCells = size(cellTCs_match{id},2);
     fractTimeActive_match{id} = zeros(1,nCells);
     %I will trim 30 frames of the start and add 30 frames of padding to the
     %end (padding is nans)
     cellTCs_match{id} = cellTCs_match{id}(stimStart:size(cellTCs_match{id},1),:);
-    %cellTCs_match{id} = padarray(cellTCs_match{id},30,0,'post');
-    cellTCs_match{id} = padarray(cellTCs_match{id},30,999,'post'); %I had been 
-    %padding with zeroas but that altered the TC so I changed this to pad with NANs 
+    cellTCs_match{id} = padarray(cellTCs_match{id},30,999,'post'); 
     cellTCs_match{id}(cellTCs_match{id}==999)=nan;
     nFrames = size(cellTCs_match{id},1);
-    
-    
+
+
     data_trial_match = reshape(cellTCs_match{id},[nOn+nOff nTrials(id) nCells]);
     data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
     data_dfof_trial_match{id} = bsxfun(@rdivide,bsxfun(@minus,data_trial_match,data_f_match),data_f_match);
@@ -188,12 +147,11 @@ for id = 1:nd %cycle through days
     for iCell = 1:nCells
         fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames;
     end
-    
+
 end
 clear  data_f_match cellstd 
 
-% MUST USE NANMEAN INSTEAD OF MEAN MOVING FORWARD SINCE I SET THE PADDING
-% VALUES TO NAN
+
 
 %% looking at wheel speed
 wheel_speed = cell(1,nd);
@@ -273,25 +231,19 @@ for id = 1:nd
             ind_stat_lowPupil = intersect(ind_stat, find(~PIx{id}));
             ind_loc = intersect(ind, find(RIx{id}));
             data_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
-            
+
             stat_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat,:),1),2));
             loc_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_loc,:),1),2));
             data_resp(:,iDir,iCon,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
             [h(:,iDir,iCon), p(:,iDir,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nDir*nCon-1));
-%             baseStd=squeeze(std(nanmean(data_dfof_trial(base_win,ind,:),1),[],2));
-%             baseMean=squeeze(nanmean(nanmean(data_dfof_trial(base_win,ind,:),1),2));
-%             thresh=baseMean + (3.*baseStd);
-%             passThresh(:,iOri,iCon) = logical(data_resp(:,iOri,iCon,1) > thresh);
-%             passThresh(:,iOri,iCon) = logical(data_resp(:,iOri,iCon,1) > .05);
-%             h(:,iOri,iCon) = h(:,iOri,iCon) .*passThresh(:,iOri,iCon);
-        
+
         end
     end 
-    
+
     resp_sig = data_resp(:,:,:,1).*h;
     h_pass = sum(sum((h),2),3); 
     resp=logical(h_pass);
-    
+
     pref_dir = nan(1,nCells);
     pref_con = nan(1,nCells);
     data_dir_resp = zeros(nCells,nDir); %at pref con
@@ -308,13 +260,7 @@ for id = 1:nd
           %versa.
           [max_val_con, pref_con(1,iCell)] = max(max(resp_sig(iCell,:,:),[],2)); 
           data_con_resp(iCell,:)=data_resp(iCell,pref_dir(iCell),:,1);
-          
-%       if pref_ori(iCell)<= nDir/2
-%           orth_ori(iCell)=pref_ori(iCell)+2;
-%       elseif pref_ori(iCell)>nOri/2
-%           orth_ori(iCell)=pref_ori(iCell)-2;
-%       end
-%     data_orth_resp(iCell,:)=nanmean(data_resp(iCell,orth_ori(iCell),:,1));
+
     end
 
  %then put into a cell matrix for the two days
@@ -330,10 +276,10 @@ stat_resp_match{id} = stat_resp;
 loc_resp_match{id} = loc_resp;
 data_con_resp_match{id} = data_con_resp;
 % data_orth_resp_match{id}=data_orth_resp;
- 
+
 end
 %clear data_resp p h_all resp pref_dir pref_con data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp  baseStd baseMean thresh pass
- 
+
 %% get basic counts 
 red_ind_match_list = find(red_ind_match==1);
 
@@ -373,12 +319,10 @@ resp_red_either=setdiff(resp_red_either_temp,outliers_either);
 
 clear resp_green_either_temp resp_red_either_temp keep_cells_temp data_resp_keep_temp resp_max_keep_temp mean_max std_max thresh outliers
 %Impose a constraint where if the max response of a cell is > 2 std from
-%the max resposne of other cells I'm keeping, I drop it
+%the max response of other cells I'm keeping, I drop it
 %%
 %these are the cells I will include from now on
 %find cells that were active on at least one day
-% resp_green_either = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
-% resp_red_either = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
 keep_cells = union(resp_green_either,resp_red_either);
 nGreen_keep = length(resp_green_either); %how many green cells to keep
 nRed_keep = length(resp_red_either);%how many red cells to keep
@@ -423,22 +367,14 @@ for id = 1:nd
     loc_resp_keep{id} = loc_resp_match{id}(keep_cells,:,:);
 end
 
-red_fluor_keep=red_fluor_match(keep_cells);
-green_fluor_keep=green_fluor_match(keep_cells);
 
-conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
-writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
-save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
-
-mean(green_fluor_keep(green_ind_keep))
-mean(green_fluor_keep(red_ind_keep))
 
 %% narrow down to the stimuli preferred for each cell each day
 %We will get one tc per cell per contrast. This represents that cell's tc
 %averaged over trials at the preferred orientation, at each contrast
 %only include stationary trials. Will also save the trials at the preferred
 %direction for each contrast and stationary/running. 
-%Make dataframes of mean and peak response to the preferred direction for
+%Make dataframes of mean response to the preferred direction for
 %each behavioral state.
 
 tc_trial_avrg_stat=cell(1,nd);
@@ -450,18 +386,20 @@ rect_tc_trial_avrg_keep=cell(1,nd);
 tc_trial_avrg_keep_allCond=cell(1,nd);
 
 pref_responses_stat = cell(1,nd);
+
 pref_responses_stat_hiPupil = cell(1,nd);
 pref_responses_stat_lowPupil = cell(1,nd);
 
 pref_responses_loc = cell(1,nd);
 pref_responses_allCond = cell(1,nd);
-pref_peak_stat  = cell(1,nd);
-pref_peak_loc  = cell(1,nd);
 pref_allTrials_stat=cell(nCon,nd);
 pref_allTrials_loc=cell(nCon,nd);
 trialCounts=cell(2,nd);
 nonPref_trial_avrg_stat=cell(1,nd);
 nonPref_trial_avrg_loc=cell(1,nd);
+
+pref_nonPref_stat=cell(1,nd);
+pref_nonPref_loc=cell(1,nd);
 
 for id = 1:nd
     trialCounts{1,id}=[];
@@ -471,23 +409,23 @@ for id = 1:nd
     temp_tc_stat_lowPupil=nan((nOn+nOff),nKeep,nCon);
 
     temp_tc_loc=nan((nOn+nOff),nKeep,nCon);
-    temp_pref_responses_stat=zeros(nKeep,nCon,1);
-    temp_pref_responses_stat_hiPupil=zeros(nKeep,nCon,1);
-    temp_pref_responses_stat_lowPupil=zeros(nKeep,nCon,1);
-    temp_pref_responses_loc=zeros(nKeep,nCon,1);
-    temp_pref_responses_allCond=zeros(nKeep,nCon,1);
-
-    temp_pref_peak_stat=zeros(nKeep,nCon,1);
-    temp_pref_peak_loc=zeros(nKeep,nCon,1);
+    temp_pref_responses_stat=nan(nKeep,nCon,1);
+    temp_pref_responses_stat_hiPupil=nan(nKeep,nCon,1);
+    temp_pref_responses_stat_lowPupil=nan(nKeep,nCon,1);
+    temp_pref_responses_loc=nan(nKeep,nCon,1);
+    temp_pref_responses_allCond=nan(nKeep,nCon,1);
 
     temp_nonPref_stat=nan((nOn+nOff),nKeep,nCon);
     temp_nonPref_loc=nan((nOn+nOff),nKeep,nCon);
-    
+
+    temp_pref_nonPref_stat=nan(nKeep,2,nCon);
+    temp_pref_nonPref_loc=nan(nKeep,2,nCon);
+
     for iCon = 1:nCon % for each contrast'
         temp_all_stat=cell(1,nKeep);
         temp_all_loc=cell(1,nKeep);
         for i=1:nKeep %for each cell
-            
+
             temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
             tCon=tCon_match{id}(1:nTrials(id));
             tDir=tDir_match{id}(1:nTrials(id));
@@ -513,10 +451,11 @@ for id = 1:nd
             dir_inds2 = find(tDir~=temp_dir); 
             dir_inds3 = find(tDir~=matchedDir); 
             dir_inds4 = intersect(dir_inds2,dir_inds3);
-            temp_nonPref_trials_stat = intersect(dir_inds4,stat_inds);
-            temp_nonPref_trials_loc = intersect(dir_inds4,loc_inds);
+            dirs4_con_inds=intersect(con_inds,dir_inds4);
+            temp_nonPref_trials_stat = intersect(dirs4_con_inds,stat_inds);
+            temp_nonPref_trials_loc = intersect(dirs4_con_inds,loc_inds);
 
-            
+
             %saving the responses of all trials at the preferred direction,
             %rather than averaging voer trials to get a single mean
             %response
@@ -530,13 +469,8 @@ for id = 1:nd
             temp_pref_responses_loc(i,iCon)=nanmean(temp_all_loc{i},2);
             temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials1),1),2);
 
-            %to get peak values, take the max value of each trails and then
-            %find the mean of those max values across trials
-            temp_pref_peak_stat(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_stat)));
-            temp_pref_peak_loc(i,iCon)=mean(max(temp_TCs(resp_win,temp_trials_loc)));
-            
             temp_tc_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat),2);
-            
+
             temp_tc_stat_hiPupil(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat_hiPupil),2);
             temp_tc_stat_lowPupil(:,i,iCon)=nanmean(temp_TCs(:,temp_trials_stat_lowPupil),2);
 
@@ -547,7 +481,13 @@ for id = 1:nd
 
             temp_nonPref_stat(:,i,iCon)=nanmean(temp_TCs(:,temp_nonPref_trials_stat),2);
             temp_nonPref_loc(:,i,iCon)=nanmean(temp_TCs(:,temp_nonPref_trials_loc),2);
-                        
+
+            temp_pref_nonPref_stat(i,1,iCon)=temp_pref_responses_stat(i,iCon);
+            temp_pref_nonPref_stat(i,2,iCon)=nanmean(temp_nonPref_stat(resp_win,i,iCon),1);
+
+            temp_pref_nonPref_loc(i,1,iCon)=temp_pref_responses_loc(i,iCon);
+            temp_pref_nonPref_loc(i,2,iCon)=nanmean(temp_nonPref_loc(resp_win,i,iCon),1);
+
             trialCounts{1,id}=[trialCounts{1,id},length(temp_trials_stat)];
             trialCounts{2,id}=[trialCounts{2,id},length(temp_trials_loc)];
             length(temp_trials1);
@@ -555,8 +495,8 @@ for id = 1:nd
     pref_allTrials_stat{iCon,id}=temp_all_stat;
     pref_allTrials_loc{iCon,id}=temp_all_loc;
     end
-    
-    
+
+
 tc_trial_avrg_stat{id}=temp_tc_stat; %this is a cell array with one cell 
 tc_trial_avrg_stat_hiPupil{id}=temp_tc_stat_hiPupil;
 tc_trial_avrg_stat_lowPupil{id}=temp_tc_stat_lowPupil;
@@ -565,19 +505,17 @@ tc_trial_avrg_loc{id}=temp_tc_loc;
 
 nonPref_trial_avrg_stat{id} =temp_nonPref_stat;
 nonPref_trial_avrg_loc{id} = temp_nonPref_loc;
-%tc_trial_avrg_keep_allCond{id}=temp_tc_allCond;
-%per day; each cell contains the average tc for each cell at that individual cell's preferred orientation and contrast
-%rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
 pref_responses_stat{id} = temp_pref_responses_stat;
 pref_responses_stat_hiPupil{id}=temp_pref_responses_stat_hiPupil;
 pref_responses_stat_lowPupil{id}=temp_pref_responses_stat_lowPupil
 
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
-pref_peak_stat{id}=temp_pref_peak_stat;
-pref_peak_loc{id}=temp_pref_peak_loc;
 
-clear temp_trials_stat_lowPupil temp_trials_stat_hiPupil temp_trials_stat temp_trials_loc temp_tc_stat_hiPupil temp_tc_stat_lowPupil temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
+pref_nonPref_stat{id}=temp_pref_nonPref_stat;
+pref_nonPref_loc{id}=temp_pref_nonPref_loc;
+
+clear temp_trials_stat_lowPupil temp_trials_stat_hiPupil temp_trials_stat temp_trials_loc temp_tc_stat_hiPupil temp_tc_stat_lowPupil temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
 end
 
 trialCountTable = table([mean(trialCounts{1,2});std(trialCounts{1,2})],[mean(trialCounts{2,2});std(trialCounts{2,2})],[mean(trialCounts{1,1});std(trialCounts{1,1})],[mean(trialCounts{2,1});std(trialCounts{2,1})],'VariableNames',{'pre stat' 'pre loc' 'post stat' 'post loc'}, 'RowNames',{'Mean'  'std'})
@@ -593,7 +531,7 @@ for id = 1:nd
     tc_trial_avrg_temp=nan((nOn+nOff),nKeep);
     mean_resp_temp=nan(nKeep,1);
     for i=1:nKeep
-        
+
             temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
             tDir=tDir_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
@@ -604,10 +542,10 @@ for id = 1:nd
             pref_responses_temp(i)=nanmean(nanmean(temp_TCs(resp_win,inds),1),2);
             pref_sd_temp(i)=std(nanmean(temp_TCs(resp_win,inds),1));
             tc_trial_avrg_temp(:,i)=nanmean(temp_TCs(:,inds),2);
-        
+
 
     end
-    
+
 pref_responses_allCon_stat{1,id}=pref_responses_temp;
 pref_responses_allCon_stat{2,id}=pref_sd_temp;
 tc_trial_avrg_keep_allCon_stat{id}=tc_trial_avrg_temp; %this is a cell array with one cell 
@@ -624,7 +562,7 @@ for id = 1:nd
     tc_trial_avrg_temp=nan((nOn+nOff),nKeep);
     mean_resp_temp=nan(nKeep,1);
     for i=1:nKeep
-        
+
             temp_TCs=data_trial_keep{id}(:,:,i); %only pulling from dfof data of keep cells
             tDir=tDir_match{id}(1:nTrials(id));
             %identify the trials where ori = pref ori
@@ -635,10 +573,10 @@ for id = 1:nd
             pref_responses_temp(i)=nanmean(nanmean(temp_TCs(resp_win,inds),1),2);
             pref_sd_temp(i)=std(nanmean(temp_TCs(resp_win,inds),1));
             tc_trial_avrg_temp(:,i)=nanmean(temp_TCs(:,inds),2);
-        
+
 
     end
-    
+
 pref_responses_allCon_loc{1,id}=pref_responses_temp;
 pref_responses_allCon_loc{2,id}=pref_sd_temp;
 tc_trial_avrg_keep_allCon_loc{id}=tc_trial_avrg_temp; %this is a cell array with one cell 
@@ -672,7 +610,7 @@ wheel_corr = cell(1,nd);
 
 
 for id = 1:nd
-    
+
     clean_wheel_speed{id}=wheel_speed{id}(1:size(fullTC_keep{id},1));
     clean_wheel_speed{id}(find(abs(clean_wheel_speed{id})<4.884))=0;
     clean_wheel_speed{id}=downsample(clean_wheel_speed{id},10);
@@ -697,7 +635,7 @@ save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat','pref_
     'tc_trial_avrg_keep_allCond','pref_responses_allCond','tc_trial_avrg_keep_allCon_stat','pref_responses_allCon_stat', ...
     'tc_trial_avrg_keep_allCon_loc','pref_responses_allCon_loc', 'pref_con_keep','pref_dir_keep','tDir_match','tOri_match', ...
     'tCon_match','data_trial_keep','nTrials','tc_trial_avrg_stat','tc_trial_avrg_stat_hiPupil','tc_trial_avrg_stat_lowPupil','tc_trial_avrg_loc', 'green_keep_logical', 'red_keep_logical', ...
-    'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc')
+    'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat','pref_allTrials_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc','pref_nonPref_stat','pref_nonPref_loc')
 
 
 %% make and save response matrix for keep cells
@@ -710,7 +648,7 @@ resp_max_keep = cell(1,nd);
 for id = 1:nd
   data_resp_keep{id}=data_resp_match{id}(keep_cells,:,:,:);
   resp_max_keep{id} = squeeze(max(data_resp_keep{id}(:,:,:,1),[],2));
-  
+
 end
 
 
@@ -718,7 +656,7 @@ end
 resp_max_keep_rect = resp_max_keep;
 for id = 1:nd
     resp_max_keep_rect{id}(find(resp_max_keep_rect{id}<0))=0;
- 
+
 end
 
 dfof_max_diff = (resp_max_keep_rect{1}-resp_max_keep_rect{2})./(resp_max_keep_rect{1}+resp_max_keep_rect{2}); % (post-pre)/(post+pre), nCell X nCon
@@ -747,13 +685,12 @@ for id = 1:nd
     end
     norm_dir_resp_stat{id}=statMatrix;
     norm_dir_resp_loc{id}=locMatrix;
-    
+
 end
 
 
-
 explanation2 = 'data_resp_keep gives the df/f averaged over the full response window for all conditions in the form nCells X nOris X nCons X mean vs. std. resp_max_keep gives the df/f averaged over the full stim period for each cell at the preferred ori only, with a dimension for each contrast';
-%save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','norm_dir_resp_stat','loc_dir_resp_keep','norm_dir_resp_loc')
+save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','norm_dir_resp_stat','norm_dir_resp_loc')
 %% making mask maps for various measurements
 %show masks
 %get masks of matched cells
@@ -794,7 +731,7 @@ for i = 1:length(keep_cells)
    ind = keep_cells(i);
    temp_mask_inds = find(masks{2}==ind); %pulling from the masks of matched cells from the baseline day
    keep_masks(temp_mask_inds)=i;
-   
+
 end
 
 
@@ -844,7 +781,7 @@ for id = 1:nd
             statRectified = pref_responses_stat{id}(:,iCon);
             statRectified(find(statRectified<0))=0;
             LMI{id}(:,iCon)=(locRectified-statRectified)./(locRectified+statRectified);
-        
+
     end
 end
 
@@ -917,7 +854,7 @@ for id = 1:nd
             tempSubData = tempData - tempCellMeans;
             subTrialResp{id}(inds,:)=tempSubData;
             conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
-           
+
         end
     end
 subTrialResp{id}=subTrialResp{id}(stat_inds,:);
@@ -941,7 +878,7 @@ for id=1:nd
         else
             otherCells = setdiff(green_ind_keep,iCell);
         end
-        
+
         otherCellsMean = mean(subTrialResp{id}(:,otherCells),2,"omitnan");
         % 
         % if id == pre
@@ -957,13 +894,13 @@ for id=1:nd
         % end
         % 
 
-         
+
         [R,p]=corrcoef(otherCellsMean,thisCell);
         title([' R= ' num2str(R(2))]);
-        
+
         noiseCorr{id}(1,iCell)=R(2);
         noiseCorr{id}(2,iCell)=p(2);
-    
+
     end
 end
 %% get correlation strucutre for signal correlation
@@ -982,9 +919,9 @@ for id=1:nd
         else
             otherCells = setdiff(green_ind_keep,iCell);
         end
-        
+
         otherCellsMean = mean(tempconditionMeans(:,otherCells),2,"omitnan");
-        
+
        % if id == pre
        %      figure
        %      scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
@@ -997,13 +934,13 @@ for id=1:nd
        %      h = lsline;
        %  end
 
-         
+
         [R,p]=corrcoef(otherCellsMean,thisCell);
         title([' R= ' num2str(R(2))]);
-        
+
         sigCorr{id}(1,iCell)=R(2);
         sigCorr{id}(2,iCell)=p(2);
-    
+
     end
 end
 
@@ -1041,7 +978,7 @@ for iCon = 1:nCon
     else
         counter=counter+2
     end
-    
+
     responseByCond(counter,:)=[mean(pref_responses_stat{pre}(green_all,iCon), "omitnan") mean(pref_responses_stat{pre}(red_all,iCon), "omitnan") mean(pref_responses_stat{post}(green_all,iCon), "omitnan") mean(pref_responses_stat{post}(red_all,iCon), "omitnan")];
     responseByCond((counter+1),:)=[mean(pref_responses_loc{pre}(green_all,iCon), "omitnan") mean(pref_responses_loc{pre}(red_all,iCon), "omitnan") mean(pref_responses_loc{post}(green_all,iCon), "omitnan") mean(pref_responses_loc{post}(red_all,iCon), "omitnan")];
 
@@ -1111,7 +1048,7 @@ for id = 1:nd
     cellType_temp = repelem(red_keep_logical,nTrials(id))';
     trialRespFlat{id}=cat(2,trialRespFlat{id},cellType_temp);
     %cell type
-    
+
     direction_temp = repmat(tDir_match{id},1,nKeep)';
     trialRespFlat{id}=cat(2,trialRespFlat{id},direction_temp);
     %direction
@@ -1119,7 +1056,7 @@ for id = 1:nd
     contrast_temp=repmat(tCon_match{id},1,nKeep)';
     trialRespFlat{id}=cat(2,trialRespFlat{id},contrast_temp);
     %contrast
-    
+
     speed_temp=repmat(wheel_trial_avg{id},1,nKeep)';
     trialRespFlat{id}=cat(2,trialRespFlat{id},speed_temp);
     %wheel speed

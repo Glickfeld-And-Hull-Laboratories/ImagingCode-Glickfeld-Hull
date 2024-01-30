@@ -1,11 +1,12 @@
+%% read in and concatenate data
 
 clear all; clear global; close all
 clc
 
 % ENTER DATASET NAME
-load('ds_YM90K_PEG.mat');
-ds_name='YM90K_PEG';
-nSess=length(ds_YM90K_PEG);
+load('ds_YM90K_DART.mat');
+ds_name='YM90K_DART';
+nSess=length(ds_YM90K_DART);
 
 % setting key variables and output folder
 %hard-coded variables specific to YM90K-DART/PEG SST project
@@ -40,14 +41,12 @@ tc_trial_avrg_stat_concat=cell(1,nd);
 tc_trial_avrg_stat_hiPupil_concat=cell(1,nd);
 tc_trial_avrg_stat_lowPupil_concat=cell(1,nd);
 tc_trial_avrg_loc_concat=cell(1,nd);
-tc_trial_avrg_keep_allCond_concat=cell(1,nd);
 resp_keep_concat=cell(1,nd);
 resp_max_keep_concat=cell(1,nd);
 pref_responses_loc_concat=cell(1,nd);
 pref_responses_stat_concat=cell(1,nd);
 pref_responses_stat_hiPupil_concat=cell(1,nd);
 pref_responses_stat_lowPupil_concat=cell(1,nd);
-pref_responses_allCond_concat=cell(1,nd);
 RIx_concat=cell(1,nd);
 dirs_concat=[];
 cons_concat=[];
@@ -82,17 +81,17 @@ responseByCondProps_concat=nan(6,2,nSess);
 
 cellID_adjustment=0;
 for iSess = 1:nSess
-    mouse = ds_YM90K_PEG(iSess).mouse;
+    mouse = ds_YM90K_DART(iSess).mouse;
     mice=[mice;mouse];
-    thisDrug = ds_YM90K_PEG(iSess).drug;
+    thisDrug = ds_YM90K_DART(iSess).drug;
     drug{iSess}=thisDrug;
 
     if iSess > 1
         cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
     end
 
-    if ds_YM90K_PEG(iSess).multiday_timesincedrug_hours>0
-        dart_str = [ds_YM90K_PEG(iSess).drug '_' num2str(ds_YM90K_PEG(iSess).multiday_timesincedrug_hours) 'Hr'];
+    if ds_YM90K_DART(iSess).multiday_timesincedrug_hours>0
+        dart_str = [ds_YM90K_DART(iSess).drug '_' num2str(ds_YM90K_DART(iSess).multiday_timesincedrug_hours) 'Hr'];
     else
         dart_str = 'control';
     end
@@ -166,7 +165,6 @@ for iSess = 1:nSess
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon));
         pref_responses_stat_hiPupil_concat{id}=cat(1,pref_responses_stat_hiPupil_concat{id},pref_responses_stat_hiPupil{id}(:,sharedCon));
         pref_responses_stat_lowPupil_concat{id}=cat(1,pref_responses_stat_lowPupil_concat{id},pref_responses_stat_lowPupil{id}(:,sharedCon));
-        pref_responses_allCond_concat{id}=cat(1,pref_responses_allCond_concat{id},pref_responses_allCond{id}(:,sharedCon));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
@@ -193,7 +191,7 @@ iSess
 end
 %
 clear mouse iSess nKeep iSess fn_multi cons oris pupilMeans norm_dir_resp_loc norm_dir_resp_stat
-clear explanation1 resp_keep tc_trial_avrg_keep_allCond pref_responses_allCond sig_diff pref_con_keep pref_ori_keep tOri_match tCon_match data_trial_keep nTrials tc_trial_avrg_keep green_keep_logical red_keep_logical green_ind_keep red_ind_keep
+clear explanation1 resp_keep sig_diff pref_con_keep pref_ori_keep tOri_match tCon_match data_trial_keep nTrials tc_trial_avrg_keep green_keep_logical red_keep_logical green_ind_keep red_ind_keep
 clear LMI RIx locCounts locResp locTCs statResp statTCs wheel_tc ttest_results_stat ttest_results_loc ttest_results_allCon_stat ttest_results_allCon_loc
 clear data_con_resp_keep data_ori_resp_keep data_rep_keep dfof_max_diff dfof_max_diff_raw explanation2 resp_max_keep data_resp_keep pref_responses_stat pref_responses_loc
 clear tc_trial_avrg_stat tc_trial_avrg_loc fullTC_keep norm_dir_resp sigCorr noiseCorr responseByCondProps
@@ -1319,65 +1317,9 @@ end
 
 
 %% delta OSI 
-delta_gOSI_stat = osi_stat{post}-osi_stat{pre};
-delta_gOSI_loc = osi_loc{post}-osi_loc{pre};
-
-
-figure
-
-subplot(2,2,1)
-h1=cdfplot(delta_gOSI_stat(green_all));
-hold on
-h2 = cdfplot(delta_gOSI_loc(green_all));
-set(h1, 'Color', 'k');
-set(h2, 'Color', 'm');
-title('Pyr')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('OSI post-pre')
-ylabel('Cumulative distribution')
-
-subplot(2,2,2)
-h1=cdfplot(delta_gOSI_stat(red_all));
-hold on
-h2 = cdfplot(delta_gOSI_loc(red_all));
-set(h1, 'Color', 'k');
-set(h2, 'Color', 'm');
-title('SST')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('OSI post-pre')
-ylabel('Cumulative distribution')
-
-
-subplot(2,2,3)
-h1=histogram(delta_gOSI_stat(green_all),20,'FaceColor','k');
-hold on
-h2 = histogram(delta_gOSI_loc(green_all),20,'FaceColor','m');
-xlim([-1.5 1.5])
-title('Pyr')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('OSI post-pre')
-
-
-subplot(2,2,4)
-h1=histogram(delta_gOSI_stat(red_all),20,'FaceColor','k');
-hold on
-h2 = histogram(delta_gOSI_loc(red_all),20,'FaceColor','m');
-xlim([-1.5 1.5])
-title('SST')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('OSI post-pre')
-
-
-%sgtitle('')
-print(fullfile(fnout,['delta_OSI.pdf']),'-dpdf','-bestfit')
+%identify cells with OSI > 0.5 on the baseline day
+OSI_stat_include = find(osi_stat{pre}>0.5);
+OSI_loc_include = find(osi_loc{pre}>0.5);
 
 %% plot distribution of OSI pre and post
 
@@ -2055,38 +1997,7 @@ set(gca,'TickDir','out')
 print(fullfile(fnout,[num2str(cons(iCon)) '_LMI.pdf']),'-dpdf');
 
 end
-%% compare r value to LMI
-meanLMI = mean(LMI_concat{pre},2);
-
-figure
-
-subplot(1,2,1)
-scatter(noiseCorr_concat{pre}(1,green_ind_concat),meanLMI(green_ind_concat),'MarkerEdgeColor','#47E5BC', 'LineWidth',1.25)
-hold on
-scatter(noiseCorr_concat{pre}(1,red_ind_concat),meanLMI(red_ind_concat),'MarkerEdgeColor','#93748A', 'LineWidth',1.25)
-xlabel('Noise corr pre-DART')
-ylabel('LMI pre-DART')
-axis square
-set(gca, 'TickDir', 'out')
-h = lsline;
-set(h(1),'color','#47E5BC')
-set(h(2),'color','#93748A')
-
-subplot(1,2,2)
-scatter(noiseCorr_concat{post}(1,green_ind_concat),meanLMI(green_ind_concat),'MarkerEdgeColor','#47E5BC', 'LineWidth',1.25)
-hold on
-scatter(noiseCorr_concat{post}(1,red_ind_concat),meanLMI(red_ind_concat),'MarkerEdgeColor','#93748A', 'LineWidth',1.25)
-xlabel('Noise corr post-DART')
-ylabel('LMI post-DART')
-axis square
-set(gca, 'TickDir', 'out')
-h = lsline;
-set(h(1),'color','#47E5BC')
-set(h(2),'color','#93748A')
-
-print(fullfile(fnout,[ 'r_vs_LMI.pdf']),'-dpdf');
-
-
+%% Identify high and low correlation cells
 
 % cells with high correlation in the baseline day
 highRInds = find(noiseCorr_concat{pre}(1,:)>0.5);
@@ -2270,7 +2181,6 @@ sgtitle(['Running, contrast = ' num2str(cons(iCon))])
 print(fullfile(fnout,[num2str(cons(iCon)) 'loc_R_timecourses.pdf']),'-dpdf');
 clear txt1 highRed lowRed
 end 
-
 
 
 

@@ -13,7 +13,7 @@ eval(ds);
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
 
-sess_list = [303 311 319 329 355 359];%enter all the sessions you want to concatenate
+sess_list = [361];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -139,13 +139,13 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'locomotion.mat'));
     load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
-    temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
+%    temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
 
-    temp_table.z_speed=zscor_xnan(temp_table.speed);
-    temp_table.z_pupil=zscor_xnan(temp_table.pupil);
-    temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
-
-    dataTableConat=[dataTableConat; temp_table];
+    % temp_table.z_speed=zscor_xnan(temp_table.speed);
+    % temp_table.z_pupil=zscor_xnan(temp_table.pupil);
+    % temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
+    % 
+    % dataTableConat=[dataTableConat; temp_table];
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -202,8 +202,8 @@ for iSess = 1:nSess
         meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
-        pref_nonPref_stat_concat{id}=cat(1,pref_nonPref_stat_concat{id},pref_nonPref_stat{id});
-        pref_nonPref_loc_concat{id}=cat(1,pref_nonPref_loc_concat{id},pref_nonPref_loc{id});
+        %pref_nonPref_stat_concat{id}=cat(1,pref_nonPref_stat_concat{id},pref_nonPref_stat{id});
+        %pref_nonPref_loc_concat{id}=cat(1,pref_nonPref_loc_concat{id},pref_nonPref_loc{id});
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
         noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
         sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
@@ -855,100 +855,101 @@ red_dir_avrg_stat = cell(1,nd); %same for red
 green_dir_se_stat = cell(1,nd); %this will be the se across all green cells
 red_dir_se_stat = cell(1,nd); %same for red
 
-for id = 1:nd
-   
-    green_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(green_ind_concat,:),1);
-    green_std=nanstd(norm_dir_resp_stat_concat{id}(green_ind_concat,:),[],1);
-    green_dir_se_stat{id}=green_std/sqrt(length(green_ind_concat));
-    green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
-    green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
+for iCon = 1:nCon
+    for id = 1:nd
+       
+        green_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(green_all,:,iCon),1);
+        green_std=nanstd(norm_dir_resp_stat_concat{id}(green_all,:,iCon),[],1);
+        green_dir_se_stat{id}=green_std/sqrt(length(green_all));
+        green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
+        green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
+        
+        red_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(red_all,:,iCon),1);
+        red_std=nanstd(norm_dir_resp_stat_concat{id}(red_all,:,iCon),[],1);
+        red_dir_se_stat{id}=red_std/sqrt(length(red_all));
+        red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
+        red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
+        clear green_std red_std
+        
+    end
     
-    red_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(red_ind_concat,:),1);
-    red_std=nanstd(norm_dir_resp_stat_concat{id}(red_ind_concat,:),[],1);
-    red_dir_se_stat{id}=red_std/sqrt(length(red_ind_concat));
-    red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
-    red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
-    clear green_std red_std
     
+    
+    green_dir_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
+    red_dir_avrg_loc = cell(1,nd); %same for red
+    green_dir_se_loc = cell(1,nd); %this will be the se across all green cells
+    red_dir_se_loc = cell(1,nd); %same for red
+    
+    for id = 1:nd
+       
+        green_dir_avrg_loc{id}=nanmean(norm_dir_resp_loc_concat{id}(green_all,:,iCon),1);
+        green_std=nanstd(norm_dir_resp_loc_concat{id}(green_all,:,iCon),[],1);
+        green_dir_se_loc{id}=green_std/sqrt(length(green_all));
+        green_dir_avrg_loc{id}=circshift(green_dir_avrg_loc{id},4);
+        green_dir_se_loc{id}=circshift(green_dir_se_loc{id},4);
+        
+        red_dir_avrg_loc{id}=nanmean(norm_dir_resp_loc_concat{id}(red_all,:,iCon),1);
+        red_std=nanstd(norm_dir_resp_loc_concat{id}(red_all,:,iCon),[],1);
+        red_dir_se_loc{id}=red_std/sqrt(length(red_all));
+        red_dir_avrg_loc{id}=circshift(red_dir_avrg_loc{id},4);
+        red_dir_se_loc{id}=circshift(red_dir_se_loc{id},4);
+        clear green_std red_std
+        
+    end
+    
+    
+    
+    figure
+    subplot(2,2,1)
+    errorbar(dirs_for_plotting,green_dir_avrg_stat{pre},green_dir_se_stat{pre},'k')
+    hold on
+    errorbar(dirs_for_plotting,green_dir_avrg_stat{post},green_dir_se_stat{post},'b')
+    title(['Stationary, ', num2str(length(green_all)),' fully matched Pyr'])
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    ylabel('dF/F')
+    ylim([-0.05 .3])
+    
+    subplot(2,2,2)
+    errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
+    hold on
+    errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
+    title(['Stationary, ', num2str(length(red_all)),' fully matched SST'])
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    ylim([-0.05 .3])
+    
+    subplot(2,2,3)
+    errorbar(dirs_for_plotting,green_dir_avrg_loc{pre},green_dir_se_loc{pre},'k')
+    hold on
+    errorbar(dirs_for_plotting,green_dir_avrg_loc{post},green_dir_se_loc{post},'b')
+    title('Running, Pyr')
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    xlabel('normalized direction')
+    ylabel('dF/F')
+    ylim([-0.05 .3])
+    
+    
+    subplot(2,2,4)
+    errorbar(dirs_for_plotting,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
+    hold on
+    errorbar(dirs_for_plotting,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
+    title('Running, SST')
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    xlabel('normalized direction')
+    ylim([-0.05 .3])
+    
+    sgtitle(['Normalized direction tuning ',num2str(cons(iCon))])
+    
+    
+    print(fullfile(fnout,[num2str(cons(iCon)),'dirTuning.pdf']),'-dpdf','-bestfit')
 end
-
-
-
-green_dir_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
-red_dir_avrg_loc = cell(1,nd); %same for red
-green_dir_se_loc = cell(1,nd); %this will be the se across all green cells
-red_dir_se_loc = cell(1,nd); %same for red
-
-for id = 1:nd
-   
-    green_dir_avrg_loc{id}=nanmean(norm_dir_resp_loc_concat{id}(green_ind_concat,:),1);
-    green_std=nanstd(norm_dir_resp_loc_concat{id}(green_ind_concat,:),[],1);
-    green_dir_se_loc{id}=green_std/sqrt(length(green_ind_concat));
-    green_dir_avrg_loc{id}=circshift(green_dir_avrg_loc{id},4);
-    green_dir_se_loc{id}=circshift(green_dir_se_loc{id},4);
-    
-    red_dir_avrg_loc{id}=nanmean(norm_dir_resp_loc_concat{id}(red_ind_concat,:),1);
-    red_std=nanstd(norm_dir_resp_loc_concat{id}(red_ind_concat,:),[],1);
-    red_dir_se_loc{id}=red_std/sqrt(length(red_ind_concat));
-    red_dir_avrg_loc{id}=circshift(red_dir_avrg_loc{id},4);
-    red_dir_se_loc{id}=circshift(red_dir_se_loc{id},4);
-    clear green_std red_std
-    
-end
-
-
-
-figure
-subplot(2,2,1)
-errorbar(dirs_for_plotting,green_dir_avrg_stat{pre},green_dir_se_stat{pre},'k')
-hold on
-errorbar(dirs_for_plotting,green_dir_avrg_stat{post},green_dir_se_stat{post},'b')
-title('-HTP, stationary')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-ylabel('dF/F')
-xlabel('normalized direction')
-%ylim([0 .25])
-
-subplot(2,2,2)
-errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
-hold on
-errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
-title('+HTP, stationary')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('normalized direction')
-%ylim([0 .25])
-
-
-subplot(2,2,3)
-errorbar(dirs_for_plotting,green_dir_avrg_loc{pre},green_dir_se_loc{pre},'k')
-hold on
-errorbar(dirs_for_plotting,green_dir_avrg_loc{post},green_dir_se_loc{post},'b')
-title('-HTP, running')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('normalized direction')
-%ylim([0 .25])
-
-subplot(2,2,4)
-errorbar(dirs_for_plotting,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
-hold on
-errorbar(dirs_for_plotting,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
-title('+HTP, running')
-set(gca, 'TickDir', 'out')
-axis square
-box off
-xlabel('normalized direction')
-%ylim([0 .25])
-
-sgtitle("Normalized direction tuning ")
-
-
-print(fullfile(fnout,['dirTuning.pdf']),'-dpdf','-bestfit')
 
 %% comparing the preferred direction across days
 

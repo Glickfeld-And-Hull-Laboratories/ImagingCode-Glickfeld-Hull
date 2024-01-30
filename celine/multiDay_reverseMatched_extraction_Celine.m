@@ -101,14 +101,16 @@ pupilThreshold=prctile(pupilBothDays,70);
 plot(pupilBothDays); hline(pupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
 print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
 
+pupilMeans = nan(nd,2);
 PIx = cell(1,nd); %pupil index for each day
 for id = 1:nd
+    
    PIx{id}=pupil{id}.rad.stim > pupilThreshold;
    %PIx for each day is a logical of trials where the pupil diameter crossed
    %the threshold, which is the 70th percentile for the two days combined
-   fprintf(['Pupil high: ' num2str(mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim > pupilThreshold)), 'omitmissing')), '   '])
-    %
-   fprintf(['Pupil low: ' num2str(mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim < pupilThreshold)), 'omitmissing')), '   '])
+    pupilMeans(id,1)=mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim > pupilThreshold)), 'omitmissing')
+    pupilMeans(id,2)=mean(pupil{id}.rad.stim(find(pupil{id}.rad.stim < pupilThreshold)), 'omitmissing')
+
 end
 
 %% stimulus props
