@@ -1,21 +1,22 @@
 close all
 clear all
 %path names
-fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff';
-th_fn = fullfile(fn_base, 'home\jerry');
-data_fn = fullfile(th_fn, 'matlab_tut');
-mworks_fn = fullfile(fn_base, 'Behavior\Data');
-fnout = fullfile(th_fn, 'matlab_tut\Analysis');
-
-%experiment info
-date = '221129';
+date = '240207';
 ImgFolder = '003';
-time = '1526';
-mouse = 'i2080';
-frame_rate = 15.5;
+time = '1435';
+mouse = 'i3301';
+frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
+
+fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff';
+th_fn = fullfile(fn_base, 'home\jerry');
+mworks_fn = fullfile(fn_base, 'Behavior\Data');
+fnout = fullfile(th_fn, 'analysis\twophoton');
+fname = fullfile(fnout, datemouse, datemouserun,[datemouserun '_TCs.mat']);
+
+mkdir(fullfile(fnout, datemouse, datemouserun,'tc_analysis'))
 %% 
 
 % Load Time Course Data
@@ -96,7 +97,7 @@ tot_nCells = length(base(:,1));
 fprintf([num2str(length(orisig_cells)) ' out of ' num2str(tot_nCells) ' cells are responsive to at least one orientation\n'])
 
 %% 
-% Average tuning curve for all cells in the FOV
+% Average tuning curve for all cells
 % (i.e. each cell's stimulus response to each orientation)
 % find average dfof in each orientation for every cell (output should be nCell x nOri)
 ori_dfof = []; 
@@ -141,7 +142,7 @@ preserve_ori = pref_ori;
 % Bootstrapping
 pref_ori = preserve_ori; %so this section can be re-run
 
-nBoot = 1000;
+nBoot = 100;
 boot_pref_ori = zeros(tot_nCells,nBoot); % preallocation for performance 
 % boot_pref_ori is nCells x nIterations
 
@@ -195,3 +196,44 @@ title('preferred orientations') %this really shouldn't be an almost normal distr
 subplot(1,2,2);
 histogram(k1(keep_cells),15)
 title('sharpness')
+
+%% plot all time courses
+
+% find cells' avg tc @ pref ori
+
+% ori_dfof is a nCell x 8Dirs matrix that contains avg dfof of each cell to
+% each direction
+
+% orisig_cells has index of all keep cells
+
+% need to know which direction correspond to which trials
+
+% ori contains the orientation of every trial
+% unique(ori)
+
+% first find each cell's most strongly responded-to orientation as an index
+
+% twtc_dfof will be graphed
+
+[max_val, pref_ind] = max(ori_dfof,[],2);
+all_avg_tc = []; % pre-allocation
+
+figure;
+hold on;
+for i = 1:length(pref_ind)
+    if ismember(i,orisig_cells) == 1
+        this_pref_ori = Dirs(pref_ind(i)); %pref ori of current cell
+        these_trials = find(ori==this_pref_ori); %trial indices w/ this ori
+        this_avg_tc = mean(twtc_dfof(:,these_trials,i),2);
+        plot(this_avg_tc,'blue','LineWidth',0.3);
+        all_avg_tc = [all_avg_tc this_avg_tc];
+    else
+        continue
+    end
+
+end
+
+plot(mean(all_avg_tc,2),'black','LineWidth',2);
+
+% then plot the avg dfof tc
+hold off
