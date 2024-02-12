@@ -97,14 +97,14 @@ for id = 1:nd
 end
 
 pupilBothDays =horzcat(pupil{pre}.rad.stim,pupil{post}.rad.stim); %combine all the pupil values for the two days
-pupilThreshold=prctile(pupilBothDays,70);
+pupilThreshold=prctile(pupilBothDays,50);
 plot(pupilBothDays); hline(pupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
 print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
 
 pupilMeans = nan(nd,2);
 PIx = cell(1,nd); %pupil index for each day
 for id = 1:nd
-    
+
    PIx{id}=pupil{id}.rad.stim > pupilThreshold;
    %PIx for each day is a logical of trials where the pupil diameter crossed
    %the threshold, which is the 70th percentile for the two days combined
@@ -266,14 +266,14 @@ for id = 1:nd
             ind_con = find(tCon == cons(iCon));
             ind = intersect(ind_dir,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
             ind_stat = intersect(ind, find(~RIx{id}));
-            ind_stat_hiPupil = intersect(ind_stat, find(PIx{id}));
-            ind_stat_lowPupil = intersect(ind_stat, find(~PIx{id}));
+           ind_stat_hiPupil = intersect(ind_stat, find(PIx{id}));
+           ind_stat_lowPupil = intersect(ind_stat, find(~PIx{id}));
             ind_loc = intersect(ind, find(RIx{id}));
             data_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
             
             stat_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat,:),1),2));
-            stat_resp_hiPupil(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_hiPupil,:),1),2));
-            stat_resp_lowPupil(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_lowPupil,:),1),2));
+           stat_resp_hiPupil(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_hiPupil,:),1),2));
+           stat_resp_lowPupil(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_lowPupil,:),1),2));
             loc_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_loc,:),1),2));
             data_resp(:,iDir,iCon,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
             [h(:,iDir,iCon), p(:,iDir,iCon)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nDir*nCon-1));
@@ -754,7 +754,7 @@ end
 
 
 explanation2 = 'data_resp_keep gives the df/f averaged over the full response window for all conditions in the form nCells X nOris X nCons X mean vs. std. resp_max_keep gives the df/f averaged over the full stim period for each cell at the preferred ori only, with a dimension for each contrast';
-%save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','norm_dir_resp_stat','loc_dir_resp_keep','norm_dir_resp_loc')
+save(fullfile(fn_multi,'resp_keep.mat'),'explanation2','data_resp_keep','resp_max_keep','dfof_max_diff','dfof_max_diff_raw','data_con_resp_keep','norm_dir_resp_stat','norm_dir_resp_loc')
 %% making mask maps for various measurements
 %show masks
 %get masks of matched cells
