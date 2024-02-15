@@ -330,6 +330,35 @@ clear dfof_stat_pre dfof_stat_post dfof_loc_pre dfof_loc_post cellID1 day1 contr
 dfof_summary = table(mouseIDcol,cellID_col,cell_type_col,contrast,behStateCol,day,dfof_col, ...
     'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'behState' 'day' 'dfof'});
 
+
+
+%calculate norm_diff
+norm_diff = nan(2,nCon,nKeep_total);
+for i = 1:nKeep_total
+    for iCon = 1:nCon
+        %for stationary trials
+        mean_pre_stat = mean(pref_allTrials_stat_concat{iCon,pre}{i});
+        mean_post_stat=mean(pref_allTrials_stat_concat{iCon,post}{i});
+        std_pre_stat = std(pref_allTrials_stat_concat{iCon,pre}{i});
+        norm_diff_stat = (mean_post_stat-mean_pre_stat) / std_pre_stat;
+
+        %for running trials
+        mean_pre_loc = mean(pref_allTrials_loc_concat{iCon,pre}{i});
+        mean_post_loc=mean(pref_allTrials_loc_concat{iCon,post}{i});
+        std_pre_loc = std(pref_allTrials_loc_concat{iCon,pre}{i});
+        norm_diff_loc = (mean_post_loc-mean_pre_loc)/ std_pre_loc;
+
+        %putting data into matrix
+        norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
+        norm_diff(2,iCon,i)=norm_diff_loc; %second is running
+clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
+    end 
+end
+%remove any infiinty values resulting from divisions by zero, and turn
+%those into NANs instead
+norm_diff(find(norm_diff == -Inf))=NaN;
+norm_diff(find(norm_diff == Inf))=NaN;
+
 %% Figure 2A
 
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
@@ -500,33 +529,6 @@ table(contrasts,sst_pvalues,pyr_pvalues)
 
 %% Figure 2B
 
-%calculate norm_diff
-norm_diff = nan(2,nCon,nKeep_total);
-for i = 1:nKeep_total
-    for iCon = 1:nCon
-        %for stationary trials
-        mean_pre_stat = mean(pref_allTrials_stat_concat{iCon,pre}{i});
-        mean_post_stat=mean(pref_allTrials_stat_concat{iCon,post}{i});
-        std_pre_stat = std(pref_allTrials_stat_concat{iCon,pre}{i});
-        norm_diff_stat = (mean_post_stat-mean_pre_stat) / std_pre_stat;
-
-        %for running trials
-        mean_pre_loc = mean(pref_allTrials_loc_concat{iCon,pre}{i});
-        mean_post_loc=mean(pref_allTrials_loc_concat{iCon,post}{i});
-        std_pre_loc = std(pref_allTrials_loc_concat{iCon,pre}{i});
-        norm_diff_loc = (mean_post_loc-mean_pre_loc)/ std_pre_loc;
-
-        %putting data into matrix
-        norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
-        norm_diff(2,iCon,i)=norm_diff_loc; %second is running
-clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
-    end 
-end
-%remove any infiinty values resulting from divisions by zero, and turn
-%those into NANs instead
-norm_diff(find(norm_diff == -Inf))=NaN;
-norm_diff(find(norm_diff == Inf))=NaN;
-
 figure;
 subplot(1,2,1)
 boxchart(squeeze(norm_diff(1,:,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
@@ -536,7 +538,7 @@ scatter([1, 2, 3],squeeze(norm_diff(1,:,red_ind_concat))',20,[.79 .25 .32], 'Mar
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
 ylabel('Normalized difference')
-ylim([-8 8])
+ylim([-12 12])
 title('SST')
 hold off
 set(gca,'TickDir','out')
@@ -1410,7 +1412,7 @@ if iCon==1
     title("Running")
 elseif iCon==3
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-end
+    end4
 set(gca,'XColor', 'none','YColor','none')
 
 sgtitle(['Pyr',' n = ', num2str(length(green_all))])
@@ -1432,7 +1434,7 @@ figure;
 subplot(1,2,1)
 boxchart(squeeze(norm_diff(1,:,red_all))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
-scatter([1, 2, 3],squeeze(norm_diff(1,:,red_all))',20,[.79 .25 .32], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(norm_diff(1,:,red_all))',20,'#F5898F', 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
 ylabel('Normalized difference')
@@ -1451,7 +1453,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 subplot(1,2,2)
 boxchart(squeeze(norm_diff(2,:,red_all))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
-scatter([1, 2, 3],squeeze(norm_diff(2,:,red_all))',20,[.79 .25 .32], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(norm_diff(2,:,red_all))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
 %ylabel('Normalized difference')
