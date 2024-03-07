@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '231129';
+date = '240113';
 ImgFolder = {'002'};
-time = strvcat('1509');
-mouse = 'i1387';
+time = strvcat('1211');
+mouse = 'i1386';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -42,7 +42,7 @@ nep = floor(size(data,3)./10000);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
 
 %% Register data
-data_avg = mean(data(:,:,50001:50500),3);
+data_avg = mean(data(:,:,60001:60500),3);
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
@@ -79,21 +79,7 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
 
 cStimOne = cell2mat(input.cStimOneOn);
 cStimTwo = cell2mat(input.cStimTwoOn);
-stimOneContrast = celleqel2mat_padded(input.tStimOneGratingContrast);
-stimOneCons = unique(stimOneContrast);
 
-ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
-oris = unique(ori_mat);
-nOri = length(oris);
-stimOneTime = celleqel2mat_padded(input.tStimOneGratingOnTimeMs);
-stimOneTimes = unique(stimOneTime);
-nTime = length(stimOneTimes);
-isiTime = celleqel2mat_padded(input.tISITimeMs);
-isiTimes = unique(isiTime);
-nISI = length(isiTimes);
-sf_mat = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
-sfs = unique(sf_mat);
-nSF = length(sfs);
 nTrials = length(cStimOne);
 sz = size(data_reg);
 data_f = nan(sz(1),sz(2),nTrials);
@@ -272,8 +258,8 @@ tc_two_f = mean(tc_two(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-base_win = 22:24;
-resp_win = 29:31;
+base_win = 21:23;
+resp_win = 28:30;
 figure;
 subplot(2,1,1)
 shadedErrorBar(1:100,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
@@ -420,7 +406,7 @@ end
 
 %%
 
-wheel_speed = wheelSpeedCalc(input,32,'orange');
+wheel_speed = wheelSpeedCalc(input,32,'purple');
 
 %%
 if input.doRandDir
@@ -548,7 +534,15 @@ if input.doRandSF & input.doRandDir
     for iC = 1:length(resp_ind)
         iCell = resp_ind(iC);
         subplot(n,n2,iC)
-        plot(squeeze(resp_dfof_stim(iCell,:,:,1,1)))
+        plot(squeeze(resp_dfof_stim(iCell,:,:,1,1))')
+        %title(num2str(sum(sum(h1_ori(iCell,:,:),2),3)>0))
+    end
+    
+    figure;
+    for iC = 1:length(resp_ind)
+        iCell = resp_ind(iC);
+        subplot(n,n2,iC)
+        plot(squeeze(mean(resp_dfof_stim(iCell,:,:,1,1),2)))
         %title(num2str(sum(sum(h1_ori(iCell,:,:),2),3)>0))
     end
 
