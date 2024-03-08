@@ -25,6 +25,8 @@ elseif isfield(input,'tStimOneGratingDirectionDeg')
     ntrials = length(input.tStimOneGratingDirectionDeg);
 elseif isfield(input,'tTestStimGratingDirectionDeg')
     ntrials = length(input.tTestStimGratingDirectionDeg);
+elseif isfield(input,'cStimOneOn')
+    ntrials = length(input.cStimOneOn);
 else
     error('how many trials?')
 end

@@ -8,10 +8,11 @@ ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
 
-area = 'V1';
+area = 'LM';
 area_ind = find(strcmp([expt.img_loc], area));
 randDir = 1;
-dir_ind = find([expt.randDir]==randDir);
+nDir = 6;
+dir_ind = intersect(find([expt.randDir]==randDir),find([expt.nDir]==nDir));
 
 expt_use = intersect(area_ind,dir_ind);
 
@@ -55,7 +56,7 @@ end
 sfs = unique(norm_sf(:,2));
 oris = unique(norm_sf(:,3));
 
-resp_ind = find(h1_ori_all<0.05/8);
+resp_ind = find(sum(sum(h1_ori_all,2),3));
 
 [max_val max_ori] = max(resp_dfof_stim_all(:,:,:,1),[],2);
 max_all =  max(max(resp_dfof_stim_all(:,:,:,1),[],2),[],3);
@@ -63,7 +64,7 @@ resp_dfof_stim_all_shift = resp_dfof_stim_all;
 resp_dfof_stim_all_norm = resp_dfof_stim_all;
 resp_dfof_stim_all_norm_all = resp_dfof_stim_all;
 for iC = 1:totCells
-    for iSF = 1:3
+    for iSF = 1:length(sfs)
         resp_dfof_stim_all_shift(iC,:,iSF,:) = circshift(resp_dfof_stim_all(iC,:,iSF,:),5-max_ori(iC,1,iSF),2);
         resp_dfof_stim_all_norm(iC,:,iSF,:) = resp_dfof_stim_all_shift(iC,:,iSF,:)./max_val(iC,1,iSF);
     end
@@ -72,7 +73,7 @@ end
 
 figure
 subplot(2,3,1)
-for iSF = 1:3
+for iSF = 1:length(sfs)
     ind_use = find(sum(h1_ori_all(:,:,iSF),2));
     errorbar(oris, squeeze(mean(resp_dfof_stim_all_norm(ind_use,:,iSF,1),1)), squeeze(std(resp_dfof_stim_all_norm(ind_use,:,iSF,1),[],1)./sqrt(length(ind_use))));
     hold on
@@ -83,7 +84,7 @@ ylim([0 1.5])
 xlabel('Orientation (deg)')
 ylabel('Normalized dF/F')
 subplot(2,3,2)
-for iSF = 1:3
+for iSF = 1:length(sfs)
     ind_use = find(sum(h1_ori_all(:,:,iSF),2));
     cdfplot(max_val(ind_use,iSF))
     hold on
@@ -91,7 +92,7 @@ end
 xlabel('max dF/F')
 OSI = (resp_dfof_stim_all_shift(:,5,:,1)-resp_dfof_stim_all_shift(:,1,:,1))./(resp_dfof_stim_all_shift(:,5,:,1)+resp_dfof_stim_all_shift(:,1,:,1));
 subplot(2,3,3)
-for iSF = 1:3
+for iSF = 1:length(sfs)
     ind_use = find(sum(h1_ori_all(:,:,iSF),2));
     cdfplot(OSI(ind_use,iSF))
     hold on
@@ -100,7 +101,7 @@ xlabel('OSI')
 h1_all = squeeze(sum(h1_ori_all,2)>0);
 ind_match = find(sum(h1_all,2)==3);
 subplot(2,3,4)
-for iSF = 1:3
+for iSF = 1:length(sfs)
     errorbar(oris, squeeze(mean(resp_dfof_stim_all_norm(ind_match,:,iSF,1),1)), squeeze(std(resp_dfof_stim_all_norm(ind_match,:,iSF,1),[],1)./sqrt(length(ind_match))));
     hold on
     str{iSF} = [num2str(sfs(iSF)) 'cpd; n = ' num2str(length(ind_match))];
@@ -110,27 +111,30 @@ xlabel('Orientation (deg)')
 ylabel('Normalized dF/F')
 ylim([0 1.5])
 subplot(2,3,5)
-for iSF = 1:3
+for iSF = 1:length(sfs)
     cdfplot(max_val(ind_match,iSF))
     hold on
 end
 xlabel('max dF/F')
 OSI = (resp_dfof_stim_all_shift(:,5,:,1)-resp_dfof_stim_all_shift(:,1,:,1))./(resp_dfof_stim_all_shift(:,5,:,1)+resp_dfof_stim_all_shift(:,1,:,1));
 subplot(2,3,6)
-for iSF = 1:3
+for iSF = 1:length(sfs)
     cdfplot(OSI(ind_match,iSF))
     hold on
 end
 xlabel('OSI')
 suptitle(['LM- ' [expt(expt_use).mouse]])
-%print('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Talks\LabMeeting\231128\tuningBySF.pdf','-dpdf','-bestfit')
+print(fullfile(summaryDir,['tuningBySF_' area '_' num2str(nDir) 'Dirs.pdf']),'-dpdf','-bestfit');
 
-[max_val max_sf] = max(resp_dfof_stim_all_norm_all(:,5,:,1),[],3);
+
 figure; 
 subplot(2,3,1)
-histogram(max_sf(ind_use))
-set(gca, 'XTickLabel',sfs)
+[n edges bin] = histcounts(norm_prefsf(:,2),[sfs; 1]);
+histogram(bin)
+set(gca,'XtickLabels', sfs(unique(bin)))
 ylabel('Number of cells')
+xlabel('Spatial frequency (cpd)')
+title([num2str(size(norm_prefsf,1)) ' cells'])
 
 %figure;
 subplot(2,3,2)
@@ -219,7 +223,7 @@ ylim([0 6])
 xlim([-10 160])
 hline(1)
 title('Preferred')
-norm_prefsf_avg = zeros(length(oris),2);
+norm_prefori_avg = zeros(length(oris),2);
 for is = 1:length(oris)
     ind = find(norm_prefdir(:,3) == oris(is));
     norm_prefori_avg(is,:) = [mean(norm_prefdir(ind,1),1) std(norm_prefdir(ind,1),[],1)./sqrt(length(ind))];
@@ -228,13 +232,17 @@ errorbar(oris,norm_prefori_avg(:,1),norm_prefori_avg(:,2),'or')
 [h_pref p_pref stats_pref] = anova1(norm_prefdir(:,1), norm_prefdir(:,3),'off');
 table_pref = multcompare(stats_pref,'Display','off');
 ind = find(table_pref(:,end)<0.05);
-groups_pref = mat2cell(oris(table_pref(ind,1:2)),ones(1,size(table_all(ind,:),1)));
+if length(ind)>1
+    groups_pref = mat2cell(oris(table_pref(ind,1:2)),ones(1,size(table_all(ind,:),1)));
+else
+    groups_pref = mat2cell(oris(table_pref(ind,1:2))',ones(1,size(table_all(ind,:),1)));
+end
 stats_pref = table_pref(ind,end);
 
 sigstar(groups_pref,stats_pref);
 suptitle(area)
-print(fullfile(summaryDir,['adaptationBySF_' area '.pdf']),'-dpdf','-bestfit');
-
+print(fullfile(summaryDir,['adaptationBySF_' area '_' num2str(nDir) 'Dirs.pdf']),'-dpdf','-bestfit');
+save(fullfile(summaryDir,['adaptationDirBySF_' area '_' num2str(nDir) 'Dirs.mat']),'oris', 'sfs', 'resp_dfof_stim_all', 'resp_dfof_stim_all_norm', 'h1_ori_all', 'norm_sf', 'norm_prefsf', 'norm_dir', 'norm_prefdir', 'norm_sf_avg', 'norm_prefsf_avg', 'norm_ori_avg', 'norm_prefori_avg')
 % uniqueCells = size(norm_prefsf,1);
 % nboot = 1000;
 % match_cell_diff = cell(1,nboot);
