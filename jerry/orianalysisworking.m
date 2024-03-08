@@ -117,7 +117,7 @@ k1 = [];
 u1 = [];
 
 close all
-figure('units','normalized','outerposition',[0 0 1 1]);
+h = figure('units','normalized','outerposition',[0 0 1 1]);
 for i = 1:tot_nCells
     subplot(n,n2,i);
     hold on
@@ -136,6 +136,8 @@ for i = 1:tot_nCells
 end
 clear m
 hold off
+% cd(fullfile(fnout, datemouse, datemouserun));
+% print(h,fullfile(fnout, datemouse, datemouserun,'ori_tuning.pdf'),'-dpdf','-bestfit');
 
 preserve_ori = pref_ori;
 %%
@@ -237,3 +239,4 @@ plot(mean(all_avg_tc,2),'black','LineWidth',2);
 
 % then plot the avg dfof tc
 hold off
+

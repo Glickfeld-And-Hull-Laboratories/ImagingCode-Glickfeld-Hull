@@ -5,6 +5,8 @@ clear all
 datapath_lif = char('G:/home/ACh/Data/Histology/Confocal_IHC_DARTSOM/DART_IHC.lif');
 outpath = 'G:/home/ACh/Analysis/histology_quant/IHC03_confocal_TH';
 cd(outpath);
+%These were used to read the leica lif, but they had been read and saved as
+%matlab data before, so just load
 %biof = bfopen(datapath_lif);
 %biof = biof{:,[1 2]};
 %c1 = biof(:,1:2);
@@ -15,9 +17,10 @@ clear c1
 zStackSize = 10;
 ch_indices = [3 4];
 n_channels = 4;
-windowWidth = 3; % kernel size if applying conv filter
-kernel = ones(windowWidth) / windowWidth^2; % conv kernel
-
+windowWidth = 5; % kernel size if applying conv filter
+% conv kernel
+% kernel = ones(windowWidth) / windowWidth^2; DEPRECATED
+kernel = fspecial("gaussian",[5 5],1); %gaussian filter
 % biof is a n*4 cell array where n is the # of image series in the .lif
 % {n,1} contains the actual image
 % {n,2} contains the image label
@@ -67,6 +70,10 @@ mip_storage = cell(nSeries,length(ch_indices)+1);
 %erase_str = ['G:/home/ACh/Data/Histology/Confocal_IHC_DARTSOM/DART_IHC.lif; ','; plane 1/40; Z=1/10; C=1/4'];
 % identify indices of images to be analyzed based on zStackSize & ch_indices
 
+% "mip_storage" is a nImageSeries x 3 cell. 1st column is red channel MIP
+% for the corresponding image series, 2nd column is cyan channel, and 3rd
+% column is series identifier
+
 for i = 1:nSeries
     this_series = biof{i,1};
     metdat = this_series{1,2};
@@ -79,7 +86,8 @@ for i = 1:nSeries
         this_stack = uint8.empty;
         for k = 1:length(img_indices)
             this_image = this_series{img_indices(k),1};
-            filtered_img = uint8(conv2(this_image, kernel,'same'));
+            % filtered_img = uint8(conv2(this_image, kernel,'same'));
+            filtered_img = imfilter(this_image,kernel);
             this_stack = cat(3,this_stack,filtered_img);
         end
         mip = max(this_stack,[],3);
@@ -98,7 +106,8 @@ end
 
 %% If all looks good, save
 
-save(fullfile(outpath,'MIPs'),"mip_storage");
+img_data = mip_storage;
+save(fullfile(outpath,'MIPs'),"img_data");
 
 %% DEBUGGING CHUNK
 % archived convolution filter test
@@ -129,4 +138,27 @@ save(fullfile(outpath,'MIPs'),"mip_storage");
 %     figure();
 %     imshow(mip_storage{q,1});
 % end
+
+% testing out different filters
+% test = series1{11,1};
+% kernel1 = fspecial("gaussian",[5 5],2);
+% kernel2 = fspecial("gaussian",[5 5],1);
+% kernel3 = fspecial("gaussian",[3 3],2);
+% kernel4 = fspecial("gaussian",[3 3],1);
+% i1 = imfilter(test,kernel1);
+% i2 = imfilter(test,kernel2);
+% i3 = imfilter(test,kernel3);
+% i4 = imfilter(test,kernel4);
+
+% figure;
+% imshow(test);
+% figure;
+% imshow(i1);
+% figure;
+% imshow(i2);
+% figure;
+% imshow(i3);
+% figure;
+% imshow(i4);
+
 
