@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 338;
+day_id = 366;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -185,11 +185,10 @@ tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:ntrials));
 dirs = unique(tDir);
 nDir = length(dirs);
 
-tSize = cell2mat(input.tGratingDiameterDeg);
+tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:ntrials));
 sizes = unique(tSize);
 nSize = length(sizes);
 ind_dir = find(tDir == max(sizes(:)));
-tSize = cell2mat(input.tGratingDiameterDeg);
 
 data_g_size = zeros(sz(1),sz(2), nSize);
 data_temp = zeros(sz(1),sz(2), nSize, nDir);
@@ -366,10 +365,10 @@ rgb = zeros(sz(1),sz(2),3);
     rgb(:,:,2) = regImg./max(regImg(:));
     figure; image(rgb);  movegui('center')
 
-hold on
-bound = cell2mat(bwboundaries(mask_cell_red));
-plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
-hold off
+% hold on
+% bound = cell2mat(bwboundaries(mask_cell_red));
+% plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+% hold off
 
 
 %% extract timecourses
