@@ -72,7 +72,8 @@ pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
 dataTableConat=[];
 drug=cell(1,nSess);
-pupilMeans_concat=nan(nd,2,nSess);
+pupilMeans_concat=nan(nd,3,nSess);
+motorByPupil_concat=nan(nd,2,nSess);
 pupilCounts_concat=nan(nd,2,nSess);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
@@ -116,7 +117,8 @@ for iSess = 1:nSess
     nKeep = size(tc_trial_avrg_stat{post},2);
 
     pupilMeans_concat(:,:,iSess)=pupilMeans;
-    pupilCounts_concat(:,:,iSess)=pupilCounts;
+    motorByPupil_concat(:,:,iSess)=motorByPupil;
+%    pupilCounts_concat(:,:,iSess)=pupilCounts;
 
 
     %tells the contrast, direction and orientation for each trial each day
@@ -302,37 +304,6 @@ for imouse =1:nSess
 end
 mouseID=mouseID';
 
-dfof_stat_pre = reshape(pref_responses_stat_concat{pre},[3*nKeep_total,1]);
-dfof_stat_post = reshape(pref_responses_stat_concat{post},[3*nKeep_total,1]);
-dfof_loc_pre = reshape(pref_responses_loc_concat{pre},[3*nKeep_total,1]);
-dfof_loc_post = reshape(pref_responses_loc_concat{post},[3*nKeep_total,1]);
-
-dfof_col = vertcat(dfof_stat_pre,dfof_stat_post,dfof_loc_pre,dfof_loc_post);
-
-cellID=1:nKeep_total;
-cellID_col=repmat(cellID',12,1);
-
-mouseIDcol = repmat(mouseID,12,1);
-
-day1 = repelem(["pre" "post"],1,(3*nKeep_total))';
-day=repmat(day1,2,1);
-
-
-contrast1 = repelem(cons,nKeep_total)';
-contrast=repmat(contrast1,4,1);
-
-cell_type_col=repmat(red_concat,1,12)';
-
-behStateCol = repelem(["stat" "loc"],1,(6*nKeep_total))';
-
-clear dfof_stat_pre dfof_stat_post dfof_loc_pre dfof_loc_post cellID1 day1 contrast1
-
-
-
-dfof_summary = table(mouseIDcol,cellID_col,cell_type_col,contrast,behStateCol,day,dfof_col, ...
-    'VariableNames',{'mouseID' 'cellID' 'cellType' 'contrast' 'behState' 'day' 'dfof'});
-
-
 
 %calculate norm_diff
 norm_diff = nan(2,nCon,nKeep_total);
@@ -378,6 +349,10 @@ for iSess = 1:nSess
     RbyExp(2,iSess) = length(intersect(mouseIndsTemp,redLow));
 end
 array2table(RbyExp,RowNames={'high R'  'low R'})
+%% 
+fractHigh = RbyExp(1,:)./sum(RbyExp,1);
+mean(fractHigh)
+std(fractHigh)
 %% Figure 2C - timecourses
 
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
@@ -514,36 +489,32 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_2D.pdf'),'-dpdf');
 
 %% Figure 2D statistics
-%from the full dataframe, extract rows for stationary trials for SST and
-%Pyr cells seperately. Use all SST and all Pyr cells.
-stat_dfof_summary_stat=dfof_summary((dfof_summary.behState=='stat'),:);
-SST_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType==1),:);
-Pyr_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType==0),:);
+% prepare data for ANOVA
+mouseID=[];
+for imouse =1:nSess
+   ID_string=mouseNames(imouse);
+   thisID = repelem(ID_string,nKeep_concat(imouse));
+   mouseID=[mouseID,thisID];
+end
+mouseID=mouseID';
+dfof_stat = horzcat(pref_responses_stat_concat{pre},pref_responses_stat_concat{post});
+cellID=(1:nKeep_total)';
+cell_type_col=categorical(red_concat)';
+dfof_stat_table = array2table(dfof_stat,'VariableNames',{'d1c1','d1c2','d1c3','d2c1','d2c2','d2c3'});
+labels_table =table(mouseID,cellID,cell_type_col,'VariableNames',{'mouseID' 'cellID' 'cellType'});
+stat_dfof_summary_stat = [labels_table,dfof_stat_table];
+SST_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType=='1'),:);
+Pyr_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType=='0'),:);
+clear dfof_stat_table cell_type_col cellID dfof_stat
 
-%for each cell type, construct a mixed model, with random effects to
-%account for having multiple cells per mouse and mutiple measurements per
-%cell, and fixed effects for contrast, pre/post day, and their interaction
-lme_sst_stat= fitlme(SST_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-lme_pyr_stat= fitlme(Pyr_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst_stat)
-anova(lme_pyr_stat)
+% run the ANOVA
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+rm_SST_stat = fitrm(SST_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
 
+rm_Pyr_stat = fitrm(Pyr_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
 
-%what is the mean df/f for each contrast on each day, for SST cells
-vars = ["dfof"];
-factors = ["contrast","day"];
-meanScoresByFactor = varfun(@nanmean, ...
-                            SST_stat_dfof, ...
-                            "InputVariables",vars, ...
-                            "GroupingVariables",factors)
-
-%what is the mean df/f for each contrast on each day, for Pyr cells
-vars = ["dfof"];
-factors = ["contrast","day"];
-meanScoresByFactor = varfun(@nanmean, ...
-                            Pyr_stat_dfof, ...
-                            "InputVariables",vars, ...
-                            "GroupingVariables",factors)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_ind_concat,1),pref_responses_stat_concat{post}(red_ind_concat,1));
@@ -559,10 +530,13 @@ sst_pvalues = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 [pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_ind_concat,3),pref_responses_stat_concat{post}(green_ind_concat,3));
 
 %corrected for three tests
-pyr_pvalues = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)]
-contrasts = cons';
+pyr_pvalues = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 
+contrasts = cons';
 table(contrasts,sst_pvalues,pyr_pvalues)
+
+
+
 
 %% Figure 2E
 
@@ -606,6 +580,30 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_2E.pdf'),'-dpdf')
 
 %% Figure 2E statistics
+modulated = (sum(facil_red(1,:,:),3)+sum(supp_red(1,:,:),3))/N;
+% chi2 for fraction cells modulated, in either direction
+%25 vs 50
+n1=modulated(1)*N;
+n2=modulated(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat1,p1] = crosstab(x1,x2);
+
+%25 vs 10%
+n1=modulated(1)*N;
+n2=modulated(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat2,p2] = crosstab(x1,x2);
+
+%50 vs 100
+n1=modulated(2)*N;
+n2=modulated(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat3,p3] = crosstab(x1,x2);
+
+[chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
 
 %compute chi squares for suppression
 %25 vs 50
@@ -658,6 +656,7 @@ x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
 clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
 
+
 %% Supplemental figure related to Fig 2 - normalized difference
 
 figure;
@@ -694,6 +693,15 @@ height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 %must manually export this figure in order to have it vectorized because of
 %the large amount of data 
+
+% Extract data from the matrix
+data = squeeze(norm_diff(1, :, red_ind_concat));  % Extract data from the specified dimension
+
+% Perform Levene's test
+[p, stats] = vartestn(data','TestType','LeveneAbsolute');
+
+% Display the p-value
+disp(['Levene''s test p-value: ', num2str(p)]);
 
 %F-test for equality of variances, asking whether the higher contrast has
 %greater variance than the lower contrast, for SST cells
@@ -1036,11 +1044,7 @@ conResp_redLow_avrg_stat = cell(1,nd); %same for redLow
 conResp_redHigh_se_stat = cell(1,nd); %this will be the se across all redHigh cells
 conResp_redLow_se_stat = cell(1,nd); %same for redLow
 
-
-
 for id = 1:nd
-   
-        
     conResp_redHigh_avrg_stat{id}=mean(pref_responses_stat_concat{id}(redHigh,:),1,'omitnan');
     redHigh_std=std(pref_responses_stat_concat{id}(redHigh,:),1,'omitnan');
     conResp_redHigh_se_stat{id}=redHigh_std/sqrt(length(redHigh));
@@ -1052,7 +1056,6 @@ for id = 1:nd
     clear redHigh_std redLow_std
  
 end
-
 
 figure
 subplot(1,2,1) %
@@ -1087,25 +1090,30 @@ width=2.5;
 height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
-
 print(fullfile(fnout,'Fig_3C.pdf'),'-dpdf');
 
 %% Figure 3D statistics
-
 %from the full dataframe, extract rows for stationary trials for weakly and
 %strongly correlated SST cells
-SST_high_stat_dfof = SST_stat_dfof(ismember(SST_stat_dfof.cellID,redHigh),:);
 SST_low_stat_dfof = SST_stat_dfof(ismember(SST_stat_dfof.cellID,redLow),:);
+SST_high_stat_dfof = SST_stat_dfof(ismember(SST_stat_dfof.cellID,redHigh),:);
 
+fullCorrTable = vertcat(SST_low_stat_dfof,SST_high_stat_dfof);
+fullCorrTable.corrType = categorical([repmat(0,length(redLow),1);repmat(1,length(redHigh),1)]);
 
-%for each correlation category, construct a mixed model, with random effects to
-%account for having multiple cells per mouse and mutiple measurements per
-%cell, and fixed effects for contrast, pre/post day, and their interaction
-lme_sst_stat_low= fitlme(SST_low_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-lme_sst_stat_high= fitlme(SST_high_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
+% run an ANOVA for corr type X contrast, baseline day only
+w = table(categorical([1 2 3].'), 'VariableNames', {'contrast'}); % within-design
+rm_fullCorr = fitrm(fullCorrTable, 'd1c1-d1c3 ~ corrType', 'WithinDesign', w)
+ranova(rm_fullCorr, 'withinmodel', 'contrast')
 
-anova(lme_sst_stat_low)
-anova(lme_sst_stat_high)
+% run the ANOVAs on low and high corr seperately
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+rm_SST_low = fitrm(SST_low_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_low, 'withinmodel', 'DART*contrast')
+
+rm_SST_high = fitrm(SST_high_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_high, 'withinmodel', 'DART*contrast')
+
 
 % pairwise ttests for dfof response at 50 contrast for each correlation
 % category
@@ -1138,8 +1146,6 @@ tc_red_avrg_stat = cell(1,nd);
 tc_red_se_stat = cell(1,nd); 
 tc_red_avrg_loc = cell(1,nd);
 tc_red_se_loc = cell(1,nd); 
-
-
 
 for id = 1:nd
     for iCon=1:nCon
@@ -1219,157 +1225,6 @@ set(gca,'XColor', 'none','YColor','none')
 end  
 print(fullfile(fnout,'Fig_4A.pdf'),'-dpdf');
 
-
-%% stats on timecourse
-preDataStat=tc_trial_avrg_stat_concat{pre}(stimStart+2:(stimStart+nOn+2),red_all,3);
-postDataStat=tc_trial_avrg_stat_concat{post}(stimStart+2:(stimStart+nOn+2),red_all,3);
-
-preDataStat = downsample(preDataStat,8,0);
-postDataStat = downsample(postDataStat,8,0);
-
-nBins=size(preDataStat,1);
-preDataLongStat = reshape(preDataStat,[(size(preDataStat,1)*size(preDataStat,2)),1]);
-postDataLongStat = reshape(postDataStat,[(size(postDataStat,1)*size(postDataStat,2)),1]);
-dFoF_Stat = vertcat(preDataLongStat,postDataLongStat);
-
-bin = repmat([1:nBins],1,(2*size(preDataStat,2)))';
-cellID=repmat(repelem(red_all,nBins),2,1);
-
-mouseID = [];
-
-for i = 1:size(cellID,1)
-    mouseIDTemp = dfof_summary.mouseID(dfof_summary.cellID == cellID(i));
-    mouseID = [mouseID,mouseIDTemp(1)];
-end
-mouseID= mouseID';
-
-day = repelem(["Pre","Post"],length(preDataLongStat))';
-
-fullConStatTC = table(dFoF_Stat,cellID,mouseID,day,bin,'VariableNames',{'dfof','cellID','mouseID','day','bin'});
-fullConStatTC.cellID =categorical(fullConStatTC.cellID);
-fullConStatTC.mouseID =categorical(fullConStatTC.mouseID);
-fullConStatTC.day =categorical(fullConStatTC.day);
-fullConStatTC.dfof_sqr = fullConStatTC.dfof.^2;
-%fullConStatTC.bin =categorical(fullConStatTC.bin)
-
-clear  preDataLongStat postDataLongStat dFoF_Stat
-
-preDataLoc=tc_trial_avrg_loc_concat{pre}(stimStart+2:(stimStart+nOn+2),red_all,3);
-postDataLoc=tc_trial_avrg_loc_concat{post}(stimStart+2:(stimStart+nOn+2),red_all,3);
-
-preDataLoc = downsample(preDataLoc,9,1);
-postDataLoc = downsample(postDataLoc,9,1);
-
-preDataLongLoc = reshape(preDataLoc,[(size(preDataLoc,1)*size(preDataLoc,2)),1]);
-postDataLongLoc = reshape(postDataLoc,[(size(postDataLoc,1)*size(postDataLoc,2)),1]);
-dFoF_Loc = vertcat(preDataLongLoc,postDataLongLoc);
-
-fullConLocTC = table(dFoF_Loc,cellID,mouseID,day,bin,'VariableNames',{'dfof','cellID','mouseID','day','bin'});
-fullConLocTC.cellID =categorical(fullConLocTC.cellID);
-fullConLocTC.mouseID =categorical(fullConLocTC.mouseID);
-fullConLocTC.day =categorical(fullConLocTC.day);
-%fullConLocTC.bin =categorical(fullConLocTC.bin)
-fullConLocTC.dfof_sqr = fullConLocTC.dfof.^2;
-clear preDataLongLoc postDataLongLoc dFoF_Loc day cellID bin
-
-lme_stat_fullCon= fitlme(fullConStatTC,'dfof~bin*day+(1|cellID:mouseID)');
-lme_loc_fullCon= fitlme(fullConLocTC,'dfof~bin*day+(1|cellID:mouseID)');
-
-% examine effect of day within each bin
-%for stationary trials
-[h,p1,~,stats1] =ttest(preDataStat(1,:),postDataStat(1,:));
-[h,p2,~,stats2] =ttest(preDataStat(2,:),postDataStat(2,:));
-[h,p3,~,stats3] =ttest(preDataStat(3,:),postDataStat(3,:));
-[h,p4,~,stats4] =ttest(preDataStat(4,:),postDataStat(4,:));
-anova(lme_stat_fullCon)
-%corrected for four tests
-[stats1.tstat,(p1*4);stats2.tstat,(p2*4);stats3.tstat,(p3*4);stats4.tstat,(p4*4)]
-
-%for running trials
-[h,p1,~,stats1] =ttest(preDataLoc(1,:),postDataLoc(1,:));
-[h,p2,~,stats2] =ttest(preDataLoc(2,:),postDataLoc(2,:));
-[h,p3,~,stats3] =ttest(preDataLoc(3,:),postDataLoc(3,:));
-[h,p4,~,stats4] =ttest(preDataLoc(4,:),postDataLoc(4,:));
-
-%corrected for four tests
-anova(lme_loc_fullCon)
-[stats1.tstat,(p1*4);stats2.tstat,(p2*4);stats3.tstat,(p3*4);stats4.tstat,(p4*4)]
-
-
-%% stats for Pyr cells
-
-preDataStat=tc_trial_avrg_stat_concat{pre}(stimStart+2:(stimStart+nOn+2),green_all,3);
-postDataStat=tc_trial_avrg_stat_concat{post}(stimStart+2:(stimStart+nOn+2),green_all,3);
-
-preDataStat = downsample(preDataStat,8,0);
-postDataStat = downsample(postDataStat,8,0);
-
-nBins=size(preDataStat,1);
-preDataLongStat = reshape(preDataStat,[(size(preDataStat,1)*size(preDataStat,2)),1]);
-postDataLongStat = reshape(postDataStat,[(size(postDataStat,1)*size(postDataStat,2)),1]);
-dFoF_Stat = vertcat(preDataLongStat,postDataLongStat);
-
-bin = repmat([1:nBins],1,(2*size(preDataStat,2)))';
-cellID=repmat(repelem(green_all,nBins),2,1);
-
-mouseID = [];
-
-for i = 1:size(cellID,1)
-    mouseIDTemp = dfof_summary.mouseID(dfof_summary.cellID == cellID(i));
-    mouseID = [mouseID,mouseIDTemp(1)];
-end
-mouseID= mouseID';
-
-day = repelem(["Pre","Post"],length(preDataLongStat))';
-
-fullConStatTC = table(dFoF_Stat,cellID,mouseID,day,bin,'VariableNames',{'dfof','cellID','mouseID','day','bin'});
-fullConStatTC.cellID =categorical(fullConStatTC.cellID)
-fullConStatTC.mouseID =categorical(fullConStatTC.mouseID)
-fullConStatTC.day =categorical(fullConStatTC.day)
-%fullConStatTC.bin =categorical(fullConStatTC.bin)
-
-clear  preDataLongStat postDataLongStat dFoF_Stat
-
-preDataLoc=tc_trial_avrg_loc_concat{pre}(stimStart+2:(stimStart+nOn+2),green_all,3);
-postDataLoc=tc_trial_avrg_loc_concat{post}(stimStart+2:(stimStart+nOn+2),green_all,3);
-
-preDataLoc = downsample(preDataLoc,9,1);
-postDataLoc = downsample(postDataLoc,9,1);
-
-preDataLongLoc = reshape(preDataLoc,[(size(preDataLoc,1)*size(preDataLoc,2)),1]);
-postDataLongLoc = reshape(postDataLoc,[(size(postDataLoc,1)*size(postDataLoc,2)),1]);
-dFoF_Loc = vertcat(preDataLongLoc,postDataLongLoc);
-
-fullConLocTC = table(dFoF_Loc,cellID,mouseID,day,bin,'VariableNames',{'dfof','cellID','mouseID','day','bin'});
-fullConLocTC.cellID =categorical(fullConLocTC.cellID)
-fullConLocTC.day =categorical(fullConLocTC.day)
-%fullConLocTC.bin =categorical(fullConLocTC.bin)
-
-clear preDataLongLoc postDataLongLoc dFoF_Loc day cellID bin
-
-lme_stat_fullCon= fitlme(fullConStatTC,'dfof~bin*day+(1|cellID:mouseID)');
-lme_loc_fullCon= fitlme(fullConLocTC,'dfof~bin*day+(1|cellID:mouseID)');
-
-% examine effect of day within each bin
-%for running trials
-[h,p1,~,stats1] =ttest(preDataLoc(1,:),postDataLoc(1,:));
-[h,p2,~,stats2] =ttest(preDataLoc(2,:),postDataLoc(2,:));
-[h,p3,~,stats3] =ttest(preDataLoc(3,:),postDataLoc(3,:));
-[h,p4,~,stats4] =ttest(preDataLoc(4,:),postDataLoc(4,:));
-
-%corrected for four tests
-anova(lme_loc_fullCon)
-[stats1.tstat,(p1*4);stats2.tstat,(p2*4);stats3.tstat,(p3*4);stats4.tstat,(p4*4)]
-
-%for stationary trials
-[h,p1,~,stats1] =ttest(preDataStat(1,:),postDataStat(1,:));
-[h,p2,~,stats2] =ttest(preDataStat(2,:),postDataStat(2,:));
-[h,p3,~,stats3] =ttest(preDataStat(3,:),postDataStat(3,:));
-[h,p4,~,stats4] =ttest(preDataStat(4,:),postDataStat(4,:));
-anova(lme_stat_fullCon)
-%corrected for four tests
-[stats1.tstat,(p1*4);stats2.tstat,(p2*4);stats3.tstat,(p3*4);stats4.tstat,(p4*4)]
-
 %% Fig S4 A - related to Fig 4A - timecourses for Pyr cells running trials
 tc_green_avrg_stat = cell(1,nd);
 tc_green_se_stat = cell(1,nd); 
@@ -1444,7 +1299,7 @@ set(gca,'XColor', 'none','YColor','none')
 end  
 print(fullfile(fnout,'Fig_S5A.pdf'),'-dpdf');
 
-% Figure 4B
+%% Figure 4B
 conResp_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(1,nd); %same for red
 conResp_green_se_stat = cell(1,nd); %this will be the se across all green cells
@@ -1516,32 +1371,59 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_4B.pdf'),'-dpdf');
 %% Fig 4B statistics
-%from the full dataframe, extract rows for running and stationary trials for SST and
-%Pyr cells seperately. Use all SST and all Pyr cells.
+
+% prepare data for ANOVA
 all_cells = union(red_all,green_all);
-matched_dfof_summary = dfof_summary(ismember(dfof_summary.cellID,all_cells),:);
 
-SST_dfof = matched_dfof_summary((matched_dfof_summary.cellType==1),:);
-%for each cell type, construct a mixed model, with random effects to
-%account for having multiple cells per mouse and mutiple measurements per
-%cell, and fixed effects for contrast, pre/post day, and their interaction
-SST_dfof.mouseID = categorical(SST_dfof.mouseID);
-SST_dfof.behState = categorical(SST_dfof.behState);
-SST_dfof.day = categorical(SST_dfof.day);
+dfof_stat = horzcat(pref_responses_stat_concat{pre},pref_responses_stat_concat{post});
+dfof_loc = horzcat(pref_responses_loc_concat{pre},pref_responses_loc_concat{post});
 
-lme_sst= fitlme(SST_dfof,'dfof~behState+contrast+day+(behState:day)+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst)
+cellID=(1:nKeep_total)';
+cell_type_col=categorical(red_concat)';
 
-%simple main effects, i.e. ANOVA within each level of the behavioral state
-%variable
-SST_dfof_stat=SST_dfof(SST_dfof.behState=='stat',:);
-SST_dfof_loc=SST_dfof(SST_dfof.behState=='loc',:);
+dfof_full = horzcat(dfof_stat,dfof_loc);
+dfof_table = array2table(dfof_full,'VariableNames',{'Sd1c1','Sd1c2','Sd1c3', ...
+    'Sd2c1','Sd2c2','Sd2c3','Rd1c1','Rd1c2','Rd1c3','Rd2c1','Rd2c2','Rd2c3'});
 
-lme_sst_stat= fitlme(SST_dfof_stat,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst_stat)
+labels_table =table(mouseID,cellID,cell_type_col,'VariableNames',{'mouseID' 'cellID' 'cellType'});
+dfof_summary_full = [labels_table,dfof_table];
+matched_dfof_summary = dfof_summary_full(ismember(dfof_summary_full.cellID,all_cells),:);
 
-lme_sst_loc= fitlme(SST_dfof_loc,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst_loc)
+
+SST_matched_dfof = matched_dfof_summary((matched_dfof_summary.cellType=='1'),:);
+Pyr_matched_dfof = matched_dfof_summary((matched_dfof_summary.cellType=='0'),:);
+clear dfof_stat_table cell_type_col cellID dfof_stat_matched
+
+% run an ANOVA on the full model for each cell type
+DART = categorical([1 1 1 2 2 2 1 1 1 2 2 2].');
+contrast = categorical([1 2 3 1 2 3 1 2 3 1 2 3].');
+behState = categorical([1 1 1 1 1 1 2 2 2 2 2 2].');
+
+% prepare new categorical variables
+w = table(DART, contrast, behState, ...
+    'VariableNames', {'DART', 'contrast', 'behState'});% within-design
+
+rm_SST_matched = fitrm(SST_matched_dfof, 'Sd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_SST_matched, 'withinmodel', 'behState*DART*contrast')
+
+rm_Pyr_matched = fitrm(Pyr_matched_dfof, 'Sd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_Pyr_matched, 'withinmodel', 'behState*DART*contrast')
+
+% models for stationary and running seperately 
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+
+rm_SST_stat = fitrm(SST_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
+
+rm_SST_loc = fitrm(SST_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_loc, 'withinmodel', 'DART*contrast')
+
+rm_Pyr_stat = fitrm(Pyr_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
+
+rm_Pyr_loc = fitrm(Pyr_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
+
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_all,1),pref_responses_stat_concat{post}(red_all,1));
@@ -1552,6 +1434,16 @@ anova(lme_sst_loc)
 sst_pvalues_stat = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
 table(contrasts,sst_pvalues_stat)
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
+[sst_h2, sst_p2]= ttest(pref_responses_loc_concat{pre}(red_all,2),pref_responses_loc_concat{post}(red_all,2));
+[sst_h3, sst_p3]= ttest(pref_responses_loc_concat{pre}(red_all,3),pref_responses_loc_concat{post}(red_all,3));
+
+%corrected for three tests
+sst_pvalues_loc = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
+contrasts = cons';
+table(contrasts,sst_pvalues_loc)
 
 %% Supplemental figure related to 4B
 %stationary and running contrast response for Pyr cells
@@ -1691,6 +1583,13 @@ x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 %100
 n1=supp_table_stat(3)*N;
 n2=supp_table_loc(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat3,p3] = crosstab(x1,x2);
+
+%25 stat vs 100 stat
+n1=supp_table_stat(1)*N;
+n2=supp_table_stat(3)*N;
 x1 = [repmat('a',N,1); repmat('b',N,1)];
 x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [tbl,chi2stat3,p3] = crosstab(x1,x2);
@@ -2180,130 +2079,35 @@ end
 
 print(fullfile(fnout,'Fig_S6_B.pdf'),'-dpdf');
 
-% pupil stats
+%% pupil stats
+pupilMeans_clean = squeeze(mean(pupilMeans_concat(:,:,:),1,'omitmissing')); %average the two days
+pupilMeans_clean = pupilMeans_clean([2,1,3],:); %rearrange rows
+%pupilMeans_clean = pupilMeans_clean./(pupilMeans_clean(1,:)); %normalize to small pupil for each mouse
+pupilMean_overall =mean(pupilMeans_clean,2,'omitmissing');
+pupilSTD_overall =std(pupilMeans_clean,[],2,'omitmissing');
+pupilSE_overall = pupilSTD_overall./sqrt(nSess);   
+
 figure
+plot(pupilMeans_clean(:,:),'-o','Color',[.5 .5 .5])
+xlim([.5 3.5])
+box off
+set(gca,'TickDir','out')
+xticks([1 2 3])
+xticklabels({'Small pupil','Large pupil','Running'})
+ylabel('Pupil diameter (pixels)')
+hold on
+ylim([.15 .4])
+errorbar(pupilMean_overall,pupilSE_overall,'k')
 
-for iSess = 1:nSess
-    subplot(2,2,1)
-    plot(pupilMeans_concat(pre,:,iSess),'o-')
-    xlim([.5 2.5])
-    box off
-    set(gca,'TickDir','out')
-    xticks([1 2])
-    xticklabels({'Large pupil','Small pupil'})
-    ylabel('Pupil diameter')
-    hold on
-    title('Pre-DART')
-    ylim([0.15 0.45])
 
-    subplot(2,2,2)
-    plot(pupilMeans_concat(post,:,iSess),'o-')
-    xlim([.5 2.5])
-    box off
-    set(gca,'TickDir','out')
-    xticks([1 2])
-    xticklabels({'Large pupil','Small pupil'})
-    hold on
-    title('Post-DART')
-    ylim([0.15 0.45])
 
-    subplot(2,2,3)
-    plot(pupilMeans_concat([pre post],1,iSess),'o-')
-    xlim([.5 2.5])
-    box off
-    set(gca,'TickDir','out')
-    xticks([1 2])
-    xticklabels({'Pre-DART','Post-DART'})
-    ylabel('Pupil diameter')
-    hold on
-    title('Large pupil')
-    ylim([0.15 0.45])
+x0=5;
+y0=5;
+width=3.5;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
 
-    subplot(2,2,4)
-    plot(pupilMeans_concat([pre post],2,iSess),'o-')
-    xlim([.5 2.5])
-    box off
-    set(gca,'TickDir','out')
-    xticks([1 2])
-    xticklabels({'Pre-DART','Post-DART'})
-    hold on
-    title('Small pupil')
-    ylim([0.15 0.45])
-end
-
-%% stats on timecourse pupil
-preDataLow=tc_trial_avrg_stat_lowPupil_concat{pre}(stimStart+2:(stimStart+nOn+2),have_allPupil_red,3);
-postDataLow=tc_trial_avrg_stat_lowPupil_concat{post}(stimStart+2:(stimStart+nOn+2),have_allPupil_red,3);
-
-preDataLow = downsample(preDataLow,8,0);
-postDataLow = downsample(postDataLow,8,0);
-
-nBins=size(preDataLow,1);
-preDataLongStat = reshape(preDataLow,[(size(preDataLow,1)*size(preDataLow,2)),1]);
-postDataLongStat = reshape(postDataLow,[(size(postDataLow,1)*size(postDataLow,2)),1]);
-dFoF_Stat = vertcat(preDataLongStat,postDataLongStat);
-
-bin = repmat([1:nBins],1,(2*size(preDataLow,2)))';
-cellID=repmat(repelem(have_allPupil_red,nBins),2,1);
-
-mouseID = [];
-
-for i = 1:size(cellID,1)
-    mouseIDTemp = dfof_summary.mouseID(dfof_summary.cellID == cellID(i));
-    mouseID = [mouseID,mouseIDTemp(1)];
-end
-mouseID= mouseID';
-
-day = repelem(["Pre","Post"],length(preDataLongStat))';
-
-fullConStatTC = table(dFoF_Stat,cellID,mouseID,day,bin,'VariableNames',{'dfof','cellID','mouseID','day','bin'});
-fullConStatTC.cellID =categorical(fullConStatTC.cellID)
-fullConStatTC.mouseID =categorical(fullConStatTC.mouseID)
-fullConStatTC.day =categorical(fullConStatTC.day)
-%fullConStatTC.bin =categorical(fullConStatTC.bin)
-
-clear  preDataLongStat postDataLongStat dFoF_Stat
-
-preDataHi=tc_trial_avrg_stat_hiPupil_concat{pre}(stimStart+2:(stimStart+nOn+2),have_allPupil_red,3);
-postDataHi=tc_trial_avrg_stat_hiPupil_concat{post}(stimStart+2:(stimStart+nOn+2),have_allPupil_red,3);
-
-preDataHi = downsample(preDataHi,9,1);
-postDataHi = downsample(postDataHi,9,1);
-
-preDataLongLoc = reshape(preDataHi,[(size(preDataHi,1)*size(preDataHi,2)),1]);
-postDataLongLoc = reshape(postDataHi,[(size(postDataHi,1)*size(postDataHi,2)),1]);
-dFoF_Loc = vertcat(preDataLongLoc,postDataLongLoc);
-
-fullConLocTC = table(dFoF_Loc,cellID,mouseID,day,bin,'VariableNames',{'dfof','cellID','mouseID','day','bin'});
-fullConLocTC.cellID =categorical(fullConLocTC.cellID)
-fullConLocTC.day =categorical(fullConLocTC.day)
-%fullConLocTC.bin =categorical(fullConLocTC.bin)
-
-clear preDataLongLoc postDataLongLoc dFoF_Loc day cellID bin
-
-lme_stat_fullCon= fitlme(fullConStatTC,'dfof~bin*day+(1|cellID:mouseID)');
-lme_loc_fullCon= fitlme(fullConLocTC,'dfof~bin*day+(1|cellID:mouseID)');
-
-% examine effect of day within each bin
-%for running trials
-[h,p1,~,stats1] =ttest(preDataHi(1,:),postDataHi(1,:));
-[h,p2,~,stats2] =ttest(preDataHi(2,:),postDataHi(2,:));
-[h,p3,~,stats3] =ttest(preDataHi(3,:),postDataHi(3,:));
-[h,p4,~,stats4] =ttest(preDataHi(4,:),postDataHi(4,:));
-
-%corrected for four tests
-anova(lme_loc_fullCon)
-[stats1.tstat,(p1*4);stats2.tstat,(p2*4);stats3.tstat,(p3*4);stats4.tstat,(p4*4)]
-
-%for stationary trials
-[h,p1,~,stats1] =ttest(preDataLow(1,:),postDataLow(1,:));
-[h,p2,~,stats2] =ttest(preDataLow(2,:),postDataLow(2,:));
-[h,p3,~,stats3] =ttest(preDataLow(3,:),postDataLow(3,:));
-[h,p4,~,stats4] =ttest(preDataLow(4,:),postDataLow(4,:));
-anova(lme_stat_fullCon)
-%corrected for four tests
-[stats1.tstat,(p1*4);stats2.tstat,(p2*4);stats3.tstat,(p3*4);stats4.tstat,(p4*4)]
-
+print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
 
 
 %% contrast response pupil
@@ -2413,5 +2217,76 @@ height=3;
 
 print(fullfile(fnout,'Fig_S6_C.pdf'),'-dpdf');
 
-%% input stats for pupil
+%% stats for pupil
 
+% prepare data for ANOVA
+dfof_small = horzcat(pref_responses_stat_lowPupil_concat{pre},pref_responses_stat_lowPupil_concat{post});
+dfof_large = horzcat(pref_responses_stat_hiPupil_concat{pre},pref_responses_stat_hiPupil_concat{post});
+
+cellID=(1:nKeep_total)';
+cell_type_col=categorical(red_concat)';
+
+dfof_full_pupil = horzcat(dfof_small,dfof_large);
+dfof_table_pupil = array2table(dfof_full_pupil,'VariableNames',{'Sd1c1','Sd1c2','Sd1c3', ...
+    'Sd2c1','Sd2c2','Sd2c3','Ld1c1','Ld1c2','Ld1c3','Ld2c1','Ld2c2','Ld2c3'});
+
+labels_table =table(mouseID,cellID,cell_type_col,'VariableNames',{'mouseID' 'cellID' 'cellType'});
+dfof_summary_full_pupil = [labels_table,dfof_table_pupil];
+matched_dfof_summary_pupil = dfof_summary_full_pupil(ismember(dfof_summary_full_pupil.cellID,have_allPupil),:);
+
+
+SST_matched_dfof_pupil = matched_dfof_summary_pupil((matched_dfof_summary_pupil.cellType=='1'),:);
+Pyr_matched_dfof_pupil = matched_dfof_summary_pupil((matched_dfof_summary_pupil.cellType=='0'),:);
+clear dfof_stat_table cell_type_col cellID dfof_stat_matched
+
+% run an ANOVA on the full model for each cell type
+DART = categorical([1 1 1 2 2 2 1 1 1 2 2 2].');
+contrast = categorical([1 2 3 1 2 3 1 2 3 1 2 3].');
+pupilSize = categorical([1 1 1 1 1 1 2 2 2 2 2 2].');
+
+% prepare new categorical variables
+w = table(DART, contrast, pupilSize, ...
+    'VariableNames', {'DART', 'contrast', 'pupilSize'});% within-design
+
+rm_SST_matched = fitrm(SST_matched_dfof_pupil, 'Sd1c1-Ld2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_SST_matched, 'withinmodel', 'pupilSize*DART*contrast')
+
+rm_Pyr_matched = fitrm(Pyr_matched_dfof_pupil, 'Sd1c1-Ld2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_Pyr_matched, 'withinmodel', 'pupilSize*DART*contrast')
+
+% models for stationary and running seperately 
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+
+rm_SST_small = fitrm(SST_matched_dfof_pupil, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_SST_small, 'withinmodel', 'DART*contrast')
+
+rm_SST_large = fitrm(SST_matched_dfof_pupil, 'Ld1c1-Ld2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_SST_large, 'withinmodel', 'DART*contrast')
+
+
+rm_Pyr_small = fitrm(Pyr_matched_dfof_pupil, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_Pyr_small, 'withinmodel', 'DART*contrast')
+
+rm_Pyr_large = fitrm(Pyr_matched_dfof_pupil, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_Pyr_large, 'withinmodel', 'DART*contrast')
+
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[sst_h1, sst_p1]= ttest(pref_responses_stat_lowPupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_lowPupil_concat{post}(have_allPupil_red,1));
+[sst_h2, sst_p2]= ttest(pref_responses_stat_lowPupil_concat{pre}(have_allPupil_red,2),pref_responses_stat_lowPupil_concat{post}(have_allPupil_red,2));
+[sst_h3, sst_p3]= ttest(pref_responses_stat_lowPupil_concat{pre}(have_allPupil_red,3),pref_responses_stat_lowPupil_concat{post}(have_allPupil_red,3));
+
+%corrected for three tests
+sst_pvalues_small = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
+contrasts = cons';
+table(contrasts,sst_pvalues_small)
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[sst_h1, sst_p1]= ttest(pref_responses_stat_hiPupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_hiPupil_concat{post}(have_allPupil_red,1));
+[sst_h2, sst_p2]= ttest(pref_responses_stat_hiPupil_concat{pre}(have_allPupil_red,2),pref_responses_stat_hiPupil_concat{post}(have_allPupil_red,2));
+[sst_h3, sst_p3]= ttest(pref_responses_stat_hiPupil_concat{pre}(have_allPupil_red,3),pref_responses_stat_hiPupil_concat{post}(have_allPupil_red,3));
+
+%corrected for three tests
+sst_pvalues_large = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
+contrasts = cons';
+table(contrasts,sst_pvalues_large)

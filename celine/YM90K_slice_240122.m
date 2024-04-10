@@ -1,0 +1,158 @@
+clear all
+fullData=readtable('experimentList_012224.csv');
+
+output=nan(size(fullData,2),2);
+
+for i=1:size(fullData,1)
+    [count, amp]=eventCountAndAmp(cell2mat(fullData.eventFileName(i)), ...
+        fullData.startSweep(i), fullData.stopSweep(i),fullData.ConversionToPA(i));
+   output(i,:)=[count amp];
+end
+clear i
+
+fullData.eventPerMin=output(:,1);
+fullData.eventAmp=output(:,2);
+
+cells_WO_events=readtable('cells_WO_events.csv');
+
+fullData = vertcat(fullData, cells_WO_events);
+
+reducedData = fullData(:,[1,4,7,11,12]);
+reducedData.drugCondition = categorical(reducedData.drugCondition);
+reducedData.group=categorical(reducedData.group);
+
+drugOnly=reducedData(reducedData.drugCondition=='NBQX',:);
+bslnOnly=reducedData(reducedData.drugCondition=='none',:);
+%only has the cells that have both baseline ad drug conditions
+matched=join(drugOnly,bslnOnly,'Keys','cellID');
+matched.drugCondition_bslnOnly=[];
+matched.group_bslnOnly=[];
+%% plotting
+
+conMeans = [mean(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='con'),'omitmissing'),
+    mean(matched.eventAmp_drugOnly(matched.group_drugOnly=='con'),'omitmissing')];
+expMeans = [mean(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='exp'),'omitmissing'),
+    mean(matched.eventAmp_drugOnly(matched.group_drugOnly=='exp'),'omitmissing')];
+
+conSTD = [std(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='con'),[],'omitmissing'),
+    std(matched.eventAmp_drugOnly(matched.group_drugOnly=='con'),[],'omitmissing')];
+nCon = length(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='con'));
+conSE=conSTD / nCon;
+
+expSTD = [std(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='exp'),[],'omitmissing'),
+    std(matched.eventAmp_drugOnly(matched.group_drugOnly=='exp'),[],'omitmissing')];
+nExp = length(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='exp'));
+expSE=expSTD / nExp;
+
+
+figure
+subplot(1,2,1)
+plot([matched.eventPerMin_bslnOnly(matched.group_drugOnly=='con'),matched.eventPerMin_drugOnly(matched.group_drugOnly=='con')]',"Color",[0 0 0 .25])
+hold on
+scatter([1,2],[matched.eventPerMin_bslnOnly(matched.group_drugOnly=='con'),matched.eventPerMin_drugOnly(matched.group_drugOnly=='con')]',10, ...
+    "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
+errorbar([1,2],conMeans, conSE,'.-k','MarkerSize',15)
+xticks([1,2])
+xticklabels({'Baseline','NBQX'})
+sgtitle("Spontaneous ePSCs / min")
+set(gca,'TickDir','out')
+box off
+ylim([-10 550])
+xlim([0.5 2.5])
+
+subplot(1,2,2)
+plot([matched.eventPerMin_bslnOnly(matched.group_drugOnly=='exp'),matched.eventPerMin_drugOnly(matched.group_drugOnly=='exp')]',"Color",[0 0 1 .25])
+hold on
+scatter([1,2],[matched.eventPerMin_bslnOnly(matched.group_drugOnly=='exp'),matched.eventPerMin_drugOnly(matched.group_drugOnly=='exp')]',10, ...
+    "MarkerEdgeColor","none","MarkerFaceColor",[0 0 1],"MarkerFaceAlpha",.25)
+errorbar([1,2],expMeans, expSE,'.-b','MarkerSize',15)
+xticks([1,2])
+xticklabels({'Baseline','NBQX'})
+set(gca,'TickDir','out')
+box off
+ylim([-10 550])
+xlim([0.5 2.5])
+x0=5;
+y0=5;
+width=2;
+height=2;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(fullfile('ePSCS_per_min.pdf'),'-dpdf')
+%% two-way ANOVA for epcs per minute
+matchedIDs=categorical(unique(matched.cellID));
+
+testTable=vertcat(bslnOnly,drugOnly);
+testTable.cellID = categorical(testTable.cellID);
+testTable=testTable(ismember(testTable.cellID,matchedIDs),:);
+
+lme1 = fitlme(testTable, 'eventPerMin~drugCondition*group+(1|cellID)');
+anova(lme1)
+
+anova(testTable, 'eventPerMin ~ group * drugCondition');
+
+
+[h,p1,~,stats1] =ttest2(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='con'),matched.eventPerMin_bslnOnly(matched.group_drugOnly=='exp'));
+[h,p2,~,stats2] =ttest2(matched.eventPerMin_drugOnly(matched.group_drugOnly=='con'),matched.eventPerMin_drugOnly(matched.group_drugOnly=='exp'));
+[p1*2, p2*2]
+
+
+[h,p3,~,stats3] =ttest(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='con'),matched.eventPerMin_drugOnly(matched.group_drugOnly=='con'));
+[h,p4,~,stats4] =ttest(matched.eventPerMin_bslnOnly(matched.group_drugOnly=='exp'),matched.eventPerMin_drugOnly(matched.group_drugOnly=='exp'));
+[p3*2, p4*2]
+%%
+bslnMeans = [mean(bslnOnly.eventAmp(bslnOnly.group=='con'),'omitmissing'),
+    mean(bslnOnly.eventAmp(bslnOnly.group=='exp'),'omitmissing')];
+
+bslnSTD = [std(bslnOnly.eventAmp(bslnOnly.group=='con'),[],'omitmissing'),
+    std(bslnOnly.eventAmp(bslnOnly.group=='exp'),[],'omitmissing')];
+
+%nByGroup = [length(bslnOnly.eventAmp(bslnOnly.group=='con')), length(bslnOnly.eventAmp(bslnOnly.group=='exp'))]';
+nByGroup = [9,14]';
+bslnSE=bslnSTD ./ nByGroup;
+
+figure;
+swarmchart(bslnOnly.group,bslnOnly.eventAmp,10,'filled')
+hold on
+errorbar([1,2],bslnMeans, bslnSE,'.-k','MarkerSize',15)
+xticklabels({'Control','DART'})
+title('ePSCs amplitude(pA)')
+set(gca,'TickDir','out')
+box off
+ylim([0 50])
+x0=5;
+y0=5;
+width=1;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(fullfile('ePSC_amp.pdf'),'-dpdf')
+%% t-test for amplitude
+[h,p,ci,stats] = ttest2(bslnOnly.eventAmp(bslnOnly.group=='con'),bslnOnly.eventAmp(bslnOnly.group=='exp'))
+%%
+
+fullData.drugCondition = reordercats(fullData.drugCondition,{'none' 'NBQX'});
+
+figure;
+subplot(1,2,1)
+c = (fullData.controlType(fullData.group=='con'));
+swarmchart(fullData.drugCondition(fullData.group=='con'),fullData.eventPerMin(fullData.group=='con'),20,c,'filled')
+hold on
+%boxchart(fullData.drugCondition(fullData.group=='con'),fullData.eventPerMin(fullData.group=='con'))
+ylim([0 550])
+xticklabels({'Baseline','NBQX'})
+ylabel('ePSCs per minute')
+title('Control')
+set(gca,'TickDir','out')
+box off
+
+subplot(1,2,2)
+swarmchart(fullData.drugCondition(fullData.group=='exp'),fullData.eventPerMin(fullData.group=='exp'),20,"b",'filled')
+hold on
+%boxchart(fullData.drugCondition(fullData.group=='exp'),fullData.eventPerMin(fullData.group=='exp'))
+ylim([0 550])
+xticklabels({'Baseline','NBQX'})
+ylabel('ePSCs per minute')
+title('Experimental')
+set(gca,'TickDir','out')
+box off

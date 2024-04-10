@@ -8,7 +8,7 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(2) = 361;
+day_id(2) = 366;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);

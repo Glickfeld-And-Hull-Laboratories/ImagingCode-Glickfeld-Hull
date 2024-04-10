@@ -1,17 +1,56 @@
-preDataloc=tc_trial_avrg_loc_concat{pre}(stimStart+2:(stimStart+nOn+2),red_all,3);
-postDataloc=tc_trial_avrg_loc_concat{post}(stimStart+2:(stimStart+nOn+2),red_all,3);
+% prepare data for ANOVA
+all_cells = union(red_all,green_all);
 
-preDataloc = downsample(preDataloc,8,0);
-postDataloc = downsample(postDataloc,8,0);
+dfof_stat = horzcat(pref_responses_stat_concat{pre},pref_responses_stat_concat{post});
+dfof_loc = horzcat(pref_responses_loc_concat{pre},pref_responses_loc_concat{post});
 
-preDataloc = preDataloc';
-postDataloc = postDataloc';
+cellID=(1:nKeep_total)';
+cell_type_col=categorical(red_concat)';
 
-data=horzcat(preDataloc,postDataloc);
-cellID=categorical(red_all);
-data=table(cellID,data(:,1),data(:,2),data(:,3),data(:,4),data(:,5),data(:,6),data(:,7),data(:,8),'VariableNames',{'cellID','D1B1','D1B2','D1B3','D1B4','D2B1','D2B2','D2B3','D2B4'});
+dfof_full = horzcat(dfof_stat,dfof_loc);
+dfof_table = array2table(dfof_full,'VariableNames',{'Sd1c1','Sd1c2','Sd1c3', ...
+    'Sd2c1','Sd2c2','Sd2c3','Rd1c1','Rd1c2','Rd1c3','Rd2c1','Rd2c2','Rd2c3'});
 
-w = table(categorical([1 1 1 1 2 2 2 2 ].'), categorical([1 2 3 4 1 2 3 4].'), 'VariableNames', {'day', 'bin'}); % within-desing
+labels_table =table(mouseID,cellID,cell_type_col,'VariableNames',{'mouseID' 'cellID' 'cellType'});
+stat_dfof_summary_full = [labels_table,dfof_table];
+matched_dfof_summary = stat_dfof_summary_full(ismember(stat_dfof_summary_full.cellID,all_cells),:);
 
-rm = fitrm(data, 'D1B1-D2B4 ~ 1', 'WithinDesign', w);
-ranova(rm, 'withinmodel', 'day*bin')
+
+SST_matched_dfof = matched_dfof_summary((matched_dfof_summary.cellType=='1'),:);
+Pyr_matched_dfof = matched_dfof_summary((matched_dfof_summary.cellType=='0'),:);
+clear dfof_stat_table cell_type_col cellID dfof_stat_matched
+
+%%
+% run an ANOVA on the full model for each cell type
+DART = categorical([1 1 1 2 2 2 1 1 1 2 2 2].');
+contrast = categorical([1 2 3 1 2 3 1 2 3 1 2 3].');
+behState = categorical([1 1 1 1 1 1 2 2 2 2 2 2].');
+
+% Create a table with your categorical variables
+w = table(DART, contrast, behState, ...
+    'VariableNames', {'DART', 'contrast', 'behState'});% within-design
+
+rm_SST_matched = fitrm(SST_matched_dfof, 'Sd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_SST_matched, 'withinmodel', 'behState*DART*contrast')
+
+rm_Pyr_matched = fitrm(Pyr_matched_dfof, 'Sd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_Pyr_matched, 'withinmodel', 'behState*DART*contrast')
+
+%%
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+
+rm_SST_stat = fitrm(SST_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
+
+rm_SST_loc = fitrm(SST_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_loc, 'withinmodel', 'DART*contrast')
+
+rm_Pyr_stat = fitrm(Pyr_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
+
+rm_Pyr_loc = fitrm(Pyr_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
+
+
+
+

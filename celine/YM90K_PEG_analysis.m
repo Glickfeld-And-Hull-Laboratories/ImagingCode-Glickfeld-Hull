@@ -509,36 +509,34 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_2D.pdf'),'-dpdf');
 
+
 %% Figure 2D statistics
-%from the full dataframe, extract rows for stationary trials for SST and
-%Pyr cells seperately. Use all SST and all Pyr cells.
-stat_dfof_summary_stat=dfof_summary((dfof_summary.behState=='stat'),:);
-SST_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType==1),:);
-Pyr_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType==0),:);
+% prepare data for ANOVA
+mouseID=[];
+for imouse =1:nSess
+   ID_string=mouseNames(imouse);
+   thisID = repelem(ID_string,nKeep_concat(imouse));
+   mouseID=[mouseID,thisID];
+end
+mouseID=mouseID';
+dfof_stat = horzcat(pref_responses_stat_concat{pre},pref_responses_stat_concat{post});
+cellID=(1:nKeep_total)';
+cell_type_col=categorical(red_concat)';
+dfof_stat_table = array2table(dfof_stat,'VariableNames',{'d1c1','d1c2','d1c3','d2c1','d2c2','d2c3'});
+labels_table =table(mouseID,cellID,cell_type_col,'VariableNames',{'mouseID' 'cellID' 'cellType'});
+stat_dfof_summary_stat = [labels_table,dfof_stat_table];
+SST_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType=='1'),:);
+Pyr_stat_dfof = stat_dfof_summary_stat((stat_dfof_summary_stat.cellType=='0'),:);
+clear dfof_stat_table cell_type_col cellID dfof_stat
 
-%for each cell type, construct a mixed model, with random effects to
-%account for having multiple cells per mouse and mutiple measurements per
-%cell, and fixed effects for contrast, pre/post day, and their interaction
-lme_sst_stat= fitlme(SST_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-lme_pyr_stat= fitlme(Pyr_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst_stat)
-anova(lme_pyr_stat)
+% run the ANOVA
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+rm_SST_stat = fitrm(SST_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
 
-%what is the mean df/f for each contrast on each day, for SST cells
-vars = ["dfof"];
-factors = ["contrast","day"];
-meanScoresByFactor = varfun(@nanmean, ...
-                            SST_stat_dfof, ...
-                            "InputVariables",vars, ...
-                            "GroupingVariables",factors)
+rm_Pyr_stat = fitrm(Pyr_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
 
-%what is the mean df/f for each contrast on each day, for Pyr cells
-vars = ["dfof"];
-factors = ["contrast","day"];
-meanScoresByFactor = varfun(@nanmean, ...
-                            Pyr_stat_dfof, ...
-                            "InputVariables",vars, ...
-                            "GroupingVariables",factors)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_ind_concat,1),pref_responses_stat_concat{post}(red_ind_concat,1));
@@ -554,9 +552,9 @@ sst_pvalues = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 [pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_ind_concat,3),pref_responses_stat_concat{post}(green_ind_concat,3));
 
 %corrected for three tests
-pyr_pvalues = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)]
-contrasts = cons';
+pyr_pvalues = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 
+contrasts = cons';
 table(contrasts,sst_pvalues,pyr_pvalues)
 
 %% Figure 2E
@@ -869,21 +867,27 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_3D.pdf'),'-dpdf');
 
 %% Figure 3D statistics
-
 %from the full dataframe, extract rows for stationary trials for weakly and
 %strongly correlated SST cells
-SST_high_stat_dfof = SST_stat_dfof(ismember(SST_stat_dfof.cellID,redHigh),:);
 SST_low_stat_dfof = SST_stat_dfof(ismember(SST_stat_dfof.cellID,redLow),:);
+SST_high_stat_dfof = SST_stat_dfof(ismember(SST_stat_dfof.cellID,redHigh),:);
 
+fullCorrTable = vertcat(SST_low_stat_dfof,SST_high_stat_dfof);
+fullCorrTable.corrType = categorical([repmat(0,length(redLow),1);repmat(1,length(redHigh),1)]);
 
-%for each correlation category, construct a mixed model, with random effects to
-%account for having multiple cells per mouse and mutiple measurements per
-%cell, and fixed effects for contrast, pre/post day, and their interaction
-lme_sst_stat_low= fitlme(SST_low_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-lme_sst_stat_high= fitlme(SST_high_stat_dfof,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
+% run an ANOVA for corr type X contrast, baseline day only
+w = table(categorical([1 2 3].'), 'VariableNames', {'contrast'}); % within-design
+rm_fullCorr = fitrm(fullCorrTable, 'd1c1-d1c3 ~ corrType', 'WithinDesign', w)
+ranova(rm_fullCorr, 'withinmodel', 'contrast')
 
-anova(lme_sst_stat_low)
-anova(lme_sst_stat_high)
+% run the ANOVAs on low and high corr seperately
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+rm_SST_low = fitrm(SST_low_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_low, 'withinmodel', 'DART*contrast')
+
+rm_SST_high = fitrm(SST_high_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_high, 'withinmodel', 'DART*contrast')
+
 
 % pairwise ttests for dfof response at 50 contrast for each correlation
 % category
@@ -908,6 +912,7 @@ high_pvalues = [(high_p1*3);(high_p2*3);(high_p3*3)]
 contrasts = cons';
 
 table(contrasts,low_pvalues,high_pvalues)
+
 
 
 %% Fig 4 - timecourses for running trials
@@ -1161,28 +1166,58 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_4B.pdf'),'-dpdf');
 %% Fig 4B statistics
-%from the full dataframe, extract rows for running and stationary trials for SST and
-%Pyr cells seperately. Use all SST and all Pyr cells.
+% prepare data for ANOVA
 all_cells = union(red_all,green_all);
-matched_dfof_summary = dfof_summary(ismember(dfof_summary.cellID,all_cells),:);
 
-SST_dfof = matched_dfof_summary((matched_dfof_summary.cellType==1),:);
-%for each cell type, construct a mixed model, with random effects to
-%account for having multiple cells per mouse and mutiple measurements per
-%cell, and fixed effects for contrast, pre/post day, and their interaction
-lme_sst= fitlme(SST_dfof,'dfof~behState+contrast+day+(behState:day)+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst)
+dfof_stat = horzcat(pref_responses_stat_concat{pre},pref_responses_stat_concat{post});
+dfof_loc = horzcat(pref_responses_loc_concat{pre},pref_responses_loc_concat{post});
 
-%simple main effects, i.e. ANOVA within each level of the behavioral state
-%variable
-SST_dfof_stat=SST_dfof(SST_dfof.behState=='stat',:);
-SST_dfof_loc=SST_dfof(SST_dfof.behState=='loc',:);
+cellID=(1:nKeep_total)';
+cell_type_col=categorical(red_concat)';
 
-lme_sst_stat= fitlme(SST_dfof_stat,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst_stat)
+dfof_full = horzcat(dfof_stat,dfof_loc);
+dfof_table = array2table(dfof_full,'VariableNames',{'Sd1c1','Sd1c2','Sd1c3', ...
+    'Sd2c1','Sd2c2','Sd2c3','Rd1c1','Rd1c2','Rd1c3','Rd2c1','Rd2c2','Rd2c3'});
 
-lme_sst_loc= fitlme(SST_dfof_loc,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_sst_loc)
+labels_table =table(mouseID,cellID,cell_type_col,'VariableNames',{'mouseID' 'cellID' 'cellType'});
+stat_dfof_summary_full = [labels_table,dfof_table];
+matched_dfof_summary = stat_dfof_summary_full(ismember(stat_dfof_summary_full.cellID,all_cells),:);
+
+
+SST_matched_dfof = matched_dfof_summary((matched_dfof_summary.cellType=='1'),:);
+Pyr_matched_dfof = matched_dfof_summary((matched_dfof_summary.cellType=='0'),:);
+clear dfof_stat_table cell_type_col cellID dfof_stat_matched
+
+% run an ANOVA on the full model for each cell type
+DART = categorical([1 1 1 2 2 2 1 1 1 2 2 2].');
+contrast = categorical([1 2 3 1 2 3 1 2 3 1 2 3].');
+behState = categorical([1 1 1 1 1 1 2 2 2 2 2 2].');
+
+% prepare new categorical variables
+w = table(DART, contrast, behState, ...
+    'VariableNames', {'DART', 'contrast', 'behState'});% within-design
+
+rm_SST_matched = fitrm(SST_matched_dfof, 'Sd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_SST_matched, 'withinmodel', 'behState*DART*contrast')
+
+rm_Pyr_matched = fitrm(Pyr_matched_dfof, 'Sd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+ranova(rm_Pyr_matched, 'withinmodel', 'behState*DART*contrast')
+
+% models for stationary and running seperately 
+w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
+
+rm_SST_stat = fitrm(SST_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
+
+rm_SST_loc = fitrm(SST_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_loc, 'withinmodel', 'DART*contrast')
+
+rm_Pyr_stat = fitrm(Pyr_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
+
+rm_Pyr_loc = fitrm(Pyr_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
+
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_all,1),pref_responses_stat_concat{post}(red_all,1));
@@ -1194,37 +1229,37 @@ sst_pvalues_stat = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
 table(contrasts,sst_pvalues_stat)
 
+% pairwise ttests for dfof response at each contrast for SST cells
+[sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
+[sst_h2, sst_p2]= ttest(pref_responses_loc_concat{pre}(red_all,2),pref_responses_loc_concat{post}(red_all,2));
+[sst_h3, sst_p3]= ttest(pref_responses_loc_concat{pre}(red_all,3),pref_responses_loc_concat{post}(red_all,3));
+
+%corrected for three tests
+sst_pvalues_loc = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
+contrasts = cons';
+table(contrasts,sst_pvalues_loc)
 
 
-%%
-
-pyr_dfof = matched_dfof_summary((matched_dfof_summary.cellType==0),:);
-%for each cell type, construct a mixed model, with random effects to
-%account for having multiple cells per mouse and mutiple measurements per
-%cell, and fixed effects for contrast, pre/post day, and their interaction
-lme_pyr= fitlme(pyr_dfof,'dfof~behState+contrast+day+(behState:day)+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_pyr)
-
-%simple main effects, i.e. ANOVA within each level of the behavioral state
-%variable
-pyr_dfof_stat=pyr_dfof(pyr_dfof.behState=='stat',:);
-pyr_dfof_loc=pyr_dfof(pyr_dfof.behState=='loc',:);
-
-lme_pyr_stat= fitlme(pyr_dfof_stat,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_pyr_stat)
-
-lme_pyr_loc= fitlme(pyr_dfof_loc,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_pyr_loc)
 
 % pairwise ttests for dfof response at each contrast for pyr cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(red_all,1),pref_responses_stat_concat{post}(red_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(red_all,2),pref_responses_stat_concat{post}(red_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(red_all,3),pref_responses_stat_concat{post}(red_all,3));
 
 %corrected for three tests
 pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 contrasts = cons';
 table(contrasts,pyr_pvalues_stat)
+
+% pairwise ttests for dfof response at each contrast for pyr cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(red_all,2),pref_responses_loc_concat{post}(red_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(red_all,3),pref_responses_loc_concat{post}(red_all,3));
+
+%corrected for three tests
+pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+contrasts = cons';
+table(contrasts,pyr_pvalues_loc)
 %% Fig 4C - Supp/facil stationary vs. running
 
 %make a subset of normalized difference for the SST cells only, then make
