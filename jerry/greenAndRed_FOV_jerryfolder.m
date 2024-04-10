@@ -1,19 +1,24 @@
 
-mouse = 'i3301';
-date = '240207';
-redFolder = '001'; %enter the first three digits
+mouse = 'i3305';
+date = '240410';
+redFolder = '002'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
-greenFolder = '000'; %enter the first three digits
+greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='152.34';
+depth='175.78';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
 % base = 
 % 'Z:/home/celine/Data/2p_data';
+[ret, computerName] = system('hostname');
+computerName = convertCharsToStrings(computerName(1:end-1));
 if computer == 'GLNXA64'
     base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Data/2p_data';
     out_base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Analysis/2p_analysis';
-else
+elseif computerName == "NB-NUKE"
+    base = 'Z:/home/jerry/data/twophoton';
+    out_base = 'Z:/home/jerry/analysis/twophoton';
+elseif computerName == "NB-HUBEL"
     base = 'G:/home/jerry/data/twophoton';
     out_base = 'G:/home/jerry/analysis/twophoton';
    
@@ -72,7 +77,7 @@ regImg = mean(data_g_reg_920,3);
 
 fig2=figure; imagesc(regImg);
 colormap gray;
-caxis([100 1000])
+caxis([100 3000])
 cd(out_path);
 title([' ' depth ' green at 920']);
 %print(fullfile(out_path, [date '_' mouse 'green_FOV_' string(greenFolder) '.pdf']),'-dpdf','-bestfit')

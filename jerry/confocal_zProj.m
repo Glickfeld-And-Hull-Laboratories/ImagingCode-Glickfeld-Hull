@@ -104,7 +104,7 @@ for q = 1:length(mip_storage)-18
     imshow(mip_storage{q,2});
 end
 
-%% If all looks good, save
+%% If all look good, save
 
 img_data = mip_storage;
 save(fullfile(outpath,'MIPs'),"img_data");

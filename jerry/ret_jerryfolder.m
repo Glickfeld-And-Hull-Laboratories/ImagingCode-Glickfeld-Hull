@@ -1,15 +1,15 @@
 
 close all
 
-date = '240207';
-mouse = 'i3301';
-ImgFolder = '002';
-time = '1419';
+date = '240410';
+mouse = 'i3305';
+ImgFolder = '003';
+time = '0918';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
-datemouse = [date '_' mouse]
+datemouse = [date '_' mouse];
 
 run_str = ['runs-' ImgFolder(1,:)];
 if nrun>1
