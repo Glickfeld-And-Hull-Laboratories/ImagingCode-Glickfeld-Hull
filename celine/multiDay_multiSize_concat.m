@@ -7,7 +7,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 300 295 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [295 308 324 334];%enter1 all the sessions you want to concatenate
+sess_list = [366 368];%enter1 all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -27,7 +27,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
             end
 clear x prompt
 
-targetCon = [.5]%what contrast to extract for all data - must be one that all datasets had
+targetCon = [.125, .25, .5, 1]%what contrast to extract for all data - must be one that all datasets had
 
 frame_rate = 15;
 
@@ -146,17 +146,16 @@ for id = 1:nd
 end
 respToSmall = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
-runningMySize = intersect(runningCells,find(respToMySize));
 
-runningGreen = intersect(runningMySize, green_ind_concat);
-runningRed= intersect(runningMySize, red_ind_concat);
+runningGreen = intersect(runningCells, green_ind_concat);
+runningRed= intersect(runningCells, red_ind_concat);
 
-statGreen = intersect(find(respToMySize),green_ind_concat);
-statRed = intersect(find(respToMySize),red_ind_concat);
+statGreen = green_ind_concat;
+statRed = red_ind_concat;
 
 clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
 
-
+%%
 %get an array with indices for each mouse
 mouseInds=cell(1,nSess);
 start=1;
@@ -530,4 +529,87 @@ sgtitle(['population size tuning' ])
 
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 
+%% contrast response
+%errorbar for stat resp and loc resp vs size, where error is across mice
+conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
+conResp_red_avrg_stat = cell(nSize,nd); %same for red
+conResp_green_se_stat = cell(nSize,nd); %this will be the se across all green cells
+conResp_red_se_stat = cell(nSize,nd); %same for red
+
+consForPlotting = [12.5 25 50 100];
+for id = 1:nd
+    for iSize = 1:nSize
+        green_data=conBySize_resp_stat_concat{id}(green_ind_concat,:,iSize);%pulling the green cells at this size
+        conResp_green_avrg_stat{id}(iSize,:)=nanmean(green_data,1);
+        green_std=nanstd(green_data,1);
+        conResp_green_se_stat{id}(iSize,:)=green_std/sqrt(length(statGreen));
+        
+        red_data=conBySize_resp_stat_concat{id}(red_ind_concat,:,iSize);%pulling the red cells at this size
+        conResp_red_avrg_stat{id}(iSize,:)=nanmean(red_data,1);
+        red_std=nanstd(red_data,1);
+        conResp_red_se_stat{id}(iSize,:)=red_std/sqrt(length(statRed));
+        
+        clear green_std red_std green_data red_data
+    end
+end
+
+
+figure
+subplot(1,2,1) %for the first day
+errorbar(consForPlotting,conResp_green_avrg_stat{pre}(1,:),conResp_green_se_stat{pre}(1,:),'k');
+hold on
+errorbar(consForPlotting,conResp_green_avrg_stat{post}(1,:),conResp_green_se_stat{post}(1,:),'b');
+title('20 deg')
+ylabel('dF/F, pref dir') 
+set(gca, 'TickDir', 'out')
+box off
+ylim([-.005 .2])
+
+subplot(1,2,2) %for the first day
+errorbar(consForPlotting,conResp_green_avrg_stat{pre}(2,:),conResp_green_se_stat{pre}(2,:),'k');
+hold on
+errorbar(consForPlotting,conResp_green_avrg_stat{post}(2,:),conResp_green_se_stat{post}(2,:),'b');
+title('fullfield')
+ylabel('dF/F, pref dir') 
+set(gca, 'TickDir', 'out')
+box off
+ylim([-.005 .2])
+
+han=axes('visible','off'); 
+han.XLabel.Visible='on';
+xlabel(han,'Contrast (%)');
+
+
+% 
+% subplot(2,2,3) %for the first day
+% errorbar(sizes,sizeResp_green_avrg_loc{pre},sizeResp_green_se_loc{pre},'k');
+% hold on
+% errorbar(sizes,sizeResp_green_avrg_loc{post},sizeResp_green_se_loc{post},'b');
+% title(['Running -HTP',' n = ', num2str(length(runningGreen))])
+% ylabel('dF/F, pref dir') 
+% xlabel('size (deg)') 
+% set(gca, 'TickDir', 'out')
+% box off
+% ylim([-.05 .3])
+% 
+% subplot(2,2,4) %for the second day
+% errorbar(sizes,sizeResp_red_avrg_loc{pre},sizeResp_red_se_loc{pre},'k');
+% hold on
+% errorbar(sizes,sizeResp_red_avrg_loc{post},sizeResp_red_se_loc{post},'b');
+% title(['Running +HTP',' n = ', num2str(length(runningRed))])
+% ylabel('dF/F, pref dir') 
+% xlabel('size (deg)') 
+% set(gca, 'TickDir', 'out')
+% box off
+% ylim([-.05 .3])
+% 
+x0=5;
+y0=5;
+width=6;
+height=3.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+sgtitle(['Stationary',' n = ', num2str(length(statGreen))])
+
+print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 

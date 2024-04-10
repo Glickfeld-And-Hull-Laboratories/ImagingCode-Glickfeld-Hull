@@ -9,7 +9,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 355; %enter the refrence day ID here
+day_id(1) = 370; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -24,6 +24,10 @@ if computer == 'GLNXA64'
     database = fullfile('/All_Staff/home/ACh/Data/2p_data');
     base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
+elseif computer == 'PCWIN64'
+    isilonName = 'C:/All_Staff';
+    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    database = fullfile('/home/ACh/Data/2p_data');
 else
     isilonName = 'duhs-user-nc1.dhe.duke.edu/';
     base = fullfile('/home/ACh/Analysis/2p_analysis');

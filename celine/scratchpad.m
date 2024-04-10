@@ -1,51 +1,17 @@
-%
+preDataStat=tc_trial_avrg_stat_concat{pre}(stimStart+2:(stimStart+nOn+2),red_all,3);
+postDataStat=tc_trial_avrg_stat_concat{post}(stimStart+2:(stimStart+nOn+2),red_all,3);
 
-%[h,p1,ci,stats1] = vartestn(norm_diff(2,1,red_all),norm_diff(2,2,red_all),'Tail','left'); %25 vs 50
-%Make sumary table
-outputColStat=(squeeze(norm_diff(1,:,red_all)));
-outputColStat=reshape(outputColStat,[],1);
-outputColLoc=(squeeze(norm_diff(1,:,red_all)));
-outputColLoc=reshape(outputColLoc,[],1);
-behStateCol = repelem(["stat" "loc"],1,((3*length(red_all))))';
-contrastCol=repmat(cons,1,(2*length(red_all)))';
-outputCol = vertcat(outputColStat,outputColLoc);
+preDataStat = downsample(preDataStat,8,0);
+postDataStat = downsample(postDataStat,8,0);
 
-normDiff_summary = table(outputCol,behStateCol,contrastCol, ...
-    'VariableNames',{'normDiff' 'behStat' 'contrast'});
-clear outputCol behStateCol contrastCol outputColStat outputColLoc
+preDataStat = preDataStat';
+postDataStat = postDataStat';
 
-%%
-vartestn(normDiff_summary.normDiff, normDiff_summary.contrast,'TestType','Bartlett')
-vartestn(normDiff_summary.normDiff, normDiff_summary.behStat,'TestType','Bartlett')
-%%
+data=horzcat(preDataStat,postDataStat);
+cellID=categorical(red_all);
+data=table(cellID,data(:,1),data(:,2),data(:,3),data(:,4),data(:,5),data(:,6),data(:,7),data(:,8),'VariableNames',{'cellID','D1B1','D1B2','D1B3','D1B4','D2B1','D2B2','D2B3','D2B4'});
 
+w = table(categorical([1 1 1 1 2 2 2 2 ].'), categorical([1 2 3 4 1 2 3 4].'), 'VariableNames', {'day', 'bin'}); % within-desing
 
-
-%compute chi squares for facilitation, low vs. high
-%25
-
-n1=facil_table_stat_low(1)*N1;
-n2=facil_table_stat_high(1)*N2;
-x1 = [repmat('a',N1,1); repmat('b',N2,1)];
-x2 = [repmat(1,n1,1); repmat(2,N1-n1,1); repmat(1,n2,1); repmat(2,N2-n2,1)];
-[tbl,chi2stat1,p1] = crosstab(x1,x2);
-
-%50
-n1=facil_table_stat_low(2)*N1;
-n2=facil_table_stat_high(2)*N2;
-x1 = [repmat('a',N1,1); repmat('b',N2,1)];
-x2 = [repmat(1,n1,1); repmat(2,N1-n1,1); repmat(1,n2,1); repmat(2,N2-n2,1)];
-[tbl,chi2stat2,p2] = crosstab(x1,x2);
-
-%100
-n1=facil_table_stat_low(3)*N1;
-n2=facil_table_stat_high(3)*N2;
-x1 = [repmat('a',N1,1); repmat('b',N2,1)];
-x2 = [repmat(1,n1,1); repmat(2,N1-n1,1); repmat(1,n2,1); repmat(2,N2-n2,1)];
-[tbl,chi2stat3,p3] = crosstab(x1,x2);
-
-
-%[chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
-[chi2stat1, chi2stat2, chi2stat3; p1, p2,p3]
-
-clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3
+rm = fitrm(data, 'D1B1-D2B4 ~ 1', 'WithinDesign', w);
+ranova(rm, 'withinmodel', 'day*bin')
