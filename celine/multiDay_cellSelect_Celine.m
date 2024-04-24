@@ -1,14 +1,14 @@
 clear all; clear global;  close all
 clc
 %ds = 'con_ori_nonDART'
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 363;
+day_id = 40;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -210,14 +210,6 @@ for iOri = 1:nOri %for every orientation
     title(num2str(oris(iOri)))
 end
 
-%make a colored image comparing cell activity at the low (1-2), medium (3)
-%and high (4-5) contrasts. There is a non-linear relationship between
-%contrast and cells activated due to surround suppression. 
-% rgb(:,:,1) = squeeze(max(mean(data_temp(:,:,:,1:2),4),[],3));
-% rgb(:,:,2) = squeeze(max(mean(data_temp(:,:,:,3),4),[],3));
-% rgb(:,:,3) = squeeze(max(mean(data_temp(:,:,:,4:5),4),[],3));
-% figure;  movegui('center'); imagesc(rgb./max(max(rgb(:,:,3)))); 
-% title('Comparing contrasts');
 
 data_ori_max = max(data_g_ori,[],3);
 data_dfof = cat(3, data_ori_max,data_ori_max,data_ori_max,data_g_ori);
@@ -295,9 +287,8 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
     figure; image(rgb);  movegui('center')
     title('Green-920 + Red-1040')
     print(fullfile(fnout,'red_green_FOV.pdf'),'-dpdf','-bestfit')
-
-    
     save(fullfile(fnout,'redImage'),'redChImg')
+
 elseif ~exist('redChImg')
     redChImg = zeros(size(regImg));
 end

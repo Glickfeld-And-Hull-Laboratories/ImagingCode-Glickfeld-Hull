@@ -38,8 +38,8 @@ nCon = length(targetCon)
 
 mice={};
 tc_trial_avrg_stat_concat=cell(1,nd);
-tc_trial_avrg_stat_hiPupil_concat=cell(1,nd);
-tc_trial_avrg_stat_lowPupil_concat=cell(1,nd);
+tc_trial_avrg_stat_largePupil_concat=cell(1,nd);
+tc_trial_avrg_stat_smallPupil_concat=cell(1,nd);
 tc_trial_avrg_loc_concat=cell(1,nd);
 resp_keep_concat=cell(1,nd);
 resp_max_keep_concat=cell(1,nd);
@@ -47,8 +47,8 @@ pref_responses_loc_concat=cell(1,nd);
 pref_responses_stat_concat=cell(1,nd);
 pref_peak_stat_concat=cell(1,nd);
 pref_peak_loc_concat=cell(1,nd);
-pref_responses_stat_hiPupil_concat=cell(1,nd);
-pref_responses_stat_lowPupil_concat=cell(1,nd);
+pref_responses_stat_largePupil_concat=cell(1,nd);
+pref_responses_stat_smallPupil_concat=cell(1,nd);
 RIx_concat=cell(1,nd);
 dirs_concat=[];
 cons_concat=[];
@@ -70,6 +70,8 @@ noiseCorr_concat = cell(1,nd);
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
+pref_allTrials_largePupil_concat =cell(nCon,nd);
+pref_allTrials_smallPupil_concat =cell(nCon,nd);
 dataTableConat=[];
 drug=cell(1,nSess);
 pupilMeans_concat=nan(nd,3,nSess);
@@ -153,8 +155,8 @@ for iSess = 1:nSess
     for id = 1:nd
         
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon));
-        tc_trial_avrg_stat_hiPupil_concat{id} = cat(2,tc_trial_avrg_stat_hiPupil_concat{id},tc_trial_avrg_stat_hiPupil{id}(:,:,sharedCon));
-        tc_trial_avrg_stat_lowPupil_concat{id} = cat(2,tc_trial_avrg_stat_lowPupil_concat{id},tc_trial_avrg_stat_lowPupil{id}(:,:,sharedCon));
+        tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon));
+        tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon));
         tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon));
         nonPref_trial_avrg_stat_concat{id} =cat(2,nonPref_trial_avrg_stat_concat{id},nonPref_trial_avrg_stat{id}(:,:,sharedCon));
         nonPref_trial_avrg_loc_concat{id} =cat(2,nonPref_trial_avrg_loc_concat{id},nonPref_trial_avrg_loc{id}(:,:,sharedCon));
@@ -164,8 +166,8 @@ for iSess = 1:nSess
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon));
         pref_peak_stat_concat{id}=cat(1,pref_peak_stat_concat{id},pref_peak_stat{id}(:,sharedCon));
         pref_peak_loc_concat{id}=cat(1,pref_peak_loc_concat{id},pref_peak_loc{id}(:,sharedCon));
-        pref_responses_stat_hiPupil_concat{id}=cat(1,pref_responses_stat_hiPupil_concat{id},pref_responses_stat_hiPupil{id}(:,sharedCon));
-        pref_responses_stat_lowPupil_concat{id}=cat(1,pref_responses_stat_lowPupil_concat{id},pref_responses_stat_lowPupil{id}(:,sharedCon));
+        pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon));
+        pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
@@ -179,6 +181,8 @@ for iSess = 1:nSess
             iCon=sharedCon(i);
             pref_allTrials_stat_concat{i,id}=[pref_allTrials_stat_concat{i,id},pref_allTrials_stat{iCon,id}];
             pref_allTrials_loc_concat{i,id}=[pref_allTrials_loc_concat{i,id},pref_allTrials_loc{iCon,id}];
+            pref_allTrials_largePupil_concat{i,id}=[pref_allTrials_largePupil_concat{i,id},pref_allTrials_largePupil{iCon,id}];
+            pref_allTrials_smallPupil_concat{i,id}=[pref_allTrials_smallPupil_concat{i,id},pref_allTrials_smallPupil{iCon,id}];
         end
         clear meanF i
     end
@@ -277,11 +281,11 @@ clear  iMouse
 
 
 %find cells that have running data on both days
-have_HI_pre = ~isnan(pref_responses_stat_hiPupil_concat{pre});
-have_HI_post = ~isnan(pref_responses_stat_hiPupil_concat{post});
+have_HI_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
+have_HI_post = ~isnan(pref_responses_stat_largePupil_concat{post});
 
-have_LOW_pre = ~isnan(pref_responses_stat_lowPupil_concat{pre});
-have_LOW_post = ~isnan(pref_responses_stat_lowPupil_concat{post});
+have_LOW_pre = ~isnan(pref_responses_stat_smallPupil_concat{pre});
+have_LOW_post = ~isnan(pref_responses_stat_smallPupil_concat{post});
 
 have_bothPupil=cell(1,3);
 for iCon =1:nCon
@@ -1952,22 +1956,22 @@ for id = 1:nd
     temp_green = have_allPupil_green;
     temp_red = have_allPupil_red;
 
-    tc_green_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_green,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_green,iCon),[],2);
+    tc_green_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),[],2);
     tc_green_se_stat_large{id}(:,iCon)=green_std/sqrt(length(temp_green));
     
-    tc_red_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_red,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_red,iCon),[],2);
+    tc_red_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_red,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_red,iCon),[],2);
     tc_red_se_stat_large{id}(:,iCon)=red_std/sqrt(length(temp_red));
     
     clear green_std red_std
 
-    tc_green_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_green,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_green,iCon),[],2);
+    tc_green_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),[],2);
     tc_green_se_stat_small{id}(:,iCon)=green_std/sqrt(length(temp_green));
     
-    tc_red_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_red,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_red,iCon),[],2);
+    tc_red_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_red,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_red,iCon),[],2);
     tc_red_se_stat_small{id}(:,iCon)=red_std/sqrt(length(temp_red));
     
     clear green_std red_std
@@ -2082,28 +2086,31 @@ print(fullfile(fnout,'Fig_S6_B.pdf'),'-dpdf');
 %% pupil stats
 pupilMeans_clean = squeeze(mean(pupilMeans_concat(:,:,:),1,'omitmissing')); %average the two days
 pupilMeans_clean = pupilMeans_clean([2,1,3],:); %rearrange rows
+pupilMeans_clean = pupilMeans_clean .*2;
+
 %pupilMeans_clean = pupilMeans_clean./(pupilMeans_clean(1,:)); %normalize to small pupil for each mouse
 pupilMean_overall =mean(pupilMeans_clean,2,'omitmissing');
 pupilSTD_overall =std(pupilMeans_clean,[],2,'omitmissing');
 pupilSE_overall = pupilSTD_overall./sqrt(nSess);   
 
 figure
-plot(pupilMeans_clean(:,:),'-o','Color',[.5 .5 .5])
+plot(pupilMeans_clean(:,:),'-','Color',[.5 .5 .5])
 xlim([.5 3.5])
 box off
 set(gca,'TickDir','out')
 xticks([1 2 3])
 xticklabels({'Small pupil','Large pupil','Running'})
-ylabel('Pupil diameter (pixels)')
+ylabel('Pupil diameter (mm)')
 hold on
-ylim([.15 .4])
-errorbar(pupilMean_overall,pupilSE_overall,'k')
+ylim([0 .9])
+scatter([1 2 3],pupilMeans_clean(:,:),10, "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
+errorbar(pupilMean_overall,pupilSE_overall,'.-k','MarkerSize',15)
 
 
 
 x0=5;
 y0=5;
-width=3.5;
+width=2.5;
 height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
@@ -2123,12 +2130,12 @@ have_allPupil_red = intersect(have_allPupil, red_ind_concat);
 for id = 1:nd
    
         
-    conResp_green_avrg_small{id}=mean(pref_responses_stat_lowPupil_concat{id}(have_allPupil_green,:),1,'omitnan');
-    green_std=std(pref_responses_stat_lowPupil_concat{id}(have_allPupil_green,:),1,'omitnan');
+    conResp_green_avrg_small{id}=mean(pref_responses_stat_smallPupil_concat{id}(have_allPupil_green,:),1,'omitnan');
+    green_std=std(pref_responses_stat_smallPupil_concat{id}(have_allPupil_green,:),1,'omitnan');
     conResp_green_se_small{id}=green_std/sqrt(length(have_allPupil_green));
     
-    conResp_red_avrg_small{id}=mean(pref_responses_stat_lowPupil_concat{id}(have_allPupil_red,:),1,'omitnan');
-    red_std=std(pref_responses_stat_lowPupil_concat{id}(have_allPupil_red,:),1,'omitnan');
+    conResp_red_avrg_small{id}=mean(pref_responses_stat_smallPupil_concat{id}(have_allPupil_red,:),1,'omitnan');
+    red_std=std(pref_responses_stat_smallPupil_concat{id}(have_allPupil_red,:),1,'omitnan');
     conResp_red_se_small{id}=red_std/sqrt(length(have_allPupil_red));
     
     clear green_std red_std
@@ -2175,12 +2182,12 @@ conResp_red_se_large = cell(1,nd); %same for red
 for id = 1:nd
    
         
-    conResp_green_avrg_large{id}=nanmean(pref_responses_stat_hiPupil_concat{id}(have_allPupil_green ,:),1);
-    green_std=nanstd(pref_responses_stat_hiPupil_concat{id}(have_allPupil_green,:),1);
+    conResp_green_avrg_large{id}=nanmean(pref_responses_stat_largePupil_concat{id}(have_allPupil_green ,:),1);
+    green_std=nanstd(pref_responses_stat_largePupil_concat{id}(have_allPupil_green,:),1);
     conResp_green_se_large{id}=green_std/sqrt(length(have_allPupil_green));
     
-    conResp_red_avrg_large{id}=nanmean(pref_responses_stat_hiPupil_concat{id}(have_allPupil_red,:),1);
-    red_std=nanstd(pref_responses_stat_hiPupil_concat{id}(have_allPupil_red,:),1);
+    conResp_red_avrg_large{id}=nanmean(pref_responses_stat_largePupil_concat{id}(have_allPupil_red,:),1);
+    red_std=nanstd(pref_responses_stat_largePupil_concat{id}(have_allPupil_red,:),1);
     conResp_red_se_large{id}=red_std/sqrt(length(have_allPupil_red));
     
     clear green_std red_std
@@ -2220,8 +2227,8 @@ print(fullfile(fnout,'Fig_S6_C.pdf'),'-dpdf');
 %% stats for pupil
 
 % prepare data for ANOVA
-dfof_small = horzcat(pref_responses_stat_lowPupil_concat{pre},pref_responses_stat_lowPupil_concat{post});
-dfof_large = horzcat(pref_responses_stat_hiPupil_concat{pre},pref_responses_stat_hiPupil_concat{post});
+dfof_small = horzcat(pref_responses_stat_smallPupil_concat{pre},pref_responses_stat_smallPupil_concat{post});
+dfof_large = horzcat(pref_responses_stat_largePupil_concat{pre},pref_responses_stat_largePupil_concat{post});
 
 cellID=(1:nKeep_total)';
 cell_type_col=categorical(red_concat)';
@@ -2272,9 +2279,9 @@ ranova(rm_Pyr_large, 'withinmodel', 'DART*contrast')
 
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[sst_h1, sst_p1]= ttest(pref_responses_stat_lowPupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_lowPupil_concat{post}(have_allPupil_red,1));
-[sst_h2, sst_p2]= ttest(pref_responses_stat_lowPupil_concat{pre}(have_allPupil_red,2),pref_responses_stat_lowPupil_concat{post}(have_allPupil_red,2));
-[sst_h3, sst_p3]= ttest(pref_responses_stat_lowPupil_concat{pre}(have_allPupil_red,3),pref_responses_stat_lowPupil_concat{post}(have_allPupil_red,3));
+[sst_h1, sst_p1]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_smallPupil_concat{post}(have_allPupil_red,1));
+[sst_h2, sst_p2]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_red,2),pref_responses_stat_smallPupil_concat{post}(have_allPupil_red,2));
+[sst_h3, sst_p3]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_red,3),pref_responses_stat_smallPupil_concat{post}(have_allPupil_red,3));
 
 %corrected for three tests
 sst_pvalues_small = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
@@ -2282,11 +2289,153 @@ contrasts = cons';
 table(contrasts,sst_pvalues_small)
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[sst_h1, sst_p1]= ttest(pref_responses_stat_hiPupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_hiPupil_concat{post}(have_allPupil_red,1));
-[sst_h2, sst_p2]= ttest(pref_responses_stat_hiPupil_concat{pre}(have_allPupil_red,2),pref_responses_stat_hiPupil_concat{post}(have_allPupil_red,2));
-[sst_h3, sst_p3]= ttest(pref_responses_stat_hiPupil_concat{pre}(have_allPupil_red,3),pref_responses_stat_hiPupil_concat{post}(have_allPupil_red,3));
+[sst_h1, sst_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_red,1));
+[sst_h2, sst_p2]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_red,2),pref_responses_stat_largePupil_concat{post}(have_allPupil_red,2));
+[sst_h3, sst_p3]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_red,3),pref_responses_stat_largePupil_concat{post}(have_allPupil_red,3));
 
 %corrected for three tests
 sst_pvalues_large = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
 table(contrasts,sst_pvalues_large)
+
+
+%calculate norm_diff
+norm_diff_pupil = nan(2,nCon,nKeep_total);
+for i = 1:nKeep_total
+    for iCon = 1:nCon
+        %for smallPupil trials
+        mean_pre_smallPupil = mean(pref_allTrials_smallPupil_concat{iCon,pre}{i});
+        mean_post_smallPupil=mean(pref_allTrials_smallPupil_concat{iCon,post}{i});
+        std_pre_smallPupil = std(pref_allTrials_smallPupil_concat{iCon,pre}{i});
+        norm_diff_smallPupil = (mean_post_smallPupil-mean_pre_smallPupil) / std_pre_smallPupil;
+
+        %for running trials
+        mean_pre_largePupil = mean(pref_allTrials_largePupil_concat{iCon,pre}{i});
+        mean_post_largePupil=mean(pref_allTrials_largePupil_concat{iCon,post}{i});
+        std_pre_largePupil = std(pref_allTrials_largePupil_concat{iCon,pre}{i});
+        norm_diff_largePupil = (mean_post_largePupil-mean_pre_largePupil)/ std_pre_largePupil;
+
+        %putting data into matrix
+        norm_diff_pupil(1,iCon,i)=norm_diff_smallPupil; %first is smallPupilionary
+        norm_diff_pupil(2,iCon,i)=norm_diff_largePupil; %second is running
+clear mean_pre_smallPupil mean_post_smallPupil std_pre_smallPupil mean_pre_largePupil mean_post_largePupil std_pre_largePupil norn_diff_smallPupil norm_diff_largePupil
+    end 
+end
+%remove any infiinty values resulting from divisions by zero, and turn
+%those into NANs instead
+norm_diff_pupil(find(norm_diff_pupil == -Inf))=NaN;
+norm_diff_pupil(find(norm_diff_pupil == Inf))=NaN;
+
+%%
+
+%make a subset of normalized difference for the SST cells only, then make
+% find how many are facilitated or suppressed by more than 1 std from
+% baseline
+%reselect norm_diff)red to be only the "red all" subset
+norm_diff_red = norm_diff_pupil(:,:,red_all);
+
+facil_red=norm_diff_red(:,:,:)>=1;
+supp_red=norm_diff_red(:,:,:)<=-1;
+
+N=length(red_all);
+facil_table_smallPupil = sum(facil_red(1,:,:),3)/N;
+supp_table_smallPupil = sum(supp_red(1,:,:),3)/N;
+facil_table_largePupil = sum(facil_red(2,:,:),3)/N;
+supp_table_largePupil = sum(supp_red(2,:,:),3)/N;
+
+figure;
+subplot(1,2,1)
+b=bar([1,2,3],[supp_table_smallPupil; supp_table_largePupil],'grouped','FaceColor',"#00ffff",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#70D0F6"
+b(2).FaceColor="#0C8ABB"
+xticklabels({'25','50','100'})
+ylim([0 .4])
+title('Suppressed')
+ylabel(["Fraction SST cells"]) 
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+subplot(1,2,2)
+b=bar([1,2,3],[facil_table_smallPupil; facil_table_largePupil],'FaceColor',"#a329cc",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#C983B1"
+b(2).FaceColor="#883367"
+xticklabels({'25','50','100'})
+ylim([0 .4])
+title('Facilitated')
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+x0=5;
+y0=5;
+width=3;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'pupil_normDiff.pdf'),'-dpdf')
+
+%%
+
+%compute chi squares for suppression, smallPupilionary vs running
+%25% contrast
+% N previously set to be the number of SST+ cells. The same cells are
+% included in smallPupilionary and running.
+n1=supp_table_smallPupil(1)*N;
+n2=supp_table_largePupil(1)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil1,p1] = crosstab(x1,x2);
+
+%50
+n1=supp_table_smallPupil(2)*N;
+n2=supp_table_largePupil(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil2,p2] = crosstab(x1,x2);
+
+%100
+n1=supp_table_smallPupil(3)*N;
+n2=supp_table_largePupil(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
+
+%25 smallPupil vs 100 smallPupil
+n1=supp_table_smallPupil(1)*N;
+n2=supp_table_smallPupil(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
+
+%[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1*3, p2*3,p3*3]
+[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
+
+clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3
+
+%compute chi squares for facilitation
+%25
+n1=facil_table_smallPupil(1)*N;
+n2=facil_table_largePupil(1)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil1,p1] = crosstab(x1,x2);
+
+%50
+n1=facil_table_smallPupil(2)*N;
+n2=facil_table_largePupil(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil2,p2] = crosstab(x1,x2);
+
+%100
+n1=facil_table_smallPupil(3)*N;
+n2=facil_table_largePupil(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
+
+[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
+clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
+%% get a table of capture values
+capture = getCaptureValues_annulus(mice);
+table(mice,capture(3,:)')
