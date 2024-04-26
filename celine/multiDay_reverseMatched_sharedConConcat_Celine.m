@@ -13,7 +13,7 @@ eval(ds);
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
 
-sess_list = [206 210 214];%enter all the sessions you want to concatenate
+sess_list = [284 294 307 323 333];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -80,7 +80,6 @@ tc_trial_avrg_stat_lowPupil_concat=cell(1,nd);
 tc_trial_avrg_loc_concat=cell(1,nd);
 tc_trial_avrg_keep_allCond_concat=cell(1,nd);
 resp_keep_concat=cell(1,nd);
-resp_max_keep_concat=cell(1,nd);
 pref_responses_loc_concat=cell(1,nd);
 pref_responses_stat_concat=cell(1,nd);
 pref_responses_stat_hiPupil_concat=cell(1,nd);
@@ -91,7 +90,6 @@ dirs_concat=[];
 cons_concat=[];
 green_concat=[];
 red_concat=[];
-dfof_max_diff_concat=[];
 nKeep_concat=[];
 LMI_concat = cell(1,nd);
 data_resp_concat = cell(1,nd);
@@ -138,7 +136,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'input.mat'));
     load(fullfile(fn_multi,'locomotion.mat'));
     load(fullfile(fn_multi,'fluor_intensity.mat'));
-    load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
+%    load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
 %    temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
 
     % temp_table.z_speed=zscor_xnan(temp_table.speed);
@@ -181,32 +179,32 @@ for iSess = 1:nSess
     for id = 1:nd
         
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon));
-        tc_trial_avrg_stat_hiPupil_concat{id} = cat(2,tc_trial_avrg_stat_hiPupil_concat{id},tc_trial_avrg_stat_hiPupil{id}(:,:,sharedCon));
-        tc_trial_avrg_stat_lowPupil_concat{id} = cat(2,tc_trial_avrg_stat_lowPupil_concat{id},tc_trial_avrg_stat_lowPupil{id}(:,:,sharedCon));
-        tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon));
+        % tc_trial_avrg_stat_hiPupil_concat{id} = cat(2,tc_trial_avrg_stat_hiPupil_concat{id},tc_trial_avrg_stat_hiPupil{id}(:,:,sharedCon));
+        % tc_trial_avrg_stat_lowPupil_concat{id} = cat(2,tc_trial_avrg_stat_lowPupil_concat{id},tc_trial_avrg_stat_lowPupil{id}(:,:,sharedCon));
+        % tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon));
 
-        nonPref_trial_avrg_stat_concat{id} =cat(2,nonPref_trial_avrg_stat_concat{id},nonPref_trial_avrg_stat{id}(:,:,sharedCon));
-        nonPref_trial_avrg_loc_concat{id} =cat(2,nonPref_trial_avrg_loc_concat{id},nonPref_trial_avrg_loc{id}(:,:,sharedCon));
+        % nonPref_trial_avrg_stat_concat{id} =cat(2,nonPref_trial_avrg_stat_concat{id},nonPref_trial_avrg_stat{id}(:,:,sharedCon));
+        % nonPref_trial_avrg_loc_concat{id} =cat(2,nonPref_trial_avrg_loc_concat{id},nonPref_trial_avrg_loc{id}(:,:,sharedCon));
 
         resp_keep_concat{id}=cat(1,resp_keep_concat{id},resp_keep{id});
-        resp_max_keep_concat{id}=cat(1,resp_max_keep_concat{id},resp_max_keep{id}(:,sharedCon));
+ 
         LMI_concat{id}=cat(1,LMI_concat{id},LMI{id}(:,sharedCon));
         pref_responses_loc_concat{id}=cat(1,pref_responses_loc_concat{id},pref_responses_loc{id}(:,sharedCon));
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon));
-        pref_responses_stat_hiPupil_concat{id}=cat(1,pref_responses_stat_hiPupil_concat{id},pref_responses_stat_hiPupil{id}(:,sharedCon));
-        pref_responses_stat_lowPupil_concat{id}=cat(1,pref_responses_stat_lowPupil_concat{id},pref_responses_stat_lowPupil{id}(:,sharedCon));
+        % pref_responses_stat_hiPupil_concat{id}=cat(1,pref_responses_stat_hiPupil_concat{id},pref_responses_stat_hiPupil{id}(:,sharedCon));
+        % pref_responses_stat_lowPupil_concat{id}=cat(1,pref_responses_stat_lowPupil_concat{id},pref_responses_stat_lowPupil{id}(:,sharedCon));
         pref_responses_allCond_concat{id}=cat(1,pref_responses_allCond_concat{id},pref_responses_allCond{id}(:,sharedCon));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
         meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
-        norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
-        norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
+        % norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
+        % norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
         %pref_nonPref_stat_concat{id}=cat(1,pref_nonPref_stat_concat{id},pref_nonPref_stat{id});
         %pref_nonPref_loc_concat{id}=cat(1,pref_nonPref_loc_concat{id},pref_nonPref_loc{id});
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
-        noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
-        sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
+%        noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
+ %       sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
             pref_allTrials_stat_concat{i,id}=[pref_allTrials_stat_concat{i,id},pref_allTrials_stat{iCon,id}];
@@ -214,7 +212,7 @@ for iSess = 1:nSess
         end
         clear meanF i
     end
-    dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
+  
    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
 
@@ -2686,7 +2684,7 @@ end
 
 %% compile capture values per imaging session
 %
-capture = getCaptureValues_annulus_peg(captureMice);
+capture = getCaptureValues_annulus(mice);
 
 %what do the distributions look like?
 figure;
@@ -3691,7 +3689,7 @@ ylabel('dF/F, pref ori')
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
 xlim([0 1])
-ylim([0 .1])
+ylim([0 .14])
 xticks([.25 .5 1])
 box off
 
@@ -3702,7 +3700,7 @@ errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
 title(['+HTP',' n = ', num2str(length(red_all))])
 xlabel('contrast') 
 xlim([0 1])
-ylim([0 .1])
+ylim([0 .14])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
 box off
