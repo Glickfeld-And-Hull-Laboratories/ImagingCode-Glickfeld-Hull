@@ -17,15 +17,16 @@ load(datafile);
 % tc_other - ch1 mask on ch2 & ch2 mask on ch1
 % tc_self - mask applied to the channel it was segmented from
 % all_ttests - ch1 mask on ch2 vs ch1 mask rotated cc 90 degrees on ch2
+% data in corresponding columns indicate MASK ORIGIN
 
 
 % tc_other = cell(23,3);
 % tc_self = cell(23,3);
 % all_ttests = zeros(23,2);
-% 
+
 nSer = size(final_masks,1);
 nCh = size(final_masks,2)-1;
-% 
+
 % for ser = 1:nSer
 %     for ch = 1:nCh
 %         if ch == 1
@@ -35,13 +36,13 @@ nCh = size(final_masks,2)-1;
 %         end
 %         % gets intensity of each object in THE OTHER CHANNEL using the mask
 %         % obtained by segmenting the current channel 
-%         otherCh_intensity = stackGetTimeCourses(img_data{ser,extract_img},final_masks{ser,ch});
+%         otherCh_intensity = stackGetTimeCourses(img_data{ser,ch},final_masks{ser,extract_img});
 %         tc_other{ser,extract_img} = otherCh_intensity;
 %         maskCh_intensity = stackGetTimeCourses(img_data{ser,ch},final_masks{ser,ch});
 %         tc_self{ser,ch} = maskCh_intensity;
 %         % rotates the mask counterclock wise 90 degrees 3 times
-%         mask_rot = rot90(final_masks{ser,ch});
-%         control_intensity = stackGetTimeCourses(img_data{ser,extract_img},mask_rot);
+%         mask_rot = rot90(final_masks{ser,extract_img});
+%         control_intensity = stackGetTimeCourses(img_data{ser,ch},mask_rot);
 %         all_ttests(ser,extract_img) = ttest(otherCh_intensity,control_intensity);
 %     end
 %     tc_other{ser,3} = img_data{ser,3}; 
@@ -212,138 +213,243 @@ errorbar(0.66,avg_mSc_2,sem_mSc_2,"o");
 
 hold off
 %% normalized
+% deprecated "normalization"
+% % "other channel" mask intensities/75% of the minimum "mask channel" mask intensities
+% 
+% intensity_cell = tc_self(:,[1 2]);
+% baseline = cellfun(@min,intensity_cell) * 0.75;
+% 
+% % since tc_other & tc_self organization is based on mask origin, intensities for
+% % Ch2 on tc_other is stored in column 1 and vice versa. Here, invert before
+% % normalization 
+% 
+% inv_tc_other(:,1) = tc_other(:,2);
+% inv_tc_other(:,2) = tc_other(:,1);
+% inv_tc_other(:,3) = tc_other(:,3);
+% 
+% norm_tc_other = cell(nSer,nCh+1);
+% 
+% for ser = 1:size(norm_tc_other,1)
+%     for ch = 1:nCh
+%         norm_tc_other{ser,ch} = inv_tc_other{ser,ch} / baseline(ser,ch);
+%     end
+% end
+% 
+% norm_tc_other(:,3) = inv_tc_other(:,3);
+% 
+% % now normalize the self tc
+% 
+% norm_tc_self = cell(nSer,nCh+1);
+% 
+% for ser = 1:size(norm_tc_self,1)
+%     for ch = 1:nCh
+%         norm_tc_self{ser,ch} = tc_self{ser,ch} / baseline(ser,ch);
+%     end
+% end
+% 
+% norm_tc_self(:,3) = tc_other(:,3);
+% 
+% %% plot the normalized version
+% 
+% norm_ChAvg_other = zeros(nSer,nCh);
+% norm_ChAvg_self = zeros(nSer,nCh);
+% 
+% for ser = 1:nSer
+%     for ch = 1:nCh
+%         norm_ChAvg_other(ser,ch) = mean(norm_tc_other{ser,ch});
+%         norm_ChAvg_self(ser,ch) = mean(norm_tc_self{ser,ch});
+%     end
+% end
+% 
+% 
+% % self
+% 
+% figure;
+% subplot(1,3,1);
+% sgtitle('normalized mask channel intensities');
+% hold on
+% title('MB HTP');
+% xticks([0.33 0.66]);
+% xlim([0 1]);
+% xticklabels({'r','c'});
+% ylabel('mean ch intensities / 75% of min obj intensity');
+% scatter(0.33,norm_ChAvg_self(mb_idx,1),'black');
+% scatter(0.66,norm_ChAvg_self(mb_idx,2),'black');
+% avg_mb_1 = mean(norm_ChAvg_self(mb_idx,1));
+% avg_mb_2 = mean(norm_ChAvg_self(mb_idx,2));
+% plot(0.33,avg_mb_1,'+r');
+% plot(0.66,avg_mb_2,'+r');
+% 
+% subplot(1,3,2);
+% hold on
+% title('NES HTP');
+% xticks([0.33 0.66]);
+% xlim([0 1]);
+% xticklabels({'r','c'});
+% scatter(0.33,norm_ChAvg_self(nes_idx,1),'black');
+% scatter(0.66,norm_ChAvg_self(nes_idx,2),'black');
+% avg_nes_1 = mean(norm_ChAvg_self(nes_idx,1));
+% avg_nes_2 = mean(norm_ChAvg_self(nes_idx,2));
+% plot(0.33,avg_nes_1,'+r');
+% plot(0.66,avg_nes_2,'+r');
+% 
+% subplot(1,3,3);
+% hold on
+% title('mScarlett HTP');
+% xticks([0.33 0.66]);
+% xlim([0 1]);
+% xticklabels({'r','c'});
+% scatter(0.33,norm_ChAvg_self(mSc_idx,1),'black');
+% scatter(0.66,norm_ChAvg_self(mSc_idx,2),'black');
+% avg_mSc_1 = mean(norm_ChAvg_self(mSc_idx,1));
+% avg_mSc_2 = mean(norm_ChAvg_self(mSc_idx,2));
+% plot(0.33,avg_mSc_1,'+r');
+% plot(0.66,avg_mSc_2,'+r');
+% 
+% % other
+% figure;
+% subplot(1,3,1);
+% sgtitle('normalized other channel intensities');
+% hold on
+% title('MB HTP');
+% xticks([0.33 0.66]);
+% xlim([0 1]);
+% xticklabels({'r','c'});
+% ylabel('mean ch intensities / 75% of min obj intensity');
+% scatter(0.33,norm_ChAvg_other(mb_idx,1),'black');
+% scatter(0.66,norm_ChAvg_other(mb_idx,2),'black');
+% avg_mb_1 = mean(norm_ChAvg_other(mb_idx,1));
+% avg_mb_2 = mean(norm_ChAvg_other(mb_idx,2));
+% plot(0.33,avg_mb_1,'+r');
+% plot(0.66,avg_mb_2,'+r');
+% 
+% subplot(1,3,2);
+% hold on
+% title('NES HTP');
+% xticks([0.33 0.66]);
+% xlim([0 1]);
+% xticklabels({'r','c'});
+% scatter(0.33,norm_ChAvg_other(nes_idx,1),'black');
+% scatter(0.66,norm_ChAvg_other(nes_idx,2),'black');
+% avg_nes_1 = mean(norm_ChAvg_other(nes_idx,1));
+% avg_nes_2 = mean(norm_ChAvg_other(nes_idx,2));
+% plot(0.33,avg_nes_1,'+r');
+% plot(0.66,avg_nes_2,'+r');
+% 
+% subplot(1,3,3);
+% hold on
+% title('mScarlett HTP');
+% xticks([0.33 0.66]);
+% xlim([0 1]);
+% xticklabels({'r','c'});
+% scatter(0.33,norm_ChAvg_other(mSc_idx,1),'black');
+% scatter(0.66,norm_ChAvg_other(mSc_idx,2),'black');
+% avg_mSc_1 = mean(norm_ChAvg_other(mSc_idx,1));
+% avg_mSc_2 = mean(norm_ChAvg_other(mSc_idx,2));
+% plot(0.33,avg_mSc_1,'+r');
+% plot(0.66,avg_mSc_2,'+r');
 
-% "other channel" mask intensities/75% of the minimum "mask channel" mask intensities
 
-intensity_cell = tc_self(:,[1 2]);
-baseline = cellfun(@min,intensity_cell) * 0.75;
 
-% since tc_other & tc_self organization is based on mask origin, intensities for
-% Ch2 on tc_other is stored in column 1 and vice versa. Here, invert before
-% normalization 
+%% distribution and inclusion criteria
 
-inv_tc_other(:,1) = tc_other(:,2);
-inv_tc_other(:,2) = tc_other(:,1);
-inv_tc_other(:,3) = tc_other(:,3);
+% visualizing intensity distributions
 
-norm_tc_other = cell(nSer,nCh+1);
+[plotx, ploty] = subplotn(nSer*nCh);
 
-for ser = 1:size(norm_tc_other,1)
+figure();
+hold on;
+sgtitle('Distribution of self mask intensities vs other mask intensities');
+for ser = 1:nSer
     for ch = 1:nCh
-        norm_tc_other{ser,ch} = inv_tc_other{ser,ch} / baseline(ser,ch);
+        if ch == 1
+            extract = 2;
+        else
+            extract = 1;
+        end
+        bin_n1 = round(size(tc_self{ser,ch},2)/2);
+        bin_n2 = round(size(tc_other{ser,extract},2)/2);
+        current_plotn = (ser-1)*2 + ch;
+        subplot(plotx,ploty,current_plotn);
+        hold on;
+        histogram(tc_self{ser,ch},bin_n1);
+        histogram(tc_other{ser,extract},bin_n2);
+        title_str = ['Series ' num2str(ser) ' CH ' num2str(ch) ' as baseline'];
+        title(title_str);
+        hold off;
     end
 end
+hold off;
 
-norm_tc_other(:,3) = inv_tc_other(:,3);
+% saveas(gcf,fullfile(analysis_out,'intensity_distributions'));
 
-% now normalize the self tc
-
-norm_tc_self = cell(nSer,nCh+1);
-
-for ser = 1:size(norm_tc_self,1)
-    for ch = 1:nCh
-        norm_tc_self{ser,ch} = tc_self{ser,ch} / baseline(ser,ch);
-    end
-end
-
-norm_tc_self(:,3) = tc_other(:,3);
-
-%% plot the normalized version
-
-norm_ChAvg_other = zeros(nSer,nCh);
-norm_ChAvg_self = zeros(nSer,nCh);
+% calculations
+coloc_count = zeros(nSer,nCh); % records # of cells above threshold for other mask
+coloc_percent = zeros(nSer,nCh);
 
 for ser = 1:nSer
     for ch = 1:nCh
-        norm_ChAvg_other(ser,ch) = mean(norm_tc_other{ser,ch});
-        norm_ChAvg_self(ser,ch) = mean(norm_tc_self{ser,ch});
+        if ch == 1
+            extract = 2;
+        else
+            extract = 1;
+        end
+        threshold = min(tc_self{ser,ch})*0.75;
+        %tc_self and tc_other are organized by the origin of the MASK
+        this_other_mask_int = tc_other{ser,extract};
+        this_other_mask_int(this_other_mask_int<threshold) = 0;
+        this_cell_count = length(find(this_other_mask_int));
+        coloc_count(ser,ch) = this_cell_count;
+        coloc_percent(ser,ch) = this_cell_count/length(tc_other{ser,extract});
     end
 end
 
+% save(fullfile(analysis_out,'coloc_count'),"coloc_count");
+% save(fullfile(analysis_out,'coloc_percent'),"coloc_percent");
 
-% self
+% tb_count = array2table(coloc_count);
+% tb_percent = array2table(coloc_percent);
+% 
+% tb_count.Properties.VariableNames("coloc_count1") = "Red";
+% tb_count.Properties.VariableNames("coloc_count2") = "Cyan";
+% tb_percent.Properties.VariableNames("coloc_percent1") = "Red";
+% tb_percent.Properties.VariableNames("coloc_percent2") = "Cyan";
 
-figure;
-subplot(1,3,1);
-sgtitle('normalized mask channel intensities');
-hold on
-title('MB HTP');
-xticks([0.33 0.66]);
-xlim([0 1]);
-xticklabels({'r','c'});
-ylabel('mean ch intensities / 75% of min obj intensity');
-scatter(0.33,norm_ChAvg_self(mb_idx,1),'black');
-scatter(0.66,norm_ChAvg_self(mb_idx,2),'black');
-avg_mb_1 = mean(norm_ChAvg_self(mb_idx,1));
-avg_mb_2 = mean(norm_ChAvg_self(mb_idx,2));
-plot(0.33,avg_mb_1,'+r');
-plot(0.66,avg_mb_2,'+r');
+%graph these as boxplots etc. 
+figure();
+sgtitle('75% as threshold')
+subplot(1,2,1);
+title('nCells passing threshold');
+hold on;
+boxplot(coloc_count(:,1));
+boxplot(coloc_count(:,2),'Positions',2);
+scatter(1,coloc_count(:,1),15,'black');
+scatter(2,coloc_count(:,2),15,'black');
+set(gca(),'XTick',[1 2],'XTickLabels',{'Red','Cyan'})
+xlim([0.33 2.66]);
+hold off;
 
-subplot(1,3,2);
-hold on
-title('NES HTP');
-xticks([0.33 0.66]);
-xlim([0 1]);
-xticklabels({'r','c'});
-scatter(0.33,norm_ChAvg_self(nes_idx,1),'black');
-scatter(0.66,norm_ChAvg_self(nes_idx,2),'black');
-avg_nes_1 = mean(norm_ChAvg_self(nes_idx,1));
-avg_nes_2 = mean(norm_ChAvg_self(nes_idx,2));
-plot(0.33,avg_nes_1,'+r');
-plot(0.66,avg_nes_2,'+r');
+subplot(1,2,2);
+title('% passing threshold');
+hold on;
+boxplot(coloc_percent(:,1));
+boxplot(coloc_percent(:,2),'Positions',2);
+scatter(1,coloc_percent(:,1),15,'black');
+scatter(2,coloc_percent(:,2),15,'black');
+set(gca(),'XTick',[1 2],'XTickLabels',{'Red','Cyan'})
+xlim([0.33 2.66]);
+hold off;
 
-subplot(1,3,3);
-hold on
-title('mScarlett HTP');
-xticks([0.33 0.66]);
-xlim([0 1]);
-xticklabels({'r','c'});
-scatter(0.33,norm_ChAvg_self(mSc_idx,1),'black');
-scatter(0.66,norm_ChAvg_self(mSc_idx,2),'black');
-avg_mSc_1 = mean(norm_ChAvg_self(mSc_idx,1));
-avg_mSc_2 = mean(norm_ChAvg_self(mSc_idx,2));
-plot(0.33,avg_mSc_1,'+r');
-plot(0.66,avg_mSc_2,'+r');
+%% rotated mask comparisons
 
-% other
-figure;
-subplot(1,3,1);
-sgtitle('normalized other channel intensities');
-hold on
-title('MB HTP');
-xticks([0.33 0.66]);
-xlim([0 1]);
-xticklabels({'r','c'});
-ylabel('mean ch intensities / 75% of min obj intensity');
-scatter(0.33,norm_ChAvg_other(mb_idx,1),'black');
-scatter(0.66,norm_ChAvg_other(mb_idx,2),'black');
-avg_mb_1 = mean(norm_ChAvg_other(mb_idx,1));
-avg_mb_2 = mean(norm_ChAvg_other(mb_idx,2));
-plot(0.33,avg_mb_1,'+r');
-plot(0.66,avg_mb_2,'+r');
 
-subplot(1,3,2);
-hold on
-title('NES HTP');
-xticks([0.33 0.66]);
-xlim([0 1]);
-xticklabels({'r','c'});
-scatter(0.33,norm_ChAvg_other(nes_idx,1),'black');
-scatter(0.66,norm_ChAvg_other(nes_idx,2),'black');
-avg_nes_1 = mean(norm_ChAvg_other(nes_idx,1));
-avg_nes_2 = mean(norm_ChAvg_other(nes_idx,2));
-plot(0.33,avg_nes_1,'+r');
-plot(0.66,avg_nes_2,'+r');
 
-subplot(1,3,3);
-hold on
-title('mScarlett HTP');
-xticks([0.33 0.66]);
-xlim([0 1]);
-xticklabels({'r','c'});
-scatter(0.33,norm_ChAvg_other(mSc_idx,1),'black');
-scatter(0.66,norm_ChAvg_other(mSc_idx,2),'black');
-avg_mSc_1 = mean(norm_ChAvg_other(mSc_idx,1));
-avg_mSc_2 = mean(norm_ChAvg_other(mSc_idx,2));
-plot(0.33,avg_mSc_1,'+r');
-plot(0.66,avg_mSc_2,'+r');
+
+%% plot within virus
+
+
+
+
+%% pool data within mouse
+
+

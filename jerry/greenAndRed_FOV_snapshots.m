@@ -1,11 +1,11 @@
 
-mouse = 'i2135';
-date = '231130';
-redFolder = '000'; %enter the first three digits
+mouse = 'i3304';
+date = '240424';
+redFolder = '001'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
-greenFolder = '001'; %enter the first three digits
+greenFolder = '000'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='171.87';
+depth='222.65';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
 % base = 
@@ -70,7 +70,7 @@ regImg = mean(data_g_reg_920,3);
 
 fig2=figure; imagesc(regImg);
 colormap gray;
-caxis([300 3000])
+caxis([200 2500])
 cd(out_path);
 title([' ' depth ' green at 920']);
 print(fullfile(out_path, [date '_' mouse '_FOV.pdf']),'-dpdf','-bestfit')

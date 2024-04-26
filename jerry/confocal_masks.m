@@ -107,8 +107,8 @@ for ser = 1:size1
 end
 
 %save the final processed masks and cell counts after the loop
-save(fullfile(mask_fig_path_vSize,['final_masks_' num2str(cellsizethresh)]),'final_masks');
-save(fullfile(mask_fig_path_vSize,['cell_counts_' num2str(cellsizethresh)]),'nCells_allCh');
+% save(fullfile(mask_fig_path_vSize,['final_masks_' num2str(cellsizethresh)]),'final_masks');
+% save(fullfile(mask_fig_path_vSize,['cell_counts_' num2str(cellsizethresh)]),'nCells_allCh');
 
 %% debugging & testing chunk
 

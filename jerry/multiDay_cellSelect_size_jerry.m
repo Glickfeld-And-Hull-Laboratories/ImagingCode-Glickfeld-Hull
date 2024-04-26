@@ -3,12 +3,12 @@ clc
 
 ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
-rc = 'G:\home\jerry\repositories\BehaviorCode-Glickfeld-Hull\BehaviorAnalysis\LGcode_HMS\behavConstsDART'; %directories
+rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 19;
+day_id = 21;
 %% load data for day
 
 mouse = expt(day_id).mouse;
