@@ -1,6 +1,6 @@
 clear all;
 %paths
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);

@@ -1,20 +1,40 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 370;
+day_id = 39;
+
+
+if computer == 'GLNXA64'
+    isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
+    datapath = fullfile('/All_Staff/home/ACh/Data/2p_data');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
+    beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/');
+elseif string(hostname) == 'NB-NUKE'
+    isilonName = 'Z:/All_Staff';
+    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    datapath = fullfile('/home/ACh/Data/2p_data');
+    beh_prefix = strcat('Z:/All_Staff/Behavior/Data/');
+else
+    isilonName = '';
+    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    datapath = fullfile('/home/ACh/Data/2p_data');
+    beh_prefix = strcat('Z:\Behavior\Data\');
+end
+
+
 %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 
-fn = fullfile(rc.achAnalysis,mouse,expDate); %can make this flexible if folder structure is different
+fn = fullfile(isilonName,base,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
 
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
@@ -23,43 +43,14 @@ nruns = length(runs);
 runFolder = [];
 for irun = 1:nruns
     imgFolder = runs{irun};
-    if nruns == 1
-        runFolder = imgFolder;
-        fnout = fullfile(fn,runFolder);
-        mkdir(fullfile(fn,runFolder))
-        fName = [imgFolder '_000_000'];
-    elseif irun < nruns
-        runFolder = [runFolder '_' imgFolder];
-        fName = [imgFolder '_000_000'];
-    else
-        runFolder = [runFolder '_' imgFolder];
-        fnout = fullfile(fn,runFolder);
-        mkdir(fullfile(fn,runFolder))
-        fName = [imgFolder '_000_000'];
-    end
+    runFolder = imgFolder;
+    fnout = fullfile(fn,runFolder);
+    mkdir(fullfile(fn,runFolder))
+    %fName = [imgFolder '_000_000'];
 
+    CD = fullfile(isilonName,datapath, mouse, expDate, runFolder);
+    dat = 'data-';
 
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        root = rc.data;
-        CD = fullfile(root,mouse,expDate,runFolder);
-        dat = 'data-';
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        root = rc.ashleyData;
-        CD = fullfile(root,mouse,'two-photon imaging', expDate,runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        root = rc.tammyData;
-        CD = fullfile(root, mouse, '2P',expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'celine')
-        root = rc.Data;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-';
-    end
     cd(CD);
 
     imgMatFile = [imgFolder '_000_000.mat'];
@@ -67,9 +58,9 @@ for irun = 1:nruns
     tHostname = lower(hostname);
     [s,tUsername] = dos('ECHO %USERNAME%');
     switch tHostname
-        case {'nuke'}
-            if username == 'celine' 
-                fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+        case {'nb-nuke'}
+            if username == 'cc735' 
+                fName = ['Z:\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
 
             else
                 fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
@@ -241,10 +232,13 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
     elseif strcmp(expt(day_id).data_loc,'tammy')
         cd(fullfile(root, mouse, '2P',expDate, redRun));
     elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        cd(fullfile(root, mouse, expDate, redRun));
+        cd(fullfile(isilonName,datapath, mouse, expDate, redRun));
     end
     load(imgMatFile);
+
+
+
+    imgMatFile = [imgFolder '_000_000.mat'];
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
     data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);
@@ -312,7 +306,7 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redThresh,redThresh,redThresh); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that

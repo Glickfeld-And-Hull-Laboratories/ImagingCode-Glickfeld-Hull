@@ -7,7 +7,7 @@ eval(ds);
 doGreenOnly = false;
 doCorrImg = true;
 
-day_id = 297;
+day_id = 285;
 
 refFolder = '005'; %ENTER THE FOLDER NUMBER, FROM THE SAME RECORDING SESSION, 
 %TO IMPORT MASKS FROM
@@ -18,6 +18,11 @@ if computer == 'GLNXA64'
     datapath = fullfile('/All_Staff/home/ACh/Data/2p_data');
     base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/');
+elseif string(hostname) == 'NB-NUKE'
+    isilonName = 'Z:/All_Staff';
+    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    datapath = fullfile('/home/ACh/Data/2p_data');
+    beh_prefix = strcat('Z:/All_Staff/Behavior/Data/');
 else
     isilonName = '';
     base = fullfile('/home/ACh/Analysis/2p_analysis');
@@ -132,75 +137,54 @@ else %if not, must register to the reference now
     input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
 end
-%%
-% find activated cells
+
+%% find activated cells
 %find number of frames per trial and temporarily reshape data into trials
 %overal goal here is to get green data in terms of df/f
 nOn = input.nScansOn;
 nOff = input.nScansOff;
-
-% data_g_reg = data_g_reg(:,:,1:10080);
-% ntrials = 160;
-ntrials = size(input.tGratingContrast,2);
 sz = size(data_g_reg);
+ntrials = size(input.tGratingDirectionDeg,2);
+%ntrials = 374;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
 data_g_dfof = (data_g_on-data_g_f)./data_g_f;
 clear data_g_trial data_g_on data_g_f
 
-%find the different contrasts and orientations
-tCon = celleqel2mat_padded(input.tGratingContrast(1:ntrials));
-%tCon = tCon(1:160);
-cons = unique(tCon);
-nCon = length(cons);
-ind_con = find(tCon == max(cons(:)));
+%find the different directions and sizes
 tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:ntrials));
-%tDir = tDir(1:160);
-tOri = tDir;
-tOri(find(tDir>=180)) = tDir(find(tDir>=180))-180;
-oris = unique(tOri);
-nOri = length(oris);
-data_g_ori = zeros(sz(1),sz(2), nOri);
-data_temp = zeros(sz(1),sz(2), nOri, nCon);
-[n n2] = subplotn(nOri);
+dirs = unique(tDir);
+nDir = length(dirs);
+
+tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:ntrials));
+sizes = unique(tSize);
+nSize = length(sizes);
+ind_dir = find(tDir == max(sizes(:)));
+
+data_g_size = zeros(sz(1),sz(2), nSize);
+data_temp = zeros(sz(1),sz(2), nSize, nDir);
+[n n2] = subplotn(nSize);
 figure; movegui('center');
-for iOri = 1:nOri %for every orientation
-    data_g_con = zeros(sz(1),sz(2), nCon); %make a data frame is the size of one imaging frame X the number of contrasts
-    for iCon = 1:nCon %for every contrast
-        ind_con = find(tCon == cons(iCon)); %find the indices of trials with that contrast
-        ind_ori = intersect(ind_con, find(tOri == oris(iOri)));%find ind of intersection between that contrast and the ori we're looking at
-        data_g_con(:,:,iCon) = mean(data_g_dfof(:,:,ind_ori),3); %pull out all those trials and average over the trials
-        data_temp(:,:,iOri,iCon) = mean(data_g_dfof(:,:,ind_ori),3);
+
+    for iSize = 1:nSize %for every size
+        data_g_dir = zeros(sz(1),sz(2), nDir); %make a data frame is the size of one imaging frame X the number of directions
+        for iDir = 1:nDir %for every direction
+            ind_dir = find(tDir == dirs(iDir)); %find the indices of trials with that direction
+            ind_size = intersect(ind_dir, find(tSize == sizes(iSize)));%find ind of intersection between that direction and the size we're looking at
+            data_g_dir(:,:,iDir) = mean(data_g_dfof(:,:,ind_size),3); %pull out all those trials and average over the trials
+            data_temp(:,:,iSize,iDir,nDir) = mean(data_g_dfof(:,:,ind_size),3);
+        end
+    
+        data_g_size(:,:,iSize) = max(data_g_dir,[],3); %find the direction with the max response for that size
+        subplot(n,n2,iSize)
+        imagesc(data_g_size(:,:,iSize))
+        title(num2str(sizes(iSize)))
     end
-    data_g_ori(:,:,iOri) = max(data_g_con,[],3); %find the contrast with the max response for that orientation
-    subplot(n,n2,iOri)
-    imagesc(data_g_ori(:,:,iOri))
-    title(num2str(oris(iOri)))
-end
 
-%make a colored image comparing cell activity at the low (1-2), medium (3)
-%and high (4-5) contrasts. There is a non-linear relationship between
-%contrast and cells activated due to surround suppression. 
-% rgb(:,:,1) = squeeze(max(mean(data_temp(:,:,:,1:2),4),[],3));
-% rgb(:,:,2) = squeeze(max(mean(data_temp(:,:,:,3),4),[],3));
-% rgb(:,:,3) = squeeze(max(mean(data_temp(:,:,:,4:5),4),[],3));
-% figure;  movegui('center'); imagesc(rgb./max(max(rgb(:,:,3)))); 
-% title('Comparing contrasts');
+%print image
 
-data_ori_max = max(data_g_ori,[],3);
-data_dfof = cat(3, data_ori_max,data_g_ori);
-figure; imagesc(data_ori_max); movegui('center');title('data ori max');
-clear data_g_dfof
-
-%get pixel correlation image, another method to identify cells
-data_g_down = stackGroupProject(data_g_reg,100);
-corrImg = getPixelCorrelationImage(data_g_down);
-figure; imagesc(corrImg); movegui('center');title('pixel correlation');
-data_dfof = cat(3, data_dfof, corrImg);
-clear data_g_down
-
-data_dfof = cat(3, data_dfof,data_avg);
+data_size_max = max(data_g_size,[],3);
 
 %% load red cells and register them to the green signal
 %this is where we use the 1040, 1000-frame run
@@ -263,7 +247,7 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 %% import masks from a reference run
 load(fullfile(fnref,'mask_cell.mat'));
 nCells = max(mask_cell(:)); % take max label of mask_cell, should circumvent bwlabel
-fprintf([num2str(nCells) ' total cells selected\n'])
+fprintf([num2str(nCells) ' total cells from ref\n'])
 
 figure;
 imagesc(data_dfof(:,:,1)); hold on;
@@ -276,7 +260,9 @@ bound = cell2mat(bwboundaries(mask_cell(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',.5); 
 colormap(gray)
 
-save(fullfile(fnout, 'mask_cell.mat'), 'redChImg', 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
+
+
+%save(fullfile(fnout, 'mask_cell.mat'), 'redChImg', 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
 
 %% extract timecourses
 
