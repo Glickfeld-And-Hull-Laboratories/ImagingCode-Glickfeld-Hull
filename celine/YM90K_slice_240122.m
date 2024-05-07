@@ -17,7 +17,7 @@ cells_WO_events=readtable('cells_WO_events.csv');
 
 fullData = vertcat(fullData, cells_WO_events);
 
-reducedData = fullData(:,[1,4,7,11,12]);
+reducedData = fullData(:,[1,4,7,9,11,12]);
 reducedData.drugCondition = categorical(reducedData.drugCondition);
 reducedData.group=categorical(reducedData.group);
 reducedData.eventHz = reducedData.eventPerMin/60;
@@ -52,7 +52,7 @@ expSE=expSTD / nExp;
 
 figure
 subplot(1,2,1)
-plot([matched.eventHz_bslnOnly(matched.group_drugOnly=='con'),matched.eventHz_drugOnly(matched.group_drugOnly=='con')]',"Color",[0 0 0 .25])
+plot([matched.eventHz_bslnOnly(matched.group_drugOnly=='con'),matched.eventHz_drugOnly(matched.group_drugOnly=='con')]')
 hold on
 scatter([1,2],[matched.eventHz_bslnOnly(matched.group_drugOnly=='con'),matched.eventHz_drugOnly(matched.group_drugOnly=='con')]',10, ...
     "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
@@ -134,29 +134,7 @@ print(fullfile('ePSC_amp.pdf'),'-dpdf')
 %% t-test for amplitude
 [h,p,ci,stats] = ttest2(bslnOnly.eventAmp(bslnOnly.group=='con'),bslnOnly.eventAmp(bslnOnly.group=='exp'))
 %%
-
-fullData.drugCondition = reordercats(fullData.drugCondition,{'none' 'NBQX'});
-
-figure;
-subplot(1,2,1)
-c = (fullData.controlType(fullData.group=='con'));
-swarmchart(fullData.drugCondition(fullData.group=='con'),fullData.eventHz(fullData.group=='con'),20,c,'filled')
-hold on
-%boxchart(fullData.drugCondition(fullData.group=='con'),fullData.eventHz(fullData.group=='con'))
-ylim([0 550])
-xticklabels({'Baseline','NBQX'})
-ylabel('ePSCs per minute')
-title('Control')
-set(gca,'TickDir','out')
-box off
-
-subplot(1,2,2)
-swarmchart(fullData.drugCondition(fullData.group=='exp'),fullData.eventHz(fullData.group=='exp'),20,"b",'filled')
-hold on
-%boxchart(fullData.drugCondition(fullData.group=='exp'),fullData.eventHz(fullData.group=='exp'))
-ylim([0 550])
-xticklabels({'Baseline','NBQX'})
-ylabel('ePSCs per minute')
-title('Experimental')
-set(gca,'TickDir','out')
-box off
+figure
+boxchart(matched.controlType_bslnOnly,matched.eventHz_bslnOnly)
+figure
+boxchart(matched.controlType_drugOnly,matched.eventHz_drugOnly)

@@ -39,7 +39,8 @@ for iExpt = 1:nExpt
     date = expt(expt_num).date;
     time = expt(expt_num).contrastxsize_time;
     frame_rate = expt(expt_num).frame_rate; 
-    load(fullfile(base, mouse, date,'goodFitResp_summary.mat'));
+    ImgFolder = expt(expt_num).contrastxsize_runs;
+    load(fullfile(base, mouse, date,ImgFolder,'goodFitResp_summary_updated.mat'));
     beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
     load(beh_file); %load the mworks behavioral file
 
@@ -181,7 +182,7 @@ for iSize = 1:nSizes %loop through the sizes
            peak_time(iSize,iCon, iCell,2)= t2(trough_time_temp);
 
                 if peak > 0
-                   if iCon > 2
+                   if iCon > 0 %previously I used this to only take the half peak measurement for 
                        
                        halfPeak = peak/2;
                        %find the frame of the half peak
@@ -2254,25 +2255,26 @@ DistCutoffs=[0,10,20,100];
 print(['prefOri',num2str(iOri),'_matrix.pdf'], '-dpdf');
     end
 
- %% responsive, centered
+ %% responsive at each stim condition, not neccearily centered
+
+nSST_resp_by_cond = nan(nCons,nSizes);
+h_any = logical(sum(sum(h_concat,3),2));
+nSST_resp_any = sum(h_any(interNrns));
+
 
 t = 1:double(nOn+nOff);
 t=(t-double(stimStart))/frame_rate;
-
-
-
 [n n2] = subplotn(nSizes*nCons);
 x=1;
-
-
-
-figure;
+fig=figure;
+for iCon = 1:nCons
     for iSize = 1:nSizes %loop through the sizes
         
-        for iCon = 1:nCons
+        
         responsiveTheseTrials = find(h_concat(:,iSize,iCon));
-        thesePyr=intersect(centerPyr,responsiveTheseTrials);
-        theseIN=intersect(centerIN,responsiveTheseTrials);
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
+        nSST_resp_by_cond(iCon,iSize)=length(theseIN);
 
         temp_mean1 = mean(TCs_stat(:,iSize,iCon,thesePyr),4,"omitnan");
         temp_se1 = std(TCs_stat(:,iSize,iCon,thesePyr),[],4,"omitnan")/sqrt(length(thesePyr));
@@ -2283,7 +2285,7 @@ figure;
 
 
 
-        subplot(n,n2,x)
+        subplot(n2,n,x)
 
         shadedErrorBar(t(:),temp_mean2,temp_se2,'b');
         hold on
@@ -2300,13 +2302,19 @@ figure;
         set(gca, 'TickDir', 'out')
         hline(0)
         hold off
-        title([{num2str(length(thesePyr)) ' Pyr cells'} {num2str(length(theseIN)) ' SST cells'}] )        
+        title([{num2str(length(thesePyr)) ' Pyr cells'} {num2str(length(theseIN)) ' SST cells'}] )
+        %title([num2str(Sizes(iSize)),' contrast ',num2str(Cons(iCon))])
         x=x+1;
         end
         
 clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
     end
-
+han=axes(fig,'visible','off'); 
+han.Title.Visible='on';
+han.XLabel.Visible='on';
+han.YLabel.Visible='on';
+ylabel(han,'Contrast');
+xlabel(han,'Size');
 x0=1;
 y0=1;
 width=7;
@@ -2315,8 +2323,89 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 sgtitle(['Stationary'])
 
-print('Centered_responsive_cells', '-dpdf');
+print('TCs_respAtEach', '-dpdf');
 
+nSST_PCT_by_cond = nSST_resp_by_cond./nSST_resp_any;
+figure; heatmap(nSST_PCT_by_cond);
+xlabel('Size')
+ylabel('Contrast')
+ax = gca;
+ax.XData = [7.5, 15, 30, 60, 120]
+ax.YData =[0.1, 0.2, 0.4, 0.8]
+print('Prct_respAtEach', '-dpdf');
+%% rise time, decay time, and FWHM for cells responsive at each size, 80% contrast
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+        
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,thesePyr,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,thesePyr,3:4),[],3,"omitnan"))./length(thesePyr);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,thesePyr),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,thesePyr),[],3,"omitnan"))./length(thesePyr);
+
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,theseIN,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseIN,3:4),[],3,"omitnan"))./length(theseIN);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseIN),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseIN),[],3,"omitnan"))./length(theseIN);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_respAtEach', '-dpdf');
 %% size tuning for only responsive cells are each condition
 figure;
 subplot(1,2,1)
@@ -2325,7 +2414,7 @@ for iCon = 1:nCons
     sizeSE=[];
     for iSize = 1:nSizes
         responsiveTheseTrials = find(h_concat(:,iSize,iCon));
-        thesePyr=intersect(centerPyr,responsiveTheseTrials);
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
 
         temp_mean = mean(peak_trough(iSize,iCon,thesePyr,1),3,"omitnan");
         temp_se = std(peak_trough(iSize,iCon,thesePyr,1),[],3,"omitnan")/sqrt(length(thesePyr));
@@ -2356,7 +2445,7 @@ for iCon = 1:nCons
     sizeSE=[];
     for iSize = 1:nSizes
         responsiveTheseTrials = find(h_concat(:,iSize,iCon));
-        theseIN=intersect(centerIN,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
 
         temp_mean = mean(peak_trough(iSize,iCon,theseIN,1),3,"omitnan");
         temp_se = std(peak_trough(iSize,iCon,theseIN,1),[],3,"omitnan")/sqrt(length(theseIN));

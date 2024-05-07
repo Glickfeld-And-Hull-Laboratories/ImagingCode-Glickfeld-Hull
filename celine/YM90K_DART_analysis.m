@@ -189,16 +189,23 @@ for iSess = 1:nSess
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon));
    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
-    
+   if size(pref_responses_stat_concat{id},1) ~= size(pref_responses_stat_smallPupil_concat{id},1)
+       break
+   end
+       
+
+
+
 iSess
 end
 
-clear mouse iSess nKeep iSess fn_multi cons oris pupilMeans norm_dir_resp_loc norm_dir_resp_stat
+clear mouse  nKeep  fn_multi cons oris pupilMeans norm_dir_resp_loc norm_dir_resp_stat
 clear explanation1 resp_keep sig_diff pref_con_keep pref_ori_keep tOri_match tCon_match data_trial_keep nTrials tc_trial_avrg_keep green_keep_logical red_keep_logical green_ind_keep red_ind_keep
 clear LMI RIx locCounts locResp locTCs statResp statTCs wheel_tc ttest_results_stat ttest_results_loc ttest_results_allCon_stat ttest_results_allCon_loc
 clear data_con_resp_keep data_ori_resp_keep data_rep_keep dfof_max_diff dfof_max_diff_raw explanation2 resp_max_keep data_resp_keep pref_responses_stat pref_responses_loc
 clear tc_trial_avrg_stat tc_trial_avrg_loc fullTC_keep norm_dir_resp sigCorr noiseCorr responseByCondProps
 clear red_fluor_all red_fluor_match green_fluor_match green_fluor_match red_fluor_keep green_fluor_keep R_p_values pre_nonPref_stat pre_nonPref_loc
+clear pref_responses_stat_hiPupil pref_responses_stat_largePupil pref_responses_stat_lowPupil pref_responses_stat_smallPupil
 red_ind_concat = find(red_concat);
 green_ind_concat = find(green_concat);
 
@@ -1477,30 +1484,18 @@ ylim([0.05 .3])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
 box off
-
-% stats for supplemental figure
-Pyr_dfof = matched_dfof_summary((matched_dfof_summary.cellType==0),:);
-lme_pyr= fitlme(Pyr_dfof,'dfof~behState*contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_pyr)
-
-%simple main effect
-pyr_dfof_stat=Pyr_dfof(Pyr_dfof.behState=='stat',:);
-pyr_dfof_loc=Pyr_dfof(Pyr_dfof.behState=='loc',:);
-
-lme_pyr_stat= fitlme(pyr_dfof_stat,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_pyr_stat)
-
-lme_pyr_loc= fitlme(pyr_dfof_loc,'dfof~contrast*day+(1|mouseID)+(1|cellID:mouseID)');
-anova(lme_pyr_loc)
-
-% pairwise ttests for dfof response at each contrast for pyr cells
+%%
+% pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
 [pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
 [pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
 
 %corrected for three tests
 pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
-% pairwise ttests for dfof response at each contrast for pyr cells
+contrasts = cons';
+table(contrasts,pyr_pvalues_stat)
+
+% pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
 [pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
 [pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
@@ -1508,8 +1503,7 @@ pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 %corrected for three tests
 pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 contrasts = cons';
-table(contrasts,pyr_pvalues_stat,pyr_pvalues_loc)
-
+table(contrasts,pyr_pvalues_loc)
 x0=5;
 y0=5;
 width=2.5;
@@ -2116,6 +2110,12 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
 
+% confirm that there's no difference in size across days within the "small"
+% pupil trials
+[h p] = ttest(pupilMeans_concat(pre,1,:),pupilMeans_concat(post,1,:))
+% confirm that there's no difference in size across days within the "large"
+% pupil trials
+[h p] = ttest(pupilMeans_concat(pre,2,:),pupilMeans_concat(post,2,:))
 
 %% contrast response pupil
 
@@ -2224,7 +2224,7 @@ height=3;
 
 print(fullfile(fnout,'Fig_S6_C.pdf'),'-dpdf');
 
-%% stats for pupil
+%% stats for data split by pupil
 
 % prepare data for ANOVA
 dfof_small = horzcat(pref_responses_stat_smallPupil_concat{pre},pref_responses_stat_smallPupil_concat{post});
@@ -2298,6 +2298,25 @@ sst_pvalues_large = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
 table(contrasts,sst_pvalues_large)
 
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_smallPupil_concat{post}(have_allPupil_green,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_green,2),pref_responses_stat_smallPupil_concat{post}(have_allPupil_green,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_green,3),pref_responses_stat_smallPupil_concat{post}(have_allPupil_green,3));
+
+%corrected for three tests
+pyr_pvalues_small = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+contrasts = cons';
+table(contrasts,pyr_pvalues_small)
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_green,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_green,2),pref_responses_stat_largePupil_concat{post}(have_allPupil_green,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_green,3),pref_responses_stat_largePupil_concat{post}(have_allPupil_green,3));
+
+%corrected for three tests
+pyr_pvalues_large = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+contrasts = cons';
+table(contrasts,pyr_pvalues_large)
 
 %calculate norm_diff
 norm_diff_pupil = nan(2,nCon,nKeep_total);
@@ -2376,7 +2395,7 @@ print(fullfile(fnout,'pupil_normDiff.pdf'),'-dpdf')
 
 %%
 
-%compute chi squares for suppression, smallPupilionary vs running
+%compute chi squares for suppression, small pupil vs large pupil
 %25% contrast
 % N previously set to be the number of SST+ cells. The same cells are
 % included in smallPupilionary and running.
@@ -2407,8 +2426,8 @@ x1 = [repmat('a',N,1); repmat('b',N,1)];
 x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
 
-%[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1*3, p2*3,p3*3]
-[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
+[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1*3, p2*3,p3*3]
+%[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
 
 clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3
 
@@ -2439,3 +2458,14 @@ clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
 %% get a table of capture values
 capture = getCaptureValues_annulus(mice);
 table(mice,capture(3,:)')
+edges = linspace(1, 2, 10); % Create 20 bins.
+% Plot the histogram.
+histogram(capture(3,:),'BinEdges',edges);
+xlim([1 2])
+box off
+set(gca, 'TickDir', 'out')
+x0=5;
+y0=5;
+width=1.1;
+height=1.1;
+set(gcf,'units','inches','position',[x0,y0,width,height])

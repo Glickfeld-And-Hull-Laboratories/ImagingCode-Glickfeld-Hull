@@ -10,6 +10,7 @@ nTrialPerStim = zeros(1,nDirs);
 for iDir = 1:nDirs
     nTrialPerStim(iDir) = length(find(tDir == Dirs(iDir)));
 end
+
 for i = 1:nDirs
     for j = 1:nDirs
         trial_mat(i,j) = nTrialPerStim(i)+nTrialPerStim(j);
