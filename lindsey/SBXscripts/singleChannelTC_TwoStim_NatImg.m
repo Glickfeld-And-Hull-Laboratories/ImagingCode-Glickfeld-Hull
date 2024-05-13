@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '240113';
+date = '240428';
 ImgFolder = {'002'};
-time = strvcat('1655');
-mouse = 'i1387';
+time = strvcat('1313');
+mouse = 'i1392';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -42,7 +42,7 @@ nep = floor(size(data,3)./10000);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
 
 %% Register data
-data_avg = mean(data(:,:,50001:50500),3);
+data_avg = mean(data(:,:,20001:20500),3);
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
@@ -84,48 +84,60 @@ nTrials = length(cStimOne);
 sz = size(data_reg);
 data_f = nan(sz(1),sz(2),nTrials);
 data_one = nan(sz(1),sz(2),nTrials);
+data_tc = nan(sz(1),sz(2),41,nTrials);
 for itrial = 1:nTrials
-    if ~isnan(cStimOne(itrial)) & (cStimOne(itrial)+30)<sz(3)
+    if ~isnan(cStimOne(itrial)) & (cStimOne(itrial)+10)<sz(3)
         data_f(:,:,itrial) = mean(data_reg(:,:,cStimOne(itrial)-20:cStimOne(itrial)-1),3);
-        data_one(:,:,itrial) = mean(data_reg(:,:,cStimOne(itrial)+5:cStimOne(itrial)+25),3);
+        data_one(:,:,itrial) = mean(data_reg(:,:,cStimOne(itrial)+5:cStimOne(itrial)+10),3);
     end
 end
 data_one_dfof = (data_one-data_f)./data_f;
 clear data_one
 
+tStimOne = celleqel2mat_padded(input.tstimOne);
+stimOne = unique(tStimOne);
+nStim = length(stimOne);
 
-data_dfof_avg = zeros(sz(1),sz(2),20);
-for i = 1:20
-    ind = randperm(nTrials,50);
-    data_dfof_avg(:,:,i) = mean(data_one_dfof(:,:,ind),3);
-end
-data_dfof_max = max(data_dfof_avg,[],3);
-
-data_dfof_stim = zeros(sz(1),sz(2),21);
-b = 5;
-for i = 1:20
-    ind = randperm(nTrials,50);
-    corr_map = zeros(sz(1),sz(2));
-    for ix = b:sz(2)-b
-        for iy = b:sz(1)-b
-            block = reshape(data_one_dfof(iy-1:iy+1,ix-1:ix+1,ind),[9 50]);
-            TC = block(5,:);
-            surround = mean(block([1:4 6:9],:),1);
-            corr_map(iy,ix) = corr(TC',surround','rows','complete');
-        end
+if nStim>50
+    data_dfof_avg = zeros(sz(1),sz(2),20);
+    for i = 1:20
+        ind = randperm(nTrials,50);
+        data_dfof_avg(:,:,i) = mean(data_one_dfof(:,:,ind),3);
     end
-    data_dfof_stim(:,:,i) = corr_map;
+    data_dfof_max = max(data_dfof_avg,[],3);
+    
+    data_dfof_stim = zeros(sz(1),sz(2),21);
+    b = 5;
+    for i = 1:20
+        ind = randperm(nTrials,50);
+        corr_map = zeros(sz(1),sz(2));
+        for ix = b:sz(2)-b
+            for iy = b:sz(1)-b
+                block = reshape(data_one_dfof(iy-1:iy+1,ix-1:ix+1,ind),[9 50]);
+                TC = block(5,:);
+                surround = mean(block([1:4 6:9],:),1);
+                corr_map(iy,ix) = corr(TC',surround','rows','complete');
+            end
+        end
+        data_dfof_stim(:,:,i) = corr_map;
+    end
+else
+    data_dfof_stim = zeros(sz(1),sz(2),nStim);
+    [n n2] = subplotn(nStim);
+    figure;
+    for i = 1:nStim
+        ind = find(tStimOne == stimOne(i));
+        data_dfof_stim(:,:,i) = mean(data_one_dfof(:,:,ind),3,'omitnan');
+        subplot(n,n2,i)
+        imagesc(data_dfof_stim(:,:,i))
+    end
 end
-
 data_dfof_stim(:,:,i+1) = mean(data_one_dfof,3,'omitnan');
-data_dfof = cat(3,cat(3,data_dfof_stim,max(data_dfof_stim,[],3)),data_dfof_max);
+data_dfof_stim(:,:,i+2) = max(data_dfof_stim,[],3);
+data_dfof = data_dfof_stim;
 
 figure;
-subplot(2,1,1)
-imagesc(max(data_dfof_stim,[],3))
-title('Max')
-subplot(2,1,2)
-imagesc(data_dfof_stim(:,:,i+1))
+imagesc(data_dfof_stim(:,:,i+2))
 clear data_f
 %% cell segmentation 
 mask_exp = zeros(sz(1),sz(2));
@@ -197,8 +209,8 @@ tc_two_f = mean(tc_two(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-base_win = 22:24;
-resp_win = 28:30;
+base_win = 20:22;
+resp_win = 25:27;
 figure;
 subplot(2,1,1)
 shadedErrorBar(1:50,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
@@ -210,8 +222,9 @@ vline([base_win resp_win])
 %% trial responses
 dfof_resp_one = squeeze(mean(tc_one_dfof(resp_win,:,:),1)-mean(tc_one_dfof(base_win,:,:),1));
 dfof_resp_two = squeeze(mean(tc_two_dfof(resp_win,:,:),1)-mean(tc_two_dfof(base_win,:,:),1));
+dfof_base_one = squeeze(mean(tc_one_dfof(base_win,:,:),1));
 tStimOne = celleqel2mat_padded(input.tstimOne);
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'dfof_resp_one', 'dfof_resp_two', 'base_win', 'resp_win','tStimOne')
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'dfof_resp_one', 'dfof_resp_two', 'dfof_base_one', 'base_win', 'resp_win','tStimOne','tc_one_dfof','tc_two_dfof')
 
 %% running speed
 wheel_speed = wheelSpeedCalc(input,32,'purple');

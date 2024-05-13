@@ -1290,7 +1290,7 @@ for iCon = 1:nCon
     axis square
     box off
     ylabel('dF/F')
-    ylim([-0.05 .1])
+    % ylim([-0.05 .1])
     
     subplot(2,2,2)
     errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
@@ -1300,7 +1300,7 @@ for iCon = 1:nCon
     set(gca, 'TickDir', 'out')
     axis square
     box off
-    ylim([-0.05 .1])
+    % ylim([-0.05 .1])
     
     subplot(2,2,3)
     errorbar(dirs_for_plotting,green_dir_avrg_loc{pre},green_dir_se_loc{pre},'k')
@@ -1312,7 +1312,7 @@ for iCon = 1:nCon
     box off
     xlabel('normalized direction')
     ylabel('dF/F')
-    ylim([-0.05 .2])
+    % ylim([-0.05 .2])
     
     
     subplot(2,2,4)
@@ -1324,7 +1324,7 @@ for iCon = 1:nCon
     axis square
     box off
     xlabel('normalized direction')
-    ylim([-0.05 .2])
+    % ylim([-0.05 .2])
     
     sgtitle(['Normalized direction tuning ',num2str(cons(iCon))])
     

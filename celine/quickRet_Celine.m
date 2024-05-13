@@ -1,10 +1,10 @@
 
 close all
 
-date = '240424';
+date = '240426';
 mouse = 'i2137';
-ImgFolder = '004';
-time = '1414';
+ImgFolder = '003';
+time = '1043';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;

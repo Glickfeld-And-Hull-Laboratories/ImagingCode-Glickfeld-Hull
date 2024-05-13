@@ -13,11 +13,14 @@ min_dist = 4;
 
 R1_avg_resp_all = [];
 R2_avg_resp_all = [];
+R1_snr_resp_all = [];
 Adapt_avg_resp_all = [];
 pref_sf_all = [];
 pref_nat_all = [];
 max_val_sf_all = [];
 max_val_nat_all = [];
+max_snr_sf_all = [];
+max_snr_nat_all = [];
 h_stim_all = [];
 ntrialperstim = zeros(nexp,14);
 
@@ -40,16 +43,19 @@ for iexp = 1:nexp
     p_stim = zeros(nStim,nCells);
     R1_avg = zeros(nStim,nCells);
     R2_avg = zeros(nStim,nCells);
+    R1_snr = zeros(nStim,nCells);
     for istim = 1:nStim
         ind = intersect(ind_dist,find(stim_seq == stims(istim)));
         ntrialperstim(iexp,istim) = length(ind);
         if length(ind)>40
             R1_avg(istim,:) = mean(R1_cell_trial(:,ind),2,'omitnan');
             R2_avg(istim,:) = mean(R2_cell_trial(:,ind),2,'omitnan');
+            R1_snr(istim,:) =  R1_avg(istim,:)./std(R1_cell_trial(:,ind),[],2,'omitnan')';
             [h_stim(istim,:) p_stim(istim,:)] = ttest(R1_cell_trial(:,ind),0,'tail','right','alpha',0.05/(nStim-1),'Dim',2);
         else
             R1_avg(istim,:) = nan(1,nCells);
             R2_avg(istim,:) = nan(1,nCells);
+            R1_snr(istim,:) = nan(1,nCells);
             h_stim(istim,:) = nan(1,nCells);
             p_stim(istim,:) = nan(1,nCells);
         end
@@ -63,19 +69,27 @@ for iexp = 1:nexp
     R2_avg_resp(nonsigind) = nan;
     R1_avg_resp = reshape(R1_avg_resp,size(R1_avg));
     R2_avg_resp = reshape(R2_avg_resp,size(R2_avg));
-    
+    R1_snr_resp = R1_snr;
+    R1_snr_resp(nonsigind) = nan;
+    R1_snr_resp = reshape(R1_snr_resp,size(R1_snr));
+
     Adapt_avg_resp = (R2_avg_resp-R1_avg_resp)./R1_avg_resp;
     
     [max_val_sf pref_sf] = max(R1_avg_resp(1:6,:),[],1);
     [max_val_nat pref_nat] = max(R1_avg_resp(7:end,:),[],1);
+    max_snr_sf = indOnly(R1_snr_resp(1:6,:)',pref_sf')';
+    max_snr_nat = indOnly(R1_snr_resp(7:end,:)',pref_nat')';
 
     R1_avg_resp_all = [R1_avg_resp_all R1_avg_resp];
     R2_avg_resp_all = [R2_avg_resp_all R2_avg_resp];
+    R1_snr_resp_all = [R1_snr_resp_all R1_snr_resp];
     Adapt_avg_resp_all = [Adapt_avg_resp_all Adapt_avg_resp];
     pref_sf_all = [pref_sf_all pref_sf];
     pref_nat_all = [pref_nat_all pref_nat];
     max_val_sf_all = [max_val_sf_all max_val_sf];
     max_val_nat_all = [max_val_nat_all max_val_nat];
+    max_snr_sf_all = [max_snr_sf_all max_snr_sf];
+    max_snr_nat_all = [max_snr_nat_all max_snr_nat];
     h_stim_all = [h_stim_all h_stim];
 end
 
@@ -304,7 +318,7 @@ print(fullfile(fn_out,'Grat6_Img8_PrefSF.pdf'),'-dpdf','-fillpage')
 % amplitude match
 ind_use = intersect(find(sum(h_stim_all(1:6,:),1)),find(sum(h_stim_all(7:end,:),1)));
 figure;
-subplot(3,3,1)
+subplot(2,2,1)
 swarmchart(ones(1,length(ind_use)),Adapt_avg_resp_grating_max{7},'k')
 hold on
 swarmchart(2.*ones(1,length(ind_use)),Adapt_avg_resp_natimg_max{7},'k')
@@ -316,14 +330,14 @@ ylim([-2 2])
 ylabel('Adapt Ix')
 set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
 
-subplot(3,3,2)
+subplot(2,2,2)
 swarmchart(ones(1,length(ind_use)),max_val_sf_all(ind_use),'k')
 hold on
 swarmchart(2.*ones(1,length(ind_use)),max_val_nat_all(ind_use),'k')
 errorbar(1,mean(max_val_sf_all(ind_use)),std(max_val_sf_all(ind_use))./sum(~isnan(max_val_sf_all(ind_use))),'or')
 errorbar(2,mean(max_val_nat_all(ind_use)),std(max_val_nat_all(ind_use))./sum(~isnan(max_val_nat_all(ind_use))),'or')
 [h p] = ttest(max_val_sf_all(ind_use),max_val_nat_all(ind_use));
-title(['All cells max resp- n = ' num2str(sum(~isnan(max_val_sf_all(ind_use)))) '; p = ' num2str(chop(p,2))])
+title(['p = ' num2str(chop(p,2))])
 ylim([0 .5])
 ylabel('dF/F')
 set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
@@ -332,7 +346,7 @@ ind_use = intersect(find(sum(h_stim_all(1:6,:),1)),find(sum(h_stim_all(7:end,:),
 ind_use_amp = intersect(find(max_val_sf_all(ind_use)>0.05), intersect(find(max_val_sf_all(ind_use)<0.15), intersect(find(max_val_nat_all(ind_use)>0.05), find(max_val_nat_all(ind_use)<0.15))));
 [h_amp p_amp] = ttest(max_val_sf_all(ind_use(ind_use_amp)),max_val_nat_all(ind_use(ind_use_amp)));
 [h_ad p_ad] = ttest(Adapt_avg_resp_grating_max{7}(ind_use_amp),Adapt_avg_resp_natimg_max{7}(ind_use_amp));
-subplot(3,3,4)
+subplot(2,2,4)
 swarmchart(ones(size(max_val_sf_all(ind_use(ind_use_amp)))), max_val_sf_all(ind_use(ind_use_amp)),'k')
 hold on
 errorbar(1,mean(max_val_sf_all(ind_use(ind_use_amp)),2),std(max_val_sf_all(ind_use(ind_use_amp)),[],2)./sqrt(length(ind_use_amp)),'or')
@@ -342,7 +356,7 @@ ylim([0 0.5])
 ylabel('dF/F')
 set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
 title(['p = ' num2str(chop(p_amp,2))])
-subplot(3,3,5)
+subplot(2,2,3)
 swarmchart(ones(size(max_val_sf_all(ind_use(ind_use_amp)))), Adapt_avg_resp_grating_max{7}(ind_use_amp),'k')
 hold on
 errorbar(1,mean(Adapt_avg_resp_grating_max{7}(ind_use_amp),2),std(Adapt_avg_resp_grating_max{7}(ind_use_amp),[],2)./sqrt(length(ind_use_amp)),'or')
@@ -351,9 +365,63 @@ errorbar(2,mean(Adapt_avg_resp_natimg_max{7}(ind_use_amp),2),std(Adapt_avg_resp_
 ylim([-2 2])
 ylabel('Adapt Ix')
 set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
-title(['p = ' num2str(chop(p_ad,2))])
+title(['Matched: n = ' num2str(length(ind_use_amp)) '; p = ' num2str(chop(p_ad,2))])
 suptitle('Amplitude match')
 print(fullfile(fn_out,'Grat6_Img8_AmpMatch.pdf'),'-dpdf','-fillpage')
+
+% snr match
+ind_use = intersect(find(sum(h_stim_all(1:6,:),1)),find(sum(h_stim_all(7:end,:),1)));
+figure;
+subplot(2,2,1)
+swarmchart(ones(1,length(ind_use)),Adapt_avg_resp_grating_max{7},'k')
+hold on
+swarmchart(2.*ones(1,length(ind_use)),Adapt_avg_resp_natimg_max{7},'k')
+errorbar(1,mean(Adapt_avg_resp_grating_max{7},2,'omitnan'),std(Adapt_avg_resp_grating_max{7},[],2,'omitnan')./sum(~isnan(Adapt_avg_resp_grating_max{7})),'or')
+errorbar(2,mean(Adapt_avg_resp_natimg_max{7},2,'omitnan'),std(Adapt_avg_resp_natimg_max{7},[],2,'omitnan')./sum(~isnan(Adapt_avg_resp_natimg_max{7})),'or')
+[h p] = ttest(Adapt_avg_resp_natimg_max{7},Adapt_avg_resp_grating_max{7});
+title(['All cells max- n = ' num2str(sum(~isnan(Adapt_avg_resp_natimg_max{7}))) '; p = ' num2str(chop(p,2))])
+ylim([-2 2])
+ylabel('Adapt Ix')
+set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
+
+subplot(2,2,2)
+swarmchart(ones(1,length(ind_use)),max_snr_sf_all(ind_use),'k')
+hold on
+swarmchart(2.*ones(1,length(ind_use)),max_snr_nat_all(ind_use),'k')
+errorbar(1,mean(max_snr_sf_all(ind_use)),std(max_snr_sf_all(ind_use))./sum(~isnan(max_snr_sf_all(ind_use))),'or')
+errorbar(2,mean(max_snr_nat_all(ind_use)),std(max_snr_nat_all(ind_use))./sum(~isnan(max_snr_nat_all(ind_use))),'or')
+[h p] = ttest(max_snr_sf_all(ind_use),max_snr_nat_all(ind_use));
+title(['p = ' num2str(chop(p,2))])
+ylim([0 2])
+ylabel('SNR')
+set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
+
+ind_use = intersect(find(sum(h_stim_all(1:6,:),1)),find(sum(h_stim_all(7:end,:),1)));
+ind_use_snr = intersect(find(max_snr_sf_all(ind_use)>0.4), intersect(find(max_snr_sf_all(ind_use)<0.9), intersect(find(max_snr_nat_all(ind_use)>0.4), find(max_snr_nat_all(ind_use)<0.9))));
+[h_amp p_snr] = ttest(max_snr_sf_all(ind_use(ind_use_snr)),max_snr_nat_all(ind_use(ind_use_snr)));
+[h_ad p_ad] = ttest(Adapt_avg_resp_grating_max{7}(ind_use_snr),Adapt_avg_resp_natimg_max{7}(ind_use_snr));
+subplot(2,2,4)
+swarmchart(ones(size(max_snr_sf_all(ind_use(ind_use_snr)))), max_snr_sf_all(ind_use(ind_use_snr)),'k')
+hold on
+errorbar(1,mean(max_snr_sf_all(ind_use(ind_use_snr)),2),std(max_snr_sf_all(ind_use(ind_use_snr)),[],2)./sqrt(length(ind_use_snr)),'or')
+swarmchart(2.*ones(size(max_snr_nat_all(ind_use(ind_use_snr)))), max_snr_nat_all(ind_use(ind_use_snr)),'k')
+errorbar(2,mean(max_snr_nat_all(ind_use(ind_use_snr)),2),std(max_snr_nat_all(ind_use(ind_use_snr)),[],2)./sqrt(length(ind_use_snr)),'or')
+ylim([0 2])
+ylabel('SNR')
+set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
+title(['p = ' num2str(chop(p_snr,2))])
+subplot(2,2,3)
+swarmchart(ones(size(max_val_sf_all(ind_use(ind_use_snr)))), Adapt_avg_resp_grating_max{7}(ind_use_snr),'k')
+hold on
+errorbar(1,mean(Adapt_avg_resp_grating_max{7}(ind_use_snr),2),std(Adapt_avg_resp_grating_max{7}(ind_use_snr),[],2)./sqrt(length(ind_use_snr)),'or')
+swarmchart(2.*ones(size(max_val_nat_all(ind_use(ind_use_snr)))), Adapt_avg_resp_natimg_max{7}(ind_use_snr),'k')
+errorbar(2,mean(Adapt_avg_resp_natimg_max{7}(ind_use_snr),2),std(Adapt_avg_resp_natimg_max{7}(ind_use_snr),[],2)./sqrt(length(ind_use_snr)),'or')
+ylim([-2 2])
+ylabel('Adapt Ix')
+set(gca,'Xtick',[1 2], 'XtickLabel', {'grating', 'image'})
+title(['Matched: n = ' num2str(length(ind_use_snr)) '; p = ' num2str(chop(p_ad,2))])
+suptitle('SNR match')
+print(fullfile(fn_out,'Grat6_Img8_SNRMatch.pdf'),'-dpdf','-fillpage')
 
 %sf pref of nat image response
 figure;

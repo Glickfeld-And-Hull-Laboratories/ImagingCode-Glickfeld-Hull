@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 39;
+day_id = 42;
 
 
 if computer == 'GLNXA64'
@@ -234,11 +234,10 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
     elseif strcmp(expt(day_id).data_loc,'ACh')
         cd(fullfile(isilonName,datapath, mouse, expDate, redRun));
     end
+
+    imgMatFile = [redRun '_000_000.mat'];
     load(imgMatFile);
-
-
-
-    imgMatFile = [imgFolder '_000_000.mat'];
+   
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
     data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);

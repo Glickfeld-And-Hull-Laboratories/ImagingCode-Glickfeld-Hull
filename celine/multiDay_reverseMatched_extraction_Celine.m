@@ -2,7 +2,7 @@
 clear all; clear global; 
 close all
 clc
-ds = 'DART_V1_atropine_Celine'; %name of data information sheet
+ds = 'DART_V1_contrast_ori_Celine'; %name of data information sheet
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);
@@ -502,8 +502,8 @@ for id = 1:nd
             temp_all_smallPupil{i}= nanmean(temp_TCs(resp_win,temp_trials_stat_smallPupil),1);
 
             temp_pref_responses_stat(i,iCon)=nanmean(temp_all_stat{i},2);
-            temp_pref_responses_stat_largePupil(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_largePupil),1),2);
-            temp_pref_responses_stat_smallPupil(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_smallPupil),1),2);
+            temp_pref_responses_stat_largePupil(i,iCon)=nanmean(temp_all_largePupil{i},2);
+            temp_pref_responses_stat_smallPupil(i,iCon)=nanmean(temp_all_smallPupil{i},2);
 
             temp_pref_responses_loc(i,iCon)=nanmean(temp_all_loc{i},2);
             temp_pref_responses_allCond(i,iCon)=nanmean(nanmean(temp_TCs(resp_win,temp_trials1),1),2);
@@ -851,39 +851,39 @@ save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','ke
 % axis square
 % hold off
 % print(fullfile(fn_multi, 'F_vs_dFoF.pdf'),'-dpdf');
-% 
-% %% get mean-subtracted trial responses
-% trialResp=cell(1,nd); %raw trial responses for each cell 
-% subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
-% conditionMeans=cell(1,nd); %mean for each condition
-% 
-% for id = 1:nd
-% 
-%     trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
-%     subTrialResp{id} = nan(size(trialResp{id}));
-% 
-%     conditionMeans{id}=nan(nDir,nCon,nKeep);
-% 
-%     tCon = tCon_match{id}(:,1:nTrials(id));
-%     tDir = tDir_match{id}(:,1:nTrials(id));
-% 
-%     for iDir = 1:nDir
-%         ind_dir = find(tDir == dirs(iDir));
-%         for iCon = 1:nCon
-%             ind_con = find(tCon == cons(iCon));
-%             inds1 = intersect(ind_dir,ind_con);
-%             inds=intersect(inds1,stat_inds);
-%             tempData=trialResp{id}(inds,:);
-%             tempCellMeans=mean(tempData,1);
-%             tempSubData = tempData - tempCellMeans;
-%             subTrialResp{id}(inds,:)=tempSubData;
-%             conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
-% 
-%         end
-%     end
-% subTrialResp{id}=subTrialResp{id}(stat_inds,:);
-% end
-% 
+
+%% get mean-subtracted trial responses
+trialResp=cell(1,nd); %raw trial responses for each cell 
+subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
+conditionMeans=cell(1,nd); %mean for each condition
+
+for id = 1:nd
+
+    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
+    subTrialResp{id} = nan(size(trialResp{id}));
+
+    conditionMeans{id}=nan(nDir,nCon,nKeep);
+
+    tCon = tCon_match{id}(:,1:nTrials(id));
+    tDir = tDir_match{id}(:,1:nTrials(id));
+
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        for iCon = 1:nCon
+            ind_con = find(tCon == cons(iCon));
+            inds1 = intersect(ind_dir,ind_con);
+            inds=intersect(inds1,stat_inds);
+            tempData=trialResp{id}(inds,:);
+            tempCellMeans=mean(tempData,1);
+            tempSubData = tempData - tempCellMeans;
+            subTrialResp{id}(inds,:)=tempSubData;
+            conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
+
+        end
+    end
+subTrialResp{id}=subTrialResp{id}(stat_inds,:);
+end
+
 % 
 % 
 % %% get correlation strucutre for noise correlation

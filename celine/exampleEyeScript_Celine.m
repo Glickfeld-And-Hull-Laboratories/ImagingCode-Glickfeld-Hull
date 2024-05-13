@@ -1,8 +1,8 @@
 %paths
-mouse = 'i2112';
-date = '230711';
+mouse = 'i2119';
+date = '230908';
 run = '006';
-time = '1108';
+time = '1536';
 data_pn = 'Z:\home\ACh';
 CD = [data_pn '\Data\2p_data\' mouse '\' date '\' run];
 cd(CD);

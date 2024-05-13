@@ -1,13 +1,13 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [285 295 300 308 324 334];%enter all the sessions you want to concatenate
+sess_list = [41];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -105,7 +105,6 @@ nonPref_trial_avrg_loc_concat=cell(1,nd);
 
 responseByCondProps_concat=nan(6,2,nSess);
 
-cellID_adjustment=0;
 for iSess = 1:nSess
     thisSess = sess_list(iSess);
     mouse = expt(thisSess).mouse;
@@ -113,11 +112,6 @@ for iSess = 1:nSess
     thisDrug = expt(thisSess).drug;
     drug{iSess}=thisDrug;
     
-
-    if iSess > 1
-        cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
-    end
-
     if expt(thisSess).multiday_timesincedrug_hours>0
         dart_str = [expt(thisSess).drug '_' num2str(expt(thisSess).multiday_timesincedrug_hours) 'Hr'];
     else
@@ -131,12 +125,12 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'locomotion.mat'));
     load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
-    load(fullfile(fn_multi,'pupilMeans.mat'));
+    % load(fullfile(fn_multi,'pupilMeans.mat'));
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
-    pupilMeans_concat(:,:,iSess)=pupilMeans;
-    motorByPupil_concat(:,:,iSess)=motorByPupil;
+    % pupilMeans_concat(:,:,iSess)=pupilMeans;
+%    motorByPupil_concat(:,:,iSess)=motorByPupil;
 %    pupilCounts_concat(:,:,iSess)=pupilCounts;
 
 
@@ -175,8 +169,8 @@ for iSess = 1:nSess
     for id = 1:nd
         
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,:,:));
-        tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,:));
-        tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,:));
+        % tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,:));
+        % tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,:));
         tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon,:));
         nonPref_trial_avrg_stat_concat{id} =cat(2,nonPref_trial_avrg_stat_concat{id},nonPref_trial_avrg_stat{id}(:,:,sharedCon,:));
         nonPref_trial_avrg_loc_concat{id} =cat(2,nonPref_trial_avrg_loc_concat{id},nonPref_trial_avrg_loc{id}(:,:,sharedCon,:));
@@ -186,8 +180,8 @@ for iSess = 1:nSess
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon,:));
         pref_peak_stat_concat{id}=cat(1,pref_peak_stat_concat{id},pref_peak_stat{id}(:,sharedCon,:));
         pref_peak_loc_concat{id}=cat(1,pref_peak_loc_concat{id},pref_peak_loc{id}(:,sharedCon,:));
-        pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon,:));
-        pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,:));
+        % pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon,:));
+        % pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,:));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
@@ -208,8 +202,8 @@ for iSess = 1:nSess
             for iSize = 1:length(sizes)
                 pref_allTrials_stat_concat{i,iSize,id}=[pref_allTrials_stat_concat{i,iSize,id},pref_allTrials_stat{iCon,iSize,id}];
                 pref_allTrials_loc_concat{i,iSize,id}=[pref_allTrials_loc_concat{i,iSize,id},pref_allTrials_loc{iCon,iSize,id}];
-                pref_allTrials_largePupil_concat{i,iSize,id}=[pref_allTrials_largePupil_concat{i,iSize,id},pref_allTrials_largePupil{iCon,iSize,id}];
-                pref_allTrials_smallPupil_concat{i,iSize,id}=[pref_allTrials_smallPupil_concat{i,iSize,id},pref_allTrials_smallPupil{iCon,iSize,id}];
+                % pref_allTrials_largePupil_concat{i,iSize,id}=[pref_allTrials_largePupil_concat{i,iSize,id},pref_allTrials_largePupil{iCon,iSize,id}];
+                % pref_allTrials_smallPupil_concat{i,iSize,id}=[pref_allTrials_smallPupil_concat{i,iSize,id},pref_allTrials_smallPupil{iCon,iSize,id}];
 
             end
         end
@@ -355,9 +349,9 @@ for i = 1:nKeep_total
             norm_diff_loc = (mean_post_loc-mean_pre_loc)/ std_pre_loc;
     
             %putting data into matrix
-            norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
-            norm_diff(2,iCon,i)=norm_diff_loc; %second is running
-clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
+            norm_diff(1,iCon,iSize,i)=norm_diff_stat; %first is stationary
+            norm_diff(2,iCon,iSize,i)=norm_diff_loc; %second is running
+%clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
         end 
     end
 end
@@ -365,6 +359,52 @@ end
 %those into NANs instead
 norm_diff(find(norm_diff == -Inf))=NaN;
 norm_diff(find(norm_diff == Inf))=NaN;
+
+%% plot fraction suppressed and facilitated
+
+%make a subset of normalized difference for the SST cells only, then make
+% find how many are facilitated or suppressed by more than 1 std from
+% baseline
+% norm_diff = nan(2,nCon,nSize,nKeep_total);
+norm_diff_red = norm_diff(:,:,:,red_ind_concat);
+facil_red=norm_diff_red(:,:,:,:)>=1;
+supp_red=norm_diff_red(:,:,:,:)<=-1;
+
+N=length(red_ind_concat);
+
+
+for iCon = 1:nCon
+    facil_table_stat = squeeze(sum(facil_red(1,iCon,:,:),4)/N);
+    supp_table_stat = squeeze(sum(supp_red(1,iCon,:,:),4)/N);
+    figure;
+    subplot(1,2,1)
+    bar([1,2,3,4,5],[supp_table_stat],'FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    hold on
+    xticklabels({'7.5','15','30', '60', '120'})
+    title('Suppressed')
+    ylim([0 .35])
+    ylabel(["Fraction SST cells"]) 
+    xlabel(["Contrast(%)"])
+    set(gca,'TickDir','out')
+    box off
+    
+    subplot(1,2,2)
+    bar([1,2,3,4,5],[facil_table_stat],'FaceColor',"#A8518A",'EdgeColor', [1 1 1])
+    hold on
+    xticklabels({'7.5','15','30', '60', '120'})
+    title('Facilitated')
+    ylim([0 .35])
+    %ylabel(["Fraction HTP+ cells"]) 
+    xlabel(["Contrast(%)"])
+    set(gca,'TickDir','out')
+    box off
+    
+    x0=5;
+    y0=5;
+    width=3;
+    height=1.5;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+end
 %% plot stationary timecourses
 
 
@@ -776,7 +816,7 @@ errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_loc{pos
 title(['SST n = ' , num2str(length(statRed))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.2 .5])
+ylim([-.05 .15])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -785,7 +825,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.2 .5])
+ylim([-.05 .15])
 xlim([0 110])
 
 

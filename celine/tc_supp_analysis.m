@@ -4,7 +4,7 @@ clear all; clear global; close all
 %identifying animal and run
 netSupp_expt
 
-expt_num = 1;
+expt_num = 25;
 
 mouse = expt(expt_num).mouse
 date = expt(expt_num).date;
@@ -15,18 +15,16 @@ ori_run=expt(expt_num).oriRun;
 depth = expt(expt_num).z;
 frame_rate = expt(expt_num).frame_rate; 
 
-
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
-    base = fullfile(isilonName, '/All_Staff/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
 else
-    isilonName = 'duhs-user-nc1.dhe.duke.edu/dusom_glickfeldlab';
-    base = fullfile(isilonName, '/All_Staff/home/ACh/Analysis/2p_analysis');
+    isilonName = 'duhs-user-nc1.dhe.duke.edu/';
+    base = fullfile('/home/ACh/Analysis/2p_analysis');
    
    beh_prefix = strcat('Z:\Behavior\Data\data-');
 end
-
 %setting my paths
 fn = fullfile(base,mouse,date,ImgFolder);
 mkdir(fn);
@@ -116,17 +114,17 @@ end
 % end
 
 h_all = sum(sum(h,2),3);
-resp_all=logical(h_all);
+resp_any=logical(h_all);
 % resp_small_highCon = logical(h(:,1,4));
 
 
-centeredResp=intersect(find(resp_all),centerCells);
+centeredResp=intersect(find(resp_any),centerCells);
 % smallResp=intersect(centeredResp,find(prefSize<4));
 % length(centeredResp)
-goodFitResp=intersect(find(resp_all),goodfit_ind);
+goodFitResp=intersect(find(resp_any),goodfit_ind);
 length(goodFitResp)
 keepDists = cellDists(goodFitResp);
-
+h_keep=h(goodFitResp,:,:);%subset the h matrix to only the cells that were responsive to at least one stimulus
 %% plot timecourses at different sizes and contrasts
 meanTC_byCondition=nan(nOn+nOff,nSizes,nCons,length(goodFitResp));
 %frame_rate=double(input.frameImagingRateMs);
@@ -171,14 +169,14 @@ sgtitle([mouse, ', ', num2str(length(goodFitResp)),' cells'])
 %print(fullfile(base, mouse, date, depth, ['tc_matrix.pdf']), '-dpdf')
 %% same as above split by cell type
 interNrns = mask_label(goodFitResp);
-interNrns_inds = find(interNrns);
-pyrCells = find(~interNrns); %DOUBLE CHECK
+interNrns_inds= find(interNrns);
+pyrCells_inds = find(~interNrns_inds); %DOUBLE CHECK
 
-save(fullfile(base, mouse, date, ImgFolder,'goodFitResp_summary.mat'),'keepDists')
+%
 
 
-meanTC_byCondition_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells));
-meanTC_byCondition_IN=nan(nOn+nOff,nSizes,nCons,length(interNrns));
+meanTC_byCondition_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells_inds));
+meanTC_byCondition_IN=nan(nOn+nOff,nSizes,nCons,length(interNrns_inds));
 %frame_rate=double(input.frameImagingRateMs);
 frame_rate = 30;
 t = 1:(size(data_tc_trial,1));
@@ -192,15 +190,15 @@ figure;
         for iCon = 1:nCons
         inds2 = find(tCons == Cons(iCon));
         inds = intersect(inds1,inds2);
-        temp_trials1 = squeeze(nanmean(data_tc_trial(:,inds,pyrCells),2));
+        temp_trials1 = squeeze(nanmean(data_tc_trial(:,inds,pyrCells_inds),2));
         meanTC_byCondition_Pyr(:,iSize,iCon,:)=temp_trials1;
         temp_mean1 = nanmean(temp_trials1,2);
-        temp_se1 = std(temp_trials1,[],2)/sqrt(length(pyrCells));
+        temp_se1 = std(temp_trials1,[],2)/sqrt(length(pyrCells_inds));
 
-        temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds,interNrns),2));
+        temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds,interNrns_inds),2));
         meanTC_byCondition_IN(:,iSize,iCon,:)=temp_trials2;
         temp_mean2 = nanmean(temp_trials2,2);
-        temp_se2 = std(temp_trials2,[],2)/sqrt(length(interNrns));
+        temp_se2 = std(temp_trials2,[],2)/sqrt(length(interNrns_inds));
 
         subplot(n,n2,x)
 
@@ -298,12 +296,13 @@ mean(RIx)
 sum(RIx)
 %%
 
-pyrCells = intersect(goodFitResp, find(~mask_label));
-interNrns = intersect(goodFitResp, find(mask_label));
+pyrCells_inds = intersect(goodFitResp, find(~mask_label));
+interNrns_inds = intersect(goodFitResp, find(mask_label));
 
-
-TC_byConditionLoc_INs=nan(nOn+nOff,nSizes,nCons,length(interNrns));
-TC_byConditionStat_INs=nan(nOn+nOff,nSizes,nCons,length(interNrns));
+TC_byConditionStat=nan(nOn+nOff,nSizes,nCons,length(goodFitResp));
+TC_byConditionLoc=nan(nOn+nOff,nSizes,nCons,length(goodFitResp));
+TC_byConditionLoc_INs=nan(nOn+nOff,nSizes,nCons,length(interNrns_inds));
+TC_byConditionStat_INs=nan(nOn+nOff,nSizes,nCons,length(interNrns_inds));
 
 [n n2] = subplotn(nSizes*nCons);
 x=1;
@@ -314,17 +313,21 @@ figure;
         inds2 = find(tCons == Cons(iCon));
         inds3 = intersect(inds1,inds2);
         inds4=intersect(inds3,find(RIx));
-        inds5=intersect(inds3,setdiff(1:nTrials,find(RIx)));
-        temp_trials = squeeze(nanmean(data_tc_trial(:,inds4,interNrns),2));
+        inds5=intersect(inds3,setdiff(1:nTrials,find(RIx))); %find the trials NOT in RIx
+
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds4,interNrns_inds),2));
         TC_byConditionLoc_INs(:,iSize,iCon,:)=temp_trials;
         temp_mean = nanmean(temp_trials,2);
-        temp_se = std(temp_trials,[],2)/sqrt(length(interNrns));
+        temp_se = std(temp_trials,[],2)/sqrt(length(interNrns_inds));
         
-        temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds5,interNrns),2));
+        temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds5,interNrns_inds),2));
         TC_byConditionStat_INs(:,iSize,iCon,:)=temp_trials2;
         temp_mean2 = nanmean(temp_trials2,2);
-        temp_se2 = std(temp_trials2,[],2)/sqrt(length(interNrns));
+        temp_se2 = std(temp_trials2,[],2)/sqrt(length(interNrns_inds));
 
+        TC_byConditionStat(:,iSize,iCon,:)=squeeze(nanmean(data_tc_trial(:,inds5,goodFitResp),2));
+        TC_byConditionLoc(:,iSize,iCon,:)=squeeze(nanmean(data_tc_trial(:,inds4,goodFitResp),2));
+        
         subplot(n,n2,x)
 
        % shadedErrorBar(t,temp_mean,temp_se,'b');
@@ -347,12 +350,12 @@ figure;
 
     end
   
-sgtitle([mouse, ', ', num2str(length(interNrns)),' INs'])
+sgtitle([mouse, ', ', num2str(length(interNrns_inds)),' INs'])
 print(fullfile(base, mouse, date, depth, ['IntrNrn_tc_matrix.pdf']), '-dpdf')
 
 
-TC_byConditionLoc_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells));
-TC_byConditionStat_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells));
+TC_byConditionLoc_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells_inds));
+TC_byConditionStat_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells_inds));
 
 [n n2] = subplotn(nSizes*nCons);
 x=1;
@@ -365,15 +368,15 @@ figure;
         inds4=intersect(inds3,find(RIx));
         length(inds4)
         inds5=intersect(inds3,setdiff(1:nTrials,find(RIx)));
-        temp_trials = squeeze(nanmean(data_tc_trial(:,inds4,pyrCells),2));
+        temp_trials = squeeze(nanmean(data_tc_trial(:,inds4,pyrCells_inds),2));
         TC_byConditionLoc_Pyr(:,iSize,iCon,:)=temp_trials;
         temp_mean = nanmean(temp_trials,2);
-        temp_se = std(temp_trials,[],2)/sqrt(length(pyrCells));
+        temp_se = std(temp_trials,[],2)/sqrt(length(pyrCells_inds));
         
-        temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds5,pyrCells),2));
+        temp_trials2 = squeeze(nanmean(data_tc_trial(:,inds5,pyrCells_inds),2));
         TC_byConditionStat_Pyr(:,iSize,iCon,:)=temp_trials2;
         temp_mean2 = nanmean(temp_trials2,2);
-        temp_se2 = std(temp_trials2,[],2)/sqrt(length(pyrCells));
+        temp_se2 = std(temp_trials2,[],2)/sqrt(length(pyrCells_inds));
 
         subplot(n,n2,x)
 
@@ -397,7 +400,7 @@ figure;
 
     end
   
-sgtitle([mouse, ', ', num2str(length(pyrCells)),' Pyr'])
+sgtitle([mouse, ', ', num2str(length(pyrCells_inds)),' Pyr'])
 print(fullfile(base, mouse, date, depth, ['Pyr_tc_matrix.pdf']), '-dpdf')
 
 save(fullfile(base, mouse, date, ImgFolder,'TCs.mat'),'TC_byConditionStat_INs','TC_byConditionLoc_INs','meanTC_byCondition')
@@ -500,7 +503,9 @@ DistCutoffs=[0,5,10,20];
 
     
 
-%% making seperate matrices for cells with different pref ori 
+%% making seperate matrices for cells with different pref ori
+keepPrefOri = prefOri(goodFitResp); %make a subset of preOri for the responsive cells
+
  oris=unique(prefOri);
 
     for iOri = 1:length(oris) %loop through the sizes
@@ -549,3 +554,6 @@ DistCutoffs=[0,5,10,20];
         print(fullfile(base, mouse, date, depth, ['prefOri',num2str(iOri),'_matrix.pdf']), '-dpdf');
 
     end
+%% save data summary
+save(fullfile(base, mouse, date,ImgFolder,'goodFitResp_summary_updated.mat'), ...
+    'TC_byConditionLoc','TC_byConditionStat','h_keep','interNrns','keepDists','keepPrefOri')
