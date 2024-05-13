@@ -22,10 +22,11 @@ load(datafile);
 
 % tc_other = cell(23,3);
 % tc_self = cell(23,3);
+% ctrl_tc_other = cell(23,3);
 % all_ttests = zeros(23,2);
-
-nSer = size(final_masks,1);
-nCh = size(final_masks,2)-1;
+% 
+% nSer = size(final_masks,1);
+% nCh = size(final_masks,2)-1;
 
 % for ser = 1:nSer
 %     for ch = 1:nCh
@@ -43,19 +44,24 @@ nCh = size(final_masks,2)-1;
 %         % rotates the mask counterclock wise 90 degrees 3 times
 %         mask_rot = rot90(final_masks{ser,extract_img});
 %         control_intensity = stackGetTimeCourses(img_data{ser,ch},mask_rot);
+%         ctrl_tc_other{ser,extract_img} = control_intensity;
 %         all_ttests(ser,extract_img) = ttest(otherCh_intensity,control_intensity);
 %     end
+%     tc_self{ser,3} = img_data{ser,3}; 
 %     tc_other{ser,3} = img_data{ser,3}; 
+%     ctrl_tc_other{ser,3} = img_data{ser,3};
 % end
 
 
 % save(fullfile(analysis_out,'tc_other'),'tc_other');
 % save(fullfile(analysis_out,'tc_self'),'tc_self');
+% save(fullfile(analysis_out,'ctrl_tc_other'),'ctrl_tc_other');
 % save(fullfile(analysis_out,'ttests'),'all_ttests');
 clear img_data;
 %% prep data
 load(fullfile(analysis_out,'tc_other'),'tc_other');
 load(fullfile(analysis_out,'tc_self'),'tc_self');
+load(fullfile(analysis_out,'ctrl_tc_other'),'ctrl_tc_other');
 load(fullfile(analysis_out,'ttests'),'all_ttests');
 
 % excluding these image series due to overlapping FOV
@@ -64,6 +70,8 @@ masks = final_masks;
 masks(excluded_rows,:) = [];
 tc_other(excluded_rows,:) = [];
 tc_self(excluded_rows,:) = [];
+ctrl_tc_other(excluded_rows,:) = [];
+all_ttests(excluded_rows,:) = [];
 
 nSer = size(masks,1);
 nCh = size(masks,2)-1;
@@ -96,10 +104,16 @@ mb_names = ["TH040","TH041"];
 nes_names = ["TH042","TH043"];
 mSc_names = ["TH044","TH045"];
 
+virus_indices = cell(3,2);
 mb_idx = find(contains(series,mb_names));
+virus_indices{1,1} = mb_idx;
+virus_indices{1,2} = 'mb';
 nes_idx = find(contains(series,nes_names));
+virus_indices{2,1} = nes_idx;
+virus_indices{2,2} = 'nes';
 mSc_idx = find(contains(series,mSc_names));
-
+virus_indices{3,1} = mSc_idx;
+virus_indices{3,2} = 'mSc';
 
 
 % self
@@ -423,9 +437,11 @@ title('nCells passing threshold');
 hold on;
 boxplot(coloc_count(:,1));
 boxplot(coloc_count(:,2),'Positions',2);
-scatter(1,coloc_count(:,1),15,'black');
-scatter(2,coloc_count(:,2),15,'black');
-set(gca(),'XTick',[1 2],'XTickLabels',{'Red','Cyan'})
+scatter(1,coloc_count(:,1),20,'black');
+scatter(2,coloc_count(:,2),20,'black');
+xtl1 = '\begin{tabular}{c} SST+ objects\\ also HTP+\end{tabular}';
+xtl2 = '\begin{tabular}{c} HTP+ objects\\ also SST+\end{tabular}';
+set(gca(),'XTick',[1 2],'XTickLabels',{xtl1,xtl2},'TickLabelInterpreter', 'latex');
 xlim([0.33 2.66]);
 hold off;
 
@@ -434,22 +450,199 @@ title('% passing threshold');
 hold on;
 boxplot(coloc_percent(:,1));
 boxplot(coloc_percent(:,2),'Positions',2);
-scatter(1,coloc_percent(:,1),15,'black');
-scatter(2,coloc_percent(:,2),15,'black');
-set(gca(),'XTick',[1 2],'XTickLabels',{'Red','Cyan'})
+scatter(1,coloc_percent(:,1),20,'black');
+scatter(2,coloc_percent(:,2),20,'black');
+xtl1 = '\begin{tabular}{c} SST+ objects\\ also HTP+\end{tabular}';
+xtl2 = '\begin{tabular}{c} HTP+ objects\\ also SST+\end{tabular}';
+set(gca(),'XTick',[1 2],'XTickLabels',{xtl1,xtl2},'TickLabelInterpreter', 'latex');
 xlim([0.33 2.66]);
 hold off;
 
 %% rotated mask comparisons
 
+rot_count = zeros(nSer,nCh); % records # of cells above threshold for other mask
+rot_percent = zeros(nSer,nCh);
+thresholds = zeros(nSer,nCh);
 
+for ser = 1:nSer
+    for ch = 1:nCh
+        if ch == 1
+            extract = 2;
+        else
+            extract = 1;
+        end
+        threshold = min(tc_self{ser,ch})*0.75;
+        thresholds(ser,ch) = threshold;
+        %tc_self and tc_other are organized by the origin of the MASK
+        rot_mask_int = ctrl_tc_other{ser,extract};
+        rot_mask_int(rot_mask_int<threshold) = 0;
+        this_cell_count = length(find(rot_mask_int));
+        rot_count(ser,ch) = this_cell_count;
+        rot_percent(ser,ch) = this_cell_count/length(ctrl_tc_other{ser,extract});
+    end
+end
+
+figure();
+sgtitle('75% as threshold, rotated control')
+hold on;
+boxplot(rot_percent(:,1));
+boxplot(rot_percent(:,2),'Positions',2);
+scatter(1,rot_percent(:,1),15,'black');
+scatter(2,rot_percent(:,2),15,'black');
+set(gca(),'XTick',[1 2],'XTickLabels',{'SST+ objects also HTP+','HTP+ objects also SST+'})
+ylabel('% passing threshold')
+xlim([0.33 2.66]);
+hold off;
 
 
 %% plot within virus
+% color codes r,g,b = MB, NES, mSc
+
+colors = [1,0,0;0.4660 0.6740 0.1880;0,0,1];
+figure();
+sgtitle('75% as threshold')
+% cell counts subplot
+subplot(1,2,1);
+title('nCells passing threshold');
+hold on;
+boxplot(coloc_count(:,1));
+boxplot(coloc_count(:,2),'Positions',2);
+
+for virus = 1:size(virus_indices,1) % order: MB, NES, mScarlett
+    scatter(1,coloc_count(virus_indices{virus,1},1),20,colors(virus,:));
+end
+for virus = 1:size(virus_indices,1) % order: MB, NES, mScarlett
+    scatter(2,coloc_count(virus_indices{virus,1},2),20,colors(virus,:));
+end
+
+% scatter(1,coloc_count(:,1),20,'black');
+% scatter(2,coloc_count(:,2),20,'black');
+xtl1 = '\begin{tabular}{c} SST+ objects\\ also HTP+\end{tabular}';
+xtl2 = '\begin{tabular}{c} HTP+ objects\\ also SST+\end{tabular}';
+set(gca(),'XTick',[1 2],'XTickLabels',{xtl1,xtl2},'TickLabelInterpreter', 'latex');
+xlim([0.33 2.66]);
+hold off;
 
 
+% percentage subplot
+
+subplot(1,2,2);
+title('% passing threshold');
+hold on;
+boxplot(coloc_percent(:,1));
+boxplot(coloc_percent(:,2),'Positions',2);
+
+for virus = 1:size(virus_indices,1) % order: MB, NES, mScarlett
+    scatter(1,coloc_percent(virus_indices{virus,1},1),20,colors(virus,:));
+end
+for virus = 1:size(virus_indices,1) % order: MB, NES, mScarlett
+    scatter(2,coloc_percent(virus_indices{virus,1},2),20,colors(virus,:));
+end
+
+avgs = mean(coloc_percent);
+plot(1,avgs(1),'+r','Color','black','Markersize',20);
+plot(2,avgs(2),'+r','Color','black','Markersize',20);
+% scatter(1,coloc_percent(:,1),20,'black');
+% scatter(2,coloc_percent(:,2),20,'black');
+
+xtl1 = '\begin{tabular}{c} SST+ objects\\ also HTP+\end{tabular}';
+xtl2 = '\begin{tabular}{c} HTP+ objects\\ also SST+\end{tabular}';
+set(gca(),'XTick',[1 2],'XTickLabels',{xtl1,xtl2},'TickLabelInterpreter', 'latex');
+xlim([0.33 2.66]);
+hold off;
+
+%% mask size
+
+m_sizes = cell(nSer,nCh);
+avg_m_sizes = zeros(nSer,nCh);
+
+for ser = 1:nSer
+    for ch = 1:nCh
+        edges = unique(masks{ser,ch});
+        real_edges = [edges' max(edges+1)];
+        counts_w_zero = histcounts(masks{ser,ch}(:),real_edges);
+        counts = counts_w_zero(2:end);
+        m_sizes{ser,ch} = counts;
+        avg_m_sizes(ser,ch) = mean(counts);
+    end
+end
+
+m_sizes_mean = mean(avg_m_sizes);
+
+figure;
+% sgtitle('mask sizes');
+hold on
+title('average mask object sizes');
+xlim([0.5 2.5]);
+ylabel('pixels');
+scatter(1,avg_m_sizes(:,1),'black');
+scatter(2,avg_m_sizes(:,2),'black');
+plot(1,m_sizes_mean(1),'+r','MarkerSize',20);
+% errorbar(0.33,avg_mb_1,sem_mb_1,"o");
+plot(2,m_sizes_mean(2),'+r','MarkerSize',20);
+% errorbar(0.66,avg_mb_2,sem_mb_2,"o");
+set(gca(),'XTick',[1 2],'XTickLabels',{'red','cyan'});
+hold off
+
+%% testing for colored scatterplot
+% data1 = rand(100, 2); % Assuming you have 100 data points with 2 features
+% categories = randi([1, 5], 100, 1); % Assuming you have 5 categories
+% 
+% % Define colors for each category
+% colors = hsv(max(categories)); % Using HSV colormap for variety
+% 
+% % Plot each category separately
+% figure();
+% hold on;
+% for i = 1:max(categories)
+%     indices = categories == i;
+%     scatter(data1(indices, 1), data1(indices, 2), [], colors(i,:), 'filled');
+% end
+% hold off;
+% 
+% % Add legend
+% legend('Category 1', 'Category 2', 'Category 3', 'Category 4', 'Category 5');
+% 
+% % Add labels
+% xlabel('Feature 1');
+% ylabel('Feature 2');
+% title('Scatter Plot by Category');
 
 
-%% pool data within mouse
+%% testing for mask boundaries
+load(datafile);
+img_data(excluded_rows,:) = [];
+
+overlay_mask_path = fullfile(analysis_out,'mask_overlays');
+
+% close all
+% figure;
+% imshow(img_data{1,1});
+% hold on
+% bound = cell2mat(bwboundaries(masks{1,1}));
+% plot(bound(:,2),bound(:,1),'.','Color','red','MarkerSize',1);
 
 
+% red masks overlay both channels
+% for ser = 1:nSer
+%     this_bound = cell2mat(bwboundaries(masks{ser,1})); %only using red masks
+%     for ch = 1:nCh
+%         imshow(img_data{ser,ch});
+%         hold on
+%         plot(this_bound(:,2),this_bound(:,1),'.','Color','red','MarkerSize',1);
+%         saveas(gcf,fullfile(overlay_mask_path,['RedMaskOverlay_' 'ser' num2str(ser) '_ch' num2str(ch) '.png']));
+%         close;
+%     end
+% end
+% 
+% % cyan masks overlay both channels
+% for ser = 1:nSer
+%     this_bound = cell2mat(bwboundaries(masks{ser,2})); %only using red masks
+%     for ch = 1:nCh
+%         imshow(img_data{ser,ch});
+%         hold on
+%         plot(this_bound(:,2),this_bound(:,1),'.','Color','cyan','MarkerSize',1);
+%         saveas(gcf,fullfile(overlay_mask_path,['CyanMaskOverlay_' 'ser' num2str(ser) '_ch' num2str(ch) '.png']));
+%         close;
+%     end
+% end
