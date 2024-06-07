@@ -1,4 +1,20 @@
+close all
+clear all
+date = '240529';
+ImgFolder = [{'002'}];
+mouse = 'i1395';
+nrun = size(ImgFolder,1);
+frame_rate = 30;
+run_str = catRunName(ImgFolder, nrun);
+LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey\Analysis\2P';
+
+load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
+load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+
 %% Find responsive cells
+LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey\Analysis\2P';
+
 ind_base = setdiff(1:nTrials,ind_con);
 [x1,y1] = ttest(squeeze(mean(data_dfof(base_win,:,1,ind_base),1))',squeeze(mean(data_dfof(resp_win,:,1,ind_base),1))','tail','left','alpha',0.05);
 [x2,y2] = ttest(squeeze(mean(data_dfof(base_win,:,2,:),1))',squeeze(mean(data_dfof(resp_win,:,2,:),1))','tail','left','alpha',0.05);
@@ -32,7 +48,7 @@ if nDelta>1
 else
     data_dfof_delta(:,:,1) = nanmean(data_dfof(:,:,2,:),4);
 end
-save(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respSig.mat']), 'p2','h2')
+save(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respSig.mat']), 'p2','h2')
 
 good_ind_temp = find(x1+x2+sum(h1,1)+sum(h2,1));
 
@@ -128,7 +144,7 @@ for iCell = 1:length(good_ind)
     plot(squeeze(nanmean(data_dfof_sub(:,iC,ind),3)))
 end
 
-save(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_decaySub.mat']), 'data_dfof_sub', 'good_ind', 'off_all', 'noff_all')
+save(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_decaySub.mat']), 'data_dfof_sub', 'good_ind', 'off_all', 'noff_all')
 %% measure tuning function and bootstrap
     
 nboot = 1000;
@@ -210,7 +226,7 @@ for iCell = 1:length(good_ind)
     end
 end 
 suptitle([date ' ' mouse])
-print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_tuningFits.pdf']),'-dpdf','-bestfit')
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_tuningFits.pdf']),'-dpdf','-bestfit')
 
 theta_90 = nan(noff_all,nCells);
 max_dir_n = nan(1,nCells);
@@ -268,9 +284,10 @@ OSI_k_sub = 1-exp(-2.*k_hat_sub);
 HWHM = 0.5.*acos((log(0.5)+k_hat)./k_hat);
 HWHM_sub = 0.5.*acos((log(0.5)+k_hat_sub)./k_hat_sub);
 
-save(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_deltaResp.mat']), 'delta_resp', 'theta_90', 'max_dir', 'max_dir_n', 'pref_ori', 'OSI', 'y_fit', 'delta_resp_sub', 'pref_ori_sub', 'OSI_sub', 'y_fit_sub', 'k_hat', 'k_hat_sub', 'OSI_k', 'OSI_k_sub', 'HWHM', 'HWHM_sub', 'R_square', 'R_square_sub','sse','sse_sub')
+save(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_deltaResp.mat']), 'good_ind', 'delta_resp', 'theta_90', 'max_dir', 'max_dir_n', 'pref_ori', 'OSI', 'y_fit', 'delta_resp_sub', 'pref_ori_sub', 'OSI_sub', 'y_fit_sub', 'k_hat', 'k_hat_sub', 'OSI_k', 'OSI_k_sub', 'HWHM', 'HWHM_sub', 'R_square', 'R_square_sub','sse','sse_sub')
 
 %% test roc analysis
+trialInd = cell(noff_all, nDelta);
 ppResp = cell(noff_all, nDelta);
 ppResp_sub = cell(noff_all, nDelta);
 for ioff = 1:noff_all
@@ -281,6 +298,7 @@ for ioff = 1:noff_all
     end
     for idelta = 1:nDelta
         ind2 = intersect(ind,find(targetDelta == deltas(idelta)));
+        trialInd{ioff,idelta} = ind2;
         ppResp{ioff, idelta} = squeeze(mean(data_dfof(resp_win,:,2,ind2),1)-mean(data_dfof(base_win,:,2,ind2),1));
         ppResp_sub{ioff, idelta} = squeeze(mean(data_dfof_sub(resp_win,:,ind2),1)-mean(data_dfof_sub(base_win,:,ind2),1));
     end
@@ -302,7 +320,43 @@ for iCell = 1:length(good_ind)
     end
 end
 
-save(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_roc180v23.mat']), 'roc_resp', 'roc_resp_sub','ppResp','ppResp_sub')
+save(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_roc180v23.mat']), 'roc_resp', 'roc_resp_sub','ppResp','ppResp_sub','trialInd')
+
+%% avg timecourses
+data_dfof_maxdir = nan(120,nCells);
+for iC = 1:nCells
+    if ~isnan(max_dir(iC,1))
+        ind_use = intersect(ind_con, find(targetDelta == deltas(max_dir(iC,1))));
+        data_dfof_maxdir(:,iC) = nanmean(data_dfof(:,iC,2,ind_use),4);
+    end
+end
+tt= (1-prewin_frames:postwin_frames).*(1000/double(frameRateHz));
+figure;
+subplot(2,2,1)
+plot(tt,data_dfof_maxdir)
+xlabel('Time (s)')
+ylabel('dF/F')
+title('Max dir')
+subplot(2,2,2)
+plot(tt,nanmean(data_dfof_maxdir,2))
+xlabel('Time (s)')
+ylabel('dF/F')
+
+ind1 = setdiff(find(tFramesOff == off_all(1)),ind_con);
+ind2 = find(targetDelta == deltas(end));
+ind_use = intersect(ind1,ind2);
+cell_use = intersect(good_ind,find(nanmean(nanmean(data_dfof(resp_win,:,1,ind_use),1),4)>0.03));
+subplot(2,2,3)
+plot(tt,nanmean(data_dfof(:,cell_use,1,ind_use),4)')
+xlabel('Time (s)')
+ylabel('dF/F')
+title('Repeat stim')
+subplot(2,2,4)
+plot(tt,nanmean(nanmean(data_dfof(:,cell_use,1,ind_use),4),2)')
+xlabel('Time (s)')
+ylabel('dF/F')
+sgtitle([mouse ' ' date ])
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_avgTCs.pdf']),'-dpdf','-bestfit')
 
 %% cell by cell figures
 for iCell = 1:5 %length(good_ind)
@@ -337,7 +391,7 @@ for iCell = 1:5 %length(good_ind)
 %         end
     end
     suptitle([mouse ' ' date '- Cell #' num2str(iC)]) 
-    print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDelta_Cell' num2str(iC) '.pdf']),'-dpdf')
+    print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDelta_Cell' num2str(iC) '.pdf']),'-dpdf')
 end
 
 
@@ -385,7 +439,7 @@ end
 %% summary cell figures
 figure;
 for idel = 1:nDelta
-    ind_cells = intersect(OSI_ind,find(max_dir == idel));
+    ind_cells = intersect(OSI_ind,find(max_dir(:,1) == idel));
     for ioff = 1:noff_all
         if length(ind_con)== 0 || ioff<noff_all 
             ind = setdiff(find(tFramesOff == off_all(ioff)),ind_con);
@@ -405,7 +459,7 @@ for idel = 1:nDelta
     end
 end
 suptitle([mouse ' ' date]) 
-print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDelta_byInt.pdf']),'-dpdf')
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDelta_byInt.pdf']),'-dpdf')
 
 figure;
 g = grays(noff_all);
@@ -431,7 +485,7 @@ for idel = 1:nDelta
     end
 end
 suptitle([mouse ' ' date]) 
-print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDelta_byInt_overlay.pdf']),'-dpdf', '-fillpage')
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDelta_byInt_overlay.pdf']),'-dpdf', '-fillpage')
 
 figure;
 g = grays(noff_all);
@@ -457,7 +511,7 @@ for idelta = 1:nDelta
     title(['Delta ' num2str(deltas(idelta)) ' deg change'])
 end
 suptitle([mouse ' ' date]) 
-print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDeltaGroup_byInt_overlay.pdf']),'-dpdf','-fillpage')
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDeltaGroup_byInt_overlay.pdf']),'-dpdf','-fillpage')
 
 data_dfof_resp = squeeze(mean(data_dfof(resp_win,:,:,:),1)-mean(data_dfof(base_win,:,:,:),1));
 if length(ind_con)== 0
@@ -501,7 +555,7 @@ for idelta = 1:nDelta
     title(['Delta ' num2str(deltas(idelta)) ' deg change'])
 end
 suptitle([mouse ' ' date]) 
-print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDeltaGroup_byInt_overlay_norm.pdf']),'-dpdf','-fillpage')
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_testResp_byDeltaGroup_byInt_overlay_norm.pdf']),'-dpdf','-fillpage')
 
 %ori_resp = (nDelta,noff,nDelta), where the first column is the cell group,
 %and the last column is the actual orientation- values are normalized so
@@ -539,7 +593,7 @@ for idelta = 1:nDelta
     ylabel('Log Likelihood')
     title([num2str(deltas(idelta)) ' deg change'])
 end
-print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_loglikelihood_byDelta_byInt.pdf']),'-dpdf','-fillpage')
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_loglikelihood_byDelta_byInt.pdf']),'-dpdf','-fillpage')
 
 figure; 
 for ioff = 1:noff_all
@@ -554,4 +608,4 @@ for ioff = 1:noff_all
     xlabel('Ori- actual')
     ylabel('Ori- max log likelihood')
 end
-print(fullfile('\\CRASH.dhe.duke.edu\data\home\lindsey\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str 'scatter_maxloglike_byInt.pdf']),'-dpdf','-fillpage')
+print(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str 'scatter_maxloglike_byInt.pdf']),'-dpdf','-fillpage')

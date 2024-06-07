@@ -1,74 +1,18 @@
-%% current datasets
-mouse_mat = strvcat('i674', 'i689', 'i696','i684','i711','i712','i574','i720','i738','i739','i745','i746');
-date_mat = strvcat('170324', '170323', '170323','170327','170503','170503','170510','170808','170810','170811','170816','170826');
-ImgFolder = strvcat('002', '003');
-nrun = size(ImgFolder,1);
-run_str = catRunName(ImgFolder, nrun);
 
-LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
-%LG_base = '\\CRASH.dhe.duke.edu\data\home\lindsey';
-%%
-nexp = size(mouse_mat,1);
-for iexp = 1:nexp
-    mouse = mouse_mat(iexp,:);
-    date = date_mat(iexp,:);
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_deltaResp.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respSig.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_decaySub.mat']))
-[y_max max_ori] = max(y_fit,[],1);
-max_ori = squeeze(max_ori);
-[y_max max_ori_sub] = max(y_fit_sub,[],1);
-max_ori_sub = squeeze(max_ori_sub);
-nboot = 1000;
-theta_smooth = (0:1:180);
-OSI = nan(nCells,noff_all);
-pref_ori = nan(nCells,noff_all);
-OSI_sub = nan(nCells,noff_all);
-pref_ori_sub = nan(nCells,noff_all);
-for iCell = 1:length(good_ind)
-    iC = good_ind(iCell);
-    if theta_90(3,iC) <= 22.5
-        for ioff = 1:noff_all
-            pref_ori(iC,ioff) = theta_smooth(max_ori(iC,ioff,1));
-            null_ori = max_ori(iC,ioff,1)-90;
-            if null_ori <= 0
-                null_ori= 180+null_ori;
-            end
-            pref_val = y_fit(max_ori(iC,ioff,1),iC,ioff,1);
-            null_val = y_fit(null_ori,iC,ioff,1);
-            if null_val < 0
-                null_val = 0;
-            end
-            OSI(iC,ioff) = (pref_val-null_val)./ (pref_val+null_val);
-        end
-        for ioff = 1:noff_all
-            pref_ori_sub(iC,ioff) = theta_smooth(max_ori_sub(iC,ioff,1));
-            null_ori = max_ori_sub(iC,ioff,1)-90;
-            if null_ori <= 0
-                null_ori= 180+null_ori;
-            end
-            pref_val = y_fit_sub(max_ori_sub(iC,ioff,1),iC,ioff,1);
-            null_val = y_fit_sub(null_ori,iC,ioff,1);
-            if null_val < 0
-                null_val = 0;
-            end
-            OSI_sub(iC,ioff) = (pref_val-null_val)./ (pref_val+null_val);
-        end
-    end
-end
+close all
+clear all
+clc
 
-OSI_k = 1-exp(-2.*k_hat);
-OSI_k_sub = 1-exp(-2.*k_hat_sub);
-HWHM = 0.5.*acos((log(0.5)+k_hat)./k_hat);
-HWHM_sub = 0.5.*acos((log(0.5)+k_hat_sub)./k_hat_sub);
-
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_deltaResp.mat']), 'delta_resp', 'theta_90', 'max_dir', 'max_dir_n', 'pref_ori', 'OSI', 'y_fit', 'delta_resp_sub', 'pref_ori_sub', 'OSI_sub', 'y_fit_sub', 'k_hat', 'k_hat_sub', 'OSI_k', 'OSI_k_sub', 'HWHM', 'HWHM_sub', 'R_square', 'R_square_sub','sse','sse_sub')
-
+eval('PP_diffOri_2024_ExptList')
+LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey\Analysis\2P';
+LG_base_out = fullfile(LG_base, 'Adaptation', 'ppDiffOri_2024');
+if ~exist(LG_base_out)
+    mkdir(LG_base_out)
 end
 
 %% collect datasets
-nexp = size(mouse_mat,1);
+nexp = size(expt,2);
+mouse_mat = [];
 max_dir_all = [];
 pref_ori_all = [];
 theta_90_all = [];
@@ -93,10 +37,15 @@ ntot = zeros(1,nexp);
 ori_sig_all = [];
 ori_all = [];
 for iexp = 1:nexp
-    mouse = mouse_mat(iexp,:);
-    date = date_mat(iexp,:);
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_deltaResp.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respSig.mat']))
+    mouse = expt(iexp).mouse;
+    mouse_mat = [mouse_mat mouse];
+    date = expt(iexp).date;
+    ImgFolder = expt(iexp).ImgFolder;
+    nrun = size(ImgFolder,1);
+    run_str = catRunName(ImgFolder, nrun);
+    fprintf([mouse ' ' date '\n'])
+    load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_deltaResp.mat']))
+    load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respSig.mat']))
     max_dir_all = [max_dir_all; max_dir];
     pref_ori_all = [pref_ori_all; pref_ori];
     R_square_all = [R_square_all; R_square(:,:,1)];
@@ -113,15 +62,20 @@ for iexp = 1:nexp
     HWHM_sub_all = [HWHM_sub_all; HWHM_sub];
     delta_resp_sub_all = cat(1,delta_resp_sub_all, delta_resp_sub(:,:,:,1));
     fit_sub_all = cat(2, fit_sub_all, y_fit_sub(:,:,:,1));
-    load(fullfile(LG_base, 'Analysis\2P', 'ForJeff', [date '_' mouse '_' run_str '_newFits.mat']))
     theta_90_all = [theta_90_all; theta_90'];
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_roc180v23.mat']))
+    load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_roc180v23.mat']))
     roc_resp_all = cat(1,roc_resp_all, roc_resp);
     roc_resp_sub_all = cat(1,roc_resp_sub_all, roc_resp_sub);
     ppResp_all{iexp} = ppResp;
+    if ~exist(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_newFits.mat']))
+        ori_fit = y_fit(:,:,3,1);
+        save(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_newFits.mat']),'ori_fit', 'ppResp', 'R_square', 'theta_90')
+    end
+    ori_fit = y_fit(:,:,3,1);
+    save(fullfile(LG_base_out, [date '_' mouse '_' run_str '_newFits.mat']),'ori_fit', 'ppResp', 'R_square', 'theta_90') 
 end
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+load(fullfile(LG_base, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 if length(ind_con)>0
     off_all = [offs; unique(cell2mat(input.tItiWaitFrames))];
     noff_all = length(off_all);
@@ -132,33 +86,34 @@ end
 control_ind = size(theta_90_all,2);
 good_ind_theta = find(theta_90_all(:,control_ind)<= 22.5);
 good_ind_dir = find(max_dir_n_all>= 500);
-
-save(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'ppDiffOri_summary.mat'),'mouse_mat', 'date_mat', 'max_dir_all', 'pref_ori_all', 'theta_90_all', 'OSI_all', 'delta_resp_all', 'fit_all', 'good_ind_theta');
+frameRateHz = double(frameRateHz);
+mouse_list= mouse_mat;
+save(fullfile(LG_base_out,'ppDiffOri_summary.mat'),'mouse_mat', 'max_dir_all', 'pref_ori_all', 'theta_90_all', 'OSI_all', 'delta_resp_all', 'fit_all', 'good_ind_theta');
 
 %% summary of changes in tuning
-figure;
-col_mat = strvcat('b', 'r', 'y');
-start = 1;
-rep = 1;
-for iCell = 1:length(good_ind_theta)
-    iC = good_ind_theta(iCell);
-    if start>16
-        suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Cells ' num2str(iCell-16) ' to ' num2str(iCell-1) '- all fits'])
-        print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', ['goodFits_summary' num2str(rep) '.pdf']),'-dpdf','-fillpage')
-        rep = 1+rep;
-        figure;
-        start = 1;
-    end
-    subplot(4, 4, start)
-    for ioff = 1:noff_all
-        plot(squeeze(fit_all(:,iC,ioff)),col_mat(ioff))
-        hold on
-        scatter(deltas, delta_resp_all(iC,:,ioff),['o' col_mat(ioff)])
-    end
-    start = start+1;
-end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Cells ' num2str(iCell-start+2) ' to ' num2str(iCell) '- all fits'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', ['goodFits_summary' num2str(rep) '.pdf']),'-dpdf','-fillpage')   
+% figure;
+% col_mat = strvcat('b', 'r', 'y');
+% start = 1;
+% rep = 1;
+% for iCell = 1:length(good_ind_theta)
+%     iC = good_ind_theta(iCell);
+%     if start>16
+%         suptitle([mouse_list '- Cells ' num2str(iCell-16) ' to ' num2str(iCell-1) '- all fits'])
+%         print(fullfile(LG_base_out, ['goodFits_summary' num2str(rep) '.pdf']),'-dpdf','-fillpage')
+%         rep = 1+rep;
+%         figure;
+%         start = 1;
+%     end
+%     subplot(4, 4, start)
+%     for ioff = 1:noff_all
+%         plot(squeeze(fit_all(:,iC,ioff)),col_mat(ioff))
+%         hold on
+%         scatter(deltas, delta_resp_all(iC,:,ioff),['o' col_mat(ioff)])
+%     end
+%     start = start+1;
+% end
+% suptitle([mouse_list '- Cells ' num2str(iCell-start+2) ' to ' num2str(iCell) '- all fits'])
+% print(fullfile(LG_base_out, ['goodFits_summary' num2str(rep) '.pdf']),'-dpdf','-fillpage')   
 
 %% tuning figures
 delta_resp_norm_all = bsxfun(@rdivide, delta_resp_all, max(delta_resp_all(:,:,3),[],2));
@@ -174,8 +129,8 @@ for idel = 1:nDelta
         ylim([-0.1 1.2])
     end
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- avg all cells- normalized'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'tuning_byPref_byInt_sep_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- avg all cells- normalized'])
+print(fullfile(LG_base_out, 'tuning_byPref_byInt_sep_summary.pdf'),'-dpdf','-fillpage')
 
 figure;
 c = [.6 .6 .6; .4 .4 .4; 0 0 0];
@@ -193,8 +148,8 @@ for idel = 1:nDelta
     end
     xlabel('Stimulus Orientation (deg)')
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- avg all cells- normalized'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'tuning_byPref_byInt_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- avg all cells- normalized'])
+print(fullfile(LG_base_out, 'tuning_byPref_byInt_summary.pdf'),'-dpdf','-fillpage')
 
 figure;
 c = [.6 .6 .6; .4 .4 .4; 0 0 0];
@@ -212,8 +167,8 @@ for idelta = 1:nDelta
     xlabel('Cell preference group (deg)')
     title([num2str(deltas(idelta)) ' deg change'])
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- avg all cells- normalized'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'popTuning_byInt_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- avg all cells- normalized'])
+print(fullfile(LG_base_out, 'popTuning_byInt_summary.pdf'),'-dpdf','-fillpage')
 
 
 %% Pref and OSI change
@@ -321,8 +276,8 @@ title('HWHM')
 ylim([-30 30])
 xlim([-10 100])
 hline(0)
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- OSI by Interval'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'OSI_byInt_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- OSI by Interval'])
+print(fullfile(LG_base_out, 'OSI_byInt_summary.pdf'),'-dpdf','-fillpage')
 
 figure;
 subplot(2,2,1)
@@ -369,8 +324,8 @@ ylabel(['Change in Pref'])
 ylim([-40 40])
 hline(0)
 xlim([-10 100])
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Change in Preference by Interval'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'prefDiff_byInt_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Change in Preference by Interval'])
+print(fullfile(LG_base_out, 'prefDiff_byInt_summary.pdf'),'-dpdf','-fillpage')
 
 col_mat = strvcat('b','r','y');
 figure;
@@ -433,8 +388,8 @@ xlabel('Diff of Max from Adaptor (deg)')
 ylim([0 2])
 xlim([-10 100])
 hline(1)
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Mean Resp by Interval'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'resp_byInt_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Mean Resp by Interval'])
+print(fullfile(LG_base_out, 'resp_byInt_summary.pdf'),'-dpdf','-fillpage')
 
 figure;
 subplot(2,2,1)
@@ -514,8 +469,8 @@ xlabel('Diff of Pref from Adaptor (deg)')
 ylim([0 2])
 xlim([-10 100])
 hline(1)
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Diff Resp by Stimulus'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'diffResp_byStim_byFit_newBin2_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Diff Resp by Stimulus'])
+print(fullfile(LG_base_out, 'diffResp_byStim_byFit_newBin2_summary.pdf'),'-dpdf','-fillpage')
 
 [p_sum, table_sum, stats_sum] = anova2(delta_resp_sum, nCells);
 [p_normsum, table_normsum, stats_normsum] = anova2(delta_resp_norm_sum, nCells);
@@ -576,12 +531,12 @@ title('OSI-k')
 ylim([-.3 .3])
 xlim([-10 100])
 hline(0)
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Change in Preference by Interval'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'diff_byInt_byPref_newBin_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Change in Preference by Interval'])
+print(fullfile(LG_base_out, 'diff_byInt_byPref_newBin_summary.pdf'),'-dpdf','-fillpage')
 [p_prefdiff, table_prefdiff, stats_prefdiff] = anovan(pref_ori_group, {off_id, diff_id});
 [p_osidiff, table_osidiff, stats_osidiff] = anovan(OSI_group, {off_id, diff_id});
 
-save(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'tuningStatsSummary.mat'),'table_osidiff','table_prefdiff','table_normsum','table_normgroup')
+save(fullfile(LG_base_out, 'tuningStatsSummary.mat'),'table_osidiff','table_prefdiff','table_normsum','table_normgroup')
 %% max log likelihood
 
 nboot = 1000;
@@ -707,8 +662,8 @@ for idelta = 1:nDelta
     xlim([-10 190])
     %ylim([-3000 0])
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood Function- all fits- 100X'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_byDelta_byInt_summary_allFits.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Log Likelihood Function- all fits- 100X'])
+print(fullfile(LG_base_out, 'loglike_byDelta_byInt_summary_allFits.pdf'),'-dpdf','-fillpage')
 
 
 
@@ -722,8 +677,8 @@ for ioff = 1:noff_all
     xlabel('Orientation')
     ylabel('Log likelihood of 0 deg')
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood of 0 deg stimulus- all cells- 100X'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_is0_combo_allCells_100X.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Log Likelihood of 0 deg stimulus- all cells- 100X'])
+print(fullfile(LG_base_out, 'loglike_is0_combo_allCells_100X.pdf'),'-dpdf','-fillpage')
 
 figure;
 for ioff = 1:noff_all
@@ -744,8 +699,8 @@ subplot(2,1,1)
 title('Orig')
 subplot(2,1,2)
 title('Bootstrap')
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Max Log Likelihood - scaled sub- 100X'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxloglike_scaledsub_100X.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Max Log Likelihood - scaled sub- 100X'])
+print(fullfile(LG_base_out, 'maxloglike_scaledsub_100X.pdf'),'-dpdf','-fillpage')
 
 maxloglike_change = maxloglike_all;
 maxloglike_change(find(maxloglike_all>90)) = 179-maxloglike_change(find(maxloglike_all>90));
@@ -768,8 +723,8 @@ xlabel('Stim - Adapter')
 ylabel('Max likely ori - Adapter')
 xlim([-10 100])
 ylim([-10 100])
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Max Log Likelihood dist from Adapter - scaled sub- 100X'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxloglike_distAdapt_scaledsub_100X.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Max Log Likelihood dist from Adapter - scaled sub- 100X'])
+print(fullfile(LG_base_out, 'maxloglike_distAdapt_scaledsub_100X.pdf'),'-dpdf','-fillpage')
 [p_max, table_max, stats_max] = anova2(maxloglike_change_all, nboot);
 
 
@@ -803,10 +758,10 @@ for ioff = 1:noff_all
     colormap(hot)
     colorbar
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Max Log Likelihood- All cells- 100X'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxloglike_byInt_summary_allCells.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Max Log Likelihood- All cells- 100X'])
+print(fullfile(LG_base_out, 'maxloglike_byInt_summary_allCells.pdf'),'-dpdf','-fillpage')
 
-save(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxLogLike_summary.mat'),'delta_sq_boot','delta_sq','maxloglike_all','loglike_all_neurons','loglike_all_sum', 'loglike_all_fact')
+save(fullfile(LG_base_out, 'maxLogLike_summary.mat'),'delta_sq_boot','delta_sq','maxloglike_all','loglike_all_neurons','loglike_all_sum', 'loglike_all_fact')
 
 %% max log likelihood by trials
 col_mat = strvcat('b','r','y');
@@ -899,8 +854,8 @@ for idelta = 1:nDelta
             xlim([-10 190])
             %ylim([-3000 0])
         end
-        suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood Function- all fits- by trial- 100X'])
-        print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_byDelta_byInt_summary_allFits_byTrial.pdf'),'-dpdf','-fillpage')
+        suptitle([mouse_list '- Log Likelihood Function- all fits- by trial- 100X'])
+        print(fullfile(LG_base_out, 'loglike_byDelta_byInt_summary_allFits_byTrial.pdf'),'-dpdf','-fillpage')
 
         %likelihood is 0
         figure;
@@ -923,8 +878,8 @@ for idelta = 1:nDelta
             xlabel('Orientation')
             ylabel('Log likelihood of 0 deg')
         end
-        suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood of 0 deg stimulus- all cells- by trial- 100X'])
-        print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_is0_combo_allCells_byTrial_100X.pdf'),'-dpdf','-fillpage')
+        suptitle([mouse_list '- Log Likelihood of 0 deg stimulus- all cells- by trial- 100X'])
+        print(fullfile(LG_base_out, 'loglike_is0_combo_allCells_byTrial_100X.pdf'),'-dpdf','-fillpage')
         [p_like0, table_like0, stats_like0] = anovan(likely_all,{off_id});
     end
 end
@@ -940,7 +895,7 @@ for iboot = 1:nboot+1
         end
     end
 end
-save(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxloglike_change.mat'),'maxloglike_change_diff','maxloglike_change','loglike_all_fun')
+save(fullfile(LG_base_out, 'maxloglike_change.mat'),'maxloglike_change_diff','maxloglike_change','loglike_all_fun')
 
 figure;
 dv = zeros(91,ndiff,noff_all,nboot+1);
@@ -976,8 +931,8 @@ end
 ylabel('Hit rate')
 xlabel('Decision variable (deg)')
 ylim([0 1])
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4])])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'allCell_CDFP_decisionVariable.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list])
+print(fullfile(LG_base_out, 'allCell_CDFP_decisionVariable.pdf'),'-dpdf','-fillpage')
 
 maxloglike_change_diff_all = [];
 maxloglike_change_diff_all_1 = [];
@@ -1013,8 +968,8 @@ xlabel('Stim - Adapter')
 ylabel('Max likely ori - Adapter')
 xlim([-10 100])
 ylim([-10 100])
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Max Log Likelihood dist from Adapter - by trial- scaled sub- 100X'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxloglike_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Max Log Likelihood dist from Adapter - by trial- scaled sub- 100X'])
+print(fullfile(LG_base_out, 'maxloglike_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
 % [p_max, table_max, stats_max] = anovan(maxloglike_change_diff_all,{off_id, diff_id});
 % [p_max_1, table_max_1, stats_max_1] = anovan(maxloglike_change_diff_all_1,{off_id_1});
 % [p_max_2, table_max_2, stats_max_2] = anovan(maxloglike_change_diff_all_2,{off_id_2});
@@ -1047,12 +1002,12 @@ xlabel('Stim - Adapter')
 ylabel('Likelyhood = 0')
 xlim([-10 100])
 ylim([-18000 0])
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood is 0 - by trial- scaled sub- 100X'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_is0_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Log Likelihood is 0 - by trial- scaled sub- 100X'])
+print(fullfile(LG_base_out, 'loglike_is0_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
 % [p_like0, table_like0, stats_like0] = anovan(loglike_diff_all,{off_id, diff_id});
 % [p_like0_1, table_like0_1, stats_like0_1] = anovan(loglike_diff_all_1,{off_id_1});
 % [comp_like0_1] = multcompare(stats_like0_1);
-% %save(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_params.mat'),'loglike_all_neurons','loglike_all_sum','loglike_all_fact')
+% %save(fullfile(LG_base_out, 'loglike_params.mat'),'loglike_all_neurons','loglike_all_sum','loglike_all_fact')
 
 %% max log likelihood by trials by experiment
 deltas = 22.5:22.5:180;
@@ -1191,7 +1146,7 @@ ylim([0 100])
 xlabel('Stimulus (deg)')
 ylabel('Readout (deg)')
 suptitle([reshape(flipud(rot90(mouse_mat(good_exp,:))),[1 size(good_exp,2)*4]) '- Hit and FA rate by experiment by trial'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'FACD_dist_byExpt_byTrial.pdf'),'-dpdf','-fillpage')
+print(fullfile(LG_base_out, 'FACD_dist_byExpt_byTrial.pdf'),'-dpdf','-fillpage')
 
 %% max log likelihood by trials - exponential distribution
 OSI_cells = good_ind_theta;
@@ -1279,8 +1234,8 @@ for iboot = 1:nboot+1
             xlim([-10 190])
             %ylim([-3000 0])
         end
-        suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood Function- all fits- by trial- 100X- sqrt'])
-        print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'sqrt_loglike_byDelta_byInt_summary_allFits_byTrial.pdf'),'-dpdf','-fillpage')
+        suptitle([mouse_list '- Log Likelihood Function- all fits- by trial- 100X- sqrt'])
+        print(fullfile(LG_base_out, 'sqrt_loglike_byDelta_byInt_summary_allFits_byTrial.pdf'),'-dpdf','-fillpage')
 
         %likelihood is 0
         figure;
@@ -1303,8 +1258,8 @@ for iboot = 1:nboot+1
             xlabel('Orientation')
             ylabel('Log likelihood of 0 deg')
         end
-        suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood of 0 deg stimulus- all cells- by trial- 100X- sqrt'])
-        print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'sqrt_loglike_is0_combo_allCells_byTrial_100X.pdf'),'-dpdf','-fillpage')
+        suptitle([mouse_list '- Log Likelihood of 0 deg stimulus- all cells- by trial- 100X- sqrt'])
+        print(fullfile(LG_base_out, 'sqrt_loglike_is0_combo_allCells_byTrial_100X.pdf'),'-dpdf','-fillpage')
         [p_like0, table_like0, stats_like0] = anovan(likely_all,{off_id});
     end
 
@@ -1317,7 +1272,7 @@ for iboot = 1:nboot+1
         end
     end
 end
-save(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxloglike_change_sqrt.mat'),'maxloglike_change_diff','maxloglike_change','loglike_all_fun')
+save(fullfile(LG_base_out, 'maxloglike_change_sqrt.mat'),'maxloglike_change_diff','maxloglike_change','loglike_all_fun')
 
 figure;
 maxloglike_change_diff_all = [];
@@ -1354,8 +1309,8 @@ ylabel('Max likely ori - Adapter')
 xlim([-10 100])
 ylim([-10 100])
 axis square
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Max Log Likelihood dist from Adapter - by trial- scaled sub- 100X - sqrt'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'sqrt_maxloglike_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Max Log Likelihood dist from Adapter - by trial- scaled sub- 100X - sqrt'])
+print(fullfile(LG_base_out, 'sqrt_maxloglike_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
 [p_max, table_max, stats_max] = anovan(maxloglike_change_diff_all,{off_id, diff_id});
 [p_max_1, table_max_1, stats_max_1] = anovan(maxloglike_change_diff_all_1,{off_id_1});
 [p_max_2, table_max_2, stats_max_2] = anovan(maxloglike_change_diff_all_2,{off_id_2});
@@ -1386,12 +1341,12 @@ xlabel('Stim - Adapter')
 ylabel('Likelyhood = 0')
 xlim([-10 100])
 ylim([-10000 0])
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood is 0 - by trial- scaled sub- 100X - sqrt'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'sqrt_loglike_is0_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Log Likelihood is 0 - by trial- scaled sub- 100X - sqrt'])
+print(fullfile(LG_base_out, 'sqrt_loglike_is0_distAdapt_byTrial_scaledsub_100X.pdf'),'-dpdf','-fillpage')
 [p_like0, table_like0, stats_like0] = anovan(loglike_diff_all,{off_id, diff_id});
 [p_like0_1, table_like0_1, stats_like0_1] = anovan(loglike_diff_all_1,{off_id_1});
 [comp_like0_1] = multcompare(stats_like0_1);
-%save(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_params.mat'),'loglike_all_neurons','loglike_all_sum','loglike_all_fact')
+%save(fullfile(LG_base_out, 'loglike_params.mat'),'loglike_all_neurons','loglike_all_sum','loglike_all_fact')
 
 %% ROC
 h = zeros(nDelta,1);
@@ -1452,8 +1407,8 @@ xlim([-10 100])
 axis square
 ylabel('Average auROC')
 xlabel('Diff of Stim from Adaptor (deg)')
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- ROC 0 (short ISI) vs Diff from Adapter']) 
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'rocv180_allCells_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- ROC 0 (short ISI) vs Diff from Adapter']) 
+print(fullfile(LG_base_out, 'rocv180_allCells_summary.pdf'),'-dpdf','-fillpage')
 [p_roc_all, table_roc_all, stats_roc_all] = anova2(roc_all, length(good_ind_theta));
 comp_roc_all = multcompare(stats_roc_all);
 
@@ -1483,8 +1438,8 @@ xlim([-10 100])
 axis square
 ylabel('Average auROC')
 xlabel('Diff of Stim from Adaptor (deg)')
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- ROC 0 (short ISI) vs Diff from Adapter- Absolute value']) 
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'rocv180_allCells_summary_abs.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- ROC 0 (short ISI) vs Diff from Adapter- Absolute value']) 
+print(fullfile(LG_base_out, 'rocv180_allCells_summary_abs.pdf'),'-dpdf','-fillpage')
 
 %bin ROC by ori pref
 figure;
@@ -1507,8 +1462,8 @@ for ibin = 1:nbin
     ylabel('auROC')
     legend(strvcat('250', '750'),'Location','Northwest')
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- ROC 0 (short ISI) vs Diff from Adapter- Binned Cell Groups']) 
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'roc_binnedByPref_summary.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- ROC 0 (short ISI) vs Diff from Adapter- Binned Cell Groups']) 
+print(fullfile(LG_base_out, 'roc_binnedByPref_summary.pdf'),'-dpdf','-fillpage')
 
 %bin with pos and neg weights
 figure;
@@ -1576,7 +1531,7 @@ for ibin = 1:nbin
     end
 end
 suptitle('Blue- 250 ms; Red- 750 ms')
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'roc_Pos&NegWeight_summary.pdf'),'-dpdf','-fillpage')
+print(fullfile(LG_base_out, 'roc_Pos&NegWeight_summary.pdf'),'-dpdf','-fillpage')
 %all pos 90 vs >30 pos 90
 [h p] = ttest(roc_val_diff(end,2,:,1,1),roc_val_diff(end,2,:,3,1));
 %all pos 90 vs >60 pos 90
@@ -1660,7 +1615,7 @@ for iexp = 1:nexp
     ylim([0 4])
     offset = n+offset;
 end
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'avgRespHist_expt10.pdf'),'-dpdf','-fillpage')
+print(fullfile(LG_base_out, 'avgRespHist_expt10.pdf'),'-dpdf','-fillpage')
     
 %average ROC for good cells in each experiment
 offset = 0;
@@ -1707,7 +1662,7 @@ ylim([0.5 1])
 xlim([-10 100])
 ylabel('auROC')
 xlabel('Diff of Stim from Adaptor (deg)')
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'rocv180_allExpts_summary.pdf'),'-dpdf','-fillpage')
+print(fullfile(LG_base_out, 'rocv180_allExpts_summary.pdf'),'-dpdf','-fillpage')
 roc_val_diff_nonan = roc_val_diff;
 roc_val_diff_nonan(:,:,find(n_15==0)) = [];
 [p_roc_byexp, table_roc_byexp, stats_roc_byexp] = anova2(reshape(permute(roc_val_diff_nonan,[1 3 2]), [ndiff noff*length(find(n_15>0))])', length(find(n_15>0)));
@@ -1787,7 +1742,7 @@ end
 %     legend({'250','750','control'})
 % end
 
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'CD_FA_sum_allExpts_summary.pdf'),'-dpdf','-fillpage')
+print(fullfile(LG_base_out, 'CD_FA_sum_allExpts_summary.pdf'),'-dpdf','-fillpage')
 
 %% tuning figures- sub
 delta_resp_norm_all = bsxfun(@rdivide, delta_resp_sub_all, max(delta_resp_sub_all(:,:,3),[],2));
@@ -1803,8 +1758,8 @@ for idel = 1:nDelta
         ylim([-0.1 1.2])
     end
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- avg all cells- normalized- sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'tuning_byPref_byInt_sep_summary_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- avg all cells- normalized- sub'])
+print(fullfile(LG_base_out, 'tuning_byPref_byInt_sep_summary_sub.pdf'),'-dpdf','-fillpage')
 
 figure;
 c = [.6 .6 .6; .4 .4 .4; 0 0 0];
@@ -1822,8 +1777,8 @@ for idel = 1:nDelta
     end
     xlabel('Stimulus Orientation (deg)')
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- avg all cells- normalized- sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'tuning_byPref_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- avg all cells- normalized- sub'])
+print(fullfile(LG_base_out, 'tuning_byPref_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
 
 figure;
 c = [.6 .6 .6; .4 .4 .4; 0 0 0];
@@ -1841,8 +1796,8 @@ for idelta = 1:nDelta
     xlabel('Cell preference group (deg)')
     title([num2str(deltas(idelta)) ' deg change'])
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- avg all cells- normalized- sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'popTuning_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- avg all cells- normalized- sub'])
+print(fullfile(LG_base_out, 'popTuning_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
 
 
 %% Pref and OSI change - sub
@@ -1923,8 +1878,8 @@ title('HWHM')
 ylim([-.3 .3])
 xlim([-10 100])
 hline(0)
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- OSI by Interval- Sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'OSI_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- OSI by Interval- Sub'])
+print(fullfile(LG_base_out, 'OSI_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
 
 figure;
 pref_ori_all_diff = pref_ori_sub_all;
@@ -1968,8 +1923,8 @@ ylabel(['Change in Pref'])
 ylim([-40 40])
 hline(0)
 xlim([-10 100])
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Change in Preference by Interval- Sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'prefDiff_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Change in Preference by Interval- Sub'])
+print(fullfile(LG_base_out, 'prefDiff_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
 
 col_mat = strvcat('b','r','y');
 figure;
@@ -2017,8 +1972,8 @@ xlabel('Diff of Max from Adaptor (deg)')
 ylim([0 2])
 xlim([-10 100])
 hline(1)
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Mean Resp by Interval- sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'resp_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Mean Resp by Interval- sub'])
+print(fullfile(LG_base_out, 'resp_byInt_summary_sub.pdf'),'-dpdf','-fillpage')
 
 %% max log likelihood- sub
 
@@ -2080,8 +2035,8 @@ for idelta = 1:nDelta
     xlabel('Orientation')
     ylabel('Log likelihood')
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood Function- all cells- 100X- Sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_byDelta_byInt_summary_allCells_100X_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Log Likelihood Function- all cells- 100X- Sub'])
+print(fullfile(LG_base_out, 'loglike_byDelta_byInt_summary_allCells_100X_sub.pdf'),'-dpdf','-fillpage')
 
 
 
@@ -2121,8 +2076,8 @@ for i = 1:3
     xlabel('Orientation')
     ylabel('Log likelihood of 0 deg')
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Log Likelihood of 0 deg stimulus- all cells- 100X- Sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'loglike_is0_combo_allCells_100X_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Log Likelihood of 0 deg stimulus- all cells- 100X- Sub'])
+print(fullfile(LG_base_out, 'loglike_is0_combo_allCells_100X_sub.pdf'),'-dpdf','-fillpage')
 
 
 figure;
@@ -2155,8 +2110,8 @@ for ioff = 1:noff_all
     colormap(hot)
     colorbar
 end
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- Max Log Likelihood- All cells- 100X- Sub'])
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'maxloglike_byInt_summary_allCells_100X_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- Max Log Likelihood- All cells- 100X- Sub'])
+print(fullfile(LG_base_out, 'maxloglike_byInt_summary_allCells_100X_sub.pdf'),'-dpdf','-fillpage')
 
 %% ROC - sub
 h = zeros(nDelta,1);
@@ -2199,7 +2154,7 @@ xlim([-10 100])
 axis square
 ylabel('Average auROC')
 xlabel('Diff of Stim from Adaptor (deg)')
-suptitle([reshape(flipud(rot90(mouse_mat)),[1 nexp*4]) '- ROC 0 (short ISI) vs Diff from Adapter - Sub']) 
-print(fullfile(LG_base, 'Analysis\2P', 'Adaptation', 'rocv180_allCells_summary_sub.pdf'),'-dpdf','-fillpage')
+suptitle([mouse_list '- ROC 0 (short ISI) vs Diff from Adapter - Sub']) 
+print(fullfile(LG_base_out, 'rocv180_allCells_summary_sub.pdf'),'-dpdf','-fillpage')
 
 

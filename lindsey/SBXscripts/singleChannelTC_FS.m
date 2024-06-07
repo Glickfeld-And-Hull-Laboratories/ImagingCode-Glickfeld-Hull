@@ -1,8 +1,11 @@
+close all
+clear all
+clc
 %% get path names
-date = '211203';
-ImgFolder = strvcat('002');
-time = strvcat('1457');
-mouse = 'i1367';
+date = '240529';
+ImgFolder = [{'002'}];
+time = strvcat('1640');
+mouse = 'i1397';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,1);
@@ -19,10 +22,10 @@ clear temp
 trial_n = [];
 offset = 0;
 for irun = 1:nrun
-    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder(irun,:)];
+    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
     %CD = [LG_base '\Data\2P_images\' date '_' mouse '\' ImgFolder(irun,:)];
     cd(CD);
-    imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
+    imgMatFile = [ImgFolder{irun} '_000_000.mat'];
     load(imgMatFile);
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
     load(fName);
@@ -68,26 +71,12 @@ input = concatenateDataBlocks(temp);
 clear data_temp
 clear temp
 toc
-%% For behavior experiments
-% Plot outcome by trial number
-SIx = strcmp(input.trialOutcomeCell, 'success');
-MIx = strcmp(input.trialOutcomeCell, 'ignore');
-
-figure;
-plot(smooth(SIx,10));
-hold on
-plot(smooth(MIx,10));
-
-% Crop data and input struct
-input = trialChopper(input,[1 200]);
-data = data(:,:,input.counterValues{1}(1):input.counterValues{end}(end));
-
 %% Choose register interval
 nep = floor(size(data,3)./10000);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):300+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(300+((i-1)*10000))]); end
 
-data_avg = mean(data(:,:,20001:20500),3);
+data_avg = mean(data(:,:,50001:50500),3);
 %% Register data
 
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
@@ -215,7 +204,7 @@ mask_data = data_dfof;
 for iStim = 1:size(data_dfof,3)
     mask_data_temp = mask_data(:,:,end+1-iStim);
     mask_data_temp(find(mask_exp >= 1)) = 0;
-    bwout = imCellEditInteractive(mask_data_temp);
+    bwout = imCellEditInteractiveLG(mask_data_temp);
     mask_all = mask_all+bwout;
     mask_exp = imCellBuffer(mask_all,3)+mask_all;
     close all
@@ -346,7 +335,7 @@ offs = unique(tFramesOff(:,1));
 noff = length(offs);
 frameRateHz = input.frameRateHz;
 
-base_win =33:35;
+base_win =32:34;
 resp_win =39:41; 
 
 % figure;
