@@ -646,3 +646,17 @@ overlay_mask_path = fullfile(analysis_out,'mask_overlays');
 %         close;
 %     end
 % end
+
+
+%% number of cells in each mask
+
+nCellMat = zeros(21,3);
+
+for ser = 1:nSer
+    for ch = 1:nCh
+    this_nCell = max(unique(masks{ser,ch}));
+    nCellMat(ser,ch) = this_nCell;
+    end
+end
+
+hist(nCellMat(:,2));

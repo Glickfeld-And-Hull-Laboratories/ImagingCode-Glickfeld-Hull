@@ -8,13 +8,13 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 24;
+day_id = 28;
 %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 
-fn = fullfile(rc.achAnalysis,mouse,expDate); %can make this flexible if folder structure is different
+fn = fullfile(rc.achAnalysis,'PV_YM90K',mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
 
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
@@ -173,7 +173,7 @@ nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingDirectionDeg,2);
-%ntrials = 374;
+%ntrials = 960;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
