@@ -8,22 +8,22 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 42;
-
+day_id = 46;
+experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
     datapath = fullfile('/All_Staff/home/ACh/Data/2p_data');
-    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis',experimentFolder);
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/');
 elseif string(hostname) == 'NB-NUKE'
     isilonName = 'Z:/All_Staff';
-    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/home/ACh/Analysis/2p_analysis/',experimentFolder);
     datapath = fullfile('/home/ACh/Data/2p_data');
     beh_prefix = strcat('Z:/All_Staff/Behavior/Data/');
 else
     isilonName = '';
-    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/home/ACh/Analysis/2p_analysis',experimentFolder);
     datapath = fullfile('/home/ACh/Data/2p_data');
     beh_prefix = strcat('Z:\Behavior\Data\');
 end

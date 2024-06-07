@@ -89,10 +89,14 @@ nSizes = length(Sizes);
 % find preferred size and contrast, find cells that are responsive 
 
 data_resp = zeros(nCells,nSizes,nCons,2);
+data_resp_short = zeros(nCells,nSizes,nCons,2);
 h = zeros(nCells, nSizes,nCons);
 p = zeros(nCells, nSizes,nCons);
+h_short = zeros(nCells, nSizes,nCons);
+p_short = zeros(nCells, nSizes,nCons);
 
 resp_win = stimStart+2:stimStart+8;
+resp_win_short = stimStart+2:stimStart+4;
 base_win = (stimStart - nOff/2):stimStart-1;
 
 
@@ -105,6 +109,13 @@ for iSize = 1:nSizes
         data_resp(:,iSize,iCon,1) = squeeze(mean(mean(data_tc_trial(resp_win,ind,:),1),2));
         data_resp(:,iSize,iCon,2) = squeeze(std(mean(data_tc_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
         [h(:,iSize,iCon), p(:,iSize,iCon)] = ttest(mean(data_tc_trial(resp_win,ind,:),1), mean(data_tc_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05);
+        
+        data_resp_short(:,iSize,iCon,1) = squeeze(mean(mean(data_tc_trial(resp_win_short,ind,:),1),2));
+        data_rdata_resp_shortesp(:,iSize,iCon,2) = squeeze(std(mean(data_tc_trial(resp_win_short,ind,:),1),[],2)./sqrt(length(ind)));
+        [h_short(:,iSize,iCon), p_short(:,iSize,iCon)] = ttest(mean(data_tc_trial(resp_win_short,ind,:),1), mean(data_tc_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05);
+
+
+
         %[h(:,iSize,iCon), p(:,iSize,iCon)] = ttest(mean(data_tc_trial(resp_win,ind,:),1), mean(data_tc_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./((nSizes*nCons)-1));
     end
 end
@@ -115,6 +126,9 @@ end
 
 h_all = sum(sum(h,2),3);
 resp_any=logical(h_all);
+
+h_all_short = sum(sum(h_short,2),3);
+resp_any_short=logical(h_all_short);
 % resp_small_highCon = logical(h(:,1,4));
 
 
@@ -125,6 +139,7 @@ goodFitResp=intersect(find(resp_any),goodfit_ind);
 length(goodFitResp)
 keepDists = cellDists(goodFitResp);
 h_keep=h(goodFitResp,:,:);%subset the h matrix to only the cells that were responsive to at least one stimulus
+h_short_keep=h_short(goodFitResp,:,:);
 %% plot timecourses at different sizes and contrasts
 meanTC_byCondition=nan(nOn+nOff,nSizes,nCons,length(goodFitResp));
 %frame_rate=double(input.frameImagingRateMs);
@@ -351,7 +366,7 @@ figure;
     end
   
 sgtitle([mouse, ', ', num2str(length(interNrns_inds)),' INs'])
-print(fullfile(base, mouse, date, depth, ['IntrNrn_tc_matrix.pdf']), '-dpdf')
+%print(fullfile(base, mouse, date, depth, ['IntrNrn_tc_matrix.pdf']), '-dpdf')
 
 
 TC_byConditionLoc_Pyr=nan(nOn+nOff,nSizes,nCons,length(pyrCells_inds));
@@ -401,7 +416,7 @@ figure;
     end
   
 sgtitle([mouse, ', ', num2str(length(pyrCells_inds)),' Pyr'])
-print(fullfile(base, mouse, date, depth, ['Pyr_tc_matrix.pdf']), '-dpdf')
+%print(fullfile(base, mouse, date, depth, ['Pyr_tc_matrix.pdf']), '-dpdf')
 
 save(fullfile(base, mouse, date, ImgFolder,'TCs.mat'),'TC_byConditionStat_INs','TC_byConditionLoc_INs','meanTC_byCondition')
 %%  ratio of dF/F in response window vs. late window(s)
@@ -497,7 +512,7 @@ DistCutoffs=[0,5,10,20];
 
     end
  
-    print(fullfile(base, mouse, date, depth, ['distance',num2str(iDist),'_matrix.pdf']), '-dpdf');
+    %print(fullfile(base, mouse, date, depth, ['distance',num2str(iDist),'_matrix.pdf']), '-dpdf');
 
     end
 
@@ -551,9 +566,9 @@ keepPrefOri = prefOri(goodFitResp); %make a subset of preOri for the responsive 
 
     end
  
-        print(fullfile(base, mouse, date, depth, ['prefOri',num2str(iOri),'_matrix.pdf']), '-dpdf');
+     %   print(fullfile(base, mouse, date, depth, ['prefOri',num2str(iOri),'_matrix.pdf']), '-dpdf');
 
     end
 %% save data summary
 save(fullfile(base, mouse, date,ImgFolder,'goodFitResp_summary_updated.mat'), ...
-    'TC_byConditionLoc','TC_byConditionStat','h_keep','interNrns','keepDists','keepPrefOri')
+    'TC_byConditionLoc','TC_byConditionStat','h_keep','h_short_keep','interNrns','keepDists','keepPrefOri')

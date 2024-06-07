@@ -13,7 +13,7 @@ eval(ds);
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
 
-sess_list = [284 294 307 323 333];%enter all the sessions you want to concatenate
+sess_list = [214];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -45,7 +45,7 @@ d=string(datetime('today'));
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
-    base = fullfile(isilonName, '/All_Staff/home/ACh/Data/2p_data');
+    base = fullfile(isilonName, '\All_Staff\home\ACh\Analysis\2p_analysis');
     
 else
     isilonName = 'Z:';
@@ -195,9 +195,9 @@ for iSess = 1:nSess
         % pref_responses_stat_lowPupil_concat{id}=cat(1,pref_responses_stat_lowPupil_concat{id},pref_responses_stat_lowPupil{id}(:,sharedCon));
         pref_responses_allCond_concat{id}=cat(1,pref_responses_allCond_concat{id},pref_responses_allCond{id}(:,sharedCon));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
-        wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
-        meanF=mean(fullTC_keep{id},1);
-        meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
+%        wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
+        % meanF=mean(fullTC_keep{id},1);
+        % meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
         % norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
         % norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
         %pref_nonPref_stat_concat{id}=cat(1,pref_nonPref_stat_concat{id},pref_nonPref_stat{id});
@@ -205,11 +205,11 @@ for iSess = 1:nSess
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
 %        noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
  %       sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
-        for i = 1:length(sharedCon)
-            iCon=sharedCon(i);
-            pref_allTrials_stat_concat{i,id}=[pref_allTrials_stat_concat{i,id},pref_allTrials_stat{iCon,id}];
-            pref_allTrials_loc_concat{i,id}=[pref_allTrials_loc_concat{i,id},pref_allTrials_loc{iCon,id}];
-        end
+        % for i = 1:length(sharedCon)
+        %     iCon=sharedCon(i);
+        %     pref_allTrials_stat_concat{i,id}=[pref_allTrials_stat_concat{i,id},pref_allTrials_stat{iCon,id}];
+        %     pref_allTrials_loc_concat{i,id}=[pref_allTrials_loc_concat{i,id},pref_allTrials_loc{iCon,id}];
+        % end
         clear meanF i
     end
   
@@ -3681,14 +3681,14 @@ end
 
 figure
 subplot(1,2,1) %for the first day
-errorbar(cons,conResp_green_avrg_stat{pre},conResp_green_se_stat{pre},'k');
+errorbar(cons,conResp_green_avrg_stat{pre},conResp_green_se_stat{pre},'--k');
 hold on
-errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'b');
+errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'--b');
 title(['-HTP',' n = ', num2str(length(green_all))])
 ylabel('dF/F, pref ori') 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
-xlim([0 1])
+xlim([0 1.1])
 ylim([0 .14])
 xticks([.25 .5 1])
 box off
@@ -3699,7 +3699,7 @@ hold on
 errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
 title(['+HTP',' n = ', num2str(length(red_all))])
 xlabel('contrast') 
-xlim([0 1])
+xlim([0 1.1])
 ylim([0 .14])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
@@ -3744,13 +3744,13 @@ end
 
 figure
 subplot(1,2,1) %for the first day
-errorbar(cons,conResp_green_avrg_loc{pre},conResp_green_se_loc{pre},'k');
+errorbar(cons,conResp_green_avrg_loc{pre},conResp_green_se_loc{pre},'--k');
 hold on
-errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'b');
+errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'--b');
 title(['-HTP',' n = ', num2str(length(green_all))])
 ylabel('dF/F, pref ori') 
 xlabel('contrast') 
-xlim([0 1])
+xlim([0 1.1])
 ylim([0 .4])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
@@ -3762,7 +3762,7 @@ hold on
 errorbar(cons,conResp_red_avrg_loc{post},conResp_red_se_loc{post},'b');
 title(['+HTP',' n = ', num2str(length(red_all))])
  ylim([0 .4])
-xlim([0 1])
+xlim([0 1.1])
 xticks([.25 .5 1])
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')

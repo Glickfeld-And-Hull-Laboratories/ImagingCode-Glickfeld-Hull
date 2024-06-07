@@ -1,7 +1,7 @@
 clear all; clear global; 
 close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -11,6 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
+experimentFolder = 'SST_atropine';
 
 mouse = expt(day_id).mouse;
 
@@ -35,7 +36,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
 clear x prompt
 
 
-fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.achAnalysis,experimentFolder,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
@@ -49,7 +50,7 @@ for id = 1 %currently only doing this for the baseline day
 mouse = expt(allDays(id)).mouse;
 date = expt(allDays(id)).date;
 imgFolder = expt(allDays(id)).contrastxori_runs{1};
-fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
+fn = fullfile(rc.achAnalysis,experimentFolder,mouse,date,imgFolder);
 cd(fn);
 load(fullfile(fn,'redImage.mat'));
 load(fullfile(fn,'mask_cell.mat'));
@@ -301,7 +302,7 @@ for id = 1:nd
         end
     end 
     
-    resp_sig = data_resp(:,:,:,:,1).*h; %make sure the call to data_resp here has the correct number of dimensions
+    resp_sig = data_resp(:,:,:,:,1).*h; %resp_sig is nCells x nDir x nCons x nSizes
     h_pass = sum(sum(sum(h(:,:,:,:),2),3),4);
     %h_pass = sum(h(:,:,:,1),2); %selects cells that are responsive to the smallest size stimulus
     
@@ -317,13 +318,18 @@ for id = 1:nd
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
     for iCell = 1:nCells
-          [max_val, pref_dir(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],3),[],4));
+          
+        [max_val, pref_dir(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),3)),2));
+        %averaging over contrast, then averaging over size, then finding
+        %the max direction
+        %[max_val, pref_dir(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],3),[],4));
           %the indexing seems weird here, but its becuase we first find the
           %maximum value for each direction by taking the max across
           %contrasts, then we fine the maximum of those max's. So we use
           %the contrast index to eventually get max direction and vice
           %versa.
-          [max_val_con, pref_con(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],4),[],2)); 
+%          [max_val_con, pref_con(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],4),[],2)); 
+        [max_val_con, pref_con(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),2)),2));
 
           %I should change this to find preferred size at pref dir
           conBySize_resp_stat(iCell,:,:)=stat_resp(iCell,pref_dir(iCell),:,:); %this gives 1 value per cell per contrast per size at the preferred dir

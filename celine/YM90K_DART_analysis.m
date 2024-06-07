@@ -18,11 +18,11 @@ frame_rate = 15;
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
-    base = fullfile(isilonName, '/All_Staff/home/ACh/Data/2p_data');
+    base = fullfile(isilonName, '/All_Staff/home/ACh\Analysis\2p_analysis\SST_YM90K');
     
 else
     isilonName = 'Z:';
-    base = fullfile(isilonName, '\home\ACh\Analysis\2p_analysis');
+    base = fullfile(isilonName, '\home\ACh\Analysis\2p_analysis\SST_YM90K');
       
 end
 
@@ -66,7 +66,9 @@ norm_dir_resp_loc_concat = cell(1,nd);
 pref_nonPref_stat_concat=cell(1,nd);
 pref_nonPref_loc_concat=cell(1,nd);
 pref_dir_concat=cell(1,nd);
-noiseCorr_concat = cell(1,nd);
+noiseCorr_concat = cell(4,nd);
+noiseCorr_OG_concat = cell(1,nd);
+noiseCorrContrast_concat = cell(4,nCon,nd); 
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
@@ -175,7 +177,13 @@ for iSess = 1:nSess
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
-        noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
+        for i=1:4
+            noiseCorr_concat{i,id}=cat(2,noiseCorr_concat{i,id},noiseCorr{i,id});
+            for iCon = 1:nCon
+                noiseCorrContrast_concat{i,iCon,id}=cat(2,noiseCorrContrast_concat{i,iCon,id},noiseCorrContrast{i,iCon,id});
+            end
+        end
+        noiseCorr_OG_concat{id}=cat(2,noiseCorr_OG_concat{id},noiseCorr_OG{id});
         sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
@@ -205,7 +213,7 @@ clear LMI RIx locCounts locResp locTCs statResp statTCs wheel_tc ttest_results_s
 clear data_con_resp_keep data_ori_resp_keep data_rep_keep dfof_max_diff dfof_max_diff_raw explanation2 resp_max_keep data_resp_keep pref_responses_stat pref_responses_loc
 clear tc_trial_avrg_stat tc_trial_avrg_loc fullTC_keep norm_dir_resp sigCorr noiseCorr responseByCondProps
 clear red_fluor_all red_fluor_match green_fluor_match green_fluor_match red_fluor_keep green_fluor_keep R_p_values pre_nonPref_stat pre_nonPref_loc
-clear pref_responses_stat_hiPupil pref_responses_stat_largePupil pref_responses_stat_lowPupil pref_responses_stat_smallPupil
+clear pref_responses_stat_hiPupil pref_responses_stat_largePupil pref_responses_stat_lowPupil pref_responses_stat_smallPupil noiseCorr_OG noiseCorrContrast
 red_ind_concat = find(red_concat);
 green_ind_concat = find(green_concat);
 
@@ -344,8 +352,8 @@ norm_diff(find(norm_diff == -Inf))=NaN;
 norm_diff(find(norm_diff == Inf))=NaN;
 
 % cells with high correlation in the baseline day
-highRInds = find(noiseCorr_concat{pre}(1,:)>0.5);
-lowRInds = find(noiseCorr_concat{pre}(1,:)<=0.5);
+highRInds = find(noiseCorr_OG_concat{pre}(1,:)>0.5);
+lowRInds = find(noiseCorr_OG_concat{pre}(1,:)<=0.5);
 
 redHigh=intersect(highRInds, red_ind_concat);
 redLow=intersect(lowRInds, red_ind_concat);
@@ -833,20 +841,19 @@ end
 
 
 
-%% Fig S3 A, related to Fig 3C
-% As a control, randomly pull SST cells in equal amounts to the number of 
+%% Fig S5 A, % As a control, randomly pull SST cells in equal amounts to the number of 
 % weakly and strongly correlated cells.
-
 nShuff=100;
 
 hi_shuff_stat = cell(1,nd);
 low_shuff_stat = cell(1,nd);
-
+shuff_normDiff=nan(2,nCon,nShuff);
 pValues_low=nan(1,nShuff);
 pValues_high=nan(1,nShuff);
 
+
 for iShuff = 1:nShuff
-    redLowShuff=randsample(red_ind_concat,length(redLow));
+    redLowShuff=randsample(red_ind_concat,length(redLow)); %set of cell IDs randomly selected from among the red cells
     redHighShuff=setdiff(red_ind_concat,redLowShuff);
     
     for id = 1:nd
@@ -855,6 +862,8 @@ for iShuff = 1:nShuff
             hi_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redHighShuff,iCon),2);
             low_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redLowShuff,iCon),2);
 
+            shuff_normDiff(1,iCon,iShuff)=nanmean(norm_diff(1,iCon,redLowShuff));
+            shuff_normDiff(2,iCon,iShuff)=nanmean(norm_diff(1,iCon,redHighShuff));
            % clear redHighShuff redLowShuff
         end
     end
@@ -862,7 +871,27 @@ for iShuff = 1:nShuff
 
 end
 
+%plot normalized difference distributions for each shuffle
+figure;
+boxchart(squeeze(shuff_normDiff(:,2,:))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+hold on
+scatter([1, 2],squeeze(shuff_normDiff(:,2,:))',20,[.79 .25 .32], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1,2],og_means)
+xticklabels({'Weak corr.', 'Strong corr.'})
+set(gca,'TickDir','out')
+ylim([-1 0.5])
+box off
+x0=5;
+y0=5;
+width=2;
+height=1.5;
+title('Random sample')
+set(gcf,'units','inches','position',[x0,y0,width,height])
+[h, p] = ttest(squeeze(shuff_normDiff(1,2,:))',squeeze(shuff_normDiff(2,2,:))')
+print(fullfile(fnout,'Fig_S5_A.pdf'),'-dpdf');
+%%
 
+%plot timecourses averaged over shuffles
 hi_avrg_stat = cell(1,nd);
 low_avrg_stat = cell(1,nd); 
 hi_std_stat = cell(1,nd);
@@ -933,16 +962,12 @@ for iCon = 1:nCon
     set(gca,'XColor', 'none','YColor','none')
     
     sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
-     if iCon==2
-         print(fullfile(fnout,'Fig_S3_A.pdf'),'-dpdf');
-     else
-    print(fullfile(fnout,[num2str(cons(iCon)) 'shuf_stat_R_timecourses.pdf']),'-dpdf');
-     end
+
     clear txt1 highRed lowRed
 end 
     
-%% Fig S3 B, related to Fig 3C
-% subsampling with replacement 
+
+%% Fig. S5 B subsampling with replacement 
 sampleFract = 1; %what fraction of the total number of low/high cells we
 %will subsample each time
 
@@ -954,6 +979,8 @@ subNhigh = round(sampleFract*length(redHigh));
 
 low_shuff_stat = cell(1,nd);
 hi_shuff_stat = cell(1,nd);
+shuff_normDiff=nan(2,nCon,nShuff);
+
 
 for iShuff = 1:nShuff
     redLowShuff = randsample(redLow,subNlow,true);
@@ -965,11 +992,111 @@ for iShuff = 1:nShuff
        for iCon=1:nCon
             low_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redLowShuff,iCon),2);
             hi_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redHighShuff,iCon),2);
+
+            shuff_normDiff(1,iCon,iShuff)=nanmean(norm_diff(1,iCon,redLowShuff));
+            shuff_normDiff(2,iCon,iShuff)=nanmean(norm_diff(1,iCon,redHighShuff));
             
         end
     end
     clear redHighShuff redLowShuff
 end
+
+%plot normalized difference distributions for each shuffle
+figure;
+boxchart(squeeze(shuff_normDiff(:,2,:))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+hold on
+scatter([1, 2],squeeze(shuff_normDiff(:,2,:))',20,[.79 .25 .32], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1,2],og_means)
+xticklabels({'Weak corr.', 'Strong corr.'})
+set(gca,'TickDir','out')
+%ylim([-1 0.25])
+box off
+x0=5;
+y0=5;
+width=2;
+height=1.5;
+title('Subsample with replacement')
+set(gcf,'units','inches','position',[x0,y0,width,height])
+[h, p] = ttest(squeeze(shuff_normDiff(1,2,:))',squeeze(shuff_normDiff(2,2,:))')
+print(fullfile(fnout,'Fig_S5_B.pdf'),'-dpdf');
+%%
+%plot timecourses of each shuffle
+hi_avrg_stat = cell(1,nd);
+low_avrg_stat = cell(1,nd); 
+hi_std_stat = cell(1,nd);
+low_std_stat = cell(1,nd);
+
+for id = 1:nd
+   for iCon=1:nCon
+        hi_avrg_stat{id}(:,iCon)=mean(hi_shuff_stat{id}(:,iCon,:),3,"omitmissing");
+        hi_std_stat{id}(:,iCon)=std(hi_shuff_stat{id}(:,iCon,:),[],3,'omitmissing');
+        
+        low_avrg_stat{id}(:,iCon)=mean(low_shuff_stat{id}(:,iCon,:),3,"omitmissing");
+        low_std_stat{id}(:,iCon)=std(low_shuff_stat{id}(:,iCon,:),[],3,'omitmissing');
+        
+        clear low_std high_std
+    end
+end
+
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(hi_avrg_stat{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+%Makes a plot for each contrast - 50 contrast used in paper
+for iCon = 1:nCon
+    figure
+    subplot(1,2,1) 
+    plot(squeeze(low_shuff_stat{pre}(:,iCon,:)),'k');
+    hold on
+    plot(squeeze(low_shuff_stat{post}(:,iCon,:)),'b');
+    ylim([-.02 .17]);
+    hold on
+    % line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
+    % hold on
+    line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    ylabel('dF/F') 
+    xlabel('s') 
+    title([' Weakly correlated',' n = ', num2str(subNlow)])
+    set(gca,'XColor', 'none','YColor','none')
+    
+    
+    subplot(1,2,2) 
+    ylim([-.02 .17]);
+    hold on
+    plot(squeeze(hi_shuff_stat{pre}(:,iCon,:)),'k');
+    hold on
+    plot(squeeze(hi_shuff_stat{post}(:,iCon,:)),'b');
+    hold on
+    % line([0,.2],[-.01,-.01],'Color','black','LineWidth',2);
+    % hold on
+    line([0,z],[-.015,-.015],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    title([' Strongly correlated',' n = ', num2str(subNhigh)])
+    
+    xlabel('s') 
+    set(gca,'XColor', 'none','YColor','none')
+    
+    x0=5;
+    y0=5;
+    width=4;
+    height=3;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    set(gca,'XColor', 'none','YColor','none')
+    
+    sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
+     if iCon==2
+         print(fullfile(fnout,'Fig_S3_B.pdf'),'-dpdf');
+     else
+    print(fullfile(fnout,[num2str(cons(iCon)) 'shuf_stat_R_timecourses.pdf']),'-dpdf');
+     end
+    clear txt1 highRed lowRed
+end 
+    
 
 
 hi_avrg_stat = cell(1,nd);
@@ -1040,11 +1167,6 @@ for iCon = 1:nCon
     set(gca,'XColor', 'none','YColor','none')
     
     sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
-     if iCon==2
-         print(fullfile(fnout,'Fig_S3_B.pdf'),'-dpdf');
-     else
-    print(fullfile(fnout,[num2str(cons(iCon)) 'shuf_stat_R_timecourses.pdf']),'-dpdf');
-     end
     clear txt1 highRed lowRed
 end 
     
@@ -1353,11 +1475,12 @@ errorbar(cons,conResp_red_avrg_stat{pre},conResp_red_se_stat{pre},'k');
 hold on
 errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
 title(['Stationary'])
-ylabel('dF/F') 
-xlabel('contrast') 
-xlim([0 1])
+%ylabel('dF/F') 
+%xlabel('contrast') 
+xlim([0 1.2])
 ylim([0 .3])
-xticks([.25 .5 1])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
 set(gca, 'TickDir', 'out')
 box off
 
@@ -1368,9 +1491,10 @@ hold on
 errorbar(cons,conResp_red_avrg_loc{post},conResp_red_se_loc{post},'b');
 title(['Running'])
 ylim([0 .3])
-xlim([0 1])
-xticks([.25 .5 1])
-xlabel('contrast') 
+xlim([0 1.2])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
+%xlabel('contrast') 
 set(gca, 'TickDir', 'out')
 box off
 
@@ -1460,30 +1584,43 @@ table(contrasts,sst_pvalues_loc)
 %stationary and running contrast response for Pyr cells
 figure
 subplot(1,2,1) %for the first day
-errorbar(cons,conResp_green_avrg_stat{pre},conResp_green_se_stat{pre},'k');
+errorbar(cons,conResp_green_avrg_stat{pre},conResp_green_se_stat{pre},'--k');
 hold on
-errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'b');
-title(['-HTP',' n = ', num2str(length(green_all))])
+errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'--b');
+%title(['-HTP',' n = ', num2str(length(green_all))])
 ylabel('dF/F') 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
-xlim([0 1])
-ylim([0.05 .3])
-xticks([.25 .5 1])
-box off 
+ylim([0 .3])
+xlim([0 1.2])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
+%xlabel('contrast') 
+set(gca, 'TickDir', 'out')
+box off
 
 
 subplot(1,2,2) %for the first day
-errorbar(cons,conResp_green_avrg_loc{pre},conResp_green_se_loc{pre},'k');
+errorbar(cons,conResp_green_avrg_loc{pre},conResp_green_se_loc{pre},'--k');
 hold on
-errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'b');
-title(['-HTP',' n = ', num2str(length(green_all))])
+errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'--b');
+%title(['-HTP',' n = ', num2str(length(green_all))])
 xlabel('contrast') 
-xlim([0 1])
-ylim([0.05 .3])
-xticks([.25 .5 1])
+ylim([0 .3])
+xlim([0 1.2])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
+%xlabel('contrast') 
 set(gca, 'TickDir', 'out')
 box off
+
+x0=5;
+y0=5;
+width=2.8;
+height=1.45;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(fullfile(fnout,'Fig_S6B.pdf'),'-dpdf');
 %%
 % pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
@@ -2124,6 +2261,11 @@ conResp_red_avrg_small = cell(1,nd); %same for red
 conResp_green_se_small = cell(1,nd); %this will be the se across all green cells
 conResp_red_se_small = cell(1,nd); %same for red
 
+conResp_green_avrg_large = cell(1,nd); %this will be the average across all green cells - a single line
+conResp_red_avrg_large = cell(1,nd); %same for red
+conResp_green_se_large = cell(1,nd); %this will be the se across all green cells
+conResp_red_se_large = cell(1,nd); %same for red
+
 have_allPupil_green = intersect(have_allPupil, green_ind_concat);
 have_allPupil_red = intersect(have_allPupil, red_ind_concat);
 
@@ -2140,48 +2282,6 @@ for id = 1:nd
     
     clear green_std red_std
  
-end
-
-
-figure
-subplot(2,2,1) %for the second day
-errorbar(cons,conResp_red_avrg_small{pre},conResp_red_se_small{pre},'k');
-hold on
-errorbar(cons,conResp_red_avrg_small{post},conResp_red_se_small{post},'b');
-title(['Small pupil SST',' n = ', num2str(length(have_allPupil_red))])
-%xlabel('contrast') 
-ylabel('dF/F, pref ori') 
-xlim([.1 1.1])
-ylim([0 .2])
-xticks([.25 .5 1])
-set(gca, 'TickDir', 'out')
-box off
-
-subplot(2,2,3) %for the first day
-errorbar(cons,conResp_green_avrg_small{pre},conResp_green_se_small{pre},'--k');
-hold on
-errorbar(cons,conResp_green_avrg_small{post},conResp_green_se_small{post},'--b');
-title(['Small pupil Pyr',' n = ', num2str(length(have_allPupil_green))])
-ylabel('dF/F, pref ori') 
-xlabel('contrast') 
-ylabel('dF/F, pref ori') 
-set(gca, 'TickDir', 'out')
-xlim([.1 1.1])
-ylim([0 .2])
-xticks([.25 .5 1])
-box off
-
-
-conResp_green_avrg_large = cell(1,nd); %this will be the average across all green cells - a single line
-conResp_red_avrg_large = cell(1,nd); %same for red
-conResp_green_se_large = cell(1,nd); %this will be the se across all green cells
-conResp_red_se_large = cell(1,nd); %same for red
-
-
-
-for id = 1:nd
-   
-        
     conResp_green_avrg_large{id}=nanmean(pref_responses_stat_largePupil_concat{id}(have_allPupil_green ,:),1);
     green_std=nanstd(pref_responses_stat_largePupil_concat{id}(have_allPupil_green,:),1);
     conResp_green_se_large{id}=green_std/sqrt(length(have_allPupil_green));
@@ -2191,38 +2291,90 @@ for id = 1:nd
     conResp_red_se_large{id}=red_std/sqrt(length(have_allPupil_red));
     
     clear green_std red_std
- 
 end
 
-subplot(2,2,2) 
-errorbar(cons,conResp_red_avrg_large{pre},conResp_red_se_large{pre},'k');
+
+
+figure
+subplot(1,2,1) %for the first day
+errorbar(cons,conResp_red_avrg_small{pre},conResp_red_se_small{pre},'k');
 hold on
-errorbar(cons,conResp_red_avrg_large{post},conResp_red_se_large{post},'b');
-title(['Large pupil SST',' n = ', num2str(length(have_allPupil_red))])
-ylim([0 .2])
-xlim([.1 1.1])
-xticks([.25 .5 1]) 
+errorbar(cons,conResp_red_avrg_small{post},conResp_red_se_small{post},'b');
+title('Small pupil')
+ylabel('dF/F') 
+xlabel('contrast') 
+set(gca, 'TickDir', 'out')
+ylim([0 .3])
+xlim([0 1.2])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
+%xlabel('contrast') 
 set(gca, 'TickDir', 'out')
 box off
 
-subplot(2,2,4) %for the first day
-errorbar(cons,conResp_green_avrg_large{pre},conResp_green_se_large{pre},'--k');
+
+subplot(1,2,2) %for the first day
+errorbar(cons,conResp_red_avrg_large{pre},conResp_red_se_large{pre},'k');
 hold on
-errorbar(cons,conResp_green_avrg_large{post},conResp_green_se_large{post},'--b');
-title(['Large pupil Pyr',' n = ', num2str(length(have_allPupil_green))])
+errorbar(cons,conResp_red_avrg_large{post},conResp_red_se_large{post},'b');
+title('Large pupil')
 xlabel('contrast') 
-xlim([.1 1.1])
-ylim([0 .2])
-xticks([.25 .5 1])
+ylim([0 .3])
+xlim([0 1.2])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
+%xlabel('contrast') 
 set(gca, 'TickDir', 'out')
 box off
 
 x0=5;
 y0=5;
-width=2.5;
-height=3;
+width=2.8;
+height=1.45;
+set(gcf,'units','inches','position',[x0,y0,width,height])
 
-print(fullfile(fnout,'Fig_S6_C.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_5C.pdf'),'-dpdf');
+
+figure
+subplot(1,2,1) %for the first day
+errorbar(cons,conResp_green_avrg_small{pre},conResp_green_se_small{pre},'--k');
+hold on
+errorbar(cons,conResp_green_avrg_small{post},conResp_green_se_small{post},'--b');
+%title('Small pupil')
+ylabel('dF/F') 
+xlabel('contrast') 
+set(gca, 'TickDir', 'out')
+ylim([0 .3])
+xlim([0 1.2])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
+%xlabel('contrast') 
+set(gca, 'TickDir', 'out')
+box off
+
+
+subplot(1,2,2) %for the first day
+errorbar(cons,conResp_green_avrg_large{pre},conResp_green_se_large{pre},'--k');
+hold on
+errorbar(cons,conResp_green_avrg_large{post},conResp_green_se_large{post},'--b');
+%title('Large pupil')
+xlabel('contrast') 
+ylim([0 .3])
+xlim([0 1.2])
+xticks([.25 .50 1.00])
+xticklabels([25 50 100])
+%xlabel('contrast') 
+set(gca, 'TickDir', 'out')
+box off
+
+x0=5;
+y0=5;
+width=2.8;
+height=1.45;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+
+print(fullfile(fnout,'Fig_S6D.pdf'),'-dpdf');
 
 %% stats for data split by pupil
 
@@ -2469,3 +2621,54 @@ y0=5;
 width=1.1;
 height=1.1;
 set(gcf,'units','inches','position',[x0,y0,width,height])
+%% additional correlation analyses
+
+%does the average R value differ between behavioral states?
+R_by_state = NaN(4,nd,nKeep_total);
+
+for id = 1:nd
+    for i = 1:4
+        R_by_state(i,id,:)=noiseCorr_concat{i,id}(1,:);
+    end
+end
+
+
+figure;
+boxplot([squeeze(R_by_state(2,post,green_ind_concat)),squeeze(R_by_state(3,post,green_ind_concat)),squeeze(R_by_state(4,post,green_ind_concat))]);
+hold on
+scatter([1, 2, 3],squeeze(R_by_state(2:4,post,green_ind_concat)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+xticklabels({'Small pupil','Large pupil','Running'})
+%ylim([-.3 1.3])
+ylabel(["Mean R value"]) 
+set(gca,'TickDir','out')
+box off
+
+[h1,p1] =ttest(squeeze(R_by_state(1,post,green_ind_concat)),squeeze(R_by_state(2,post,green_ind_concat)))
+[h2,p2] =ttest(squeeze(R_by_state(1,post,green_ind_concat)),squeeze(R_by_state(3,post,green_ind_concat)))
+[h3,p3] =ttest(squeeze(R_by_state(2,post,green_ind_concat)),squeeze(R_by_state(3,post,green_ind_concat)))
+
+%%
+%does the average R value differ between contrasts within a behvaioral
+%state?
+R_by_contrast = NaN(nCon,nd,nKeep_total);
+
+for id = 1:nd
+    for iCon = 1:nCon
+        R_by_contrast(iCon,id,:)=noiseCorrContrast_concat{4,iCon,id}(1,:);
+    end
+end
+
+
+figure;
+scatter([1, 2, 3],squeeze(R_by_contrast(:,post,green_ind_concat)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+hold on
+boxplot([squeeze(R_by_contrast(1,post,green_ind_concat)),squeeze(R_by_contrast(2,post,green_ind_concat)),squeeze(R_by_contrast(3,post,green_ind_concat))]);
+xticklabels({'25%','50%','100%'})
+ylim([-1 1])
+ylabel(["Mean R value"]) 
+set(gca,'TickDir','out')
+box off
+[h1,p1] =ttest(squeeze(R_by_contrast(1,post,green_ind_concat)),squeeze(R_by_contrast(2,post,green_ind_concat)))
+[h2,p2] =ttest(squeeze(R_by_contrast(1,post,green_ind_concat)),squeeze(R_by_contrast(3,post,green_ind_concat)))
+[h3,p3] =ttest(squeeze(R_by_contrast(2,post,green_ind_concat)),squeeze(R_by_contrast(3,post,green_ind_concat)))
+
