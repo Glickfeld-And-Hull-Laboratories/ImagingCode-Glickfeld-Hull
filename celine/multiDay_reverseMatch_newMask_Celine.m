@@ -9,9 +9,10 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 41; %enter the refrence day ID here
+day_id(1) = 46; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
+experimentFolder = 'SST_atropine';
 
 
 nd = length(day_id);
@@ -22,15 +23,15 @@ mouse = expt(day_id(1)).mouse;
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
     database = fullfile('/All_Staff/home/ACh/Data/2p_data');
-    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis',experimentFolder);
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
 elseif string(hostname) == 'NB-NUKE'
     isilonName = 'Z:/All_Staff';
-    base = fullfile(isilonName,'/home/ACh/Analysis/2p_analysis');
+    base = fullfile(isilonName,'/home/ACh/Analysis/2p_analysis',experimentFolder);
     database = fullfile(isilonName,'/home/ACh/Data/2p_data');
 else
     isilonName = 'duhs-user-nc1.dhe.duke.edu/';
-    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/home/ACh/Analysis/2p_analysis',experimentFolder);
     database = fullfile('/home/ACh/Data/2p_data');
    
    beh_prefix = strcat('Z:\Behavior\Data\data-');
@@ -38,7 +39,7 @@ end
 
 fnout = fullfile(base,mouse);
 
-if expt(day_id(2)).multiday_timesincedrug_hours>0
+if expt(day_id(1)).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(1)).multiday_timesincedrug_hours) 'Hr'];
 else
     dart_str = 'control';

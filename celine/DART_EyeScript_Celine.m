@@ -5,6 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);
 
+experimentFolder = 'SST_atropine';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -24,7 +25,7 @@ for day = 1:2
     time = expt(iexp).contrastxori_time{1};
         
     CD = fullfile(rc.achData, mouse, date, run);
-    data_out = fullfile(rc.achAnalysis, mouse, date,run);
+    data_out = fullfile(rc.achAnalysis,experimentFolder, mouse, date,run);
     cd(CD);
     fn = [run '_000_000_eye.mat'];
     
@@ -56,7 +57,7 @@ for day = 1:2
     [rad centroid] = alignEyeData(Eye_data,input);
     
     % wheel data
-    wheel_data = wheelSpeedCalc(input,32,'purple');
+    wheel_data = wheelSpeedCalc(input,32,'orange');
     wheel_trial = mean(reshape(wheel_data,[input.nScansOff+input.nScansOn nTrials]),1);
     
     save(fullfile(data_out,'pupil.mat'),'rect','rad_range','Eye_data','rad','centroid','wheel_trial')
