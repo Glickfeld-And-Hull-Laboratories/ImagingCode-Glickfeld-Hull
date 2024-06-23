@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 46;
+day_id = 49;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
@@ -163,8 +163,8 @@ end
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
-ntrials = size(input.tGratingDirectionDeg,2);
-%ntrials = 374;
+%ntrials = size(input.tGratingDirectionDeg,2);
+ntrials = 960;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));

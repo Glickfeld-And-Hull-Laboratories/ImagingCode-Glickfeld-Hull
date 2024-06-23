@@ -189,16 +189,15 @@ PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for
 % stationary large pupil, second cell is inds for stationary small pupil
 motorByPupil = nan(nd,2);
 for id = 1:nd
-    PIx_temp=pupil{id}.rad.stim > statPupilThreshold;
-    PIx_stat{1,id}= logical(PIx_temp.*~RIx{id});
-    PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id});
+    PIx_temp=pupil{id}.rad.stim > statPupilThreshold; %the trials that cross the pupil threshold
+    PIx_stat{1,id}= logical(PIx_temp.*~RIx{id}); %the trials with large pupil, stationary
+    PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id}); %the trials with small pupil, stationary
     pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
     pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
     pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
-    motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}));
-    motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}));
-    small_pupil_inds{id}=find(PIx_stat{2,id});
-    large_pupil_inds{id}=find(PIx_stat{1,id});
+    motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
+    motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
+
 end
 save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
 
@@ -250,8 +249,8 @@ for id = 1:nd
             ind_con = find(tCon == cons(iCon));
             ind = intersect(ind_dir,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
             ind_stat = intersect(ind, find(~RIx{id}))
-            ind_stat_largePupil = intersect(ind, find(PIx_stat{1,id}));
-            ind_stat_smallPupil = intersect(ind, find(PIx_stat{2, id}));
+            ind_stat_largePupil = intersect(ind, PIx_stat{1,id});
+            ind_stat_smallPupil = intersect(ind, PIx_stat{2,id});
             ind_loc = intersect(ind, find(RIx{id}));
             data_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
 
@@ -554,12 +553,13 @@ nonPref_trial_avrg_loc{id} = temp_nonPref_loc;
 %rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
 pref_responses_stat{id} = temp_pref_responses_stat;
 pref_responses_stat_largePupil{id}=temp_pref_responses_stat_largePupil;
-pref_responses_stat_smallPupil{id}=temp_pref_responses_stat_smallPupil
+pref_responses_stat_smallPupil{id}=temp_pref_responses_stat_smallPupil;
 
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
 pref_peak_stat{id}=temp_pref_peak_stat;
 pref_peak_loc{id}=temp_pref_peak_loc;
+
 
 %clear temp_trials_stat_smallPupil temp_trials_stat_largePupil temp_trials_stat temp_trials_loc temp_tc_stat_largePupil temp_tc_stat_smallPupil temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
 end
@@ -936,7 +936,7 @@ for id = 1:nd
             inds1 = intersect(ind_dir,ind_con);
 
             %for stationary small pupil
-            inds=intersect(inds1,small_pupil_inds{id});
+            inds=intersect(inds1,find(PIx_stat{2,id}));
             if length(inds)>2
                 tempData=trialResp{id}(inds,:);
                 tempCellMeans=mean(tempData,1,'omitmissing');
@@ -946,7 +946,7 @@ for id = 1:nd
             end
 
             %for stationary large pupil
-            inds=intersect(inds1,large_pupil_inds{id});
+            inds=intersect(inds1,find(PIx_stat{1,id}));
             if length(inds)>2
                 tempData=trialResp{id}(inds,:);
                 tempCellMeans=mean(tempData,1,'omitmissing');
@@ -1025,14 +1025,14 @@ end
 for id=1:nd
     noiseCorr{2,id}=nan(2,nKeep);
     counter = 1;
-    if length(small_pupil_inds{id})>10
+    if length(find(PIx_stat{2,id}))>10
 
         for iCell = 1:nKeep 
-            thisCell=subTrialResp{id}(small_pupil_inds{id},iCell);
+            thisCell=subTrialResp{id}(PIx_stat{2,id},iCell);
             %if this is a red cell, compare to all green cells. If its a green
             %cell, compare it to all other green cells
             otherCells = setdiff(green_ind_keep,iCell);
-            otherCellsMean = mean(subTrialResp{id}(small_pupil_inds{id},otherCells),2,"omitnan");
+            otherCellsMean = mean(subTrialResp{id}(PIx_stat{2,id},otherCells),2,"omitnan");
             [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
             
             % if rem(iCell,10)==0
@@ -1064,13 +1064,13 @@ end
 %for stationary large pupil
 for id=1:nd
     noiseCorr{3,id}=nan(2,nKeep);
-    if length(large_pupil_inds{id})>10
+    if length(find(PIx_stat{1,id}))>10
         for iCell = 1:nKeep 
-            thisCell=subTrialResp{id}(large_pupil_inds{id},iCell);
+            thisCell=subTrialResp{id}(PIx_stat{1,id},iCell);
             %if this is a red cell, compare to all green cells. If its a green
             %cell, compare it to all other green cells
             otherCells = setdiff(green_ind_keep,iCell);
-            otherCellsMean = mean(subTrialResp{id}(large_pupil_inds{id},otherCells),2,"omitnan");
+            otherCellsMean = mean(subTrialResp{id}(PIx_stat{1,id},otherCells),2,"omitnan");
             [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
             
             % if rem(iCell,10)==0
@@ -1196,7 +1196,7 @@ for id=1:nd
     for iCon = 1:nCon
         noiseCorrContrast{2,iCon,id}=nan(2,nKeep);
         ind_con = find(tCon == cons(iCon));
-        inds = intersect(ind_con,small_pupil_inds{id});
+        inds = intersect(ind_con,find(PIx_stat{2,id}));
         if length(inds)>10
             for iCell = 1:nKeep 
                 thisCell=subTrialResp{id}(inds,iCell);
@@ -1240,7 +1240,7 @@ for id=1:nd
     for iCon = 1:nCon
         noiseCorrContrast{3,iCon,id}=nan(2,nKeep);
         ind_con = find(tCon == cons(iCon));
-        inds = intersect(ind_con,large_pupil_inds{id});
+        inds = intersect(ind_con,find(PIx_stat{1,id}));
         if length(inds)>10
         
             for iCell = 1:nKeep 
@@ -1371,7 +1371,7 @@ end
 
 
 %% response by condition for cells matched across all conditions
-% find cells that I ahve running data for on both days
+% find cells that I ahve running data for on both days178
 % haveRunning_pre = ~isnan(pref_responses_loc{pre});
 % haveRunning_post = ~isnan(pref_responses_loc{post});
 % haveRunning_both = find(haveRunning_pre.* haveRunning_post);

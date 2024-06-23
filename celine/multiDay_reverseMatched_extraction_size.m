@@ -234,8 +234,8 @@ for id = 1:nd
     pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
     pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
     pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
-    motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}));
-    motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}));
+    motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
+    motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
 end
 save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
 

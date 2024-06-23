@@ -296,20 +296,20 @@ clear  iMouse
 
 
 %find cells that have running data on both days
-have_HI_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
-have_HI_post = ~isnan(pref_responses_stat_largePupil_concat{post});
+have_LARGE_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
+have_LARGE_post = ~isnan(pref_responses_stat_largePupil_concat{post});
 
-have_LOW_pre = ~isnan(pref_responses_stat_smallPupil_concat{pre});
-have_LOW_post = ~isnan(pref_responses_stat_smallPupil_concat{post});
+have_SMALL_pre = ~isnan(pref_responses_stat_smallPupil_concat{pre});
+have_SMALL_post = ~isnan(pref_responses_stat_smallPupil_concat{post});
 
 have_bothPupil=cell(1,3);
 for iCon =1:nCon
-    have_HI_both= find(have_HI_pre(:,iCon).* have_HI_post(:,iCon));
-    have_LOW_both=find(have_LOW_pre(:,iCon).* have_LOW_post(:,iCon));
+    have_HI_both= find(have_LARGE_pre(:,iCon).* have_LARGE_post(:,iCon));
+    have_LOW_both=find(have_SMALL_pre(:,iCon).* have_SMALL_post(:,iCon));
     have_bothPupil{iCon}=intersect(have_HI_both,have_LOW_both);
 end
  
-clear have_HI_pre have_HI_post have_LOW_pre have_LOW_post have_HI_both have_LOW_both
+clear have_LARGE_pre have_LARGE_post have_SMALL_pre have_SMALL_post have_HI_both have_LOW_both
 
 have_allPupil = intersect(have_bothPupil{1},have_bothPupil{2});
 have_allPupil = intersect(have_allPupil, have_bothPupil{3});
@@ -2068,7 +2068,7 @@ end
 
 
 
-%% Fig S6 A, SST cell timecourses split by pupil size, and SX B, Pyr responses split by pupil size
+%% Fig 5 B, SST cell timecourses split by pupil size, and SX B, Pyr responses split by pupil size
 
 tc_green_avrg_stat_large = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_stat_large = cell(1,nd); %same for red
@@ -2082,88 +2082,88 @@ tc_red_se_stat_small = cell(1,nd); %same for red
 have_allPupil_green = intersect(have_allPupil, green_ind_concat);
 have_allPupil_red = intersect(have_allPupil, red_ind_concat);
 
-for id = 1:nd
-    for iCon=1:nCon
-    temp_green = have_allPupil_green;
-    temp_red = have_allPupil_red;
-
-    tc_green_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),[],2);
-    tc_green_se_stat_large{id}(:,iCon)=green_std/sqrt(length(temp_green));
+    for id = 1:nd
+        for iCon=1:nCon
     
-    tc_red_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_red,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_red,iCon),[],2);
-    tc_red_se_stat_large{id}(:,iCon)=red_std/sqrt(length(temp_red));
     
-    clear green_std red_std
-
-    tc_green_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),[],2);
-    tc_green_se_stat_small{id}(:,iCon)=green_std/sqrt(length(temp_green));
+        tc_green_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_green,iCon),2);
+        green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_green,iCon),[],2);
+        tc_green_se_stat_large{id}(:,iCon)=green_std/sqrt(length(have_allPupil_green));
+        
+        tc_red_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_red,iCon),2);
+        red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_red,iCon),[],2);
+        tc_red_se_stat_large{id}(:,iCon)=red_std/sqrt(length(have_allPupil_red));
+        
+        clear green_std red_std
     
-    tc_red_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_red,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_red,iCon),[],2);
-    tc_red_se_stat_small{id}(:,iCon)=red_std/sqrt(length(temp_red));
-    
-    clear green_std red_std
+        tc_green_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_green,iCon),2);
+        green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_green,iCon),[],2);
+        tc_green_se_stat_small{id}(:,iCon)=green_std/sqrt(length(have_allPupil_green));
+        
+        tc_red_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_red,iCon),2);
+        red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_red,iCon),[],2);
+        tc_red_se_stat_small{id}(:,iCon)=red_std/sqrt(length(have_allPupil_red));
+        
+        clear green_std red_std
+        end
     end
-end
+    
+    
+    z=double(nOn)/double(frame_rate);
+    
+    %create a time axis in seconds
+    t=1:(size(tc_green_avrg_stat_large{1,1,1},1));
+    t=(t-(double(stimStart)-1))/double(frame_rate);
+    
+    positions=[1,2;3,4;5,6];
+    
+    figure
+    for iCon = 1:nCon
+    p1=positions(iCon,1);
+    p2=positions(iCon,2);
+    
+    subplot(3,2,p1) 
+    ylim([-.02 .2]);
+    hold on
+    shadedErrorBar(t,tc_red_avrg_stat_small{pre}(:,iCon),tc_red_se_stat_small{pre}(:,iCon),'k');
+    hold on
+    shadedErrorBar(t,tc_red_avrg_stat_small{post}(:,iCon),tc_red_se_stat_small{post}(:,iCon),'b','transparent');
+    hold on
+    if iCon==1
+        title("Small pupil")
+        line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    elseif iCon==3
+        line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    end
+    set(gca,'XColor', 'none','YColor','none')
+    
+    subplot(3,2,p2) 
+    
+    hold on
+    shadedErrorBar(t,tc_red_avrg_stat_large{pre}(:,iCon),tc_red_se_stat_large{pre}(:,iCon),'k');
+    hold on
+    shadedErrorBar(t,tc_red_avrg_stat_large{post}(:,iCon),tc_red_se_stat_large{post}(:,iCon),'b','transparent');
+    hold on
+    if iCon==1
+        title("Large pupil")
+    elseif iCon==3
+        line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    end
+    set(gca,'XColor', 'none','YColor','none')
+    ylim([-.02 .2]);
+    sgtitle(['SST',' n = ', num2str(length(have_allPupil_red))])
+    
+    x0=5;
+    y0=0;
+    width=4;
+    height=9;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    set(gca,'XColor', 'none','YColor','none')
+    
+    
+    end  
 
-
-z=double(nOn)/double(frame_rate);
-
-%create a time axis in seconds
-t=1:(size(tc_green_avrg_stat_large{1,1,1},1));
-t=(t-(double(stimStart)-1))/double(frame_rate);
-
-positions=[1,2;3,4;5,6];
-
-figure
-for iCon = 1:nCon
-p1=positions(iCon,1);
-p2=positions(iCon,2);
-
-subplot(3,2,p1) 
-ylim([-.02 .2]);
-hold on
-shadedErrorBar(t,tc_red_avrg_stat_small{pre}(:,iCon),tc_red_se_stat_small{pre}(:,iCon),'k');
-hold on
-shadedErrorBar(t,tc_red_avrg_stat_small{post}(:,iCon),tc_red_se_stat_small{post}(:,iCon),'b','transparent');
-hold on
-if iCon==1
-    title("Small pupil")
-    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-elseif iCon==3
-    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-end
-set(gca,'XColor', 'none','YColor','none')
-
-subplot(3,2,p2) 
-
-hold on
-shadedErrorBar(t,tc_red_avrg_stat_large{pre}(:,iCon),tc_red_se_stat_large{pre}(:,iCon),'k');
-hold on
-shadedErrorBar(t,tc_red_avrg_stat_large{post}(:,iCon),tc_red_se_stat_large{post}(:,iCon),'b','transparent');
-hold on
-if iCon==1
-    title("Large pupil")
-elseif iCon==3
-    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-end
-set(gca,'XColor', 'none','YColor','none')
-ylim([-.02 .2]);
-sgtitle(['SST',' n = ', num2str(length(have_allPupil_red))])
-
-x0=5;
-y0=0;
-width=4;
-height=9;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-set(gca,'XColor', 'none','YColor','none')
-
-
-end  
-print(fullfile(fnout,'Fig_S6_A.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_5B.pdf'),'-dpdf');
 
 figure
 for iCon = 1:nCon
@@ -2212,7 +2212,7 @@ set(gca,'XColor', 'none','YColor','none')
 end  
 
 
-print(fullfile(fnout,'Fig_S6_B.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_S6C.pdf'),'-dpdf');
 
 %% pupil stats
 pupilMeans_clean = squeeze(mean(pupilMeans_concat(:,:,:),1,'omitmissing')); %average the two days
@@ -2233,7 +2233,7 @@ xticks([1 2 3])
 xticklabels({'Small pupil','Large pupil','Running'})
 ylabel('Pupil diameter (mm)')
 hold on
-ylim([0 .9])
+ylim([0 1])
 scatter([1 2 3],pupilMeans_clean(:,:),10, "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
 errorbar(pupilMean_overall,pupilSE_overall,'.-k','MarkerSize',15)
 
@@ -2249,10 +2249,24 @@ print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
 
 % confirm that there's no difference in size across days within the "small"
 % pupil trials
-[h p] = ttest(pupilMeans_concat(pre,1,:),pupilMeans_concat(post,1,:))
-% confirm that there's no difference in size across days within the "large"
-% pupil trials
 [h p] = ttest(pupilMeans_concat(pre,2,:),pupilMeans_concat(post,2,:))
+% large pupil trials are significantly
+[h p] = ttest(pupilMeans_concat(pre,1,:),pupilMeans_concat(post,1,:))
+
+
+
+%confirm that pupil is significantly large in large trials, averaging over
+%days
+[h p] = ttest(pupilMeans_clean(1,:),pupilMeans_clean(2,:))
+%test whether pupuil is different between large trials and running
+[h p] = ttest(pupilMeans_clean(2,:),pupilMeans_clean(3,:))
+
+
+%look at how motor activity differs with pupil size
+%control day
+[h p] = ttest(motorByPupil_concat(pre,1,:),motorByPupil_concat(pre,2,:))
+%DART day
+[h p] = ttest(motorByPupil_concat(post,1,:),motorByPupil_concat(post,2,:))
 
 %% contrast response pupil
 
@@ -2304,7 +2318,7 @@ title('Small pupil')
 ylabel('dF/F') 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
-ylim([0 .3])
+ylim([0 .15])
 xlim([0 1.2])
 xticks([.25 .50 1.00])
 xticklabels([25 50 100])
@@ -2319,7 +2333,7 @@ hold on
 errorbar(cons,conResp_red_avrg_large{post},conResp_red_se_large{post},'b');
 title('Large pupil')
 xlabel('contrast') 
-ylim([0 .3])
+ylim([0 .15])
 xlim([0 1.2])
 xticks([.25 .50 1.00])
 xticklabels([25 50 100])
@@ -2413,7 +2427,7 @@ ranova(rm_SST_matched, 'withinmodel', 'pupilSize*DART*contrast')
 rm_Pyr_matched = fitrm(Pyr_matched_dfof_pupil, 'Sd1c1-Ld2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_Pyr_matched, 'withinmodel', 'pupilSize*DART*contrast')
 
-% models for stationary and running seperately 
+% models for small and large pupil seperately 
 w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
 
 rm_SST_small = fitrm(SST_matched_dfof_pupil, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w);
@@ -2426,7 +2440,7 @@ ranova(rm_SST_large, 'withinmodel', 'DART*contrast')
 rm_Pyr_small = fitrm(Pyr_matched_dfof_pupil, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_Pyr_small, 'withinmodel', 'DART*contrast')
 
-rm_Pyr_large = fitrm(Pyr_matched_dfof_pupil, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
+rm_Pyr_large = fitrm(Pyr_matched_dfof_pupil, 'Ld1c1-Ld2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_Pyr_large, 'withinmodel', 'DART*contrast')
 
 
@@ -2549,8 +2563,7 @@ print(fullfile(fnout,'pupil_normDiff.pdf'),'-dpdf')
 
 %compute chi squares for suppression, small pupil vs large pupil
 %25% contrast
-% N previously set to be the number of SST+ cells. The same cells are
-% included in smallPupilionary and running.
+
 n1=supp_table_smallPupil(1)*N;
 n2=supp_table_largePupil(1)*N;
 x1 = [repmat('a',N,1); repmat('b',N,1)];
@@ -2571,12 +2584,7 @@ x1 = [repmat('a',N,1); repmat('b',N,1)];
 x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
 
-%25 smallPupil vs 100 smallPupil
-n1=supp_table_smallPupil(1)*N;
-n2=supp_table_smallPupil(3)*N;
-x1 = [repmat('a',N,1); repmat('b',N,1)];
-x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
-[tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
+
 
 [chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1*3, p2*3,p3*3]
 %[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
@@ -2634,18 +2642,17 @@ end
 
 
 figure;
-boxplot([squeeze(R_by_state(2,post,green_ind_concat)),squeeze(R_by_state(3,post,green_ind_concat)),squeeze(R_by_state(4,post,green_ind_concat))]);
+boxplot([squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all))]);
 hold on
-scatter([1, 2, 3],squeeze(R_by_state(2:4,post,green_ind_concat)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
-xticklabels({'Small pupil','Large pupil','Running'})
+scatter([1, 2],squeeze(R_by_state([1,4],pre,red_all)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+xticklabels({'Stationary','Running'})
 %ylim([-.3 1.3])
 ylabel(["Mean R value"]) 
-set(gca,'TickDir','out')
+set(gca,'TickDir','out')        
 box off
 
-[h1,p1] =ttest(squeeze(R_by_state(1,post,green_ind_concat)),squeeze(R_by_state(2,post,green_ind_concat)))
-[h2,p2] =ttest(squeeze(R_by_state(1,post,green_ind_concat)),squeeze(R_by_state(3,post,green_ind_concat)))
-[h3,p3] =ttest(squeeze(R_by_state(2,post,green_ind_concat)),squeeze(R_by_state(3,post,green_ind_concat)))
+
+[h1,p1] =ttest(squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all)))
 
 %%
 %does the average R value differ between contrasts within a behvaioral
@@ -2654,21 +2661,31 @@ R_by_contrast = NaN(nCon,nd,nKeep_total);
 
 for id = 1:nd
     for iCon = 1:nCon
-        R_by_contrast(iCon,id,:)=noiseCorrContrast_concat{4,iCon,id}(1,:);
+        R_by_contrast(iCon,id,:)=noiseCorrContrast_concat{1,iCon,id}(1,:);
     end
 end
 
 
 figure;
-scatter([1, 2, 3],squeeze(R_by_contrast(:,post,green_ind_concat)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(R_by_contrast(:,pre,red_ind_concat)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 hold on
-boxplot([squeeze(R_by_contrast(1,post,green_ind_concat)),squeeze(R_by_contrast(2,post,green_ind_concat)),squeeze(R_by_contrast(3,post,green_ind_concat))]);
+boxplot([squeeze(R_by_contrast(1,pre,red_ind_concat)),squeeze(R_by_contrast(2,pre,red_ind_concat)),squeeze(R_by_contrast(3,pre,red_ind_concat))]);
 xticklabels({'25%','50%','100%'})
 ylim([-1 1])
 ylabel(["Mean R value"]) 
 set(gca,'TickDir','out')
 box off
-[h1,p1] =ttest(squeeze(R_by_contrast(1,post,green_ind_concat)),squeeze(R_by_contrast(2,post,green_ind_concat)))
-[h2,p2] =ttest(squeeze(R_by_contrast(1,post,green_ind_concat)),squeeze(R_by_contrast(3,post,green_ind_concat)))
-[h3,p3] =ttest(squeeze(R_by_contrast(2,post,green_ind_concat)),squeeze(R_by_contrast(3,post,green_ind_concat)))
 
+
+[h1,p1] =ttest(squeeze(R_by_contrast(1,pre,red_ind_concat)),squeeze(R_by_contrast(2,pre,red_ind_concat)));
+[h2,p2] =ttest(squeeze(R_by_contrast(1,pre,red_ind_concat)),squeeze(R_by_contrast(3,pre,red_ind_concat)));
+[h3,p3] =ttest(squeeze(R_by_contrast(2,pre,red_ind_concat)),squeeze(R_by_contrast(3,pre,red_ind_concat)));
+[p1*3,p2*3,p3*3]
+%%
+% ANOVA for noise corr change across contrasts within stationary
+
+data = squeeze(R_by_contrast(:,pre,red_ind_concat))';
+dataTable = array2table(data,'VariableNames',{'C1','C2','C3'});
+w = table(categorical([1 2 3 ].'), 'VariableNames', {'contrast'}); % within-design
+rm_SST_stat = fitrm(dataTable, 'C1-C3 ~ 1', 'WithinDesign', w)
+ranova(rm_SST_stat, 'withinmodel', 'contrast')
