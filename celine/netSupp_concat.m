@@ -29,6 +29,7 @@ interNrns_concat=[];
 dists_concat=[];
 prefOri_concat=[];
 h_concat=[];
+h_short_concat = [];
 mouseID=[];
 depth=[];
 
@@ -50,6 +51,7 @@ for iExpt = 1:nExpt
     dists_concat=cat(2,dists_concat,keepDists');
     prefOri_concat=cat(2,prefOri_concat,keepPrefOri);
     h_concat = cat(1,h_concat,h_keep);
+    h_short_concat = cat(1,h_short_concat,h_short_keep);
     
     tCons = celleqel2mat_padded(input.tGratingContrast); %transforms cell array into matrix (1 x ntrials)
     Cons = unique(tCons);
@@ -160,13 +162,13 @@ for iSize = 1:nSizes %loop through the sizes
            traceInterp=interp1(t,thisTrace,(t(1):0.01:t(123)));
            %traceInterp=smoothdata(traceInterp,'movmean',3);
            t2=t(1):0.01:t(123); % to get temporal values with the interpolated data
-           stimStart_interp=find(t2==0);
+           stimStart_interp=find(t2==0)+5; %don't look in the first 50 ms, as this is too early to be a true peak
            %find(t2==.2)
 
            peak=max(traceInterp(stimStart_interp:stimStart_interp+20)); %find the max value within a set window
            %currently set to 61 (stim onset) through 67, 200ms after stim
            trough=min(traceInterp(stimStart_interp+20:stimStart_interp+30));
-           %search for the trough between 200 and 300 ms
+           %search for the trough between 200 and 300 ms after 
            
 %           (thisTrace(stimStart+6:stimStart+9));
 
@@ -235,12 +237,12 @@ end
 
 
 %% look at the mean peak for each
-mean_peak=(mean(peak_time(:,:,centered,1),3,"omitmissing"));
-mean_halfPeak=mean(peak_time(:,:,centered,3),3,"omitmissing");
-mean_trough=(mean(peak_time(:,:,centered,2),3,"omitmissing"));
-mean_halfDecay=(mean(peak_time(:,:,centered,4),3,"omitmissing"));
-std_peak=std(peak_time(:,:,centered,1),[],3,"omitmissing");
-std_trough=std(peak_time(:,:,centered,2),[],3,"omitmissing");
+mean_peak=(mean(peak_time(:,:,:,1),3,"omitmissing"));
+mean_halfPeak=mean(peak_time(:,:,:,3),3,"omitmissing");
+mean_trough=(mean(peak_time(:,:,:,2),3,"omitmissing"));
+mean_halfDecay=(mean(peak_time(:,:,:,4),3,"omitmissing"));
+std_peak=std(peak_time(:,:,:,1),[],3,"omitmissing");
+std_trough=std(peak_time(:,:,:,2),[],3,"omitmissing");
 
 [n n2] = subplotn(nSizes*nCons);
 x=1;
@@ -2255,7 +2257,7 @@ DistCutoffs=[0,10,20,100];
 print(['prefOri',num2str(iOri),'_matrix.pdf'], '-dpdf');
     end
 
- %% responsive at each stim condition, not neccearily centered
+ %% responsive at each stim condition, not necc. centered
 
 nSST_resp_by_cond = nan(nCons,nSizes);
 h_any = logical(sum(sum(h_concat,3),2));
@@ -2475,6 +2477,64 @@ width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print('SizeTuning_byContrast.pdf', '-dpdf');
+%% Relationship to distance
+
+responsiveTheseTrials = find(h_concat(:,nSizes,nCons)); %getting the cells taht are responsive at the largest size and highest contrast
+thesePyr=intersect(pyrCells,responsiveTheseTrials);
+theseIN=intersect(interNrns,responsiveTheseTrials);
+
+these_peaks_sst =  squeeze(peak_time(nSizes,nCons,theseIN,3));
+these_FWHM_sst =  squeeze(fwhm(nSizes,nCons,theseIN));
+these_dists_sst = dists_concat(:,theseIN);
+
+these_peaks_pyr =  squeeze(peak_time(nSizes,nCons,thesePyr,3));
+these_FWHM_pyr =  squeeze(fwhm(nSizes,nCons,thesePyr));
+these_dists_pyr= dists_concat(:,thesePyr);
+
+figure;
+subplot(1,2,1)
+swarmchart(these_dists_sst, these_peaks_sst)
+set(gca, 'TickDir', 'out')
+xlabel('RF-stim distance')
+ylabel('Rise time')
+title('SST cells')
+subplot(1,2,2)
+swarmchart(these_dists_pyr, these_peaks_pyr)
+set(gca, 'TickDir', 'out')
+xlabel('RF-stim distance')
+%ylabel('Rise time')
+title('Pyr cells')
+
+x0=1;
+y0=1;
+width=6;
+height=2.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print('Rise_timeByDist', '-dpdf');
+
+
+figure;
+subplot(1,2,1)
+swarmchart(these_dists_sst, these_FWHM_sst)
+set(gca, 'TickDir', 'out')
+xlabel('RF-stim distance')
+ylabel('FWHM')
+title('SST cells')
+subplot(1,2,2)
+swarmchart(these_dists_pyr, these_FWHM_pyr)
+set(gca, 'TickDir', 'out')
+xlabel('RF-stim distance')
+%ylabel('Rise time')
+title('Pyr cells')
+
+x0=1;
+y0=1;
+width=6;
+height=2.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print('FWHM_ByDist', '-dpdf');
+
+
 %% SSI
 SSI_peak = squeeze((max(peak_trough(:,3,center,1)))-peak_trough(5,3,:,1));
 

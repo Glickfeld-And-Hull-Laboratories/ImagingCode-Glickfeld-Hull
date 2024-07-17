@@ -4,8 +4,9 @@ close all
 clc
 ds = 'DART_V1_contrast_ori_Celine'; %name of data information sheet
 dataStructLabels = {'contrastxori'};
-rc =  behavConstsDART; %directories178
+rc =  behavConstsDART; %directories
 eval(ds);
+experimentFolder = 'SST_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -27,7 +28,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
                   "post-DART used as reference"
             end
 clear x prompt
-fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.achAnalysis,experimentFolder,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
@@ -42,7 +43,7 @@ for id = post %currently only doing this for the baseline day
     mouse = expt(allDays(id)).mouse;
     date = expt(allDays(id)).date;
     imgFolder = expt(allDays(id)).contrastxori_runs{1};
-    fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
+    fn = fullfile(rc.achAnalysis,experimentFolder,mouse,date,imgFolder);
     load(fullfile(fn,'redImage.mat'));
     load(fullfile(fn,'mask_cell.mat'));
 
@@ -188,14 +189,15 @@ PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for
 % stationary large pupil, second cell is inds for stationary small pupil
 motorByPupil = nan(nd,2);
 for id = 1:nd
-    PIx_temp=pupil{id}.rad.stim > statPupilThreshold;
-    PIx_stat{1,id}= logical(PIx_temp.*~RIx{id});
-    PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id});
+    PIx_temp=pupil{id}.rad.stim > statPupilThreshold; %the trials that cross the pupil threshold
+    PIx_stat{1,id}= logical(PIx_temp.*~RIx{id}); %the trials with large pupil, stationary
+    PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id}); %the trials with small pupil, stationary
     pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
     pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
     pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
-    motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}));
-    motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}));
+    motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
+    motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
+
 end
 save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
 
@@ -247,8 +249,8 @@ for id = 1:nd
             ind_con = find(tCon == cons(iCon));
             ind = intersect(ind_dir,ind_con); %for every orientation and then every contrast, find trials with that con/ori combination
             ind_stat = intersect(ind, find(~RIx{id}))
-            ind_stat_largePupil = intersect(ind, find(PIx_stat{1,id}));
-            ind_stat_smallPupil = intersect(ind, find(PIx_stat{2, id}));
+            ind_stat_largePupil = intersect(ind, PIx_stat{1,id});
+            ind_stat_smallPupil = intersect(ind, PIx_stat{2,id});
             ind_loc = intersect(ind, find(RIx{id}));
             data_resp(:,iDir,iCon,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
 
@@ -437,6 +439,8 @@ pref_allTrials_smallPupil=cell(nCon,nd);
 trialCounts=cell(2,nd);
 nonPref_trial_avrg_stat=cell(1,nd);
 nonPref_trial_avrg_loc=cell(1,nd);
+stat_inds = cell(1,nd);
+loc_inds = cell(1,nd);
 
 for id = 1:nd
     trialCounts{1,id}=[];
@@ -472,16 +476,16 @@ for id = 1:nd
             temp_dir= pref_dir_keep{id}(i); %find the preferred ori of this cell (already in degrees)
             dir_inds = find(tDir==temp_dir); %these are the trials at that direction
             con_inds=find(tCon==cons(iCon));
-            stat_inds = find(~RIx{id});
-            ind_stat_largePupil = intersect(stat_inds, find(PIx_stat{1,id}));
-            ind_stat_smallPupil = intersect(stat_inds, find(PIx_stat{2,id}));
+            stat_inds{id} = find(~RIx{id});
+            ind_stat_largePupil = intersect(stat_inds{id}, find(PIx_stat{1,id}));
+            ind_stat_smallPupil = intersect(stat_inds{id}, find(PIx_stat{2,id}));
 
-            loc_inds = find(RIx{id});
+            loc_inds{id} = find(RIx{id});
             temp_trials1 = intersect(dir_inds, con_inds); %preferred ori for this cell, looping through all cons
-            temp_trials_stat = intersect(temp_trials1,stat_inds);
+            temp_trials_stat = intersect(temp_trials1,stat_inds{id});
             temp_trials_stat_largePupil = intersect(temp_trials1,ind_stat_largePupil);
             temp_trials_stat_smallPupil = intersect(temp_trials1,ind_stat_smallPupil);
-            temp_trials_loc = intersect(temp_trials1,loc_inds);
+            temp_trials_loc = intersect(temp_trials1,loc_inds{id});
 
             position=find(dirs==temp_dir);
             newDirs=circshift(dirs,4);
@@ -489,8 +493,8 @@ for id = 1:nd
             dir_inds2 = find(tDir~=temp_dir); 
             dir_inds3 = find(tDir~=matchedDir); 
             dir_inds4 = intersect(dir_inds2,dir_inds3);
-            temp_nonPref_trials_stat = intersect(dir_inds4,stat_inds);
-            temp_nonPref_trials_loc = intersect(dir_inds4,loc_inds);
+            temp_nonPref_trials_stat = intersect(dir_inds4,stat_inds{id});
+            temp_nonPref_trials_loc = intersect(dir_inds4,loc_inds{id});
 
 
             %saving the responses of all trials at the preferred direction,
@@ -549,12 +553,13 @@ nonPref_trial_avrg_loc{id} = temp_nonPref_loc;
 %rect_tc_trial_avrg_keep{1,iCon,id}=rect_tc_trial_avrg; %rectified version of above
 pref_responses_stat{id} = temp_pref_responses_stat;
 pref_responses_stat_largePupil{id}=temp_pref_responses_stat_largePupil;
-pref_responses_stat_smallPupil{id}=temp_pref_responses_stat_smallPupil
+pref_responses_stat_smallPupil{id}=temp_pref_responses_stat_smallPupil;
 
 pref_responses_loc{id} = temp_pref_responses_loc;
 pref_responses_allCond{id} = temp_pref_responses_allCond;
 pref_peak_stat{id}=temp_pref_peak_stat;
 pref_peak_loc{id}=temp_pref_peak_loc;
+
 
 %clear temp_trials_stat_smallPupil temp_trials_stat_largePupil temp_trials_stat temp_trials_loc temp_tc_stat_largePupil temp_tc_stat_smallPupil temp_pref_peak_loc temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat temp_pref_responses_loc temp_all_stat temp_all_loc temp_tc_stat temp_tc_loc temp_TCs temp_trials_loc temp_trials_stat temp_tc_allCond temp_trials1 temp_dir
 end
@@ -734,7 +739,7 @@ colormap gray
 %caxis([0.05 .3])
 title('average FOV reference day');
 hold on
-bound = cell2mat(bwboundaries(mask_match{1}(:,:,1)));
+bound = cell2mat(bwboundaries(mask_match{1}));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 bound = cell2mat(bwboundaries(mask_match{2}(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','g','MarkerSize',2);
@@ -851,18 +856,18 @@ save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','ke
 % axis square
 % hold off
 % print(fullfile(fn_multi, 'F_vs_dFoF.pdf'),'-dpdf');
+%% The original way of finding the mean-subtracted trial responses
+%looking only at stationary trials, not seperating by pupil size
 
-%% get mean-subtracted trial responses
-trialResp=cell(1,nd); %raw trial responses for each cell 
-subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
-conditionMeans=cell(1,nd); %mean for each condition
-
+trialResp_OG=cell(1,nd); %raw trial responses for each cell 
+subTrialResp_OG=cell(1,nd); 
+conditionMeans_OG=cell(1,nd);
 for id = 1:nd
 
-    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
-    subTrialResp{id} = nan(size(trialResp{id}));
+    trialResp_OG{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
+    subTrialResp_temp = NaN(nTrials(id),nKeep);
 
-    conditionMeans{id}=nan(nDir,nCon,nKeep);
+    conditionMeans_OG{id}=NaN(nDir,nCon,nKeep);
 
     tCon = tCon_match{id}(:,1:nTrials(id));
     tDir = tDir_match{id}(:,1:nTrials(id));
@@ -872,161 +877,553 @@ for id = 1:nd
         for iCon = 1:nCon
             ind_con = find(tCon == cons(iCon));
             inds1 = intersect(ind_dir,ind_con);
-            inds=intersect(inds1,stat_inds);
-            tempData=trialResp{id}(inds,:);
-            tempCellMeans=mean(tempData,1);
-            tempSubData = tempData - tempCellMeans;
-            subTrialResp{id}(inds,:)=tempSubData;
-            conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
+            %for stationary
+            inds=intersect(inds1,stat_inds{id});
+            tempData=trialResp_OG{id}(inds,:);
+            tempCellMeans=mean(tempData,1); %find the mean for each cell in this contrast x direction
+            tempSubData = tempData - tempCellMeans; %subtract the mean for each cell from that cell's response to each trial
+            subTrialResp_temp(inds,:)=tempSubData; %put this into the trial by trial matrix, 
+            % for the trials that meet these conditions
+            conditionMeans_OG{1,id}(iDir,iCon,:)=tempCellMeans;
 
         end
     end
-subTrialResp{id}=subTrialResp{id}(stat_inds,:);
+subTrialResp_OG{id}=subTrialResp_temp; 
+
 end
 
-% 
-% 
-% %% get correlation strucutre for noise correlation
-% 
-% noiseCorr = cell(1,nd);
-% 
-% for id=1:nd
-%     noiseCorr{id}=nan(2,nKeep);
-% 
-%     for iCell = 1:nKeep %change this to nKeep
-%         thisCell=subTrialResp{id}(:,iCell);
-% 
-%         %if this is a red cell, compare to all green cells
-%         if ismember(iCell,red_ind_keep);
-%             otherCells = green_ind_keep;;
-%         else
-%             otherCells = setdiff(green_ind_keep,iCell);
-%         end
-% 
-%         otherCellsMean = mean(subTrialResp{id}(:,otherCells),2,"omitnan");
-%         % 
-%         % if id == pre
-%         %     figure
-%         %     scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-%         %     hold on
-%         %     h = lsline;
-%         % else 
-%         %     figure
-%         %     scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-%         %     hold on
-%         %     h = lsline;
-%         % end
-%         % 
-% 
-% 
-%         [R,p]=corrcoef(otherCellsMean,thisCell);
-%         title([' R= ' num2str(R(2))]);
-% 
-%         noiseCorr{id}(1,iCell)=R(2);
-%         noiseCorr{id}(2,iCell)=p(2);
-% 
-%     end
-% end
-% %% get correlation strucutre for signal correlation
-% sigCorr = cell(1,nd);
-% 
-% 
-% for id=1:nd
-%     sigCorr{id}=nan(2,nKeep);
-%     tempconditionMeans=reshape(conditionMeans{id},(nCon*nDir),nKeep); %resahpe this into a vector for each cell
-%     for iCell = 1:nKeep %change this to nKeep
-%         thisCell=tempconditionMeans(:,iCell);
-% 
-%         %if this is a red cell, compare to all green cells
-%         if ismember(iCell,red_ind_keep);
-%             otherCells = green_ind_keep;;
-%         else
-%             otherCells = setdiff(green_ind_keep,iCell);
-%         end
-% 
-%         otherCellsMean = mean(tempconditionMeans(:,otherCells),2,"omitnan");
-% 
-%        % if id == pre
-%        %      figure
-%        %      scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-%        %      hold on
-%        %      h = lsline;
-%        %  else 
-%        %      figure
-%        %      scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-%        %      hold on
-%        %      h = lsline;
-%        %  end
-% 
-% 
-%         [R,p]=corrcoef(otherCellsMean,thisCell);
-%         title([' R= ' num2str(R(2))]);
-% 
-%         sigCorr{id}(1,iCell)=R(2);
-%         sigCorr{id}(2,iCell)=p(2);
-% 
-%     end
-% end
-% 
-% 
-% 
-% 
-% 
-% 
-% %% response by condition for cells matched across all conditions
-% % find cells that I ahve running data for on both days
-% % haveRunning_pre = ~isnan(pref_responses_loc{pre});
-% % haveRunning_post = ~isnan(pref_responses_loc{post});
-% % haveRunning_both = find(haveRunning_pre.* haveRunning_post);
-% % green_ind_keep = intersect(haveRunning_both, green_ind_keep);
-% % red_ind_keep = intersect(haveRunning_both, red_ind_keep);
-% 
-% 
-% responseByCond = nan((nCon*2),4);
-% 
-% for iCon = 1:nCon
-%     if iCon == 1
-%         counter=1
-%     else
-%         counter=counter+2
-%     end
-% 
-%     responseByCond(counter,:)=[mean(pref_responses_stat{pre}(green_ind_keep,iCon), "omitnan") mean(pref_responses_stat{pre}(red_ind_keep,iCon), "omitnan") mean(pref_responses_stat{post}(green_ind_keep,iCon), "omitnan") mean(pref_responses_stat{post}(red_ind_keep,iCon), "omitnan")]
-%     responseByCond((counter+1),:)=[mean(pref_responses_loc{pre}(green_ind_keep,iCon), "omitnan") mean(pref_responses_loc{pre}(red_ind_keep,iCon), "omitnan") mean(pref_responses_loc{post}(green_ind_keep,iCon), "omitnan") mean(pref_responses_loc{post}(red_ind_keep,iCon), "omitnan")]
-% 
-% end
-% 
-% responseByCondProps = nan(6,2);
-% figure;
-% scatter(responseByCond(:,1),responseByCond(:,2),'k')
-% hold on
-% linfit = polyfit(responseByCond(:,1),responseByCond(:,2),1);
-% y1 = polyval(linfit,responseByCond(:,1));
-% plot(responseByCond(:,1),y1,'k');
-% [R,p]=corrcoef(responseByCond(:,1),responseByCond(:,2)); 
-% responseByCondProps(1,1)=linfit(1); %slope
-% responseByCondProps(2,1)=linfit(2); %intercept
-% responseByCondProps(3,1)=R(2);
-% responseByCondProps(4,1)=p(2);
-% responseByCondProps(5,1)=min(responseByCond(:,1));
-% responseByCondProps(6,1)=max(responseByCond(:,1));
-% hold on
-% 
-% 
-% scatter(responseByCond(:,3),responseByCond(:,4),'b')
-% hold on
-% linfit = polyfit(responseByCond(:,3),responseByCond(:,4),1);
-% y2 = polyval(linfit,responseByCond(:,3));
-% plot(responseByCond(:,3),y2,'b');
-% [R,p]=corrcoef(responseByCond(:,3),responseByCond(:,4)); 
-% responseByCondProps(1,2)=linfit(1); %slope
-% responseByCondProps(2,2)=linfit(2); %intercept
-% responseByCondProps(3,2)=R(2);
-% responseByCondProps(4,2)=p(2);
-% responseByCondProps(5,2)=min(responseByCond(:,3));
-% responseByCondProps(6,2)=max(responseByCond(:,3));
-% 
-% save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'responseByCond','responseByCondProps','conditionMeans','sigCorr','noiseCorr')
+%% original way of getting noise correlation
+noiseCorr_OG = cell(1,nd); 
+%for stationary all pupil
+for id=1:nd
+    noiseCorr_OG{1,id}=nan(2,nKeep);
+    
+    for iCell = 1:nKeep 
+        thisCell=subTrialResp_OG{id}(stat_inds{id},iCell);
+        %if this is a red cell, compare to all green cells. If its a green
+        %cell, compare it to all other green cells
+        otherCells = setdiff(green_ind_keep,iCell);
+        otherCellsMean = mean(subTrialResp_OG{id}(stat_inds{id},otherCells),2,"omitnan");
+        [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+        
+
+        noiseCorr_OG{id}(1,iCell)=R(2);
+        noiseCorr_OG{id}(2,iCell)=p(2);
+     
+    end
+    
+end
+clear thisCell otherCells otherCellsMean
+%% get mean-subtracted trial responses
+
+trialResp=cell(1,nd); %raw trial responses for each cell 
+subTrialResp=cell(1,nd); 
+conditionMeans=cell(1,nd);
+for id = 1:nd
+
+    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
+    subTrialResp_temp = NaN(nTrials(id),nKeep);
+
+    conditionMeans{id}=NaN(nDir,nCon,nKeep);
+
+    tCon = tCon_match{id}(:,1:nTrials(id));
+    tDir = tDir_match{id}(:,1:nTrials(id));
+
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        for iCon = 1:nCon
+            ind_con = find(tCon == cons(iCon));
+            inds1 = intersect(ind_dir,ind_con);
+
+            %for stationary small pupil
+            inds=intersect(inds1,find(PIx_stat{2,id}));
+            if length(inds)>2
+                tempData=trialResp{id}(inds,:);
+                tempCellMeans=mean(tempData,1,'omitmissing');
+                tempSubData = tempData - tempCellMeans;
+                subTrialResp_temp(inds,:)=tempSubData;
+                conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
+            end
+
+            %for stationary large pupil
+            inds=intersect(inds1,find(PIx_stat{1,id}));
+            if length(inds)>2
+                tempData=trialResp{id}(inds,:);
+                tempCellMeans=mean(tempData,1,'omitmissing');
+                tempSubData = tempData - tempCellMeans;
+                subTrialResp_temp(inds,:)=tempSubData;
+                conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
+            end
+            
+            %for running
+            inds=intersect(inds1,loc_inds{id});
+            if length(inds)>2
+                tempData=trialResp{id}(inds,:);
+                tempCellMeans=mean(tempData,1,'omitmissing');
+                tempSubData = tempData - tempCellMeans;
+                subTrialResp_temp(inds,:)=tempSubData;
+                conditionMeans{id}(iDir,iCon,:)=tempCellMeans;
+            end
+
+
+        end
+    end
+subTrialResp{id}=subTrialResp_temp; 
+
+end
+clear subTrialResp_loc_temp subTrialResp_temp tempSubData tempCellMeans tempData subTrialResp_small_temp subTrialResp_large_temp
+
+%% get correlation strucutre for noise correlation
+%not seperated by contrast 
+noiseCorr = cell(4,nd); 
+%1 = stationary not seperated by pupil
+%2 = stationary small pupil
+%3= stationary large pupil
+%4 = running
+
+%for stationary all pupil
+for id=1:nd
+    noiseCorr{1,id}=nan(2,nKeep);
+    
+    if length(stat_inds{id})>10
+    
+        for iCell = 1:nKeep 
+            thisCell=subTrialResp{id}(stat_inds{id},iCell);
+            %if this is a red cell, compare to all green cells. If its a green
+            %cell, compare it to all other green cells
+            otherCells = setdiff(green_ind_keep,iCell);
+            otherCellsMean = mean(subTrialResp{id}(stat_inds{id},otherCells),2,"omitnan");
+            [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+            
+            % if rem(iCell,10)==0
+            %     if id == pre
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     else 
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     end
+            % 
+            % end
+    
+            noiseCorr{1,id}(1,iCell)=R(2);
+            noiseCorr{1,id}(2,iCell)=p(2);
+         
+        end
+    end
+end
+
+%for stationary small pupil
+for id=1:nd
+    noiseCorr{2,id}=nan(2,nKeep);
+    counter = 1;
+    if length(find(PIx_stat{2,id}))>10
+
+        for iCell = 1:nKeep 
+            thisCell=subTrialResp{id}(PIx_stat{2,id},iCell);
+            %if this is a red cell, compare to all green cells. If its a green
+            %cell, compare it to all other green cells
+            otherCells = setdiff(green_ind_keep,iCell);
+            otherCellsMean = mean(subTrialResp{id}(PIx_stat{2,id},otherCells),2,"omitnan");
+            [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+            
+            % if rem(iCell,10)==0
+            %     if id == pre
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     else 
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     end
+            % 
+            % end
+    
+            noiseCorr{2,id}(1,iCell)=R(2);
+            noiseCorr{2,id}(2,iCell)=p(2);
+            
+        end
+    end   
+end
+
+%for stationary large pupil
+for id=1:nd
+    noiseCorr{3,id}=nan(2,nKeep);
+    if length(find(PIx_stat{1,id}))>10
+        for iCell = 1:nKeep 
+            thisCell=subTrialResp{id}(PIx_stat{1,id},iCell);
+            %if this is a red cell, compare to all green cells. If its a green
+            %cell, compare it to all other green cells
+            otherCells = setdiff(green_ind_keep,iCell);
+            otherCellsMean = mean(subTrialResp{id}(PIx_stat{1,id},otherCells),2,"omitnan");
+            [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+            
+            % if rem(iCell,10)==0
+            %     if id == pre
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     else 
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     end
+            % 
+            % end
+    
+            noiseCorr{3,id}(1,iCell)=R(2);
+            noiseCorr{3,id}(2,iCell)=p(2);
+            
+        end
+    end
+end
+
+%for running
+for id=1:nd
+    noiseCorr{4,id}=nan(2,nKeep);
+    if length(loc_inds{id})>10
+        for iCell = 1:nKeep 
+            thisCell=subTrialResp{id}(loc_inds{id},iCell);
+            %if this is a red cell, compare to all green cells. If its a green
+            %cell, compare it to all other green cells
+            otherCells = setdiff(green_ind_keep,iCell);
+            otherCellsMean = mean(subTrialResp{id}(loc_inds{id},otherCells),2,"omitnan");
+            [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+            
+            % if rem(iCell,10)==0
+            %     if id == pre
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     else 
+            %         figure
+            %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            %         hold on
+            %         h = lsline;
+            %         title([' R= ' num2str(R(2))]);
+            % 
+            %     end
+            % 
+            % end
+    
+            noiseCorr{4,id}(1,iCell)=R(2);
+            noiseCorr{4,id}(2,iCell)=p(2);
+            
+        end
+    end
+end
+
+clear thisCell otherCells otherCellsMean
+%% get noise correlation structure, seperated by contrast
+noiseCorrContrast = cell(4,nCon,nd); 
+%1 = stationary not seperated by pupil
+%2 = stationary small pupil
+%3= stationary large pupil
+%4 = running
+
+%for stationary all pupil
+for id=1:nd
+    tCon = tCon_match{id};
+    for iCon = 1:nCon
+        noiseCorrContrast{1,iCon,id}=nan(2,nKeep);
+        ind_con = find(tCon == cons(iCon));
+        inds = intersect(ind_con,stat_inds{id});
+        if length(inds)>10
+        
+            for iCell = 1:nKeep 
+                thisCell=subTrialResp{id}(inds,iCell);
+                %if this is a red cell, compare to all green cells. If its a green
+                %cell, compare it to all other green cells
+                otherCells = setdiff(green_ind_keep,iCell);
+                otherCellsMean = mean(subTrialResp{id}(inds,otherCells),2,"omitnan");
+                [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+                
+                % if rem(iCell,10)==0
+                %     if id == pre
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     else 
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     end
+                % 
+                % end
+        
+                noiseCorrContrast{1,iCon,id}(1,iCell)=R(2);
+                noiseCorrContrast{1,iCon,id}(2,iCell)=p(2);
+             
+            end
+        end
+    end
+end
+clear thisCell otherCells otherCellsMean
+
+%for stationary small pupil
+for id=1:nd
+    tCon = tCon_match{id};
+    for iCon = 1:nCon
+        noiseCorrContrast{2,iCon,id}=nan(2,nKeep);
+        ind_con = find(tCon == cons(iCon));
+        inds = intersect(ind_con,find(PIx_stat{2,id}));
+        if length(inds)>10
+            for iCell = 1:nKeep 
+                thisCell=subTrialResp{id}(inds,iCell);
+                %if this is a red cell, compare to all green cells. If its a green
+                %cell, compare it to all other green cells
+                otherCells = setdiff(green_ind_keep,iCell);
+                otherCellsMean = mean(subTrialResp{id}(inds,otherCells),2,"omitnan");
+                [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+                
+                % if rem(iCell,10)==0
+                %     if id == pre
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     else 
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     end
+                % 
+                % end
+        
+                noiseCorrContrast{2,iCon,id}(1,iCell)=R(2);
+                noiseCorrContrast{2,iCon,id}(2,iCell)=p(2);
+             
+            end
+        end
+    end
+end
+clear thisCell otherCells otherCellsMean
+
+%for stationary large pupil
+for id=1:nd
+    tCon = tCon_match{id};
+    for iCon = 1:nCon
+        noiseCorrContrast{3,iCon,id}=nan(2,nKeep);
+        ind_con = find(tCon == cons(iCon));
+        inds = intersect(ind_con,find(PIx_stat{1,id}));
+        if length(inds)>10
+        
+            for iCell = 1:nKeep 
+                thisCell=subTrialResp{id}(inds,iCell);
+                %if this is a red cell, compare to all green cells. If its a green
+                %cell, compare it to all other green cells
+                otherCells = setdiff(green_ind_keep,iCell);
+                otherCellsMean = mean(subTrialResp{id}(inds,otherCells),2,"omitnan");
+                [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+                
+                % if rem(iCell,10)==0
+                %     if id == pre
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     else 
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     end
+                % 
+                % end
+        
+                noiseCorrContrast{2,iCon,id}(1,iCell)=R(2);
+                noiseCorrContrast{2,iCon,id}(2,iCell)=p(2);
+             
+            end
+        end
+    end
+end
+clear thisCell otherCells otherCellsMean
+
+%for running
+for id=1:nd
+    tCon = tCon_match{id};
+    for iCon = 1:nCon
+        noiseCorrContrast{4,iCon,id}=nan(2,nKeep);
+        ind_con = find(tCon == cons(iCon));
+        inds = intersect(ind_con,loc_inds{id});
+        if length(inds)>10
+        
+            for iCell = 1:nKeep 
+                thisCell=subTrialResp{id}(inds,iCell);
+                %if this is a red cell, compare to all green cells. If its a green
+                %cell, compare it to all other green cells
+                otherCells = setdiff(green_ind_keep,iCell);
+                otherCellsMean = mean(subTrialResp{id}(inds,otherCells),2,"omitnan");
+                [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+                
+                if rem(iCell,10)==0
+                    if id == pre
+                        figure
+                        scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                        hold on
+                        h = lsline;
+                        title([' R= ' num2str(R(2))]);
+
+                    else 
+                        figure
+                        scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                        hold on
+                        h = lsline;
+                        title([' R= ' num2str(R(2))]);
+
+                    end
+
+                end
+        
+                noiseCorrContrast{4,iCon,id}(1,iCell)=R(2);
+                noiseCorrContrast{4,iCon,id}(2,iCell)=p(2);
+             
+            end
+        end
+    end
+end
+clear thisCell otherCells otherCellsMean
+
+%% get correlation strucutre for signal correlation
+sigCorr = cell(1,nd);
+
+
+for id=1:nd
+    sigCorr{id}=nan(2,nKeep);
+    tempconditionMeans=reshape(conditionMeans{id},(nCon*nDir),nKeep); %resahpe this into a vector for each cell
+    for iCell = 1:nKeep %change this to nKeep
+        thisCell=tempconditionMeans(:,iCell);
+
+        %if this is a red cell, compare to all green cells
+        if ismember(iCell,red_ind_keep);
+            otherCells = green_ind_keep;;
+        else
+            otherCells = setdiff(green_ind_keep,iCell);
+        end
+
+        otherCellsMean = mean(tempconditionMeans(:,otherCells),2,"omitnan");
+
+       % if id == pre
+       %      figure
+       %      scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+       %      hold on
+       %      h = lsline;
+       %  else 
+       %      figure
+       %      scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+       %      hold on
+       %      h = lsline;
+       %  end
+
+
+        [R,p]=corrcoef(otherCellsMean,thisCell);
+        title([' R= ' num2str(R(2))]);
+
+        sigCorr{id}(1,iCell)=R(2);
+        sigCorr{id}(2,iCell)=p(2);
+
+    end
+end
+
+
+
+
+
+
+%% response by condition for cells matched across all conditions
+% find cells that I ahve running data for on both days178
+% haveRunning_pre = ~isnan(pref_responses_loc{pre});
+% haveRunning_post = ~isnan(pref_responses_loc{post});
+% haveRunning_both = find(haveRunning_pre.* haveRunning_post);
+% green_ind_keep = intersect(haveRunning_both, green_ind_keep);
+% red_ind_keep = intersect(haveRunning_both, red_ind_keep);
+
+
+responseByCond = nan((nCon*2),4);
+
+for iCon = 1:nCon
+    if iCon == 1
+        counter=1
+    else
+        counter=counter+2
+    end
+
+    responseByCond(counter,:)=[mean(pref_responses_stat{pre}(green_ind_keep,iCon), "omitnan") mean(pref_responses_stat{pre}(red_ind_keep,iCon), "omitnan") mean(pref_responses_stat{post}(green_ind_keep,iCon), "omitnan") mean(pref_responses_stat{post}(red_ind_keep,iCon), "omitnan")]
+    responseByCond((counter+1),:)=[mean(pref_responses_loc{pre}(green_ind_keep,iCon), "omitnan") mean(pref_responses_loc{pre}(red_ind_keep,iCon), "omitnan") mean(pref_responses_loc{post}(green_ind_keep,iCon), "omitnan") mean(pref_responses_loc{post}(red_ind_keep,iCon), "omitnan")]
+
+end
+
+responseByCondProps = nan(6,2);
+figure;
+scatter(responseByCond(:,1),responseByCond(:,2),'k')
+hold on
+linfit = polyfit(responseByCond(:,1),responseByCond(:,2),1);
+y1 = polyval(linfit,responseByCond(:,1));
+plot(responseByCond(:,1),y1,'k');
+[R,p]=corrcoef(responseByCond(:,1),responseByCond(:,2)); 
+responseByCondProps(1,1)=linfit(1); %slope
+responseByCondProps(2,1)=linfit(2); %intercept
+responseByCondProps(3,1)=R(2);
+responseByCondProps(4,1)=p(2);
+responseByCondProps(5,1)=min(responseByCond(:,1));
+responseByCondProps(6,1)=max(responseByCond(:,1));
+hold on
+
+
+scatter(responseByCond(:,3),responseByCond(:,4),'b')
+hold on
+linfit = polyfit(responseByCond(:,3),responseByCond(:,4),1);
+y2 = polyval(linfit,responseByCond(:,3));
+plot(responseByCond(:,3),y2,'b');
+[R,p]=corrcoef(responseByCond(:,3),responseByCond(:,4)); 
+responseByCondProps(1,2)=linfit(1); %slope
+responseByCondProps(2,2)=linfit(2); %intercept
+responseByCondProps(3,2)=R(2);
+responseByCondProps(4,2)=p(2);
+responseByCondProps(5,2)=min(responseByCond(:,3));
+responseByCondProps(6,2)=max(responseByCond(:,3));
+
+save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'responseByCond','responseByCondProps','conditionMeans','sigCorr','noiseCorr', 'noiseCorrContrast','noiseCorr_OG')
 % 
 % 
 % clear R p x0 y0 y1 y2 linfit

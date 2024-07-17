@@ -8,22 +8,22 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 42;
-
+day_id = 49;
+experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
     datapath = fullfile('/All_Staff/home/ACh/Data/2p_data');
-    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis',experimentFolder);
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/');
 elseif string(hostname) == 'NB-NUKE'
     isilonName = 'Z:/All_Staff';
-    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/home/ACh/Analysis/2p_analysis/',experimentFolder);
     datapath = fullfile('/home/ACh/Data/2p_data');
     beh_prefix = strcat('Z:/All_Staff/Behavior/Data/');
 else
     isilonName = '';
-    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/home/ACh/Analysis/2p_analysis',experimentFolder);
     datapath = fullfile('/home/ACh/Data/2p_data');
     beh_prefix = strcat('Z:\Behavior\Data\');
 end
@@ -163,8 +163,8 @@ end
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
-ntrials = size(input.tGratingDirectionDeg,2);
-%ntrials = 374;
+%ntrials = size(input.tGratingDirectionDeg,2);
+ntrials = 960;
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
