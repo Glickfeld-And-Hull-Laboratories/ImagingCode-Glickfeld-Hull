@@ -7,7 +7,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [20 24];%enter all the sessions you want to concatenate
+sess_list = [38];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -43,7 +43,7 @@ if nSess == 1
             dart_str = 'control';
         end
         
-        fnout = fullfile(rc.achAnalysis,expt(sess_list(1)).mouse,['multiday_' dart_str],d);
+        fnout = fullfile(rc.achAnalysis,'PV_YM90K',expt(sess_list(1)).mouse,['multiday_' dart_str],d);
 else
     fnout= fullfile(rc.achAnalysis,'PV_YM90K',strcat('concat', sess_title),d);
 end
@@ -117,7 +117,7 @@ for iSess = 1:nSess
     else
         dart_str = 'control';
     end
-    fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
+    fn_multi = fullfile(rc.achAnalysis,'PV_YM90K',mouse,['multiday_' dart_str]);
 
     load(fullfile(fn_multi,'tc_keep.mat'));
     load(fullfile(fn_multi,'resp_keep.mat'));
@@ -383,7 +383,7 @@ for iCon = 1:nCon
     xticklabels({'20','1000'})
     title('Suppressed')
     ylim([0 .35])
-    ylabel(["Fraction SST cells"]) 
+    ylabel(["Fraction PV cells"]) 
     xlabel(["Size"])
     set(gca,'TickDir','out')
     box off
@@ -638,7 +638,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .2])
+ylim([0 .1])
 
 subplot(2,2,2) %for the second day
 errorbar(sizes,sizeResp_red_avrg_stat{pre},sizeResp_red_se_stat{pre},'k');
@@ -649,7 +649,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .2])
+ylim([0 .1])
 
 subplot(2,2,3) %for the first day
 errorbar(sizes,sizeResp_green_avrg_loc{pre},sizeResp_green_se_loc{pre},'k');
@@ -660,7 +660,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .3])
+ylim([0 .2])
 
 subplot(2,2,4) %for the second day
 errorbar(sizes,sizeResp_red_avrg_loc{pre},sizeResp_red_se_loc{pre},'k');
@@ -671,7 +671,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .3])
+ylim([0 .2])
 
 x0=5;
 y0=5;
@@ -796,7 +796,7 @@ title(['Pyr n = ' , num2str(length(statGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .15])
+ylim([-.025 .075])
 xlim([0 110])
 
 subplot(2,2,3) %for the second size, all contrasts
@@ -806,17 +806,17 @@ errorbar(consForPlotting,conResp_green_avrg_stat{post}(2,:),conResp_green_se_sta
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.15 .15])
+ylim([-.025 .075])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['SST n = ' , num2str(length(statRed))])
+title(['PV n = ' , num2str(length(statRed))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .15])
+ylim([-.025 .075])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -825,7 +825,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.10 .15])
+ylim([-.025 .075])
 xlim([0 110])
 
 
@@ -898,7 +898,7 @@ title(['Pyr n = ' , num2str(length(runningGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([-0.025 .25])
 xlim([0 110])
 
 subplot(2,2,3) %for the first day
@@ -908,17 +908,17 @@ errorbar(consForPlotting,conResp_green_avrg_loc{post}(2,:),conResp_green_se_loc{
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([-0.025 .25])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_loc{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['PV n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
-%ylim([-.05 .15])
+ylim([-0.025 .25])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -927,7 +927,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-%ylim([-.05 .15])
+ylim([-0.025 .25])
 xlim([0 110])
 
 

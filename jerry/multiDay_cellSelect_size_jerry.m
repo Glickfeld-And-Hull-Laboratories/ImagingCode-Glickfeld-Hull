@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 28;
+day_id = 38;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -116,8 +116,11 @@ for irun = 1:nruns
         %     clear data_temp_r
         % end
     end
+    break
 end
 
+
+%%
 % register data for each day
 %reg green data
 
@@ -155,6 +158,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
     save(fullfile(fnout,'regOuts&Img.mat'),'outs','regImg','data_avg')
     input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
+    
 end
 %
 %reg red data 
@@ -516,5 +520,8 @@ hold off
 ylim([-.02 .18])
 
 
+% addition 07/05/24 to save semi-raw tc and state # of cells
+title(['Responsive cells (',num2str(sum(resp)), ' total, ', num2str(sum(resp_red)), ' red), out of ', num2str(size(data_tc,2)), ' total cells']);
+print(fullfile(fnout,'rawTCs.pdf'),'-dpdf','-bestfit');
 
 
