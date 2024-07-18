@@ -2,9 +2,10 @@ function captureResults = getCaptureValues_annulus_jerry(mice)
 %captureResults = getCaptureValues_annulus_jerry(mice)
 %   Function to get widefield HTP capture/background ratios. Output is a
 %   nMice x 2 cell array with mice in the first column and their corresponding
-%   data in the second. The data cell is an array nTP x 2, with ratios in
-%   the first column and time points in the second column, sorted by
-%   ascending order of time points. 
+%   data in the second. The data cell is an array nTP x 4, with ratios in
+%   the first column, time points in the second column, avg intensity of 
+%   HTP ROI in the third column, and avg intensity of back ground ROI in the 
+%   fourth column, sorted by ascending order of time points. 
 %   MICE needs to be a list of mice id in the first column of a cell array
 warning('off');
 
@@ -21,7 +22,7 @@ for iMouse = 1:nMice
     mouse=mice{iMouse};
     fnames = ls(fullfile('G:\home\jerry\analysis\widefield\',mouse,'capture_quant','*.csv'));
     TPs = zeros(size(fnames,1),1);
-    % extract time points from file names
+    % extract metadata (time points) from file names
     for iFile = 1:size(fnames,1)
         currFile = fnames(iFile,:);
         newStrs = split(currFile,'_');
@@ -30,7 +31,7 @@ for iMouse = 1:nMice
         TPs(iFile) = str2double(currTime);
     end
     currData = nan(4,size(TPs,1));
-    extracted = nan(size(TPs,1),2);
+    extracted = nan(size(TPs,1),4);
     % find pix intensities and calculate ratio
     for iTP = 1:size(TPs)
         time = TPs(iTP);
@@ -42,6 +43,8 @@ for iMouse = 1:nMice
     end
     extracted(:,1) = currData(3,:);
     extracted(:,2) = currData(4,:);
+    extracted(:,3) = currData(1,:); % HTP
+    extracted(:,4) = currData(2,:); % control
     sorted_vals = sortrows(extracted,2);
     output_cell{iMouse,2} = sorted_vals;
     %clear tableData data 

@@ -1,11 +1,11 @@
 
 mouse = 'i3313';
-date = '240717';
+date = '240718';
 redFolder = '000'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
 greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='210.93';
+depth='214.84';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
 % base = 
