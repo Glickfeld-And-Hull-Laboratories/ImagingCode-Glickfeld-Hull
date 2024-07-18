@@ -6,7 +6,7 @@ ds = 'DART_V1_contrast_ori_Celine'; %name of data information sheet
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
-experimentFolder = 'SST_YM90K';
+experimentFolder = 'SST_atropine';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -59,8 +59,8 @@ for id = post %currently only doing this for the baseline day
 end
 
 %using the reference day
-red_fluor_match=red_fluor_all(:,match_ind);
-clear red_fluor_all red_fluor_mask red_fluor_np
+%red_fluor_match=red_fluor_all(:,match_ind);
+%clear red_fluor_all red_fluor_mask red_fluor_np
 
 load(fullfile(fn_multi,'multiday_alignment.mat'))
 % get green fluor level
@@ -177,8 +177,8 @@ end
 %% get large/small pupil trials
 statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
 statPupilThreshold=prctile(statPupilBothDays,50);
-%plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
-%print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
+plot(statPupilBothDays*2); hline(statPupilThreshold*2); xlabel('trials, both days');ylabel('pupil diam'); hold off
+print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
 
 pupilMeans = nan(nd,3);
 % for each day, the first column is the mean pupil size for stat trials
@@ -401,12 +401,12 @@ for id = 1:nd
     loc_resp_keep{id} = loc_resp_match{id}(keep_cells,:,:);
 end
 
-red_fluor_keep=red_fluor_match(keep_cells);
+%red_fluor_keep=red_fluor_match(keep_cells);
 green_fluor_keep=green_fluor_match(keep_cells);
 
 conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
-save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
+%save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
 
 %% narrow down to the stimuli preferred for each cell each day
 %We will get one tc per cell per contrast. This represents that cell's tc
@@ -974,6 +974,8 @@ end
 clear subTrialResp_loc_temp subTrialResp_temp tempSubData tempCellMeans tempData subTrialResp_small_temp subTrialResp_large_temp
 
 %% get correlation strucutre for noise correlation
+%FOR EMX ONLY
+green_ind_keep = red_ind_keep;
 %not seperated by contrast 
 noiseCorr = cell(4,nd); 
 %1 = stationary not seperated by pupil

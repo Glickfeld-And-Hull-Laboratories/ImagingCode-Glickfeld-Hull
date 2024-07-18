@@ -21,7 +21,7 @@ if computer == 'GLNXA64'
     
 else
     isilonName = 'Z:';
-    base = fullfile(isilonName, '\home\ACh\Analysis\2p_analysis');
+    base = fullfile(isilonName, '\home\ACh\Analysis\2p_analysis\SST_YM90K');
       
 end
 

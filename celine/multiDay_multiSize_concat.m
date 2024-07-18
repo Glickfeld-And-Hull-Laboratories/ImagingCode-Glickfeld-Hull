@@ -9,7 +9,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [46];%enter all the sessions you want to concatenate
+sess_list = [42 44];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -127,13 +127,13 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'locomotion.mat'));
     load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
-    load(fullfile(fn_multi,'pupilMeans.mat'));
+%    load(fullfile(fn_multi,'pupilMeans.mat'));
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
-   pupilMeans_concat(:,:,iSess)=pupilMeans;
-   motorByPupil_concat(:,:,iSess)=motorByPupil;
-%   pupilCounts_concat(:,:,iSess)=pupilCounts;
+%    pupilMeans_concat(:,:,iSess)=pupilMeans;
+%    motorByPupil_concat(:,:,iSess)=motorByPupil;
+% %   pupilCounts_concat(:,:,iSess)=pupilCounts;
 
 
     %tells the contrast, direction and orientation for each trial each day
@@ -235,7 +235,7 @@ clear pref_peak_loc pref_peak_stat pref_responses_stat_smallPupil pref_allTrials
 clear pupilMeans red_fluor_match red_fluor_keep RIx tc_trial_avrg_keep_allCond tc_trial_avrg_stat_largePupil
 clear tc_trial_avrg_stat_smallPupil wheel_corr wheel_tc dart_Str expt fullTC_keep wheel_speed
 
-%% cell selection
+% cell selection
 % find cells that I have running and stationary data for on both days - these are called pass cells
 
 haveRunning_pre=(sum(squeeze((sum(~isnan(conBySize_resp_loc_concat{pre}),2))),2)==nSize*nCon); %find cells that have a no NAN values for any size (the total of non-NAN should == the number of size)
@@ -256,7 +256,7 @@ for id = 1:nd
 end
 respToSmall = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
-mySize = nSize; %nSize is the smallest size
+mySize = nSize; %nSize is the largest size
 respToSizeBothDays = cell(1,nd);
 for id = 1:nd
     respToSizeBothDays{id}=sum(squeeze(sum(h_concat{id}(:,:,:,mySize),2)),2); %finding cells that responded this size, at any contrast or direction
@@ -287,7 +287,7 @@ Pyr_cells = intersect(green_ind_concat,find(OSI_baseline>.4));
 
 runningGreen = intersect(runningCells, green_ind_concat);
 runningRed= intersect(runningCells, red_ind_concat);
-
+% 
 runningGreen = intersect(runningGreen, find(respToLarge));
 runningRed = intersect(runningRed, find(respToLarge));
 
@@ -296,7 +296,7 @@ statGreen = green_ind_concat;
 statRed = red_ind_concat;
 statGreen = intersect(find(respToLarge),green_ind_concat);
 statRed = intersect(find(respToLarge),red_ind_concat);
-%%
+
 %get an array with indices for each mouse
 mouseInds=cell(1,nSess);
 start=1;
@@ -365,7 +365,6 @@ norm_diff(find(norm_diff == Inf))=NaN;
 
 %% plot fraction suppressed and facilitated
 
-%CONVERT TO BE SPLIT BARS FOR EACH OF THE TWO SIZES, X AXIS IS CONTRAST
 %make a subset of normalized difference for the SST cells only, then make
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
@@ -377,38 +376,85 @@ supp_red=norm_diff_red(:,:,:,:)<=-1;
 N=length(red_ind_concat);
 
 
-for iCon = 1:nCon
-    facil_table_stat = squeeze(sum(facil_red(1,iCon,:,:),4)/N);
-    supp_table_stat = squeeze(sum(supp_red(1,iCon,:,:),4)/N);
+
+    facil_table_stat = squeeze(sum(facil_red(1,:,:,:),4)/N);
+    supp_table_stat = squeeze(sum(supp_red(1,:,:,:),4)/N);
+    
     figure;
     subplot(1,2,1)
-    bar([1,2],[supp_table_stat],'FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b=bar([1,2,3,4],[supp_table_stat(:,1),supp_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#70D0F6"
+    b(2).FaceColor="#0C8ABB"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
     hold on
-    xticklabels({'20','fullfield'})
     title('Suppressed')
     ylim([0 .35])
     ylabel(["Fraction SST cells"]) 
-    xlabel(["Contrast(%)"])
+    xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
     
     subplot(1,2,2)
-    bar([1,2],[facil_table_stat],'FaceColor',"#A8518A",'EdgeColor', [1 1 1])
+    b=bar([1,2,3,4],[facil_table_stat(:,1),facil_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#C983B1"
+    b(2).FaceColor="#883367"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
     hold on
-    xticklabels({'7.5','15','30', '60', '120'})
     title('Facilitated')
     ylim([0 .35])
-    %ylabel(["Fraction HTP+ cells"]) 
-    xlabel(["Contrast(%)"])
+    %ylabel(["Fraction SST cells"]) 
+    xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
+    sgtitle('Stationary')
     
     x0=5;
     y0=5;
     width=3;
-    height=1.5;
+    height=1.75;
     set(gcf,'units','inches','position',[x0,y0,width,height])
-end
+print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
+
+ facil_table_loc = squeeze(sum(facil_red(2,:,:,:),4)/N);
+    supp_table_loc = squeeze(sum(supp_red(2,:,:,:),4)/N);
+    
+    figure;
+    subplot(1,2,1)
+    b=bar([1,2,3,4],[supp_table_loc(:,1),supp_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#70D0F6"
+    b(2).FaceColor="#0C8ABB"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Suppressed')
+    ylim([0 .35])
+    ylabel(["Fraction SST cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    
+    subplot(1,2,2)
+    b=bar([1,2,3,4],[facil_table_loc(:,1),facil_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#C983B1"
+    b(2).FaceColor="#883367"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Facilitated')
+    ylim([0 .35])
+    %ylabel(["Fraction SST cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    sgtitle('Running')
+    x0=5;
+    y0=5;
+    width=3;
+    height=1.75;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'Facil_supp_loc.pdf'),'-dpdf');
 %% plot stationary timecourses
 
 
@@ -426,13 +472,13 @@ for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
         
-        tc_green_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,statGreen,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,statGreen,iCon,iSize),[],2);
-        tc_green_se_stat{id}(:,iCon,iSize)=green_std/sqrt(length(statGreen));
+        tc_green_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,runningGreen,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,runningGreen,iCon,iSize),[],2);
+        tc_green_se_stat{id}(:,iCon,iSize)=green_std/sqrt(length(runningGreen));
         
-        tc_red_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,statRed,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,statRed,iCon,iSize),[],2);
-        tc_red_se_stat{id}(:,iCon,iSize)=red_std/sqrt(length(statRed));
+        tc_red_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,runningRed,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,runningRed,iCon,iSize),[],2);
+        tc_red_se_stat{id}(:,iCon,iSize)=red_std/sqrt(length(runningRed));
         
         clear green_std red_std
       end 
@@ -461,7 +507,7 @@ for iCon = 1:nCon
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-    title(['-HTP',' n = ', num2str(length(statGreen))])
+    title(['-HTP',' n = ', num2str(length(runningGreen))])
     
     ylabel('dF/F') 
     xlabel('s') 
@@ -479,7 +525,7 @@ for iCon = 1:nCon
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
     ylabel('dF/F') 
     xlabel('s') 
-    title(['+HTP',' n = ', num2str(length(statRed))])
+    title(['+HTP',' n = ', num2str(length(runningRed))])
     
     x0=5;
     y0=5;
@@ -535,7 +581,7 @@ for iCon = 1:nCon
     
     
     
-    ylim([-.05 .35]);
+    ylim([-.05 .45]);
     hold on
     shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon,iSize),tc_green_se_loc{pre}(:,iCon,iSize),'--k');
     hold on
@@ -555,7 +601,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon,iSize),tc_red_se_loc{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon,iSize),tc_red_se_loc{post}(:,iCon,iSize),'b');
-    ylim([-.05 .35]);
+    ylim([-.05 .45]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -755,15 +801,15 @@ conResp_red_se_stat = cell(nSize,nd); %same for red
 consForPlotting = [12.5 25 50 100];
 for id = 1:nd
     for iSize = 1:nSize
-        green_data=conBySize_resp_stat_concat{id}(statGreen,:,iSize);%pulling the green cells at this size
+        green_data=conBySize_resp_stat_concat{id}(runningGreen,:,iSize);%pulling the green cells at this size
         conResp_green_avrg_stat{id}(iSize,:)=nanmean(green_data,1);
         green_std=nanstd(green_data,1);
-        conResp_green_se_stat{id}(iSize,:)=green_std/sqrt(length(statGreen));
+        conResp_green_se_stat{id}(iSize,:)=green_std/sqrt(length(runningGreen));
         
-        red_data=conBySize_resp_stat_concat{id}(statRed,:,iSize);%pulling the red cells at this size
+        red_data=conBySize_resp_stat_concat{id}(runningRed,:,iSize);%pulling the red cells at this size
         conResp_red_avrg_stat{id}(iSize,:)=nanmean(red_data,1);
         red_std=nanstd(red_data,1);
-        conResp_red_se_stat{id}(iSize,:)=red_std/sqrt(length(statRed));
+        conResp_red_se_stat{id}(iSize,:)=red_std/sqrt(length(runningRed));
         
         clear green_std red_std green_data red_data
     end
@@ -796,7 +842,7 @@ subplot(2,2,1) %for the first size, all contrasts
 errorbar(consForPlotting,conResp_green_avrg_stat{pre}(1,:),conResp_green_se_stat{pre}(1,:),'--k');
 hold on
 errorbar(consForPlotting,conResp_green_avrg_stat{post}(1,:),conResp_green_se_stat{post}(1,:),'--b');
-title(['Pyr n = ' , num2str(length(statGreen))])
+title(['Pyr n = ' , num2str(length(runningGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
@@ -817,7 +863,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['SST n = ' , num2str(length(statRed))])
+title(['SST n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([-.01 .2])
@@ -971,15 +1017,15 @@ red_dir_se_stat = cell(1,nd); %same for red
 for iCon = 1:nCon
     for id = 1:nd
        
-        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(runningGreen,:,iCon,:),4),1);
-        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(runningGreen,:,iCon,:),4),[],1);
-        green_dir_se_stat{id}=green_std/sqrt(length(runningGreen));
+        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(statGreen,:,iCon,:),4),1);
+        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(statGreen,:,iCon,:),4),[],1);
+        green_dir_se_stat{id}=green_std/sqrt(length(statGreen));
         green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
         green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
         
-        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(runningRed,:,iCon,:),4),1);
-        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(runningRed,:,iCon,:),4),[],1);
-        red_dir_se_stat{id}=red_std/sqrt(length(runningRed));
+        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(statRed,:,iCon,:),4),1);
+        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(statRed,:,iCon,:),4),[],1);
+        red_dir_se_stat{id}=red_std/sqrt(length(statRed));
         red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
         red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
         clear green_std red_std
@@ -1017,7 +1063,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,green_dir_avrg_stat{pre},green_dir_se_stat{pre},'--k')
     hold on
     errorbar(dirs_for_plotting,green_dir_avrg_stat{post},green_dir_se_stat{post},'--b')
-    title(['Stationary, ', num2str(length(runningGreen)),' fully matched Pyr'])
+    %title(['Stationary, ', num2str(length(runningGreen)),' fully matched Pyr'])
     set(gca, 'TickDir', 'out')
     xticks(dirs)
     axis square
@@ -1030,7 +1076,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
-    title(['Stationary, ', num2str(length(runningRed)),' fully matched SST'])
+   % title(['Stationary, ', num2str(length(runningRed)),' fully matched SST'])
     set(gca, 'TickDir', 'out')
     axis square
     box off

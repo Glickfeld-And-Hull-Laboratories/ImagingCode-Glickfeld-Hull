@@ -343,7 +343,7 @@ for i = 1:nKeep_total
         %putting data into matrix
         norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
         norm_diff(2,iCon,i)=norm_diff_loc; %second is running
-clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
+clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc norm_diff_stat norm_diff_loc
     end 
 end
 %remove any infiinty values resulting from divisions by zero, and turn
@@ -358,6 +358,8 @@ lowRInds = find(noiseCorr_OG_concat{pre}(1,:)<=0.5);
 redHigh=intersect(highRInds, red_ind_concat);
 redLow=intersect(lowRInds, red_ind_concat);
 
+greenHigh=intersect(highRInds, green_ind_concat);
+greenLow=intersect(lowRInds, green_ind_concat);
 
 % finding how the high and low R cells are distributed over epxeriments
 
@@ -674,7 +676,120 @@ x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 
 [chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
 clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
+%%
+norm_diff_green = norm_diff(:,:,green_ind_concat);
+facil_green=norm_diff_green(:,:,:)>=1;
+supp_green=norm_diff_green(:,:,:)<=-1;
 
+N=length(green_ind_concat);
+facil_table_stat = sum(facil_green(1,:,:),3)/N;
+supp_table_stat = sum(supp_green(1,:,:),3)/N;
+
+figure;
+subplot(1,2,1)
+bar([1,2,3],[supp_table_stat],'FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+xticklabels({'25','50','100'})
+title('Suppressed')
+ylim([0 .5])
+ylabel(["Fraction Pyr cells"]) 
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+subplot(1,2,2)
+bar([1,2,3],[facil_table_stat],'FaceColor',"#A8518A",'EdgeColor', [1 1 1])
+xticklabels({'25','50','100'})
+title('Facilitated')
+ylim([0 .5])
+%ylabel(["Fraction HTP+ cells"]) 
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+x0=5;
+y0=5;
+width=3;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'Fig_2E_green.pdf'),'-dpdf')
+
+
+%% Figure 2E green statistics
+modulated = (sum(facil_green(1,:,:),3)+sum(supp_green(1,:,:),3))/N;
+% chi2 for fraction cells modulated, in either direction
+%25 vs 50
+n1=modulated(1)*N;
+n2=modulated(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat1,p1] = crosstab(x1,x2);
+
+%25 vs 10%
+n1=modulated(1)*N;
+n2=modulated(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat2,p2] = crosstab(x1,x2);
+
+%50 vs 100
+n1=modulated(2)*N;
+n2=modulated(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat3,p3] = crosstab(x1,x2);
+
+[chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
+
+%compute chi squares for suppression
+%25 vs 50
+n1=supp_table_stat(1)*N;
+n2=supp_table_stat(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat1,p1] = crosstab(x1,x2);
+
+%25 vs 10%
+n1=supp_table_stat(1)*N;
+n2=supp_table_stat(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat2,p2] = crosstab(x1,x2);
+
+%50 vs 100
+n1=supp_table_stat(2)*N;
+n2=supp_table_stat(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat3,p3] = crosstab(x1,x2);
+
+[chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
+
+clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3
+
+%compute chi squares for facilitation
+%25 vs 50
+n1=facil_table_stat(1)*N;
+n2=facil_table_stat(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat1,p1] = crosstab(x1,x2);
+
+%25 vs 10%
+n1=facil_table_stat(1)*N;
+n2=facil_table_stat(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat2,p2] = crosstab(x1,x2);
+
+%50 vs 100
+n1=facil_table_stat(2)*N;
+n2=facil_table_stat(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat3,p3] = crosstab(x1,x2);
+
+[chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
+clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
 
 %% Supplemental figure related to Fig 2 - normalized difference
 
@@ -842,6 +957,56 @@ end
 
 
 %% Fig S5 A, % As a control, randomly pull SST cells in equal amounts to the number of 
+% % weakly and strongly correlated cells.
+% nShuff=100;
+% 
+% hi_shuff_stat = cell(1,nd);
+% low_shuff_stat = cell(1,nd);
+% shuff_normDiff=nan(2,nCon,nShuff);
+% pValues_low=nan(1,nShuff);
+% pValues_high=nan(1,nShuff);
+% 
+% 
+% for iShuff = 1:nShuff
+%     redLowShuff=randsample(red_ind_concat,length(redLow)); %set of cell IDs randomly selected from among the red cells
+%     redHighShuff=setdiff(red_ind_concat,redLowShuff);
+% 
+%     for id = 1:nd
+% 
+%        for iCon=1:nCon
+%             hi_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redHighShuff,iCon),2);
+%             low_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redLowShuff,iCon),2);
+% 
+%             shuff_normDiff(1,iCon,iShuff)=nanmean(norm_diff(1,iCon,redLowShuff));
+%             shuff_normDiff(2,iCon,iShuff)=nanmean(norm_diff(1,iCon,redHighShuff));
+%            % clear redHighShuff redLowShuff
+%         end
+%     end
+% 
+% 
+% end
+% 
+% og_means= [mean(norm_diff(1,2,redLow),'omitmissing'),mean(norm_diff(1,2,redHigh),'omitmissing')];
+% 
+% %plot normalized difference distributions for each shuffle
+% figure;
+% boxchart(squeeze(shuff_normDiff(:,2,:))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+% hold on
+% scatter([1, 2],squeeze(shuff_normDiff(:,2,:))',20, [.26 .29 .33],'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+% scatter([1,2],og_means,'r')
+% xticklabels({'Weak corr.', 'Strong corr.'})
+% set(gca,'TickDir','out')
+% ylim([-1 0.5])
+% box off
+% x0=5;
+% y0=5;
+% width=2;
+% height=1.5;
+% title('Random sample')
+% set(gcf,'units','inches','position',[x0,y0,width,height])
+% print(fullfile(fnout,'Fig_S5_A.pdf'),'-dpdf');
+
+%% Fig S5 A, % As a control, randomly pull SST cells in equal amounts to the number of 
 % weakly and strongly correlated cells.
 nShuff=100;
 
@@ -861,22 +1026,42 @@ for iShuff = 1:nShuff
        for iCon=1:nCon
             hi_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redHighShuff,iCon),2);
             low_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redLowShuff,iCon),2);
+            
+            pre_stat_low = NaN(1,length(redLowShuff));
+            post_stat_low = NaN(1,length(redLowShuff));
+            for iCell=1:length(redLowShuff)
+                pre_stat_low(iCell) = mean(pref_allTrials_stat_concat{iCon,pre}{redLowShuff(iCell)});
+                post_stat_low(iCell)=mean(pref_allTrials_stat_concat{iCon,post}{redLowShuff(iCell)});
+            end
+            
+            std_pre_stat_low = std(pre_stat_low,[],2);
+            shuff_normDiff(1,iCon,iShuff) = (mean(post_stat_low)-mean(pre_stat_low))/std_pre_stat_low;
 
-            shuff_normDiff(1,iCon,iShuff)=nanmean(norm_diff(1,iCon,redLowShuff));
-            shuff_normDiff(2,iCon,iShuff)=nanmean(norm_diff(1,iCon,redHighShuff));
-           % clear redHighShuff redLowShuff
+            pre_stat_high = NaN(1,length(redHighShuff));
+            post_stat_high = NaN(1,length(redHighShuff));
+            for iCell=1:length(redHighShuff)
+                pre_stat_high(iCell) = mean(pref_allTrials_stat_concat{iCon,pre}{redHighShuff(iCell)});
+                post_stat_high(iCell)=mean(pref_allTrials_stat_concat{iCon,post}{redHighShuff(iCell)});
+            end
+            
+            std_pre_stat_high = std(pre_stat_high,[],2);
+            shuff_normDiff(2,iCon,iShuff) = (mean(post_stat_high)-mean(pre_stat_high))/std_pre_stat_high;
+
+           
         end
     end
-
+clear redHighShuff redLowShuff
 
 end
+%%
+og_means= [mean(norm_diff(1,2,redLow),'omitmissing'),mean(norm_diff(1,2,redHigh),'omitmissing')];
 
 %plot normalized difference distributions for each shuffle
 figure;
 boxchart(squeeze(shuff_normDiff(:,2,:))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
-scatter([1, 2],squeeze(shuff_normDiff(:,2,:))',20,[.79 .25 .32], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
-scatter([1,2],og_means)
+scatter([1, 2],squeeze(shuff_normDiff(:,2,:))',20, [.26 .29 .33],'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1,2],og_means,'r')
 xticklabels({'Weak corr.', 'Strong corr.'})
 set(gca,'TickDir','out')
 ylim([-1 0.5])
@@ -887,8 +1072,27 @@ width=2;
 height=1.5;
 title('Random sample')
 set(gcf,'units','inches','position',[x0,y0,width,height])
-[h, p] = ttest(squeeze(shuff_normDiff(1,2,:))',squeeze(shuff_normDiff(2,2,:))')
 print(fullfile(fnout,'Fig_S5_A.pdf'),'-dpdf');
+%% confidence interval comparison for bottstrapped distributions
+CI_level = 95;
+ci_low = ((100-CI_level)/2);
+ci_high = 100-ci_low;
+
+boot_data1 = squeeze(shuff_normDiff(1,2,:));
+boot_data2 = squeeze(shuff_normDiff(2,2,:));
+
+% Calculate confidence intervals
+ci1 = prctile(boot_data1, [ci_low, ci_high]);
+ci2 = prctile(boot_data2, [ci_low, ci_high]);
+
+fprintf('CI for Data 1: [%f, %f]\n', ci1(1), ci1(2));
+fprintf('CI for Data 2: [%f, %f]\n', ci2(1), ci2(2));
+
+% Check for overlap
+overlap = ~(ci1(2) < ci2(1) || ci2(2) < ci1(1));
+fprintf('Do the confidence intervals overlap? %s\n', string(overlap));
+ci1(2)-ci2(1)
+
 %%
 
 %plot timecourses averaged over shuffles
@@ -966,47 +1170,118 @@ for iCon = 1:nCon
     clear txt1 highRed lowRed
 end 
     
-
+% %% Fig. S5 B subsampling with replacement 
+% sampleFract = 1; %what fraction of the total number of low/high cells we
+% %will subsample each time
+% 
+% nShuff = 100; %how many bootstrap samples to draw
+% 
+% %how many cells we need to draw each time
+% subNlow = round(sampleFract*length(redLow));
+% subNhigh = round(sampleFract*length(redHigh));
+% 
+% low_shuff_stat = cell(1,nd);
+% hi_shuff_stat = cell(1,nd);
+% Resamp_normDiff=nan(2,nCon,nShuff);
+% 
+% 
+% for iShuff = 1:nShuff
+%     redLowResamp = randsample(redLow,subNlow,true);
+%     redHighResamp = randsample(redHigh,subNhigh,true);
+% 
+% 
+%     for id = 1:nd
+% 
+%        for iCon=1:nCon
+%             low_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redLowResamp,iCon),2);
+%             hi_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redHighResamp,iCon),2);
+% 
+%             Resamp_normDiff(1,iCon,iShuff)=nanmean(norm_diff(1,iCon,redLowResamp));
+%             Resamp_normDiff(2,iCon,iShuff)=nanmean(norm_diff(1,iCon,redHighResamp));
+% 
+%         end
+%     end
+%     clear redHighResamp redLowResamp
+% end
+% 
+% %plot normalized difference distributions for each shuffle
+% figure;
+% boxchart(squeeze(Resamp_normDiff(:,2,:))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+% hold on
+% scatter([1, 2],squeeze(Resamp_normDiff(:,2,:))',20,[.26 .29 .33], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+% scatter([1,2],og_means,'r')
+% xticklabels({'Weak corr.', 'Strong corr.'})
+% set(gca,'TickDir','out')
+% %ylim([-1 0.25])
+% box off
+% x0=5;
+% y0=5;
+% width=2;
+% height=1.5;
+% title('Subsample with replacement')
+% set(gcf,'units','inches','position',[x0,y0,width,height])
+% [h, p] = ttest(squeeze(Resamp_normDiff(1,2,:))',squeeze(Resamp_normDiff(2,2,:))')
+% print(fullfile(fnout,'Fig_S5_B.pdf'),'-dpdf');
 %% Fig. S5 B subsampling with replacement 
 sampleFract = 1; %what fraction of the total number of low/high cells we
 %will subsample each time
 
-nShuff = 100; %how many bootstrap samples to draw
+nResamp = 100; %how many bootstrap samples to draw
 
 %how many cells we need to draw each time
 subNlow = round(sampleFract*length(redLow));
 subNhigh = round(sampleFract*length(redHigh));
 
-low_shuff_stat = cell(1,nd);
-hi_shuff_stat = cell(1,nd);
-shuff_normDiff=nan(2,nCon,nShuff);
+low_resamp_stat = cell(1,nd);
+hi_resamp_stat = cell(1,nd);
+Resamp_normDiff=nan(2,nCon,nResamp);
 
 
-for iShuff = 1:nShuff
-    redLowShuff = randsample(redLow,subNlow,true);
-    redHighShuff = randsample(redHigh,subNhigh,true);
 
-
+for iResamp = 1:nResamp
+    redLowResamp = randsample(redLow,subNlow,true);
+    redHighResamp = randsample(redHigh,subNhigh,true);
+    
     for id = 1:nd
     
        for iCon=1:nCon
-            low_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redLowShuff,iCon),2);
-            hi_shuff_stat{id}(:,iCon,iShuff)=nanmean(tc_trial_avrg_stat_concat{id}(:,redHighShuff,iCon),2);
-
-            shuff_normDiff(1,iCon,iShuff)=nanmean(norm_diff(1,iCon,redLowShuff));
-            shuff_normDiff(2,iCon,iShuff)=nanmean(norm_diff(1,iCon,redHighShuff));
+            hi_resamp_stat{id}(:,iCon,iResamp)=nanmean(tc_trial_avrg_stat_concat{id}(:,redHighResamp,iCon),2);
+            low_resamp_stat{id}(:,iCon,iResamp)=nanmean(tc_trial_avrg_stat_concat{id}(:,redLowResamp,iCon),2);
             
+            pre_stat_low = NaN(1,length(redLowResamp));
+            post_stat_low = NaN(1,length(redLowResamp));
+            for iCell=1:length(redLowResamp)
+                pre_stat_low(iCell) = mean(pref_allTrials_stat_concat{iCon,pre}{redLowResamp(iCell)});
+                post_stat_low(iCell)=mean(pref_allTrials_stat_concat{iCon,post}{redLowResamp(iCell)});
+            end
+            
+            std_pre_stat_low = std(pre_stat_low,[],2);
+            Resamp_normDiff(1,iCon,iResamp) = (mean(post_stat_low)-mean(pre_stat_low))/std_pre_stat_low;
+
+            pre_stat_high = NaN(1,length(redHighResamp));
+            post_stat_high = NaN(1,length(redHighResamp));
+            for iCell=1:length(redHighResamp)
+                pre_stat_high(iCell) = mean(pref_allTrials_stat_concat{iCon,pre}{redHighResamp(iCell)});
+                post_stat_high(iCell)=mean(pref_allTrials_stat_concat{iCon,post}{redHighResamp(iCell)});
+            end
+            
+            std_pre_stat_high = std(pre_stat_high,[],2);
+            Resamp_normDiff(2,iCon,iResamp) = (mean(post_stat_high)-mean(pre_stat_high))/std_pre_stat_high;
+
+           
         end
     end
-    clear redHighShuff redLowShuff
+clear redHighResamp redLowResamp
+
 end
 
-%plot normalized difference distributions for each shuffle
+
+%plot normalized difference distributions for each resample
 figure;
-boxchart(squeeze(shuff_normDiff(:,2,:))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+boxchart(squeeze(Resamp_normDiff(:,2,:))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
-scatter([1, 2],squeeze(shuff_normDiff(:,2,:))',20,[.79 .25 .32], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
-scatter([1,2],og_means)
+scatter([1, 2],squeeze(Resamp_normDiff(:,2,:))',20,[.26 .29 .33], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1,2],og_means,'r')
 xticklabels({'Weak corr.', 'Strong corr.'})
 set(gca,'TickDir','out')
 %ylim([-1 0.25])
@@ -1017,10 +1292,28 @@ width=2;
 height=1.5;
 title('Subsample with replacement')
 set(gcf,'units','inches','position',[x0,y0,width,height])
-[h, p] = ttest(squeeze(shuff_normDiff(1,2,:))',squeeze(shuff_normDiff(2,2,:))')
+[h, p] = ttest(squeeze(Resamp_normDiff(1,2,:))',squeeze(Resamp_normDiff(2,2,:))')
 print(fullfile(fnout,'Fig_S5_B.pdf'),'-dpdf');
-%%
-%plot timecourses of each shuffle
+%% confidence interval comparison for resampling with replacement
+CI_level = 65;
+ci_low = ((100-CI_level)/2);
+ci_high = 100-ci_low;
+
+resamp_data1 = squeeze(Resamp_normDiff(1,2,:));
+resamp_data2 = squeeze(Resamp_normDiff(2,2,:));
+
+% Calculate confidence intervals
+ci1 = prctile(resamp_data1, [ci_low, ci_high]);
+ci2 = prctile(resamp_data2, [ci_low, ci_high]);
+
+fprintf('CI for Data 1: [%f, %f]\n', ci1(1), ci1(2));
+fprintf('CI for Data 2: [%f, %f]\n', ci2(1), ci2(2));
+% Check for overlap
+overlap = ~(ci1(2) < ci2(1) || ci2(2) < ci1(1));
+fprintf('Do the confidence intervals overlap? %s\n', string(overlap));
+ci1(2)-ci2(1)
+
+%% plot timecourses of each shuffle
 hi_avrg_stat = cell(1,nd);
 low_avrg_stat = cell(1,nd); 
 hi_std_stat = cell(1,nd);
@@ -1169,6 +1462,28 @@ for iCon = 1:nCon
     sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
     clear txt1 highRed lowRed
 end 
+
+%% Find CI for difference (ie permutation test) for shuffled control
+shuff_normDiff_subtracted = squeeze(shuff_normDiff(2,2,:))-squeeze(shuff_normDiff(1,2,:));
+
+CI_level = 50;
+ci_low = ((100-CI_level)/2);
+ci_high = 100-ci_low;
+
+ci_subtracted_shuff = prctile(shuff_normDiff_subtracted, [ci_low, ci_high])
+%% Find CI for difference (ie permutation test) for resampled contorl
+Resamp_normDiff_subtracted = squeeze(Resamp_normDiff(2,2,:))-squeeze(Resamp_normDiff(1,2,:));
+
+CI_level = 82;
+ci_low = ((100-CI_level)/2);
+ci_high = 100-ci_low;
+
+ci_subtracted_resamp = prctile(Resamp_normDiff_subtracted, [ci_low, ci_high])
+
+%% Find cohen's D for shuffled control
+effect_shuffled = meanEffectSize(squeeze(shuff_normDiff(2,2,:)),squeeze(shuff_normDiff(1,2,:)),Effect="cohen")
+%% Find cohen's D for resampled control
+effect_resamp = meanEffectSize(squeeze(Resamp_normDiff(2,2,:)),squeeze(Resamp_normDiff(1,2,:)),Effect="cohen")
     
 %% Fig 3D - contrast response split by correlation value
 
@@ -1272,6 +1587,56 @@ contrasts = cons';
 
 table(contrasts,low_pvalues,high_pvalues)
 
+%% suppressed and facilitated for weak and strong correlation
+%make a subset of normalized difference for the SST cells only, then make
+% find how many are facilitated or suppressed by more than 1 std from
+% baseline
+%reselect norm_diff)red to be only the "red all" subset
+norm_diff_redHigh = norm_diff(:,:,redHigh);
+facil_red_high=norm_diff_redHigh(:,:,:)>=1;
+supp_red_high=norm_diff_redHigh(:,:,:)<=-1;
+
+N1=length(redHigh);
+facil_table_high = sum(facil_red_high(1,:,:),3)/N1;
+supp_table_high = sum(supp_red_high(1,:,:),3)/N1;
+
+norm_diff_redLow = norm_diff(:,:,redLow);
+facil_red_low=norm_diff_redLow(:,:,:)>=1;
+supp_red_low=norm_diff_redLow(:,:,:)<=-1;
+N2=length(redLow);
+facil_table_low = sum(facil_red_low(1,:,:),3)/N2;
+supp_table_low = sum(supp_red_low(1,:,:),3)/N2;
+
+figure;
+subplot(1,2,1)
+b=bar([1,2,3],[supp_table_low; supp_table_high],'grouped','FaceColor',"#00ffff",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#70D0F6"
+b(2).FaceColor="#0C8ABB"
+ylim([0 .6])
+title('Suppressed')
+ylabel(["Fraction SST cells"]) 
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+subplot(1,2,2)
+b=bar([1,2,3],[facil_table_low; facil_table_high],'FaceColor',"#a329cc",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#C983B1"
+b(2).FaceColor="#883367"
+xticklabels({'25','50','100'})
+ylim([0 .6])
+title('Facilitated')
+ylabel(["Fraction HTP+ cells"]) 
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+x0=5;
+y0=5;
+width=3;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'Facil_supp_byR.pdf'),'-dpdf')
 
 %% Fig 4A - timecourses for running trials
 
@@ -1696,6 +2061,8 @@ height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_4C.pdf'),'-dpdf')
 
+
+
 %% Fig 4C stats 
 
 %compute chi squares for suppression, stationary vs running
@@ -1722,12 +2089,6 @@ x1 = [repmat('a',N,1); repmat('b',N,1)];
 x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [tbl,chi2stat3,p3] = crosstab(x1,x2);
 
-%25 stat vs 100 stat
-n1=supp_table_stat(1)*N;
-n2=supp_table_stat(3)*N;
-x1 = [repmat('a',N,1); repmat('b',N,1)];
-x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
-[tbl,chi2stat3,p3] = crosstab(x1,x2);
 
 %[chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
 [chi2stat1, chi2stat2, chi2stat3; p1, p2,p3]
@@ -1759,135 +2120,108 @@ x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [chi2stat1, chi2stat2, chi2stat3; p1, p2,p3]
 clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
 
-%% Fig 4D  response by condition
+%% facilitated and suppressed for pyr cells
+%make a subset of normalized difference for the SST cells only, then make
+% find how many are facilitated or suppressed by more than 1 std from
+% baseline
+%reselect norm_diff)green to be only the "green all" subset
+norm_diff_green = norm_diff(:,:,green_all);
 
-a=mean(pref_responses_stat_concat{pre}(green_all,:), "omitnan");
-b=mean(pref_responses_loc_concat{pre}(green_all,:), "omitnan");
+facil_green=norm_diff_green(:,:,:)>=1;
+supp_green=norm_diff_green(:,:,:)<=-1;
 
-c=mean(pref_responses_stat_concat{pre}(red_all,:), "omitnan");
-d=mean(pref_responses_loc_concat{pre}(red_all,:), "omitnan");
-
-e=mean(pref_responses_stat_concat{post}(green_all,:), "omitnan");
-f=mean(pref_responses_loc_concat{post}(green_all,:), "omitnan");
-
-g=mean(pref_responses_stat_concat{post}(red_all,:), "omitnan");
-h=mean(pref_responses_loc_concat{post}(red_all,:), "omitnan");
-
-responseByCond = horzcat([a';b'],[c';d'],[e';f'],[g';h']);
-clear a b c d e f g h
+N=length(green_all);
+facil_table_stat = sum(facil_green(1,:,:),3)/N;
+supp_table_stat = sum(supp_green(1,:,:),3)/N;
+facil_table_loc = sum(facil_green(2,:,:),3)/N;
+supp_table_loc = sum(supp_green(2,:,:),3)/N;
 
 figure;
-scatter(responseByCond(:,1),responseByCond(:,2),'k')
-hold on
-scatter(responseByCond(:,3),responseByCond(:,4),'b')
-hold on
-
-h2 = lsline;
-set(h2(2),'color','k','LineWidth',2)
-set(h2(1),'color','b','LineWidth',2)
-hold on
-scatter(responseByCond(4:6,1),responseByCond(4:6,2),'MarkerEdgeColor', 'k','MarkerFaceColor', 'k')
-hold on
-scatter(responseByCond(4:6,3),responseByCond(4:6,4),'MarkerEdgeColor','b','MarkerFaceColor','b')
-set(gca,'TickDir','out')
-xlabel('Mean Pyr dF/F')
-ylabel('Mean SOM dF/F')
-%title('Mean response to different conditions')
-
-
-% 
-% 
-% for iMouse = 1:nSess 
-%     x = responseByCondProps_concat(5,1,iMouse):.005:responseByCondProps_concat(6,1,iMouse);
-%     m  = responseByCondProps_concat(1,1,iMouse);
-%     y = (m*x)+responseByCondProps_concat(2,1,iMouse);
-%     plot(x,y,'Color',"#808080") 
-% 
-% 
-%     x = responseByCondProps_concat(5,2,iMouse):.005:responseByCondProps_concat(6,2,iMouse);
-%     m  = responseByCondProps_concat(1,2,iMouse);
-%     y = (m*x)+responseByCondProps_concat(2,2,iMouse);
-%     plot(x,y,'Color',"#0080ff")  
-% 
-%     x_population=min(responseByCondProps_concat(5,1,:)):.005:max(responseByCondProps_concat(6,1,:));
-%     m_mean=mean(responseByCondProps_concat(1,1,:),'omitmissing');
-%     b_mean=mean(responseByCondProps_concat(2,1,:),'omitmissing');
-%     y_mean=(m_mean*x_population)+b_mean;
-%     plot(x_population,y_mean,'k','LineWidth',2)
-% 
-%     x_population=min(responseByCondProps_concat(5,2,:)):.005:max(responseByCondProps_concat(6,2,:));
-%     m_mean=mean(responseByCondProps_concat(1,2,:),'omitmissing');
-%     b_mean=mean(responseByCondProps_concat(2,2,:),'omitmissing');
-%     y_mean=(m_mean*x_population)+b_mean;
-%     plot(x_population,y_mean,'b','LineWidth',2)
-% 
-% end
-
-ylim([-.01 .3])
-xlim([-.01 .3])
-x0=5;
-y0=5;
-width=2;
-height=2;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-print(fullfile(fnout,'Fig_4D.pdf'),'-dpdf')
-
-%% Fig 4E % F
-% property X pre/post (1=pre, 2=post) X mouse
-%properties: range = 5-6, slope = 1, intercept = 2
-
-slopes=squeeze(responseByCondProps_concat(1,:,:));
-slopes_mean = mean(slopes,2,'omitmissing');
-slopes_std = std(slopes,[],2,"omitmissing");
-slopes_se = slopes_std/sum(cellCountsRedAll>0);
-
-intercepts=squeeze(responseByCondProps_concat(2,:,:));
-intercepts_mean = mean(intercepts,2,'omitmissing');
-intercepts_std = std(intercepts,[],2,"omitmissing");
-intercepts_se = intercepts_std/sum(cellCountsRedAll>0);
-
-figure
 subplot(1,2,1)
-plot(slopes, "-o",'Color',"#7b7b7b")
-% xlim([.5 2.5])
-box off
+b=bar([1,2,3],[supp_table_stat; supp_table_loc],'grouped','FaceColor',"#00ffff",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#70D0F6"
+b(2).FaceColor="#0C8ABB"
+ylim([0 .6])
+title('Suppressed')
+ylabel(["Fraction SST cells"]) 
+xlabel(["Contrast(%)"])
 set(gca,'TickDir','out')
-xticks([1 2])
-xticklabels({'Pre-DART','Post-DART'})
-ylabel('Slope')
-hold on
-errorbar(slopes_mean, slopes_se,"-*K",'LineWidth',2)
-%plot(nanmean(slopes,2),"-*K",'LineWidth',2)
-%title("Slope change")
+box off
 
 subplot(1,2,2)
-plot(intercepts, "-o",'Color',"#7b7b7b")
-xlim([.5 2.5])
-% ylim([-.3 .1])
-box off
+b=bar([1,2,3],[facil_table_stat; facil_table_loc],'FaceColor',"#a329cc",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#C983B1"
+b(2).FaceColor="#883367"
+xticklabels({'25','50','100'})
+ylim([0 .6])
+title('Facilitated')
+ylabel(["Fraction HTP+ cells"]) 
+xlabel(["Contrast(%)"])
 set(gca,'TickDir','out')
-xticks([1 2])
-xticklabels({'Pre-DART','Post-DART'})
-ylabel('Intercept')
-hold on
-errorbar(intercepts_mean, intercepts_se,"-*K",'LineWidth',2)
-%plot(nanmean(intercepts,2),"-*K",'LineWidth',2)
-%title("Intercept change")
-
-
+box off
 
 x0=5;
 y0=5;
 width=3;
-height=2;
+height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
-print(fullfile(fnout,'Fig_4EF.pdf'),'-dpdf')
+%compute chi squares for suppression, stationary vs running
+%25% contrast
 
-%% Fig 4E-F stats
-[h,p1,~,stats1]= ttest(slopes(1,:),slopes(2,:));
-stats1.tstat, p1
-[h,p2,~,stats2]= ttest(intercepts(1,:),intercepts(2,:));
-stats2.tstat, p2
+n1=int32(supp_table_stat(1)*N);
+n2=int32(supp_table_loc(1)*N);
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat1,p1] = crosstab(x1,x2);
+
+%50
+n1=int32(supp_table_stat(2)*N);
+n2=int32(supp_table_loc(2)*N);
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat2,p2] = crosstab(x1,x2);
+
+%100
+n1=int32(supp_table_stat(3)*N);
+n2=int32(supp_table_loc(3)*N);
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat3,p3] = crosstab(x1,x2);
+
+
+
+%[chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
+[chi2stat1, chi2stat2, chi2stat3; p1, p2,p3]
+
+clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3
+
+%compute chi squares for facilitation
+%25
+n1=int32(supp_table_stat(1)*N);
+n2=int32(facil_table_loc(1)*N);
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat1,p1] = crosstab(x1,x2);
+
+%50
+n1=int32(facil_table_stat(2)*N);
+n2=int32(facil_table_loc(2)*N);
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat2,p2] = crosstab(x1,x2);
+
+%100
+n1=int32(facil_table_stat(3)*N);
+n2=int32(facil_table_loc(3)*N);
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2stat3,p3] = crosstab(x1,x2);
+
+[chi2stat1, chi2stat2, chi2stat3; p1, p2,p3]
+clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
+
+
+
 %% Fig Sx A, comparing the preferred direction across days
 
 change_pref = pref_dir_concat{pre}-pref_dir_concat{post};
@@ -2226,26 +2560,25 @@ pupilSE_overall = pupilSTD_overall./sqrt(nSess);
 
 figure
 plot(pupilMeans_clean(:,:),'-','Color',[.5 .5 .5])
-xlim([.5 3.5])
+xlim([.75 3.25])
 box off
 set(gca,'TickDir','out')
 xticks([1 2 3])
 xticklabels({'Small pupil','Large pupil','Running'})
 ylabel('Pupil diameter (mm)')
 hold on
-ylim([0 1])
+ylim([0.2 .8])
 scatter([1 2 3],pupilMeans_clean(:,:),10, "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
 errorbar(pupilMean_overall,pupilSE_overall,'.-k','MarkerSize',15)
 
 
-
 x0=5;
 y0=5;
-width=2.5;
+width=2;
 height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
-print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_S5b.pdf'),'-dpdf');
 
 % confirm that there's no difference in size across days within the "small"
 % pupil trials
@@ -2261,12 +2594,43 @@ print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
 %test whether pupuil is different between large trials and running
 [h p] = ttest(pupilMeans_clean(2,:),pupilMeans_clean(3,:))
 
+%%
+motorByPupil_clean = squeeze(mean(pupilMeans_concat(:,:,:),1,'omitmissing')); %average the two days
+motorByPupil_clean = motorByPupil_clean([2,1],:); %rearrange rows
+
+
+%pupilMeans_clean = pupilMeans_clean./(pupilMeans_clean(1,:)); %normalize to small pupil for each mouse
+pupilMotorMean_overall =mean(motorByPupil_clean,2,'omitmissing');
+pupilMotorSTD_overall =std(motorByPupil_clean,[],2,'omitmissing');
+pupilMotorSE_overall = pupilMotorSTD_overall./sqrt(nSess);   
+
+figure
+plot(motorByPupil_clean(:,:),'-','Color',[.5 .5 .5])
+xlim([.75 2.25])
+box off
+set(gca,'TickDir','out')
+xticks([1 2])
+xticklabels({'Small pupil','Large pupil'})
+ylabel('Wheel speed (cm/s)')
+hold on
+ylim([.1 .4])
+scatter([1 2],motorByPupil_clean(:,:),10, "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
+errorbar(pupilMotorMean_overall,pupilMotorSE_overall,'.-k','MarkerSize',15)
+
+
+
+x0=5;
+y0=5;
+width=1;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print(fullfile(fnout,'Fig_s5c.pdf'),'-dpdf');
+
 
 %look at how motor activity differs with pupil size
 %control day
-[h p] = ttest(motorByPupil_concat(pre,1,:),motorByPupil_concat(pre,2,:))
-%DART day
-[h p] = ttest(motorByPupil_concat(post,1,:),motorByPupil_concat(post,2,:))
+[h p] = ttest(motorByPupil_clean(1,:),motorByPupil_clean(2,:))
 
 %% contrast response pupil
 
@@ -2615,6 +2979,108 @@ x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 
 [chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
 clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
+
+%% For pyramidal cells
+
+norm_diff_green = norm_diff_pupil(:,:,green_all);
+
+facil_green=norm_diff_green(:,:,:)>=1;
+supp_green=norm_diff_green(:,:,:)<=-1;
+
+N=length(green_all);
+facil_table_smallPupil_green = sum(facil_green(1,:,:),3)/N;
+supp_table_smallPupil_green = sum(supp_green(1,:,:),3)/N;
+facil_table_largePupil_green = sum(facil_green(2,:,:),3)/N;
+supp_table_largePupil_green = sum(supp_green(2,:,:),3)/N;
+
+figure;
+subplot(1,2,1)
+b=bar([1,2,3],[supp_table_smallPupil_green; supp_table_largePupil_green],'grouped','FaceColor',"#00ffff",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#70D0F6"
+b(2).FaceColor="#0C8ABB"
+xticklabels({'25','50','100'})
+ylim([0 .4])
+title('Suppressed')
+ylabel(["Fraction Pyr cells"]) 
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+subplot(1,2,2)
+b=bar([1,2,3],[facil_table_smallPupil_green; facil_table_largePupil_green],'FaceColor',"#a329cc",'EdgeColor', [1 1 1]);
+b(1).FaceColor="#C983B1"
+b(2).FaceColor="#883367"
+xticklabels({'25','50','100'})
+ylim([0 .4])
+title('Facilitated')
+xlabel(["Contrast(%)"])
+set(gca,'TickDir','out')
+box off
+
+x0=5;
+y0=5;
+width=3;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'pupil_normDiff_green.pdf'),'-dpdf')
+%% compute chi squares for suppression, small pupil vs large pupil
+%25% contrast
+
+n1=supp_table_smallPupil_green(1)*N;
+n2=supp_table_largePupil_green(1)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil1,p1] = crosstab(x1,x2);
+
+%50
+n1=supp_table_smallPupil_green(2)*N;
+n2=supp_table_largePupil_green(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil2,p2] = crosstab(x1,x2);
+
+%100
+n1=supp_table_smallPupil_green(3)*N;
+n2=round(supp_table_largePupil_green(3)*N);
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
+
+
+
+[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1*3, p2*3,p3*3]
+%[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
+
+clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3
+
+
+
+%compute chi squares for facilitation
+%25
+n1=facil_table_smallPupil_green(1)*N;
+n2=facil_table_largePupil_green(1)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil1,p1] = crosstab(x1,x2);
+
+%50
+n1=facil_table_smallPupil_green(2)*N;
+n2=facil_table_largePupil_green(2)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil2,p2] = crosstab(x1,x2);
+
+%100
+n1=facil_table_smallPupil_green(3)*N;
+n2=facil_table_largePupil_green(3)*N;
+x1 = [repmat('a',N,1); repmat('b',N,1)];
+x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+[tbl,chi2smallPupil3,p3] = crosstab(x1,x2);
+
+[chi2smallPupil1, chi2smallPupil2, chi2smallPupil3; p1, p2,p3]
+clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
+
+
 %% get a table of capture values
 capture = getCaptureValues_annulus(mice);
 table(mice,capture(3,:)')
@@ -2629,6 +3095,266 @@ y0=5;
 width=1.1;
 height=1.1;
 set(gcf,'units','inches','position',[x0,y0,width,height])
+
+%%
+captureByCell = [];
+for iSess = 1:nSess
+    temp = repmat(capture(3,iSess),[nKeep_concat(iSess),1]);
+    captureByCell=[captureByCell;temp];
+end
+
+%% timecourses seperated by capture
+
+
+%make figure with se shaded, one figure per contrast - stationary
+
+tc_green_avrg_stat = cell(1,nd); 
+tc_red_avrg_stat = cell(1,nd); 
+tc_green_se_stat = cell(1,nd); 
+tc_red_se_stat = cell(1,nd); 
+
+tc_green_avrg_stat_b = cell(1,nd); 
+tc_red_avrg_stat_b = cell(1,nd); 
+tc_green_se_stat_b = cell(1,nd); 
+tc_red_se_stat_b = cell(1,nd);
+
+
+for id = 1:nd
+    for iCon=1:nCon
+        
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff)));
+    
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff)));
+
+
+    tc_green_avrg_stat_b{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon),[],2);
+    tc_green_se_stat_b{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff)));
+    
+    tc_red_avrg_stat_b{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon),[],2);
+    tc_red_se_stat_b{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff)));
+
+    clear green_std red_std
+    end
+end
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_green_avrg_stat{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+figure
+subplot(2,2,1) %for the first day
+
+ylim([-.05 .3]);
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'--k');
+hold on
+shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon),tc_green_se_stat{post}(:,iCon),'--b','transparent');
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['low capture -HTP',' n = ', num2str(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff)))])
+
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(2,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b');
+ylim([-.05 .3]);
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+ylabel('dF/F') 
+xlabel('s') 
+title(['low capture +HTP',' n = ', num2str(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff)))])
+set(gca,'XColor', 'none','YColor','none')
+
+subplot(2,2,3) %for the first day
+
+ylim([-.05 .3]);
+hold on
+shadedErrorBar(t,tc_green_avrg_stat_b{pre}(:,iCon),tc_green_se_stat_b{pre}(:,iCon),'--k');
+hold on
+shadedErrorBar(t,tc_green_avrg_stat_b{post}(:,iCon),tc_green_se_stat_b{post}(:,iCon),'--b','transparent');
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['high capture -HTP',' n = ', num2str(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff)))])
+
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(2,2,4) %for the second day
+shadedErrorBar(t,tc_red_avrg_stat_b{pre}(:,iCon),tc_red_se_stat_b{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_stat_b{post}(:,iCon),tc_red_se_stat_b{post}(:,iCon),'b');
+ylim([-.05 .3]);
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+ylabel('dF/F') 
+xlabel('s') 
+title(['high capture +HTP',' n = ', num2str(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff)))])
+
+x0=5;
+y0=5;
+width=4;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
+
+sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_stat_capt_timecourses.pdf']),'-dpdf');
+end 
+
+clear tc_green_avrg_stat tc_red_avrg_stat tc_green_se_stat tc_red_se_stat tc_green_avrg_stat_b tc_red_avrg_stat_b tc_green_se_stat_b tc_red_se_stat_b 
+
+% make figure with se shaded, one figure per contrast - loc
+
+tc_green_avrg_loc = cell(1,nd); 
+tc_red_avrg_loc = cell(1,nd); 
+tc_green_se_loc = cell(1,nd); 
+tc_red_se_loc = cell(1,nd); 
+
+tc_green_avrg_loc_b = cell(1,nd); 
+tc_red_avrg_loc_b = cell(1,nd); 
+tc_green_se_loc_b = cell(1,nd); 
+tc_red_se_loc_b = cell(1,nd); 
+
+
+for id = 1:nd
+    for iCon=1:nCon
+        
+    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon),2);
+    green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff),iCon),[],2);
+    tc_green_se_loc{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff)));
+    
+    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon),2);
+    red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff),iCon),[],2);
+    tc_red_se_loc{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff)));
+
+
+    tc_green_avrg_loc_b{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon),2);
+    green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff),iCon),[],2);
+    tc_green_se_loc_b{id}(:,iCon)=green_std/sqrt(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff)));
+    
+    tc_red_avrg_loc_b{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon),2);
+    red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff),iCon),[],2);
+    tc_red_se_loc_b{id}(:,iCon)=red_std/sqrt(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff)));
+    
+
+
+
+    clear green_std red_std
+    end
+end
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_green_avrg_loc{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+
+
+for iCon = 1:nCon
+figure
+subplot(2,2,1) %for the first day
+
+ylim([-.05 .35]);
+hold on
+shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon),tc_green_se_loc{pre}(:,iCon),'--k');
+hold on
+shadedErrorBar(t,tc_green_avrg_loc{post}(:,iCon),tc_green_se_loc{post}(:,iCon),'--b','transparent');
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['low capture -HTP',' n = ', num2str(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})<cutOff)))])
+
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(2,2,2) %for the second day
+shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon),tc_red_se_loc{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon),tc_red_se_loc{post}(:,iCon),'b');
+ylim([-.05 .35]);
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+ylabel('dF/F') 
+xlabel('s') 
+title(['low capture +HTP',' n = ', num2str(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})<cutOff)))])
+set(gca,'XColor', 'none','YColor','none')
+
+subplot(2,2,3) %for the first day
+
+ylim([-.05 .35]);
+hold on
+shadedErrorBar(t,tc_green_avrg_loc_b{pre}(:,iCon),tc_green_se_loc_b{pre}(:,iCon),'--k');
+hold on
+shadedErrorBar(t,tc_green_avrg_loc_b{post}(:,iCon),tc_green_se_loc_b{post}(:,iCon),'--b','transparent');
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+title(['high capture -HTP',' n = ', num2str(length(haveRunning_green{iCon}(captureByCell(haveRunning_green{iCon})>=cutOff)))])
+
+ylabel('dF/F') 
+xlabel('s') 
+set(gca,'XColor', 'none','YColor','none')
+
+
+subplot(2,2,4) %for the second day
+shadedErrorBar(t,tc_red_avrg_loc_b{pre}(:,iCon),tc_red_se_loc_b{pre}(:,iCon),'k');
+hold on
+shadedErrorBar(t,tc_red_avrg_loc_b{post}(:,iCon),tc_red_se_loc_b{post}(:,iCon),'b');
+ylim([-.05 .35]);
+hold on
+line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+hold on
+line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+ylabel('dF/F') 
+xlabel('s') 
+title(['high capture +HTP',' n = ', num2str(length(haveRunning_red{iCon}(captureByCell(haveRunning_red{iCon})>=cutOff)))])
+
+x0=5;
+y0=5;
+width=4;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+set(gca,'XColor', 'none','YColor','none')
+
+sgtitle(['running, contrast = ' num2str(cons(iCon))])
+
+
+print(fullfile(fnout,[num2str(cons(iCon)) '_loc_capt_timecourses.pdf']),'-dpdf');
+end 
+
+
+clear tc_green_avrg_loc tc_red_avrg_loc tc_green_se_loc tc_red_se_loc tc_green_avrg_loc_b tc_red_avrg_loc_b tc_green_se_loc_b tc_red_se_loc_b 
+
 %% additional correlation analyses
 
 %does the average R value differ between behavioral states?
@@ -2642,6 +3368,7 @@ end
 
 
 figure;
+subplot(1,2,1)
 boxplot([squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all))]);
 hold on
 scatter([1, 2],squeeze(R_by_state([1,4],pre,red_all)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
@@ -2650,7 +3377,16 @@ xticklabels({'Stationary','Running'})
 ylabel(["Mean R value"]) 
 set(gca,'TickDir','out')        
 box off
-
+hold on
+subplot(1,2,2)
+boxplot([squeeze(R_by_state(1,post,red_all)),squeeze(R_by_state(4,post,red_all))]);
+hold on
+scatter([1, 2],squeeze(R_by_state([1,4],post,red_all)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+xticklabels({'Stationary','Running'})
+%ylim([-.3 1.3])
+ylabel(["Mean R value"]) 
+set(gca,'TickDir','out')        
+box off
 
 [h1,p1] =ttest(squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all)))
 
@@ -2689,3 +3425,68 @@ dataTable = array2table(data,'VariableNames',{'C1','C2','C3'});
 w = table(categorical([1 2 3 ].'), 'VariableNames', {'contrast'}); % within-design
 rm_SST_stat = fitrm(dataTable, 'C1-C3 ~ 1', 'WithinDesign', w)
 ranova(rm_SST_stat, 'withinmodel', 'contrast')
+%% normDiff comparisons
+%compare norm_diff across contrasts and states
+        
+figure;
+subplot(2,2,1)
+scatter(squeeze(norm_diff(1,1,green_ind_concat)),squeeze(norm_diff(1,3,green_ind_concat)))
+xlabel('norm diff 25% contrast')
+ylabel('norm diff 100% contrast')
+xlim([-5 7.5])
+ylim([-5 7.5])
+title('Pyr')
+
+subplot(2,2,2)
+scatter(squeeze(norm_diff(1,1,green_ind_concat)),squeeze(norm_diff(2,1,green_ind_concat)))
+xlabel('norm diff 25% contrast stationary')
+ylabel('norm diff 25% contrast running')
+xlim([-5 7.5])
+ylim([-5 7.5])
+title('Pyr')
+
+subplot(2,2,3)
+scatter(squeeze(norm_diff(1,1,red_ind_concat)),squeeze(norm_diff(1,3,red_ind_concat)))
+xlabel('norm diff 25% contrast')
+ylabel('norm diff 100% contrast')
+xlim([-5 7.5])
+ylim([-5 7.5])
+title('SST')
+
+subplot(2,2,4)
+scatter(squeeze(norm_diff(1,1,red_ind_concat)),squeeze(norm_diff(2,1,red_ind_concat)))
+xlabel('norm diff 25% contrast stationary')
+ylabel('norm diff 25% contrast running')
+xlim([-5 7.5])
+ylim([-5 7.5])
+title('SST')
+
+%% comparing normalized difference to noise correlation
+%get a normalized difference averaged over contrasts
+norm_diff_average_stat = squeeze(mean(norm_diff(1,:,:),2,'omitmissing'));
+norm_diff_average_loc = squeeze(mean(norm_diff(2,:,:),2,'omitmissing'));
+
+figure
+scatter(noiseCorr_OG_concat{pre}(1,green_ind_concat),norm_diff_average_stat(green_ind_concat))
+ylabel('norm diff averaged over contrast')
+xlabel('R value')
+title('Pyr')
+ylim([-5, 10])
+figure
+scatter(noiseCorr_OG_concat{pre}(1,red_ind_concat),norm_diff_average_stat(red_ind_concat))
+ylabel('norm diff averaged over contrast')
+xlabel('R value')
+title('SST')
+
+figure
+scatter(noiseCorr_OG_concat{pre}(1,green_ind_concat),norm_diff_average_loc(green_ind_concat))
+ylabel('norm diff averaged over contrast')
+xlabel('R value')
+title('Pyr')
+ylim([-5, 10])
+figure
+scatter(noiseCorr_OG_concat{pre}(1,red_ind_concat),norm_diff_average_loc(red_ind_concat))
+ylabel('norm diff averaged over contrast')
+xlabel('R value')
+title('SST')
+ylim([-5, 10])
