@@ -36,4 +36,28 @@ expt(3).indicator = {'tg';'6s'};
 expt(3).ImgFolder = [{'002'}];
 expt(3).time = [{'0946'}];
 
+%% i1397 240605
+expt(4).mouse = 'i1397';
+expt(4).date = '240605';
+expt(4).img_loc  = {'V1';'L2/3'};
+expt(4).inj_loc = {'V1'};
+expt(4).z = -200;
+expt(4).img_strct  = {'cells'};
+expt(4).driver = {'SLC'};
+expt(4).indicator = {'tg';'6s'};
+expt(4).ImgFolder = [{'002'}];
+expt(4).time = [{'1315'}];
+
+%% i1398 240605
+expt(5).mouse = 'i1398';
+expt(5).date = '240605';
+expt(5).img_loc  = {'V1';'L2/3'};
+expt(5).inj_loc = {'V1'};
+expt(5).z = -200;
+expt(5).img_strct  = {'cells'};
+expt(5).driver = {'SLC'};
+expt(5).indicator = {'tg';'8m'};
+expt(5).ImgFolder = [{'002'}];
+expt(5).time = [{'1514'}];
+
 
