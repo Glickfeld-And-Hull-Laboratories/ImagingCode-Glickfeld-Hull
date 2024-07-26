@@ -18,7 +18,6 @@ output_cell(:,1) = mice(:,1);
 % TIME in the file name would be 0.16)
 
 for iMouse = 1:nMice
-    allData=cell(nMice,1);
     mouse=mice{iMouse};
     fnames = ls(fullfile('G:\home\jerry\analysis\widefield\',mouse,'capture_quant','*.csv'));
     TPs = zeros(size(fnames,1),1);

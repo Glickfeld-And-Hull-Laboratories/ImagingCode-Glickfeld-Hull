@@ -7,7 +7,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [38];%enter all the sessions you want to concatenate
+sess_list = [40];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -236,12 +236,12 @@ nKeep_total = sum(nKeep_concat);
 %% cell selection
 % find cells that I have running and stationary data for on both days - these are called pass cells
 
-haveRunning_pre=(sum(squeeze(logical(sum(~isnan(conBySize_resp_loc_concat{pre}),2))),2)==nSize); %find cells that have a no NAN values for any sise (the total of non-NAN should == the number of size)
-haveRunning_post=(sum(squeeze(logical(sum(~isnan(conBySize_resp_loc_concat{post}),2))),2)==nSize);
+haveRunning_pre=(sum(squeeze((sum(~isnan(conBySize_resp_loc_concat{pre}),2))),2)==(nCon*nSize)); %find cells that have a no NAN values for any sise (the total of non-NAN should == the number of size)
+haveRunning_post=(sum(squeeze((sum(~isnan(conBySize_resp_loc_concat{post}),2))),2)==(nCon*nSize));
 haveRunning_both= find(haveRunning_pre.* haveRunning_post); %find cells that meet this criteria for both days - now in indices, not logical
 
-haveStat_pre=(sum(squeeze(logical(sum(~isnan(conBySize_resp_stat_concat{pre}),2))),2)==nSize); %find cells that have a no NAN values for any sise (the total of non-NAN should == the number of size)
-haveStat_post=(sum(squeeze(logical(sum(~isnan(conBySize_resp_stat_concat{post}),2))),2)==nSize); 
+haveStat_pre=(sum(squeeze((sum(~isnan(conBySize_resp_stat_concat{pre}),2))),2)==(nCon*nSize)); %find cells that have a no NAN values for any sise (the total of non-NAN should == the number of size)
+haveStat_post=(sum(squeeze((sum(~isnan(conBySize_resp_stat_concat{post}),2))),2)==(nCon*nSize)); 
 haveStat_both= find(haveStat_pre.* haveStat_post); %find cells that meet this criteria for both days - now in indices, not logical
 
 runningCells = intersect(haveStat_both, haveRunning_both);
@@ -505,12 +505,12 @@ for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
         
-        tc_green_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),[],2);
+        tc_green_avrg_loc{id}(:,iCon,iSize)=mean(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),2);
+        green_std=std(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),[],2);
         tc_green_se_loc{id}(:,iCon,iSize)=green_std/sqrt(length(runningGreen));
         
-        tc_red_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),[],2);
+        tc_red_avrg_loc{id}(:,iCon,iSize)=mean(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),2);
+        red_std=std(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),[],2);
         tc_red_se_loc{id}(:,iCon,iSize)=red_std/sqrt(length(runningRed));
         
         clear green_std red_std
@@ -612,12 +612,12 @@ sizeResp_red_se_loc = cell(1,nd); %same for red
 
 
 for id = 1:nd
-    green_data=squeeze(mean(conBySize_resp_loc_concat{id}(runningGreen,:,:),2));%pulling the green cells and averaging over contrast
+    green_data=squeeze(nanmean(conBySize_resp_loc_concat{id}(runningGreen,:,:),2));%pulling the green cells and averaging over contrast
     sizeResp_green_avrg_loc{id}=nanmean(green_data,1);
     green_std=nanstd(green_data,1);
     sizeResp_green_se_loc{id}=green_std/sqrt(length(runningGreen));
     
-    red_data=squeeze(mean(conBySize_resp_loc_concat{id}(runningRed,:,:),2));%pulling the red cells and averaging over contrast
+    red_data=squeeze(nanmean(conBySize_resp_loc_concat{id}(runningRed,:,:),2));%pulling the red cells and averaging over contrast
     sizeResp_red_avrg_loc{id}=nanmean(red_data,1);
     red_std=nanstd(red_data,1);
     sizeResp_red_se_loc{id}=red_std/sqrt(length(runningRed));
@@ -638,7 +638,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .1])
+ylim([-0.05 0.05])
 
 subplot(2,2,2) %for the second day
 errorbar(sizes,sizeResp_red_avrg_stat{pre},sizeResp_red_se_stat{pre},'k');
@@ -649,7 +649,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .1])
+ylim([-0.05 0.05])
 
 subplot(2,2,3) %for the first day
 errorbar(sizes,sizeResp_green_avrg_loc{pre},sizeResp_green_se_loc{pre},'k');
@@ -660,7 +660,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([0 0.15])
 
 subplot(2,2,4) %for the second day
 errorbar(sizes,sizeResp_red_avrg_loc{pre},sizeResp_red_se_loc{pre},'k');
@@ -671,7 +671,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([0 0.15])
 
 x0=5;
 y0=5;

@@ -14,7 +14,7 @@ for iMouse = 1:nMice
     ylim([0.8 2]);
     Ax = gca;
     Ax.XTick = currData(:,2);
-    xlabel('Time since Infusion (hr)');
+    xlabel('Time since Infusion (Hrs)');
     ylabel('Capture Index (AU)');
 end
 
@@ -29,6 +29,6 @@ for iMouse = 1:nMice
     ylim([70 200])
     Ax = gca;
     Ax.XTick = currData(:,2);
-    xlabel('Time since Infusion (hr)');
+    xlabel('Time since Infusion (Hrs)');
     ylabel('Mean HTP ROI Intensity (AU)');
 end
