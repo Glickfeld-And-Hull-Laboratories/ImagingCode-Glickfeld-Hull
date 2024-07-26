@@ -12,7 +12,7 @@ if computer == 'GLNXA64'
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
 else
     isilonName = 'duhs-user-nc1.dhe.duke.edu/';
-    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/home/ACh/Analysis/2p_analysis/NetworkSuppression/');
    
    beh_prefix = strcat('Z:\Behavior\Data\data-');
 end
@@ -32,6 +32,7 @@ h_concat=[];
 h_short_concat = [];
 mouseID=[];
 depth=[];
+exptNumber = [];
 
 for iExpt = 1:nExpt
     expt_num=expt_list(iExpt);
@@ -44,6 +45,7 @@ for iExpt = 1:nExpt
     load(fullfile(base, mouse, date,ImgFolder,'goodFitResp_summary_updated.mat'));
     beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
     load(beh_file); %load the mworks behavioral file
+
 
     TCs_stat=cat(4,TCs_stat,TC_byConditionStat);
     TCs_loc=cat(4,TCs_loc,TC_byConditionLoc);
@@ -68,11 +70,14 @@ for iExpt = 1:nExpt
 
     depth_temp = repmat(expt(expt_num).z,size(TC_byConditionStat,4),1);
     mouse_name = pad(mouse,5);
-    mouseID_temp = repmat(mouse_name,size(TC_byConditionStat,4),1); 
+    mouseID_temp = repmat(mouse_name,size(TC_byConditionStat,4),1);
+    exptNumber_temp = repmat(iExpt,size(TC_byConditionStat,4),1);
 
 
     depth=[depth;depth_temp];
     mouseID = [mouseID;mouseID_temp];
+    exptNumber = vertcat(exptNumber, exptNumber_temp);
+
 
     clear TC_byConditionStat TC_byConditionLoc interNrns keepDists keepPrefOri
     clear mouse date time iExpt expt_num tCons tSize input depth_temp mouseID_temp h_keep
@@ -139,8 +144,6 @@ INdepths{2}=INdepth2;
 INdepths{3}=INdepth3;
 INdepths{4}=INdepth4;
 %% find peak, trough and similar metrics
-
-
 
 %make an empty matrix for values
 peak_trough =nan(nSizes,nCons,nCells,2);
@@ -2257,7 +2260,7 @@ DistCutoffs=[0,10,20,100];
 print(['prefOri',num2str(iOri),'_matrix.pdf'], '-dpdf');
     end
 
- %% responsive at each stim condition, not necc. centered
+%% responsive at each stim condition, not necc. centered
 
 nSST_resp_by_cond = nan(nCons,nSizes);
 h_any = logical(sum(sum(h_concat,3),2));
@@ -2545,3 +2548,413 @@ axis square
 ylim([0 .5])
 xlabel('SSI based on peak')
 ylabel('SSI based on mean')
+
+%% splitting SST cells into two groups based on response to small size or not at 80% contrast
+
+%group 1: responsive at ALL sizes. Sum h_concat(iCell,:,4) = nSizes
+%group 2: responsive at all sizes ABOVE 15. h_concat(iCell,:,4) == [0 0 1 1
+%1]
+group1Cells=zeros(1,nCells);
+group2Cells=zeros(1,nCells);
+
+group1Vec=[1 1 1 1 1];
+group2Vec=[0 0 1 1 1];
+
+for iCell = 1:nCells
+    if all(h_concat(iCell,:,4)==group1Vec)
+        group1Cells(iCell)=1;
+    elseif all(h_concat(iCell,:,4)==group2Vec)
+        group2Cells(iCell)=1;
+    end
+end
+
+
+sum(group1Cells)
+sum(group2Cells)
+
+SST_group1=intersect(interNrns,find(group1Cells));
+SST_group2=intersect(interNrns,find(group2Cells));
+
+%% rise time, decay time, and FWHM for SST cells in the two groups above
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,SST_group1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group1,3:4),[],3,"omitnan"))./length(SST_group1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group1),[],3,"omitnan"))./length(SST_group1);
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,SST_group2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group2,3:4),[],3,"omitnan"))./length(SST_group2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group2),[],3,"omitnan"))./length(SST_group2);
+
+
+    end
+end
+temp_mean2(iCon,1:2,:)=NaN;
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'Color',	"#3BB806");
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_byGroup', '-dpdf');
+
+%% New way of splitting groups
+
+group1Cells=zeros(1,nCells);
+group2Cells=zeros(1,nCells);
+
+
+for iCell = 1:nCells
+    if (h_concat(iCell,1,4)==1) & (h_concat(iCell,5,4)==0)
+        group1Cells(iCell)=1;
+    elseif (h_concat(iCell,1,4)==0) & (h_concat(iCell,5,4)==1)
+        group2Cells(iCell)=1;
+    end
+end
+%define a subset of SST cells with med-range retinotopic distances
+%SST_midDistance = intersect(interNrns,find(dists_concat >6 & dists_concat < 18));
+
+SST_group1=intersect(interNrns,find(group1Cells));
+length(SST_group1)
+SST_group2=intersect(interNrns,find(group2Cells));
+length(SST_group2)
+
+mean(dists_concat(SST_group1))
+mean(dists_concat(SST_group2))
+
+figure;
+histogram(dists_concat(SST_group1))
+hold on
+histogram(dists_concat(SST_group2))
+legend('Responsive at 7.5, NOT 120','Responsive at 120, NOT 7.5')
+box off
+print('RF_distance_byGroup', '-dpdf');
+
+%% how are the groups distributed across depths
+mean(depth(SST_group1))
+mean(depth(SST_group2))
+
+figure;
+histogram(depth(SST_group1))
+hold on
+histogram(depth(SST_group2))
+legend('Responsive at 7.5, NOT 120','Responsive at 120, NOT 7.5')
+xlabel('Cortical depth')
+box off
+print('corticalDepth_byGroup', '-dpdf');
+
+
+%% rise time, decay time, and FWHM for cells responsive at each size WITHIN groups 1 and 2, 80% contrast
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        theseGroup1=intersect(SST_group1,responsiveTheseTrials);
+        theseGroup2=intersect(SST_group2,responsiveTheseTrials);
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,theseGroup1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup1,3:4),[],3,"omitnan"))./length(theseGroup1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup1),[],3,"omitnan"))./length(theseGroup1);
+
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,theseGroup2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup2,3:4),[],3,"omitnan"))./length(theseGroup2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup2),[],3,"omitnan"))./length(theseGroup2);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_respAtEach_byGroup', '-dpdf');
+
+%%
+%group 1: responsive at ALL sizes. Sum h_concat(iCell,:,4) = nSizes
+%group 2: responsive at all sizes ABOVE 15. h_concat(iCell,:,4) == [0 0 1 1
+%1]
+group1Cells=zeros(1,nCells);
+group2Cells=zeros(1,nCells);
+
+%check whether responsive to the smallest size at the highest contrast
+
+for iCell = 1:nCells
+    if h_concat(iCell,1,4)==1
+        group1Cells(iCell)=1;
+    elseif h_concat(iCell,1,4)~=1
+        group2Cells(iCell)=1;
+    end
+end
+
+
+SST_group1=intersect(interNrns,find(group1Cells));
+length(SST_group1)
+SST_group2=intersect(interNrns,find(group2Cells));
+length(SST_group2)
+%% rise time, decay time, and FWHM for SST cells in the two groups above
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,SST_group1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group1,3:4),[],3,"omitnan"))./length(SST_group1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group1),[],3,"omitnan"))./length(SST_group1);
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,SST_group2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group2,3:4),[],3,"omitnan"))./length(SST_group2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group2),[],3,"omitnan"))./length(SST_group2);
+
+
+    end
+end
+temp_mean2(iCon,1,:)=NaN;
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'.','MarkerSize',20,'Color',"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'.','MarkerSize',20,'Color',	"#3BB806");
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'.','MarkerSize',20,'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'.','MarkerSize',20,'Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'.','MarkerSize',20,'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'.','MarkerSize',20,'Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+sgtitle('Responsive at 7.5 VS NOT responsive at 7.5')
+
+
+x0=5;
+y0=5;
+width=7;
+height=2;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamicsByGroup', '-dpdf','-bestfit');
+
+%% dynamics vs pref size
+
+%find preferred size for each cell, at 80% contrast, based on peak response
+prefSize=NaN(1,nCells);
+for iCell = 1:nCells
+   [~,prefSize(1,iCell)] = max(peak_trough(:,nCons,iCell,1),[],1); 
+end
+
+%plot FWHM vs pref size at 30 degrees for SST cells responsive at 30 degrees
+responsiveSST = intersect(find(h_concat(:,3,4)),interNrns); %30 deg, 80% contrast
+
+means_peak=NaN(1,nSizes);
+se_peak=NaN(1,nSizes);
+means_decay=NaN(1,nSizes);
+se_decay=NaN(1,nSizes);
+means_FWHM=NaN(1,nSizes);
+se_FWHM=NaN(1,nSizes);
+
+
+for iSize = 1:nSizes
+    prefThisSize=find(prefSize==iSize);
+    theseSST=intersect(prefThisSize,responsiveSST);
+
+    means_peak(iSize)=mean(squeeze(peak_time(3,4, theseSST,3)),"omitmissing");
+    se_peak(iSize) = (std(squeeze(peak_time(3,4, theseSST,3)),[],"omitmissing"))/length(theseSST);
+
+    means_decay(iSize)=mean(squeeze(peak_time(3,4, theseSST,4)),"omitmissing");
+    se_decay(iSize) = (std(squeeze(peak_time(3,4, theseSST,4)),[],"omitmissing"))/length(theseSST);
+
+    means_FWHM(iSize)=mean(squeeze(fwhm(iSize,iCon,theseSST)),"omitmissing");
+    se_FWHM(iSize) = (std(squeeze(fwhm(iSize,iCon,theseSST)),[],"omitmissing"))/length(theseSST);
+
+end
+
+
+figure
+subplot(1,3,1)
+errorbar(means_peak,se_peak,'.','MarkerSize',20,'Color',	"#4e701f")
+ylabel('Rise')
+xlabel('Pref size')
+xlim([.5 5.5])
+xticks([1,2,3,4,5])
+xticklabels(Sizes)
+box off
+set(gca, 'TickDir', 'out')
+
+subplot(1,3,2)
+errorbar(means_decay,se_decay,'.','MarkerSize',20,'Color',	"#4e701f")
+ylabel('Decay')
+xlabel('Pref size')
+xlim([.5 5.5])
+xticks([1,2,3,4,5])
+xticklabels(Sizes)
+box off
+set(gca, 'TickDir', 'out')
+
+subplot(1,3,3)
+errorbar(means_FWHM,se_FWHM,'.','MarkerSize',20,'Color',	"#4e701f")
+ylabel('FWHM')
+xlabel('Pref size')
+xlim([.5 5.5])
+xticks([1,2,3,4,5])
+xticklabels(Sizes)
+box off
+set(gca, 'TickDir', 'out')
+
+sgtitle('30 degree size, 80% contrast')
+
+x0=5;
+y0=5;
+width=7;
+height=2;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+
+print('dynamicsAt30_byPrefSize', '-dpdf','-bestfit');
+%% seeing how groups of cells are clustered among/within mice
+SST_group1_logical = group1Cells.*interNrns_concat;
+SST_group2_logical = group2Cells.*interNrns_concat;
+
+mouseIndx = NaN(2,nExpt);
+for iExpt = 1:nExpt
+    mouseIndx(1,iExpt)=min(find(exptNumber==iExpt));
+    mouseIndx(2,iExpt)=max(find(exptNumber==iExpt));
+end
+
+figure
+for iExpt = 1:nExpt
+    subplot(3,6,iExpt)
+    plot(SST_group1_logical(mouseIndx(1,iExpt):mouseIndx(2,iExpt)),'k')
+    hold on
+    plot(SST_group2_logical(mouseIndx(1,iExpt):mouseIndx(2,iExpt)),'color',"#3BB806")
+    yticks([0,1])
+end
+
+x0=5;   
+y0=5;
+width=9;
+height=6;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('Responsive at 7.5, NOT 120 VS Responsive at 120, NOT 7.5')
+
+
+print('SST_group_distribution2', '-dpdf','-bestfit');

@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id = 49;
+day_id =51;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
@@ -508,6 +508,6 @@ title('');
 hold off
 ylim([-.02 .18])
 
-
-
+title(['Responsive cells (',num2str(sum(resp)), ' total, ', num2str(sum(resp_red)), ' red), out of ', num2str(size(data_tc,2)), ' total cells'])
+print(fullfile(fnout,'rawTCs.pdf'),'-dpdf','-bestfit')
 

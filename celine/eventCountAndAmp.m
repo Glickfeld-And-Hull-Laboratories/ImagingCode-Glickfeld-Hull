@@ -4,7 +4,7 @@ function [meanCounts, meanAmps] = eventCountAndAmp(dataIN,startSweep,stopSweep,c
 % amplitude
 
     % I'm allowing a maximum amplitude of 60 pAmp and a maximum rise
-    % slope of 0.05 nA/mS. Events above these are values are removed.
+    % slope of 0.1 nA/mS. Events above these are values are removed.
     ampMax = 175;
     ampMin = 15;
     slopeThreshold = 1000;
