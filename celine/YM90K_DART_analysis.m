@@ -32,7 +32,6 @@ fnout= fullfile(base,ds_name,d);
 mkdir(fnout);
 cd(fnout)
 clear d sess_title
-zscor_xnan = @(x) bsxfun(@rdivide, bsxfun(@minus, x, mean(x,'omitnan')), std(x, 'omitnan'));
 % concatenating data
 nCon = length(targetCon)
 
@@ -89,7 +88,7 @@ for iSess = 1:nSess
     mouse = ds_YM90K_DART(iSess).mouse;
     mice=[mice;mouse];
     thisDrug = ds_YM90K_DART(iSess).drug;
-    drug{iSess}=thisDrug;
+    drug{iSess}=repmat(thisDrug);
 
     if iSess > 1
         cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
@@ -1513,7 +1512,7 @@ errorbar(cons,conResp_redLow_avrg_stat{post},conResp_redLow_se_stat{post},'b');
 title(['Weak Corr',' n = ', num2str(length(redLow))])
 xlabel('contrast') 
 ylabel('dF/F, pref ori') 
-xlim([0 1])
+xlim([0 1.2])
 ylim([0 .15])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
@@ -1527,7 +1526,7 @@ title(['Strong Corr,' 'n = ', num2str(length(redHigh))])
 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
-xlim([0 1])
+xlim([0 1.2])
 ylim([0 .15])
 xticks([.25 .5 1])
 box off

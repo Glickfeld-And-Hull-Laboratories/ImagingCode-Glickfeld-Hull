@@ -6,13 +6,13 @@ ds = 'DART_V1_contrast_ori_Celine'; %name of data information sheet
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
-experimentFolder = 'SST_atropine';
+experimentFolder = 'SST_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 nd=2; %hardcoding the number of days for now
 
-mouse = expt(day_id).mouse;
+mouse = expt(day_id).m3ouse;
 dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
 
 prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
