@@ -117,5 +117,238 @@ xlim([0 3])
 ylim([0 0.3])
 print(fullfile(LG_base,'Adaptation','pairStimInteraction','pairStim_GratingImage_AvgSummary.pdf'),'-dpdf','-bestfit')
 
+allData = cat(2, stimOne_comp_all(:,1), allStim_comp_all);
+figure;
+ind_grating = intersect(find(allData(:,4)<3),find(allData(:,5)<3));
+subplot(1,3,1)
+errorbar(1:3, nanmean(allData(ind_grating,1:3),1), nanstd(allData(ind_grating,1:3),[],1)./sqrt(length(ind_grating)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(ind_grating,ind(1)), allData(ind_grating,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['Grating comp- n = ' num2str(nGratingCells)])
+xlim([0 4])
+ylim([0 0.3])
+ind_nat = intersect(find(allData(:,4)>2),find(allData(:,5)>2));
+subplot(1,3,2)
+errorbar(1:3, nanmean(allData(ind_nat,1:3),1), nanstd(allData(ind_nat,1:3),[],1)./sqrt(length(ind_nat)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(ind_nat,ind(1)), allData(ind_nat,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['Image comp- n = ' num2str(nImageCells)])
+xlim([0 4])
+ylim([0 0.3])
+cross_mix = [intersect(find(allData(:,4)<3),find(allData(:,5)>2)); intersect(find(allData(:,4)>2),find(allData(:,5)<3))];
+subplot(1,3,3)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['Cross comp- n = ' num2str(nCrossCells)])
+xlim([0 4])
+ylim([0 0.3])
+print(fullfile(LG_base,'Adaptation','pairStimInteraction','pairStim_GratingImage_AvgSummary.pdf'),'-dpdf','-bestfit')
+
+%separate by grating response
+figure;
+ind_grating = intersect(find(allData(:,4)==2),find(allData(:,5)==1));
+subplot(2,3,1)
+errorbar(1:3, nanmean(allData(ind_grating,1:3),1), nanstd(allData(ind_grating,1:3),[],1)./sqrt(length(ind_grating)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(ind_grating,ind(1)), allData(ind_grating,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['0.08 cpd grating comp- n = ' num2str(length(ind_grating))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==3),find(allData(:,5)==1));
+subplot(2,3,2)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['0.08 cpd comp deer- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==4),find(allData(:,5)==1));
+subplot(2,3,3)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['0.08 cpd comp flower- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+ind_grating = intersect(find(allData(:,4)==1),find(allData(:,5)==2));
+subplot(2,3,4)
+errorbar(1:3, nanmean(allData(ind_grating,1:3),1), nanstd(allData(ind_grating,1:3),[],1)./sqrt(length(ind_grating)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(ind_grating,ind(1)), allData(ind_grating,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['0.32 cpd grating comp- n = ' num2str(length(ind_grating))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==3),find(allData(:,5)==2));
+subplot(2,3,5)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['0.32 cpd comp deer- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==4),find(allData(:,5)==2));
+subplot(2,3,6)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['0.32 cpd comp flower- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+print(fullfile(LG_base,'Adaptation','pairStimInteraction','pairStim_GratingResponseSummary.pdf'),'-dpdf','-bestfit')
+
+%separate by image response
+figure;
+ind_img = intersect(find(allData(:,4)==4),find(allData(:,5)==3));
+subplot(2,3,1)
+errorbar(1:3, nanmean(allData(ind_img,1:3),1), nanstd(allData(ind_img,1:3),[],1)./sqrt(length(ind_img)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(ind_img,ind(1)), allData(ind_img,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['deer img comp- n = ' num2str(length(ind_img))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==1),find(allData(:,5)==3));
+subplot(2,3,2)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['deer comp 0.08 cpd- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==2),find(allData(:,5)==3));
+subplot(2,3,3)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['deer comp 0.32- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+ind_img = intersect(find(allData(:,4)==3),find(allData(:,5)==4));
+subplot(2,3,4)
+errorbar(1:3, nanmean(allData(ind_img,1:3),1), nanstd(allData(ind_img,1:3),[],1)./sqrt(length(ind_img)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(ind_img,ind(1)), allData(ind_img,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['flower comp deer- n = ' num2str(length(ind_img))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==1),find(allData(:,5)==4));
+subplot(2,3,5)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['flower comp 0.08 cpd- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+cross_mix = intersect(find(allData(:,4)==2),find(allData(:,5)==4));
+subplot(2,3,6)
+errorbar(1:3, nanmean(allData(cross_mix,1:3),1), nanstd(allData(cross_mix,1:3),[],1)./sqrt(length(cross_mix)),'-o')
+comp = [{[1 2]}; {[1 3]}; {[2 3]}];
+for i = 1:3
+    ind = comp{i};
+    [h(i) p(i)] = ttest(allData(cross_mix,ind(1)), allData(cross_mix,ind(2)));
+end
+hold on
+p = 2.*p;
+sigstar(comp(find(p<0.05)),p(find(p<0.05)));
+title(['flower comp 0.32 cpd- n = ' num2str(length(cross_mix))])
+xlim([0.5 3.5])
+ylim([0 0.3])
+axis square
+print(fullfile(LG_base,'Adaptation','pairStimInteraction','pairStim_ImageResponseSummary.pdf'),'-dpdf','-bestfit')
 
 save(fullfile(LG_base,'Adaptation','pairStimInteraction','pairStim_GratingImage_Summary.mat'),'allStim_comp_all','stimOne_comp_all','nGratingCells','nImageCells','nCrossCells','nCrossCellStimPairs','expt');

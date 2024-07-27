@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '240530';
+date = '240605';
 ImgFolder = {'002'};
-time = strvcat('0946');
-mouse = 'i1395';
+time = strvcat('1514');
+mouse = 'i1398';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -42,7 +42,7 @@ nep = floor(size(data,3)./10000);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
 
 %% Register data
-data_avg = mean(data(:,:,10001:10500),3);
+data_avg = mean(data(:,:,40001:40500),3);
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
@@ -209,8 +209,8 @@ tc_two_f = mean(tc_two(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-base_win = 21:23;
-resp_win = 28:30;
+base_win = 20:22;
+resp_win = 25:27;
 figure;
 subplot(2,1,1)
 shadedErrorBar(1:50,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
