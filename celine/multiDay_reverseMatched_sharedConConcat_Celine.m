@@ -38,12 +38,12 @@ prompt = 'EMX mice? 0- no, 1- yes';
             isEMX = input(prompt);
             switch isEMX
                 case 0
-                    pre=1; %baeline session, used as reference, is in the 1st position
-                    post=2;
+                    pre=2; %baeline session, used as reference, is in the 1st position
+                    post=1;
                     "baseline used as reference"
                 case 1
-                  pre=2;
-                  post=1; %post-DART session, used as reference, is in the 1st position  
+                  pre=1;
+                  post=2; %post-DART session, used as reference, is in the 1st position  
                   "post-DART used as reference"
             end
 clear x prompt
