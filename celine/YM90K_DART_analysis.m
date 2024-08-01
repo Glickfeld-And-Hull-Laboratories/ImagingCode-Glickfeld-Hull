@@ -244,14 +244,37 @@ green_all = intersect(green_all, haveRunning_green{3});
 red_all = intersect(haveRunning_red{1},haveRunning_red{2});
 red_all = intersect(red_all, haveRunning_red{3});
 
-%find how many haveRunning red cells exist for each mouse
+%find cells that have pupil data on both days
+have_LARGE_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
+have_LARGE_post = ~isnan(pref_responses_stat_largePupil_concat{post});
+
+have_SMALL_pre = ~isnan(pref_responses_stat_smallPupil_concat{pre});
+have_SMALL_post = ~isnan(pref_responses_stat_smallPupil_concat{post});
+
+have_bothPupil=cell(1,3);
+for iCon =1:nCon
+    have_HI_both= find(have_LARGE_pre(:,iCon).* have_LARGE_post(:,iCon));
+    have_LOW_both=find(have_SMALL_pre(:,iCon).* have_SMALL_post(:,iCon));
+    have_bothPupil{iCon}=intersect(have_HI_both,have_LOW_both);
+end
+ 
+clear have_LARGE_pre have_LARGE_post have_SMALL_pre have_SMALL_post have_HI_both have_LOW_both
+
+have_allPupil = intersect(have_bothPupil{1},have_bothPupil{2});
+have_allPupil = intersect(have_allPupil, have_bothPupil{3});
+
+have_allPupil_green = intersect(have_allPupil, green_ind_concat);
+have_allPupil_red = intersect(have_allPupil, red_ind_concat);
+
+%find how many total, running, and pupil cells exist for each mouse
 cellCountsRed = nan(nSess,nCon);
 mouseNames=[];
 for iMouse = 1:nSess
-    for iCon = 1:nCon
-        cellCountsRed(iMouse, iCon,1)=length(intersect(red_all,(mouseInds{iMouse})));
+    
+    cellCountsRed(iMouse, 1,1)=length(intersect(red_ind_concat,(mouseInds{iMouse})));
+    cellCountsRed(iMouse, 2,1)=length(intersect(red_all,(mouseInds{iMouse})));
+    cellCountsRed(iMouse, 3,1)=length(intersect(have_allPupil_red,(mouseInds{iMouse})));
         
-    end
     mouseNames=[mouseNames, string(mice(iMouse,:))]
 end
 clear  iMouse
@@ -260,10 +283,11 @@ clear  iMouse
 cellCountsGreen = nan(nSess,nCon);
 mouseNames=[];
 for iMouse = 1:nSess
-    for iCon = 1:nCon
-        cellCountsGreen(iMouse, iCon,1)=length(intersect(green_ind_concat,(mouseInds{iMouse})));
+    
+    cellCountsGreen(iMouse, 1,1)=length(intersect(green_ind_concat,(mouseInds{iMouse})));
+    cellCountsGreen(iMouse, 2,1)=length(intersect(green_all,(mouseInds{iMouse})));
+    cellCountsGreen(iMouse, 3,1)=length(intersect(have_allPupil_green,(mouseInds{iMouse})));
         
-    end
     mouseNames=[mouseNames, string(mice(iMouse,:))]
 end
 
@@ -282,24 +306,6 @@ end
 clear  iMouse
 
 
-%find cells that have running data on both days
-have_LARGE_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
-have_LARGE_post = ~isnan(pref_responses_stat_largePupil_concat{post});
-
-have_SMALL_pre = ~isnan(pref_responses_stat_smallPupil_concat{pre});
-have_SMALL_post = ~isnan(pref_responses_stat_smallPupil_concat{post});
-
-have_bothPupil=cell(1,3);
-for iCon =1:nCon
-    have_HI_both= find(have_LARGE_pre(:,iCon).* have_LARGE_post(:,iCon));
-    have_LOW_both=find(have_SMALL_pre(:,iCon).* have_SMALL_post(:,iCon));
-    have_bothPupil{iCon}=intersect(have_HI_both,have_LOW_both);
-end
- 
-clear have_LARGE_pre have_LARGE_post have_SMALL_pre have_SMALL_post have_HI_both have_LOW_both
-
-have_allPupil = intersect(have_bothPupil{1},have_bothPupil{2});
-have_allPupil = intersect(have_allPupil, have_bothPupil{3});
 
 % make dfof summary table for statistics
 mouseID=[];
@@ -551,11 +557,11 @@ table(contrasts,sst_pvalues,pyr_pvalues)
 %make a subset of normalized difference for the SST cells only, then make
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
-norm_diff_red = norm_diff(:,:,red_all);
+norm_diff_red = norm_diff(:,:,red_ind_concat);
 facil_red=norm_diff_red(:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:)<=-1;
 
-N=length(red_all);
+N=length(red_ind_concat);
 facil_table_stat = sum(facil_red(1,:,:),3)/N;
 supp_table_stat = sum(supp_red(1,:,:),3)/N;
 
@@ -640,11 +646,11 @@ x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [chi2stat1, chi2stat2, chi2stat3; p1*3, p2*3,p3*3]
 clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
 %% 3F pyramidal
-norm_diff_green = norm_diff(:,:,green_all);
+norm_diff_green = norm_diff(:,:,green_ind_concat);
 facil_green=norm_diff_green(:,:,:)>=1;
 supp_green=norm_diff_green(:,:,:)<=-1;
 
-N=length(green_all);
+N=length(green_ind_concat);
 facil_table_stat = sum(facil_green(1,:,:),3)/N;
 supp_table_stat = sum(supp_green(1,:,:),3)/N;
 
@@ -714,7 +720,7 @@ x1 = [repmat('a',N,1); repmat('b',N,1)];
 x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
 [tbl,chi2stat1,p1] = crosstab(x1,x2);
 
-%25 vs 10%
+%25 vs 100
 n1=facil_table_stat(1)*N;
 n2=facil_table_stat(3)*N;
 x1 = [repmat('a',N,1); repmat('b',N,1)];
@@ -2352,8 +2358,7 @@ tc_red_avrg_stat_small = cell(1,nd); %same for red
 tc_green_se_stat_small = cell(1,nd); %this will be the se across all green cells
 tc_red_se_stat_small = cell(1,nd); %same for red
 
-have_allPupil_green = intersect(have_allPupil, green_ind_concat);
-have_allPupil_red = intersect(have_allPupil, red_ind_concat);
+
 
     for id = 1:nd
         for iCon=1:nCon

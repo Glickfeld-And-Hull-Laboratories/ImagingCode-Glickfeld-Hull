@@ -85,7 +85,7 @@ cd(fnout)
 clear d sess_title
 
 zscor_xnan = @(x) bsxfun(@rdivide, bsxfun(@minus, x, mean(x,'omitnan')), std(x, 'omitnan'));
-%% concatenating data
+% concatenating data
 nCon = length(targetCon)
 
 mice={};
