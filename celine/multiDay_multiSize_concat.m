@@ -365,10 +365,7 @@ norm_diff(find(norm_diff == Inf))=NaN;
 
 %% plot fraction suppressed and facilitated
 
-%make a subset of normalized difference for the SST cells only, then make
-% find how many are facilitated or suppressed by more than 1 std from
-% baseline
-% norm_diff = nan(2,nCon,nSize,nKeep_total);
+
 norm_diff_red = norm_diff(:,:,:,red_ind_concat);
 facil_red=norm_diff_red(:,:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:,:)<=-1;

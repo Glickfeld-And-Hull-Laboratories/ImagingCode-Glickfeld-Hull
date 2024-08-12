@@ -441,7 +441,7 @@ set(gca,'XColor', 'none','YColor','none')
 
 
 end  
-print(fullfile(fnout,'Fig_2C.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_3C.pdf'),'-dpdf');
 
 %% Fig 3D - contrast response for SST and Pyr cells
 
@@ -475,7 +475,7 @@ errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
 %title(['SST',' n = ', num2str(length(red_ind_concat))])
 %xlabel('contrast') 
 ylabel('dF/F') 
-xlim([0 1])
+xlim([0 1.2])
 ylim([.0 .18])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
@@ -488,7 +488,7 @@ errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'b');
 %title(['Pyr',' n = ', num2str(length(green_ind_concat))])
 %xlabel('contrast') 
 set(gca, 'TickDir', 'out')
-xlim([0 1])
+xlim([0 1.2])
 ylim([.0 .18])
 xticks([.25 .5 1])
 box off
@@ -523,10 +523,10 @@ clear dfof_stat_table cell_type_col cellID dfof_stat
 
 % run the ANOVA
 w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
-rm_SST_stat = fitrm(SST_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+rm_SST_stat = fitrm(SST_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
 
-rm_Pyr_stat = fitrm(Pyr_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+rm_Pyr_stat = fitrm(Pyr_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
 
 
@@ -683,7 +683,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_3F_pyramidal.pdf'),'-dpdf')
 
 
-%% Figure 2E green statistics
+%% Figure 3E green statistics
 
 
 %compute chi squares for suppression
@@ -741,9 +741,9 @@ clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
 
 figure;
 subplot(1,2,1)
-boxchart(squeeze(norm_diff(1,:,red_all))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+boxchart(squeeze(norm_diff(1,:,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
-scatter([1, 2, 3],squeeze(norm_diff(1,:,red_all))',20,[.79 .25 .32], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(norm_diff(1,:,red_ind_concat))',20,[.26 .29 .33], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
@@ -755,9 +755,9 @@ set(gca,'TickDir','out')
 box off
 
 subplot(1,2,2)
-boxchart(squeeze(norm_diff(1,:,green_all))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+boxchart(squeeze(norm_diff(1,:,green_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
-scatter([1, 2, 3],squeeze(norm_diff(1,:,green_all))',20,[.26 .29 .33], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(norm_diff(1,:,green_ind_concat))',20,[.26 .29 .33], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
 ylim([-12 12])
@@ -773,14 +773,23 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 %must manually export this figure in order to have it vectorized because of
 %the large amount of data 
 
-% Extract data from the matrix
+% Extract data from the matrix for SST cells
 data = squeeze(norm_diff(1, :, red_ind_concat));  % Extract data from the specified dimension
 
 % Perform Levene's test
 [p, stats] = vartestn(data','TestType','LeveneAbsolute');
 
 % Display the p-value
-disp(['Levene''s test p-value: ', num2str(p)]);
+disp(['Levene''s test for SST cells, p-value: ', num2str(p)]);
+
+% Extract data from the matrix for SST cells
+data = squeeze(norm_diff(1, :, green_ind_concat));  % Extract data from the specified dimension
+
+% Perform Levene's test
+[p, stats] = vartestn(data','TestType','LeveneAbsolute');
+
+% Display the p-value
+disp(['Levene''s test for pyramidal cells, p-value: ', num2str(p)]);
 
 %F-test for equality of variances, asking whether the higher contrast has
 %greater variance than the lower contrast, for SST cells
@@ -1430,7 +1439,7 @@ effect_shuffled = meanEffectSize(squeeze(shuff_normDiff(2,2,:)),squeeze(shuff_no
 %% Find cohen's D for resampled control
 effect_resamp = meanEffectSize(squeeze(Resamp_normDiff(2,2,:)),squeeze(Resamp_normDiff(1,2,:)),Effect="cohen")
     
-%% Fig 3D - contrast response split by correlation value
+%% Fig 4C - contrast response split by correlation value
 
 conResp_redHigh_avrg_stat = cell(1,nd); %this will be the average across all redHigh cells - a single line
 conResp_redLow_avrg_stat = cell(1,nd); %same for redLow
@@ -1485,7 +1494,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_3C.pdf'),'-dpdf');
 
-%% Figure 3D statistics
+%% Figure 4C statistics
 %from the full dataframe, extract rows for stationary trials for weakly and
 %strongly correlated SST cells
 SST_low_stat_dfof = SST_stat_dfof(ismember(SST_stat_dfof.cellID,redLow),:);
@@ -1583,7 +1592,7 @@ height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Facil_supp_byR.pdf'),'-dpdf')
 
-%% Fig 4A - timecourses for running trials
+%% Fig 5A - timecourses for running trials
 
 tc_red_avrg_stat = cell(1,nd);
 tc_red_se_stat = cell(1,nd); 
@@ -1624,11 +1633,7 @@ shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon),tc_red_se_stat{pre}(:,iCon),'k');
 hold on
 shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon),tc_red_se_stat{post}(:,iCon),'b','transparent');
 hold on
-vline(.133)
-vline(.633)
-vline(1.1330)
-vline(1.6330)
-vline(2.133)
+
 if iCon==1
     title("Stationary")
     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
@@ -1643,11 +1648,7 @@ hold on
 shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon),tc_red_se_loc{post}(:,iCon),'b');
 ylim([-.02 .35]);
 hold on
-vline(.133)
-vline(.633)
-vline(1.1330)
-vline(1.6330)
-vline(2.133)
+
 if iCon==1
     title("Running")
 elseif iCon==3
@@ -1666,9 +1667,9 @@ set(gca,'XColor', 'none','YColor','none')
 
 
 end  
-print(fullfile(fnout,'Fig_4A.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
 
-%% Fig S4 A - related to Fig 4A - timecourses for Pyr cells running trials
+%% Fig 5C- timecourses for Pyr cells running trials
 tc_green_avrg_stat = cell(1,nd);
 tc_green_se_stat = cell(1,nd); 
 tc_green_avrg_loc = cell(1,nd);
@@ -1740,9 +1741,9 @@ set(gca,'XColor', 'none','YColor','none')
 
 
 end  
-print(fullfile(fnout,'Fig_S5A.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_5C.pdf'),'-dpdf');
 
-%% Figure 4B
+%% Figure 5B
 conResp_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(1,nd); %same for red
 conResp_green_se_stat = cell(1,nd); %this will be the se across all green cells
@@ -1815,7 +1816,7 @@ height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_4B.pdf'),'-dpdf');
-%% Fig 4B statistics
+%% Fig 5B statistics
 
 % prepare data for ANOVA
 all_cells = union(red_all,green_all);
@@ -1994,7 +1995,7 @@ b(2).FaceColor="#883367"
 xticklabels({'25','50','100'})
 ylim([0 .6])
 title('Facilitated')
-ylabel(["Fraction HTP+ cells"]) 
+ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast(%)"])
 set(gca,'TickDir','out')
 box off

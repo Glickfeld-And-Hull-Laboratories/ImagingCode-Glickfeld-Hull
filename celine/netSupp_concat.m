@@ -33,6 +33,7 @@ h_short_concat = [];
 mouseID=[];
 depth=[];
 exptNumber = [];
+noiseCorr_concat=[];
 
 for iExpt = 1:nExpt
     expt_num=expt_list(iExpt);
@@ -45,8 +46,7 @@ for iExpt = 1:nExpt
     load(fullfile(base, mouse, date,ImgFolder,'goodFitResp_summary_updated.mat'));
     beh_file = [beh_prefix mouse '-' date '-' time '.mat'];
     load(beh_file); %load the mworks behavioral file
-
-
+    
     TCs_stat=cat(4,TCs_stat,TC_byConditionStat);
     TCs_loc=cat(4,TCs_loc,TC_byConditionLoc);
     interNrns_concat=cat(2,interNrns_concat,interNrns);
@@ -54,6 +54,7 @@ for iExpt = 1:nExpt
     prefOri_concat=cat(2,prefOri_concat,keepPrefOri);
     h_concat = cat(1,h_concat,h_keep);
     h_short_concat = cat(1,h_short_concat,h_short_keep);
+    noiseCorr_concat=cat(2,noiseCorr_concat,noiseCorr);
     
     tCons = celleqel2mat_padded(input.tGratingContrast); %transforms cell array into matrix (1 x ntrials)
     Cons = unique(tCons);
@@ -2958,3 +2959,162 @@ sgtitle('Responsive at 7.5, NOT 120 VS Responsive at 120, NOT 7.5')
 
 
 print('SST_group_distribution2', '-dpdf','-bestfit');
+
+%% Noise correlation
+figure;histogram(noiseCorr_concat(1,interNrns));
+
+figure; cdfplot(noiseCorr_concat(1,interNrns));hold on; cdfplot(noiseCorr_concat(1,pyrCells)); xlabel('R');ylabel('cum dist');legend('SST','Pyr')
+
+figure;
+scatter(noiseCorr_concat(1,interNrns),squeeze(mean(squeeze(mean(resp_means(:,:,interNrns,1),1)),1)));
+xlabel('R')
+ylabel('Mean response, average over sizes and contrasts')
+
+figure;
+scatter(noiseCorr_concat(1,interNrns),squeeze(mean(squeeze(mean(peak_trough(:,:,interNrns,1),1)),1)));
+xlabel('R')
+ylabel('Peak response, average over sizes and contrasts')
+
+%% rise time, decay time, and FWHM for SST cells high and low R - median split
+SST_group1=intersect(interNrns, find(noiseCorr_concat(1,:)>=median(noiseCorr_concat(1,interNrns))));
+SST_group2=intersect(interNrns, find(noiseCorr_concat(1,:)<median(noiseCorr_concat(1,interNrns))));
+
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,SST_group1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group1,3:4),[],3,"omitnan"))./length(SST_group1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group1),[],3,"omitnan"))./length(SST_group1);
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,SST_group2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group2,3:4),[],3,"omitnan"))./length(SST_group2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group2),[],3,"omitnan"))./length(SST_group2);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'.','Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'.','Color',	"#3BB806");
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'.','Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'.','Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'.','Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'.','Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=2;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+
+sgtitle('Median split')
+
+%% rise time, decay time, and FWHM for SST cells high and low R - split at 0.5
+SST_group1=intersect(interNrns, find(noiseCorr_concat(1,:)>=0.5));
+SST_group2=intersect(interNrns, find(noiseCorr_concat(1,:)<0.5));
+
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,SST_group1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group1,3:4),[],3,"omitnan"))./length(SST_group1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group1),[],3,"omitnan"))./length(SST_group1);
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,SST_group2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group2,3:4),[],3,"omitnan"))./length(SST_group2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group2),[],3,"omitnan"))./length(SST_group2);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'.','Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'.','Color',	"#3BB806");
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'.','Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'.','Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'.','Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'.','Color',	"#3BB806");
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=2;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+
+sgtitle('0.5 split')
