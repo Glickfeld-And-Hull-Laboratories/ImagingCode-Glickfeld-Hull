@@ -1,17 +1,158 @@
-%% retOnly script by kevin 
-% modified from singleChannelTCScript.m
-% then modified from newScript.m
-% then modified from retOnly.m 180801
+%% Choose experiment
+clc; clear all; close all;
 
-% reads in Tuning Curves from single channel imaging data
+doRedChannel = 0;
 
-%% get path names
+mouse = 'i2707';
+date = '230808';
+runs = {'002'};
+time = {'1709'};
+nrun = length(runs);
+frame_rate = 15;
+ImgFolder = runs;
+nrun = length(ImgFolder);
+run_str = catRunName(cell2mat(ImgFolder), nrun);
+fprintf([mouse ' ' date '\n'])
+base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
+fnout = fullfile(base, '\Analysis\2P\', [date '_' mouse], [date '_' mouse '_' run_str]);
+
+
+%% Load temp data
+
+load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataTEMP.mat']))
+
+% load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
+% load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+%%
+
+% data_f = OFF
+% data_resp = ON
+
+b = 5;
+mask_cell = zeros(size(data_f,1), size(data_f,2));
+
+for i = 2:(size(data_f,1)-1)
+    for j = 2:(size(data_f,2)-1)
+        for is = 1:nStimCon
+            ind_stim = find(stimCon_all == stimCons(is));
+            for im = 1:nMaskCon
+                ind_mask = find(maskCon_all == maskCons(im));
+                if im>1 & is>1
+                    for ip = 1:nMaskPhas
+                        ind_p = find(maskPhas_all == maskPhas(ip));
+                        ind_all = intersect(ind_p,intersect(ind_stim,ind_mask));
+                        data_on = mean(reshape(data_f(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                        data_off = mean(reshape(data_resp(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                        [h(is,im,ip), p] = ttest(data_on,data_off,'Alpha',0.01);
+                    end
+                else
+                    ind_all = intersect(ind_stim,ind_mask);
+                    data_on = mean(reshape(data_f(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                    data_off = mean(reshape(data_resp(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                    [h(is,im,1), p] = ttest(data_on,data_off,'Alpha',0.01);
+                end
+            end
+        end
+        idx = find(h==1);
+        if idx>5
+            mask_cell(i,j) = 1;
+        end
+    end
+end
+
+
+figure; imagesc(mask_cell)
+print(fullfile(fnout, [date '_' mouse '_' run_str  '_bouton_mask_resp6.pdf']), '-dpdf')
+
+
+min_df = 0.1;
+sz = size(mask_cell);
+temp_data = ones(sz(1),sz(2));
+temp_max = squeeze(max(max(data_resp_dfof,[],1),[],2));
+[a, max_sort] = sort(temp_max,'descend');
+data_dfof_avg_sort = cat(3,data_dfof_max,data_dfof(:,:,max_sort));
+
+
+
+for ia = 1:size(data_dfof_avg_sort,3)
+    fprintf([ '\n img:' num2str(ia)])
+    temp_data_log = ~isnan(temp_data);
+    [x, y, v] = find(data_dfof_avg_sort(:,:,ia).*temp_data_log);
+    [a, ind_sort] = sort(v,'descend');
+    ind = find(a>min_df);
+    fprintf(['- ' num2str(length(ind)) ' pix: '])
+    for a = 1:length(ind)
+        i = x(ind_sort(a));
+        j = y(ind_sort(a));
+        if i>5 & j>5 & i<sz(1)-b & j<sz(2)-b
+            if ~isnan(temp_data(i-1:i+1,j-1:j+1))
+                all_pix = data_dfof_avg_sort(i-1:i+1,j-1:j+1,ia);
+                [max_val max_ind] = max(all_pix(:));
+                if max_ind == 5
+                    h = zeros(length(stimCons),length(maskCons),length(maskPhas));
+                    for is = 1:nStimCon
+                        ind_stim = find(stimCon_all == stimCons(is));
+                        for im = 1:nMaskCon
+                            ind_mask = find(maskCon_all == maskCons(im));
+                            if im>1 & is>1
+                                for ip = 1:nMaskPhas
+                                    ind_p = find(maskPhas_all == maskPhas(ip));
+                                    ind_all = intersect(ind_p,intersect(ind_stim,ind_mask));
+                                    data_on = mean(reshape(data_f(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                                    data_off = mean(reshape(data_resp(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                                    [h(is,im,ip), p] = ttest(data_on,data_off,'Alpha',0.01);
+%                                     [h(is,im,ip) p] = ttest(squeeze(mean(mean(data_resp_dfeduof(i-1:i+1,j-1:j+1,ind_all),1),2)),0,'tail','right','alpha',0.001./(size(data_dfof,3)));
+                                end
+                            else 
+                                ind_all = intersect(ind_stim,ind_mask);
+                                [h(is,im,1) p] = ttest(squeeze(mean(mean(data_resp_dfof(i-1:i+1,j-1:j+1,ind_all),1),2)),0,'tail','right','alpha',0.001./(size(data_dfof,3)));
+                            end
+                        end
+                    end
+                    if sum(h(:))==1
+                        mask_cell_hOne(i,j) = 1;
+                    end
+                    if sum(h(:))>2
+                        mask_cell(i,j) = 1;
+                        mask_all(i-1:i+1,j-1:j+1) = ones(3,3);
+                        temp_data(i-2:i+2,j-2:j+2) = NaN(5,5);
+                        fprintf('.')
+                    end
+                    mask_cell_bright(i,j) = 1;
+                end
+            end
+        end
+    end
+end      
+   
+
+
+
+
+
+%%
+% COPYING AND PASTING ORIGINAL SCRIPT
+% Changing it so that instead of choosing the brightest of 8 pixels, it
+% chooses the most significant of the 8 pixels...
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%
+%%
+% retOnly script by kevin 
+%get path names
 close all;clear all;clc;
 
-mouse = 'i2900';
-date = '221027';
+mouse = 'i2707';
+date = '230808';
 runs = {'002'};
-time = {'1317'};
+time = {'1709'};
 nrun = length(runs);
 frame_rate = 15;
 ImgFolder = runs;
@@ -67,23 +208,24 @@ fprintf([num2str(size(data,3)) ' total frames\n'])
 input = concatenateDataBlocks(temp);
 clear data_temp
 clear temp
-
 %% Choose register interval
-regIntv = 800; %3000 for axons
+regIntv = 3000; %3000 for axons
 nep = floor(size(data,3)./regIntv);
     % plot 500 frame means at each register interval
 [n, n2] = subplotn(nep);
 figure(1);clf;
-colormap(gray)
+% colormap(gray)
 for i = 1:nep
     subplot(n,n2,i);
     imagesc(mean(data(:,:,(1:500)+(i-1)*regIntv),3));
     title([num2str(i) ': ' num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]);
-    clim([600 1500])
+%     clim([600 1500])
+    clim([100 600])
 end
+movegui('center')
 %% Register data
 
-chooseInt = 10; %nep/2 % interval chosen for data_avg =[epoch of choice]-1
+chooseInt = 8; %nep/2 % interval chosen for data_avg =[epoch of choice]-1
 
 fprintf('\nBegin registering...\n')
     
@@ -110,7 +252,15 @@ fprintf('\nBegin registering...\n')
 %end
 clear data % depending on memory
 
+stop
+
+%% subsample data_reg to be a smaller window for analysis
+
+% data_reg = data_reg(200:300,550:650,:);
+
+%end subsample
 %% test stability
+
 % figure 2 shows the registered images to check the stability
 fprintf('\nExamine registered images for stability\n')
 figure(2);clf;
@@ -220,13 +370,16 @@ if nStimCon >= 2  || nMaskCon >=2
                     Stims(start,:) = [stimCons(is) maskCons(im) maskPhas(ip)];
                     start = start+1;
                 end
-            else
-                for ip = 1:nMaskPhas
+            elseif im>1 & is==1 
                 ind_all = intersect(ind_stim,ind_mask);
                 data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_all),3);
-                Stims(start,:) = [stimCons(is) maskCons(im) maskPhas(ip)];
+                Stims(start,:) = [stimCons(is) maskCons(im) 0];
                 start = start+1;
-                end
+            elseif im==1 & is>1 
+                ind_all = intersect(ind_stim,ind_mask);
+                data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_all),3);
+                Stims(start,:) = [stimCons(is) maskCons(im) 0];
+                start = start+1;
             end
         end
     end
@@ -249,14 +402,80 @@ save(fullfile(fnout, [date '_' mouse '_' run_str '_dataStim.mat']), 'cStimOn', '
 % find hotspots
 
 fprintf('\nBegin axon segmentation...')
-min_df = 0.1;
+min_df = 0.2; %CHANGED from 0.05 to 0
 b = 5;
+mask_cell_bright = zeros(sz(1), sz(2));
+mask_cell_sig = zeros(sz(1), sz(2));
 mask_cell = zeros(sz(1), sz(2));
 mask_all = zeros(sz(1), sz(2));
-temp_data = ones(sz(1),sz(2));
 temp_max = squeeze(max(max(data_dfof,[],1),[],2));
 [a, max_sort] = sort(temp_max,'descend');
 data_dfof_avg_sort = cat(3,data_dfof_max,data_dfof(:,:,max_sort));
+
+for ia = 1:size(data_dfof_avg_sort,3)
+    fprintf([ '\n img:' num2str(ia)])
+    [x, y, v] = find(data_dfof_avg_sort(:,:,ia));
+    [a, ind_sort] = sort(v,'descend');
+    ind = find(a>min_df);
+    fprintf(['- ' num2str(length(ind)) ' pix: '])
+    for a = 1:length(ind)
+        i = x(ind_sort(a));
+        j = y(ind_sort(a));
+        mask_cell_bright(i,j) = mask_cell_bright(i,j) + 1;
+    end
+end   
+
+for i = 1:size(mask_cell_bright,1)
+    for j = 1:size(mask_cell_bright,2)
+        if mask_cell_bright(i,j) <2
+            mask_cell_bright(i,j) = 0;
+        end
+    end
+end
+
+figure;
+imagesc(mask_cell_bright)
+
+
+for i = 2:(size(data_f,1)-1)
+    for j = 2:(size(data_f,2)-1)
+        pix = mask_cell_bright(i,j);
+        if pix>0
+            for is = 1:nStimCon
+                ind_stim = find(stimCon_all == stimCons(is));
+                for im = 1:nMaskCon
+                    ind_mask = find(maskCon_all == maskCons(im));
+                    if im>1 & is>1
+                        for ip = 1:nMaskPhas
+                            ind_p = find(maskPhas_all == maskPhas(ip));
+                            ind_all = intersect(ind_p,intersect(ind_stim,ind_mask));
+                            data_on = mean(reshape(data_f(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                            data_off = mean(reshape(data_resp(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                            [h(is,im,ip), p] = ttest(data_on,data_off,'Alpha',0.001./(size(data_dfof,3)));
+                        end
+                    else
+                        ind_all = intersect(ind_stim,ind_mask);
+                        data_on = mean(reshape(data_f(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                        data_off = mean(reshape(data_resp(i-1:i+1,j-1:j+1,ind_all),9,[]));
+                        [h(is,im,1), p] = ttest(data_on,data_off,'Alpha',0.001./(size(data_dfof,3)));
+                    end
+                end
+            end
+            idx = find(h==1);
+            if idx>1
+                mask_cell_sig(i,j) = 1;
+            else
+            end
+        else
+        end
+    end
+end
+figure;
+imagesc(mask_cell_sig)
+
+
+temp_data = mask_cell_sig;
+temp_data(temp_data==0) = NaN;
 
 for ia = 1:size(data_dfof_avg_sort,3)
     fprintf([ '\n img:' num2str(ia)])
@@ -269,41 +488,22 @@ for ia = 1:size(data_dfof_avg_sort,3)
         i = x(ind_sort(a));
         j = y(ind_sort(a));
         if i>5 & j>5 & i<sz(1)-b & j<sz(2)-b
-            if ~isnan(temp_data(i-1:i+1,j-1:j+1))
-                all_pix = data_dfof_avg_sort(i-1:i+1,j-1:j+1,ia);
-                [max_val max_ind] = max(all_pix(:));
-                if max_ind == 5
-                    h = zeros(length(stimCons),length(maskCons),length(maskPhas));
-                    for is = 1:nStimCon
-                        ind_stim = find(stimCon_all == stimCons(is));
-                        for im = 1:nMaskCon
-                            ind_mask = find(maskCon_all == maskCons(im));
-                            if im>1 & is>1
-                                for ip = 1:nMaskPhas
-                                    ind_p = find(maskPhas_all == maskPhas(ip));
-                                    ind_all = intersect(ind_p,intersect(ind_stim,ind_mask));
-                                    [h(is,im,ip) p] = ttest(squeeze(mean(mean(data_resp_dfof(i-1:i+1,j-1:j+1,ind_all),1),2)),0,'tail','right','alpha',0.001./(size(data_dfof,3)));
-                                end
-                            else 
-                                ind_all = intersect(ind_stim,ind_mask);
-                                [h(is,im,1) p] = ttest(squeeze(mean(mean(data_resp_dfof(i-1:i+1,j-1:j+1,ind_all),1),2)),0,'tail','right','alpha',0.001./(size(data_dfof,3)));
-                            end
-                        end
-                    end
-                    if sum(h(:))>2
-                        mask_cell(i,j) = 1;
-                        mask_all(i-1:i+1,j-1:j+1) = ones(3,3);
-                        temp_data(i-2:i+2,j-2:j+2) = NaN(5,5);
-                        fprintf('.')
-                    end
-                end
+            all_pix = data_dfof_avg_sort(i-1:i+1,j-1:j+1,ia);
+            [max_val max_ind] = max(all_pix(:));
+            if max_ind == 5
+                mask_cell(i,j) = 1;
+                mask_all(i-1:i+1,j-1:j+1) = ones(3,3);
+                temp_data(i-2:i+2,j-2:j+2) = NaN(5,5);
+                fprintf('.')
             end
         end
     end
 end      
-   
+
 figure; imagesc(mask_cell)
 print(fullfile(fnout, [date '_' mouse '_' run_str  '_bouton_mask.pdf']), '-dpdf')
+
+
 shadeimg = imShade(data_dfof_max,mask_cell); figure; imagesc(shadeimg)
 
 save(fullfile(fnout, [date '_' mouse '_' run_str '_mask_cell.mat']), 'mask_cell', 'mask_all')

@@ -1,7 +1,7 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 
 dataStructLabels = {'contrastxori'};
 
@@ -12,8 +12,8 @@ eval(ds);
 % 178 190 294 %good quality SOM YM90K
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
-experimentFolder = 'SST_atropine';
-sess_list = [4 8 12];%enter all the sessions you want to concatenate
+experimentFolder = 'SST_YM90K';
+sess_list = [138 142 163 171 178 190 294 307 333 323 303 311 319 329 355 359];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -38,12 +38,12 @@ prompt = 'EMX mice? 0- no, 1- yes';
             isEMX = input(prompt);
             switch isEMX
                 case 0
-                    pre=1; %baeline session, used as reference, is in the 1st position
-                    post=2;
+                    pre=2; %baeline session, used as reference, is in the 1st position
+                    post=1;
                     "baseline used as reference"
                 case 1
-                  pre=2;
-                  post=1; %post-DART session, used as reference, is in the 1st position  
+                  pre=1;
+                  post=2; %post-DART session, used as reference, is in the 1st position  
                   "post-DART used as reference"
             end
 clear x prompt
@@ -117,13 +117,14 @@ norm_dir_resp_loc_concat = cell(1,nd);
 pref_nonPref_stat_concat=cell(1,nd);
 pref_nonPref_loc_concat=cell(1,nd);
 pref_dir_concat=cell(1,nd);
+noiseCorr_OG_concat = cell(1,nd);
 noiseCorr_concat = cell(1,nd);
 noiseCorrContrast_concat = cell(4,nCon,nd); 
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
 dataTableConat=[];
-drug=cell(1,nSess);
+drug=[];
 noiseCorr_concat = cell(4,nd);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
@@ -133,8 +134,8 @@ for iSess = 1:nSess
     day_id = sess_list(iSess)
     mouse = expt(day_id).mouse;
     mice=[mice;mouse];
-    thisDrug = expt(day_id).drug;
-    drug{iSess}=thisDrug;
+
+
     % 
     % if iSess > 1
     %     cellID_adjustment=max(temp_table.cell_ID_unique); %this should get saved until the next loop;
@@ -163,7 +164,7 @@ for iSess = 1:nSess
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
-
+    
 %    tells the contrast, direction and orientation for each trial each day
     tCon_match = cell(1,nd);
     tDir_match = cell(1,nd);
@@ -219,12 +220,14 @@ for iSess = 1:nSess
         % pref_nonPref_stat_concat{id}=cat(1,pref_nonPref_stat_concat{id},pref_nonPref_stat{id});
         % pref_nonPref_loc_concat{id}=cat(1,pref_nonPref_loc_concat{id},pref_nonPref_loc{id});
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
+
         for i=1:4
             noiseCorr_concat{i,id}=cat(2,noiseCorr_concat{i,id},noiseCorr{i,id});
             for iCon = 1:nCon
                 noiseCorrContrast_concat{i,iCon,id}=cat(2,noiseCorrContrast_concat{i,iCon,id},noiseCorrContrast{i,iCon,id});
             end
         end
+        noiseCorr_OG_concat{id}=cat(2,noiseCorr_OG_concat{id},noiseCorr_OG{id});
        sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
@@ -233,7 +236,13 @@ for iSess = 1:nSess
         end
         clear meanF i
     end
-  
+
+   if contains(expt(day_id).drug,'PEG') 
+        thisDrug = 0;
+   else
+        thisDrug = 1;
+    end
+   drug=vertcat(drug, repmat(thisDrug,nKeep,1));
    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
 
@@ -258,14 +267,14 @@ mean(RIx_concat{post})
 
 
 
-% %%
-% % loop to add "b" to the end of mice IDs where I have more than one session
-% % with that mouse
-% %set z to be the order position of first session that is at the earlier timepoint
-% z = 12;
-% for iMouse = z:nSess
-%     mice{iMouse}=[mice{iMouse},'b'];
-% end
+%
+% loop to add "b" to the end of mice IDs where I have more than one session
+% with that mouse
+%set z to be the order position of first session that is at the earlier timepoint
+z = 11;
+for iMouse = z:nSess
+    mice{iMouse}=[mice{iMouse},'b'];
+end
 
 
 
@@ -2694,7 +2703,7 @@ cell_type_col=repelem(red_concat,1,6)';
 
 behStateCol = repelem(["stat" "loc"],1,3*nKeep_total)';
 
-drug="PEG"; %%need to get drug coded correctly
+%drug="PEG"; %%need to get drug coded correctly
 drugCol=repmat(drug,size(mouseIDcol));
 
 DART_effect_output = table(mouseIDcol,cellID_col,cell_type_col,consCol2,behStateCol,drugCol,norm_diff_col3,raw_diff_col3, ...
@@ -4079,9 +4088,6 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,['pupil_contrast_resposnse.pdf']),'-dpdf');
 
-
-%% anova on contrast response
-DARTeffect = pref_responses_stat_concat{pre}(red_ind_concat,:)-pref_responses_stat_concat{post}(red_ind_concat,:);
 
 
 %% time courses averaging stationary and running
