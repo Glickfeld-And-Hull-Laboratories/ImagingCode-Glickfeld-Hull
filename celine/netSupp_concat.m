@@ -168,6 +168,7 @@ for iSize = 1:nSizes %loop through the sizes
            t2=t(1):0.01:t(123); % to get temporal values with the interpolated data
            stimStart_interp=find(t2==0)+5; %don't look in the first 50 ms, as this is too early to be a true peak
            %find(t2==.2)
+           endSearch=find(t2==0)+30;
 
            peak=max(traceInterp(stimStart_interp:stimStart_interp+20)); %find the max value within a set window
            %currently set to 61 (stim onset) through 67, 200ms after stim
@@ -198,7 +199,8 @@ for iSize = 1:nSizes %loop through the sizes
                        peak_time(iSize,iCon, iCell,3) = t2(half_peak_temp);
                         %find the frame of the equivalent point on the decay
                        if min(traceInterp(peak_time_temp:length(t2)))<halfPeak
-                           half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
+                           half_dacay_frame=find(traceInterp(peak_time_temp:endSearch)>halfPeak,1,'last'); 
+                           %half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
                            %look for the half decay anywhere after the peak, until the end of the trace
                            half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
                            peak_time(iSize,iCon, iCell,4) = t2(half_dacay_temp);
@@ -268,10 +270,10 @@ figure;
         temp_se2 = std(TCs_stat(:,iSize,iCon,centerIN),[],4,"omitnan")/sqrt(length(centerIN));
 
         subplot(n,n2,x)
-        vline(temp_halfPeak,'g')
-        vline(temp_peak,'b')
-        vline(temp_trough,'k')
-        vline(temp_halfDecay,'r')
+        vline(temp_halfPeak,'b')
+        %vline(temp_peak,'b')
+        %vline(temp_trough,'k')
+        vline(temp_halfDecay,'m')
         hold on
         shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
         hold on
@@ -541,8 +543,8 @@ print('Stationary_center_matrix.pdf', '-dpdf');
 %% centered cells running trials 
 %find out how many cells have running data in each condition
 locResp = squeeze(mean(TCs_loc(61:68,:,:,:),1));
-locCountPyr = sum(~isnan(locResp(:,:,centerPyr)),3)
-locCountSST = sum(~isnan(locResp(:,:,centerIN)),3)
+locCountPyr = sum(~isnan(locResp(:,:,pyrCells)),3)
+locCountSST = sum(~isnan(locResp(:,:,interNrns)),3)
 %% plot running
 
 
@@ -1401,11 +1403,11 @@ figure;
 for iCon=3:4
 
 subplot(1,2,iCon-2)
-temp_mean1 = mean(fwhm(:,iCon,centerPyr),3,"omitnan");
-temp_se1 = std(fwhm(:,iCon,centerPyr),[],3,"omitnan")/sqrt(length(centerPyr));
+temp_mean1 = mean(fwhm(:,iCon,pyrCells),3,"omitnan");
+temp_se1 = std(fwhm(:,iCon,pyrCells),[],3,"omitnan")/sqrt(length(pyrCells));
 
-temp_mean2 = mean(fwhm(:,iCon,centerIN),3,"omitnan");
-temp_se2 = std(fwhm(:,iCon,centerIN),[],3,"omitnan")/sqrt(length(centerIN));
+temp_mean2 = mean(fwhm(:,iCon,interNrns),3,"omitnan");
+temp_se2 = std(fwhm(:,iCon,interNrns),[],3,"omitnan")/sqrt(length(interNrns));
 
 errorbar(Sizes,temp_mean1,temp_se1);
 hold on
@@ -1417,7 +1419,7 @@ set(gca, 'TickDir', 'out')
 xticks(Sizes)
 xlabel('Size')
 ylabel('seconds')
-ylim([0.06 .2])
+%ylim([0.06 .2])
 
 end
 sgtitle("FWHM by size, stationary")
@@ -1568,7 +1570,8 @@ for iSize = 1:nSizes %loop through the sizes
                        peak_time_loc(iSize,iCon, iCell,3) = t2(half_peak_temp);
                         %find the frame of the equivalent point on the decay
                        if min(traceInterp(peak_time_temp:length(t2)))<halfPeak
-                           half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
+                  
+                           half_dacay_frame=find(traceInterp(peak_time_temp:endSearch)>halfPeak,1,'last'); 
                            %look for the half decay anywhere after the peak, until the end of the trace
                            half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
                            peak_time_loc(iSize,iCon, iCell,4) = t2(half_dacay_temp);
@@ -1649,10 +1652,10 @@ figure;
         hold on
         ylim([-.03 .14])
         xlim([-.25 .5])
-        vline(temp_halfPeak,'g')
-        vline(temp_peak,'b')
-        vline(temp_trough,'k')
-        vline(temp_halfDecay,'r')
+        vline(temp_halfPeak,'b')
+        % vline(temp_peak,'b')
+        % vline(temp_trough,'k')
+        vline(temp_halfDecay,'m')
         box off
         set(gca, 'TickDir', 'out')
         hline(0)
@@ -1780,11 +1783,11 @@ figure;
 for iCon=3:4
 
 subplot(1,2,iCon-2)
-temp_mean1 = mean(fwhm_loc(:,iCon,centerPyr),3,"omitnan");
-temp_se1 = std(fwhm_loc(:,iCon,centerPyr),[],3,"omitnan")/sqrt(length(centerPyr));
+temp_mean1 = mean(fwhm_loc(:,iCon,pyrCells),3,"omitnan");
+temp_se1 = std(fwhm_loc(:,iCon,pyrCells),[],3,"omitnan")/sqrt(length(pyrCells));
 
-temp_mean2 = mean(fwhm_loc(:,iCon,centerIN),3,"omitnan");
-temp_se2 = std(fwhm_loc(:,iCon,centerIN),[],3,"omitnan")/sqrt(length(centerIN));
+temp_mean2 = mean(fwhm_loc(:,iCon,interNrns),3,"omitnan");
+temp_se2 = std(fwhm_loc(:,iCon,interNrns),[],3,"omitnan")/sqrt(length(interNrns));
 
 errorbar(Sizes,temp_mean1,temp_se1);
 hold on
@@ -1796,7 +1799,7 @@ set(gca, 'TickDir', 'out')
 xticks(Sizes)
 xlabel('Size')
 ylabel('seconds')
-ylim([0.06 .25])
+%ylim([0.06 .25])
 
 end
 sgtitle("FWHM by size, running")
@@ -2370,9 +2373,9 @@ end
 
 figure;
 subplot(1,3,1)
-errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f",'LineStyle','none','Marker','o');
 hold on
-errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k','LineStyle','none','Marker','o');
 %ylim([0,.11])
 xticks(Sizes)
 xlabel('Size')
@@ -2382,9 +2385,9 @@ set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,3,2)
-errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f",'LineStyle','none','Marker','o');
 hold on
-errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k','LineStyle','none','Marker','o');
 %ylim([0,.28])
 xticks(Sizes)
 xlabel('Size')
@@ -2393,9 +2396,9 @@ set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,3,3)
-errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f",'LineStyle','none','Marker','o');
 hold on
-errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k','LineStyle','none','Marker','o');
 %ylim([0,.28])
 xticks(Sizes)
 xlabel('Size')
@@ -2412,7 +2415,8 @@ height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print('dynamics_respAtEach', '-dpdf');
-%% size tuning for only responsive cells are each condition
+%%
+% size tuning for only responsive cells are each condition
 figure;
 subplot(1,2,1)
 for iCon = 1:nCons
@@ -2986,16 +2990,21 @@ temp_se2 = nan(nCons,nSizes,3);
 
 for iCon = 1:nCons
     for iSize = 1:nSizes %loop through the sizes
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        theseGroup1=intersect(SST_group1,responsiveTheseTrials);
+        theseGroup2=intersect(SST_group2,responsiveTheseTrials);
 
-        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,SST_group1,3:4),3,"omitnan");
-        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group1,3:4),[],3,"omitnan"))./length(SST_group1);
-        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group1),3,"omitnan");
-        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group1),[],3,"omitnan"))./length(SST_group1);
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,theseGroup1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup1,3:4),[],3,"omitnan"))./length(theseGroup1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup1),[],3,"omitnan"))./length(theseGroup1);
 
-        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,SST_group2,3:4),3,"omitnan");
-        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group2,3:4),[],3,"omitnan"))./length(SST_group2);
-        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group2),3,"omitnan");
-        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group2),[],3,"omitnan"))./length(SST_group2);
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,theseGroup2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup2,3:4),[],3,"omitnan"))./length(theseGroup2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup2),[],3,"omitnan"))./length(theseGroup2);
 
 
     end
@@ -3003,9 +3012,9 @@ end
 
 figure;
 subplot(1,3,1)
-errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'.','Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
 hold on
-errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'.','Color',	"#3BB806");
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
 %ylim([0,.11])
 xticks(Sizes)
 xlabel('Size')
@@ -3015,9 +3024,9 @@ set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,3,2)
-errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'.','Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
 hold on
-errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'.','Color',	"#3BB806");
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
 %ylim([0,.28])
 xticks(Sizes)
 xlabel('Size')
@@ -3026,9 +3035,9 @@ set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,3,3)
-errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'.','Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
 hold on
-errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'.','Color',	"#3BB806");
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
 %ylim([0,.28])
 xticks(Sizes)
 xlabel('Size')
@@ -3041,12 +3050,27 @@ box off
 x0=5;
 y0=5;
 width=7;
-height=2;
+height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
-
 
 sgtitle('Median split')
 
+
+responsiveTheseTrials = find(h_concat(:,5,4));
+theseGroup1=intersect(SST_group1,responsiveTheseTrials);
+theseGroup2=intersect(SST_group2,responsiveTheseTrials);
+
+%plot timecourses for largest size / highest contrast for the two groups
+temp_mean1 = mean(TCs_stat(55:90,iSize,iCon,theseGroup1),4,"omitnan");
+temp_se1 = std(TCs_stat(55:90,iSize,iCon,theseGroup1),[],4,"omitnan")/sqrt(length(theseGroup1));
+
+temp_mean2 = mean(TCs_stat(55:90,iSize,iCon,theseGroup2),4,"omitnan");
+temp_se2 = std(TCs_stat(55:90,iSize,iCon,theseGroup2),[],4,"omitnan")/sqrt(length(theseGroup2));
+
+figure
+shadedErrorBar(t(55:90),temp_mean1,temp_se1,'k');
+hold on
+shadedErrorBar(t(55:90),temp_mean2,temp_se2,'g');
 %% rise time, decay time, and FWHM for SST cells high and low R - split at 0.5
 SST_group1=intersect(interNrns, find(noiseCorr_concat(1,:)>=0.5));
 SST_group2=intersect(interNrns, find(noiseCorr_concat(1,:)<0.5));
@@ -3058,16 +3082,21 @@ temp_se2 = nan(nCons,nSizes,3);
 
 for iCon = 1:nCons
     for iSize = 1:nSizes %loop through the sizes
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        theseGroup1=intersect(SST_group1,responsiveTheseTrials);
+        theseGroup2=intersect(SST_group2,responsiveTheseTrials);
 
-        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,SST_group1,3:4),3,"omitnan");
-        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group1,3:4),[],3,"omitnan"))./length(SST_group1);
-        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group1),3,"omitnan");
-        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group1),[],3,"omitnan"))./length(SST_group1);
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,theseGroup1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup1,3:4),[],3,"omitnan"))./length(theseGroup1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup1),[],3,"omitnan"))./length(theseGroup1);
 
-        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,SST_group2,3:4),3,"omitnan");
-        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,SST_group2,3:4),[],3,"omitnan"))./length(SST_group2);
-        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,SST_group2),3,"omitnan");
-        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,SST_group2),[],3,"omitnan"))./length(SST_group2);
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,theseGroup2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup2,3:4),[],3,"omitnan"))./length(theseGroup2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup2),[],3,"omitnan"))./length(theseGroup2);
 
 
     end
@@ -3075,9 +3104,9 @@ end
 
 figure;
 subplot(1,3,1)
-errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'.','Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
 hold on
-errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'.','Color',	"#3BB806");
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
 %ylim([0,.11])
 xticks(Sizes)
 xlabel('Size')
@@ -3087,9 +3116,9 @@ set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,3,2)
-errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'.','Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
 hold on
-errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'.','Color',	"#3BB806");
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
 %ylim([0,.28])
 xticks(Sizes)
 xlabel('Size')
@@ -3098,9 +3127,9 @@ set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,3,3)
-errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'.','Color',	"#4e701f");
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
 hold on
-errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'.','Color',	"#3BB806");
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
 %ylim([0,.28])
 xticks(Sizes)
 xlabel('Size')
@@ -3113,8 +3142,582 @@ box off
 x0=5;
 y0=5;
 width=7;
-height=2;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+sgtitle('0.5 split')
+
+%% rise time, decay time, and FWHM for SST cells high and low R - split at 0
+SST_group1=intersect(interNrns, find(noiseCorr_concat(1,:)>=0));
+length(SST_group1)
+SST_group2=intersect(interNrns, find(noiseCorr_concat(1,:)<0));
+length(SST_group2)
+
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        theseGroup1=intersect(SST_group1,responsiveTheseTrials);
+        theseGroup2=intersect(SST_group2,responsiveTheseTrials);
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,theseGroup1,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup1,3:4),[],3,"omitnan"))./length(theseGroup1);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup1),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup1),[],3,"omitnan"))./length(theseGroup1);
+
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,theseGroup2,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseGroup2,3:4),[],3,"omitnan"))./length(theseGroup2);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseGroup2),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseGroup2),[],3,"omitnan"))./length(theseGroup2);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('+/- split')
+
+%% size tuning for SST cells , split by median correlation
+SST_high=intersect(interNrns, find(noiseCorr_concat(1,:)>=median(noiseCorr_concat(1,interNrns))));
+SST_low=intersect(interNrns, find(noiseCorr_concat(1,:)<median(noiseCorr_concat(1,interNrns))));
+
+
+figure;
+subplot(1,2,1)
+for iCon = 1:nCons
+    sizeMeans=[];
+    sizeSE=[];
+    for iSize = 1:nSizes
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        %these_SST_high=intersect(SST_high,responsiveTheseTrials);
+        these_SST_high=SST_high;
+
+        temp_mean = mean(resp_means(iSize,iCon,these_SST_high,1),3,"omitnan");
+        temp_se = std(resp_means(iSize,iCon,these_SST_high,1),[],3,"omitnan")/sqrt(length(these_SST_high));
+
+
+        sizeMeans=[sizeMeans,temp_mean];
+        sizeSE=[sizeSE,temp_se];
+    end
+    errorbar(Sizes,sizeMeans,sizeSE);
+    hold on
+end
+
+lgd=legend(string(Cons))
+title(lgd,'Contrast')
+title("Size tuning by contrast, high corr SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f mean')
+ylim([-.005 .03])
+
+hold off
+
+
+subplot(1,2,2)
+for iCon = 1:nCons
+    sizeMeans=[];
+    sizeSE=[];
+    for iSize = 1:nSizes
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        %these_SST_low=intersect(SST_low,responsiveTheseTrials);
+        these_SST_low=SST_low;
+        
+        temp_mean = mean(resp_means(iSize,iCon,these_SST_low,1),3,"omitnan");
+        temp_se = std(resp_means(iSize,iCon,these_SST_low,1),[],3,"omitnan")/sqrt(length(these_SST_low));
+
+        sizeMeans=[sizeMeans,temp_mean];
+        sizeSE=[sizeSE,temp_se];
+    end
+    errorbar(Sizes,sizeMeans,sizeSE);
+    hold on
+end
+
+
+lgd=legend(string(Cons))
+title(lgd,'Contrast')
+title("Size tuning by contrast, low corr SST")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Sizes)
+xlabel('Size')
+ylabel('df/f mean')
+ylim([-.005 .03])
+
+
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+%%
+%% rise time, decay time, and FWHM for cells responsive at each size, 80% contrast
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+        
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,thesePyr,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,thesePyr,3:4),[],3,"omitnan"))./length(thesePyr);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,thesePyr),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,thesePyr),[],3,"omitnan"))./length(thesePyr);
+
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,theseIN,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseIN,3:4),[],3,"omitnan"))./length(theseIN);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseIN),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseIN),[],3,"omitnan"))./length(theseIN);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f",'LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k','LineStyle','none','Marker','o');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f",'LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f",'LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_respAtEach', '-dpdf');
+%% rise time, decay time, and FWHM for cells responsive at each size, 80% contrast
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,pyrCells,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,pyrCells,3:4),[],3,"omitnan"))./length(pyrCells);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,pyrCells),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,pyrCells),[],3,"omitnan"))./length(pyrCells);
+
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,interNrns,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,interNrns,3:4),[],3,"omitnan"))./length(interNrns);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,interNrns),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,interNrns),[],3,"omitnan"))./length(interNrns);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_all', '-dpdf');
+
+%% rise time, decay time, and FWHM for cells responsive at each size, 80% contrast
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+        
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time_loc(iSize,iCon,thesePyr,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time_loc(iSize,iCon,thesePyr,3:4),[],3,"omitnan"))./length(thesePyr);
+        temp_mean1(iCon,iSize,3)=mean(fwhm_loc(iSize,iCon,thesePyr),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm_loc(iSize,iCon,thesePyr),[],3,"omitnan"))./length(thesePyr);
+
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time_loc(iSize,iCon,theseIN,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time_loc(iSize,iCon,theseIN,3:4),[],3,"omitnan"))./length(theseIN);
+        temp_mean2(iCon,iSize,3)=mean(fwhm_loc(iSize,iCon,theseIN),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm_loc(iSize,iCon,theseIN),[],3,"omitnan"))./length(theseIN);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f",'LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k','LineStyle','none','Marker','o');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f",'LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f",'LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_respAtEach_running', '-dpdf');
+%% rise time, decay time, and FWHM for allcells, 80% contrast
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time_loc(iSize,iCon,pyrCells,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time_loc(iSize,iCon,pyrCells,3:4),[],3,"omitnan"))./length(pyrCells);
+        temp_mean1(iCon,iSize,3)=mean(fwhm_loc(iSize,iCon,pyrCells),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm_loc(iSize,iCon,pyrCells),[],3,"omitnan"))./length(pyrCells);
+
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time_loc(iSize,iCon,interNrns,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time_loc(iSize,iCon,interNrns,3:4),[],3,"omitnan"))./length(interNrns);
+        temp_mean2(iCon,iSize,3)=mean(fwhm_loc(iSize,iCon,interNrns),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm_loc(iSize,iCon,interNrns),[],3,"omitnan"))./length(interNrns);
+
+
+    end
+end
+
+figure;
+subplot(1,3,1)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,2)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(1,3,3)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f");
+hold on
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_all_running', '-dpdf');
+
+%% responsive at each stim condition, matched across stat and running
+% match the responsive cells across running and stationary by converting
+% the h (responsivity) value for any cells that don't have running into a
+% nan. This way only cells that have running data will be considered when
+% finding responsive cells. Responsivity is determined pooling running and
+% stationary trials.
+locResp_permut=permute(locResp, [3, 1, 2]);
+h_running = h_concat;
+h_running(isnan(locResp_permut))=NaN;
+
+%% rise time, decay time, and FWHM for cells responsive at each size, 80% contrast
+temp_mean1 = nan(nCons,nSizes,3);
+temp_se1 = nan(nCons,nSizes,3);
+temp_mean2 = nan(nCons,nSizes,3);
+temp_se2 = nan(nCons,nSizes,3);
+
+for iCon = 1:nCons
+    for iSize = 1:nSizes %loop through the sizes
+        
+        
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
+
+        temp_mean1(iCon,iSize,1:2) = mean(peak_time(iSize,iCon,thesePyr,3:4),3,"omitnan");
+        temp_se1(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,thesePyr,3:4),[],3,"omitnan"))./length(thesePyr);
+        temp_mean1(iCon,iSize,3)=mean(fwhm(iSize,iCon,thesePyr),3,"omitnan");
+        temp_se1(iCon,iSize,3)=(std(fwhm(iSize,iCon,thesePyr),[],3,"omitnan"))./length(thesePyr);
+
+        temp_mean2(iCon,iSize,1:2) =  mean(peak_time(iSize,iCon,theseIN,3:4),3,"omitnan");
+        temp_se2(iCon,iSize,1:2) = (std(peak_time(iSize,iCon,theseIN,3:4),[],3,"omitnan"))./length(theseIN);
+        temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseIN),3,"omitnan");
+        temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseIN),[],3,"omitnan"))./length(theseIN);
+
+        temp_mean3(iCon,iSize,1:2) = mean(peak_time_loc(iSize,iCon,thesePyr,3:4),3,"omitnan");
+        temp_se3(iCon,iSize,1:2) = (std(peak_time_loc(iSize,iCon,thesePyr,3:4),[],3,"omitnan"))./length(thesePyr);
+        temp_mean3(iCon,iSize,3)=mean(fwhm_loc(iSize,iCon,thesePyr),3,"omitnan");
+        temp_se3(iCon,iSize,3)=(std(fwhm_loc(iSize,iCon,thesePyr),[],3,"omitnan"))./length(thesePyr);
+
+
+        temp_mean4(iCon,iSize,1:2) =  mean(peak_time_loc(iSize,iCon,theseIN,3:4),3,"omitnan");
+        temp_se4(iCon,iSize,1:2) = (std(peak_time_loc(iSize,iCon,theseIN,3:4),[],3,"omitnan"))./length(theseIN);
+        temp_mean4(iCon,iSize,3)=mean(fwhm_loc(iSize,iCon,theseIN),3,"omitnan");
+        temp_se4(iCon,iSize,3)=(std(fwhm_loc(iSize,iCon,theseIN),[],3,"omitnan"))./length(theseIN);
+
+
+    end
+end
+
+figure;
+subplot(2,3,1)
+errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k','LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean3(4,:,1),temp_se3(4,:,1),'m','LineStyle','none','Marker','o');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time Pyr')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(2,3,2)
+errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k','LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean3(4,:,2),temp_se3(4,:,2),'m','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time Pyr')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(2,3,3)
+errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k','LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean3(4,:,3),temp_se3(4,:,3),'m','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM Pyr')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 
-sgtitle('0.5 split')
+
+subplot(2,3,4)
+errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'k','LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean4(4,:,1),temp_se4(4,:,1),'m','LineStyle','none','Marker','o');
+%ylim([0,.11])
+xticks(Sizes)
+xlabel('Size')
+ylabel('Seconds')
+title('Rise time SST')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(2,3,5)
+errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'k','LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean4(4,:,2),temp_se4(4,:,2),'m','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('Decay time SST')
+set(gca, 'TickDir', 'out')
+box off
+
+subplot(2,3,6)
+errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'k','LineStyle','none','Marker','o');
+hold on
+errorbar(Sizes,temp_mean4(4,:,3),temp_se4(4,:,3),'m','LineStyle','none','Marker','o');
+%ylim([0,.28])
+xticks(Sizes)
+xlabel('Size')
+title('FWHM SST')
+set(gca, 'TickDir', 'out')
+box off
+
+
+
+x0=5;
+y0=5;
+width=7;
+height=4;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+
+print('dynamics_respAtEach_runningVSstat', '-dpdf');
