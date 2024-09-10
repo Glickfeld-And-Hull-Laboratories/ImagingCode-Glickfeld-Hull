@@ -1,6 +1,6 @@
 clear all
 close all
-mice = {'i3312'};
+mice = {'i3312';'i3313'};
 dat = getCaptureValues_annulus_jerry(mice);
 nMice = size(dat,1);
 %% plot ratio
@@ -26,7 +26,7 @@ for iMouse = 1:nMice
     figure();
     plot(currData(:,2),currData(:,3),'-o');
     title([dat{iMouse,1} ' HTP ROI']);
-    ylim([70 200])
+    %ylim([70 200])
     Ax = gca;
     Ax.XTick = currData(:,2);
     xlabel('Time since Infusion (Hrs)');

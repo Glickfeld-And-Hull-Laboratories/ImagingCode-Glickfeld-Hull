@@ -7,7 +7,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [40];%enter all the sessions you want to concatenate
+sess_list = [42 44];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -118,7 +118,7 @@ for iSess = 1:nSess
         dart_str = 'control';
     end
     fn_multi = fullfile(rc.achAnalysis,'PV_YM90K',mouse,['multiday_' dart_str]);
-
+    mkdir fn_multi
     load(fullfile(fn_multi,'tc_keep.mat'));
     load(fullfile(fn_multi,'resp_keep.mat'));
     load(fullfile(fn_multi,'input.mat'));
@@ -362,10 +362,11 @@ norm_diff(find(norm_diff == Inf))=NaN;
 
 %% plot fraction suppressed and facilitated
 
-%make a subset of normalized difference for the SST cells only, then make
-% find how many are facilitated or suppressed by more than 1 std from
-% baseline
-% norm_diff = nan(2,nCon,nSize,nKeep_total);
+%makes one plot for stationary trials and one plot for running; wihtin each
+%plot, the y axis is the fraciton of interneurons that are
+%suppressed/facilitated by more than 1 std from their control-day
+%responses; the x axis is contrast; and the light/dark bars are for the
+%small/large stimulus size, respectively.
 norm_diff_red = norm_diff(:,:,:,red_ind_concat);
 facil_red=norm_diff_red(:,:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:,:)<=-1;
@@ -373,38 +374,85 @@ supp_red=norm_diff_red(:,:,:,:)<=-1;
 N=length(red_ind_concat);
 
 
-for iCon = 1:nCon
-    facil_table_stat = squeeze(sum(facil_red(1,iCon,:,:),4)/N);
-    supp_table_stat = squeeze(sum(supp_red(1,iCon,:,:),4)/N);
+
+    facil_table_stat = squeeze(sum(facil_red(1,:,:,:),4)/N);
+    supp_table_stat = squeeze(sum(supp_red(1,:,:,:),4)/N);
+    
     figure;
     subplot(1,2,1)
-    bar([1,2],[supp_table_stat],'FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b=bar([1,2,3,4],[supp_table_stat(:,1),supp_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#70D0F6"
+    b(2).FaceColor="#0C8ABB"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
     hold on
-    xticklabels({'20','1000'})
     title('Suppressed')
     ylim([0 .35])
     ylabel(["Fraction PV cells"]) 
-    xlabel(["Size"])
+    xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
     
     subplot(1,2,2)
-    bar([1,2],[facil_table_stat],'FaceColor',"#A8518A",'EdgeColor', [1 1 1])
+    b=bar([1,2,3,4],[facil_table_stat(:,1),facil_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#C983B1"
+    b(2).FaceColor="#883367"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
     hold on
-    xticklabels({'20','1000'})
     title('Facilitated')
     ylim([0 .35])
-    %ylabel(["Fraction HTP+ cells"]) 
-    xlabel(["Size"])
+    %ylabel(["Fraction PV cells"]) 
+    xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
+    sgtitle('Stationary')
     
     x0=5;
     y0=5;
     width=3;
-    height=1.5;
+    height=1.75;
     set(gcf,'units','inches','position',[x0,y0,width,height])
-end
+print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
+
+ facil_table_loc = squeeze(sum(facil_red(2,:,:,:),4)/N);
+    supp_table_loc = squeeze(sum(supp_red(2,:,:,:),4)/N);
+    
+    figure;
+    subplot(1,2,1)
+    b=bar([1,2,3,4],[supp_table_loc(:,1),supp_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#70D0F6"
+    b(2).FaceColor="#0C8ABB"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Suppressed')
+    ylim([0 .35])
+    ylabel(["Fraction PV cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    
+    subplot(1,2,2)
+    b=bar([1,2,3,4],[facil_table_loc(:,1),facil_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#C983B1"
+    b(2).FaceColor="#883367"
+    ylim([0 .3])
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Facilitated')
+    ylim([0 .35])
+    %ylabel(["Fraction PV cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    sgtitle('Running')
+    x0=5;
+    y0=5;
+    width=3;
+    height=1.75;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'Facil_supp_loc.pdf'),'-dpdf');
 %% plot stationary timecourses
 
 
@@ -796,7 +844,7 @@ title(['Pyr n = ' , num2str(length(statGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.025 .075])
+ylim([0 .07])
 xlim([0 110])
 
 subplot(2,2,3) %for the second size, all contrasts
@@ -806,7 +854,7 @@ errorbar(consForPlotting,conResp_green_avrg_stat{post}(2,:),conResp_green_se_sta
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.025 .075])
+ylim([-.03 .03])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
@@ -816,7 +864,7 @@ errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_loc{pos
 title(['PV n = ' , num2str(length(statRed))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.025 .075])
+ylim([0 .07])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -825,7 +873,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.025 .075])
+ylim([-.03 .03])
 xlim([0 110])
 
 
@@ -898,7 +946,7 @@ title(['Pyr n = ' , num2str(length(runningGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.025 .25])
+ylim([0 .2])
 xlim([0 110])
 
 subplot(2,2,3) %for the first day
@@ -908,7 +956,7 @@ errorbar(consForPlotting,conResp_green_avrg_loc{post}(2,:),conResp_green_se_loc{
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.025 .25])
+ylim([0 .2])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
@@ -918,7 +966,7 @@ errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post
 title(['PV n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.025 .25])
+ylim([0 .2])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -927,7 +975,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.025 .25])
+ylim([0 .2])
 xlim([0 110])
 
 

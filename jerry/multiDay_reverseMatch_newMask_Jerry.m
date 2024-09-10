@@ -5,14 +5,14 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
 doGreenOnly = false;
-doCorrImg = true;
+doCorrImg = true; 
 
 %BEFORE RUNNING THIS SCRIPT, IF IT HAS BEEN DONE FOR THE SAME MOUSE, DELETE
 %RELATED FILES IN THE MULTIDAY ANALYSIS FOLDER
 
 %to use the post-DART timepoint as the template
 
-day_id(1) =40; %enter the refrence day ID here 
+day_id(1) =44; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -427,7 +427,7 @@ end
 [max_skew ind] =  max(x,[],1);
 np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
-            
+
 cellTCs_match{2} = npSub_tc;
 
 red_ind_match = ismember(match_ind,find(~isnan([cellImageAlign.r_red])));
