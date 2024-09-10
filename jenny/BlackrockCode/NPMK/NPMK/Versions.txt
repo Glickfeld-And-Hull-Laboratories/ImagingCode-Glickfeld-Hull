@@ -1,0 +1,44 @@
+NPMK Version 2.6.0.0
+
+    NEW FUNCTIONS
+	- NSxToHL: Strips the header information from a NSx file and saves it 
+      into a new .dat file. This is useful for programs that only need the
+      binary data, e.g. Klusters.
+	- openNSxHL: Opens the header-less data into a variable.
+	  This is useful for programs that only need the binary data, 
+      e.g. Klusters.
+	- edgeDetect: It can be used to detect rising or falling edges in a 
+      signal.
+
+NPMK Version 2.7.0.0
+
+    NEW FEATURES
+    - edgeDetect
+        - Added the ability to automatically estimate threshold when 
+          threshold is not provided as an argument.
+        - Updated help.
+    - plotAverageWaveform
+        - Added the ability to plot scaled or non-scaled plots. By default,
+          the plots are scaled. 
+        - The color of the first unit is always selected at random, so when
+          a channel only has 1 unit, that 1 unit will be a different color
+          (visualization only).
+    BUG FIXES
+    - KTUEAMapFile
+        - Fixed a minor bug related to reading the mapfile.
+
+    - saveNEVTetrodes
+        - Fixed a bug related to the # of input arguments and compatibility
+          with other functions.
+	- Updated help.
+    - BlackrockLoadingEngine
+	- Fixed many bugs with the MClust loading engine.
+
+NPMK Version 2.7.1.0
+
+    BUG FIXES
+    - saveNEVSubSpikes
+	- Fixed a bug where the data was not being saved correctly on Windows
+	machines.
+	- Fixed a bug where tetrodes higher than 10 were overwriting tetrodes 1
+	through 10 over and over again.

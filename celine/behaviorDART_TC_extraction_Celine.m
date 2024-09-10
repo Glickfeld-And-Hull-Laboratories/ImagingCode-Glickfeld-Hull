@@ -1,8 +1,9 @@
 %% get path names
+
 close all;clear all;clc;
 ds = 'DART_behavior_ExptList';
 experimentFolder = 'SST_behavior';
-iexp = 3; 
+iexp = 1; 
 eval(ds)
 
 %%
@@ -36,6 +37,8 @@ for irun=1:nrun
     fprintf([ImgFolder{irun} ' - ' time{irun} '\n'])
 end
 
+fnout = fullfile(base,mouse,date,cell2mat(ImgFolder));
+mkdir(fnout)
 %% load
 tic
 data = [];
@@ -43,7 +46,7 @@ clear temp
 trial_n = [];
 offset = 0;
 for irun = 1:nrun
-    CD = [database mouse '\' date '\' ImgFolder{irun}];
+    CD = fullfile(database,mouse,date,ImgFolder{irun});
     cd(CD);
     imgMatFile = [ImgFolder{irun} '_000_000.mat'];
     load(imgMatFile);
@@ -51,8 +54,8 @@ for irun = 1:nrun
     load(fName);
     
     temp(irun) = input;
-    nframes = [temp(irun).counterValues{end}(end) info.config.frames];
-    
+   %nframes = [temp(irun).counterValues{end}(end) info.config.frames];
+    nframes=85000
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
     data_temp = sbxread(imgMatFile(1,1:11),0,min(nframes));
     if size(data_temp,1)== 2
@@ -97,28 +100,22 @@ nep = floor(size(data,3)./step);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*step):500+((i-1)*step)),3)); title([num2str(1+((i-1)*step)) '-' num2str(500+((i-1)*step))]); end
 
-data_avg = mean(data(:,:,20001:20500),3);
+data_avg = mean(data(:,:,55000:55500),3);
 %% Register data
 [database mouse '\' date '\' ImgFolder{irun}]
-if exist(fullfile(base, mouse,date, string(ImgFolder),'\regOuts&Img.mat'))
-    load(fullfile(base, mouse,date, string(ImgFolder),'regOuts&Img.mat'))
-    save(fullfile(base, mouse,date, string(ImgFolder),'input.mat'), 'input')
+if exist(fullfile(fnout,'\regOuts&Img.mat'))
+    load(fullfile(fnout,'regOuts&Img.mat'))
+    save(fullfile(fnout,'input.mat'), 'input')
     [outs, data_reg]=stackRegister_MA(double(data),[],[],out);
     clear out outs
 else
     [out, data_reg] = stackRegister(data,data_avg);
-    mkdir(fullfile(base, mouse,date, string(ImgFolder)))
-    save(fullfile(base, mouse,date, string(ImgFolder),'regOuts&Img.mat'), 'out', 'data_avg')
-    save(fullfile(base, mouse,date, string(ImgFolder),'input.mat'), 'input')
+    mkdir(fullfile(fnout))
+    save(fullfile(fnout,'regOuts&Img.mat'), 'out', 'data_avg')
+    save(fullfile(fnout,'input.mat'), 'input')
 end
 clear data out
 
-%% test stability
-figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data_reg(:,:,1+((i-1)*step):500+((i-1)*step)),3)); title([num2str(1+((i-1)*step)) '-' num2str(500+((i-1)*step))]); end
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_byFrame.pdf']),'-dpdf', '-bestfit')
-
-figure; imagesq(mean(data_reg(:,:,1:10000),3)); truesize;
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
 
 %% find activated cells
 
@@ -132,7 +129,7 @@ data_f_targ = zeros(sz(1),sz(2),nTrials);
 data_targ = nan(sz(1),sz(2),nTrials);
 for itrial = 1:nTrials    
     if ~isnan(cStart(itrial))
-        if cStart(itrial)+19 < sz(3)
+        if cStart(itrial)+19 < sz(3) % making a buffer of enough frames prior to the end of the trial. why 19?
             data_f_base(:,:,itrial) = mean(data_reg(:,:,cStart(itrial)-20:cStart(itrial)-1),3);
             data_base(:,:,itrial) = mean(data_reg(:,:,cStart(itrial)+5:cStart(itrial)+10),3);
         end
@@ -147,52 +144,117 @@ for itrial = 1:nTrials
 end
 data_base_dfof = (data_base-data_f_base)./data_f_base;
 data_targ_dfof = (data_targ-data_f_targ)./data_f_targ;
-b1 = celleqel2mat_padded(input.tBlock2TrialNumber);
-targSpeed = celleqel2mat_padded(input.tDotSpeedDPS);
-spds = cell(1,2);
-spds{1} = unique(targSpeed(find(b1)));
-spds{2} = unique(targSpeed(find(b1==0)));
-nSpd = length(spds{2});
-baseCon = celleqel2mat_padded(input.tBaseDotContrast);
-cons = unique(baseCon);
+trialCon = celleqel2mat_padded(input.tGratingContrast);
+cons = unique(trialCon);
 nCon = length(cons);
-data_dfof_spd = zeros(sz(1),sz(2),nSpd,nCon);
-[n n2] = subplotn(nSpd);
+data_dfof_con = zeros(sz(1),sz(2),nCon);
+[n n2] = subplotn(nCon);
 for iCon = 1:nCon
-    figure;
-    ind_con = find(baseCon == cons(iCon));
-    for ispd = 1:nSpd
-        ind_spd = intersect(ind_con, find(targSpeed==spds{iCon}(ispd)));
-        data_dfof_spd(:,:,ispd,iCon) = nanmean(data_targ_dfof(:,:,ind_spd),3);
-        subplot(n,n2,ispd)
-        imagesc(data_dfof_spd(:,:,ispd,iCon))
-        title(spds{iCon}(ispd))
-    end
-    suptitle([mouse ' ' date '- Base con = ' num2str(cons(iCon))])
-    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOVbySpd_Con' num2str(cons(iCon)) '.pdf']),'-dpdf','-bestfit')
+    ind_con = find(trialCon == cons(iCon));
+    data_dfof_con(:,:,iCon) = nanmean(data_targ_dfof(:,:,ind_con),3);
+    subplot(n,n2,iCon)
+    imagesc(data_dfof_con(:,:,iCon))
+    title(cons(iCon))
 end
 
-ind_con = find(baseCon == 1);
-data_dfof_base = nanmean(data_base_dfof(:,:,ind_con),3);
 
-data_dfof = cat(3, reshape(data_dfof_spd,[sz(1), sz(2), nCon*nSpd]), data_dfof_base);
+data_dfof = cat(3, reshape(data_dfof_con,[sz(1), sz(2), nCon]), data_dfof_con);
 myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_max = max(imfilter(data_dfof,myfilter),[],3);
 figure;
 imagesc(data_dfof_max)
 data_dfof = cat(3, data_dfof, data_dfof_max);
 
-down = 5;
+down = 100;
 data_reg_down  = stackGroupProject(data_reg,down);
 pixelCorr = getPixelCorrelationImage(data_reg_down);
 figure; 
 imagesc(pixelCorr)
-data_dfof = cat(3, data_dfof, pixelCorr);
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_cellSelect.mat']), 'data_dfof')
+
+save(fullfile(fnout, 'cellSelect.mat'), 'data_dfof')
+%% load red data
+data_reg_avg =  mean(data_reg(:,:,:),3);
+%this is where we use the 1040, 1000-frame run
+if exist(fullfile(fnout,'redImage.mat'))
+    load(fullfile(fnout,'redImage'))
+elseif ~isempty(expt(iexp).redChannelRun) %if there IS a red channel run, find and load it
+    redRun = expt(iexp).redChannelRun;
+    imgMatFile = [redRun '_000_000.mat'];
+    cd(fullfile(database,mouse,date,redRun))
+    load(imgMatFile);
+
+    fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
+    data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);
+    if size(data_temp,1) == 2
+        data_rg = squeeze(data_temp(1,:,:,:));
+        data_rr = squeeze(data_temp(2,:,:,:));
+    else
+        data_rr = squeeze(data_temp(1,:,:,:));
+    end
+    clear data_temp
+
+    if exist('redChImg')
+        [out, data_rr_reg] = stackRegister(stackGroupProject(data_rr,100), redChImg);
+        redChImg = mean(data_rr_reg,3);
+    elseif info.config.pmt0_gain>0.5 %if there is a green channel in this run, it gets registered to the registration image from green channel from the 920 run
+        %data_rr = padarray(data_rr,9,0,'pre');
+        redAvg = mean(data_rr,3);%take the average of the red at 1040
+        [out, data_rr_reg] = stackRegister(data_rr,redAvg); %register red at 1040 to average of itself
+        [~, data_rg_reg] = stackRegister_MA(data_rg,[],[],out); %register green at 1040 using the shifts from the registration of the red at 1040
+        redChImgTemp = mean(data_rr_reg,3);  %take an average of the registered red at 1040
+        rg_avg = mean(data_rg_reg,3); %take an average of the registered green at 1040
+        [out2, ~] = stackRegister(rg_avg,data_reg_avg); %register that green average to the registered data from my experimental run
+        [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2); %apply those shifts to the mean registered red at 1040
+        
+%         [out, data_rg_reg] = stackRegister(data_rg,data_avg); %register the green channel from the 1040 run to the green channel from the 920 run
+%         [~, data_rr_reg]=stackRegister_MA(data_rr,[],[],out); %use those shifts to register the red 1040 run
+%         redChImg = mean(data_rr_reg,3);
+        
+        
+    else %if there is no green channel in this run
+        redAvg = mean(data_rr,3);
+        [out, data_rr_reg] = stackRegister(data_rr,redAvg);
+        redChImgTemp = mean(data_rr_reg,3);
+        [~,redChImg] = stackRegister(redChImgTemp,data_reg_avg);
+    end
+    
+    figure; colormap gray; imagesc(redChImg);  movegui('center');title('registration image for red channel');
+   
+    rgb = zeros(sz(1),sz(2),3);
+    rgb(:,:,1) = redChImg./max(redChImg(:));
+    rgb(:,:,2) = data_reg_avg./max(data_reg_avg(:));
+    figure; image(rgb);  movegui('center')
+    title('Green-920 + Red-1040')
+    print(fullfile(fnout,'red_green_FOV.pdf'),'-dpdf','-bestfit')
+    save(fullfile(fnout,'redImage'),'redChImg')
+
+elseif ~exist('redChImg')
+    redChImg = zeros(size(regImg));
+end
+
+clear data_rr data_rg data_rg_reg data_rr_reg
+
 %% cell segmentation 
+close all
+data_dfof = cat(3, data_dfof, data_reg_avg,data_reg_avg, pixelCorr);
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
+%find and label the red cells - this is the first segmentation figure that
+%comes up
+if ~isempty(expt(iexp).redChannelRun)
+    for iStim=1:size(redForSegmenting,3)
+        mask_data_temp=redForSegmenting(:,:,iStim);
+        mask_data_temp(find(mask_exp >= 1)) = 0;
+        bwout = imCellEditInteractiveLG(mask_data_temp);
+        mask_all = mask_all+bwout; 
+        mask_exp = imCellBuffer(mask_all,3)+mask_all;
+        close all
+    end
+end
+
+mask_cell_red = bwlabel(mask_all);
 mask_data = data_dfof;
 
 for iStim = 1:size(data_dfof,3)
@@ -206,11 +268,20 @@ end
 mask_cell= bwlabel(mask_all);
 figure; imagesc(mask_cell)
 
+nCells = max(mask_cell(:));
+%mask_label = ones(1,nCells); %this is for the EMX and similar lines only
+mask_label = zeros(1,nCells);
+for i = 1:nCells
+    if mask_cell_red(find(mask_cell == i, 1))
+        mask_label(1,i) = 1;
+    end
+end
+
 %% neuropil mask and subtraction
 mask_np = imCellNeuropil(mask_cell, 3, 5);
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']), 'data_dfof', 'mask_cell', 'mask_np')
+save(fullfile(fnout,'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_np','mask_label','data_reg_avg')
 
-clear data_dfof data_dfof_avg max_dfof mask_data mask_all mask_data_temp mask_exp data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_avg data_dfof2_dir data_dfof_dir 
+%clear data_Avg data_dfof data_dfof_avg max_dfof mask_data mask_all mask_data_temp mask_exp data_base data_base_dfof data_targ data_targ_dfof data_f data_base2 data_base2_dfof data_dfof_dir_all data_dfof_max data_dfof_targ data_dfof2_dir data_dfof_dir 
 
 % neuropil subtraction
 down = 5;
@@ -236,383 +307,416 @@ end
 [max_skew ind] =  max(x,[],1);
 np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
-clear data_reg data_reg_down
+%clear data_reg data_reg_down
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+save(fullfile(fnout,'TCs.mat'), 'data_tc', 'np_tc', 'npSub_tc')
 
-clear data_tc data_tc_down np_tc np_tc_down mask_np mask_cell
-%% target analysis
-data_targ = nan(120,nCells,nTrials);
-data_base = nan(120,nCells,nTrials);
-for itrial = 1:nTrials
-    if ~isnan(cStart(itrial))
-        if cStart(itrial)+99 <= size(npSub_tc,1)
-            data_base(:,:,itrial) = npSub_tc(cStart(itrial)-20:cStart(itrial)+99,:);
-        end
-    end
-    if ~isnan(cTarget(itrial))
-        if cTarget(itrial)+99 <= size(npSub_tc,1)
-            data_targ(:,:,itrial) = npSub_tc(cTarget(itrial)-20:cTarget(itrial)+99,:);
-        end
-    end
-end
-data_f_targ = nanmean(data_targ(1:20,:,:),1);
-data_dfof_targ = bsxfun(@rdivide,bsxfun(@minus,data_targ,data_f_targ),data_f_targ);
-data_f_base = nanmean(data_base(1:20,:,:),1);
-data_dfof_base = bsxfun(@rdivide,bsxfun(@minus,data_base,data_f_base),data_f_base);
+clear data_tc data_tc_down np_tc np_tc_down mask_np 
 
-frameRateHz = double(input.frameRateHz);
+%% finding trial types
+%find trials within nframes
+lastTrial = find(cell2mat(input.cTrialEnd)<min(nframes),1,'last');
 
-base_win =19:21;
-resp_win =25:29; 
+%these are indices of trials
+hit =  find(strcmp(input.trialOutcomeCell(1:lastTrial), 'success'));
+FA =  find(strcmp(input.trialOutcomeCell(1:lastTrial), 'failure'));
+miss =  find(strcmp(input.trialOutcomeCell(1:lastTrial), 'ignore'));
+block2trials = find(cell2mat(input.tBlock2TrialNumber(1:lastTrial)));
+block1trials = find(~cell2mat(input.tBlock2TrialNumber(1:lastTrial)));
 
-figure;
-if nCells<25
-    ii = nCells;
-else
-    ii = 25;
-end
-for i = 1:ii
-    subplot(5,5,i)
-    plot(squeeze(nanmean(mean(data_dfof_targ(20:50,i,:),2),3)))
-    vline(base_win-19)
-    vline(resp_win-19)
-end
+hitRate = nan(nCon,2);
 
-tt = [-20:99].*(1000/frameRateHz);
-figure;
-subplot(2,1,1)
-plot(tt,squeeze(nanmean(mean(data_dfof_base,2),3)));
-vline((base_win-20).*(1000/frameRateHz))
-vline((resp_win-20).*(1000/frameRateHz))
-title('Baseline')
-subplot(2,1,2)
-plot(tt,squeeze(nanmean(mean(data_dfof_targ,2),3)));
-vline((base_win-20).*(1000/frameRateHz))
-vline((resp_win-20).*(1000/frameRateHz))
-title('Target')
-
-
-%%
-
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']), 'data_dfof_base', 'data_dfof_targ')
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']),'baseCon', 'cons', 'nCon', 'targSpeed','spds','nSpd', 'nCells', 'frameRateHz', 'nTrials', 'cTarget', 'cStart', 'base_win','resp_win')
-
-%% Speed analysis
-late_win = resp_win+(2.*frameRateHz);
-full_win = resp_win(1): resp_win(1)+(2.*frameRateHz);
-figure;
-spd_mat = zeros(nSpd,nCon,nCells,2);
-spd_mat_late = zeros(nSpd,nCon,nCells,2);
-h_early = zeros(nCon,nSpd,nCells);
-p_early = zeros(nCon,nSpd,nCells);
-h_late = zeros(nCon,nSpd,nCells);
-p_late = zeros(nCon,nSpd,nCells);
-h_supp = zeros(nCon,nSpd,nCells);
-p_supp = zeros(nCon,nSpd,nCells);
-data_dfof_spd = zeros(size(data_dfof_targ,1), nCells, nCon,nSpd);
+%get the mean neural response to hits and misses at each contrast for each
+%block. Currently looking 1 second before through 1 second after the stim
+%turns on
+trialAvrg_tcs = nan(60,nCells,nCon,4); %empty matrix, 60 frames by nCells by nCon by hit B1, miss B1, hit B2, miss B2
 for iCon = 1:nCon
-    ind_con = find(baseCon == cons(iCon));
-    Ax(iCon+(iCon-1)) = subplot(2,2,iCon+(iCon-1));
-    for iSpd = 1:nSpd
-        ind_spd = intersect(ind_con, find(targSpeed==spds{iCon}(iSpd)));
-        plot(tt, mean(nanmean(data_dfof_targ(:,:,ind_spd),3),2))
-        data_dfof_spd(:,:,iCon,iSpd) = nanmean(data_dfof_targ(:,:,ind_spd),3);
-        hold on
-        for iCell = 1:nCells
-            [h_early(iCon,iSpd,iCell), p_early(iCon,iSpd,iCell)] = ttest(mean(permute(data_dfof_targ(resp_win,iCell,ind_spd),[1 3 2]),1),mean(permute(data_dfof_targ(base_win,iCell,ind_spd),[1 3 2]),1),'tail','right','alpha',0.05./(nSpd*nCon));
-            [h_late(iCon,iSpd,iCell), p_late(iCon,iSpd,iCell)] = ttest(mean(permute(data_dfof_targ(late_win,iCell,ind_spd),[1 3 2]),1),mean(permute(data_dfof_targ(base_win,iCell,ind_spd),[1 3 2]),1),'tail','right','alpha',0.05./(nSpd*nCon));
-            [h_supp(iCon,iSpd,iCell), p_supp(iCon,iSpd,iCell)] = ttest(mean(data_dfof_targ(late_win,iCell,ind_spd),1),mean(data_dfof_targ(base_win,iCell,ind_spd),1),'tail','left','alpha',0.05./(nSpd*nCon));
+    conInds=find(trialCon==cons(iCon)); %find trials for this contrast
+    block1Inds = intersect(conInds,block1trials); %find trials for block 1 at this contrast
+    hitInds = intersect(hit, block1Inds); %hit trials for block 1 at this contrast
+    missInds = intersect(miss,block1Inds); %miss trials for block1 at this contrast
+    hitTargetTimes = cell2mat(input.cTargetOn(hitInds));
+    missTargetTimes = cell2mat(input.cTargetOn(missInds));
+    hitsTemp = nan(60,nCells,length(hitInds));
+    missTemp = nan(60,nCells,length(missInds));
+    for iHit = 1:length(hitInds)
+        hitsTemp(:,:,iHit)=npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit),:),1);
+    end
+    trialAvrg_tcs(:,:,iCon,1)=mean(hitsTemp,3);
+    for iMiss = 1:length(missInds)
+        missTemp(:,:,iMiss)=npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss),:),1);
+    end
+    trialAvrg_tcs(:,:,iCon,2)=mean(missTemp,3);
+    hitRate(iCon, 1) = length(hitInds)/(length(hitInds)+length(missInds));
 
-            spd_mat(iSpd,iCon,iCell,1) = mean(nanmean(data_dfof_targ(resp_win,iCell,ind_spd),3),1);
-            spd_mat(iSpd,iCon,iCell,2) = nanstd(nanmean(data_dfof_targ(resp_win,iCell,ind_spd),1),[],3)./sqrt(length(ind_spd));
-            spd_mat_late(iSpd,iCon,iCell,1) = mean(nanmean(data_dfof_targ(late_win,iCell,ind_spd),3),1);
-            spd_mat_late(iSpd,iCon,iCell,2) = nanstd(nanmean(data_dfof_targ(late_win,iCell,ind_spd),1),[],3)./sqrt(length(ind_spd));
-        end
+    %now do block 2
+    block2Inds = intersect(conInds,block2trials); %find trials for block 1 at this contrast
+    hitInds = intersect(hit, block2Inds); %hit trials for block 1 at this contrast
+    missInds = intersect(miss,block2Inds); %miss trials for block1 at this contrast
+    hitTargetTimes = cell2mat(input.cTargetOn(hitInds));
+    missTargetTimes = cell2mat(input.cTargetOn(missInds));
+    hitsTemp = nan(60,nCells,length(hitInds));
+    missTemp = nan(60,nCells,length(missInds));
+    for iHit = 1:length(hitInds)
+        hitsTemp(:,:,iHit)=npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit),:),1);
     end
-    y(iCon+(iCon-1),:) = Ax(iCon+(iCon-1)).YLim;
-    title(['BaseCon = ' num2str(cons(iCon))]) 
-    ylabel('dF/F')
-    xlabel('Time from target (ms)')
-    if iCon == 1
-        legend(num2str(chop(spds{iCon},2)'))
+    trialAvrg_tcs(:,:,iCon,3)=mean(hitsTemp,3);
+    for iMiss = 1:length(missInds)
+        missTemp(:,:,iMiss)=npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss),:),1);
     end
-    Ax(iCon+(iCon-1)+1) = subplot(2,2,iCon+(iCon-1)+1);
-    errorbar(spds{iCon}, mean(spd_mat(:,iCon,:,1),3), std(spd_mat(:,iCon,:,1),[],3)./sqrt(nCells))
+    trialAvrg_tcs(:,:,iCon,4)=mean(missTemp,3);
+    hitRate(iCon, 2) = length(hitInds)/(length(hitInds)+length(missInds));
+
+end
+save(fullfile(fnout,'trialAvrg_tcs.mat'),'trialAvrg_tcs')
+
+%% plot mean responses
+pyr = ~mask_label;
+
+t=(-29:30)/30;
+positions=[1,3,5,7,9,11];
+
+figure;
+for iCon = 1:nCon
+    subplot(nCon,2,positions(iCon))
+    meanHit=mean(trialAvrg_tcs(:,pyr,iCon,1),2);
+    stdHit=std(trialAvrg_tcs(:,pyr,iCon,1),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit)
     hold on
-    errorbar(spds{iCon}, mean(spd_mat_late(:,iCon,:,1),3), std(spd_mat_late(:,iCon,:,1),[],3)./sqrt(nCells))
-    y(iCon+(iCon-1)+1,:) = Ax(iCon+(iCon-1)+1).YLim;
-    ylabel('dF/F')
-    xlabel('Speed (DPS)')
-    if iCon == 1
-        legend({'early', 'late'})
-    end
-    title(['BaseCon = ' num2str(cons(iCon))]) 
-end
-min_y = min(y(:,1),[],1);
-max_y = max(y(:,2),[],1);
-set(Ax(1:4),'YLim',[min_y max_y])
-suptitle([date ' ' mouse '- Avg speed tuning- n = ' num2str(nCells)])
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_avgSpeedResp.pdf']),'-dpdf', '-bestfit')
-
-good_ind = unique([find(sum(sum(h_early,1),2)); find(sum(sum(h_late,1),2))]);
-
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_cellResp.mat']),'data_dfof_spd', 'good_ind', 'tt')
-
-for iCell = 1:length(good_ind)
-    figure;
-    iC = good_ind(iCell);
-    y = zeros(4,2);
-    clear Ax
-    for iCon = 1:nCon
-        ind_con = find(baseCon == cons(iCon));
-        Ax(iCon+(iCon-1)) = subplot(2,2,iCon+(iCon-1));
-        for iSpd = 1:nSpd
-            ind_spd = intersect(ind_con, find(targSpeed==spds{iCon}(iSpd)));
-            plot(tt, nanmean(data_dfof_targ(:,iC,ind_spd),3))
-            hold on
-        end
-        y(iCon+(iCon-1),:) = Ax(iCon+(iCon-1)).YLim;
-        title(['BaseCon = ' num2str(cons(iCon))]) 
-        ylabel('dF/F')
-        xlabel('Time from target (ms)')
-        if iCon == 1
-            legend(num2str(chop(spds{iCon},2)'))
-        end
-        Ax(iCon+(iCon-1)+1) = subplot(2,2,iCon+(iCon-1)+1);
-        errorbar(spds{iCon}, spd_mat(:,iCon,iC,1), spd_mat(:,iCon,iC,2))
-        hold on
-        errorbar(spds{iCon}, spd_mat_late(:,iCon,iC,1), spd_mat_late(:,iCon,iC,2))
-        y(iCon+(iCon-1)+1,:) = Ax(iCon+(iCon-1)+1).YLim;
-        ylabel('dF/F')
-        xlabel('Speed (DPS)')
-        if iCon == 1
-            legend({'early', 'late'})
-        end
-        title(['BaseCon = ' num2str(cons(iCon))]) 
-    end
-    min_y = min(y(:,1),[],1);
-    max_y = max(y(:,2),[],1);
-    set(Ax(1:4),'YLim',[min_y max_y])
-    suptitle([date ' ' mouse '- Cell #' num2str(iC)])
-    print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_avgSpeedResp_Cell#' num2str(iC) '.pdf']),'-dpdf', '-bestfit')
+    meanMiss=mean(trialAvrg_tcs(:,pyr,iCon,2),2);
+    stdMiss=std(trialAvrg_tcs(:,pyr,iCon,2),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate(iCon,1))};
+    % text(-0.75,75,txt)
 end
 
-supp_ind = find(h_supp(end,end,:));
-high_resp_ind = find(h_late(end,end,:));
-low_resp_ind = find(h_late(end,1,:));
+for iCon = 1:nCon
+    subplot(nCon,2,iCon*2)
+    meanHit=mean(trialAvrg_tcs(:,pyr,iCon,3),2);
+    stdHit=std(trialAvrg_tcs(:,pyr,iCon,3),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit)
+    hold on
+    meanMiss=mean(trialAvrg_tcs(:,pyr,iCon,4),2);
+    stdMiss=std(trialAvrg_tcs(:,pyr,iCon,4),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate(iCon,2))};
+    % text(-0.75,75,txt)
+end
+print(fullfile(fnout,'Active_HitvsMiss.pdf'),'-dpdf', '-bestfit')
+%% plot responses comparing block 1 and 2
+positions=[1,3,5,7,9,11];
 
 figure;
 for iCon = 1:nCon
-    ind_con = find(baseCon == cons(iCon));
-    subplot(3,2,iCon)
-    for iSpd = 1:nSpd
-        ind_spd = intersect(ind_con, find(targSpeed==spds{iCon}(iSpd)));
-        plot(tt, mean(nanmean(data_dfof_targ(:,low_resp_ind,ind_spd),3),2))
-        hold on
-    end
-    title('Resp to low speed increment')
-end
-title(['n = ' num2str(size(low_resp_ind,1))])
-for iCon = 1:nCon
-    ind_con = find(baseCon == cons(iCon));
-    subplot(3,2,iCon+2)
-    for iSpd = 1:nSpd
-        ind_spd = intersect(ind_con, find(targSpeed==spds{iCon}(iSpd)));
-        plot(tt, mean(nanmean(data_dfof_targ(:,high_resp_ind,ind_spd),3),2))
-        hold on
-    end
-    title('Resp to high speed increment')
-end
-title(['n = ' num2str(size(high_resp_ind,1))])
-for iCon = 1:nCon
-    ind_con = find(baseCon == cons(iCon));
-    subplot(3,2,iCon+4)
-    for iSpd = 1:nSpd
-        ind_spd = intersect(ind_con, find(targSpeed==spds{iCon}(iSpd)));
-        plot(tt, mean(nanmean(data_dfof_targ(:,supp_ind,ind_spd),3),2))
-        hold on
-    end
-    title('Supp to high speed increment')
-end
-title(['n = ' num2str(size(supp_ind,1))])
+    subplot(nCon,2,positions(iCon))
+    meanHit=mean(trialAvrg_tcs(:,pyr,iCon,1),2);
+    stdHit=std(trialAvrg_tcs(:,pyr,iCon,1),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit,'b')
+    hold on
+    meanHit=mean(trialAvrg_tcs(:,pyr,iCon,3),2);
+    stdHit=std(trialAvrg_tcs(:,pyr,iCon,3),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit,'g')
 
-%% distribution of speed prefereances
-% load((fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat'])))
-% load((fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat'])))
-% load((fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat'])))
-% load((fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_cellResp.mat'])))
-close all
-stimOn_fr = 23;
-resp_win_sec = [200 700];
-resp_win_fr = stimOn_fr + ceil(resp_win_sec./(1000/frameRateHz));
-base_win_fr = resp_win_fr-resp_win_fr(1)+1;
-h_ttest = zeros(nSpd+1,nCon,nCells);
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % 
+    % txt = {num2str(hitRate(iCon,1))};
+    % text(-0.75,85,txt,'Color','b')
+    % 
+    % txt = {num2str(hitRate(iCon,2))};
+    % text(-0.75,55,txt,'Color','g')
+end
 
-anova_spd_test = zeros(1,nCells);
-for iCell = 1:nCells
-    anova_spd_mat = [];
-    group_mat = [];
-    for icon = 1:nCon
-        ind_con = find(baseCon == cons(icon));
-        for iSpd = 1:nSpd
-            ind_spd = intersect(ind_con, find(targSpeed==spds{icon}(iSpd)));
-            base_temp = squeeze(mean(data_dfof_targ(base_win_fr(1):base_win_fr(2),iCell,ind_spd),1));
-            resp_temp = squeeze(mean(data_dfof_targ(resp_win_fr(1):resp_win_fr(2),iCell,ind_spd),1));
-            [h_ttest(iSpd,icon,iCell)] = ttest(base_temp,resp_temp,'tail','both','alpha',0.05./(nSpd));
-            if icon == 2
-                anova_spd_mat = [anova_spd_mat; squeeze(mean(data_dfof_targ(resp_win_fr(1):resp_win_fr(2),iCell,ind_spd),1))];
-                group_mat = [group_mat; iSpd.*ones(length(ind_spd),1)];
+for iCon = 1:nCon
+    subplot(nCon,2,iCon*2)
+    meanMiss=mean(trialAvrg_tcs(:,pyr,iCon,2),2);
+    stdMiss=std(trialAvrg_tcs(:,pyr,iCon,2),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'b')
+    hold on
+    meanMiss=mean(trialAvrg_tcs(:,pyr,iCon,4),2);
+    stdMiss=std(trialAvrg_tcs(:,pyr,iCon,4),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'g')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+end
+
+print(fullfile(fnout,'Active_B1vsB2.pdf'),'-dpdf', '-bestfit')
+%% read in the passive dataset
+ImgFolderPassive = expt(iexp).passive_runs;
+time = expt(iexp).passive_time;
+nrun = length(ImgFolderPassive);
+run_str_passive = catRunName(cell2mat(ImgFolderPassive), nrun);
+
+tic
+data = [];
+clear temp
+trial_n = [];
+offset = 0;
+for irun = 1:nrun
+    CD = fullfile(database,mouse,date,ImgFolderPassive{irun});
+    cd(CD);
+    imgMatFile = [ImgFolderPassive{irun} '_000_000.mat'];
+    load(imgMatFile);
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time{irun} '.mat'];
+    load(fName);
+    
+    temp(irun) = input;
+    nframes = [temp(irun).counterValues{end}(end) info.config.frames];
+    
+    fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
+    data_temp = sbxread(imgMatFile(1,1:11),0,min(nframes));
+    if size(data_temp,1)== 2
+        data_temp = data_temp(1,:,:,:);
+    end
+    
+    if isfield(input, 'cLeverUp') 
+        if irun>1
+            ntrials = size(input.trialOutcomeCell,2);
+            for itrial = 1:ntrials
+                %temp(irun).counterValues{itrial} = bsxfun(@plus,temp(irun).counterValues{itrial},offset);
+                temp(irun).cLeverDown{itrial} = temp(irun).cLeverDown{itrial}+offset;
+                temp(irun).cFirstStim{itrial} = temp(irun).cFirstStim{itrial}+offset;
+                temp(irun).cStimOn{itrial} = temp(irun).cStimOn{itrial}+offset;
+                if ~isempty(temp(irun).cLeverUp{itrial})
+                    temp(irun).cLeverUp{itrial} = temp(irun).cLeverUp{itrial}+offset;
+                else
+                    temp(irun).cLeverUp{itrial} = temp(irun).cLeverUp{itrial};
+                end
+                if ~isempty(temp(irun).cTargetOn{itrial})
+                    temp(irun).cTargetOn{itrial} = temp(irun).cTargetOn{itrial}+offset;
+                else
+                    temp(irun).cTargetOn{itrial} = temp(irun).cTargetOn{itrial};
+                end
             end
         end
-        base_temp = squeeze(mean(data_dfof_targ(base_win_fr(1):base_win_fr(2),iCell,:),1));
-        resp_temp = squeeze(mean(data_dfof_targ(resp_win_fr(1):resp_win_fr(2),iCell,:),1));
-        [h_ttest(nSpd+1,icon,iCell)] = ttest(base_temp,resp_temp,'tail','both','alpha',0.05./(nSpd));
-        if icon == 2
-            [anova_spd_test(1,iCell)] = anova1(anova_spd_mat,group_mat,'off');
-        end
     end
-end
-anova_ind = find(anova_spd_test<0.05);
-data_dfof_spd_inc_resp = squeeze(mean(data_dfof_spd(resp_win_fr(1):resp_win_fr(2),:,2,:),1));
-[max_val max_ind] = max(data_dfof_spd_inc_resp(anova_ind,:),[],2);
-spds{1} = [double(input.block2BaseDotSpeedDPS) spds{1}];
-spds{2} = [double(input.baseDotSpeedDPS) spds{2}];
-spds_log = cell(1,2);
-for i=1:2
-    spds_log{i} = log2(double(spds{i}));
-end
-max_ind(find(max_val<0)) = 0;
-
-figure; 
-subplot(1,2,1)
-plot(tt,squeeze(mean(data_dfof_spd(:,anova_ind,2,:),2)))
-ylabel('dF/F')
-xlabel('Time (ms)')
-legend(num2str(spds{2}(2:end)'))
-title([num2str(length(anova_ind)) ' tuned cells'])
-temp = ylim;
-subplot(1,2,2)
-plot(tt,squeeze(mean(data_dfof_spd(:,setdiff(good_ind,anova_ind),2,:),2)))
-ylabel('dF/F')
-xlabel('Time (ms)')
-ylim(temp)
-title([num2str(length(setdiff(good_ind,anova_ind))) ' responsive untuned cells'])
-suptitle([date ' ' mouse])
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_tunedVuntuned.pdf']),'-dpdf', '-bestfit')
-
-figure; 
-[n, edges, bin] = histcounts(max_ind);
-[n n2] = subplotn(length(spds{2})+1);
-subplot(n,n2,1)
-hist(spds_log{2}(max_ind+1))
-ylabel('Number of cells')
-xlabel('log2(Speed)')
-
-
-for i = 1:length(spds{2})
-    subplot(n,n2,1+i)
-    ind = find(max_ind==i-1);
-    plot(tt,squeeze(mean(data_dfof_spd(:,anova_ind(ind),2,:),2)))
-    ylabel('dF/F')
-    xlabel('Time (ms)')
-    title([num2str(spds{2}(i)) ' deg pref cells- n = ' num2str(length(ind))])
-    ylim([-.15 .25])
-end
-
-suptitle([date ' ' mouse '- ' num2str(length(anova_ind)) ' tuned cells'])
-print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_tunedCellSummary.pdf']),'-dpdf', '-bestfit')
-
-%%
-spd_step = [spds{2}-input.baseDotSpeedDPS];
-spd_resp_mat = nan(nCells,nCon,nSpd);
-for icon = 1:nCon
-    tr_resp_mat = cell(1,nSpd+1);
-    ind_con = find(baseCon == cons(icon));
-    targetTr = [];
-    resp = [];
-    for iSpd = 2:nSpd+1
-        ind_spd = intersect(ind_con, find(targSpeed==spds{icon}(iSpd)));
-        if length(ind_spd)>0
-            resp = [resp squeeze(mean(data_dfof_targ(resp_win_fr(1):resp_win_fr(2),:,ind_spd),1))];
-            targetTr = [targetTr spd_step(iSpd).*ones(1, length(ind_spd))];
-            resp = [resp squeeze(mean(data_dfof_targ(base_win_fr(1):base_win_fr(2),:,ind_spd),1))];
-            targetTr = [targetTr zeros(1, length(ind_spd))];
-            tr_resp_mat{iSpd} = squeeze(mean(data_dfof_targ(resp_win_fr(1):resp_win_fr(2),:,ind_spd),1));
-            tr_resp_mat{1} = [tr_resp_mat{1} squeeze(mean(data_dfof_targ(base_win_fr(1):base_win_fr(2),:,ind_spd),1))];
-            spd_resp_mat(:,icon,iSpd-1) = nanmean(tr_resp_mat{iSpd},2);
-        end
-    end
-end
-targetTrInd = zeros(size(targetTr));
-targetTrInd(find(targetTr)) = 1;
-
-resp_ind = find(nansum(nansum(h_ttest,1),2));
-inc_resp_ind = find(nansum(h_ttest(:,2,:),1));
-
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_trResp.mat']),'spd_resp_mat', 'tr_resp_mat', 'spds', 'anova_ind', 'resp_ind', 'inc_resp_ind', 'resp_win_fr','base_win_fr', 'resp', 'targetTr')
-
-%% single cell decode
-trInd_train_all = 1:length(targetTr);
-pctCorrectTarget_ho_singlecell = zeros(1,nCells);
-yhat_singlecell = zeros(length(targetTr),nCells);
-cellW = zeros(1,nCells);
-for i = 1:nCells
-    [pctCorrectTarget_ho_singlecell(i), yhat_singlecell(:,i), targetGLM(i)] = getPctCorr_hoData_train(resp(i,:)',targetTrInd',trInd_train_all,trInd_train_all,0.5);
-    cellW(1,i) = targetGLM(i).beta(2);
-    fprintf([num2str(i) '/' num2str(nCells) '\n'])
-end        
-
-data_dfof_spd_inc_resp = squeeze(mean(data_dfof_spd(resp_win_fr(1):resp_win_fr(2),:,2,:),1));
-data_dfof_spd_inc_base = squeeze(nanmean(mean(data_dfof_spd(base_win_fr(1):base_win_fr(2),:,2,:),1),4));
-[max_val max_ind] = max(data_dfof_spd_inc_resp,[],2);
-[min_val min_ind] = min(data_dfof_spd_inc_resp,[],2);
-val_diff = (max_val-min_val)./max_val;
-
-data_dfof_spd_resp = squeeze(mean(data_dfof_spd(resp_win_fr(1):resp_win_fr(2),:,1,:),1));
-[max_val_nobase max_ind_nobase] = max(data_dfof_spd_resp,[],2);
-
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_singleCellDecode.mat']),'pctCorrectTarget_ho_singlecell', 'max_ind', 'max_val', 'max_ind_nobase', 'max_val_nobase', 'val_diff', 'yhat_singlecell', 'spd_step', 'cellW')
-
-%% cell group decode
-
-
-resp_high_ind = find(max(data_dfof_spd_inc_resp,[],2)>0.05);
-n = [4 8 16 32];
-figure;
-p = [];
-ci =[];
-for i = 1:length(n)
-    n_tot = length(resp_ind);
-    for ir = 1:ceil(n_tot./n(i))
-        rand_ind = randperm(n_tot,n(i));
-        use_ind = resp_ind(rand_ind);
-        [pctCorrectTarget_ho, yhat_temp, targetGLM] = getPctCorr_hoData_train(resp(use_ind,:)',targetTrInd',trInd_train_all,trInd_train_all,0.5);
+    offset = offset+min(nframes);
         
-        for iS = 1:nSpd+1
-            ind = find(targetTr == spd_step(iS));
-            [p(iS,ir,i) ci(iS,:,ir,i)] = binofit(sum(yhat_temp(ind)>0.5),length(ind));
-        end
-    end
-    %subplot(3,3,i)
-    %errorbar(spd_step, p, p'-ci(:,1), ci(:,2)-p')
-    p(find(p==0))=NaN;
-    errorbar(spd_step, nanmean(p(:,:,i),2), nanstd(p(:,:,i),[],2))
-    hold on
-    title(num2str(n(i)))
+    data_temp = squeeze(data_temp);
+    data = cat(3,data,data_temp);
+    trial_n = [trial_n nframes];
 end
+input = concatenateDataBlocks(temp);
+clear data_temp
+clear temp
+toc
+%% register the passive data to the active data
+fnout_passive = fullfile(base,mouse,date,cell2mat(ImgFolderPassive));
+[database mouse '\' date '\' ImgFolderPassive{irun}]
+if exist(fullfile(fnout_passive,'\regOuts&Img.mat'))
+    load(fullfile(fnout_passive,'regOuts&Img.mat'))
+    save(fullfile(fnout_passive,'input.mat'), 'input')
+    [outs, data_reg]=stackRegister_MA(double(data),[],[],out);
+    clear out outs
+else
+    [out, data_reg] = stackRegister(data,data_avg);
+    mkdir(fullfile(fnout_passive))
+    save(fullfile(fnout_passive,'regOuts&Img.mat'), 'out', 'data_avg')
+    save(fullfile(fnout_passive,'input.mat'), 'input')
+end
+clear data out
 
 figure;
-[n n2] = subplotn(length(use_ind));
-for iC = 1:length(use_ind)
-    iCell = use_ind(iC);
-    subplot(n,n2,iC)
-    for i = 1:nSpd+1
-        errorbar(i,nanmean(tr_resp_mat{i}(iCell,:),2), nanstd(tr_resp_mat{i}(iCell,:),[],2),'k')
-        hold on
-    end
-    title(num2str(targetGLM.beta(iC+1)))
-    %ylim([-.1 0.5])
-    xlim([0 6])
-    hline(0)
+subplot(2,1,1)
+imagesc(data_avg);
+title('Active run');
+subplot(2,1,2)
+imagesc(mean(data_reg(:,:,:),3));
+title('Passive run')
+%% apply the masks from the active run
+% neuropil subtraction
+down = 5;
+sz = size(data_reg);
+
+data_tc_passive = stackGetTimeCourses(data_reg, mask_cell);
+data_reg_down_passive  = stackGroupProject(data_reg,down);
+data_tc_down_passive = stackGetTimeCourses(data_reg_down_passive, mask_cell);
+np_tc_passive = zeros(sz(3),nCells);
+np_tc_down_passive = zeros(floor(sz(3)./down), nCells);
+for i = 1:nCells
+     np_tc_passive(:,i) = stackGetTimeCourses(data_reg,mask_np(:,:,i));
+     np_tc_down_passive(:,i) = stackGetTimeCourses(data_reg_down_passive,mask_np(:,:,i));
+     fprintf(['Cell #' num2str(i) '%s/n']) 
 end
+%get weights by maximizing skew
+ii= 0.01:0.01:1;
+x = zeros(length(ii), nCells);
+for i = 1:100
+    x(i,:) = skewness(data_tc_down_passive-tcRemoveDC(np_tc_down_passive*ii(i)));
+end
+[max_skew ind] =  max(x,[],1);
+np_w_passive = 0.01*ind;
+npSub_tc_passive = data_tc_passive-bsxfun(@times,tcRemoveDC(np_tc_passive),np_w_passive);
+%clear data_reg data_reg_down
+
+save(fullfile(fnout,'TCs_passive.mat'), 'data_tc_passive', 'np_tc_passive', 'npSub_tc_passive')
+
+clear data_tc_passive data_tc_down_passive np_tc_passive np_tc_down_passive mask_np 
+
+%% finding trial types
+%find trials within nframes
+trialCon = celleqel2mat_padded(input.tGratingContrast);
+cons = unique(trialCon);
+nCon = length(cons);
+lastTrial = find(cell2mat(input.cTrialEnd)<min(nframes),1,'last');
+
+%these are indices of trials
+hit_passive =  find(strcmp(input.trialOutcomeCell(1:lastTrial), 'success'));
+FA_passive =  find(strcmp(input.trialOutcomeCell(1:lastTrial), 'failure'));
+miss_passive =  find(strcmp(input.trialOutcomeCell(1:lastTrial), 'ignore'));
+block2trials_passive = find(cell2mat(input.tBlock2TrialNumber(1:lastTrial)));
+block1trials_passive = find(~cell2mat(input.tBlock2TrialNumber(1:lastTrial)));
+
+hitRate_passive = nan(nCon,2);
+
+%get the mean neural response to hits and misses at each contrast for each
+%block. Currently looking 1 second before through 1 second after the stim
+%turns on
+trialAvrg_tcs_passive = nan(60,nCells,nCon,4); %empty matrix, 60 frames by nCells by nCon by hit B1, miss B1, hit B2, miss B2
+for iCon = 1:nCon
+    conInds=find(trialCon==cons(iCon)); %find trials for this contrast
+    block1Inds = intersect(conInds,block1trials_passive); %find trials for block 1 at this contrast
+    hitInds = intersect(hit_passive, block1Inds); %hit trials for block 1 at this contrast
+    missInds = intersect(miss_passive,block1Inds); %miss trials for block1 at this contrast
+    hitTargetTimes = cell2mat(input.cTargetOn(hitInds));
+    hitTargetTimes(hitTargetTimes>(min(nframes)-30))=[];
+    missTargetTimes = cell2mat(input.cTargetOn(missInds));
+    missTargetTimes(missTargetTimes>(min(nframes)-30))=[];
+    hitsTemp = nan(60,nCells,length(hitInds));
+    missTemp = nan(60,nCells,length(missInds));
+    for iHit = 1:length(hitTargetTimes)
+        hitsTemp(:,:,iHit)=npSub_tc_passive(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc_passive(hitTargetTimes(iHit)-29:hitTargetTimes(iHit),:),1);
+    end
+    trialAvrg_tcs_passive(:,:,iCon,1)=mean(hitsTemp,3);
+    for iMiss = 1:length(missTargetTimes)
+        missTemp(:,:,iMiss)=npSub_tc_passive(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc_passive(missTargetTimes(iMiss)-29:missTargetTimes(iMiss),:),1);
+    end
+    trialAvrg_tcs_passive(:,:,iCon,2)=mean(missTemp,3);
+    hitRate_passive(iCon, 1) = length(hitInds)/(length(hitInds)+length(missInds));
+
+    %now do block 2
+    block2Inds = intersect(conInds,block2trials_passive); %find trials for block 1 at this contrast
+    hitInds = intersect(hit_passive, block2Inds); %hit trials for block 1 at this contrast
+    missInds = intersect(miss_passive,block2Inds); %miss trials for block1 at this contrast
+    hitTargetTimes = cell2mat(input.cTargetOn(hitInds));
+    hitTargetTimes(hitTargetTimes>(min(nframes)-30))=[];
+    missTargetTimes = cell2mat(input.cTargetOn(missInds));
+    missTargetTimes(missTargetTimes>(min(nframes)-30))=[];
+    hitsTemp = nan(60,nCells,length(hitInds));
+    missTemp = nan(60,nCells,length(missInds));
+    for iHit = 1:length(hitTargetTimes)
+        hitsTemp(:,:,iHit)=npSub_tc_passive(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc_passive(hitTargetTimes(iHit)-29:hitTargetTimes(iHit),:),1);
+    end
+    trialAvrg_tcs_passive(:,:,iCon,3)=mean(hitsTemp,3);
+    for iMiss = 1:length(missTargetTimes)
+        missTemp(:,:,iMiss)=npSub_tc_passive(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc_passive(missTargetTimes(iMiss)-29:missTargetTimes(iMiss),:),1);
+    end
+    trialAvrg_tcs_passive(:,:,iCon,4)=mean(missTemp,3);
+    hitRate_passive(iCon, 2) = length(hitInds)/(length(hitInds)+length(missInds));
+
+end
+save(fullfile(fnout,'trialAvrg_tcs_passive.mat'),'trialAvrg_tcs_passive')
+
+%% plot mean responses
+pyr = ~mask_label;
+
+t=(-29:30)/30;
+positions=[1,3,5,7];
+
+figure;
+for iCon = 1:nCon
+    subplot(nCon,2,positions(iCon))
+    meanHit=mean(trialAvrg_tcs_passive(:,pyr,iCon,1),2);
+    stdHit=std(trialAvrg_tcs_passive(:,pyr,iCon,1),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit)
+    hold on
+    meanMiss=mean(trialAvrg_tcs_passive(:,pyr,iCon,2),2);
+    stdMiss=std(trialAvrg_tcs_passive(:,pyr,iCon,2),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate_passive(iCon,1))};
+    % text(-0.75,75,txt)
+end
+
+for iCon = 1:nCon
+    subplot(nCon,2,iCon*2)
+    meanHit=mean(trialAvrg_tcs_passive(:,pyr,iCon,3),2);
+    stdHit=std(trialAvrg_tcs_passive(:,pyr,iCon,3),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit)
+    hold on
+    meanMiss=mean(trialAvrg_tcs_passive(:,pyr,iCon,4),2);
+    stdMiss=std(trialAvrg_tcs_passive(:,pyr,iCon,4),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate_passive(iCon,2))};
+    % text(-0.75,75,txt)
+end
+
+%% plot responses comparing block 1 and 2
+positions=[1,3,5,7];
+
+figure;
+for iCon = 1:nCon
+    subplot(nCon,2,positions(iCon))
+    meanHit=mean(trialAvrg_tcs_passive(:,pyr,iCon,1),2);
+    stdHit=std(trialAvrg_tcs_passive(:,pyr,iCon,1),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit,'b')
+    hold on
+    meanHit=mean(trialAvrg_tcs_passive(:,pyr,iCon,3),2);
+    stdHit=std(trialAvrg_tcs_passive(:,pyr,iCon,3),[],2);
+    seHit=stdHit./sqrt(sum(pyr));
+    shadedErrorBar(t,meanHit,seHit,'g')
+
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+
+    txt = {num2str(hitRate_passive(iCon,1))};
+    text(-0.75,85,txt,'Color','b')
+
+    txt = {num2str(hitRate_passive(iCon,2))};
+    text(-0.75,55,txt,'Color','g')
+end
+
+for iCon = 1:nCon
+    subplot(nCon,2,iCon*2)
+    meanMiss=mean(trialAvrg_tcs_passive(:,pyr,iCon,2),2);
+    stdMiss=std(trialAvrg_tcs_passive(:,pyr,iCon,2),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'b')
+    hold on
+    meanMiss=mean(trialAvrg_tcs_passive(:,pyr,iCon,4),2);
+    stdMiss=std(trialAvrg_tcs_passive(:,pyr,iCon,4),[],2);
+    seMiss=stdMiss./sqrt(sum(pyr));
+    shadedErrorBar(t,meanMiss,seMiss,'g')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+end
+
+print(fullfile(fnout,'Passive_B1vsB2.pdf'),'-dpdf', '-bestfit')

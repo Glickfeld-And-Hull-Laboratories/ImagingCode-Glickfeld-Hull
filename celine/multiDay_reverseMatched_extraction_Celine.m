@@ -6,7 +6,7 @@ ds = 'DART_V1_contrast_ori_Celine'; %name of data information sheet
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
-experimentFolder = 'SST_atropine';
+experimentFolder = 'SST_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -905,7 +905,24 @@ for id=1:nd
         otherCells = setdiff(green_ind_keep,iCell);
         otherCellsMean = mean(subTrialResp_OG{id}(stat_inds{id},otherCells),2,"omitnan");
         [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
-        
+            if ismember(iCell,red_ind_keep)
+                if id == pre
+                    figure
+                    scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                    hold on
+                    h = lsline;
+                    title([' R= ' num2str(R(2))]);
+
+                % else 
+                %     figure
+                %     scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %     hold on
+                %     h = lsline;
+                %     title([' R= ' num2str(R(2))]);
+
+                end
+
+            end
 
         noiseCorr_OG{id}(1,iCell)=R(2);
         noiseCorr_OG{id}(2,iCell)=p(2);
@@ -975,7 +992,7 @@ clear subTrialResp_loc_temp subTrialResp_temp tempSubData tempCellMeans tempData
 
 %% get correlation strucutre for noise correlation
 %FOR EMX ONLY
-green_ind_keep = red_ind_keep;
+%green_ind_keep = red_ind_keep;
 %not seperated by contrast 
 noiseCorr = cell(4,nd); 
 %1 = stationary not seperated by pupil
@@ -1297,25 +1314,25 @@ for id=1:nd
                 otherCells = setdiff(green_ind_keep,iCell);
                 otherCellsMean = mean(subTrialResp{id}(inds,otherCells),2,"omitnan");
                 [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
-                
-                if rem(iCell,10)==0
-                    if id == pre
-                        figure
-                        scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-                        hold on
-                        h = lsline;
-                        title([' R= ' num2str(R(2))]);
-
-                    else 
-                        figure
-                        scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-                        hold on
-                        h = lsline;
-                        title([' R= ' num2str(R(2))]);
-
-                    end
-
-                end
+                % 
+                % if rem(iCell,10)==0
+                %     if id == pre
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     else 
+                %         figure
+                %         scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+                %         hold on
+                %         h = lsline;
+                %         title([' R= ' num2str(R(2))]);
+                % 
+                %     end
+                % 
+                % end
         
                 noiseCorrContrast{4,iCon,id}(1,iCell)=R(2);
                 noiseCorrContrast{4,iCon,id}(2,iCell)=p(2);

@@ -7,9 +7,9 @@ frame_rate = 15;
 nexp = size(expt,2);
 % ex_exp = [5 12 13];
 nanframes = zeros(1,nexp);
-max_dist = 2;
+max_dist = 4;
 
-for iexp =  47  %setdiff(1:nexp, ex_exp)
+for iexp =  [93 94]  %setdiff(1:nexp, ex_exp)
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
     area = expt(iexp).img_loc{1};
@@ -34,7 +34,6 @@ for iexp =  47  %setdiff(1:nexp, ex_exp)
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
     
-    max_dist = 2;
     seed = rng;
     nCells = size(resp_cell{end,end,end},1);
     nTrials = size(stimCon_all,2);
@@ -97,6 +96,9 @@ for iexp =  47  %setdiff(1:nexp, ex_exp)
         end
     end
 
+    %Find preferred plaid phase
+    [pp_max, pp_ind] = max(resp_avg, [],2);
+    
     resp_downsamp_rect = resp_all;
     resp_downsamp_rect(find(resp_all<0)) = 0;
     SI_all = (resp_downsamp_rect-(test_avg_rect+mask_avg_rect))./(resp_downsamp_rect+(test_avg_rect+mask_avg_rect));
@@ -116,39 +118,47 @@ for iexp =  47  %setdiff(1:nexp, ex_exp)
     movegui('center')
     start = 1;
     n = 1;
-    for iCell =1:nCells
-        if start>25
-            sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
-            print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
-            figure;
-            movegui('center')
-            start = 1;
-            n = n+1;
+    
+    
+        for iCell =1:nCells
+            if start>25
+                sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
+                print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+                figure;
+                movegui('center')
+                start = 1;
+                n = n+1;
+            end
+            p_anova_all(iCell,1) = anova1(resp_all(iCell,:), stim_all,'off');
+            if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
+                [b_hat_all(iCell,1), amp_hat_all(iCell,1), per_hat_all(iCell,1),pha_hat_all(iCell,1),sse_all(iCell,1),R_square_all(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all)),SI_all(iCell,:));
+                if iCell < 200
+                    subplot(5,5,start)
+                    scatter(maskPhas(stim_all),SI_all(iCell,:));
+                    hold on
+                    scatter(maskPhas,SI_avg(iCell,:))
+                    yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
+                    plot(phase_range, yfit_all(iCell,:,1));
+                    title(['Rsq = ' num2str(chop(R_square_all(iCell,1),2)) '; p = ' num2str(chop(p_anova_all(iCell,1),2))])
+                    ylim([ -1 1])
+                    xlim([ 0 360])
+                    set(gca,'TickDir','out')
+                end
+            else
+                b_hat_all(iCell,1) = max(SI_avg(iCell,:),[],2);
+                amp_hat_all(iCell,1) = 0;
+                per_hat_all(iCell,1) = NaN;
+                pha_hat_all(iCell,1) = NaN;
+                sse_all(iCell,1) = 0;
+                R_square_all(iCell,1)= 0;
+                yfit_all(iCell,:,1) = nan(length(phase_range),1);
+            end
+            start = start+1;
+        if iCell < 200
+        sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
         end
-        p_anova_all(iCell,1) = anova1(resp_all(iCell,:), stim_all,'off');
-        if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
-            [b_hat_all(iCell,1), amp_hat_all(iCell,1), per_hat_all(iCell,1),pha_hat_all(iCell,1),sse_all(iCell,1),R_square_all(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all)),SI_all(iCell,:));
-            subplot(5,5,start)
-            scatter(maskPhas(stim_all),SI_all(iCell,:));
-            hold on
-            scatter(maskPhas,SI_avg(iCell,:))
-            yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
-            plot(phase_range, yfit_all(iCell,:,1));
-            title(['Rsq = ' num2str(chop(R_square_all(iCell,1),2)) '; p = ' num2str(chop(p_anova_all(iCell,1),2))])
-        else
-            b_hat_all(iCell,1) = max(SI_avg(iCell,:),[],2);
-            amp_hat_all(iCell,1) = 0;
-            per_hat_all(iCell,1) = NaN;
-            pha_hat_all(iCell,1) = NaN;
-            sse_all(iCell,1) = 0;
-            R_square_all(iCell,1)= 0;
-            yfit_all(iCell,:,1) = nan(length(phase_range),1);
         end
-        start = start+1;
-    end
-    sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
-    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
-
     p_anova_shuf = nan(nCells,1);
     b_hat_shuf = nan(nCells,1); 
     amp_hat_shuf = nan(nCells,1); 
@@ -164,43 +174,48 @@ for iexp =  47  %setdiff(1:nexp, ex_exp)
     movegui('center')
     start = 1;
     n = 1;
-    for iCell = 1:nCells
-        if start>25
-            sgtitle([mouse ' ' date '- Thresh Shuffled- Trials < ' num2str(max_dist) '  deg'])
-            print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
-            figure;
-            movegui('center')
-            start = 1;
-            n = n+1;
-        end
-        p_anova_shuf(iCell,1) = anova1(resp_all(iCell,:), stim_all_shuf,'off');
-        if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
-            [b_hat_shuf(iCell,1), amp_hat_shuf(iCell,1), per_hat_shuf(iCell,1),pha_hat_shuf(iCell,1),sse_shuf(iCell,1),R_square_shuf(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all_shuf)),SI_all(iCell,:));
-            subplot(5,5,start)
-            scatter(maskPhas(stim_all_shuf),SI_all(iCell,:));
-            hold on
-            scatter(maskPhas,SI_avg(iCell,:))
-            yfit_shuf(iCell,:,1) = b_hat_shuf(iCell,1)+amp_hat_shuf(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_shuf(iCell,1) + 2.*pi/pha_hat_shuf(iCell,1)));
-            plot(phase_range, yfit_shuf(iCell,:,1));
-            title(['Rsq = ' num2str(chop(R_square_shuf(iCell,1),2)) '; p = ' num2str(chop(p_anova_shuf(iCell,1),2))])
-        else
-            b_hat_shuf(iCell,1) = max(SI_avg(iCell,:),[],2);
-            amp_hat_shuf(iCell,1) = 0;
-            per_hat_shuf(iCell,1) = NaN;
-            pha_hat_shuf(iCell,1) = NaN;
-            sse_shuf(iCell,1) = 0;
-            R_square_shuf(iCell,1)= 0;
-            yfit_shuf(iCell,:,1) = nan(length(phase_range),1);
-        end
-        start = start+1;
-    end
     
-    resp_avg_max = max(resp_avg,[],2); 
-    
-    sgtitle([mouse ' ' date '- Shuffled Trials < ' num2str(max_dist) '  deg'])
-    print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
 
-    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']),'trN', 'seed', 'resp_avg_max', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd','SI_all_avg', 'max_dist')
+        for iCell = 1:nCells
+            if start>25
+                sgtitle([mouse ' ' date '- Thresh Shuffled- Trials < ' num2str(max_dist) '  deg'])
+                print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
+                figure;
+                movegui('center')
+                start = 1;
+                n = n+1;
+            end
+            p_anova_shuf(iCell,1) = anova1(resp_all(iCell,:), stim_all_shuf,'off');
+            if max(SI_avg(iCell,:),[],2)>min(SI_avg(iCell,:),[],2)
+                [b_hat_shuf(iCell,1), amp_hat_shuf(iCell,1), per_hat_shuf(iCell,1),pha_hat_shuf(iCell,1),sse_shuf(iCell,1),R_square_shuf(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all_shuf)),SI_all(iCell,:));
+                if iCell < 200
+                    subplot(5,5,start)
+                    scatter(maskPhas(stim_all_shuf),SI_all(iCell,:));
+                    hold on
+                    scatter(maskPhas,SI_avg(iCell,:))
+                    yfit_shuf(iCell,:,1) = b_hat_shuf(iCell,1)+amp_hat_shuf(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_shuf(iCell,1) + 2.*pi/pha_hat_shuf(iCell,1)));
+                    plot(phase_range, yfit_shuf(iCell,:,1));
+                    title(['Rsq = ' num2str(chop(R_square_shuf(iCell,1),2)) '; p = ' num2str(chop(p_anova_shuf(iCell,1),2))])
+                end
+            else
+                b_hat_shuf(iCell,1) = max(SI_avg(iCell,:),[],2);
+                amp_hat_shuf(iCell,1) = 0;
+                per_hat_shuf(iCell,1) = NaN;
+                pha_hat_shuf(iCell,1) = NaN;
+                sse_shuf(iCell,1) = 0;
+                R_square_shuf(iCell,1)= 0;
+                yfit_shuf(iCell,:,1) = nan(length(phase_range),1);
+            end
+            start = start+1;
+        if iCell < 200
+        sgtitle([mouse ' ' date '- Shuffled Trials < ' num2str(max_dist) '  deg'])
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
+        end
+     end 
+    
+    resp_avg_max = max(resp_avg,[],2);
+    
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits.mat']), 'pp_max', 'pp_ind', 'trN', 'seed', 'resp_avg_max', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd','SI_all_avg', 'max_dist')
     close all
 end
 
@@ -216,9 +231,9 @@ frame_rate = 15;
 nexp = size(expt,2);
 ex_exp = [5 12 13];
 nanframes = zeros(1,nexp);
-max_dist = 2;
+max_dist = 4;
 
-for iexp = [46]
+for iexp = [92]
     
         mouse = expt(iexp).mouse;
         date = expt(iexp).date;
@@ -246,7 +261,6 @@ for iexp = [46]
         load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
         load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
 
-        max_dist = 2;
         seed = rng;
         nCells = size(resp_cell{end,end,end},1);
         nTrials = size(stimCon_all,2);
@@ -352,13 +366,15 @@ for iexp = [46]
             p_anova_all(iCell,1) = anova1(resp_all(iCell,:), stim_all,'off');
             if max(resp_avg(iCell,:),[],2)>min(resp_avg(iCell,:),[],2)
                 [b_hat_all(iCell,1), amp_hat_all(iCell,1), per_hat_all(iCell,1),pha_hat_all(iCell,1),sse_all(iCell,1),R_square_all(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all)),resp_all(iCell,:));
-                subplot(5,5,start)
-                scatter(maskPhas(stim_all),resp_all(iCell,:));
-                hold on
-                scatter(maskPhas,resp_avg(iCell,:))
-                yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
-                plot(phase_range, yfit_all(iCell,:,1));
-                title(['Rsq = ' num2str(chop(R_square_all(iCell,1),2)) '; p = ' num2str(chop(p_anova_all(iCell,1),2))])
+                if iCell < 200
+                    subplot(5,5,start)
+                    scatter(maskPhas(stim_all),resp_all(iCell,:));
+                    hold on
+                    scatter(maskPhas,resp_avg(iCell,:))
+                    yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
+                    plot(phase_range, yfit_all(iCell,:,1));
+                    title(['Rsq = ' num2str(chop(R_square_all(iCell,1),2)) '; p = ' num2str(chop(p_anova_all(iCell,1),2))])
+                end
             else
                 b_hat_all(iCell,1) = max(resp_avg(iCell,:),[],2);
                 amp_hat_all(iCell,1) = 0;
@@ -370,9 +386,11 @@ for iexp = [46]
             end
             start = start+1;
         end
+        if iCell < 200
         sgtitle([mouse ' ' date '- Trials < ' num2str(max_dist) '  deg'])
         print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_SI_maxDist' num2str(max_dist) '_' num2str(n) '.pdf']), '-dpdf','-fillpage')
-
+        end
+        
         p_anova_shuf = nan(nCells,1);
         b_hat_shuf = nan(nCells,1); 
         amp_hat_shuf = nan(nCells,1); 
@@ -400,13 +418,15 @@ for iexp = [46]
             p_anova_shuf(iCell,1) = anova1(resp_all(iCell,:), stim_all_shuf,'off');
             if max(resp_avg(iCell,:),[],2)>min(resp_avg(iCell,:),[],2)
                 [b_hat_shuf(iCell,1), amp_hat_shuf(iCell,1), per_hat_shuf(iCell,1),pha_hat_shuf(iCell,1),sse_shuf(iCell,1),R_square_shuf(iCell,1)] = sinefit(deg2rad(maskPhas(stim_all_shuf)),resp_all(iCell,:));
-                subplot(5,5,start)
-                scatter(maskPhas(stim_all_shuf),resp_all(iCell,:));
-                hold on
-                scatter(maskPhas,resp_avg(iCell,:))
-                yfit_shuf(iCell,:,1) = b_hat_shuf(iCell,1)+amp_hat_shuf(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_shuf(iCell,1) + 2.*pi/pha_hat_shuf(iCell,1)));
-                plot(phase_range, yfit_shuf(iCell,:,1));
-                title(['Rsq = ' num2str(chop(R_square_shuf(iCell,1),2)) '; p = ' num2str(chop(p_anova_shuf(iCell,1),2))])
+                if iCell < 200
+                    subplot(5,5,start)
+                    scatter(maskPhas(stim_all_shuf),resp_all(iCell,:));
+                    hold on
+                    scatter(maskPhas,resp_avg(iCell,:))
+                    yfit_shuf(iCell,:,1) = b_hat_shuf(iCell,1)+amp_hat_shuf(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_shuf(iCell,1) + 2.*pi/pha_hat_shuf(iCell,1)));
+                    plot(phase_range, yfit_shuf(iCell,:,1));
+                    title(['Rsq = ' num2str(chop(R_square_shuf(iCell,1),2)) '; p = ' num2str(chop(p_anova_shuf(iCell,1),2))])
+                end
             else
                 b_hat_shuf(iCell,1) = max(resp_avg(iCell,:),[],2);
                 amp_hat_shuf(iCell,1) = 0;
@@ -418,9 +438,10 @@ for iexp = [46]
             end
             start = start+1;
         end
+        if iCell < 200
         sgtitle([mouse ' ' date '- Shuffled Trials < ' num2str(max_dist) '  deg'])
         print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_respPlaid_maxDist' num2str(max_dist) '_' num2str(n) '_shuffled.pdf']), '-dpdf','-fillpage')
-
+        end
         save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_phaseFits_respPlaid.mat']), 'respPlaid_avg', 'respTest_max', 'respmask_max', 'resp_avg_max', 'test_avg', 'mask_avg', 'trN', 'seed', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all', 'p_anova_all', 'yfit_shuf', 'b_hat_shuf', 'amp_hat_shuf', 'per_hat_shuf', 'pha_hat_shuf', 'sse_shuf', 'R_square_shuf', 'p_anova_shuf','trial_n', 'trialInd','SI_all_avg', 'max_dist')
         close all
         

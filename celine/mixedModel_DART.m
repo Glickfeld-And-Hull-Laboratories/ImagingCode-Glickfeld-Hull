@@ -15,7 +15,7 @@ eval(ds);
 %Oct 2023: 138 142 163 171 178 190 294 307 323 333
 
 
-sess_list = [138 163 171 178 190 294 307 323 333 303 311 319 329 355 359];%enter all the sessions you want to concatenate
+sess_list = [138 142 163 171 178 190 294 307 333 323 303 311 319 329 355 359];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session

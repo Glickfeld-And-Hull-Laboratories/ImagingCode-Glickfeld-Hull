@@ -37,15 +37,15 @@ nCon = length(targetCon)
 
 mice={};
 tc_trial_avrg_stat_concat=cell(1,nd);
-tc_trial_avrg_stat_hiPupil_concat=cell(1,nd);
-tc_trial_avrg_stat_lowPupil_concat=cell(1,nd);
+tc_trial_avrg_stat_largePupil_concat=cell(1,nd);
+tc_trial_avrg_stat_smallPupil_concat=cell(1,nd);
 tc_trial_avrg_loc_concat=cell(1,nd);
 resp_keep_concat=cell(1,nd);
 resp_max_keep_concat=cell(1,nd);
 pref_responses_loc_concat=cell(1,nd);
 pref_responses_stat_concat=cell(1,nd);
-pref_responses_stat_hiPupil_concat=cell(1,nd);
-pref_responses_stat_lowPupil_concat=cell(1,nd);
+pref_responses_stat_largePupil_concat=cell(1,nd);
+pref_responses_stat_smallPupil_concat=cell(1,nd);
 RIx_concat=cell(1,nd);
 dirs_concat=[];
 cons_concat=[];
@@ -63,13 +63,15 @@ norm_dir_resp_loc_concat = cell(1,nd);
 pref_nonPref_stat_concat=cell(1,nd);
 pref_nonPref_loc_concat=cell(1,nd);
 pref_dir_concat=cell(1,nd);
-noiseCorr_concat = cell(1,nd);
+noiseCorr_concat = cell(4,nd);
+noiseCorr_OG_concat = cell(1,nd);
+noiseCorrContrast_concat = cell(4,nCon,nd); 
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nd);
 pref_allTrials_loc_concat =cell(nCon,nd);
 dataTableConat=[];
 drug=cell(1,nSess);
-pupilMeans_concat=nan(nd,2,nSess);
+pupilMeans_concat=nan(nd,3,nSess);
 pupilCounts_concat=nan(nd,2,nSess);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
@@ -112,8 +114,9 @@ for iSess = 1:nSess
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
+   
     pupilMeans_concat(:,:,iSess)=pupilMeans;
-    pupilCounts_concat(:,:,iSess)=pupilCounts;
+%    pupilCounts_concat(:,:,iSess)=pupilCounts;
 
 
     %tells the contrast, direction and orientation for each trial each day
@@ -148,8 +151,8 @@ for iSess = 1:nSess
     for id = 1:nd
         
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon));
-        tc_trial_avrg_stat_hiPupil_concat{id} = cat(2,tc_trial_avrg_stat_hiPupil_concat{id},tc_trial_avrg_stat_hiPupil{id}(:,:,sharedCon));
-        tc_trial_avrg_stat_lowPupil_concat{id} = cat(2,tc_trial_avrg_stat_lowPupil_concat{id},tc_trial_avrg_stat_lowPupil{id}(:,:,sharedCon));
+        tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon));
+        tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon));
         tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon));
         nonPref_trial_avrg_stat_concat{id} =cat(2,nonPref_trial_avrg_stat_concat{id},nonPref_trial_avrg_stat{id}(:,:,sharedCon));
         nonPref_trial_avrg_loc_concat{id} =cat(2,nonPref_trial_avrg_loc_concat{id},nonPref_trial_avrg_loc{id}(:,:,sharedCon));
@@ -157,8 +160,8 @@ for iSess = 1:nSess
         resp_max_keep_concat{id}=cat(1,resp_max_keep_concat{id},resp_max_keep{id}(:,sharedCon));
         pref_responses_loc_concat{id}=cat(1,pref_responses_loc_concat{id},pref_responses_loc{id}(:,sharedCon));
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon));
-        pref_responses_stat_hiPupil_concat{id}=cat(1,pref_responses_stat_hiPupil_concat{id},pref_responses_stat_hiPupil{id}(:,sharedCon));
-        pref_responses_stat_lowPupil_concat{id}=cat(1,pref_responses_stat_lowPupil_concat{id},pref_responses_stat_lowPupil{id}(:,sharedCon));
+        pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon));
+        pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
@@ -166,7 +169,13 @@ for iSess = 1:nSess
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
         pref_dir_concat{id}=cat(2,pref_dir_concat{id},pref_dir_keep{id});
-        noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
+        for i=1:4
+            noiseCorr_concat{i,id}=cat(2,noiseCorr_concat{i,id},noiseCorr{i,id});
+            for iCon = 1:nCon
+                noiseCorrContrast_concat{i,iCon,id}=cat(2,noiseCorrContrast_concat{i,iCon,id},noiseCorrContrast{i,iCon,id});
+            end
+        end
+        noiseCorr_OG_concat{id}=cat(2,noiseCorr_OG_concat{id},noiseCorr_OG{id});
         sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
@@ -226,15 +235,21 @@ end
 clear start iMouse
 
 
+green_all = intersect(haveRunning_green{1},haveRunning_green{2});
+green_all = intersect(green_all, haveRunning_green{3});
+
+red_all = intersect(haveRunning_red{1},haveRunning_red{2});
+red_all = intersect(red_all, haveRunning_red{3});
+
 %find how many haveRunning red cells exist for each mouse
 cellCountsRed = nan(nSess,nCon);
 mouseNames=[];
 for iMouse = 1:nSess
     for iCon = 1:nCon
-        cellCountsRed(iMouse, iCon,1)=length(intersect(red_ind_concat,(mouseInds{iMouse})));
+        cellCountsRed(iMouse, iCon,1)=length(intersect(haveRunning_red{iCon},(mouseInds{iMouse})));
         
     end
-    mouseNames=[mouseNames, string(mice(iMouse,:))]
+    mouseNames=[mouseNames, string(mice(iMouse,:))];
 end
 clear  iMouse
 
@@ -243,7 +258,7 @@ cellCountsGreen = nan(nSess,nCon);
 mouseNames=[];
 for iMouse = 1:nSess
     for iCon = 1:nCon
-        cellCountsGreen(iMouse, iCon,1)=length(intersect(green_ind_concat,(mouseInds{iMouse})));
+        cellCountsGreen(iMouse, iCon,1)=length(intersect(haveRunning_green{iCon},(mouseInds{iMouse})));
         
     end
     mouseNames=[mouseNames, string(mice(iMouse,:))]
@@ -255,11 +270,6 @@ cellCountTableGreen = table(cellCountsGreen, RowNames=mouseNames)
 writetable(cellCountTableRed,fullfile(fnout,'cellCounts.csv'),'WriteRowNames',true)
 writetable(cellCountTableGreen,fullfile(fnout,'cellCounts_Green.csv'),'WriteRowNames',true)
 
-green_all = intersect(haveRunning_green{1},haveRunning_green{2});
-green_all = intersect(green_all, haveRunning_green{3});
-
-red_all = intersect(haveRunning_red{1},haveRunning_red{2});
-red_all = intersect(red_all, haveRunning_red{3});
 
 %find how many haveRunning red cells exist for each mouse
 cellCountsRedAll = nan(nSess,1);
@@ -270,11 +280,11 @@ clear  iMouse
 
 
 %find cells that have running data on both days
-have_HI_pre = ~isnan(pref_responses_stat_hiPupil_concat{pre});
-have_HI_post = ~isnan(pref_responses_stat_hiPupil_concat{post});
+have_HI_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
+have_HI_post = ~isnan(pref_responses_stat_largePupil_concat{post});
 
-have_LOW_pre = ~isnan(pref_responses_stat_lowPupil_concat{pre});
-have_LOW_post = ~isnan(pref_responses_stat_lowPupil_concat{post});
+have_LOW_pre = ~isnan(pref_responses_stat_smallPupil_concat{pre});
+have_LOW_post = ~isnan(pref_responses_stat_smallPupil_concat{post});
 
 have_bothPupil=cell(1,3);
 for iCon =1:nCon
@@ -357,8 +367,8 @@ norm_diff(find(norm_diff == -Inf))=NaN;
 norm_diff(find(norm_diff == Inf))=NaN;
 
 % cells with high correlation in the baseline day
-highRInds = find(noiseCorr_concat{pre}(1,:)>0.5);
-lowRInds = find(noiseCorr_concat{pre}(1,:)<=0.5);
+highRInds = find(noiseCorr_OG_concat{pre}(1,:)>0.5);
+lowRInds = find(noiseCorr_OG_concat{pre}(1,:)<=0.5);
 
 redHigh=intersect(highRInds, red_ind_concat);
 redLow=intersect(lowRInds, red_ind_concat);
@@ -424,7 +434,7 @@ end
 set(gca,'XColor', 'none','YColor','none')
 
 subplot(3,2,p2) 
-ylim([-.02 .25]);
+ylim([-.02 .17]);
 hold on
 shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon),tc_green_se_stat{pre}(:,iCon),'--k');
 hold on
@@ -447,7 +457,7 @@ set(gca,'XColor', 'none','YColor','none')
 
 
 end  
-print(fullfile(fnout,'Fig_2A_vertical.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_S3A_vertical.pdf'),'-dpdf');
 
 
 %% Fig 2D - contrast response for SST and Pyr cells
@@ -481,11 +491,11 @@ hold on
 errorbar(cons,conResp_red_avrg_stat{post},conResp_red_se_stat{post},'b');
 %title(['SST',' n = ', num2str(length(red_ind_concat))])
 %xlabel('contrast') 
-ylabel('dF/F') 
-xlim([0 1])
-ylim([.0 .18])
+%ylabel('dF/F') 
+xlim([0 1.1])
+ylim([.0 .12])
 xticks([.25 .5 1])
-set(gca, 'TickDir', 'out')
+%set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,2,2) %
@@ -494,9 +504,9 @@ hold on
 errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'b');
 %title(['Pyr',' n = ', num2str(length(green_ind_concat))])
 %xlabel('contrast') 
-set(gca, 'TickDir', 'out')
-xlim([0 1])
-ylim([.0 .18])
+%set(gca, 'TickDir', 'out')
+xlim([0 1.1])
+ylim([.0 .12])
 xticks([.25 .5 1])
 box off
 
@@ -507,7 +517,7 @@ width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
-print(fullfile(fnout,'Fig_2D.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_S3B.pdf'),'-dpdf');
 
 
 %% Figure 2D statistics
@@ -531,10 +541,10 @@ clear dfof_stat_table cell_type_col cellID dfof_stat
 
 % run the ANOVA
 w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
-rm_SST_stat = fitrm(SST_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+rm_SST_stat = fitrm(SST_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
 
-rm_Pyr_stat = fitrm(Pyr_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+rm_Pyr_stat = fitrm(Pyr_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
 
 
@@ -836,12 +846,12 @@ errorbar(cons,conResp_redLow_avrg_stat{pre},conResp_redLow_se_stat{pre},'k');
 hold on
 errorbar(cons,conResp_redLow_avrg_stat{post},conResp_redLow_se_stat{post},'b');
 title(['Weak Corr',' n = ', num2str(length(redLow))])
-xlabel('contrast') 
-ylabel('dF/F, pref ori') 
-xlim([0 1])
+% xlabel('contrast') 
+% ylabel('dF/F, pref ori') 
+xlim([0 1.1])
 ylim([0 .15])
 xticks([.25 .5 1])
-set(gca, 'TickDir', 'out')
+% set(gca, 'TickDir', 'out')
 box off
 
 subplot(1,2,2) %
@@ -852,7 +862,7 @@ title(['Strong Corr,' 'n = ', num2str(length(redHigh))])
 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
-xlim([0 1])
+xlim([0 1.1])
 ylim([0 .15])
 xticks([.25 .5 1])
 box off
@@ -864,7 +874,7 @@ height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 
-print(fullfile(fnout,'Fig_3D.pdf'),'-dpdf');
+print(fullfile(fnout,'Fig_S4D.pdf'),'-dpdf');
 
 %% Figure 3D statistics
 %from the full dataframe, extract rows for stationary trials for weakly and
@@ -878,14 +888,14 @@ fullCorrTable.corrType = categorical([repmat(0,length(redLow),1);repmat(1,length
 % run an ANOVA for corr type X contrast, baseline day only
 w = table(categorical([1 2 3].'), 'VariableNames', {'contrast'}); % within-design
 rm_fullCorr = fitrm(fullCorrTable, 'd1c1-d1c3 ~ corrType', 'WithinDesign', w)
-ranova(rm_fullCorr, 'withinmodel', 'contrast')
+ranova(rm_fullCorr, 'withinmodel', 'contrast');
 
 % run the ANOVAs on low and high corr seperately
 w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
-rm_SST_low = fitrm(SST_low_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+rm_SST_low = fitrm(SST_low_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_SST_low, 'withinmodel', 'DART*contrast')
 
-rm_SST_high = fitrm(SST_high_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w)
+rm_SST_high = fitrm(SST_high_stat_dfof, 'd1c1-d2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_SST_high, 'withinmodel', 'DART*contrast')
 
 
@@ -1206,16 +1216,16 @@ ranova(rm_Pyr_matched, 'withinmodel', 'behState*DART*contrast')
 % models for stationary and running seperately 
 w = table(categorical([1 1 1 2 2 2 ].'), categorical([1 2 3 1 2 3].'), 'VariableNames', {'DART', 'contrast'}); % within-design
 
-rm_SST_stat = fitrm(SST_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+rm_SST_stat = fitrm(SST_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_SST_stat, 'withinmodel', 'DART*contrast')
 
-rm_SST_loc = fitrm(SST_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+rm_SST_loc = fitrm(SST_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_SST_loc, 'withinmodel', 'DART*contrast')
 
-rm_Pyr_stat = fitrm(Pyr_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w)
+rm_Pyr_stat = fitrm(Pyr_matched_dfof, 'Sd1c1-Sd2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_Pyr_stat, 'withinmodel', 'DART*contrast')
 
-rm_Pyr_loc = fitrm(Pyr_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w)
+rm_Pyr_loc = fitrm(Pyr_matched_dfof, 'Rd1c1-Rd2c3 ~ 1', 'WithinDesign', w);
 ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
 
 
@@ -1242,9 +1252,9 @@ table(contrasts,sst_pvalues_loc)
 
 
 % pairwise ttests for dfof response at each contrast for pyr cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(red_all,1),pref_responses_stat_concat{post}(red_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(red_all,2),pref_responses_stat_concat{post}(red_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(red_all,3),pref_responses_stat_concat{post}(red_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
 
 %corrected for three tests
 pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
@@ -1252,9 +1262,9 @@ contrasts = cons';
 table(contrasts,pyr_pvalues_stat)
 
 % pairwise ttests for dfof response at each contrast for pyr cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(red_all,2),pref_responses_loc_concat{post}(red_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(red_all,3),pref_responses_loc_concat{post}(red_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
 
 %corrected for three tests
 pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
@@ -1689,22 +1699,22 @@ for id = 1:nd
     temp_green = intersect(green_ind_concat,have_bothPupil{iCon});
     temp_red = intersect(red_ind_concat,have_bothPupil{iCon});
 
-    tc_green_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_green,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_green,iCon),[],2);
+    tc_green_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),[],2);
     tc_green_se_stat_large{id}(:,iCon)=green_std/sqrt(length(temp_green));
     
-    tc_red_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_red,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_hiPupil_concat{id}(:,temp_red,iCon),[],2);
+    tc_red_avrg_stat_large{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_red,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_red,iCon),[],2);
     tc_red_se_stat_large{id}(:,iCon)=red_std/sqrt(length(temp_red));
     
     clear green_std red_std
 
-    tc_green_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_green,iCon),2);
-    green_std=nanstd(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_green,iCon),[],2);
+    tc_green_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),2);
+    green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),[],2);
     tc_green_se_stat_small{id}(:,iCon)=green_std/sqrt(length(temp_green));
     
-    tc_red_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_red,iCon),2);
-    red_std=nanstd(tc_trial_avrg_stat_lowPupil_concat{id}(:,temp_red,iCon),[],2);
+    tc_red_avrg_stat_small{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_red,iCon),2);
+    red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_red,iCon),[],2);
     tc_red_se_stat_small{id}(:,iCon)=red_std/sqrt(length(temp_red));
     
     clear green_std red_std
