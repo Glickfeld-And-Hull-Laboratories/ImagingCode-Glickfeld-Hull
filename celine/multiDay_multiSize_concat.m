@@ -9,7 +9,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [53];%enter all the sessions you want to concatenate
+sess_list = [53, 55];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -287,9 +287,6 @@ Pyr_cells = intersect(green_ind_concat,find(OSI_baseline>.4));
 
 runningGreen = intersect(runningCells, green_ind_concat);
 runningRed= intersect(runningCells, red_ind_concat);
-% 
-runningGreen = intersect(runningGreen, find(respToLarge));
-runningRed = intersect(runningRed, find(respToLarge));
 
 
 statGreen = green_ind_concat;
@@ -335,9 +332,9 @@ cellCountTableGreen = table(cellCountsGreen, RowNames=mouseNames)
 clear cellCounts cellCountsGreen
 %Nan swap to match cells for running even when not matched across
 %conditions
-% conBySize_resp_loc_concat{post}(isnan(conBySize_resp_loc_concat{pre}))=nan;
-% conBySize_resp_loc_concat{pre}(isnan(conBySize_resp_loc_concat{post}))=nan;
-% 
+conBySize_resp_loc_concat{post}(isnan(conBySize_resp_loc_concat{pre}))=nan;
+conBySize_resp_loc_concat{pre}(isnan(conBySize_resp_loc_concat{post}))=nan;
+
 
 
 %% calculate norm_diff
@@ -388,11 +385,12 @@ N=length(red_ind_concat);
     b=bar([1,2,3,4],[supp_table_stat(:,1),supp_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#70D0F6"
     b(2).FaceColor="#0C8ABB"
-    ylim([0 .3])
+    %ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
+
     title('Suppressed')
-    ylim([0 .35])
+   % ylim([0 .35])
     ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -402,11 +400,11 @@ N=length(red_ind_concat);
     b=bar([1,2,3,4],[facil_table_stat(:,1),facil_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#C983B1"
     b(2).FaceColor="#883367"
-    ylim([0 .3])
+    %ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .35])
+    %ylim([0 .35])
     %ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -429,11 +427,11 @@ print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
     b=bar([1,2,3,4],[supp_table_loc(:,1),supp_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#70D0F6"
     b(2).FaceColor="#0C8ABB"
-    ylim([0 .3])
+   % ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Suppressed')
-    ylim([0 .35])
+    %ylim([0 .35])
     ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -443,11 +441,11 @@ print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
     b=bar([1,2,3,4],[facil_table_loc(:,1),facil_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#C983B1"
     b(2).FaceColor="#883367"
-    ylim([0 .3])
+    %ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .35])
+    %ylim([0 .35])
     %ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -548,8 +546,8 @@ end
 
 %% plots for running trials
 
-runningGreen = green_ind_concat;
-runningRed = red_ind_concat;
+% runningGreen = green_ind_concat;
+% runningRed = red_ind_concat;
 
 tc_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_loc = cell(1,nd); %same for red

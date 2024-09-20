@@ -372,6 +372,7 @@ save(fullfile(fnout,'trialAvrg_tcs.mat'),'trialAvrg_tcs')
 
 %% plot mean responses
 pyr = ~mask_label;
+sst = mask_label;
 
 t=(-29:30)/30;
 positions=[1,3,5,7,9,11];
@@ -720,3 +721,86 @@ for iCon = 1:nCon
 end
 
 print(fullfile(fnout,'Passive_B1vsB2.pdf'),'-dpdf', '-bestfit')
+%% plot mean responses SST active
+t=(-29:30)/30;
+positions=[1,3,5,7,9,11];
+
+figure;
+for iCon = 1:nCon
+    subplot(nCon,2,positions(iCon))
+    meanHit=mean(trialAvrg_tcs(:,sst,iCon,1),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs(:,sst,iCon,1),[],2,'omitmissing');
+    seHit=stdHit./sqrt(sum(sst));
+    shadedErrorBar(t,meanHit,seHit)
+    hold on
+    meanMiss=mean(trialAvrg_tcs(:,sst,iCon,2),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs(:,sst,iCon,2),[],2,'omitmissing');
+    seMiss=stdMiss./sqrt(sum(sst));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate(iCon,1))};
+    % text(-0.75,75,txt)
+end
+
+for iCon = 1:nCon
+    subplot(nCon,2,iCon*2)
+    meanHit=mean(trialAvrg_tcs(:,sst,iCon,3),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs(:,sst,iCon,3),[],2,'omitmissing');
+    seHit=stdHit./sqrt(sum(sst));
+    shadedErrorBar(t,meanHit,seHit)
+    hold on
+    meanMiss=mean(trialAvrg_tcs(:,sst,iCon,4),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs(:,sst,iCon,4),[],2,'omitmissing');
+    seMiss=stdMiss./sqrt(sum(sst));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate(iCon,2))};
+    % text(-0.75,75,txt)
+end
+
+%% plot mean responses SST passive
+
+
+t=(-29:30)/30;
+positions=[1,3,5,7];
+
+figure;
+for iCon = 1:nCon
+    subplot(nCon,2,positions(iCon))
+    meanHit=mean(trialAvrg_tcs_passive(:,sst,iCon,1),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs_passive(:,sst,iCon,1),[],2,'omitmissing');
+    seHit=stdHit./sqrt(sum(sst));
+    shadedErrorBar(t,meanHit,seHit)
+    hold on
+    meanMiss=mean(trialAvrg_tcs_passive(:,sst,iCon,2),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs_passive(:,sst,iCon,2),[],2,'omitmissing');
+    seMiss=stdMiss./sqrt(sum(sst));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate_passive(iCon,1))};
+    % text(-0.75,75,txt)
+end
+
+for iCon = 1:nCon
+    subplot(nCon,2,iCon*2)
+    meanHit=mean(trialAvrg_tcs_passive(:,sst,iCon,3),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs_passive(:,sst,iCon,3),[],2,'omitmissing');
+    seHit=stdHit./sqrt(sum(sst));
+    shadedErrorBar(t,meanHit,seHit)
+    hold on
+    meanMiss=mean(trialAvrg_tcs_passive(:,sst,iCon,4),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs_passive(:,sst,iCon,4),[],2,'omitmissing');
+    seMiss=stdMiss./sqrt(sum(sst));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(num2str(cons(iCon)))
+    box off
+    ylim([-20 200])
+    % txt = {num2str(hitRate_passive(iCon,2))};
+    % text(-0.75,75,txt)
+end

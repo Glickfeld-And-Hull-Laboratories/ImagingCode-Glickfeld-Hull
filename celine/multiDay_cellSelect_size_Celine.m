@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =53;
+day_id =57;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
@@ -290,16 +290,10 @@ elseif ~exist('redChImg')
 end
 
 
-%create red image where any pixel value above a certain percentile of the max is set to 90%
-%of the max - removing the highest 10% of pixel values to create a lower
-%direction image for segmenting
-threshPercentile = 99;
 
-highValues = find(redChImg>prctile(redChImg,threshPercentile,'all'));
-redThresh = redChImg;
-redThresh(highValues)=prctile(redChImg,threshPercentile,'all');
+
+
 figure; imagesc(redChImg);colormap gray;
-figure; imagesc(redThresh);colormap gray;
 
 clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells
