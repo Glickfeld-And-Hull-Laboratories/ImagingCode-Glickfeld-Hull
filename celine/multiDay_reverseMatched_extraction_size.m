@@ -867,6 +867,7 @@ for i = 1:size(match_ind,2)
 end
 
 figure;
+subplot(1,2,1)
 imagesc(corrmap{1});
 colormap gray
 %caxis([0.05 .3])
@@ -877,6 +878,22 @@ plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
 bound = cell2mat(bwboundaries(mask_match{post}(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 hold off
+subplot(1,2,2)
+imagesc(corrmap{3});
+colormap gray
+%caxis([0.05 .3])
+title('average FOV matched day');
+hold on
+bound = cell2mat(bwboundaries(mask_match{pre}(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
+bound = cell2mat(bwboundaries(mask_match{post}(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+hold off
+x0=5;
+y0=5;
+width=10;
+height=4;
+set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fn_multi,'matchCells.pdf'),'-dpdf');
 
 

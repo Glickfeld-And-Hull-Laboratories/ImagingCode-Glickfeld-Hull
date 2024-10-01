@@ -1,7 +1,7 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 
 dataStructLabels = {'contrastxori'};
 
@@ -12,8 +12,8 @@ eval(ds);
 % 178 190 294 %good quality SOM YM90K
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
-experimentFolder = 'SST_YM90K';
-sess_list = [138 142 163 171 178 190 294 307 333 323 303 311 319 329 355 359];%enter all the sessions you want to concatenate
+experimentFolder = 'SST_atropine';
+sess_list = [4 8 12];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -85,7 +85,7 @@ cd(fnout)
 clear d sess_title
 
 zscor_xnan = @(x) bsxfun(@rdivide, bsxfun(@minus, x, mean(x,'omitnan')), std(x, 'omitnan'));
-%% concatenating data
+% concatenating data
 nCon = length(targetCon)
 
 mice={};
