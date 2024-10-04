@@ -868,7 +868,7 @@ end
 
 figure;
 subplot(1,2,1)
-imagesc(corrmap{1});
+imagesc(fov_avg{1});
 colormap gray
 %caxis([0.05 .3])
 title('average FOV reference day');
@@ -879,7 +879,7 @@ bound = cell2mat(bwboundaries(mask_match{post}(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 hold off
 subplot(1,2,2)
-imagesc(corrmap{3});
+imagesc(fov_avg{3});
 colormap gray
 %caxis([0.05 .3])
 title('average FOV matched day');
@@ -915,7 +915,6 @@ for i = 1:length(keep_cells)
 end
 
 
-
 %I am converting these to be labelled by their position in the keep cell
 %index
 
@@ -929,14 +928,30 @@ for i = 1:length(keep_cells)
 end
 
 figure;
-imagesc(fov_red{3});
+subplot(1,2,1)
+imagesc(fov_avg{1});
 colormap gray
 %caxis([10 100])
 title('matched red cells');
 hold on
 bound = cell2mat(bwboundaries(keep_red_masks));
-%plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
+
+subplot(1,2,2)
+imagesc(fov_avg{3});
+colormap gray
+%caxis([10 100])
+title('matched red cells');
+hold on
+bound = cell2mat(bwboundaries(keep_red_masks));
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+hold off
+x0=5;
+y0=5;
+width=10;
+height=4;
+set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
