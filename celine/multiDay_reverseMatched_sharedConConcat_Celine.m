@@ -154,13 +154,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'locomotion.mat'));
     load(fullfile(fn_multi,'fluor_intensity.mat'));
    load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
-%   temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
 
-   %  temp_table.z_speed=zscor_xnan(temp_table.speed);
-   %  temp_table.z_pupil=zscor_xnan(temp_table.pupil);
-   %  temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
-   % 
-   %  dataTableConat=[dataTableConat; temp_table];
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -1365,9 +1359,7 @@ title('+HTP')
 set(gca, 'TickDir', 'out')
 print(fullfile(fnout,['prefDir_change.pdf']),'-dpdf','-bestfit')
 
-%%
-
-
+%% split timecourses by correlation
 % Identify high and low correlation cells
 
 % cells with high correlation in the baseline day

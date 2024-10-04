@@ -9,7 +9,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [46];%enter all the sessions you want to concatenate
+sess_list = [44 55];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -295,9 +295,9 @@ for iCell = 1:nKeep_total
     OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
 end
 
-%histogram(OSI_baseline);
-green_ind_concat = intersect(green_ind_concat, find(respToLarge));
-red_ind_concat = intersect(red_ind_concat, find(respToLarge));
+% %histogram(OSI_baseline);
+% green_ind_concat = intersect(green_ind_concat, find(respToLarge));
+% red_ind_concat = intersect(red_ind_concat, find(respToLarge));
 
 runningGreen = intersect(runningCells, green_ind_concat);
 runningRed= intersect(runningCells, red_ind_concat);

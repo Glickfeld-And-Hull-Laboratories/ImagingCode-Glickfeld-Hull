@@ -475,8 +475,7 @@ save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_mat
 %% narrow down to the stimuli preferred for each cell each day
 
 
-%%
-
+%
 tc_trial_avrg_stat_largePupil=cell(1,nd);
 tc_trial_avrg_stat_smallPupil=cell(1,nd);
 
