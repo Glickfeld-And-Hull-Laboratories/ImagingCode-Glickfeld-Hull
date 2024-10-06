@@ -2789,31 +2789,32 @@ end
 z=12;
 y=z-1;
 
+cmap = jet(length(mice)); % Make nMice colors.
+
 
 for iCon = 1:nCon
 figure; movegui('center') 
 subplot(2,2,1)
-% scatter((green_means_stat{pre}(:,iCon)),(green_means_stat{post}(:,iCon)),10,'filled')
-% hold on
-scatter((green_means_stat{pre}(z:nSess,iCon)),(green_means_stat{post}(z:nSess,iCon)),10,'filled')
+scatter((green_means_stat{pre}(:,iCon)),(green_means_stat{post}(:,iCon)),10,cmap,'filled')
+hold on
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-% ylim([0 .2])
-% xlim([0 .2])
+ylim([0 .2])
+xlim([0 .2])
+axis square
 hline=refline(1);
 hline.Color = 'k';
 hline.LineStyle = ':';
 title('-HTP stationary')
-axis square
 set(gca, 'TickDir', 'out')
 uistack(hline,'bottom');
 hold off
 
 
 subplot(2,2,2)
-% scatter(red_means_stat{pre}(:,iCon),red_means_stat{post}(:,iCon),10, 'filled')
-% hold on
-scatter(red_means_stat{pre}(z:nSess,iCon),red_means_stat{post}(z:nSess,iCon),10,'filled')
+scatter(red_means_stat{pre}(:,iCon),red_means_stat{post}(:,iCon),10,cmap, 'filled')
+hold on
+axis square
 % ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([0 .2])
@@ -2824,13 +2825,12 @@ hline.LineStyle = ':';
 set(gca, 'TickDir', 'out')
 uistack(hline,'bottom');
 title('+HTP stationary')
-axis square
 hold off
 
 subplot(2,2,3)
-% scatter((green_means_loc{pre}(:,iCon)),(green_means_loc{post}(:,iCon)),10, 'filled')
-% hold on
-scatter((green_means_loc{pre}(z:nSess,iCon)),(green_means_loc{post}(z:nSess,iCon)),10,'filled')
+scatter((green_means_loc{pre}(:,iCon)),(green_means_loc{post}(:,iCon)),10,cmap, 'filled')
+hold on
+axis square
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([0 .4])
@@ -2839,17 +2839,16 @@ hline=refline(1);
 hline.Color = 'k';
 hline.LineStyle = ':';
 title('-HTP running')
-axis square
 set(gca, 'TickDir', 'out')
 uistack(hline,'bottom');
 hold off
 
 subplot(2,2,4)
-% scatter((red_means_loc{pre}(:,iCon)),(red_means_loc{post}(:,iCon)),10, 'filled')
-% hold on
-scatter((red_means_loc{pre}(z:nSess,iCon)),(red_means_loc{post}(z:nSess,iCon)),10,'filled')
+scatter((red_means_loc{pre}(:,iCon)),(red_means_loc{post}(:,iCon)),10, cmap,'filled')
+hold on
 % ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
+axis square
 ylim([0 .4])
 xlim([0 .4])
 hline=refline(1);
@@ -2857,7 +2856,6 @@ hline.Color = 'k';
 hline.LineStyle = ':';
 title('+HTP running')
 uistack(hline,'bottom');
-axis square
 hold off
 set(gca, 'TickDir', 'out')
 
