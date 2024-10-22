@@ -4508,4 +4508,38 @@ ylim([-.04 .04])
 
 clear green_means_stat green_means_loc red_mean_stat red_means_loc green_se_stat green_se_loc red_se_stat red_se_loc green_std red_std
 
+%% scattering R value vs. mean response
+%% scatterplot of max df/f for day 1 vs day 2
+
+for iCon = 1:nCon
+figure; movegui('center') 
+subplot(1,2,1)
+scatter(noiseCorr_OG_concat{pre}(1,haveRunning_green{iCon}),(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+xlim([0 1])
+ylim([-.2 1])
+ylabel('pre-DART dF/F')
+xlabel('pre-DART  R')
+title('-HTP stationary')
+axis square
+set(gca, 'TickDir', 'out')
+hold off
+
+
+subplot(1,2,2)
+scatter(noiseCorr_OG_concat{pre}(1,haveRunning_red{iCon}),(pref_responses_stat_concat{pre}(haveRunning_red{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+ylabel('pre-DART dF/F')
+xlabel('pre-DART  R')
+xlim([0 1])
+ylim([-.2 1])
+set(gca, 'TickDir', 'out')
+title('+HTP stationary')
+axis square
+hold off
+
+
+sgtitle(num2str(cons(iCon)))
+print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
+clear mean_pre_stat mean_post_stat stderror_post stderror_pre
+end
 

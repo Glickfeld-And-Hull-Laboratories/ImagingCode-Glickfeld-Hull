@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =59;
+day_id =62;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'

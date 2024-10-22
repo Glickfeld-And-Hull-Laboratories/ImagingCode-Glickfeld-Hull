@@ -9,7 +9,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [44 55];%enter all the sessions you want to concatenate
+sess_list = [62];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -779,9 +779,9 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle(['population size tuning' ])
 
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
-
-contrast response
-errorbar for stat resp and loc resp vs size, where error is across mice
+%%
+% contrast response
+% errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(nSize,nd); %same for red
 conResp_green_se_stat = cell(nSize,nd); %this will be the se across all green cells
@@ -862,8 +862,8 @@ sgtitle('Stationary')
 
 print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
-contrast response running
-errorbar for loc resp and loc resp vs size, where error is across mice
+% contrast response running
+% errorbar for loc resp and loc resp vs size, where error is across mice
 conResp_green_avrg_loc = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_loc = cell(nSize,nd); %same for red
 conResp_green_se_loc = cell(nSize,nd); %this will be the se across all green cells

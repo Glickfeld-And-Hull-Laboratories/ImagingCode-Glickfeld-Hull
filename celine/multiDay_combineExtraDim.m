@@ -1,14 +1,14 @@
 
 clear all; clear global; close all
 clc
-%ds = 'DART_V1_atropine_Celine'; %dataset info
+%ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 ds = 'DART_V1_atropine_Celine';
 dataStructLabels = {'contrastxori'};
 
 eval(ds);
 
 experimentFolder = 'SST_atropine';
-sess_list = [4,8,44,46,55];%enter all the sessions you want to concatenate
+sess_list = [4,8,12,44,46,55];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 oldNewCutoff = 4; %list "old" session (3 con, 1 size, 8 dir) first, and indicate here where the first "new" session (4 con, 2 sze, 4 dir) is
@@ -166,14 +166,14 @@ for iSess = 1:oldNewCutoff-1
     for id = 1:nd
         
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon,targetSize));
-        % tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,targetSize));
-        % tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,targetSize));
+        tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,targetSize));
+        tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,targetSize));
         tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon,targetSize));
 
         pref_responses_loc_concat{id}=cat(1,pref_responses_loc_concat{id},pref_responses_loc{id}(:,sharedCon,targetSize));
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon,targetSize));
-        % pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon,targetSize));
-        % pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,targetSize));
+        pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon,targetSize));
+        pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,targetSize));
         
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id}(:,1:4,:,targetSize));
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id}(:,1:4,:,targetSize));
@@ -255,13 +255,13 @@ for iSess = oldNewCutoff:nSess
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon,targetSize));
         % tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,targetSize));
         % tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,targetSize));
-        tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon,targetSize));
+        % tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon,targetSize));
 
         pref_responses_loc_concat{id}=cat(1,pref_responses_loc_concat{id},pref_responses_loc{id}(:,sharedCon,targetSize));
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon,targetSize));
         % pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon,targetSize));
         % pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,targetSize));
-        
+        % 
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id}(:,:,sharedCon,targetSize));
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id}(:,:,sharedCon,targetSize));
  
@@ -294,18 +294,6 @@ cons=unique(cons_concat);
 dirs=unique(dirs_concat);
 nDir=length(dirs);
 nKeep_total = sum(nKeep_concat);
-
-
-
-%
-% loop to add "b" to the end of mice IDs where I have more than one session
-% with that mouse
-%set z to be the order position of first session that is at the earlier timepoint
-z = 11;
-for iMouse = z:nSess
-    mice{iMouse}=[mice{iMouse},'b'];
-end
-
 
 
 %find cells that I have running data for on both days
@@ -503,8 +491,8 @@ tc_red_se_stat = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-        temp_green = intersect(green_ind_concat, have_allPupil);
-        temp_red = intersect(red_ind_concat, have_allPupil);
+    temp_green = intersect(green_ind_concat, have_bothPupil{iCon});
+    temp_red = intersect(red_ind_concat, have_bothPupil{iCon});
     tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),2);
     green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,temp_green,iCon),[],2);
     tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(temp_green));
@@ -578,8 +566,8 @@ tc_red_se_stat = cell(1,nd); %same for red
 
 for id = 1:nd
     for iCon=1:nCon
-                temp_green = intersect(green_ind_concat, have_allPupil);
-        temp_red = intersect(red_ind_concat, have_allPupil);
+    temp_green = intersect(green_ind_concat, have_bothPupil{iCon});
+    temp_red = intersect(red_ind_concat, have_bothPupil{iCon});
     tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),2);
     green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,temp_green,iCon),[],2);
     tc_green_se_stat{id}(:,iCon)=green_std/sqrt(length(temp_green));
@@ -1453,7 +1441,7 @@ clear h1 p1 h2 p2
 meanEffectSize(pref_resp_subtracted{pre}(haveRunning_green{iCon},iCon),pref_resp_subtracted{post}(haveRunning_green{iCon},iCon))
 meanEffectSize(pref_resp_subtracted{pre}(haveRunning_red{iCon},iCon),pref_resp_subtracted{post}(haveRunning_red{iCon},iCon))
 
-%calculate norm_diff
+%% calculate norm_diff
 norm_diff = nan(2,nCon,nKeep_total);
 for i = 1:nKeep_total
     for iCon = 1:nCon
@@ -1479,7 +1467,7 @@ end
 %those into NANs instead
 norm_diff(find(norm_diff == -Inf))=NaN;
 norm_diff(find(norm_diff == Inf))=NaN;
-%%
+
 %make a table of suppresses and facilitated cells for the cells that have
 %both stationary and running within each condition
 facil=norm_diff(:,:,:)>=1;
@@ -1607,16 +1595,61 @@ set(gca,'TickDir','out')
 box off
 
 subplot(2,2,4)
-b=bar([1,2,3],[facil_table_stat_green(:,1),facil_table_loc_green(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+b=bar([1,2,3],[supp_table_loc_green(:,1),facil_table_loc_green(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
 b(1).FaceColor="#0C8ABB";
 b(2).FaceColor="#883367";
 xticklabels({'25','50','100'})
 hold on
 %title('Facilitated')
-ylim([0 .4])
+%ylim([0 .4])
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
+%% compute chi squares 
+%compute chi squares for stat red
+for iCon = 1:nCon
+    N=length(haveRunning_red{iCon});
+    n1=round(supp_table_stat_red(iCon,1)*N);
+    n2=round(facil_table_stat_red(2)*N);
+    x1 = [repmat('a',N,1); repmat('b',N,1)];
+    x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+    [tbl,chi2stat1,p1] = crosstab(x1,x2);
+    p1*3
+end
+
+%compute chi squares for running red
+for iCon = 1:nCon
+    N=length(haveRunning_red{iCon});
+    n1=round(supp_table_loc_red(iCon,1)*N);
+    n2=round(facil_table_loc_red(2)*N);
+    x1 = [repmat('a',N,1); repmat('b',N,1)];
+    x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+    [tbl,chi2stat1,p1] = crosstab(x1,x2);
+    p1*3
+end
+
+
+%compute chi squares for stat green
+for iCon = 1:nCon
+    N=length(haveRunning_green{iCon});
+    n1=round(supp_table_stat_green(iCon,1)*N);
+    n2=round(facil_table_stat_green(2)*N);
+    x1 = [repmat('a',N,1); repmat('b',N,1)];
+    x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+    [tbl,chi2stat1,p1] = crosstab(x1,x2);
+    p1*3
+end
+
+%compute chi squares for running green
+for iCon = 1:nCon
+    N=length(haveRunning_green{iCon});
+    n1=round(supp_table_loc_green(iCon,1)*N);
+    n2=round(facil_table_loc_green(2)*N);
+    x1 = [repmat('a',N,1); repmat('b',N,1)];
+    x2 = [repmat(1,n1,1); repmat(2,N-n1,1); repmat(1,n2,1); repmat(2,N-n2,1)];
+    [tbl,chi2stat1,p1] = crosstab(x1,x2);
+    p1*3
+end
 
 %% plot contrast response
 
@@ -1710,7 +1743,7 @@ errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'Ob');
 title('-HTP')
 xlabel('contrast') 
 xlim([0 1.1])
-ylim([0 .4])
+ylim([0 .2])
 xticks([.25 .5 1])
 set(gca, 'TickDir', 'out')
 box off
@@ -1888,3 +1921,119 @@ print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_byMouse.pdf']),'-dpdf','-best
 clear mean_pre_stat mean_post_stat stderror_post stderror_pre
 end
 
+%% direction tuning
+%% linear direction plot 
+
+green_dir_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
+red_dir_avrg_stat = cell(1,nd); %same for red
+green_dir_se_stat = cell(1,nd); %this will be the se across all green cells
+red_dir_se_stat = cell(1,nd); %same for red
+
+for iCon = 1:nCon
+    for id = 1:nd
+       
+        green_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(haveRunning_green{iCon},:,iCon),1);
+        green_std=nanstd(norm_dir_resp_stat_concat{id}(haveRunning_green{iCon},:,iCon),[],1);
+        green_dir_se_stat{id}=green_std/sqrt(length(haveRunning_green{iCon}));
+        green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
+        green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
+        
+        red_dir_avrg_stat{id}=nanmean(norm_dir_resp_stat_concat{id}(haveRunning_red{iCon},:,iCon),1);
+        red_std=nanstd(norm_dir_resp_stat_concat{id}(haveRunning_red{iCon},:,iCon),[],1);
+        red_dir_se_stat{id}=red_std/sqrt(length(haveRunning_red{iCon}));
+        red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
+        red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
+        clear green_std red_std
+        
+    end
+    
+    
+    
+    green_dir_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
+    red_dir_avrg_loc = cell(1,nd); %same for red
+    green_dir_se_loc = cell(1,nd); %this will be the se across all green cells
+    red_dir_se_loc = cell(1,nd); %same for red
+    
+    for id = 1:nd
+       
+        green_dir_avrg_loc{id}=nanmean(norm_dir_resp_loc_concat{id}(haveRunning_green{iCon},:,iCon),1);
+        green_std=nanstd(norm_dir_resp_loc_concat{id}(haveRunning_green{iCon},:,iCon),[],1);
+        green_dir_se_loc{id}=green_std/sqrt(length(haveRunning_green{iCon}));
+        green_dir_avrg_loc{id}=circshift(green_dir_avrg_loc{id},4);
+        green_dir_se_loc{id}=circshift(green_dir_se_loc{id},4);
+        
+        red_dir_avrg_loc{id}=nanmean(norm_dir_resp_loc_concat{id}(haveRunning_red{iCon},:,iCon),1);
+        red_std=nanstd(norm_dir_resp_loc_concat{id}(haveRunning_red{iCon},:,iCon),[],1);
+        red_dir_se_loc{id}=red_std/sqrt(length(haveRunning_red{iCon}));
+        red_dir_avrg_loc{id}=circshift(red_dir_avrg_loc{id},4);
+        red_dir_se_loc{id}=circshift(red_dir_se_loc{id},4);
+        clear green_std red_std
+        
+    end
+    
+    
+    
+    figure
+    subplot(2,2,1)
+    errorbar(dirs,green_dir_avrg_stat{pre},green_dir_se_stat{pre},'k')
+    hold on
+    errorbar(dirs,green_dir_avrg_stat{post},green_dir_se_stat{post},'b')
+    title(['Stationary, ', num2str(length(haveRunning_green{iCon})),' Pyr'])
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    ylabel('dF/F')
+    % ylim([-0.05 .1])
+    
+    subplot(2,2,2)
+    errorbar(dirs,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
+    hold on
+    errorbar(dirs,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
+    title(['Stationary, ', num2str(length(haveRunning_red{iCon})),' SST'])
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    % ylim([-0.05 .1])
+    
+    subplot(2,2,3)
+    errorbar(dirs,green_dir_avrg_loc{pre},green_dir_se_loc{pre},'k')
+    hold on
+    errorbar(dirs,green_dir_avrg_loc{post},green_dir_se_loc{post},'b')
+    title('Running, Pyr')
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    xlabel('normalized direction')
+    ylabel('dF/F')
+    % ylim([-0.05 .2])
+    
+    
+    subplot(2,2,4)
+    errorbar(dirs,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
+    hold on
+    errorbar(dirs,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
+    title('Running, SST')
+    set(gca, 'TickDir', 'out')
+    axis square
+    box off
+    xlabel('normalized direction')
+    % ylim([-0.05 .2])
+    
+    sgtitle(['Normalized direction tuning ',num2str(cons(iCon))])
+    
+    
+    print(fullfile(fnout,[num2str(cons(iCon)),'dirTuning.pdf']),'-dpdf','-bestfit')
+end
+
+%% compared effect during stationary to effect during running
+diffStat = pref_responses_stat_concat{post}-pref_responses_stat_concat{pre};
+diffLoc = pref_responses_loc_concat{post}-pref_responses_loc_concat{pre};
+
+for iCon = 1:nCon
+    figure
+    scatter(diffStat(haveRunning_red{iCon},iCon),diffLoc(haveRunning_red{iCon},iCon));
+    ylabel('diff run')
+    xlabel('diff stat')
+    xlim([-.8 .8])
+    ylim([-.8 .8])
+end 

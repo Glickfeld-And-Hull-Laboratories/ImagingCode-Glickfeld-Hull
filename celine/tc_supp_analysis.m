@@ -51,7 +51,7 @@ load(fullfile(base, mouse,date,ori_run, [date '_' mouse '_runs-' ori_run '_prefO
 %NEED TO LOAD MASKS TO GET THE INDEXES OF RED CELLS
 
 load(fullfile(base, mouse, date, RetImgFolder, [date '_' mouse '_runs-' RetImgFolder '_mask_cell.mat']))
-%% convert to trials
+% convert to trials
 nOn = input.nScansOn;
 nOff=input.nScansOff;
 %change this to use a padded array, where I add zeros at the end. test=padarray(cellTCs_match{1},30,0,'post');
@@ -77,6 +77,22 @@ data_tc_trial = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
 data_tc_trial = data_tc_trial(:,1:nTrials,:);
 clear data_trial data_f
 %plot(squeeze(mean(data_tc_trial, 2)))
+% looking at wheel speed
+wheel_speed = wheelSpeedCalc(input,32,'orange'); 
+nanmean(wheel_speed)
+
+
+
+wheel_tc = zeros(nOn+nOff, nTrials);
+
+for iTrial = 1:nTrials
+    wheel_tc(:,iTrial) = wheel_speed(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
+end
+wheel_trial_avg = mean(wheel_tc(nOff:nOn+nOff,:),1);
+RIx = wheel_trial_avg>2; %.55 is the noise level in the wheel movement
+mean(RIx)
+sum(RIx)
+mean(wheel_trial_avg(RIx))
 %% find the stimulus conditions
 tCons = celleqel2mat_padded(input.tGratingContrast(1:nTrials-1)); %transforms cell array into matrix (1 x ntrials)
 Cons = unique(tCons);
@@ -294,21 +310,6 @@ sgtitle([mouse, ', ', num2str(length(goodFitResp)),' cells'])
 % end
 
 
-%% looking at wheel speed
-wheel_speed = wheelSpeedCalc(input,32,'orange'); 
-nanmean(wheel_speed)
-
-
-
-wheel_tc = zeros(nOn+nOff, nTrials);
-
-for iTrial = 1:nTrials
-    wheel_tc(:,iTrial) = wheel_speed(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
-end
-wheel_trial_avg = mean(wheel_tc(nOff:nOn+nOff,:),1);
-RIx = wheel_trial_avg>2; %.55 is the noise level in the wheel movement
-mean(RIx)
-sum(RIx)
 
 %% get mean-subtracted trial responses for each cell
 

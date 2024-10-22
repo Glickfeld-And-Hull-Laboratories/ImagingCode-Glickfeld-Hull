@@ -168,7 +168,7 @@ for iSize = 1:nSizes %loop through the sizes
            t2=t(1):0.01:t(123); % to get temporal values with the interpolated data
            stimStart_interp=find(t2==0)+5; %don't look in the first 50 ms, as this is too early to be a true peak
            %find(t2==.2)
-           endSearch=find(t2==0)+30;
+           endSearch=find(t2==0)+29;
 
            peak=max(traceInterp(stimStart_interp:stimStart_interp+20)); %find the max value within a set window
            %currently set to 61 (stim onset) through 67, 200ms after stim
@@ -3721,3 +3721,180 @@ height=4;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print('dynamics_respAtEach_runningVSstat', '-dpdf');
+%% looking into the "piled up" cells
+piledUpCells_all = find(peak_time(5,4,:,4)>.29);
+responsiveHighConLArge = find(h_concat(:,nSizes,nCons));
+piledUpCells =intersect(piledUpCells_all,responsiveHighConLArge);
+
+%distribution of depth
+figure;histogram(depth);hold on; histogram(depth(piledUpCells))
+
+%distribution by RF distance
+figure;histogram(dists_concat);hold on; histogram(dists_concat(piledUpCells))
+%% seeing how groups of cells are clustered among/within mice
+
+
+piledUpDistByExpt = NaN(1,nExpt);
+for iExpt = 1:nExpt
+    piledUpDistByExpt(iExpt)=(length(intersect(find(exptNumber==iExpt), piledUpCells)))/length(find(exptNumber==iExpt));
+end
+uniExpt=expt_list(unique(exptNumber));
+table(uniExpt',piledUpDistByExpt','VariableNames', {'Experiment', 'Percent "piled up'})
+%% 
+
+
+cellArray = cellstr(mouseID);
+
+% Find unique strings and their corresponding indices
+[uniqueStrings, ~, idx] = unique(cellArray);
+
+% Count occurrences of each unique string
+totalCounts = accumarray(idx, 1);
+
+
+piledUpMice=mouseID(piledUpCells,:);
+cellArray = cellstr(piledUpMice);
+
+% Find unique strings and their corresponding indices
+[uniqueStrings, ~, idx] = unique(cellArray);
+
+% Count occurrences of each unique string
+piledUpCounts= accumarray(idx, 1);
+
+% Display the results
+for i = 1:length(uniqueStrings)
+    fprintf('String: %s, Percent: %d\n', uniqueStrings{i}, round(100*(piledUpCounts(i)/totalCounts(i))));
+end
+
+%%
+piledUp_SST = intersect(piledUpCells, interNrns);
+piledUp_pyr = intersect(piledUpCells, pyrCells);
+
+[n n2] = subplotn(nSizes*nCons);
+x=1;
+figure;
+    for iSize = 1:nSizes %loop through the sizes
+        
+        for iCon = 1:nCons
+        
+        temp_mean1 = mean(TCs_stat(:,iSize,iCon,piledUp_pyr),4,"omitnan");
+        temp_se1 = std(TCs_stat(:,iSize,iCon,piledUp_pyr),[],4,"omitnan")/sqrt(length(piledUp_pyr));
+
+
+        temp_mean2 = mean(TCs_stat(:,iSize,iCon,piledUp_SST),4,"omitnan");
+        temp_se2 = std(TCs_stat(:,iSize,iCon,piledUp_SST),[],4,"omitnan")/sqrt(length(piledUp_SST));
+
+        subplot(n,n2,x)
+
+        shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
+        hold on
+        shadedErrorBar(t(:),temp_mean1,temp_se1);
+        hold on
+        
+        %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+        hold on
+        ylim([-.03 .15])
+        xlim([-.15 .5])
+        box off
+        set(gca, 'TickDir', 'out')
+        hline(0)
+        hold off
+        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+        x=x+1;
+        end
+        
+clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
+    end
+  
+x0=1;
+y0=1;
+width=7;
+height=8;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle(['Stationary, ', num2str(length(piledUp_pyr)),' Pyr cells, ',num2str((length(piledUp_SST))),' SST cells'])
+
+print('timeCourses_piledUpCells', '-dpdf');
+%% plot individual example cells
+
+% Total number of indices you want to draw
+numIndices = 24;
+% Get evenly spaced indices
+drawnIndices = round(linspace(1, length(piledUp_pyr), numIndices));
+% Get the corresponding values from piledUp_SST
+selectedIndices = piledUp_pyr(drawnIndices);
+
+[n n2] = subplotn(numIndices);
+x=1;
+figure;
+for iCell = 1:numIndices
+    subplot(n,n2,x)
+    thisCell = selectedIndices(iCell);
+    plot(t,TCs_stat(:,nSizes,nCons,thisCell))
+    box off
+    x=x+1;
+end
+
+sgtitle('Example Pyramidal cells with late fall')
+x0=1;
+y0=1;
+width=7;
+height=8;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print('ExamplePyrCells', '-dpdf');
+
+
+
+% Get evenly spaced indices
+drawnIndicesSST = round(linspace(1, length(piledUp_SST), numIndices));
+% Get the corresponding values from piledUp_SST
+selectedIndicesSST = piledUp_SST(drawnIndicesSST);
+
+[n n2] = subplotn(numIndices);
+x=1;
+figure;
+for iCell = 1:numIndices
+    subplot(n,n2,x)
+    thisCell = selectedIndicesSST(iCell);
+    plot(t,TCs_stat(:,nSizes,nCons,thisCell))
+    box off
+    x=x+1;
+end
+sgtitle('Example SST cells with late fall')
+
+x0=1;
+y0=1;
+width=7;
+height=8;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print('ExampleSSTCells', '-dpdf');
+%%
+piledUp_SST = intersect(piledUpCells, interNrns);
+piledUp_pyr = intersect(piledUpCells, pyrCells);
+
+figure;
+    temp_mean1 = mean(TCs_stat(:,iSize,iCon,piledUp_pyr),4,"omitnan");
+    temp_se1 = std(TCs_stat(:,iSize,iCon,piledUp_pyr),[],4,"omitnan")/sqrt(length(piledUp_pyr));
+
+
+    temp_mean2 = mean(TCs_stat(:,iSize,iCon,piledUp_SST),4,"omitnan");
+    temp_se2 = std(TCs_stat(:,iSize,iCon,piledUp_SST),[],4,"omitnan")/sqrt(length(piledUp_SST));
+
+    shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
+    hold on
+    shadedErrorBar(t(:),temp_mean1,temp_se1);
+    hold on
+    
+    %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+    hold on
+    fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+    hold on
+    %ylim([-.03 .15])
+    xlim([-.15 .5])
+    box off
+    set(gca, 'TickDir', 'out')
+    hline(0)
+    hold off
+    title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+ 
