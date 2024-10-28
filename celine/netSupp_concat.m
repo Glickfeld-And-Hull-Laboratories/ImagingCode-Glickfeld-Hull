@@ -155,7 +155,7 @@ resp_means = nan(nSizes,nCons,nCells,2);
 fwhm=nan(nSizes,nCons,nCells); %only for 80% contrast
 %first value will be the eary timepoint, second value will be the late
 %timepoint
-
+interpolatedTCs = nan(407,5,4,nCells);
 for iSize = 1:nSizes %loop through the sizes    
     for iCon = 1:nCons
         for iCell = 1:nCells
@@ -164,6 +164,7 @@ for iSize = 1:nSizes %loop through the sizes
            thisTrace = TCs_stat(:,iSize,iCon,iCell);
            %interpolate data
            traceInterp=interp1(t,thisTrace,(t(1):0.01:t(123)));
+           interpolatedTCs(:,iSize,iCon,iCell) = traceInterp;
            %traceInterp=smoothdata(traceInterp,'movmean',3);
            t2=t(1):0.01:t(123); % to get temporal values with the interpolated data
            stimStart_interp=find(t2==0)+5; %don't look in the first 50 ms, as this is too early to be a true peak
@@ -3767,8 +3768,8 @@ for i = 1:length(uniqueStrings)
 end
 
 %%
-piledUp_SST = intersect(piledUpCells, interNrns);
-piledUp_pyr = intersect(piledUpCells, pyrCells);
+% piledUp_SST = intersect(piledUpCells, interNrns);
+% piledUp_pyr = intersect(piledUpCells, pyrCells);
 
 [n n2] = subplotn(nSizes*nCons);
 x=1;
@@ -3776,6 +3777,12 @@ figure;
     for iSize = 1:nSizes %loop through the sizes
         
         for iCon = 1:nCons
+
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
+        piledUp_pyr = intersect(piledUpCells, thesePyr);
+        piledUp_SST = intersect(piledUpCells, theseIN);
         
         temp_mean1 = mean(TCs_stat(:,iSize,iCon,piledUp_pyr),4,"omitnan");
         temp_se1 = std(TCs_stat(:,iSize,iCon,piledUp_pyr),[],4,"omitnan")/sqrt(length(piledUp_pyr));
@@ -3819,7 +3826,7 @@ print('timeCourses_piledUpCells', '-dpdf');
 %% plot individual example cells
 
 % Total number of indices you want to draw
-numIndices = 24;
+numIndices = 20;
 % Get evenly spaced indices
 drawnIndices = round(linspace(1, length(piledUp_pyr), numIndices));
 % Get the corresponding values from piledUp_SST
@@ -3832,6 +3839,7 @@ for iCell = 1:numIndices
     subplot(n,n2,x)
     thisCell = selectedIndices(iCell);
     plot(t,TCs_stat(:,nSizes,nCons,thisCell))
+    xlim([-.15 .7])
     box off
     x=x+1;
 end
@@ -3843,8 +3851,6 @@ width=7;
 height=8;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print('ExamplePyrCells', '-dpdf');
-
-
 
 % Get evenly spaced indices
 drawnIndicesSST = round(linspace(1, length(piledUp_SST), numIndices));
@@ -3858,6 +3864,7 @@ for iCell = 1:numIndices
     subplot(n,n2,x)
     thisCell = selectedIndicesSST(iCell);
     plot(t,TCs_stat(:,nSizes,nCons,thisCell))
+    xlim([-.15 .7])
     box off
     x=x+1;
 end
@@ -3870,19 +3877,18 @@ height=8;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print('ExampleSSTCells', '-dpdf');
 %%
-piledUp_SST = intersect(piledUpCells, interNrns);
-piledUp_pyr = intersect(piledUpCells, pyrCells);
+
 
 figure;
-    temp_mean1 = mean(TCs_stat(:,iSize,iCon,piledUp_pyr),4,"omitnan");
-    temp_se1 = std(TCs_stat(:,iSize,iCon,piledUp_pyr),[],4,"omitnan")/sqrt(length(piledUp_pyr));
+    temp_mean1 = mean(TCs_stat(:,iSize,iCon,thesePyr),4,"omitnan");
+    temp_se1 = std(TCs_stat(:,iSize,iCon,thesePyr),[],4,"omitnan")/sqrt(length(thesePyr));
 
 
-    temp_mean2 = mean(TCs_stat(:,iSize,iCon,piledUp_SST),4,"omitnan");
-    temp_se2 = std(TCs_stat(:,iSize,iCon,piledUp_SST),[],4,"omitnan")/sqrt(length(piledUp_SST));
+    temp_mean2 = mean(TCs_stat(:,iSize,iCon,theseIN),4,"omitnan");
+    temp_se2 = std(TCs_stat(:,iSize,iCon,theseIN),[],4,"omitnan")/sqrt(length(theseIN));
 
     shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
-    hold on
+    hold on     
     shadedErrorBar(t(:),temp_mean1,temp_se1);
     hold on
     

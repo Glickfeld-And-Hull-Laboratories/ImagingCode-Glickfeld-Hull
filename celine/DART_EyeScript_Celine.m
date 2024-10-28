@@ -2,7 +2,7 @@ clear all;
 %paths
 ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-rc =  behavConstsDART; %directories178
+rc =  behavConstsDART; %directories
 eval(ds);
 
 experimentFolder = 'SST_atropine';

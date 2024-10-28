@@ -5,6 +5,7 @@ clear all; clear global; close all
 netSupp_expt
 
 expt_num = 25;
+%[1,2,3,4,11,12,13,14,16,17,18,19,20,21,22,23,24,25];
 
 mouse = expt(expt_num).mouse
 date = expt(expt_num).date;
@@ -111,7 +112,7 @@ p = zeros(nCells, nSizes,nCons);
 h_short = zeros(nCells, nSizes,nCons);
 p_short = zeros(nCells, nSizes,nCons);
 
-resp_win = stimStart+2:stimStart+8;
+resp_win = stimStart+2:stimStart+5;
 resp_win_short = stimStart+2:stimStart+4;
 base_win = (stimStart - nOff/2):stimStart-1;
 
