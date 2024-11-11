@@ -21,7 +21,7 @@ fn = fullfile(base,['netSupp_analysis-',date]);
 mkdir(fn);
 cd(fn);
 
-%% collect and combine data
+% collect and combine data
 
 TCs_stat = []; 
 TCs_loc = [];
@@ -107,7 +107,10 @@ t = 1:double(nOn+nOff);
 t=(t-double(stimStart))/frame_rate;
 
 %find cells that are well centered
-centered = find(dists_concat<10);  
+%centered = find(dists_concat<10);  
+centered = find(h_concat(:,1,nCons)==1); %here using the definition that 
+largeSizeHighCon = find(h_concat(:,nSizes,nCons)==1);
+% cells responsive at the smallest size and highest contrast are "centered"
 centerIN = intersect(centered,interNrns);
 centerPyr = intersect(centered,pyrCells);
 
@@ -147,7 +150,7 @@ INdepths{4}=INdepth4;
 %% find peak, trough and similar metrics
 
 %make an empty matrix for values
-peak_trough =nan(nSizes,nCons,nCells,2);
+peak_trough =nan(nSizes,nCons,nCells,3);
 dip =nan(nSizes,nCons,nCells);
 dip_peak_ratio =nan(nSizes,nCons,nCells);
 peak_time=nan(nSizes,nCons,nCells,4);
@@ -190,7 +193,7 @@ for iSize = 1:nSizes %loop through the sizes
            peak_time(iSize,iCon, iCell,2)= t2(trough_time_temp);
 
                 if peak > 0
-                   if iCon > 0 %previously I used this to only take the half peak measurement for 
+                   if iCon > 0 
                        
                        halfPeak = peak/2;
                        %find the frame of the half peak
@@ -200,8 +203,14 @@ for iSize = 1:nSizes %loop through the sizes
                        peak_time(iSize,iCon, iCell,3) = t2(half_peak_temp);
                         %find the frame of the equivalent point on the decay
                        if min(traceInterp(peak_time_temp:length(t2)))<halfPeak
-                           half_dacay_frame=find(traceInterp(peak_time_temp:endSearch)>halfPeak,1,'last'); 
-                           %half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
+                           %half_dacay_frame=find(traceInterp(peak_time_temp:endSearch)>halfPeak,1,'last'); 
+                           half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
+                           if half_dacay_frame >5
+                              half_dacay_frame =5;
+                           end
+                           %restric half decay to max out at 300 ms by
+                           %setting any value greater than that equal to
+                           %300 ms
                            %look for the half decay anywhere after the peak, until the end of the trace
                            half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
                            peak_time(iSize,iCon, iCell,4) = t2(half_dacay_temp);
@@ -228,8 +237,9 @@ for iSize = 1:nSizes %loop through the sizes
            peak_trough(iSize,iCon, iCell,1)=peak;
            %peak is the identified max
            peak_trough(iSize,iCon, iCell,2)=trough;
-            %rough is the minimum within the identified timebin, which is
+            %trough is the minimum within the identified timebin, which is
             %locked to the time of the peak 
+            peak_trough(iSize,iCon, iCell,3)=halfPeak;
 
             %resp_mean is the average (:,:,:,1) or cumulative integral (:,:,:,2) response from 0 to 400 ms
            resp_means(iSize,iCon, iCell,1)=mean(thisTrace(stimStart:stimStart+12));
@@ -242,6 +252,63 @@ for iSize = 1:nSizes %loop through the sizes
     end
 end
 
+%% half rise and half decay averages for cells responsive at each condition
+
+
+[n n2] = subplotn(nSizes*nCons);
+x=1;
+
+figure;
+    for iSize = 1:nSizes %loop through the sizes
+        
+        for iCon = 1:nCons
+      
+        responsiveTheseTrials = find(h_concat(:,iSize,iCon));
+        thesePyr=intersect(pyrCells,responsiveTheseTrials);
+        theseIN=intersect(interNrns,responsiveTheseTrials);
+
+        temp_mean1 = mean(TCs_stat(:,iSize,iCon,thesePyr),4,"omitnan");
+        temp_se1 = std(TCs_stat(:,iSize,iCon,thesePyr),[],4,"omitnan")/sqrt(length(thesePyr));
+
+        temp_mean2 = mean(TCs_stat(:,iSize,iCon,theseIN),4,"omitnan");
+        temp_se2 = std(TCs_stat(:,iSize,iCon,theseIN),[],4,"omitnan")/sqrt(length(theseIN));
+
+        mean_halfPeak=mean(peak_time(iSize,iCon,responsiveTheseTrials,3),3,"omitmissing");
+        mean_halfDecay=(mean(peak_time(iSize,iCon,responsiveTheseTrials,4),3,"omitmissing"));
+
+        subplot(n,n2,x)
+        vline(mean_halfPeak,'b')
+        vline(mean_halfDecay,'m')
+        hold on
+        shadedErrorBar(t(:),temp_mean2,temp_se2,'g');
+        hold on
+        shadedErrorBar(t,temp_mean1,temp_se1);
+        hold on
+        alpha(.5)
+        hold on
+        ylim([-.03 .1])
+        xlim([-.25 .5])
+        
+        box off
+        set(gca, 'TickDir', 'out')
+        hline(0)
+        hold off
+        title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+        x=x+1;
+        end
+        
+clear temp_mean1 temp_trials1 temp_se1 temp_mean2 temp_trials2 temp_se2
+    end
+  
+x0=1;
+y0=1;
+width=5;
+height=8;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('Stationary')
+
+sgtitle('For cells responsive at each condition')
+print('halfRise_halfDecay_responsiveEach.pdf', '-dpdf');
 
 %% look at the mean peak for each
 mean_peak=(mean(peak_time(:,:,:,1),3,"omitmissing"));
@@ -307,7 +374,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle('Stationary')
 
 sgtitle(['Stationary, ', num2str(length(centerPyr)),' Pyr cells, ',num2str(length(centerIN)),' SST cells'])
-
+print('halfRise_halfDecay_allStims.pdf', '-dpdf');
 %% peak time traces
 
 figure; 
@@ -326,10 +393,11 @@ title('Centered Pyr cells')
 ylabel('Peak time')
 xlabel('Size')
 xticks(Sizes)
-ylim([.1 .17])
+ylim([.1 .18])
 box off
 set(gca, 'TickDir', 'out')
 lgd=legend(string(Cons))
+lgd.Location='best'
 title(lgd,'Contrast')
 
 subplot(1,2,2)
@@ -346,15 +414,15 @@ title('Centered SST cells')
 ylabel('Peak time')
 xlabel('Size')
 xticks(Sizes)
-ylim([.1 .17])
+ylim([0.1 .18])
 box off
 set(gca, 'TickDir', 'out')
 
 
 x0=5;
 y0=5;
-width=6;
-height=3;
+width=6.5;
+height=3.5;
 set(gcf,'units','inches','position',[x0,y0,width,height]);
 sgtitle('Stationary')
 
@@ -836,7 +904,7 @@ set(gca, 'TickDir', 'out')
 xticks(Sizes)
 xlabel('Size')
 ylabel('df/f mean')
-ylim([0 .06])
+ylim([-.01 .06])
 
 
 
@@ -857,7 +925,7 @@ set(gca, 'TickDir', 'out')
 xticks(Sizes)
 xlabel('Size')
 ylabel('df/f mean')
-ylim([0 .06])
+ylim([-.01 .06])
 
 sgtitle('Stationary')
 x0=5;
@@ -867,7 +935,7 @@ height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print('SizeTuning_byContrast_means.pdf', '-dpdf');
 
-%% Contrast tuning by size, based on peak
+% Contrast tuning by size, based on peak
 figure;
 subplot(1,2,1)
 for iSize = 1:nSizes
@@ -878,13 +946,13 @@ for iSize = 1:nSizes
 end
 lgd=legend(string(Sizes),'location','best');
 title(lgd,'Size')
-title("Contrast tuning by contrast, Pyr cells")
+title("Contrast tuning by size, Pyr cells")
 box off
 set(gca, 'TickDir', 'out')
 xticks(Cons)
 xlabel('Contrast')
 ylabel('df/f peak')
-ylim([0 .13])
+ylim([-.01 .13])
 
 subplot(1,2,2)
 for iSize = 1:nSizes
@@ -896,13 +964,13 @@ for iSize = 1:nSizes
 end
 lgd=legend(string(Sizes),'location','best');
 title(lgd,'Size')
-title("Contrast tuning by contrast, SST cells")
+title("Contrast tuning by size, SST cells")
 box off
 set(gca, 'TickDir', 'out')
 xticks(Cons)
 xlabel('Contrast')
 ylabel('df/f peak')
-ylim([0 .13])
+ylim([-.01 .13])
 
 
 x0=5;
@@ -911,6 +979,51 @@ width=6;
 height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print('ContrastTuning_bySize.pdf', '-dpdf');
+%% Contrast tuning by size, based on mean
+figure;
+subplot(1,2,1)
+for iSize = 1:nSizes
+        temp_mean1 = mean(resp_means(iSize,:,centerPyr,1),3,"omitnan");
+        temp_se1 = std(resp_means(iSize,:,centerPyr,1),[],3,"omitnan")/sqrt(length(centerPyr));
+        errorbar(Cons,temp_mean1,temp_se1);
+        hold on
+end
+lgd=legend(string(Sizes),'location','best');
+title(lgd,'Size')
+title("Contrast tuning by size, Pyr cells")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Cons)
+xlabel('Contrast')
+ylabel('df/f mean')
+ylim([-.01 .13])
+
+subplot(1,2,2)
+for iSize = 1:nSizes
+        temp_mean1 = mean(resp_means(iSize,:,centerIN,1),3,"omitnan");
+        temp_se1 = std(resp_means(iSize,:,centerIN,1),[],3,"omitnan")/sqrt(length(centerIN));
+
+        errorbar(Cons,temp_mean1,temp_se1);
+        hold on
+end
+lgd=legend(string(Sizes),'location','best');
+title(lgd,'Size')
+title("Contrast tuning by size, SST cells")
+box off
+set(gca, 'TickDir', 'out')
+xticks(Cons)
+xlabel('Contrast')
+ylabel('df/f mean')
+ylim([-.01 .13])
+
+
+x0=5;
+y0=5;
+width=6;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print('ContrastTuning_bySize_Mean.pdf', '-dpdf');
+
 
 %% TC matrix separated by depth
 
@@ -2335,14 +2448,16 @@ sgtitle(['Stationary'])
 
 print('TCs_respAtEach', '-dpdf');
 
-nSST_PCT_by_cond = nSST_resp_by_cond./nSST_resp_any;
-figure; heatmap(nSST_PCT_by_cond);
+%% heatmap for fraction of cells responsive at each stimulus condition, as 
+% a fraction of cells that are responsive at any condition
+nSST_fract_by_cond = nSST_resp_by_cond./nSST_resp_any;
+figure; heatmap(nSST_fract_by_cond,'Colormap',summer);
 xlabel('Size')
 ylabel('Contrast')
 ax = gca;
 ax.XData = [7.5, 15, 30, 60, 120]
 ax.YData =[0.1, 0.2, 0.4, 0.8]
-print('Prct_respAtEach', '-dpdf');
+print('Fract_respAtEach', '-dpdf');
 %% rise time, decay time, and FWHM for cells responsive at each size, 80% contrast
 temp_mean1 = nan(nCons,nSizes,3);
 temp_se1 = nan(nCons,nSizes,3);
@@ -3904,3 +4019,47 @@ figure;
     hold off
     title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
  
+%% plotting individual example cells
+iSize=nSizes
+iCon=nCons
+
+[n n2] = subplotn(4*3);
+x=1;
+
+figure;
+for i = 1:12
+    largeHighPyr = intersect(largeSizeHighCon,pyrCells);
+    iCell = largeHighPyr(i)
+
+    temp_halfPeak=peak_time(iSize,iCon,iCell,3)'
+    temp_halfDecay=peak_time(iSize,iCon,iCell,4);
+    temp_max=peak_trough(iSize,iCon,iCell,1);
+    temp_half_max=peak_trough(iSize,iCon,iCell,3);
+
+    temp_mean1 = TCs_stat(:,iSize,iCon,iCell);
+
+    subplot(n,n2,x)
+    vline(temp_halfPeak,'b')
+    vline(temp_halfDecay,'m')
+
+    hold on
+    plot(t,temp_mean1);
+    hold on
+    alpha(.5)
+    %fill([.2 .2 .4 .4],[-.1 .15 .15 -.1],'b',FaceAlpha = 0.25,LineStyle='none')
+    hold on
+    %fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
+    hold on
+    ylim([-.03 .15])
+    xlim([-.25 .5])
+    
+    box off
+    set(gca, 'TickDir', 'out')
+    hline(0)
+    hline(temp_max,'k')
+    hline(temp_half_max,'k')
+    hold off
+    title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
+    x=x+1;
+end
+print('ExampleLargeHighConCells', '-dpdf');
