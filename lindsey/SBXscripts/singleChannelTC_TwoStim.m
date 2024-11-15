@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '240821';
+date = '241113';
 ImgFolder = {'002'};
-time = strvcat('1309');
-mouse = 'i1396';
+time = strvcat('1154');
+mouse = 'i1412';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -42,7 +42,7 @@ nep = floor(size(data,3)./10000);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
 
 %% Register data
-data_avg = mean(data(:,:,70001:70500),3);
+data_avg = mean(data(:,:,50001:50500),3);
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
@@ -75,10 +75,13 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
 figure; imagesq(mean(data_reg(:,:,1:10000),3)); truesize;
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
 
+figure; n = [1 nep]; for ii = 1:2; subplot(2,1,ii); i = n(ii); imagesc(mean(data_reg(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
+
 %% find activated cells
 
-cStimOne = cell2mat(input.cStimOneOn);
-cStimTwo = cell2mat(input.cStimTwoOn);
+[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+cStimOne = stimOns(1:2:end);
+cStimTwo = stimOns(2:2:end);
 
 nTrials = length(cStimOne);
 sz = size(data_reg);
@@ -111,6 +114,12 @@ if input.doRandStimOnTime
         title(num2str(stimOneTimes(it)))
     end
 elseif input.doRandDir & input.doRandSF
+    ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
+    oris = unique(ori_mat);
+    nOri = length(oris);
+    sf_mat = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
+    sfs = unique(sf_mat);
+    nSF = length(sfs);
     data_dfof_stim = zeros(sz(1),sz(2),nOri*nSF);
     figure;
     it = 1;
@@ -127,6 +136,9 @@ elseif input.doRandDir & input.doRandSF
         end
     end
 elseif input.doRandDir
+    ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
+    oris = unique(ori_mat);
+    nOri = length(oris);
     data_dfof_stim = zeros(sz(1),sz(2),nOri+1);
     [n n2] = subplotn(nOri+1);
     figure;
@@ -240,6 +252,9 @@ save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
 
 clear data_tc data_tc_down np_tc np_tc_down mask_np mask_cell
 %% Stim two analysis
+
+nTrials = length(cStimOne);
+[sz(3) nCells] = size(npSub_tc);
 tISITime = celleqel2mat_padded(input.tISITimeMs);
 ISIs = unique(tISITime);
 nISI = length(ISIs);
@@ -301,13 +316,13 @@ resp_mat = zeros(nCells,nTrials,2);
 resp_mat(:,:,1) = squeeze(mean(tc_one_dfof(resp_win,:,:),1)-mean(tc_one_dfof(base_win,:,:),1));
 resp_mat(:,:,2) = squeeze(mean(tc_two_dfof(resp_win,:,:),1)-mean(tc_two_dfof(base_win,:,:),1));
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'sf_mat', 'sfs', 'nSF', 'ori_mat', 'oris', 'nOri', 'good_ind', 'base_win', 'resp_win');
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','cStimTwo','sf_mat', 'sfs', 'nSF', 'ori_mat', 'oris', 'nOri', 'good_ind', 'base_win', 'resp_win', 'h1','h1_ori');
 %%
 resp_mat_sf = zeros(nCells,nSF,2);
 for iSF = 1:nSF
     ind = find(sf_mat == sfs(iSF));
-    resp_mat_sf(:,iSF,1) = mean(resp_mat(:,ind),2,'omitnan');
-    resp_mat_sf(:,iSF,2) = std(resp_mat(:,ind),[],2,'omitnan')./sqrt(length(ind));
+    resp_mat_sf(:,iSF,1) = mean(resp_mat(:,ind,1),2,'omitnan');
+    resp_mat_sf(:,iSF,2) = std(resp_mat(:,ind,1),[],2,'omitnan')./sqrt(length(ind));
 end
 figure;
 [n n2] = subplotn(nCells);
@@ -322,6 +337,47 @@ print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
 
 [max_val max_ind] = max(resp_mat_sf(:,:,1),[],2);
 figure; histogram(max_ind)
+%%
+resp_mat_ori = zeros(nCells,nOri,2);
+for iOri = 1:nOri
+    ind = find(ori_mat == oris(iOri));
+    resp_mat_ori(:,iOri,1) = mean(resp_mat(:,ind,1),2,'omitnan');
+    resp_mat_ori(:,iOri,2) = std(resp_mat(:,ind,1),[],2,'omitnan')./sqrt(length(ind));
+end
+figure;
+[n n2] = subplotn(nCells);
+for iCell = 1:nCells
+    subplot(n,n2,iCell)
+    errorbar(oris, resp_mat_ori(iCell,:,1), resp_mat_ori(iCell,:,2))
+    ylim([0 inf])
+    xlabel('Ori')
+    ylabel('dF/F')
+end
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_tuningCurves.pdf']),'-dpdf','-bestfit')
+
+[max_val max_ind] = max(resp_mat_ori(:,:,1),[],2);
+figure; histogram(max_ind)
+%%
+
+resp_mat_ori_sf = zeros(nCells,nOri,nSF);
+for iOri = 1:nOri
+    ind1 = find(ori_mat == oris(iOri));
+    for iSF = 1:nSF
+         ind2 = find(sf_mat == sfs(iSF));
+         ind = intersect(ind1,ind2);
+         resp_mat_ori_sf(:,iOri,iSF) = mean(resp_mat(:,ind,1),2,'omitnan');
+    end
+end
+figure;
+[n n2] = subplotn(nCells);
+for iCell = 1:nCells
+    subplot(n,n2,iCell)
+    imagesc(squeeze(resp_mat_ori_sf(iCell,:,:)))
+    ylabel('Oris')
+    xlabel('SFs')
+end
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_sfbyori.pdf']),'-dpdf','-bestfit')
+
 %%
 tt1 = [-20:79].*1000/frame_rate;
 tt2 = tt1;
