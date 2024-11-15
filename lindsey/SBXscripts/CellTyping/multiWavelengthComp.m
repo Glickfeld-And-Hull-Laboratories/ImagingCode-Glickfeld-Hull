@@ -1,15 +1,18 @@
 pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\2P_images';
-mouse = 'i3317';
-date = '240912';
+mouse = 'i3320';
+date = '241114';
 
-ImgFolder ='001';
+ImgFolder ='003';
 
-ImgType = 'GCaMP&flpHT&flexMCh';
-wl = 800:40:1040;
+%ImgType = 'GCaMP&flpMCh&flexTdt';
+ImgType = 'flxGCaMP&flpHT';
+%wl = 800:40:1040;%
+%wl = [920 800 1040];
+wl = [1040 920 800 ];
 Run = 0:length(wl)-1;
-RunType = mat2cell(wl, [1 length(wl)],[1]);
+%RunType = mat2cell(wl, [1 length(wl)],[1]);
 
-for i = 3:length(wl)
+for i = 1:length(wl)
     CD = fullfile(pn, mouse, date, ImgFolder);
     cd(CD);
     imgMatFile = [ImgFolder '_000_00' num2str(Run(i)) '.mat'];
@@ -38,6 +41,7 @@ mkdir(fullfile(fn_out,[date '_' mouse],[date '_' mouse '_' ImgFolder]));
 writetiff(data_r_avg, fullfile(fn_out,[date '_' mouse],[date '_' mouse '_' ImgFolder],[date '_' mouse '_' ImgType '_Red.tif']))
 writetiff(data_g_avg, fullfile(fn_out,[date '_' mouse],[date '_' mouse '_' ImgFolder],[date '_' mouse '_' ImgType '_Green.tif']))
 
+%%
 sz = size(data_r_avg);
 mask_data = data_r_avg;
 mask_exp = zeros(sz(1),sz(2));
