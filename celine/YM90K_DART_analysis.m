@@ -812,7 +812,7 @@ format short
 clear h p1 p2 p3 ci stats1 stats2 stats3 h p4 p5 p6 ci stats4 stats5 stats6
 %% Fig S4 histogram
 figure;
-histogram(noiseCorr_concat{pre}(1,red_all),'FaceColor','black','BinWidth',.1)
+histogram(noiseCorr_OG_concat{pre}(1,red_ind_concat),'FaceColor','black','BinWidth',.1)
 xlabel('Correlation to Pyr activity')
 ylabel('# Cells')
 set(gca,'TickDir','out')

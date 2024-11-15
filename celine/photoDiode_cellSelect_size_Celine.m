@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =68;
+day_id =63;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
@@ -147,17 +147,12 @@ else %if not, must register. Start by showing average for each of four 500-frame
     input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
 end
-%
-%reg red data 
-%register the red data from the 920 nm run (same run used for green
-%above)to the output of the green registration
-% if info.config.pmt1_gain > 0.5
-%     [~,data_r_reg] = stackRegister_MA(data_r,[],[],double(outs));
-%     redChImg = mean(data_r_reg,3);
-%     clear data_r clear data_r_reg
-% end
-    
+
 %% find activated cells
+
+photoFrameFinder_Sanworks
+
+%%
 %find number of frames per trial and temporarily reshape data into trials
 %overal goal here is to get green data in terms of df/f
 nOn = input.nScansOn;
