@@ -158,7 +158,7 @@ resp_means = nan(nSizes,nCons,nCells,2);
 fwhm=nan(nSizes,nCons,nCells); %only for 80% contrast
 %first value will be the eary timepoint, second value will be the late
 %timepoint
-interpolatedTCs = nan(407,5,4,nCells);
+interpolatedTCs = nan(814,5,4,nCells);
 for iSize = 1:nSizes %loop through the sizes    
     for iCon = 1:nCons
         for iCell = 1:nCells
@@ -166,57 +166,57 @@ for iSize = 1:nSizes %loop through the sizes
 
            thisTrace = TCs_stat(:,iSize,iCon,iCell);
            %interpolate data
-           traceInterp=interp1(t,thisTrace,(t(1):0.01:t(123)));
+           traceInterp=interp1(t,thisTrace,(t(1):0.005:t(123)));
            interpolatedTCs(:,iSize,iCon,iCell) = traceInterp;
            %traceInterp=smoothdata(traceInterp,'movmean',3);
-           t2=t(1):0.01:t(123); % to get temporal values with the interpolated data
-           stimStart_interp=find(t2==0)+5; %don't look in the first 50 ms, as this is too early to be a true peak
-           %find(t2==.2)
-           endSearch=find(t2==0)+29;
+           t2=t(1):0.005:t(123); % to get temporal values with the interpolated data
+           stimStart_interp=find(t2==0); 
 
-           peak=max(traceInterp(stimStart_interp:stimStart_interp+20)); %find the max value within a set window
-           %currently set to 61 (stim onset) through 67, 200ms after stim
-           trough=min(traceInterp(stimStart_interp+20:stimStart_interp+30));
-           %search for the trough between 200 and 300 ms after 
-           
-%           (thisTrace(stimStart+6:stimStart+9));
+           peak=max(traceInterp(stimStart_interp+6:stimStart_interp+40)); %search for peak between 30 and 250 mis
+           trough=min(traceInterp(stimStart_interp+40:stimStart_interp+60));
+           %search for the trough between 200 and 300 ms after stim onset
+ 
+           peak_frame_temp = find(traceInterp==peak); %this is in FRAMES not time
 
            
-           peak_time_temp = find(traceInterp==peak);
-
-           peakBin = [peak_time_temp-5,peak_time_temp+5]; %a ~100 ms bin around the peak
+           peakBin = [peak_frame_temp-10,peak_frame_temp+10]; %a ~100 ms bin around the peak
            
            trough_time_temp = find(traceInterp==trough);
-           troughBin = [trough_time_temp-7,trough_time_temp+7]; 
+           troughBin = [trough_time_temp-10,trough_time_temp+10]; 
 
-           peak_time(iSize,iCon, iCell,1)=t2(peak_time_temp);
-           peak_time(iSize,iCon, iCell,2)= t2(trough_time_temp);
+           peak_time(iSize,iCon, iCell,1)=t2(peak_frame_temp); %now converting from frames to time - this is for the PEAK
+           peak_time(iSize,iCon, iCell,2)= t2(trough_time_temp); %this is for the TROUGH
 
                 if peak > 0
                    if iCon > 0 
                        
                        halfPeak = peak/2;
                        %find the frame of the half peak
-                       half_peak_frame = find(traceInterp(stimStart_interp:peak_time_temp)>halfPeak,1,'first');
-                       half_peak_temp = stimStart_interp+(half_peak_frame-1); %adjust this for the frame we started on
+                       half_peak_frame = find(traceInterp(stimStart_interp:peak_frame_temp)>halfPeak,1,'first');
+                       half_peak_frame = stimStart_interp+(half_peak_frame-1); %adjust this for the frame we started on
                         %convert this to time
-                       peak_time(iSize,iCon, iCell,3) = t2(half_peak_temp);
+                       peak_time(iSize,iCon, iCell,3) = t2(half_peak_frame);
+
                         %find the frame of the equivalent point on the decay
-                       if min(traceInterp(peak_time_temp:length(t2)))<halfPeak
+                       if min(traceInterp(peak_frame_temp:length(t2)))<halfPeak %checking whether the timecourse ever falls bellow half the peak
                            %half_dacay_frame=find(traceInterp(peak_time_temp:endSearch)>halfPeak,1,'last'); 
-                           half_dacay_frame=find(traceInterp(peak_time_temp:length(t2))<halfPeak,1,'first'); 
-                           if half_dacay_frame >5
-                              half_dacay_frame =5;
+                           half_dacay_frame=find(traceInterp(peak_frame_temp:length(t2))<halfPeak,1,'first');%this will identify the frame relative to the PEAK frame
+                           half_dacay_frame=peak_frame_temp+half_dacay_frame-1;
+                           if half_dacay_frame >stimStart_interp+80
+                              half_dacay_frame =stimStart_interp+80;
                            end
+
+                        % figure;plot(t2(stimStart_interp:stimStart_interp+40),traceInterp(stimStart_interp:stimStart_interp+40));
+                        % hold on;hline(peak);vline(t2(peak_frame_temp));hline(halfPeak);vline(t2(half_peak_frame));
+                        % vline(t2(half_dacay_frame))
+
                            %restric half decay to max out at 300 ms by
                            %setting any value greater than that equal to
                            %300 ms
-                           %look for the half decay anywhere after the peak, until the end of the trace
-                           half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
-                           peak_time(iSize,iCon, iCell,4) = t2(half_dacay_temp);
+                           peak_time(iSize,iCon, iCell,4) = t2(half_dacay_frame);
                             %find the difference, in time, between the half decay
                             %and the half peak
-                           fwhm(iSize,iCon,iCell)=t2(half_dacay_temp)-t2(half_peak_temp);
+                           fwhm(iSize,iCon,iCell)=t2(half_dacay_frame)-t2(half_peak_frame);
                        end
         
                        % [minVal, endWin]=min(abs(t2-t(peak_time_temp))); %find the value in the interpoalted t vector that is closest to the time in the oringal t vector when the peak occurs
@@ -246,12 +246,27 @@ for iSize = 1:nSizes %loop through the sizes
            resp_means(iSize,iCon, iCell,2)=max(cumtrapz(t(stimStart:stimStart+12),thisTrace(stimStart:stimStart+12)));
 
 
-           clear thisTrace peak peakBin troughBin dip_temp trough trough_time_temp peak_time_temp
+           clear thisTrace peak peakBin troughBin dip_temp trough trough_time_temp peak_frame_temp
 
         end
     end
 end
 
+figure;histogram(peak_time(nSizes,nCons,intersect(largeSizeHighCon,pyrCells),4))
+title("distribution of half decay for cells responsive to large size high contrast")
+hold on
+histogram(peak_time(nSizes,nCons,intersect(largeSizeHighCon,interNrns),4))
+box off
+xlim([-.05 .6])
+print('largeHighhalfDecay_histogram.pdf', '-dpdf');
+
+figure;histogram(peak_time(1,nCons,centerPyr,4))
+title("distribution of half decay for cells responsive to small size high contrast")
+hold on
+histogram(peak_time(1,nCons,centerIN,4))
+box off
+xlim([-.05 .6])
+print('smallHighhalfDecay_histogram.pdf', '-dpdf');
 %% half rise and half decay averages for cells responsive at each condition
 
 
@@ -1663,14 +1678,14 @@ for iSize = 1:nSizes %loop through the sizes
 %           (thisTrace(stimStart+6:stimStart+9));
 
            
-           peak_time_temp = find(traceInterp==peak);
+           peak_frame_temp = find(traceInterp==peak);
 
-           peakBin = [peak_time_temp-5,peak_time_temp+5]; %a ~100 ms bin around the peak
+           peakBin = [peak_frame_temp-5,peak_frame_temp+5]; %a ~100 ms bin around the peak
            
            trough_time_temp = find(traceInterp==trough);
            troughBin = [trough_time_temp-7,trough_time_temp+7]; 
 
-           peak_time_loc(iSize,iCon, iCell,1)=t2(peak_time_temp);
+           peak_time_loc(iSize,iCon, iCell,1)=t2(peak_frame_temp);
            peak_time_loc(iSize,iCon, iCell,2)= t2(trough_time_temp);
 
                 if peak > 0
@@ -1678,20 +1693,20 @@ for iSize = 1:nSizes %loop through the sizes
                        
                        halfPeak = peak/2;
                        %find the frame of the half peak
-                       half_peak_frame = find(traceInterp(stimStart_interp:peak_time_temp)>halfPeak,1,'first');
-                       half_peak_temp = stimStart_interp+(half_peak_frame-1); %adjust this for the frame we started on
+                       half_peak_frame = find(traceInterp(stimStart_interp:peak_frame_temp)>halfPeak,1,'first');
+                       half_peak_frame = stimStart_interp+(half_peak_frame-1); %adjust this for the frame we started on
                         %convert this to time
-                       peak_time_loc(iSize,iCon, iCell,3) = t2(half_peak_temp);
+                       peak_time_loc(iSize,iCon, iCell,3) = t2(half_peak_frame);
                         %find the frame of the equivalent point on the decay
-                       if min(traceInterp(peak_time_temp:length(t2)))<halfPeak
+                       if min(traceInterp(peak_frame_temp:length(t2)))<halfPeak
                   
-                           half_dacay_frame=find(traceInterp(peak_time_temp:endSearch)>halfPeak,1,'last'); 
+                           half_dacay_frame=find(traceInterp(peak_frame_temp:endSearch)>halfPeak,1,'last'); 
                            %look for the half decay anywhere after the peak, until the end of the trace
-                           half_dacay_temp=peak_time_temp+half_dacay_frame-1; %adjust this for the frame we started on
+                           half_dacay_temp=peak_frame_temp+half_dacay_frame-1; %adjust this for the frame we started on
                            peak_time_loc(iSize,iCon, iCell,4) = t2(half_dacay_temp);
                             %find the difference, in time, between the half decay
                             %and the half peak
-                           fwhm_loc(iSize,iCon,iCell)=t2(half_dacay_temp)-t2(half_peak_temp);
+                           fwhm_loc(iSize,iCon,iCell)=t2(half_dacay_temp)-t2(half_peak_frame);
                        end
         
                        % [minVal, endWin]=min(abs(t2-t(peak_time_temp))); %find the value in the interpoalted t vector that is closest to the time in the oringal t vector when the peak occurs
@@ -1720,7 +1735,7 @@ for iSize = 1:nSizes %loop through the sizes
            resp_means_loc(iSize,iCon, iCell,2)=max(cumtrapz(t(stimStart:stimStart+12),thisTrace(stimStart:stimStart+12)));
 
 
-           clear thisTrace peak peakBin troughBin dip_temp trough trough_time_temp peak_time_temp
+           clear thisTrace peak peakBin troughBin dip_temp trough trough_time_temp peak_frame_temp
         end
         end
     end
@@ -2527,7 +2542,7 @@ box off
 x0=5;
 y0=5;
 width=7;
-height=1.5;
+height=2.4;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print('dynamics_respAtEach', '-dpdf');
@@ -4020,16 +4035,17 @@ figure;
     title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
  
 %% plotting individual example cells
-iSize=nSizes
-iCon=nCons
+iSize=1;
+iCon=nCons;
+largeHighPyr = intersect(largeSizeHighCon,pyrCells);
 
+%theseCells = randsample(centered, 12);
 [n n2] = subplotn(4*3);
 x=1;
 
 figure;
 for i = 1:12
-    largeHighPyr = intersect(largeSizeHighCon,pyrCells);
-    iCell = largeHighPyr(i)
+    iCell = theseCells(i)
 
     temp_halfPeak=peak_time(iSize,iCon,iCell,3)'
     temp_halfDecay=peak_time(iSize,iCon,iCell,4);
@@ -4050,7 +4066,7 @@ for i = 1:12
     hold on
     %fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
     hold on
-    ylim([-.03 .15])
+    ylim([-.03 .2])
     xlim([-.25 .5])
     
     box off
@@ -4062,4 +4078,4 @@ for i = 1:12
     title([num2str(Sizes(iSize)) ' X ' num2str(Cons(iCon))] )        
     x=x+1;
 end
-print('ExampleLargeHighConCells', '-dpdf');
+print('ExampleLargeSmallConCells', '-dpdf');

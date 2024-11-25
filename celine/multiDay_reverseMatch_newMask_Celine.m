@@ -9,10 +9,10 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 66; %enter the refrence day ID here
+day_id(1) = 70; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
-experimentFolder = 'SST_atropine';
+experimentFolder = 'VIP_atropine';
 
 
 nd = length(day_id);

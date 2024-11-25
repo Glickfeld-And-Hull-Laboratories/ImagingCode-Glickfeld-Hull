@@ -3,13 +3,13 @@ clear all; clear global; close all
 clc
 ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'SST_atropine';
+experimentFolder = 'VIP_atropine';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [64];%enter all the sessions you want to concatenate4
+sess_list = [70];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -779,8 +779,9 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle(['population size tuning' ])
 
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
-%%
-% contrast response
+%% contrast response
+ymin=-0.015;
+ymax=.11;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(nSize,nd); %same for red
@@ -815,7 +816,7 @@ title(['Pyr n = ' , num2str(length(green_ind_concat))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.01 .2])
+ylim([ymin ymax])
 xlim([0 110])
 
 subplot(2,2,3) %for the second size, all contrasts
@@ -825,7 +826,7 @@ errorbar(consForPlotting,conResp_green_avrg_stat{post}(2,:),conResp_green_se_sta
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.01 .2])
+ylim([ymin ymax])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
@@ -835,7 +836,7 @@ errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_stat{po
 title(['SST n = ' , num2str(length(red_ind_concat))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.01 .2])
+ylim([ymin ymax])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -844,7 +845,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(2,:),conResp_red_se_stat{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.01 .2])
+ylim([ymin ymax])
 xlim([0 110])
 
 
@@ -858,10 +859,11 @@ width=6;
 height=4;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle('Stationary')
-
-
 print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
+
+ymin=-0.015;
+ymax=.2;
 % contrast response running
 % errorbar for loc resp and loc resp vs size, where error is across mice
 conResp_green_avrg_loc = cell(nSize,nd); %this will be the average across all green cells - a single line
@@ -917,7 +919,7 @@ title(['Pyr n = ' , num2str(length(runningGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.1 .35])
+ylim([ymin ymax])
 xlim([0 110])
 
 subplot(2,2,3) %for the first day
@@ -927,7 +929,7 @@ errorbar(consForPlotting,conResp_green_avrg_loc{post}(2,:),conResp_green_se_loc{
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.1 .35])
+ylim([ymin ymax])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
@@ -937,7 +939,7 @@ errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post
 title(['SST n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.1 .35])
+ylim([ymin ymax])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -946,7 +948,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.1 .35])
+ylim([ymin ymax])
 xlim([0 110])
 
 
@@ -973,9 +975,9 @@ elseif length(dirs) ==4
     dirs_for_plotting =dirs;
 end
 
-yMin = 0;
-yMax = .11;
-yMax2 = .25;
+yMin = -.01;
+yMax = .075;
+yMax2 = .15;
 
 
 green_dir_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
@@ -1128,11 +1130,11 @@ norm_diff(find(norm_diff == Inf))=NaN;
 %% plot fraction suppressed and facilitated
 
 
-norm_diff_red = norm_diff(:,:,:,runningRed);
+norm_diff_red = norm_diff(:,:,:,red_ind_concat);
 facil_red=norm_diff_red(:,:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:,:)<=-1;
 
-N=length(runningRed);
+N=length(red_ind_concat);
 
 
 
@@ -1173,8 +1175,12 @@ N=length(runningRed);
     height=1.75;
     set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
+%% 
+norm_diff_red = norm_diff(:,:,:,runningRed);
+facil_red=norm_diff_red(:,:,:,:)>=1;
+supp_red=norm_diff_red(:,:,:,:)<=-1;
 
-%N should change to length of runningRed
+N=length(red_ind_concat);
 
  facil_table_loc = squeeze(sum(facil_red(2,:,:,:),4)/N);
  supp_table_loc = squeeze(sum(supp_red(2,:,:,:),4)/N);
@@ -1187,7 +1193,7 @@ print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Suppressed')
-    %ylim([0 .6])
+    ylim([0 .6])
     ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')

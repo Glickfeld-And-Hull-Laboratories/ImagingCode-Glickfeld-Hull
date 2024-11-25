@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'SST_atropine';
+experimentFolder = 'VIP_atropine';
 
 mouse = expt(day_id).mouse;
 
