@@ -8,13 +8,9 @@ ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
 
-area = 'AL';
-area_ind = find(strcmp([expt.img_loc], area));
-randDir = 0;
-dir_ind = find([expt.randDir]==randDir);
+area = 'V1_GC6s';
 
-expt_use = intersect(area_ind,dir_ind);
-
+expt_use = 4:6;
 totCells = 0;
 norm_sf = [];
 norm_prefsf = [];
@@ -223,3 +219,25 @@ print(fullfile(summaryDir,['adaptationBySFonly_' area '.pdf']),'-dpdf','-bestfit
 % ylabel('Fraction of cells')
 % title([num2str(uniqueCells) ' cells; ' num2str(nexp) ' mice'])
 % print(fullfile(summaryDir,'adaptationDiffFromPrefSF.pdf'),'-dpdf','-bestfit','-painters');
+
+figure; 
+subplot(1,2,1)
+errorbar(sfs,norm_prefsf_avg(:,1),norm_prefsf_avg(:,2),'or')
+set(gca,'XScale','log')
+ylabel('Normalized dF/F')
+xlabel('Pref. Spatial frequency')
+ylim([0 1.4])
+xlim([0.02 1])
+hline(1)
+
+subplot(1,2,2)
+errorbar(sfs,resp_pref_avg(:,1),resp_pref_avg(:,2),'or')
+set(gca,'XScale','log')
+ylabel('R1 dF/F')
+xlabel('Pref. Spatial frequency')
+ylim([0 0.4])
+xlim([0.02 1])
+
+sgtitle(mice')
+
+print(fullfile(summaryDir,['adaptationBySFAvgonly_' area '.pdf']),'-dpdf','-bestfit');
