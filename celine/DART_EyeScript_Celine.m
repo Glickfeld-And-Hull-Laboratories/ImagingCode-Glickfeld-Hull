@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-experimentFolder = 'VIP_atropine';
+experimentFolder = 'SST_atropine';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -49,7 +49,7 @@ for day = 1:2
     end
     
     % measure pupil position/diameter
-    rad_range = [2 15]; %adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
+    rad_range = [3 15]; %adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
     Eye_data = extractEyeData(data_crop,rad_range);
     %if pupil not found reliably, adjust the image cropping or the rad_range
     

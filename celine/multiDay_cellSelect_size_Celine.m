@@ -8,8 +8,8 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =70;
-experimentFolder = 'VIP_atropine';
+day_id =74;
+experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';

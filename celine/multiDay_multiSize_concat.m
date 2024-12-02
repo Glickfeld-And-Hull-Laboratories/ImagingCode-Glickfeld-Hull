@@ -3,13 +3,13 @@ clear all; clear global; close all
 clc
 ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'VIP_atropine';
+experimentFolder = 'SST_atropine';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [70];%enter all the sessions you want to concatenate4
+sess_list = [74];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -781,7 +781,7 @@ sgtitle(['population size tuning' ])
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 %% contrast response
 ymin=-0.015;
-ymax=.11;
+ymax=.1;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(nSize,nd); %same for red
@@ -861,9 +861,9 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle('Stationary')
 print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
-
+%%
 ymin=-0.015;
-ymax=.2;
+ymax=.35;
 % contrast response running
 % errorbar for loc resp and loc resp vs size, where error is across mice
 conResp_green_avrg_loc = cell(nSize,nd); %this will be the average across all green cells - a single line
@@ -976,8 +976,9 @@ elseif length(dirs) ==4
 end
 
 yMin = -.01;
-yMax = .075;
+yMax = .1;
 yMax2 = .15;
+iSize=2; %set to whichever size you want
 
 
 green_dir_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
@@ -988,14 +989,14 @@ red_dir_se_stat = cell(1,nd); %same for red
 for iCon = 1:nCon
     for id = 1:nd
        
-        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(statGreen,:,iCon,:),4),1);
-        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(statGreen,:,iCon,:),4),[],1);
+        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(statGreen,:,iCon,iSize),4),1);
+        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(statGreen,:,iCon,iSize),4),[],1);
         green_dir_se_stat{id}=green_std/sqrt(length(statGreen));
         green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
         green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
         
-        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(statRed,:,iCon,:),4),1);
-        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(statRed,:,iCon,:),4),[],1);
+        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(statRed,:,iCon,iSize),4),1);
+        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(statRed,:,iCon,iSize),4),[],1);
         red_dir_se_stat{id}=red_std/sqrt(length(statRed));
         red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
         red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
@@ -1012,14 +1013,14 @@ for iCon = 1:nCon
     
     for id = 1:nd
        
-        green_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(runningGreen,:,iCon,:),4),1);
-        green_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(runningGreen,:,iCon,:),4),[],1);
+        green_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(runningGreen,:,iCon,iSize),4),1);
+        green_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(runningGreen,:,iCon,iSize),4),[],1);
         green_dir_se_loc{id}=green_std/sqrt(length(runningGreen));
         green_dir_avrg_loc{id}=circshift(green_dir_avrg_loc{id},4);
         green_dir_se_loc{id}=circshift(green_dir_se_loc{id},4);
         
-        red_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(runningRed,:,iCon,:),4),1);
-        red_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(runningRed,:,iCon,:),4),[],1);
+        red_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(runningRed,:,iCon,iSize),4),1);
+        red_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(runningRed,:,iCon,iSize),4),[],1);
         red_dir_se_loc{id}=red_std/sqrt(length(runningRed));
         red_dir_avrg_loc{id}=circshift(red_dir_avrg_loc{id},4);
         red_dir_se_loc{id}=circshift(red_dir_se_loc{id},4);
@@ -1244,7 +1245,6 @@ for iCon = 1:nCon
 end
 
 
-    %%
 figure;
 subplot(2,2,1)
 b=bar([1,2,3,4],[supp_table_stat(:,1),supp_table_loc(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
@@ -1253,7 +1253,7 @@ b(2).FaceColor="#0C8ABB"
 xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed 20-deg')
-ylim([0 .4])
+ylim([0 .6])
 ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
@@ -1266,7 +1266,7 @@ b(2).FaceColor="#883367"
 xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated 20-deg')
-ylim([0 .4])
+ylim([0 .6])
 %ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
@@ -1281,7 +1281,7 @@ b(2).FaceColor="#0C8ABB"
 xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed fullfield')
-ylim([0 .4])
+ylim([0 .6])
 ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
@@ -1294,7 +1294,7 @@ b(2).FaceColor="#883367"
 xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated fullfield')
-ylim([0 .4])
+ylim([0 .6])
 %ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
@@ -1304,4 +1304,49 @@ y0=5;
 width=4;
 height=4;
 set(gcf,'units','inches','position',[x0,y0,width,height])
-print(fullfile(fnout,'mached_facil_supp_byState.pdf'),'-dpdf');
+print(fullfile(fnout,'matched_facil_supp_byState.pdf'),'-dpdf');
+
+%% norm diff for stationary vs running
+for iSize = 1:nSize
+    figure;
+    subplot(1,2,1)
+    boxchart(squeeze(norm_diff(1,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+    hold on
+    scatter([1, 2, 3, 4],squeeze(norm_diff(1,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+    xticklabels({'12.5','25','50','100'})
+    xlabel('Contrast(%)')
+    ylabel('Normalized difference')
+    ylim([-10 10])
+    title('Stationary')
+    hold off
+    set(gca,'TickDir','out')
+    box off
+    x0=5;
+    y0=5;
+    width=1.25;
+    height=2;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    
+    
+    subplot(1,2,2)
+    boxchart(squeeze(norm_diff(2,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
+    hold on
+    scatter([1, 2, 3, 4],squeeze(norm_diff(2,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+    xticklabels({'12.5','25','50','100'})
+    xlabel('Contrast(%)')
+    %ylabel('Normalized difference')
+    ylim([-35 35])
+    title('Running')
+    hold off
+    set(gca,'TickDir','out')
+    box off
+    x0=5;
+    y0=5;
+    width=6;
+    height=4;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    
+    sgtitle(num2str(sizes(iSize)))
+
+    print(fullfile(fnout,['normDiff_scatter_size', num2str(sizes(iSize)), '.pdf']),'-dpdf');
+end
