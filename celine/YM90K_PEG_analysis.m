@@ -585,7 +585,7 @@ subplot(1,2,1)
 bar([1,2,3],[supp_table_stat],'FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
 xticklabels({'25','50','100'})
 title('Suppressed')
-ylim([0 .5])
+ylim([0 .4])
 ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast(%)"])
 set(gca,'TickDir','out')
@@ -595,7 +595,7 @@ subplot(1,2,2)
 bar([1,2,3],[facil_table_stat],'FaceColor',"#A8518A",'EdgeColor', [1 1 1])
 xticklabels({'25','50','100'})
 title('Facilitated')
-ylim([0 .5])
+ylim([0 .4])
 %ylabel(["Fraction HTP+ cells"]) 
 xlabel(["Contrast(%)"])
 set(gca,'TickDir','out')
@@ -667,12 +667,12 @@ figure;
 subplot(1,2,1)
 boxchart(squeeze(norm_diff(1,:,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
-scatter([1, 2, 3],squeeze(norm_diff(1,:,red_ind_concat))',20,[.79 .25 .32], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2, 3],squeeze(norm_diff(1,:,red_ind_concat))',20,[.26 .29 .33], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
 ylabel('Normalized difference')
-ylim([-12 12])
+ylim([-10 10])
 title('SST')
 hold off
 set(gca,'TickDir','out')
@@ -685,7 +685,7 @@ scatter([1, 2, 3],squeeze(norm_diff(1,:,green_ind_concat))',20,[.26 .29 .33], 'M
 boxchart(squeeze(norm_diff(1,:,green_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
-ylim([-12 12])
+ylim([-20 20])
 title('Pyr')
 hold off
 set(gca,'TickDir','out')

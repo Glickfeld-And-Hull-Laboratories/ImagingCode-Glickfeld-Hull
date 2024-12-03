@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =66;
+day_id =63;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
@@ -36,7 +36,7 @@ expDate = expt(day_id).date;
 
 fn = fullfile(isilonName,base,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
-dat = 'data-';
+
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
 times = eval(['expt(day_id).' cell2mat(dataStructLabels) '_time']);
 nruns = length(runs);
@@ -49,7 +49,7 @@ for irun = 1:nruns
     %fName = [imgFolder '_000_000'];
 
     CD = fullfile(isilonName,datapath, mouse, expDate, runFolder);
-    
+    dat = 'data-';
 
     cd(CD);
 
@@ -147,17 +147,12 @@ else %if not, must register. Start by showing average for each of four 500-frame
     input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
 end
-%
-%reg red data 
-%register the red data from the 920 nm run (same run used for green
-%above)to the output of the green registration
-% if info.config.pmt1_gain > 0.5
-%     [~,data_r_reg] = stackRegister_MA(data_r,[],[],double(outs));
-%     redChImg = mean(data_r_reg,3);
-%     clear data_r clear data_r_reg
-% end
-    
+
 %% find activated cells
+
+photoFrameFinder_Sanworks
+
+%%
 %find number of frames per trial and temporarily reshape data into trials
 %overal goal here is to get green data in terms of df/f
 nOn = input.nScansOn;

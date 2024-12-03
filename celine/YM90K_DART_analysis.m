@@ -659,7 +659,7 @@ subplot(1,2,1)
 bar([1,2,3],[supp_table_stat],'FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
 xticklabels({'25','50','100'})
 title('Suppressed')
-ylim([0 .5])
+ylim([0 .4])
 ylabel(["Fraction Pyr cells"]) 
 xlabel(["Contrast(%)"])
 set(gca,'TickDir','out')
@@ -669,7 +669,7 @@ subplot(1,2,2)
 bar([1,2,3],[facil_table_stat],'FaceColor',"#A8518A",'EdgeColor', [1 1 1])
 xticklabels({'25','50','100'})
 title('Facilitated')
-ylim([0 .5])
+ylim([0 .4])
 %ylabel(["Fraction HTP+ cells"]) 
 xlabel(["Contrast(%)"])
 set(gca,'TickDir','out')
@@ -748,7 +748,7 @@ scatter([1, 2, 3],squeeze(norm_diff(1,:,red_ind_concat))',20,[.26 .29 .33], 'Mar
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
 ylabel('Normalized difference')
-ylim([-12 12])
+ylim([-10 10])
 title('SST')
 hold off
 set(gca,'TickDir','out')
@@ -758,9 +758,10 @@ subplot(1,2,2)
 boxchart(squeeze(norm_diff(1,:,green_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 hold on
 scatter([1, 2, 3],squeeze(norm_diff(1,:,green_ind_concat))',20,[.26 .29 .33], 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+boxchart(squeeze(norm_diff(1,:,green_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
 xticklabels({'25','50','100'})
 xlabel('Contrast(%)')
-ylim([-12 12])
+ylim([-20 20])
 title('Pyr')
 hold off
 set(gca,'TickDir','out')
@@ -772,7 +773,7 @@ height=1.5;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 %must manually export this figure in order to have it vectorized because of
 %the large amount of data 
-
+%%
 % Extract data from the matrix for SST cells
 data = squeeze(norm_diff(1, :, red_ind_concat));  % Extract data from the specified dimension
 
@@ -812,7 +813,7 @@ format short
 clear h p1 p2 p3 ci stats1 stats2 stats3 h p4 p5 p6 ci stats4 stats5 stats6
 %% Fig S4 histogram
 figure;
-histogram(noiseCorr_concat{pre}(1,red_all),'FaceColor','black','BinWidth',.1)
+histogram(noiseCorr_OG_concat{pre}(1,red_ind_concat),'FaceColor','black','BinWidth',.1)
 xlabel('Correlation to Pyr activity')
 ylabel('# Cells')
 set(gca,'TickDir','out')
