@@ -1,5 +1,7 @@
 function experiment_sessions = query_expt(mouse)
 % experiment_sessions = query_expt(mouse_ID)
+%   For Jerry's DART experiment metadata. Returns corresponding DART experiment session numbers for
+%   the current mouse. 
 %   MOUSE_ID should be the mouse number (without the "i")
 %   EXPERIMENT_SESSIONS returns all sessions associated with the mouse in a
 %   double array column
@@ -16,7 +18,7 @@ for row = 1:nLoops
 end
 isThere = strcmp(substr, mouse_id);
 if sum(isThere) == 0
-    error('Mouse ID does not exist. Enter a valid mouse ID.')
+    error(['Mouse ID does not exist. Enter a valid mouse ID. Mouse ID should be the 4-digit number without the "i".'])
 else
     experiment_sessions = find(isThere);
 end

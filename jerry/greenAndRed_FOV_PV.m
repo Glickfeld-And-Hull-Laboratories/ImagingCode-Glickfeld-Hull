@@ -1,26 +1,26 @@
 
-mouse = 'i3315';
-date = '240821';
+mouse = 'i3321';
+date = '241125';
 redFolder = '000'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
 greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='211.71';
+depth='178.12';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
 % base = 
 % 'Z:/home/celine/Data/2p_data';
 if computer == 'GLNXA64'
     base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Data/2p_data';
-    out_base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Analysis/2p_analysis';
+    out_base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Analysis/2p_analysis/PV_CMPDA/';
 else
     base = 'G:/home/ACh/Data/2p_data/';
-    out_base = 'G:/home/ACh/Analysis/2p_analysis';
+    out_base = 'G:/home/ACh/Analysis/2p_analysis/PV_CMPDA/';
    
 end
 
 data_path = fullfile(base,mouse, date, redFolder);
-out_path = fullfile(out_base,'PV_YM90K',mouse, date, redFolder);
+out_path = fullfile(out_base,mouse, date, redFolder);
 
 cd(data_path)
 mkdir(out_path);

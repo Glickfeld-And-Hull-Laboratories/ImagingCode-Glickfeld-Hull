@@ -4,6 +4,7 @@ clc
 ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
+ExperimentFolder = 'PV_CMPDA';
 eval(ds);
 
 %day_id = 169; %enter post-DART day
@@ -14,7 +15,7 @@ nd=2; %hardcoding the number of days for now
 
 mouse = expt(day_id).mouse;
 
-fnout = fullfile(rc.achAnalysis,'PV_YM90K',mouse);
+fnout = fullfile(rc.achAnalysis,ExperimentFolder,mouse);
 if expt(day_id).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
 else
@@ -35,7 +36,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
 clear x prompt
 
 
-fn_multi = fullfile(rc.achAnalysis,'PV_YM90K',mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
@@ -49,7 +50,7 @@ for id = 1 %currently only doing this for the baseline day
 mouse = expt(allDays(id)).mouse;
 date = expt(allDays(id)).date;
 imgFolder = expt(allDays(id)).contrastxori_runs{1};
-fn = fullfile(rc.achAnalysis,'PV_YM90K',mouse,date,imgFolder);
+fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
 cd(fn);
 load(fullfile(fn,'redImage.mat'));
 load(fullfile(fn,'mask_cell.mat'));

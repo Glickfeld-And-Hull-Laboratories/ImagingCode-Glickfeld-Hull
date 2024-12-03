@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);
 
-experimentFolder = 'PV_YM90K';
+experimentFolder = 'PV_CMPDA';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -36,8 +36,10 @@ for day = 1:2
     %crop frames to match mworks data
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time '.mat'];
     load(fName);
-    nFrames = input.counterValues{end}(end);
-    nTrials = size(input.counterValues,2);
+    %nFrames = input.counterValues{end}(end);
+    nFrames = 86400;
+    %nTrials = size(input.counterValues,2);
+    nTrials = 960;
     data = data_temp(:,:,1:nFrames);      % the raw images...
     
     % Crop image to isolate pupil 
@@ -49,7 +51,7 @@ for day = 1:2
     end
     
     % measure pupil position/diameter
-    rad_range = [4 20]; %adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
+    rad_range = [3 30]; %adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
     Eye_data = extractEyeData(data_crop,rad_range);
     %if pupil not found reliably, adjust the image cropping or the rad_range
     

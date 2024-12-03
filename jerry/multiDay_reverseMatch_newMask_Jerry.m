@@ -6,13 +6,14 @@ rc = behavConstsDART; %directories
 eval(ds)
 doGreenOnly = false;
 doCorrImg = true; 
+ExperimentFolder = 'PV_CMPDA';
 
 %BEFORE RUNNING THIS SCRIPT, IF IT HAS BEEN DONE FOR THE SAME MOUSE, DELETE
 %RELATED FILES IN THE MULTIDAY ANALYSIS FOLDER
 
 %to use the post-DART timepoint as the template
 
-day_id(1) =44; %enter the refrence day ID here 
+day_id(1) =52; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -25,13 +26,12 @@ mouse = expt(day_id(1)).mouse;
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
     database = fullfile('/All_Staff/home/ACh/Data/2p_data');
-    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis/PV_YM90K');
+    base = fullfile(['/All_Staff/home/ACh/Analysis/2p_analysis/' ExperimentFolder]);
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
 else
     isilonName = 'duhs-user-nc1.dhe.duke.edu/';
-    base = fullfile('/home/ACh/Analysis/2p_analysis/PV_YM90K');
+    base = fullfile(['/home/ACh/Analysis/2p_analysis/' ExperimentFolder]);
     database = fullfile('/home/ACh/Data/2p_data');
-   
    beh_prefix = strcat('Z:\Behavior\Data\data-');
 end
 

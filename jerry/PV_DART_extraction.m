@@ -6,10 +6,12 @@ dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
-day_id = [24 29 32 35 38 40 42 44]; % concat days, enter one post-DART day id for each mouse
+day_id = [48]; % concat days, enter one post-DART day id for each mouse
 
-fnroot = fullfile(rc.achAnalysis,'PV_YM90K','summary_analyses');
+fnroot = fullfile(rc.achAnalysis,'PV_CMPDA','summary_analyses');
 fn_epi = fullfile(fnroot,'epileptiform');
+
+mkdir(fn_epi);
 
 nOn = 30;
 nOff = 60;
@@ -29,7 +31,7 @@ for idx = 1:length(day_id)
     mouse_data_cell = cell(size(these_sesh,1),2); %first column stores raw F, second stores mean-subtracted
     for j = 1:length(these_sesh) % extract data from every session this mouse had
         this_sesh = these_sesh(j);
-        data_path_cell = fullfile(rc.achAnalysis,'PV_YM90K',this_mouse, expt(this_sesh).date, expt(this_sesh).contrastxori_runs, 'TCs.mat');
+        data_path_cell = fullfile(rc.achAnalysis,'PV_CMPDA',this_mouse, expt(this_sesh).date, expt(this_sesh).contrastxori_runs, 'TCs.mat');
         data_path = data_path_cell{1};
         load(data_path);
         avg_np_tc = mean(np_tc,2);
