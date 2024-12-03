@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'VIP_atropine';
+experimentFolder = 'SST_atropine';
 
 mouse = expt(day_id).mouse;
 
@@ -154,7 +154,9 @@ for id = 1:nd %cycle through days
     nCells = size(cellTCs_match{id},2);
     fractTimeActive_match{id} = zeros(1,nCells);
     %I will trim 30 frames of the start and add 30 frames of padding to the
-    %end (padding is nans)
+    %end (padding is nans). This is for a 15hz dataset with 60 frames (4s)
+    %off and 30 frames (2 seconds) on. Shifts the 2 seconds when stim is on
+    %to the center.
     cellTCs_match{id} = cellTCs_match{id}(stimStart:size(cellTCs_match{id},1),:);
     
     cellTCs_match{id} = padarray(cellTCs_match{id},30,999,'post'); 

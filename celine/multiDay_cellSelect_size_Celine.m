@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =74;
+day_id =66;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
@@ -36,7 +36,7 @@ expDate = expt(day_id).date;
 
 fn = fullfile(isilonName,base,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
-
+dat = 'data-';
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
 times = eval(['expt(day_id).' cell2mat(dataStructLabels) '_time']);
 nruns = length(runs);
@@ -49,7 +49,7 @@ for irun = 1:nruns
     %fName = [imgFolder '_000_000'];
 
     CD = fullfile(isilonName,datapath, mouse, expDate, runFolder);
-    dat = 'data-';
+    
 
     cd(CD);
 

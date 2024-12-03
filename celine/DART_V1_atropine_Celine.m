@@ -1714,7 +1714,7 @@ expt(65).contrastxori_runs = {'007'};
 expt(65).contrastxori_time = {'1205'};
 expt(65).data_loc = 'ACh';
 expt(65).wheelColor = 'orange';
-%% i2175 DAR
+%% i2175 DART
 expt(66).mouse = 'i2175';
 expt(66).date = '241107';
 expt(66).folder = '2P';
