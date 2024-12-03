@@ -1,4 +1,4 @@
-function plotCellArrayDifferencesSkipTwo(cellArray1, cellArray2)
+function plotCellArrayDifferencesTwoInputs(cellArray1, cellArray2)
     % plotCellArrayDifferencesSkipTwo Processes two cell arrays, skips the 
     % first two numeric values in each, computes differences, converts the 
     % first cell array from microseconds to milliseconds, and plots the results.
