@@ -752,7 +752,7 @@ expt(39).z = 178.9;
 expt(39).obj = '16x';
 expt(39).zoom = 2.0;
 expt(39).wheel = 1;
-%% i2519 - KRAB - LacZ Day 1 in V1
+%% i2519 - KRAB - LacZ Day 1 in V1 ***Very poor matching do not use***
 expt(40).mouse = 'i2519';
 expt(40).sex = 'female';
 expt(40).date = '220525';
@@ -771,7 +771,7 @@ expt(40).z = 209.37;
 expt(40).obj = '16x';
 expt(40).zoom = 2.0;
 expt(40).wheel = 1;
-%% i2519 - KRAB - LacZ Day 2 in V1
+%% i2519 - KRAB - LacZ Day 2 in V1 ***Very poor matching do not use***
 expt(41).mouse = 'i2519';
 expt(41).sex = 'female';
 expt(41).date = '220527';
@@ -790,7 +790,7 @@ expt(41).z = 216.4;
 expt(41).obj = '16x';
 expt(41).zoom = 2.0;
 expt(41).wheel = 1;
-%% i2519 - KRAB - LacZ Day 3 in V1
+%% i2519 - KRAB - LacZ Day 3 in V1 ***Very poor matching do not use***
 expt(42).mouse = 'i2519';
 expt(42).sex = 'female';
 expt(42).date = '220531';
@@ -1500,7 +1500,7 @@ expt(78).z = 142.96;
 expt(78).obj = '16x';
 expt(78).zoom = 1.7;
 expt(78).wheel = 0;
-%% i1805 - KRAB - Arc Enhancer Day 4 in V1
+%% i1805 - KRAB - Arc Enhancer Day 4 in V1 ***1 CELL MATCHED TO D3 - DO NOT USE
 expt(79).mouse = 'i1805';
 expt(79).sex = 'male';
 expt(79).date = '210809';
@@ -1519,7 +1519,7 @@ expt(79).z = 175;
 expt(79).obj = '16x';
 expt(79).zoom = 1.7;
 expt(79).wheel = 0;
-%% i1805 - KRAB - Arc Enhancer Day 5 in V1
+%% i1805 - KRAB - Arc Enhancer Day 5 in V1 ***1 CELL MATCHED TO D3 - DO NOT USE
 expt(80).mouse = 'i1805';
 expt(80).sex = 'male';
 expt(80).date = '210811';
@@ -1538,7 +1538,7 @@ expt(80).z = 110.93;
 expt(80).obj = '16x';
 expt(80).zoom = 1.7;
 expt(80).wheel = 0;
-%% i1805 - KRAB - Arc Enhancer Day 6 in V1
+%% i1805 - KRAB - Arc Enhancer Day 6 in V1 ***1 CELL MATCHED TO D3 - DO NOT USE
 expt(81).mouse = 'i1805';
 expt(81).sex = 'male';
 expt(81).date = '210813';

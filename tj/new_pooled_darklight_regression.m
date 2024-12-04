@@ -613,6 +613,21 @@ plotInteraction(new_v1_interaction_avg_std_model,'timepoint','avg_reliability','
 
 new_v1_step_model = stepwiselm(new_v1_table, 'interactions')
 
+stepwiselm(new_v1_table, 'Criterion','adjrsquared','Upper', 'interactions')
+
+stepwiselm(new_v1_table,'PEnter', 0.05)
+
+stepwiselm(new_v1_table, 'Criterion','adjrsquared','PEnter', .01)
+
+
+%un-standardized V1 table
+raw_new_v1_table = table(all_d_labels, [d1_d2_avg_reliability'; d1_d3_avg_reliability'; d1_d4_avg_reliability'], ...
+    [d1_d2_avg_max'; d1_d3_avg_max'; d1_d4_avg_max'], [d1_d2_avg_k'; d1_d3_avg_k'; d1_d4_avg_k'], ...
+    [d1_d2_pref_d_all'; d1_d3_pref_d_all'; d1_d4_pref_d_all'], ...
+    'VariableNames', {'timepoint', 'avg_reliability', 'avg_max_dfof', 'avg_k_val', 'prefori_change'})
+
+writetable(raw_new_v1_table, fullfile(realfnout, ['v1_ld_table.csv']))
+
 %%
 new_LM_table = table(all_d_labels_LM, zscor_xnan([d1_d2_avg_reliability_LM'; d1_d3_avg_reliability_LM'; d1_d4_avg_reliability_LM']), ...
     zscor_xnan([d1_d2_avg_max_LM'; d1_d3_avg_max_LM'; d1_d4_avg_max_LM']), zscor_xnan([d1_d2_avg_k_LM'; d1_d3_avg_k_LM'; d1_d4_avg_k_LM']), ...

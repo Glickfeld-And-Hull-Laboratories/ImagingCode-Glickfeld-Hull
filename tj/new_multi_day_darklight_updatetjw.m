@@ -28,10 +28,10 @@ eval(dataset); %load dataset
 %we start with loading the proper information based on the mouse's info in
 %the experiment list
 
-d1 = 46; 
-d2 = 47; 
-d3 = 48;
-d4 = 49;
+d1 = 1; 
+d2 = 3; 
+d3 = 5;
+d4 = 7;
 mouse = expt(d1).mouse; 
 ref_str_d1 = ['runs-',expt(d1).runs];
 ref_str_d2 = ['runs-',expt(d2).runs]; 

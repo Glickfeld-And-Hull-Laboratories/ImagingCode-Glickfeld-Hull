@@ -21,9 +21,9 @@ eval(dataset); %load dataset
 %we start with loading the proper information based on the mouse's info in
 %the experiment list
 
-d1 = 49; 
-d2 = 50; 
-d3 = 51;
+d1 = 51; 
+d2 = 53; 
+d3 = 55;
 
 mouse = expt(d1).mouse; 
 group = expt(d1).indicator{1};

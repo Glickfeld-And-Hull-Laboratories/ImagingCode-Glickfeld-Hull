@@ -9,10 +9,10 @@ close all
 %% *** REMEMBER TO CHANGE NEW AND REALFNOUT BASED ON LOOSE OR STRICT TUNING CRITERION
 %LOAD DATA AND IDENTIFY FOLDERS TO SAVE TO
 fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P'; %folder to load files from
-% newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_Arc_greenVred'; %folder to save files to
-newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_Arc_greenVred_STRICT'; %folder to save files to
-% realfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_greenVred'; %folder to save files to
-realfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_greenVred_STRICT'; %folder to save files to
+newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_Arc_greenVred'; %folder to save files to
+% newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_Arc_greenVred_STRICT'; %folder to save files to
+realfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_greenVred'; %folder to save files to
+% realfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_greenVred_STRICT'; %folder to save files to
 dataset = 'exp_list_arc_tjw'; %experiment list to pick files from
 eval(dataset); %load dataset
 
@@ -1156,7 +1156,24 @@ hold off
 
 print(fullfile(realfnout, ['tj_allmice_changeprefcdf_green_.pdf']), '-dpdf', '-bestfit')
 
+%%
+%poster
+fig = figure;
+% sgtitle('Pref Ori Changes')
+% a=subplot(2,2,1)
+h=cdfplot(lacz_red_d1_d3_pref_d_all);
+set(h, 'LineStyle', '-', 'Color', 'g', 'LineWidth',2);
+hold on
+j=cdfplot(arc_red_d1_d3_pref_d_all);
+set(j, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+legend(['LacZ (Control)'], ['Arc Promoter Knockdown'], 'Location', 'best')
+xlim([0 90])
+xlabel(['Change in Pref Ori'])
+ylabel(['Proportion of cells'])
+title('')
+hold off
 
+print(fullfile(realfnout, ['tj_poster_allmice_changeprefcdf1to3_red_.pdf']), '-dpdf', '-bestfit')
 
 %%
 %median split analysis for 4d dark group
@@ -1968,3 +1985,8 @@ save(fullfile(realfnout, ['_tj_reliabilitysplit_pref_data.mat']), 'arc_red_pref_
     'lacz_red_pref_bin1_reliability_all', 'lacz_red_pref_bin2_reliability_all', 'lacz_red_pref_bin3_reliability_all', ...
     'arc_green_pref_bin1_reliability_all', 'arc_green_pref_bin2_reliability_all', 'arc_green_pref_bin3_reliability_all', ...
     'lacz_green_pref_bin1_reliability_all', 'lacz_green_pref_bin2_reliability_all', 'lacz_green_pref_bin3_reliability_all')
+
+%%
+%poster
+arc_red_d1_d3_pref_d_all
+lacz_red_d1_d3_pref_d_all
