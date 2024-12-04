@@ -364,6 +364,20 @@ expt(25).randDir = 0;
 expt(25).nDir = 1;
 expt(25).saveLoc = 'lindsey';
 
+%% i2585 241129
+expt(26).mouse = 'i2585';
+expt(26).date = '241129';
+expt(26).img_loc  = {'V1'};
+expt(26).z = -200;
+expt(26).img_strct  = {'cells'};
+expt(26).driver = {'WT'};
+expt(26).indicator = {'AAV';'GCaMP6s'};
+expt(26).adaptFolder = {'002'};
+expt(26).adaptTime = {'1311'};
+expt(26).randDir = 0;
+expt(26).nDir = 1;
+expt(26).saveLoc = 'lindsey';
+
 
  
 

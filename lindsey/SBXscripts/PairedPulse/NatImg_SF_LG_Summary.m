@@ -1,17 +1,21 @@
-data_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lan\Data\2P_images\mat_inter\';
-pupil_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lan\Analysis\2P\';
-mouse = strvcat('i1380','i1381','i1386','i1374','i1387','i1375');
-area = 'V1';
-date = strvcat('230330','230404','230406','230411','230418','230425');
+close all
+clear all
+clc
 
-sf_stim = [1:6]; %new test based on image pres error.
+mouse = strvcat('i1412','i2585','i1406');
+area = 'V1';
+date = strvcat('241129', '241202', '241202');
+ImgFolder = strvcat({'003'},{'002'},{'003'});
+nrun = size(ImgFolder,2);
+
+sf_stim = [1:5]; %new test based on image pres error.
 nsf = length(sf_stim);
-nat_stim = [7:14];
+nat_stim = [6:13];
 nnat = length(nat_stim);
 stim_set = 'Grat6_Img8';
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey';
-fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Adaptation\SFSummary\NatImg', stim_set);
+fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Adaptation\SFSummary\NatImg_LG', stim_set);
 if ~exist(fn_out)
     mkdir(fn_out)
 end 
@@ -38,15 +42,13 @@ ntrialperstim = zeros(nexp,14);
 
 for iexp = 1:nexp
     fprintf([mouse(iexp,:) ' ' date(iexp,:) '\n'])
-    load(fullfile(data_pn,[area '_' mouse(iexp,:) '_' date(iexp,:) '_cellpose'],'trace_trial_stim.mat'))
-    %load(fullfile(pupil_pn,[date(iexp,:) '_' mouse(iexp,:)],[date(iexp,:) '_' mouse(iexp,:) '_runs-002-004'],[date(iexp,:) '_' mouse(iexp,:) '_pupil.mat']))
-   
-    if doEyeDist
-        ind_dist = find(centroid.dist<=min_dist);
-    else
-        ind_dist = 1:length(stim_seq);
-    end
+    run_str = catRunName(ImgFolder(iexp), nrun);
+    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
+    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 
+    stim_seq = celleqel2mat_padded(input.tstimOne);
+    R1_cell_trial = resp_mat(:,:,1);
+    R2_cell_trial = resp_mat(:,:,2);
     stims = unique(stim_seq);
     nStim = length(stims);
     [nCells nTrials] = size(R1_cell_trial);
@@ -57,7 +59,7 @@ for iexp = 1:nexp
     R2_avg = zeros(nStim,nCells);
     R1_snr = zeros(nStim,nCells);
     for istim = 1:nStim
-        ind = intersect(ind_dist,find(stim_seq == stims(istim)));
+        ind = find(stim_seq == stims(istim));
         ntrialperstim(iexp,istim) = length(ind);
         if length(ind)>40
             R1_avg(istim,:) = mean(R1_cell_trial(:,ind),2,'omitnan');
@@ -117,7 +119,7 @@ for iexp = 1:nexp
 end
 
 %% 241123 analysis
-outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2024';
+%outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2024';
 nCells = size(R1_avg_resp_all,2);
 R1_avg_resp_all_nan = R1_avg_resp_all;
 R1_avg_resp_all_nan(find(h_stim_all==0)) = nan;
@@ -170,7 +172,7 @@ ylabel('R1 dF/F')
 [h p] = ttest2(R1_resp_sf(ind_sub_sf),R1_resp_nat(ind_sub_nat));
 title(['p = ' num2str(p)])
 sgtitle('All cells resp to 0.16 OR any nat image')
-print(fullfile(outpn,'NatImgVGratingAdapt_RespEither.pdf'),'-dpdf')
+print(fullfile(fn_out,'NatImgVGratingAdapt_RespEither.pdf'),'-dpdf')
 
 figure;
 subplot(2,2,1)
@@ -207,7 +209,7 @@ ylabel('R1 dF/F')
 title(['p = ' num2str(p)])
 sgtitle('All cells resp to 0.16 AND any nat image')
 
-print(fullfile(outpn,'NatImgVGratingAdapt_RespBoth.pdf'),'-dpdf')
+print(fullfile(fn_out,'NatImgVGratingAdapt_RespBoth.pdf'),'-dpdf')
 %% 
 Adapt_avg_resp_grating_mean = cell(1,nsf+1);
 Adapt_avg_resp_natimg_mean = cell(1,nsf+1);
