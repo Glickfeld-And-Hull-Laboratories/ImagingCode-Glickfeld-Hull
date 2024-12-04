@@ -842,6 +842,21 @@ xlim([0 90])
 hold off
 print(fullfile(newfnout, ['tj concat dscores pre vs post RW', '_change_pref_cdf.pdf']), '-dpdf', '-bestfit')
 
+%%
+figure; 
+hold on
+j = cdfplot(pref_d_d1_d3_all);
+hold on;
+m = cdfplot(RW_pref_d_d1_d2_all);
+set(j, 'LineStyle', '-', 'Color', 'g', 'LineWidth', 2.0);
+set(m, 'LineStyle', '-', 'Color', 'r', 'LineWidth', 2.0);
+legend(['Pre-Runnning Wheel'],...
+    ['Post-Running Wheel'], 'Location', 'Best')
+title('')
+xlabel('Change in Pref Ori')
+ylabel('Proportion of Cells')
+xlim([0 90])
+print(fullfile(newfnout, ['tj poster RW', '_change_pref_cdf.pdf']), '-dpdf', '-bestfit')
 
 %%
 %prefori dscores k-s tests

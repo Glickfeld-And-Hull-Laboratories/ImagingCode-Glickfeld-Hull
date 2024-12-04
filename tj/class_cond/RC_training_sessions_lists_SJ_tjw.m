@@ -37,16 +37,43 @@ pre_cue_lick_rate_sem = [];
 iti_lick_window_avg = [];
 iti_lick_rate_sem = [];
 
+sessions = {'240115_img2571_1211', '240118_img2571_1130'};
+testDay_mouse = [2571,2571,0];
+assert(length(sessions)==length(testDay_mouse)-1);
+
+% sessions = {'240115_img2570_1132', '240118_img2570_1037'};
+% testDay_mouse = [2570,2570,0];
+% assert(length(sessions)==length(testDay_mouse)-1);
+
+% sessions = {'240113_img2570_1025'};
+% testDay_mouse = [2570,0];
+% assert(length(sessions)==length(testDay_mouse)-1);
+
+% sessions = {'231218_img2570_1319'};
+% testDay_mouse = [2570,0];
+% assert(length(sessions)==length(testDay_mouse)-1);
+
+% sessions = {'231218_img2571_1406'};
+% testDay_mouse = [2571,0];
+% assert(length(sessions)==length(testDay_mouse)-1);
+
+% sessions = {'231018_img2566_1012', '231019_img2566_0829', '231020_img2566_0822', '231021_img2566_0959', '231022_img2566_1042', '231024_img2566_0848'};
+% testDay_mouse = [2566,0,0,0,0,0,0];
+% assert(length(sessions)==length(testDay_mouse)-1);
+
+% sessions = {'231013_img1111_1059'};
+% testDay_mouse = [1111,0];
+% assert(length(sessions)==length(testDay_mouse)-1);
 
 % sessions = {'220926_img2526_1143','220927_img2526_1033', '220928_img2526_0943', '220929_img2526_1115', '220930_img2526_1037',...
 %     '221003_img2526_0926', '221004_img2526_1048'};
 % testDay_mouse = [2526,0,0,0,0,0,0,0];
 % assert(length(sessions)==length(testDay_mouse)-1);
 
-sessions = {'220926_img2525_1047','220927_img2525_0805', '220928_img2525_0840', '220929_img2525_1011', '220930_img2525_0940',...
-    '221003_img2525_0833'};
-testDay_mouse = [2525,0,0,0,0,0,0];
-assert(length(sessions)==length(testDay_mouse)-1);
+% sessions = {'220926_img2525_1047','220927_img2525_0805', '220928_img2525_0840', '220929_img2525_1011', '220930_img2525_0940',...
+%     '221003_img2525_0833'};
+% testDay_mouse = [2525,0,0,0,0,0,0];
+% assert(length(sessions)==length(testDay_mouse)-1);
 
 
 %sessions = {'data-i2521-220906-1330','data-i2521-220907-0837'};

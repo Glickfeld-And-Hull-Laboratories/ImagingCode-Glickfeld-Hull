@@ -14,19 +14,18 @@ clear global
 close all
 clc
 %% get path names
-date = '240625';
+date = '240110';
 ImgFolder = strvcat('001'); 
-time = strvcat('2019');
-mouse = 'i2577';
+time = strvcat('1410');
+mouse = 'i2570';
 run = strvcat('001'); 
 nrun = size(ImgFolder,1);
 frame_rate = 15;
 run_str = catRunName(ImgFolder, nrun);
 ref_str = catRunName(run, size(run,1)); 
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-% fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
 % fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\Day1_recycled';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\reverse_match';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load data
 data = [];
@@ -45,7 +44,8 @@ for irun = 1:nrun
     %input is behavioral parameters
     %info is imaging parameters
 
-    nframes = info.config.frames; %find nframes from info
+    nframes = min([info.config.frames input.counterValues{end}(end)]); %find nframes from info
+    %nframes = length(unique(info.frame))-1;
     fprintf(['Reading run ' num2str(irun) '- ' num2str(nframes) ' frames \r\n']) %graphic display of frames reading
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes); %reads data from 0 to nframes from raw file
     %nPMT x nYpix x nXpix x nframes
@@ -86,17 +86,22 @@ t = 2000; %nframes to skip for each average; could add nframes to not hard code 
 nep = floor(size(data,3)./t); %divides frames by skips and rounds down
 [n n2] = subplotn(nep); %finds ideal number of subplots to make
 figure; %makes figure
+% for i = 1:nep; %for the number of plots
+%     subplot(n,n2,i); %this subplot
+%     imagesc(mean(data(:,:,1+((i-1)*t):500+((i-1)*t)),3)); %scaled color image of mean of frames for specified range
+%     title([num2str(1+((i-1)*t)) '-' num2str(500+((i-1)*t))]); %titled based on frame numbers
+% end
 for i = 1:nep; %for the number of plots
     subplot(n,n2,i); %this subplot
-    imagesc(mean(data(:,:,1+((i-1)*t):100+((i-1)*t)),3)); %scaled color image of mean of frames for specified range
-    title([num2str(1+((i-1)*t)) '-' num2str(100+((i-1)*t))]); %titled based on frame numbers
+    imagesc(mean(data(:,:,1+((i-1)*t):250+((i-1)*t)),3)); %scaled color image of mean of frames for specified range
+    title([num2str(1+((i-1)*t)) '-' num2str(250+((i-1)*t))]); %titled based on frame numbers
 end
 %these figures are taking averages of each pixel value across certain sets
 %of frames; ex: what is the avg pixel value of pixel 1,1 for these 500
 %frames; what about pixel 1,2 etc.
 %% Register data
 
-data_avg = mean(data(:,:,34001:34100),3); %mean of pixel values over selected range of frames
+data_avg = mean(data(:,:,20001:20250),3); %mean of pixel values over selected range of frames
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str])) %if this folder exists)
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat'])) %load this mat file
@@ -111,12 +116,167 @@ else
     save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'data_reg_avg', 'out', 'data_avg')
     save(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
 end
-%clear data
+clear data
 
 
 %% test stability
 figure; imagesq(data_reg_avg); truesize; % avg pixel value of all frames registered***
+colormap('gray');
 print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf','-bestfit') %save as pdf that fits the page
+
+
+%%
+
+data_size = round(size(data_reg,3)/4);
+data_1 = 1:data_size;
+data_2 = data_size+1:data_size*2;
+data_3 = data_size*2+1:data_size*3;
+data_4 = data_size*3+1:data_size*4;
+
+
+%%
+
+
+% big images
+figure;
+imagesc(mean(data_reg(:,:,1:100),3))
+title('1st block')
+colormap gray
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_1st_min.pdf']),'-dpdf','-bestfit')
+
+figure;
+imagesc(mean(data_reg(:,:,data_2:100+data_2),3))
+title('2nd block')
+colormap gray
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_15th_min.pdf']),'-dpdf','-bestfit')
+
+figure;
+imagesc(mean(data_reg(:,:,data_3:100+data_3),3))
+title('3rd block')
+colormap gray
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_30th_min.pdf']),'-dpdf','-bestfit')
+
+figure;
+imagesc(mean(data_reg(:,:,data_4:100+data_4),3))
+title('4th block')
+colormap gray
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_45th_min.pdf']),'-dpdf','-bestfit')
+
+figure;
+imagesc(mean(data_reg(:,:,data_4(end-100):data_4(end-2)),3))
+title('5th block')
+colormap gray
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_60th_min.pdf']),'-dpdf','-bestfit')
+
+%%
+x = sqrt(out(:,3).^2 + out(:,4).^2);
+figure; plot(x)
+
+clean_data_reg = data_reg(:,:,x <= 15);
+fprintf(['Removed ' num2str(size(data_reg,3)-size(clean_data_reg,3)) ' frames \r\n'])
+
+%%
+clean_size = round(size(clean_data_reg,3)/4);
+
+figure;
+subplot(2,2,1);
+imagesc(mean(clean_data_reg(:,:,1:clean_size),3));
+colormap('gray');
+hold on
+subplot(2,2,2);
+imagesc(mean(clean_data_reg(:,:,clean_size+1:clean_size*2),3));
+subplot(2,2,3);
+imagesc(mean(clean_data_reg(:,:,clean_size*2+1:clean_size*3),3));
+subplot(2,2,4);
+imagesc(mean(clean_data_reg(:,:,clean_size*3+1:clean_size*4),3));
+hold off
+
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_4blocks_clean.pdf']),'-dpdf','-bestfit')
+
+%% same as above but 1000-frame stacks
+
+figure;
+subplot(2,2,1);
+imagesc(mean(clean_data_reg(:,:,1:1000),3));
+colormap('gray');
+hold on
+subplot(2,2,2);
+imagesc(mean(clean_data_reg(:,:,clean_size+1:clean_size+1000),3));
+subplot(2,2,3);
+imagesc(mean(clean_data_reg(:,:,clean_size*2+1:clean_size*2+1000),3));
+subplot(2,2,4);
+imagesc(mean(clean_data_reg(:,:,clean_size*3+1:clean_size*3+1000),3));
+hold off
+
+print(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_4blocks_clean_1000frames.pdf']),'-dpdf','-bestfit')
+
+%% same as above but 500-frame stacks
+
+figure;
+subplot(2,2,1);
+imagesc(mean(clean_data_reg(:,:,1:500),3));
+colormap('gray');
+hold on
+subplot(2,2,2);
+imagesc(mean(clean_data_reg(:,:,clean_size+1:clean_size+500),3));
+subplot(2,2,3);
+imagesc(mean(clean_data_reg(:,:,clean_size*2+1:clean_size*2+500),3));
+subplot(2,2,4);
+imagesc(mean(clean_data_reg(:,:,clean_size*3+1:clean_size*3+500),3));
+hold off
+
+%% same as above but 250-frame stacks
+
+figure;
+subplot(2,2,1);
+imagesc(mean(clean_data_reg(:,:,1:500),3));
+colormap('gray');
+hold on
+subplot(2,2,2);
+imagesc(mean(clean_data_reg(:,:,clean_size+1:clean_size+250),3));
+subplot(2,2,3);
+imagesc(mean(clean_data_reg(:,:,clean_size*2+1:clean_size*2+250),3));
+subplot(2,2,4);
+imagesc(mean(clean_data_reg(:,:,clean_size*3+1:clean_size*3+250),3));
+hold off
+
+%% same as above but for 1st block and diff stack sizes
+
+figure;
+subplot(2,2,1);
+imagesc(mean(clean_data_reg(:,:,1:clean_size),3));
+colormap('gray');
+hold on
+subplot(2,2,2);
+imagesc(mean(clean_data_reg(:,:,1:1000),3));
+subplot(2,2,3);
+imagesc(mean(clean_data_reg(:,:,1:500),3));
+subplot(2,2,4);
+imagesc(mean(clean_data_reg(:,:,1:250),3));
+hold off
+
+%%
+
+CD = fullfile(fnout, [date '_' mouse '\' date '_' mouse '_runs-' ImgFolder(irun,:)]);
+cd(CD);
+
+%%
+
+
+%***remember to changed cd!!!***
+writetiff(clean_data_reg(:,:,1:clean_size), 'cleandata1.tiff', 'double');
+
+
+%%
+
+%%
+
+
+
+%%
+
+
+
 
 %% PART 3: Find activated cells %%
 %we want trial level data in df/f; f is the baseline fluorescence (noise)
