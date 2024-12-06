@@ -15,12 +15,14 @@
 %% SECTION ONE - assign pathnames and datasets to be analyzed/written. 
 clear;
 clc;
+close all;
 % bdata_source = 'Z:\home\shuyang\Data\behavior\RC\';
 % analysis_outputs_dir = 'Z:\home\shuyang\behavior_analysis\RC\';
 % RC_fig_dir_base = 'Z:\home\shuyang\behavior_analysis\RC\sessions_&_summaries\';
 
 %bdata_source = 'Z:\home\tj\cc_data';
-bdata_source = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\cc_data';
+% bdata_source = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\cc_data';
+bdata_source = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %analysis_outputs_dir = 'Z:\home\tj\Analysis\Behavior\class_cond';
 analysis_outputs_dir = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Behavior\class_cond';
 %RC_fig_dir_base = 'Z:\home\tj\Analysis\Behavior\class_cond\sessions_&_summaries';
@@ -154,13 +156,9 @@ for ii = 1:length(sessions)
             for kk = 1:6:size(all_trials_lick_hist,1)
                 plot(x_axis_range, all_trials_lick_hist(kk,:), 'Color', [0,0,0]+(1-(kk/size(all_trials_lick_hist,1))));
             end
-            if soundamp > 0 && b_data.gratingSpeedDPS == 0 % plays sounds, no visual stim
-                vline(cue_rew_int, 'b');
-            elseif soundamp > 0 && b_data.gratingSpeedDPS > 0 % play both sound and visual stim
-                vline(cue_rew_int, 'r');
-            elseif soundamp == 0 && b_data.gratingSpeedDPS > 0 % plays only visual stim
+            
                 vline(time_before_ms+1, 'g');
-            end
+            
             savefig([session_fig_dir, sessions{ii}, '_rew_cum_hist']);
         end
     end
@@ -182,13 +180,9 @@ for ii = 1:length(sessions)
             %REWARDED trials lick raster plot
             figure;
             plotSpikeRaster(logical(licks_by_trial_rewarded), 'PlotType', 'vertline');
-            if soundamp > 0 && b_data.gratingSpeedDPS == 0 % plays sounds, no visual stim
-                vline(time_before_ms+1, 'b');
-            elseif soundamp > 0 && b_data.gratingSpeedDPS > 0 % plays sounds and visual stim
-                vline(time_before_ms+1, 'r');
-            elseif soundamp == 0 && b_data.gratingSpeedDPS > 0 % plays only visual stim
+            
                 vline(time_before_ms+1, 'g');
-            end
+            
             if b_data.trialLaserPowerMw > 0 && b_data.fixedReqHoldTimeMs ~= 1900 % if doing optogenetics
                 laser_bf_cue = b_data.fixedReqHoldTimeMs;
                 vline(time_before_ms+1 - laser_bf_cue, 'c');
@@ -328,7 +322,7 @@ for ii = 1:length(sessions)
         
         if TFT_ms > 0 && b_data.RewardDelayDurationMs == 0 && jakes_RT_filtering %%% what is this?
             miss_rate_this_session = length(find(RT_this_session>1200))/(num_trials-1);
-            RT_this_session = RT_this_session(find(RT_this_session>200 & RT_this_session<1200));
+            RT_this_session = RT_this_session(find(RT_this_session_raw>200 & RT_this_session_raw<1200));
         elseif jakes_RT_filtering
             miss_rate_this_session = (length(find(RT_this_session>500))+no_lick_trials) / num_trials_b1;
             RT_this_session = RT_this_session(find(RT_this_session>200 & RT_this_session<500));
@@ -522,7 +516,7 @@ xlabel('session');
 ylabel('standard deviation');
 xlim([0.8 length(RT_across_sessions)+length(RT_across_sessions_2CS)+length(RT_across_sessions_testDay)+length(RT_across_sessions_IL)+0.2]);
 
-subplot(2,2,3); plot(x,TFT_rates, 'b');
+subplot(2,2,3); plot(x,TFT_rates_IL, 'b');
 % if ~isempty(RT_across_sessions_2CS)
 %     hold on; plot(x2,TFT_rates_2CS, 'r');
 % end

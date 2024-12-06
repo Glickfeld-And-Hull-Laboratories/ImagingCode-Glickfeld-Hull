@@ -9,18 +9,19 @@ clear global;
 close all;
 clc;
 %% get path names D2
-ref_date = '230513';
-date = '230602';
-time = strvcat('1016');
+ref_date = '240627';
+date = '240627';
+time = strvcat('1916');
 alignToRef = 1;
 ImgFolder = strvcat('001');
-mouse = 'i2560';
+mouse = 'i2577';
 nrun = size(ImgFolder,1);
 frame_rate = 15.5;
 ref_str = 'runs-001';
 run_str = catRunName(ImgFolder, nrun);
 tj_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\2P_Imaging';
-fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
+% fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P';
+fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\reverse_match';
 behav_fn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data';
 %% load and register - same as d1 code
 data = [];
@@ -69,11 +70,11 @@ clear temp
 t = 2000;
 nep = floor(size(data,3)./t);
 [n n2] = subplotn(nep);
-figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):500+((i-1)*t)),3)); title([num2str(1+((i-1)*t)) '-' num2str(500+((i-1)*t))]); end
+figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*t):100+((i-1)*t)),3)); title([num2str(1+((i-1)*t)) '-' num2str(100+((i-1)*t))]); end
 
 %% Register data - identify clearest stack and align frames to that
 
-data_avg = mean(data(:,:,34001:34500),3); 
+data_avg = mean(data(:,:,36001:36100),3); 
 
 if exist(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(fnout, [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
