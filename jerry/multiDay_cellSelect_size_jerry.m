@@ -177,20 +177,20 @@ end
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
-ntrials = size(input.tGratingDirectionDeg,2);
-ntrials = 960;
-data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
+nTrials = size(input.tGratingDirectionDeg,2);
+%nTrials = 960;
+data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff nTrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
 data_g_dfof = (data_g_on-data_g_f)./data_g_f;
 clear data_g_trial data_g_on data_g_f
 
 %find the different directions and sizes
-tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:ntrials));
+tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:nTrials));
 dirs = unique(tDir);
 nDir = length(dirs);
 
-tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:ntrials));
+tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:nTrials));
 sizes = unique(tSize);
 nSize = length(sizes);
 ind_dir = find(tDir == max(sizes(:)));
@@ -406,17 +406,88 @@ npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
 %clear data_g_reg data_reg_down
-%% reshape by trials
+
+%% deprecated code archive
+
+% DEPRECATED - FIND EXACT FRAMES IN A TRIAL (CREATES UNEVEN TRIALS)
+% [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
+% nTrials = length(cStimOn);
+% [nFrames nCells] = size(npSub_tc);
+% % nOn = input.nScansOn;
+% % nOff = input.nScansOff;
+% MAXnFrames = max(max(diff(cStimOn)),nFrames - stimOffs(end)); % find
+% % nFrames for the trial with the most frames
+% data_tc = nan(MAXnFrames,nCells,nTrials);
+% data_f_trial = nan(nCells,nTrials);
+% stimOffs(end+1) = nFrames;
+% for itrial = 1:nTrials
+%     if itrial == 1
+%         baseFrame = 1;
+%     else
+%         baseFrame = stimOffs(itrial-1); 
+%     end
+%     nOn = stimOffs(itrial) - cStimOn (itrial);
+%     nOff = cStimOn(itrial) - baseFrame;
+%     trialFrames = nan(MAXnFrames,nCells);
+%     trialFrames(1:nOn+nOff,:) = npSub_tc(baseFrame:stimOffs(itrial)-1,:);
+%     %if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
+%         data_tc(:,:,itrial) = trialFrames;
+%     %end
+% end
+%
+% data_tc is final organized data by frame/trial (empty frames filled with NaN) x nCell x nTrials
+%
+% % calculate f and dfof
+% for itrial = 1:nTrials
+% end
+% elements = zeros(960,1);
+% for m = 1:960
+%     elements(m,1) = sum(~isnan(data_tc(:,1,m)));
+% end
+% histogram(elements)
+
+
+%% find stim info from photodiode
+% LG code
+[cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
+nTrials = length(cStimOn);
+[nFrames nCells] = size(npSub_tc);
+nOn = input.nScansOn;
+nOff = input.nScansOff;
+data_tc = nan(nOn+nOff,nCells,nTrials);
+
+for itrial = 1:nTrials
+  if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
+    data_tc(:,:,itrial) = npSub_tc(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2,:);
+  end
+end
+%% dfof calculation
+%data_tc = data_tc(:,:,1:end-1);
+data_f_trial = mean(data_tc(1:nOff/2,:,:),1);
+data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc, data_f_trial), data_f_trial);
+data_dfof_trial = permute(data_dfof_trial,[1 3 2]); %nFrames x nTrials x nCells
+% plot tc sanity check
+% tavg = squeeze(nanmean(data_dfof_trial,3));
+% figure;
+% hold on
+% for icell = 1:nCells
+%     plot(tavg(:,icell), 'LineWidth',.005,'color',[.25 .25 .25]);
+% end
+% tc_cellavg = mean(tavg,2);
+% plot(tc_cellavg);
+%% reshape by trials - DEPRECATED
 %getting df/f for each trial, using a baseline window
-data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);
-data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
-data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
+%data_tc_trial = reshape(npSub_tc, [nOn+nOff,nTrials,nCells]);
+%data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
+%data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %split into baseline and response windows, run paired t-test to see if
 %cells have a significant response (elevation in df/f comapred to baseline)
 %for any sizes/directions
-resp_win = nOff:nOn+nOff;
-base_win = nOff/2:nOff;
+
+%% calculate responsive cells
+resp_win = nOff/2:nOff/2+nOn;
+base_win = 1:nOff/2;
 data_resp = zeros(nCells, nSize, nDir,2);
 h = zeros(nCells, nSize, nDir);
 p = zeros(nCells, nSize, nDir);
@@ -500,22 +571,22 @@ green_inds = 1:nCells;
 green_inds = setdiff(green_inds, find(mask_label));
 green_tcs = npSub_tc(:,green_inds);
 
-data_tc_trial = reshape(npSub_tc, [nOn+nOff,ntrials,nCells]);
+% data_tc_trial = reshape(npSub_tc, [nOn+nOff,nTrials,nCells]);
 
-data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
-data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
+% data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
+% data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = mean(data_dfof_trial(:,:,resp),3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(mean(data_dfof_trial(:,:,resp),2));%average over trials, one row per cell
-tc_cell_trial_avrg = mean(tc_cell_avrg,2);%average over trials and cells
+tc_cell_avrg = nanmean(data_dfof_trial(:,:,resp),3);%average pver cells, one row per trial
+tc_trial_avrg = squeeze(nanmean(data_dfof_trial(:,:,resp),2));%average over trials, one row per cell
+tc_cell_trial_avrg = nanmean(tc_cell_avrg,2);%average over trials and cells
 
 figure;
 plot(tc_trial_avrg, 'LineWidth',.005,'color',[.25 .25 .25]);
 hold on;
 plot(tc_cell_trial_avrg, 'LineWidth',2, 'color','k');
 hold on;
-vline(nOff,'g')
+vline(nOff/2,'g')
 title('');
 hold off
 ylim([-.02 .18])
@@ -525,4 +596,61 @@ ylim([-.02 .18])
 title(['Responsive cells (',num2str(sum(resp)), ' total, ', num2str(sum(resp_red)), ' red), out of ', num2str(size(data_tc,2)), ' total cells']);
 print(fullfile(fnout,'rawTCs.pdf'),'-dpdf','-bestfit');
 
+%% add diagnostic plots
 
+[cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
+nTrials = length(cStimOn);
+[nFrames nCells] = size(npSub_tc);
+MAXnFrames = max(max(diff(cStimOn)),nFrames - stimOffs(end)); % find
+% nFrames for the trial with the most frames
+data_tc = nan(MAXnFrames,nCells,nTrials);
+data_f_trial = nan(nCells,nTrials);
+stimOffs(end+1) = nFrames;
+for itrial = 1:nTrials
+    if itrial == 1
+        baseFrame = 1;
+    else
+        baseFrame = stimOffs(itrial-1); 
+    end
+    nOn = stimOffs(itrial) - cStimOn (itrial);
+    nOff = cStimOn(itrial) - baseFrame;
+    trialFrames = nan(MAXnFrames,nCells);
+    trialFrames(1:nOn+nOff,:) = npSub_tc(baseFrame:stimOffs(itrial)-1,:);
+    %if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
+        data_tc(:,:,itrial) = trialFrames;
+    %end
+end
+
+elements = zeros(960,1);
+for m = 1:960
+    elements(m,1) = sum(~isnan(data_tc(:,1,m)));
+end
+% plot 
+figure
+[counts centers] = hist(elements);
+histogram(elements);
+set(gca,'YScale','log')
+sgtitle('Log Trial Length Distribution')
+ylim([0.1 max(n)+max(n)*1/10])
+xlabel('nFrames')
+ylabel('log number of trials')
+
+print(fullfile(fnout,'LogTrialLengthDistribution.pdf'),'-dpdf','-bestfit');
+
+figure
+histogram(elements);
+sgtitle('Trial Length Distribution')
+ylim([0.1 max(n)+max(n)*1/10])
+xlabel('nFrames')
+ylabel('number of trials')
+
+print(fullfile(fnout,'TrialLengthDistribution.pdf'),'-dpdf','-bestfit');
+
+figure
+ptdcounter = cStimOn;
+mwcounter = [60:90:86400];
+plot(ptdcounter-mwcounter);
+sgtitle('Counter Value Diff')
+xlabel('trial number')
+ylabel('Photodiode Counter - mWorks Counter')
+print(fullfile(fnout,'ptd-mw.pdf'),'-dpdf','-bestfit');
