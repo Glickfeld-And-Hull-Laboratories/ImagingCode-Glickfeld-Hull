@@ -9,7 +9,7 @@ doGreenOnly = true;
 doCorrImg = true;  
 ExperimentFolder = 'PV_CMPDA';
 
-day_id = 52;
+day_id = 53;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -446,9 +446,10 @@ save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 % end
 % histogram(elements)
 
-
 %% find stim info from photodiode
 % LG code
+cd(CD);
+load([runFolder '_000_000.mat']);
 [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
 nTrials = length(cStimOn);
 [nFrames nCells] = size(npSub_tc);
@@ -577,8 +578,8 @@ green_tcs = npSub_tc(:,green_inds);
 % data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = nanmean(data_dfof_trial(:,:,resp),3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(nanmean(data_dfof_trial(:,:,resp),2));%average over trials, one row per cell
+tc_cell_avrg = nanmean(data_dfof_trial(:,1:400,resp),3);%average pver cells, one row per trial
+tc_trial_avrg = squeeze(nanmean(data_dfof_trial(:,1:400,resp),2));%average over trials, one row per cell
 tc_cell_trial_avrg = nanmean(tc_cell_avrg,2);%average over trials and cells
 
 figure;
@@ -654,3 +655,58 @@ sgtitle('Counter Value Diff')
 xlabel('trial number')
 ylabel('Photodiode Counter - mWorks Counter')
 print(fullfile(fnout,'ptd-mw.pdf'),'-dpdf','-bestfit');
+
+
+%% look at running trials
+
+loc_dat = input.wheelSpeedValues;
+wheelspd = zeros(length(loc_dat),1);
+for iTrial = 1:length(wheelspd)
+    wheelspd(iTrial) = mean(loc_dat{iTrial});
+end
+
+figure
+plot(wheelspd);
+sgtitle('Trial Average Wheel Speed')
+print(fullfile(fnout,'wheelspd.pdf'),'-dpdf','-bestfit');
+
+runidx = find(wheelspd>2);
+runTrialBoolean = wheelspd > 2;
+tCon = cell2mat(input.tGratingContrast);
+contrasts = unique(tCon);
+nCon = length(contrasts);
+tot_conds = nSize * nDir * nCon;
+all_conds = cell(tot_conds,1);
+RunTrialsN = nan(tot_conds,1);
+cond_counter = 1;
+%all_idx = [];
+
+for iSize = 1:nSize
+    ind_size = find(tSize == sizes(iSize));
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        for iCon = 1:nCon
+            ind_con = find(tCon == contrasts(iCon));
+            this_ind = intersect(intersect(ind_size,ind_dir,'stable'),ind_con,'stable'); 
+            this_condition = ['Con-' num2str(contrasts(iCon)) '-Dir-' num2str(dirs(iDir)) '-Size-' num2str(sizes(iSize))];
+            all_conds{cond_counter} = this_condition;
+            haveRun = intersect(this_ind,runidx);
+            RunTrialsN(cond_counter) = length(haveRun);
+            cond_counter = cond_counter + 1;
+            %all_idx = [all_idx length(this_ind)];
+        end
+    end
+end
+
+figure
+bar(RunTrialsN)
+sgtitle('Number of Running Trials in Each Stimulus Condition')
+ylim([0 max(RunTrialsN+1)])
+yticks([0:1:max(RunTrialsN+1)])
+xticks([1:1:length(all_conds)])
+xticklabels(all_conds)
+ylabel('# of Running Trials')
+
+ax = gca;
+ax.FontSize = 8; 
+print(fullfile(fnout,'nRunTrialsInCond.pdf'),'-dpdf','-bestfit');

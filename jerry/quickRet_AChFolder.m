@@ -1,11 +1,11 @@
 
 close all
 
-date = '241126';
-mouse = 'i3321';
-ImgFolder = '002';
-time = '0848';
-doReg = 1;
+date = '241212';
+mouse = 'i3322';
+ImgFolder = '003';
+time = '0925';
+doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;

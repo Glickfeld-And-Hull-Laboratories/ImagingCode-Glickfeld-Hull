@@ -13,7 +13,7 @@ ExperimentFolder = 'PV_CMPDA';
 
 %to use the post-DART timepoint as the template
 
-day_id(1) =52; %enter the refrence day ID here 
+day_id(1) =50; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
