@@ -1332,6 +1332,7 @@ expt(46).contrastxori_runs = {'003'};
 expt(46).contrastxori_time = {'0837'};
 expt(46).data_loc = 'ACh';
 expt(46).wheelColor = 'orange';
+expt(46).exptType = 'PV_YM90K';
 %% 47 i3319 multisize 12hrs post
 expt(47).SubNum = 'i3319';
 expt(47).mouse = 'i3319';
@@ -1361,6 +1362,7 @@ expt(47).contrastxori_runs = {'004'};
 expt(47).contrastxori_time = {'1012'};
 expt(47).data_loc = 'ACh';
 expt(47).wheelColor = 'orange';
+expt(47).exptType = 'PV_CMPDA';
 %% 48 i3319 multisize 12hrs post
 expt(48).SubNum = 'i3319';
 expt(48).mouse = 'i3319';
@@ -1390,6 +1392,7 @@ expt(48).contrastxori_runs = {'004'};
 expt(48).contrastxori_time = {'0925'};
 expt(48).data_loc = 'ACh';
 expt(48).wheelColor = 'orange';
+expt(48).exptType = 'PV_CMPDA';
 %% 49 i3320 multisize baseline
 expt(49).SubNum = 'i3320';
 expt(49).mouse = 'i3320';
@@ -1419,6 +1422,7 @@ expt(49).contrastxori_runs = {'004'};
 expt(49).contrastxori_time = {'1234'};
 expt(49).data_loc = 'ACh';
 expt(49).wheelColor = 'orange';
+expt(49).exptType = '';
 %% 50 i3320 multisize 19hrs post
 expt(50).SubNum = 'i3320';
 expt(50).mouse = 'i3320';
@@ -1448,6 +1452,7 @@ expt(50).contrastxori_runs = {'003'};
 expt(50).contrastxori_time = {'1039'};
 expt(50).data_loc = 'ACh';
 expt(50).wheelColor = 'orange';
+expt(50).exptType = '';
 %% 51 i3321 multisize baseline
 expt(51).SubNum = 'i3321';
 expt(51).mouse = 'i3321';
@@ -1477,6 +1482,7 @@ expt(51).contrastxori_runs = {'004'};
 expt(51).contrastxori_time = {'1032'};
 expt(51).data_loc = 'ACh';
 expt(51).wheelColor = 'orange';
+expt(51).exptType = 'PV_CMPDA';
 %% 52 i3321 multisize 13hrs post
 expt(52).SubNum = 'i3321';
 expt(52).mouse = 'i3321';
@@ -1506,6 +1512,7 @@ expt(52).contrastxori_runs = {'003'};
 expt(52).contrastxori_time = {'0904'};
 expt(52).data_loc = 'ACh';
 expt(52).wheelColor = 'orange';
+expt(52).exptType = 'PV_CMPDA';
 %% 53 i3322 multisize baseline
 expt(53).SubNum = 'i3322';
 expt(53).mouse = 'i3322';
@@ -1535,3 +1542,4 @@ expt(53).contrastxori_runs = {'005'};
 expt(53).contrastxori_time = {'0934'};
 expt(53).data_loc = 'ACh';
 expt(53).wheelColor = 'orange';
+expt(53).exptType = 'PV_CMPDA';
