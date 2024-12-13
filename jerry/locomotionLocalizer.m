@@ -1,10 +1,18 @@
-function result = locomotionLocalizer(person,session)
+function [wheelspeeds,nRunningTrialsInConditions] = locomotionLocalizer(person,session)
 %LOCOMOTIONLOCALIZER returns locomotion status in the given experiment sessions. 
-% RESULT = locomotionLocalizer(person,session)
+% [wheelspeeds,nRunningTrialsInConditions] = locomotionLocalizer(person,session)
 % PERSON is the intial of the experimenter given as string (e.g. "CC" or
 % "TH"). Valid experimenters are defined in the function, edit function to add.
 % SESSION is the sessions to be checked given as a row vector of doubles,
 % defined by each experimenter's DART dataset info file.
+% WHEELSPEEDS is an nSessions x 2 cell array that has mouse-day in the
+% first column and nTrials x 1 double arrays with trial average wheelspeeds
+% in the second column.
+% NRUNNINGTRIALSINCONDITIONS is nSessions x 2 cell array that has mouse-day in the
+% first column and nested cell arrays in the second column. The nested arrays
+% have dimensions nStimConditions x 2 and have all stimulus conditions in
+% the first column and number of running trials in that condition in the
+% second column.
 
 if isa(session,'double') == 0
     error('Invalid session class, supply session as a row vector of doubles.')
@@ -30,6 +38,12 @@ end
 cd(code_cd);
 eval(ds);
 disp(['Dataset name is ' ds ' and is hardcoded in function. Edit function if file name changed.']);
+
+
+nSesh = length(session);
+
+nRunningTrialsInConditions = cell(nSesh,2);
+wheelspeeds = cell(nSesh,2);
 
 for sesh = 1:length(session)
     mouse = expt(session(sesh)).mouse;
@@ -98,7 +112,7 @@ for sesh = 1:length(session)
     
     figure
     bar(RunTrialsN)
-    sgtitle('Number of Running Trials in Each Stimulus Condition')
+    sgtitle([mouse '-' day '-Number of Running Trials in Each Stimulus Condition'])
     ylim([0 max(RunTrialsN+1)])
     yticks([0:1:max(RunTrialsN+1)])
     xticks([1:1:length(all_conds)])
@@ -108,6 +122,14 @@ for sesh = 1:length(session)
     ax = gca;
     ax.FontSize = 8; 
     print(fullfile(fnout,'nRunTrialsInCond.pdf'),'-dpdf','-bestfit');
+
+    thisRunningTrialsInConditions = cell(tot_conds,2);
+    thisRunningTrialsInConditions(:,1) = all_conds;
+    thisRunningTrialsInConditions(:,2) = num2cell(RunTrialsN);
+    nRunningTrialsInConditions{sesh,1} = [mouse '-' day];
+    nRunningTrialsInConditions{sesh,2} = thisRunningTrialsInConditions;
+    wheelspeeds{sesh,1} = [mouse '-' day];
+    wheelspeeds{sesh,2} = wheelspd;
 end
 
 

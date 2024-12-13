@@ -1042,6 +1042,7 @@ expt(36).contrastxori_runs = {'005'};
 expt(36).contrastxori_time = {'1321'};
 expt(36).data_loc = 'ACh';
 expt(36).wheelColor = 'orange';
+expt(36).exptType = 'PV_YM90K';
 %% 37 i3312 multisize 4hrs post-DART
 expt(37).SubNum = 'i3312';
 expt(37).mouse = 'i3312';
@@ -1071,6 +1072,7 @@ expt(37).contrastxori_runs = {'003'};
 expt(37).contrastxori_time = {'1220'};
 expt(37).data_loc = 'ACh';
 expt(37).wheelColor = 'orange';
+expt(37).exptType = 'PV_YM90K';
 %% 38 i3312 multisize 10hrs post-DART
 expt(38).SubNum = 'i3312';
 expt(38).mouse = 'i3312';
@@ -1100,6 +1102,7 @@ expt(38).contrastxori_runs = {'007'};
 expt(38).contrastxori_time = {'1831'};
 expt(38).data_loc = 'ACh';
 expt(38).wheelColor = 'orange';
+expt(38).exptType = 'PV_YM90K';
 %% 39 i3313 multisize baseline
 expt(39).SubNum = 'i3313';
 expt(39).mouse = 'i3313';
@@ -1129,6 +1132,7 @@ expt(39).contrastxori_runs = {'004'};
 expt(39).contrastxori_time = {'1403'};
 expt(39).data_loc = 'ACh';
 expt(39).wheelColor = 'orange';
+expt(39).exptType = 'PV_YM90K';
 %% 40 i3313 multisize 12hrs post-DART
 expt(40).SubNum = 'i3313';
 expt(40).mouse = 'i3313';
@@ -1158,6 +1162,7 @@ expt(40).contrastxori_runs = {'003'};
 expt(40).contrastxori_time = {'0849'};
 expt(40).data_loc = 'ACh';
 expt(40).wheelColor = 'orange';
+expt(40).exptType = 'PV_YM90K';
 %% 41 i3314 multisize baseline
 expt(41).SubNum = 'i3314';
 expt(41).mouse = 'i3314';
@@ -1187,6 +1192,7 @@ expt(41).contrastxori_runs = {'004'};
 expt(41).contrastxori_time = {'0954'};
 expt(41).data_loc = 'ACh';
 expt(41).wheelColor = 'orange';
+expt(41).exptType = 'PV_YM90K';
 %% 42 i3314 multisize 12hrs post
 expt(42).SubNum = 'i3314';
 expt(42).mouse = 'i3314';
@@ -1216,6 +1222,7 @@ expt(42).contrastxori_runs = {'003'};
 expt(42).contrastxori_time = {'0912'};
 expt(42).data_loc = 'ACh';
 expt(42).wheelColor = 'orange';
+expt(42).exptType = 'PV_YM90K';
 %% 43 i3315 multisize baseline
 expt(43).SubNum = 'i3315';
 expt(43).mouse = 'i3315';
@@ -1245,6 +1252,7 @@ expt(43).contrastxori_runs = {'004'};
 expt(43).contrastxori_time = {'1159'};
 expt(43).data_loc = 'ACh';
 expt(43).wheelColor = 'orange';
+expt(43).exptType = 'PV_YM90K';
 %% 44 i3315 multisize 12hrs post
 expt(44).SubNum = 'i3315';
 expt(44).mouse = 'i3315';
@@ -1274,6 +1282,7 @@ expt(44).contrastxori_runs = {'003'};
 expt(44).contrastxori_time = {'0921'};
 expt(44).data_loc = 'ACh';
 expt(44).wheelColor = 'orange';
+expt(44).exptType = 'PV_YM90K';
 %% 45 i3318 multisize baseline
 expt(45).SubNum = 'i3318';
 expt(45).mouse = 'i3318';
@@ -1303,6 +1312,7 @@ expt(45).contrastxori_runs = {'004'};
 expt(45).contrastxori_time = {'1141'};
 expt(45).data_loc = 'ACh';
 expt(45).wheelColor = 'orange';
+expt(45).exptType = 'PV_YM90K';
 %% 46 i3318 multisize 12hrs post
 expt(46).SubNum = 'i3318';
 expt(46).mouse = 'i3318';
