@@ -25,7 +25,7 @@ fn_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff'; %base fil
 tj_fn = fullfile(fn_base, 'home\tj'); %personal file path
 data_fn = fullfile(tj_fn, '2P_Imaging\tutorial'); 
 mworks_fn = fullfile(fn_base, 'Behavior\Data'); %behavior data
-fnout = fullfile(tj_fn, 'Analysis\2P\tutorial\211020_tj_092021'); %analysis folder
+fnout = fullfile(tj_fn, 'Analysis\Analysis\2P\tutorial\211020_tj_092021'); %analysis folder
 
 %experiment info
 date = '211020';
@@ -125,12 +125,12 @@ subplot(1,2,2)
 plot(resp(:,1))
 
 %% 
-% Create a “for” loop where you loop through each orientation and select the 
-% set of trials for that orientation and use a “ttest” to compare the baseline 
+% Create a �for� loop where you loop through each orientation and select the 
+% set of trials for that orientation and use a �ttest� to compare the baseline 
 % and stimulus response across those trials. Output of ttest function should give 
 % you the thresholded significance (using the bonferonni corrected alpha value) 
 % for ncells x nori (this will be 1s for significant values). You should create 
-% three new variables here – one that is ncells x nori for the outcome of the 
+% three new variables here � one that is ncells x nori for the outcome of the 
 % ttest, and two that are the same size that have the average response of each 
 % cell to each orientation and the standard error for that response (you will 
 % use these last two later).
