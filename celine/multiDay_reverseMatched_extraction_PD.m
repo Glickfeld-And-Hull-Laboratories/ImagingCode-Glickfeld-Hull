@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'SST_atropine';
+experimentFolder = 'VIP_atropine';
 
 mouse = expt(day_id).mouse;
 
@@ -191,10 +191,79 @@ for id = 1:nd
     end
     wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
     wheel_trial_avg_raw{id} = mean(wheel_tc_raw{id}(nOff:nOn+nOff,:),1);
-    RIx{id} = wheel_trial_avg{id}>2; %.55 is the noise level in the wheel movement
+    RIx{id} = wheel_trial_avg{id}>2; %~5 is the noise level in the wheel movement
     mean(RIx{id})
 end
 
+%% extract running onsets
+data_dfof_runOnset_match = cell(1,nd);
+nRunOnsets=[];
+for id = 1:nd
+    fwdWheelClean = wheel_speed_clean{id};
+    fwdWheelClean(fwdWheelClean<0)=0;
+    % moveMean = movmean(fwdWheelClean,3);
+    % smoothRun=smooth(fwdWheelClean,3);
+    % figure;plot(fwdWheelClean(900:1300));hold on;plot(smoothRun(900:1300));hold on;plot(moveMean(900:1300));
+    
+    % find and refine the onset indices
+    stillFrames = logical(fwdWheelClean<2); %find the stationary periods based on the sliding window
+    runFrames = logical(fwdWheelClean>2); %find the stationary periods based on the sliding window
+
+    runOnsets=(find(diff(stillFrames) == -1)+1); %find the transitions from stationary to running
+    runOffsets=(find(diff(stillFrames) == 1)+1); %find the transitions from running to stationary
+  
+    %subset to onsets that are preceeded by 1s stillness and followed by at
+    %least 1s of running
+    runOnsets_clean = runOnsets;
+    toDrop = [];
+    for iOnset = 1:length(runOnsets_clean)
+        if runOnsets_clean(iOnset) < frame_rate+1
+            toDrop=[toDrop,iOnset]; %drop onsets that are less than 1 second from the start of the session, because in that case I can't test of my next criterion
+        elseif runOnsets_clean(iOnset) > frame_rate+1
+        testWinStill=[runOnsets_clean(iOnset)-frame_rate:runOnsets_clean(iOnset)];
+        testWinRun=[runOnsets_clean(iOnset):runOnsets_clean(iOnset)+frame_rate];
+            if sum(stillFrames(testWinStill))<(frame_rate*.75) |sum(runFrames(testWinRun))<(frame_rate*.75)
+                toDrop=[toDrop,iOnset]; %gather a list of onsets that don't meet my criteria
+            end 
+        end
+    end
+    runOnsets_clean(toDrop)=[];
+    %
+    %make a vector that is 1 during the ITI and 0 when the stim is on
+    ITI = ones(1,nFrames);
+    for iTrial = 1:nTrials(id)
+        ITI(cStimOn(iTrial):cStimOn(iTrial)+nOn)=0;
+    end
+    
+    %subset the running onsets to only include those during the ITI
+    ITIOnsets = runOnsets_clean;
+    ITIOnsets(ITI(runOnsets_clean)==0)=[];
+    
+    % get neural data for run onsets 
+    % extract timecourses during a window around the run onset
+    onsetWin = 1; %how many seconds you want the window the be, on EITHER side of the onset
+    
+    data_dfof_runOnset = nan(onsetWin*2*frame_rate,nCells,length(ITIOnsets));
+    runConfirmation = nan(onsetWin*2*frame_rate,length(ITIOnsets));
+    for iOnset = 1:length(ITIOnsets)
+        %find inds for a window around the onset
+        fullWindow = [(ITIOnsets(iOnset)-(onsetWin*frame_rate)):(ITIOnsets(iOnset)+(onsetWin*frame_rate)-1)];
+        bslnWindow = [(ITIOnsets(iOnset)-(frame_rate/2)):ITIOnsets(iOnset)];%the last half second before the run onset. Will use this as the baseline for df/f
+        tempFull=cellTCs_match{id}(fullWindow,:);
+        tempBsln=mean(cellTCs_match{id}(bslnWindow,:));
+        %this is F, convert to dfof. 
+        tempDfof = bsxfun(@rdivide,bsxfun(@minus,tempFull,tempBsln),tempBsln);
+        data_dfof_runOnset(:,:,iOnset)=tempDfof;
+        runConfirmation(:,iOnset) = fwdWheelClean(fullWindow);
+    end
+    
+    figure; plot(nanmean(runConfirmation,2)) %to check whether running actually does increase around the time of these onsets.
+    
+    data_dfof_runOnset_match{id} = mean(data_dfof_runOnset,3,'omitmissing'); %frames x cells (for all matched cells) averaged over all the onsets
+    nRunOnsets=[nRunOnsets length(ITIOnsets)];
+end
+
+nRunOnsets
 
 
 %% get large/small pupil trials
@@ -485,6 +554,8 @@ pref_allTrials_smallPupil=cell(nCon,nSize,nd);
 tc_trial_avrg_stat=cell(1,nd);
 tc_trial_avrg_loc=cell(1,nd);
 
+data_dfof_runOnset_keep=cell(1,nd);
+
 for id = 1:nd
     
     trialCounts{1,id}=[];
@@ -614,6 +685,8 @@ for id = 1:nd
     pref_peak_stat{id}=temp_pref_peak_stat;
     pref_peak_loc{id}=temp_pref_peak_loc;
     
+    data_dfof_runOnset_keep{id}=data_dfof_runOnset_match{id}(:,keep_cells);
+
     clear temp_trials_stat_smallPupil temp_trials_stat_largePupil temp_trials_stat 
     clear temp_trials_loc temp_tc_stat_largePupil temp_tc_stat_smallPupil temp_pref_peak_loc 
     clear temp_pref_peak_stat temp_pref_responses_allCond temp_pref_responses_stat 
@@ -666,7 +739,7 @@ save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
     'tc_trial_avrg_stat_smallPupil','tc_trial_avrg_loc', 'green_keep_logical', ...
     'red_keep_logical', 'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat', ...
     'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
-    'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc')
+    'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc','data_dfof_runOnset_keep')
 
 
 

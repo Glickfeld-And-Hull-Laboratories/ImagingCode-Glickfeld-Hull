@@ -1,4 +1,4 @@
-%% read in and concatenate data
+% %% read in and concatenate data
 
 clear all; clear global; close all
 clc

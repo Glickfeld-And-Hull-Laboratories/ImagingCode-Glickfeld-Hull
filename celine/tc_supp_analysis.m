@@ -4,7 +4,7 @@ clear all; clear global; close all
 %identifying animal and run
 netSupp_expt
 
-expt_num = 1;
+expt_num = 5;
 %[1,2,3,4,11,12,13,14,16,17,18,19,20,21,22,23,24,25];
 
 mouse = expt(expt_num).mouse
