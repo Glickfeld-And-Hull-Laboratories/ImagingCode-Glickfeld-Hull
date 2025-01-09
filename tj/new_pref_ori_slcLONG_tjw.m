@@ -7,7 +7,9 @@ close all
 % dataset = 'exp_list_slc_long_tjw';
 dataset = 'exp_list_ket_1wk_tjw';
 eval(dataset); %load dataset
-d1 = 4; %from expt list
+d1 = 12; %from expt list
+doNewD1 = 0;
+doNewD1Match = 1;
 mouse = expt(d1).mouse; %mouse
 ref_str = ['runs-' expt(d1).runs];
 img_area = expt(d1).img_loc{1};
@@ -17,9 +19,13 @@ img_folder = expt(d1).runs; %img folder of day 1
 time = expt(d1).time_mat;
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' ref_str];
-fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P', datemouse, datemouserun); %folder to load files from
-
-
+fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P', datemouse, datemouserun); %folder to load files from
+if doNewD1
+    fnout = fullfile(fnout, 'newD1');
+end
+if doNewD1Match
+    fnout = fullfile(fnout, 'newD1Match');
+end
 %%
 %load files
 CD = fnout; %finds current directory
@@ -54,7 +60,8 @@ end
 Oris = unique(Ori);
 
 %%
-resp_win = 70:90;
+nOff = 60;
+resp_win = nOff/2+5:nOff/2+nOn;
 a = squeeze(mean(data_dfof(resp_win,:,:),1));
 
 %%
@@ -62,7 +69,7 @@ a = squeeze(mean(data_dfof(resp_win,:,:),1));
 x = Ori;
 y = a;
 for ii = 1:nCells
-z= sum(y(ii,:).*cos(2.*deg2rad(x))+y(ii,:).*i.*sin(2.*deg2rad(x)));
+z= sum(y(ii,:).*cos(2.*deg2rad(x))+y(ii,:).*i.*sin(2.*deg2rad(x)),'omitnan');
 theta(ii) = 0.5*rad2deg(angle(z));
 end
 
@@ -88,12 +95,12 @@ aaa_oris_2nd_set = aaa_oris(:,(length(aaa_oris)/2)+1:length(aaa_oris));
 %%
 
 for ii = 1:nCells
-    z_1 = sum(aaa_1st_set(ii,:).*cos(2.*deg2rad(aaa_oris_1st_set))+aaa_1st_set(ii,:).*i.*sin(2.*deg2rad(aaa_oris_1st_set)));
+    z_1 = sum(aaa_1st_set(ii,:).*cos(2.*deg2rad(aaa_oris_1st_set))+aaa_1st_set(ii,:).*i.*sin(2.*deg2rad(aaa_oris_1st_set)),'omitnan');
     theta_1(ii) = 0.5*rad2deg(angle(z_1));
 end
 
 for ii = 1:nCells
-    z_2 = sum(aaa_2nd_set(ii,:).*cos(2.*deg2rad(aaa_oris_2nd_set))+aaa_2nd_set(ii,:).*i.*sin(2.*deg2rad(aaa_oris_2nd_set)));
+    z_2 = sum(aaa_2nd_set(ii,:).*cos(2.*deg2rad(aaa_oris_2nd_set))+aaa_2nd_set(ii,:).*i.*sin(2.*deg2rad(aaa_oris_2nd_set)),'omitnan');
     theta_2(ii) = 0.5*rad2deg(angle(z_2));
 end
 
@@ -105,22 +112,45 @@ theta_2(find(theta_2<0)) = 180+theta_2(find(theta_2<0));
 %and run the vonmises part of the day1 code for each 'half' of the data
 
 %remember to save both 'halves' of each pref ori method
+a1 = a(:, aaa_idx(1:round(length(aaa_idx)/2)));
+oris1 = Ori(aaa_idx(1:round(length(aaa_idx)/2)));
 
-if exist('cellTCs_match','var') == 1
-    npSub_tc = cellTCs_match{2};
+a2 = a(:, aaa_idx(round(length(aaa_idx)/2)+1:end));
+oris2 = Ori(aaa_idx(round(length(aaa_idx)/2)+1:end));
+
+nBoot = 1000;
+avgResponseEaOri_1 = nan(nCells,nori);
+tuningResamp_1 = nan(nCells,nori,nBoot);
+
+for istim = 1:nori
+    ind = find(oris1 == Oris(istim));
+    avgResponseEaOri_1(:,istim) = mean(a1(:,ind),2,'omitnan');
+    for iboot = 1:nBoot
+        n = length(ind);
+        randTrials = randsample(ind,n,1);
+        tuningResamp_1(:,istim,iboot) = mean(a1(:,randTrials),2,'omitnan');
+    end
 end
 
-down = 10;
-nframes = size(npSub_tc,1)./down;
-nCells = size(npSub_tc,2);
-data_tc_down = squeeze(mean(reshape(npSub_tc, [down,nframes,nCells]),1));
-tuningDownSampFactor = down;
+[vonMisesFitAllCells_1,~,fitReliability_1,R_square_1] = vonmisesReliableFit(avgResponseEaOri_1,...
+    tuningResamp_1,Oris,nBoot);
 
-[avgResponseEaOri_1,semResponseEaOri_1,vonMisesFitAllCells_1,fitReliability_1,R_square_1,tuningTC_1, ...
-    avgResponseEaOri_2,semResponseEaOri_2,vonMisesFitAllCells_2,fitReliability_2,R_square_2,tuningTC_2] = ...
-    getOriTuningTJ_datasplit(data_tc_down,input,tuningDownSampFactor,aaa_idx); 
-    % vonMisesFitAllCells_1 = squeeze(vonMisesFitAllCellsAllBoots_1(:,1,:));
-    % vonMisesFitAllCells_2 = squeeze(vonMisesFitAllCellsAllBoots_2(:,1,:));
+avgResponseEaOri_2 = nan(nCells,nori);
+tuningResamp_2 = nan(nCells,nori,nBoot);
+nBoot = 1000;
+for istim = 1:nori
+    ind = find(oris2 == Oris(istim));
+    avgResponseEaOri_2(:,istim) = mean(a2(:,ind),2,'omitnan');
+    for iboot = 1:nBoot
+        n = length(ind);
+        randTrials = randsample(ind,n,1);
+        tuningResamp_2(:,istim,iboot) = mean(a2(:,randTrials),2,'omitnan');
+    end
+end
+
+[vonMisesFitAllCells_2,~,fitReliability_2,R_square_2] = vonmisesReliableFit(avgResponseEaOri_2,...
+    tuningResamp_2,Oris,nBoot);
+
 
 [max_resp_1 prefOri_1] = max(vonMisesFitAllCells_1,[],1);
 [max_resp_2 prefOri_2] = max(vonMisesFitAllCells_2,[],1);
@@ -134,7 +164,7 @@ for iboot = 1:1000;
     [aaa aaa_idx] = datasample(a, length(a), 2 ,Replace=true);
     aaa_oris = Ori(aaa_idx);
         for ii = 1:nCells
-            z = sum(aaa(ii,:).*cos(2.*deg2rad(aaa_oris))+aaa(ii,:).*i.*sin(2.*deg2rad(aaa_oris)));
+            z = sum(aaa(ii,:).*cos(2.*deg2rad(aaa_oris))+aaa(ii,:).*i.*sin(2.*deg2rad(aaa_oris)),'omitnan');
             theta_resample(iboot,ii) = 0.5*rad2deg(angle(z));
         end
 end
