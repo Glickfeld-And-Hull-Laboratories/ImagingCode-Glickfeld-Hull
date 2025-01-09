@@ -58,7 +58,7 @@ function plotCellArrayDifferencesTwoInputs(cellArray1, cellArray2)
     title('Differences counterTimes');
     %hline(round((1/frameRate)*1000),'r') %to add a refernce line at the
     %expected value, based on frame rate
-    ylim([20 120])
+    %ylim([20 120])
     grid on;
 
     subplot(2, 1, 2);
@@ -67,5 +67,5 @@ function plotCellArrayDifferencesTwoInputs(cellArray1, cellArray2)
     ylabel('Difference');
     title('Differences counterValues');
     grid on;
-    ylim([-2 2])
+    %ylim([-2 2])
 end

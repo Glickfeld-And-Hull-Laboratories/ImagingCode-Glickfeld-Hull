@@ -75,11 +75,6 @@ for iExpt = 1:nExpt
     exptNumber_temp = repmat(iExpt,size(TC_byConditionStat,4),1);
 
 
-    depth=[depth;depth_temp];
-    mouseID = [mouseID;mouseID_temp];
-    exptNumber = vertcat(exptNumber, exptNumber_temp);
-
-
     clear TC_byConditionStat TC_byConditionLoc interNrns keepDists keepPrefOri
     clear mouse date time iExpt expt_num tCons tSize input depth_temp mouseID_temp h_keep
 
@@ -107,8 +102,8 @@ t = 1:double(nOn+nOff);
 t=(t-double(stimStart))/frame_rate;
 
 %find cells that are well centered
-%centered = find(dists_concat<10);  
-centered = find(h_concat(:,1,nCons)==1); %here using the definition that 
+centered = find(dists_concat<10);  
+%centered = find(h_concat(:,1,nCons)==1); %here using the definition that 
 largeSizeHighCon = find(h_concat(:,nSizes,nCons)==1);
 % cells responsive at the smallest size and highest contrast are "centered"
 centerIN = intersect(centered,interNrns);
@@ -302,7 +297,7 @@ figure;
         alpha(.5)
         hold on
         ylim([-.03 .1])
-        xlim([-.25 .5])
+        xlim([-.5 .5])
         
         box off
         set(gca, 'TickDir', 'out')
@@ -355,7 +350,7 @@ figure;
         subplot(n,n2,x)
         vline(temp_halfPeak,'b')
         %vline(temp_peak,'b')
-        %vline(temp_trough,'k')
+        vline(temp_trough,'k')
         vline(temp_halfDecay,'m')
         hold on
         shadedErrorBar(t(:),temp_mean2,temp_se2,'r');
@@ -368,7 +363,7 @@ figure;
         %fill([0 0 .1 .1],[-.015 -.01 -.01 -.015],'r',FaceAlpha = 0.25,LineStyle='none')
         hold on
         ylim([-.03 .1])
-        xlim([-.25 .5])
+       % xlim([-.25 .5])
         
         box off
         set(gca, 'TickDir', 'out')
@@ -2498,6 +2493,7 @@ for iCon = 1:nCons
         temp_mean2(iCon,iSize,3)=mean(fwhm(iSize,iCon,theseIN),3,"omitnan");
         temp_se2(iCon,iSize,3)=(std(fwhm(iSize,iCon,theseIN),[],3,"omitnan"))./length(theseIN);
 
+length(theseIN)
 
     end
 end
@@ -2507,7 +2503,7 @@ subplot(1,3,1)
 errorbar(Sizes,temp_mean2(4,:,1),temp_se2(4,:,1),'Color',	"#4e701f",'LineStyle','none','Marker','o');
 hold on
 errorbar(Sizes,temp_mean1(4,:,1),temp_se1(4,:,1),'k','LineStyle','none','Marker','o');
-%ylim([0,.11])
+ylim([0,.2])
 xticks(Sizes)
 xlabel('Size')
 ylabel('Seconds')
@@ -2519,7 +2515,7 @@ subplot(1,3,2)
 errorbar(Sizes,temp_mean2(4,:,2),temp_se2(4,:,2),'Color',	"#4e701f",'LineStyle','none','Marker','o');
 hold on
 errorbar(Sizes,temp_mean1(4,:,2),temp_se1(4,:,2),'k','LineStyle','none','Marker','o');
-%ylim([0,.28])
+ylim([.1,.3])
 xticks(Sizes)
 xlabel('Size')
 title('Decay time')
@@ -2530,7 +2526,7 @@ subplot(1,3,3)
 errorbar(Sizes,temp_mean2(4,:,3),temp_se2(4,:,3),'Color',	"#4e701f",'LineStyle','none','Marker','o');
 hold on
 errorbar(Sizes,temp_mean1(4,:,3),temp_se1(4,:,3),'k','LineStyle','none','Marker','o');
-%ylim([0,.28])
+ylim([0,.2])
 xticks(Sizes)
 xlabel('Size')
 title('FWHM')
