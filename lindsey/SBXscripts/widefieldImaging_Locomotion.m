@@ -6,27 +6,29 @@ clear all global
 %Path names
 
 fn_base = findIsilon;
-base_fn = fullfile(fn_base, 'home', 'lindsey'); %edit
+base_fn = fullfile(fn_base, 'home', 'LindseyW'); %edit
 data_fn = fullfile(base_fn, 'Data', 'Widefield'); %edit
 mworks_fn = fullfile(fn_base, 'Behavior', 'Data'); 
 fnout = fullfile(base_fn, 'Analysis', 'Widefield'); %edit
 
 %Specific experiment information
-date = '250106'; %edit
+date = '250205'; %edit
 ImgFolder = '001'; %edit
-time = '1713'; %edit
-mouse = 'i2189'; %edit
-frame_rate = 15; %edit
+time = '1151'; %edit
+mouse = 'i2194'; %edit
+frame_rate = 10; %15; %edit
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' ImgFolder];
 
 %Load data
 %Load mworks data- this has information about experiment (e.g. the visual stimuli presented and synchronization with the microscope)
-fName = fullfile(mworks_fn, ['data-' mouse '-' date '-' time '.mat']);
+%fName = fullfile(mworks_fn, ['data-' mouse '-' date '-' time '.mat']);
+fName = fullfile("Z:\All_Staff\Behavior\Data\data-i2194-250205-1511.mat") %temp
 load(fName);
 
 %Load tiff stack
-expt_fn = fullfile(data_fn,datemouse,datemouserun); %edit
+%expt_fn = fullfile(data_fn,datemouse,datemouserun); %edit
+expt_fn = fullfile('Z:\All_Staff\home\ACh\Data\WF_data\i2194\Pre_injection\i2194_250205_NoStim_1\i2194_250205_NoStim_1_MMStack_Pos0.ome.tif') %temp
 data = readtiff(expt_fn); %loads the .sbx files with imaging data (path, nframes to skip, nframes to load)
 %Data is nYpix x nXpix x nframes. 
 fprintf(['Data is ' num2str(size(data)) '\n'])
@@ -37,7 +39,8 @@ wheel_speed = wheelSpeedCalc(input,32,'purple');
 
 figure; plot(wheel_speed)
 hold on;
-plot(squeeze(mean(mean(data_reg,1),2)))
+plot(squeeze(mean(mean(data,1),2)))
+
 
 delay = frame_rate*3;
 ind = find(wheel_speed>10);
@@ -63,11 +66,13 @@ vline(ind_use)
 sz = size(data);
 data_align = nan(sz(1),sz(2),delay*2,length(ind_use));
 for i = 1:length(ind_use)
+    if ind_use(i)-delay>0
     if ind_use(i)+delay-1<sz(3)
         data_align(:,:,:,i) = data(:,:,ind_use(i)-delay:ind_use(i)+delay-1);
     else
         n = sz(3)-(ind_use(i)-delay-1);
         data_align(:,:,1:n,i) = data(:,:,ind_use(i)-delay:end);
+    end
     end
 end
 data_align_p = permute(data_align,[1 2 4 3]);
@@ -105,7 +110,7 @@ data_dfof_avg_all = imfilter(data_dfof_avg,myfilter);
 figure; movegui('center'); imagesc(data_dfof_avg_all);
 title([mouse ' ' date])
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_runAlignFOV_filtered.pdf']), '-dpdf') %edit
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']),'data_dfof_avg_all','ind_use') %edit
+%save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']),'data_dfof_avg_all','ind_use') %edit
 
 thresh = 0.08;
 mask_data = data_dfof_avg_all>thresh;
@@ -118,16 +123,16 @@ mask_cell = bwlabel(mask_data);
 figure; imagesc(mask_cell)
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_masks.pdf']), '-dpdf')
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'mask_data', 'mask_cell', 'thresh')
+%save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'mask_data', 'mask_cell', 'thresh')
 clear data_align data_align_p data_align_f data_align_dfof data_align_dfof_avg data_align_dfof_down
 
 %% Extract cell timecourses
-data_tc = stackGetTimeCourses(data_reg, mask_cell); %applies mask to stack (averages all pixels in each frame for each cell) to get timecourses
+data_tc = stackGetTimeCourses(data, mask_cell); %applies mask to stack (averages all pixels in each frame for each cell) to get timecourses
             %Timecourses are nFrames x nCells
 fprintf(['data_tc is ' num2str(size(data_tc))]) 
 [nFrames, nCells] = size(data_tc);
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc')
+%save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_tc')
 
 %% make tuning curves
 data_align = nan(delay*2,nCells,length(ind_use));
@@ -155,5 +160,5 @@ ylabel('dF/F')
 title([mouse ' ' date])
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_avgTC_respCells.pdf']), '-dpdf')
 
-save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData.mat']), 'data_align', 'h','resp_ind','resp_win','base_win','tt')
+%save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_respData.mat']), 'data_align', 'h','resp_ind','resp_win','base_win','tt')
 
