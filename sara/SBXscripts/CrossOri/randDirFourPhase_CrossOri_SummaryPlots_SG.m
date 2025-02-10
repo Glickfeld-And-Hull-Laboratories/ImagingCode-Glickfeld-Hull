@@ -1350,4 +1350,89 @@ end
 print(fullfile(outDir, [svName '_VarianceByFitAmp.pdf']),'-dpdf', '-fillpage') 
 
 
+%% layer 4 by experiment
+
+close all; clear all; clc;
+
+base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
+summaryDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary', 'summaries');
+outDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary');
+svName = 'randPhase';
+exptn = strvcat('063', '064', '107', '109'); 
+area = 'all_areas';
+area_list = strvcat('V1', 'V1', 'V1', 'V1');
+narea = length(area_list);
+nCells = [];
+
+
+
+figure;
+for iA = 1:narea
+    fprintf([area_list(iA,:) '\n'])
+    load(fullfile(summaryDir, ([svName '_Summary_' area_list(iA,:) '_' exptn(iA,:) '.mat'])))
+    resp_ind = intersect(intersect(sig_stim,sig_dir),find(DSI_all>0.5));
+    if exist('red_cells_all','var')
+        resp_ind = setdiff(resp_ind, red_cells_all);
+    end
+    leg_str{iA}=[area_list(iA,:) ' ' exptn(iA,:) ' n=' num2str(length(resp_ind))];
+    
+
+    c(1,:)=[0.6350 0.0780 0.1840]; c(2,:)=[0.8500 0.3250 0.0980];
+    c(3,:)=[0 0.4470 0.7410]; c(4,:)=[0.3010 0.7450 0.9330];
+
+    mean_avg_all(mean_avg_all<0) = 0;
+
+    subplot(4,4,1)
+        h(1,iA)=cdfplot(mean_avg_all(resp_ind));
+        hold on
+        set(h(1,iA),'Color',c(iA,:))
+        xlabel('mean df/f')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+     subplot(4,4,2)
+        h(2,iA)=cdfplot(std_avg_all(resp_ind));
+        hold on
+        set(h(2,iA),'Color',c(iA,:))
+        xlabel('variance (std)')
+        set(gca,'TickDir','out'); box off; axis square; grid off 
+    subplot(4,4,3)
+        h(3,iA)=cdfplot(std_avg_all(resp_ind)./mean_avg_all(resp_ind));
+        hold on
+        set(h(3,iA),'Color',c(iA,:))
+        xlabel('variance/mean')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+    subplot(4,4,4)
+        scatter(amp_all(resp_ind),std_avg_all(resp_ind)./mean_avg_all(resp_ind))
+        hold on
+        ylabel('variance/mean')
+        xlabel('amp')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+     
+ 
+    subplot(4,4,5)
+        h(5,iA)=cdfplot(b_all(resp_ind));
+        hold on
+        set(h(5,iA),'Color',c(iA,:))
+        xlabel('phase mod baseline')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+    subplot(4,4,6)
+        h(6,iA)=cdfplot(amp_all(resp_ind));
+        hold on
+        set(h(6,iA),'Color',c(iA,:))
+        xlabel('phase mod amplitude')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+    subplot(4,4,7)
+        h(7,iA)=cdfplot(plaid_corr_all(resp_ind));
+        hold on
+        set(h(7,iA),'Color',c(iA,:))
+        xlabel('avg corr across plaid phase')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+    subplot(4,4,8)
+        h(8,iA)=cdfplot(mean(ZpZcPWdist_all(:,resp_ind),1));
+        hold on
+        set(h(8,iA),'Color',c(iA,:))
+        xlabel('avg ZpZc dist')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+end
+sgtitle('L4 single cell comparison - local injection FLEX-6s (red), transgenic 8m (blue)')
+print(fullfile(outDir, [svName '_Layer4_InjectionTransgenicComparison.pdf']),'-dpdf', '-fillpage') 
 

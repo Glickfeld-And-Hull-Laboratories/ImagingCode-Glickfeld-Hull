@@ -16,7 +16,7 @@ maxVal_all = [];
 DSI_all = [];
 h_resp_all = [];
 
-for iexp  = 1:nexp
+for iexp  =  1:nexp
 
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
@@ -180,36 +180,53 @@ end
 
 
 ind_use = intersect(resp_ind_dir_use, [find(maxDir_all==11); find(maxDir_all==3)]);
+ZpEffectInd = intersect(Zp_use,intersect(resp_ind_dir_use, [find(maxDir_all==11); find(maxDir_all==3)]));
 
 figure;
-    subplot(2,2,1)
-        scatter(Zc_all(1,ind_use), Zp_all(1,ind_use))
+    subplot(3,3,1)
+        scatter(Zc_all(1,ind_use), Zp_all(1,ind_use),5,'filled')
         hold on
+        for ic = 1:length(ZpEffectInd)
+            scatter(Zc_all(1,ZpEffectInd(ic)), Zp_all(1,ZpEffectInd(ic)),5,'filled')
+        end
         plotZcZpBorders
-        ylim([-4 8]); xlim([-4 8]); axis square
+        ylim([-4 8]); xlim([-4 8]); axis square;set(gca,'TickDir','out'); box off; grid off   
         xlabel('Zc')
         ylabel('Zp')
-    subplot(2,2,2)
-        scatter(Zc_all(2,ind_use), Zp_all(2,ind_use))
+        subtitle('no adapt')
+    subplot(3,3,2)
+        scatter(Zc_all(2,ind_use), Zp_all(2,ind_use),5,'filled')
         hold on
+        for ic = 1:length(ZpEffectInd)
+            scatter(Zc_all(2,ZpEffectInd(ic)), Zp_all(2,ZpEffectInd(ic)),5,'filled')
+        end
         plotZcZpBorders
-        ylim([-4 8]); xlim([-4 8]); axis square
+        ylim([-4 8]); xlim([-4 8]); axis square;set(gca,'TickDir','out'); box off; grid off   
         xlabel('Zc')
         ylabel('Zp')
-    subplot(2,2,3)
-        scatter(Zc_all(1,ind_use), Zc_all(2,ind_use))
-        ylim([-4 8]); xlim([-4 8]); axis square; refline(1,0)
+        subtitle('adapt')
+    subplot(3,3,3)
+        scatter(Zc_all(1,ind_use), Zc_all(2,ind_use),5,'filled')
+        hold on
+        for ic = 1:length(ZpEffectInd)
+            scatter(Zc_all(1,ZpEffectInd(ic)), Zc_all(2,ZpEffectInd(ic)),5,'filled')
+        end
+        ylim([-4 8]); xlim([-4 8]); axis square; refline(1,0);set(gca,'TickDir','out'); box off; grid off   
         [h p] = ttest(Zc_all(1,ind_use), Zc_all(2,ind_use));
         xlabel('Zc- control')
         ylabel('Zc- adapt')
-        title(['p = ' num2str(chop(p,2))])
-    subplot(2,2,4)
-        scatter(Zp_all(1,ind_use), Zp_all(2,ind_use))
-        ylim([-4 8]); xlim([-4 8]); axis square; refline(1,0)
+        % title(['p = ' num2str(chop(p,2))])
+    subplot(3,3,4)
+        scatter(Zp_all(1,ind_use), Zp_all(2,ind_use),5,'filled')
+        hold on
+        for ic = 1:length(ZpEffectInd)
+            scatter(Zp_all(1,ZpEffectInd(ic)), Zp_all(2,ZpEffectInd(ic)),5,'filled')
+        end
+        ylim([-4 8]); xlim([-4 8]); axis square; refline(1,0);set(gca,'TickDir','out'); box off; grid off   
         [h p] = ttest(Zp_all(1,ind_use), Zp_all(2,ind_use));
         xlabel('Zp- control')
-        ylabel('Zp- adapt')
-        title(['p = ' num2str(chop(p,2))])
+        ylabel('Zp- adapt'); 
+        % title(['p = ' num2str(chop(p,2))])
         suptitle(['Pref: 60 & 300- n = ' num2str(length(ind_use))])
     print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_ZcZpEffects.pdf'),'-dpdf','-bestfit')
 
@@ -289,7 +306,8 @@ figure;
 
 figure;
     subplot(3,2,1)
-        ind_use = intersect(resp_ind_dir_use,  [find(maxDir_all==1); find(maxDir_all==7)]);
+        % ind_use = intersect(resp_ind_dir_use,  [find(maxDir_all==1); find(maxDir_all==7)]);
+        ind_use = intersect(resp_ind_dir_use,  [find(maxDir_all==1)]);
         polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,1,1,1),1) mean(avg_resp_dir_align_all(ind_use,1,1,1,1),1)])
         hold on
         polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,1,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,1,2,1),1)])
@@ -300,7 +318,8 @@ figure;
         hold on
         polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,2,1),1)])
         title(num2str(length(ind_use)))
-        ind_use = intersect(Zp_use,intersect(resp_ind_dir_use, [find(maxDir_all==1); find(maxDir_all==7)]));
+        % ind_use = intersect(Zp_use,intersect(resp_ind_dir_use, [find(maxDir_all==1); find(maxDir_all==7)]));
+        ind_use = intersect(Zp_use,intersect(resp_ind_dir_use, [find(maxDir_all==1)]));
     subplot(3,2,5)
         polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,1,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,1,1),1)])
         hold on
@@ -324,6 +343,21 @@ figure;
         hold on
         polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,2,1),1)])
         title(num2str(length(ind_use)))
-        suptitle({'Left: 0 & 180; Right: 60 & 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
+        suptitle({'Left: 0 ; Right: 60 & 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
   print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_0v60.pdf'),'-dpdf','-bestfit')
 
+
+%% polar plots of all cells that are PDS for adapted component direction
+
+
+figure;
+ind_use = intersect(Zp_use,intersect(resp_ind_dir_use, [find(maxDir_all==11); find(maxDir_all==3)]));
+for ic = 1:length(ind_use)
+    subplot(5,4,ic)
+        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use(ic),:,1,1,1),1) mean(avg_resp_dir_align_all(ind_use(ic),1,1,1,1),1)])
+        hold on
+        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use(ic),:,1,2,1),1) mean(avg_resp_dir_align_all(ind_use(ic),1,1,2,1),1)])
+end
+
+print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_0and60PDS.pdf'),'-dpdf','-bestfit')
+  

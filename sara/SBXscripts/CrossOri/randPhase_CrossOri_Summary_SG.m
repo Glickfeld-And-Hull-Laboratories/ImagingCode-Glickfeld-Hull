@@ -508,7 +508,7 @@ for iA = 1:narea
 %         legend(area_list, 'location', 'southeast')          
 end
 
-    print(fullfile(outDir, [svName '_' area '_Compare.pdf']),'-dpdf', '-fillpage') 
+    % print(fullfile(outDir, [svName '_' area '_Compare.pdf']),'-dpdf', '-fillpage') 
 
     
 %% Comparing AL by TF (with SI fit)

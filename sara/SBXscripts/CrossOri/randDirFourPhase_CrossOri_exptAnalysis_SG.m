@@ -5,7 +5,7 @@ ds = 'CrossOriRandDirFourPhase_ExptList_SG';
 rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
-iexp = 102;
+iexp = 112; 
 frame_rate = 15;
 
 %%
@@ -163,6 +163,7 @@ end
 int = unique(diff(stimDirs));
 component = avg_resp_dir(:,:,1,1,1)+circshift(avg_resp_dir(:,:,1,1,1),-120./int,2);
 pattern = circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
+
 
 comp_corr = zeros(nMaskPhas,nCells);
 patt_corr = zeros(nMaskPhas,nCells);

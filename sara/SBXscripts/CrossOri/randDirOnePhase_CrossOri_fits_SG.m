@@ -1,42 +1,42 @@
-%% Make expected trial distribution
-clc; clear all; close all;
-doRedChannel = 0;
-ds = 'CrossOriRandDirFourPhase_ExptList_SG';
-rc = behavConstsAV;
-eval(ds)
-nexp = length(expt);
-
-iexp = 38;
-max_dist = 5;
-
-frame_rate = 15;
-seed = rng;
-
-mouse = expt(iexp).mouse;
-date = expt(iexp).date;
-area = expt(iexp).img_loc;
-ImgFolder = expt(iexp).coFolder;
-time = expt(iexp).coTime;
-nrun = length(ImgFolder);
-run_str = catRunName(cell2mat(ImgFolder), nrun);
-
-base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
-
-fprintf([mouse ' ' date '\n'])
-
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_respData.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_stimData.mat']))
-
-ntrials = reshape(trialsperstim(:,:,2),[],1);
-
-mean = mean(ntrials);
-std = std(ntrials);
-
-pd = makedist('Normal','mu',mean,'sigma',std);
-% mean =  13.9167
-% std = 3.4073
-
-% trialsperstimFOUR = trialsperstim;
+% %% Make expected trial distribution
+% clc; clear all; close all;
+% doRedChannel = 0;
+% ds = 'CrossOriRandDirFourPhase_ExptList_SG';
+% rc = behavConstsAV;
+% eval(ds)
+% nexp = length(expt);
+% 
+% iexp = 38;
+% max_dist = 10;
+% 
+% frame_rate = 15;
+% seed = rng;
+% 
+% mouse = expt(iexp).mouse;
+% date = expt(iexp).date;
+% area = expt(iexp).img_loc;
+% ImgFolder = expt(iexp).coFolder;
+% time = expt(iexp).coTime;
+% nrun = length(ImgFolder);
+% run_str = catRunName(cell2mat(ImgFolder), nrun);
+% 
+% base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
+% 
+% fprintf([mouse ' ' date '\n'])
+% 
+% load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_respData.mat']))
+% load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_stimData.mat']))
+% 
+% ntrials = reshape(trialsperstim(:,:,2),[],1);
+% 
+% mean = mean(ntrials);
+% std = std(ntrials);
+% 
+% pd = makedist('Normal','mu',mean,'sigma',std);
+% % mean =  13.9167
+% % std = 3.4073
+% 
+% % trialsperstimFOUR = trialsperstim;
 
 %% Load one phase data
 clearvars -except trialsperstimFOUR
@@ -47,8 +47,8 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-iexp = 38; 
-max_dist = 5;
+iexp = 112; 
+max_dist = 10;
 
 frame_rate = 15;
 seed = rng;

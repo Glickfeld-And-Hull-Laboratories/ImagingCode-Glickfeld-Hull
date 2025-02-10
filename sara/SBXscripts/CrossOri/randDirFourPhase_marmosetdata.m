@@ -1,3 +1,11 @@
+
+%%
+% !!!!!!
+% this script is retired -- I now use randDirFourPhase_CrossOri_marmosetdata_raw and randDirFourPhase_CrossOri_marmosetdata_Summary
+% !!!!!!
+
+%%
+
 close all; clear all; clc;
 base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 outDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary');
@@ -102,6 +110,8 @@ for iCell = [5 20 24]
         subtitle([num2str(iCell)])
 end
 
+stop
+
 %% Plot population-- PCI by variance (amplitude)
 
 pattern_ind = (Zpd-Zcd);    
@@ -165,41 +175,121 @@ Zc_all = Zcd;
 
     ind1 = intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28));
     ind2 = intersect(find(Zp_all(2,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28));
+    ind3 = intersect(find(Zp_all(3,:)>1.28),find(Zp_all(3,:)-Zc_all(3,:)>1.28));
     ind4 = intersect(find(Zp_all(4,:)>1.28),find(Zp_all(4,:)-Zc_all(4,:)>1.28));
     pattern1 - ind1;
     pattern2 = ind2;
+    pattern3 = ind3;
     pattern4 = ind4;
+
 figure(3);    
-    subplot(1,4,1)
-        scatter(Zc_all(1,:),Zp_all(1,:),15,[0.7 0.7 0.7])
+    subplot(5,5,1)
+        scatter(Zc_all(1,:),Zp_all(1,:),5,[0.7 0.7 0.7],'filled')
         hold on
-        scatter(Zc_all(1,pattern1),Zp_all(1,pattern1),15)
+        scatter(Zc_all(1,pattern1),Zp_all(1,pattern1),5,'filled')
         xlabel('Zc'); ylabel('Zp'); xlim([-4 8]); ylim([-4 8]); plotZcZpBorders; set(gca,'TickDir','out'); axis square
         
-   subplot(1,4,2)
-        scatter(Zc_all(2,:),Zp_all(2,:),15,[0.7 0.7 0.7])
+   subplot(5,5,2)
+        scatter(Zc_all(2,:),Zp_all(2,:),5,[0.7 0.7 0.7],'filled')
         hold on
-        scatter(Zc_all(2,pattern1),Zp_all(2,pattern1),15)
+        scatter(Zc_all(2,pattern1),Zp_all(2,pattern1),5,'filled')
         xlabel('Zc'); ylabel('Zp'); xlim([-4 8]); ylim([-4 8]); plotZcZpBorders; set(gca,'TickDir','out'); axis square
         
-   subplot(1,4,3)
-        scatter(Zc_all(3,:),Zp_all(3,:),15,[0.7 0.7 0.7])
+   subplot(5,5,3)
+        scatter(Zc_all(3,:),Zp_all(3,:),5,[0.7 0.7 0.7],'filled')
         hold on
-        scatter(Zc_all(3,pattern1),Zp_all(3,pattern1),15)
+        scatter(Zc_all(3,pattern1),Zp_all(3,pattern1),5,'filled')
         xlabel('Zc'); ylabel('Zp'); xlim([-4 8]); ylim([-4 8]); plotZcZpBorders; set(gca,'TickDir','out'); axis square
         
-   subplot(1,4,4)
-        scatter(Zc_all(4,:),Zp_all(4,:),15,[0.7 0.7 0.7])
+   subplot(5,5,4)
+        scatter(Zc_all(4,:),Zp_all(4,:),5,[0.7 0.7 0.7],'filled')
         hold on
-        scatter(Zc_all(4,pattern1),Zp_all(4,pattern1),15)
+        scatter(Zc_all(4,pattern1),Zp_all(4,pattern1),5,'filled')
         xlabel('Zc'); ylabel('Zp'); xlim([-4 8]); ylim([-4 8]); plotZcZpBorders; set(gca,'TickDir','out'); axis square
 
+
+%%
+figure(4);
+
+Zc_all = Zcd;
+Zp_all = Zpd;
+
+    ind_patt(1) = length(intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)));
+    ind_patt(2) = length(intersect(find(Zp_all(2,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)));
+    ind_patt(3) = length(intersect(find(Zp_all(3,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)));
+    ind_patt(4) = length(intersect(find(Zp_all(4,:)>1.28),find(Zp_all(4,:)-Zc_all(4,:)>1.28)));
+    ind_comp(1) = length(intersect(find(Zc_all(1,:)>1.28),find(Zc_all(1,:)-Zp_all(1,:)>1.28)));
+    ind_comp(2) = length(intersect(find(Zc_all(2,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28)));
+    ind_comp(3) = length(intersect(find(Zc_all(3,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28)));
+    ind_comp(4) = length(intersect(find(Zc_all(4,:)>1.28),find(Zc_all(4,:)-Zp_all(4,:)>1.28)));
+
+    nCells = size(pattpeak,1);
+    resp_ind = [1:72];
+
+    avg_classification(1) = mean(ind_patt(:))/length(resp_ind);
+    avg_classification(2) = mean(ind_comp(:))/length(resp_ind);
+
+
+    ind_patt1 = intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28));
+    ind_patt2 = intersect(find(Zp_all(2,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28));
+    ind_patt3 = intersect(find(Zp_all(3,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28));
+    ind_patt4 = intersect(find(Zp_all(4,:)>1.28),find(Zp_all(4,:)-Zc_all(4,:)>1.28));
+    ind_comp1 = intersect(find(Zc_all(1,:)>1.28),find(Zc_all(1,:)-Zp_all(1,:)>1.28));
+    ind_comp2 = intersect(find(Zc_all(2,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28));
+    ind_comp3 = intersect(find(Zc_all(3,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28));
+    ind_comp4 = intersect(find(Zc_all(4,:)>1.28),find(Zc_all(4,:)-Zp_all(4,:)>1.28));
+    
+    max_classification(1) = length(unique([ind_patt1,ind_patt2,ind_patt3,ind_patt4]))/length(resp_ind);
+    max_classification(2) = length(unique([ind_comp1,ind_comp2,ind_comp3,ind_comp4]))/length(resp_ind);
+
+    
+    pie0 = [ind_patt(1)/length(resp_ind) ind_comp(1)/length(resp_ind) (1-(ind_patt(1)/length(resp_ind))-(ind_comp(1)/length(resp_ind)))];
+    pie90 = [ind_patt(2)/length(resp_ind) ind_comp(2)/length(resp_ind) (1-(ind_patt(2)/length(resp_ind))-(ind_comp(2)/length(resp_ind)))];
+
+    ind_patt_cells0 = intersect(intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)),resp_ind);
+    ind_patt_cells0_pattAt90 = intersect(intersect(find(Zp_all(2,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)),ind_patt_cells0);
+    ind_patt_cells0_compAt90 = intersect(intersect(find(Zc_all(2,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28)),ind_patt_cells0);
+    ind_patt_cells0_pattAt180 = intersect(intersect(find(Zp_all(3,:)>1.28),find(Zp_all(3,:)-Zc_all(3,:)>1.28)),ind_patt_cells0);
+    ind_patt_cells0_compAt180 = intersect(intersect(find(Zc_all(3,:)>1.28),find(Zc_all(3,:)-Zp_all(3,:)>1.28)),ind_patt_cells0);
+    ind_patt_cells0_pattAt270 = intersect(intersect(find(Zp_all(4,:)>1.28),find(Zp_all(4,:)-Zc_all(4,:)>1.28)),ind_patt_cells0);
+    ind_patt_cells0_compAt270 = intersect(intersect(find(Zc_all(4,:)>1.28),find(Zc_all(4,:)-Zp_all(4,:)>1.28)),ind_patt_cells0);
+    
+
+
+    pie_patt0at90 = [length(ind_patt_cells0_pattAt90)/length(ind_patt_cells0) length(ind_patt_cells0_compAt90)/length(ind_patt_cells0) (1-(length(ind_patt_cells0_pattAt90)/length(ind_patt_cells0))-( length(ind_patt_cells0_compAt90)/length(ind_patt_cells0)))];
+    pie_patt0at180 = [length(ind_patt_cells0_pattAt180)/length(ind_patt_cells0) length(ind_patt_cells0_compAt180)/length(ind_patt_cells0) (1-(length(ind_patt_cells0_pattAt180)/length(ind_patt_cells0))-( length(ind_patt_cells0_compAt180)/length(ind_patt_cells0)))];
+    pie_patt0at270 = [length(ind_patt_cells0_pattAt270)/length(ind_patt_cells0) length(ind_patt_cells0_compAt270)/length(ind_patt_cells0) (1-(length(ind_patt_cells0_pattAt270)/length(ind_patt_cells0))-( length(ind_patt_cells0_compAt270)/length(ind_patt_cells0)))];
+
+    pie_patt0atOthers(1,:) = [pie_patt0at90];
+    pie_patt0atOthers(2,:) = [pie_patt0at180];
+    pie_patt0atOthers(3,:) = [pie_patt0at270];
+    pie_patt0atOtherAvg = mean(pie_patt0atOthers,1);
+    
+
+    subplot(5,5,1)
+        piechart(pie0)
+        % subtitle('pie 0')
+    subplot(5,5,2)
+        piechart(pie_patt0at90)
+        % subtitle('patt0 at 90')
+    subplot(5,5,3)
+        piechart(pie_patt0at180)
+        % subtitle('patt0 at 180')
+    subplot(5,5,4)
+        piechart(pie_patt0at270)
+        % subtitle('patt0 at 270')
+    subplot(5,5,5)
+        piechart(pie_patt0atOtherAvg)
+        % subtitle('patt0 at others')
+    subplot(5,5,6)
+        piechart([max_classification(1) 1-max_classification(1)])
 
     
     %%
     figure(1); print(fullfile(outDir, [svName '_marmoset_examplecells.pdf']),'-dpdf', '-fillpage') 
     figure(2); print(fullfile(outDir, [svName '_marmoset_population.pdf']),'-dpdf', '-fillpage') 
     figure(3); print(fullfile(outDir, [svName '_marmoset_populationZpZc.pdf']),'-dpdf', '-fillpage') 
+    figure(4); print(fullfile(outDir, [svName '_marmoset_populationPieCharts.pdf']),'-dpdf', '-fillpage') 
 
 %% TEST -- plot my calculated Zp Zc
  

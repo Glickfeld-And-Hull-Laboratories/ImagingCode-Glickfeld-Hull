@@ -9,7 +9,7 @@ seed = rng;
 
 max_dist = 10;
 
-for iexp = [102] %27 58 74
+for iexp = [111] %27 58 74
 
 %%
 mouse = expt(iexp).mouse;
@@ -142,12 +142,16 @@ for iCell = 1:nCells
     end
 end
 
-p_dir = find(p_anova_dir<0.05);
-p_plaid1 = find(p_anova_plaid(1,:)<0.05);
-p_plaid2 = find(p_anova_plaid(2,:)<0.05);
-p_plaid3 = find(p_anova_plaid(3,:)<0.05);
-p_plaid4 = find(p_anova_plaid(4,:)<0.05);
-p_all = unique([p_dir,p_plaid1,p_plaid2,p_plaid3,p_plaid4]); %significantly responsive to a direction (anova) for gratings or any plaid set
+
+    p_dir = find(p_anova_dir<0.05);
+    p_plaid1 = find(p_anova_plaid(1,:)<0.05);
+    p_plaid2 = find(p_anova_plaid(2,:)<0.05);
+    p_plaid3 = find(p_anova_plaid(3,:)<0.05);
+    p_plaid4 = find(p_anova_plaid(4,:)<0.05);
+    p_all = unique([p_dir,p_plaid1,p_plaid2,p_plaid3,p_plaid4]); %significantly responsive to a direction (anova) for gratings or any plaid set
+    p_dir = find(p_anova_dir<0.05);
+    p_plaid1 = find(p_anova_plaid(1,:)<0.05);
+    p_all = unique([p_dir,p_plaid1]); %significantly responsive to a direction (anova) for gratings or any plaid set
 
 
 for iCell = 1:nCells

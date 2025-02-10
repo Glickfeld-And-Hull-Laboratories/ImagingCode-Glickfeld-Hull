@@ -7,7 +7,7 @@ doPlot = 1;
 ds = ['CrossOriRandDirFourPhase_ExptList_SG'];
 svName = 'randPhase';
 eval(ds)
-driver = 'SLC';
+driver = 'SCN';
 img_area = {'LM';'L2/3'}; %LM
 inj_area = 'LM';
 img_layer = 'L2/3';
