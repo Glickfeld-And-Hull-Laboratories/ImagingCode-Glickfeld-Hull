@@ -1,20 +1,21 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
-doCorrImg = true;
+doCorrImg = true;  
+ExperimentFolder = 'VIP_atropine';
 
-day_id = 370;
+day_id = 51;
 %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 
-fn = fullfile(rc.achAnalysis,mouse,expDate); %can make this flexible if folder structure is different
+fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
 
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
@@ -85,7 +86,7 @@ for irun = 1:nruns
     load(fName); %load the mworks behavioral file
 
     temp(irun) = input; %load the data from the mworks file into temp
-    clear input
+    %clear input
     nframes = [temp(irun).counterValues{end}(end) info.config.frames];
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
@@ -95,7 +96,8 @@ for irun = 1:nruns
     %     data_temp_r = squeeze(data_temp_g(2,:,:,:));
     %     data_temp_g = squeeze(data_temp_g(1,:,:,:));
     % else
-        data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
+        %data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
+        data_temp_g = sbxread('G:\home\ACh\Analysis\2p_analysis\i3321\241125\i3321_241125_runs-004_correctedTiming.mat',0,min(nframes));
         data_temp_g = squeeze(data_temp_g(1,:,:,:));
     % end
 
@@ -515,6 +517,6 @@ title('');
 hold off
 ylim([-.02 .18])
 
-
-
+title(['Responsive cells (',num2str(sum(resp)), ' total, ', num2str(sum(resp_red)), ' red), out of ', num2str(size(data_tc,2)), ' total cells']);
+print(fullfile(fnout,'rawTCs.pdf'),'-dpdf','-bestfit');
 

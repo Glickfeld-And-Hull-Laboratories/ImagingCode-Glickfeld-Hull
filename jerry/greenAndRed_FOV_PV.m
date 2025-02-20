@@ -1,21 +1,21 @@
 
-mouse = 'i3322';
-date = '241212';
+mouse = 'i2191';
+date = '250218';
 redFolder = '000'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
 greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='198.43';
+depth='182.03';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
 % base = 
 % 'Z:/home/celine/Data/2p_data';
 if computer == 'GLNXA64'
     base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Data/2p_data';
-    out_base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Analysis/2p_analysis/PV_CMPDA/';
+    out_base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Analysis/2p_analysis/VIP_YM90K/';
 else
     base = 'G:/home/ACh/Data/2p_data/';
-    out_base = 'G:/home/ACh/Analysis/2p_analysis/PV_CMPDA/';
+    out_base = 'G:/home/ACh/Analysis/2p_analysis/VIP_YM90K/';
    
 end
 

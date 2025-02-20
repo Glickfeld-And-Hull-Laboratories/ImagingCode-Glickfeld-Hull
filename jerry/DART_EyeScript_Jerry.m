@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);
 
-experimentFolder = 'PV_CMPDA';
+experimentFolder = 'VIP_atropine';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -28,7 +28,6 @@ for day = 1:2
     data_out = fullfile(rc.achAnalysis,experimentFolder, mouse, date,run);
     cd(CD);
     fn = [run '_000_000_eye.mat'];
-    
     %load data
     data_temp = load(fn);
     data_temp = squeeze(data_temp.data);
@@ -36,10 +35,11 @@ for day = 1:2
     %crop frames to match mworks data
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time '.mat'];
     load(fName);
-    %nFrames = input.counterValues{end}(end);
-    nFrames = 86400;
-    %nTrials = size(input.counterValues,2);
-    nTrials = 960;
+    %load('G:\home\ACh\Analysis\2p_analysis\i3321\241125\i3321_241125_runs-004_correctedTiming.mat');
+    nFrames = input.counterValues{end}(end);
+    %nFrames = 86400;
+    nTrials = size(input.counterValues,2);
+    %nTrials = 960;
     data = data_temp(:,:,1:nFrames);      % the raw images...
     
     % Crop image to isolate pupil 
@@ -56,7 +56,7 @@ for day = 1:2
     %if pupil not found reliably, adjust the image cropping or the rad_range
     
     % align to stimulus presentation
-    [rad centroid] = alignEyeData(Eye_data,input);
+    [rad centroid] = alignEyeData_jerry(Eye_data,input);
     
     % wheel data
     wheel_data = wheelSpeedCalc(input,32,'orange');

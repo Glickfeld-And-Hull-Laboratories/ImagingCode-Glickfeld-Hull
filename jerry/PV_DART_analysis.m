@@ -8,7 +8,7 @@ eval(ds);
 
 % day_id = [24 29 32 35 38 40 42 44]; % concat days, enter one post-DART day id for each mouse
 
-fnroot = fullfile(rc.achAnalysis,'PV_CMPDA','summary_analyses');
+fnroot = fullfile(rc.achAnalysis,'PV_YM90K','summary_analyses');
 fn_epi = fullfile(fnroot,'epileptiform');
 
 
@@ -323,6 +323,126 @@ hold off
 % or use "save_all_open_figs(directory_to_be_saved_to)"
 
 
-%% 
+%% power frequency curve
+
+% extract just i3309 and i3310, the two high dose YM90K mice
+% mus = off_np_tc(2:3,:);
+mus = off_np_tc(2:4,:);
+nMice = size(mus,1);
+close all
+norm_dataset = cell(nMice,3);
+norm_pks = zeros(nMice,3);
+for iMouse = 1:nMice
+    mouse = mus{iMouse,1};
+    intact_tc = mouse(:,1);
+    meanSub_tc = mouse(:,2);
+    nSesh = size(mouse,1);
+    curr_mus = mus{iMouse,2};
+
+    for sesh = 1:nSesh
+        f1 = figure;
+        [p,f] = pspectrum(meanSub_tc{sesh},15); 
+        dbp = pow2db(p);
+        plot(f,pow2db(p));
+        ylim([-15 30]);
+        %xlim([0 100]);
+        sgtitle([curr_mus ' Session ' num2str(sesh) ' Power Spectrum'])
+        xlabel('frequency (Hz)')
+        ylabel('Power (dB)')
+        f1.Name = [curr_mus '_Session' num2str(sesh) '_ps'];
+
+        this_norm_p = normalize(dbp,'range',[0 1]);
+        norm_dataset{iMouse,sesh} = this_norm_p;
+        [norm_pks(iMouse,sesh),idx_max] = max(this_norm_p(2501:end));
+        linex = f(2500+idx_max);
+
+        f2 = figure;
+        plot(f,this_norm_p);
+        hold on
+        xline(linex);
+        hold off
+        f2.Name = [curr_mus '_Session' num2str(sesh) '_normalized'];
+        xlabel('frequency (Hz)')
+        ylabel('z-score')
+        sgtitle([curr_mus ' Session ' num2str(sesh) ' Normalized PS']);
+        % f2 = figure;
+        % plot(meanSub_tc{sesh});
+        % ylim([-200 1100]);
+        % sgtitle([curr_mus ' Session ' num2str(sesh) ' Mean-Subtracted Neuropil TC']);
+        % xlabel('nFrame')
+        % ylabel('F')
+        % f2.Name = [curr_mus '_Session' num2str(sesh) '_MSNPTC'];
+    end
+    % pause
+    % disp('press any key to continue');
+end
+
+save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\summary_analyses\epileptiform\plots\power');
+
+
+%%
+Fs = 15; % freq
+T = 1/Fs; % period length
+L = length(meanSub_tc{sesh});  % length of sample       
+t = (0:L-1)*T;  % Time vector
+y = fft(meanSub_tc{sesh});
+figure;
+plot(Fs/L*(0:L-1),abs(y));
+
+P2 = abs(y/L);
+P1 = P2(1:L/2+1);
+P1(2:end-1) = 2*P1(2:end-1);
+
+f = Fs/L*(0:(L/2));
+figure
+plot(f,pow2db(P1.^2),'LineWidth',0.1);
+ylim([-15 25]);
+
+% x = spectrogram(meanSub_tc{sesh});
+% f3 = figure;
+% plot(x(:,1));
+% 
+% N = 128;
+% x = [1 1/sqrt(2)].*exp(1j*pi./[4;2]*(0:N-1)).';
+% 
+% [p,f] = pspectrum(x);
+
+% plot(f/pi,p)
+% hold on
+% stem(0:2/N:2-1/N,abs(fft(x)/N).^2)
+% hold off
+% axis([0.15 0.6 0 1.1])
+% legend("Channel "+[1;2]+", "+["pspectrum" "fft"])
+% grid
+% 
+% Fs = 1000;
+% t = (0:1/Fs:0.296)';
+% x = cos(2*pi*t*200)+0.1*randn(size(t));
+% xTable = timetable(seconds(t),x);
+% 
+% [pxx,f] = pspectrum(xTable);
+% 
+% plot(f,pow2db(pxx))
+% grid on
+% xlabel('Frequency (Hz)')
+% ylabel('Power Spectrum (dB)')
+% title('Default Frequency Resolution')
+
+
+%% pwelch
+
+t = 1/15:1/15:86400/15; % Time vector
+x = meanSub_tc{sesh}; % Signal 
+
+% Compute the power spectral density using pwelch
+[pxx, f] = pwelch(x, [], [], [], 1/(t(2)-t(1)));
+
+% Plot the power spectral density
+figure;
+plot(f, 10*log10(pxx)); % Plot in dB scal
+xlabel('Frequency (Hz)');
+ylabel('Power/Frequency (dB/Hz)');
+title('Power Spectral Density using pwelch');
+
 
 

@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'PV_CMPDA';
+experimentFolder = 'VIP_atropine';
 
 mouse = expt(day_id).mouse;
 
@@ -42,6 +42,7 @@ cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
 %load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
+%load('G:\home\ACh\Analysis\2p_analysis\i3321\241125\i3321_241125_runs-004_correctedTiming.mat')
 frame_rate = input.frameImagingRateMs;
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
@@ -59,7 +60,7 @@ load(fullfile(fn,'mask_cell.mat'));
 red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
 nCells=max(max(mask_cell));
 for i = 1:nCells
-red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
+    red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
 end
 
 red_fluor_all = red_fluor_mask-red_fluor_np;
@@ -76,7 +77,7 @@ load(fullfile(fn_multi,'multiday_alignment.mat'))
 clear red_fluor_all red_fluor_mask red_fluor_np
 % get green fluor level
 %using the reference day
-green_fluor_match=mean(cellTCs_match{1},1);   
+green_fluor_match=mean(cellTCs_match{1},1);
 
 
 pupil=cell(1,nd);
@@ -88,7 +89,12 @@ end
 
 nOn = input(1).nScansOn;
 nOff = input(1).nScansOff;
-
+if length(nOn) == 2
+    nOn = nOn(1);
+end
+if length(nOff) == 2
+    nOff = nOff(1);
+end
 %tells the contrast, direction and orientation for each trial each day
 tCon_match = cell(1,nd);
 tDir_match = cell(1,nd);
@@ -99,7 +105,13 @@ tSize_match = cell(1,nd);
 %in case of instances where the number of trails actually collected was not
 %consistent with the number mWorks thinks occured, only take 1:nTrials as
 %dictated above based on the number of frames recorded
+
+if mouse == 'i3321'
+    input(:,2) = input_correct;
+end
+
 for id = 1:nd
+
     nTrials(id) = size(cellTCs_match{id},1)/(nOn+nOff); %to account for times 
 %when there is a disruption before the full set of trials is collcted, I'm 
 %determining the number of trials each day by how many frames of data I 
@@ -667,7 +679,6 @@ save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
     'red_keep_logical', 'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat', ...
     'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
     'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc')
-
 
 
 %% interneuron / pyr relationship

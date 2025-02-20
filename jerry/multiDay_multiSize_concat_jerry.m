@@ -5,10 +5,10 @@ ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
-ExperimentFolder = 'PV_CMPDA';
+ExperimentFolder = 'VIP_atropine';
 %285 295 300 308 324 334 DART CMPDA 
 % 299 289 304 312 320 330
-sess_list = [48];%enter all the sessions you want to concatenate
+sess_list = [59];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -388,7 +388,7 @@ N=length(red_ind_concat);
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Suppressed')
-    ylim([0 .5])
+    ylim([0 .3])
     ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -402,7 +402,7 @@ N=length(red_ind_concat);
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .5])
+    ylim([0 .3])
     %ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -423,11 +423,11 @@ print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
     b=bar([1,2,3,4],[supp_table_loc(:,1),supp_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#70D0F6"
     b(2).FaceColor="#0C8ABB"
-    ylim([0 .5])
+    ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Suppressed')
-    ylim([0 .5])
+    ylim([0 .3])
     ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -437,11 +437,11 @@ print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
     b=bar([1,2,3,4],[facil_table_loc(:,1),facil_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#C983B1"
     b(2).FaceColor="#883367"
-    ylim([0 .5])
+    ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .5])
+    ylim([0 .3])
     %ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -483,11 +483,11 @@ supp_table_loc_2_nosize = sum(supp_table_loc_2,2);
     b=bar([1,2,3,4],[supp_table_stat_2(:,1),supp_table_stat_2(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#70D0F6"
     b(2).FaceColor="#0C8ABB"
-    ylim([0 .5])
+    ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Suppressed')
-    ylim([0 .5])
+    ylim([0 .3])
     ylabel(["Fraction Pyr cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -497,11 +497,11 @@ supp_table_loc_2_nosize = sum(supp_table_loc_2,2);
     b=bar([1,2,3,4],[facil_table_stat_2(:,1),facil_table_stat_2(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#C983B1"
     b(2).FaceColor="#883367"
-    ylim([0 .5])
+    ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .5])
+    ylim([0 .3])
     %ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -522,11 +522,11 @@ print(fullfile(fnout,'Facil_supp_stat_green.pdf'),'-dpdf');
     b=bar([1,2,3,4],[supp_table_loc_2(:,1),supp_table_loc_2(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#70D0F6"
     b(2).FaceColor="#0C8ABB"
-    ylim([0 .5])
+    ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Suppressed')
-    ylim([0 .5])
+    ylim([0 .3])
     ylabel(["Fraction Pyr cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -536,11 +536,11 @@ print(fullfile(fnout,'Facil_supp_stat_green.pdf'),'-dpdf');
     b=bar([1,2,3,4],[facil_table_loc_2(:,1),facil_table_loc_2(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
     b(1).FaceColor="#C983B1"
     b(2).FaceColor="#883367"
-    ylim([0 .5])
+    ylim([0 .3])
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .5])
+    ylim([0 .3])
     %ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -636,7 +636,8 @@ end
 
 
 
-%% plots for running trials
+runningGreen = green_ind_concat;
+runningRed = red_ind_concat;
 
 tc_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_loc = cell(1,nd); %same for red
@@ -649,12 +650,12 @@ for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
         
-        tc_green_avrg_loc{id}(:,iCon,iSize)=mean(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),2);
-        green_std=std(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),[],2);
+        tc_green_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_loc_concat{id}(:,runningGreen,iCon,iSize),[],2);
         tc_green_se_loc{id}(:,iCon,iSize)=green_std/sqrt(length(runningGreen));
         
-        tc_red_avrg_loc{id}(:,iCon,iSize)=mean(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),2);
-        red_std=std(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),[],2);
+        tc_red_avrg_loc{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_loc_concat{id}(:,runningRed,iCon,iSize),[],2);
         tc_red_se_loc{id}(:,iCon,iSize)=red_std/sqrt(length(runningRed));
         
         clear green_std red_std
@@ -675,11 +676,11 @@ for iCon = 1:nCon
     
     
     
-    ylim([-.05 .35]);
+    ylim([-.05 .45]);
     hold on
-    shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon,iSize),tc_green_se_loc{pre}(:,iCon,iSize),'k');
+    shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon,iSize),tc_green_se_loc{pre}(:,iCon,iSize),'--k');
     hold on
-    shadedErrorBar(t,tc_green_avrg_loc{post}(:,iCon,iSize),tc_green_se_loc{post}(:,iCon,iSize),'b','transparent');
+    shadedErrorBar(t,tc_green_avrg_loc{post}(:,iCon,iSize),tc_green_se_loc{post}(:,iCon,iSize),'--b','transparent');
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -695,7 +696,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon,iSize),tc_red_se_loc{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon,iSize),tc_red_se_loc{post}(:,iCon,iSize),'b');
-    ylim([-.05 .35]);
+    ylim([-.05 .45]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -940,7 +941,7 @@ title(['Pyr n = ' , num2str(length(statGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.02 0.08])
+ylim([-0.03 0.08])
 xlim([0 110])
 
 subplot(2,2,3) %for the second size, all contrasts
@@ -950,17 +951,17 @@ errorbar(consForPlotting,conResp_green_avrg_stat{post}(2,:),conResp_green_se_sta
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.02 0.08])
+ylim([-0.03 0.08])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['PV n = ' , num2str(length(statRed))])
+title(['VIP n = ' , num2str(length(statRed))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.02 0.08])
+ylim([-0.03 0.08])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -969,7 +970,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([-0.02 0.08])
+ylim([-0.03 0.08])
 xlim([0 110])
 
 
@@ -1042,7 +1043,7 @@ title(['Pyr n = ' , num2str(length(runningGreen))])
 ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([-0.02 .22])
 xlim([0 110])
 
 subplot(2,2,3) %for the first day
@@ -1052,17 +1053,17 @@ errorbar(consForPlotting,conResp_green_avrg_loc{post}(2,:),conResp_green_se_loc{
 ylabel('dF/F, Fullfield') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([-0.02 .22])
 xlim([0 110])
 
 subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_loc{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['PV n = ' , num2str(length(runningRed))])
+title(['VIP n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([-0.02 .22])
 xlim([0 110])
 
 subplot(2,2,4) %for the first day
@@ -1071,7 +1072,7 @@ hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(2,:),conResp_red_se_loc{post}(2,:),'b');
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .2])
+ylim([-0.02 .22])
 xlim([0 110])
 
 

@@ -8,7 +8,7 @@ function [wheelspeeds,nRunningTrialsInConditions] = locomotionLocalizer(person,s
 % WHEELSPEEDS is an nSessions x 2 cell array that has mouse-day in the
 % first column and nTrials x 1 double arrays with trial average wheelspeeds
 % in the second column.
-% NRUNNINGTRIALSINCONDITIONS is nSessions x 2 cell array that has mouse-day in the
+% NRUNNINGTRIALSINCONDITIONS is an nSessions x 2 cell array that has mouse-day in the
 % first column and nested cell arrays in the second column. The nested arrays
 % have dimensions nStimConditions x 2 and have all stimulus conditions in
 % the first column and number of running trials in that condition in the
@@ -37,8 +37,7 @@ elseif person == "CC"
 end
 cd(code_cd);
 eval(ds);
-disp(['Dataset name is ' ds ' and is hardcoded in function. Edit function if file name changed.']);
-
+disp(['Dataset name is ' ds ' and is hardcoded in function. Edit function if file name changed.'])
 
 nSesh = length(session);
 
@@ -55,9 +54,11 @@ for sesh = 1:length(session)
     ExperimentFolder = expt(session(sesh)).exptType;
     %load([dat_root '\' mouse '\' day '\' run '\' run '_000_000.mat']);
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' 'data-' mouse '-' day '-' time '.mat'];
-    expt(53).exptType = 'PV_CMPDA';
+
     fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,day);
     fnout = fullfile(fn,run);
+
+    mkdir(fnout);
 
     load(fName);
     %plot trial running speed
@@ -73,7 +74,7 @@ for sesh = 1:length(session)
 
     %plot # of running trials per condition
     runidx = find(wheelspd>2);
-    runTrialBoolean = wheelspd > 2;
+    %runTrialBoolean = wheelspd > 2;
     tCon = cell2mat(input.tGratingContrast);
     contrasts = unique(tCon);
     nCon = length(contrasts);
@@ -113,8 +114,8 @@ for sesh = 1:length(session)
     figure
     bar(RunTrialsN)
     sgtitle([mouse '-' day '-Number of Running Trials in Each Stimulus Condition'])
-    ylim([0 max(RunTrialsN+1)])
-    yticks([0:1:max(RunTrialsN+1)])
+    ylim([0 max(RunTrialsN)+1])
+    yticks([0:1:max(RunTrialsN)+1])
     xticks([1:1:length(all_conds)])
     xticklabels(all_conds)
     ylabel('# of Running Trials')
@@ -131,7 +132,6 @@ for sesh = 1:length(session)
     wheelspeeds{sesh,1} = [mouse '-' day];
     wheelspeeds{sesh,2} = wheelspd;
 end
-
 
 
 end

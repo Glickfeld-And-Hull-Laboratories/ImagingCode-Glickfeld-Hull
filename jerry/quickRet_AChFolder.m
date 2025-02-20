@@ -1,15 +1,20 @@
 
 close all
 
-date = '241212';
-mouse = 'i3322';
-ImgFolder = '003';
-time = '0925';
+date = '250218';
+mouse = 'i2191';
+ImgFolder = '002';
+time = '1257';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
 datemouse = [date '_' mouse]
+saveRet = 1;
+experimentFolder = 'VIP_YM90K';
+
+isilon_home = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\';
+analysis_root = [isilon_home 'ACh\Analysis\2p_analysis'];
 
 run_str = ['runs-' ImgFolder(1,:)];
 if nrun>1
@@ -131,6 +136,11 @@ expt_input = concatenateDataBlocks(temp);
 %             img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
             %clim([0 max(data_dfof_avg_all(:))./2])
         end
+        fnout = fullfile(analysis_root,experimentFolder,mouse,date,ImgFolder);
+        mkdir(fnout);
+        if saveRet == 1
+            print(fullfile(fnout,'Retinotopy.pdf'),'-dpdf','-bestfit');
+        end
         
 %         if strcmp(rc.name,'linds')
 %             mkdir(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
@@ -202,6 +212,13 @@ expt_input = concatenateDataBlocks(temp);
     figure; imagesc(mean(data,3));
     axis off
     title([mouse ' ' date])
+
+    if isfield(info,'frame')
+        fprintf('Photodiode data collected')
+    else
+        fprintf('WARNING- NOT PHOTODIODE DATA!!!!!')
+    end
+
 %     if strcmp(rc.name,'linds')
 %     print(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
 %     elseif strcmp(rc.name,'robin')

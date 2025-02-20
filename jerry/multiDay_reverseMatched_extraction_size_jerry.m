@@ -36,7 +36,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
 clear x prompt
 
 
-fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.achAnalysis,ExperimentFolder,mouse,['multiday_' dart_str]);
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
@@ -50,7 +50,7 @@ for id = 1 %currently only doing this for the baseline day
 mouse = expt(allDays(id)).mouse;
 date = expt(allDays(id)).date;
 imgFolder = expt(allDays(id)).contrastxori_runs{1};
-fn = fullfile(rc.achAnalysis,mouse,date,imgFolder);
+fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,date,imgFolder);
 cd(fn);
 load(fullfile(fn,'redImage.mat'));
 load(fullfile(fn,'mask_cell.mat'));

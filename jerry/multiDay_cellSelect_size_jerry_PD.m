@@ -7,9 +7,11 @@ rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;  
-ExperimentFolder = 'PV_CMPDA';
+ExperimentFolder = 'VIP_atropine';
+doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 53;
+
+day_id = 60;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -86,7 +88,7 @@ for irun = 1:nruns
     load(fName); %load the mworks behavioral file
 
     temp(irun) = input; %load the data from the mworks file into temp
-    clear input
+    %clear input
     nframes = [temp(irun).counterValues{end}(end) info.config.frames];
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
@@ -117,11 +119,10 @@ for irun = 1:nruns
         %     clear data_temp_r
         % end
     end
-    break
 end
 
-
-%%
+mWStruct = input;
+clear input;
 % register data for each day
 %reg green data
 
@@ -159,8 +160,10 @@ else %if not, must register. Start by showing average for each of four 500-frame
     save(fullfile(fnout,'regOuts&Img.mat'),'outs','regImg','data_avg')
     input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
-    
 end
+
+input = mWStruct;
+clear mWStruct;
 %
 %reg red data 
 %register the red data from the 920 nm run (same run used for green
@@ -177,20 +180,20 @@ end
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
-nTrials = size(input.tGratingDirectionDeg,2);
-%nTrials = 960;
-data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff nTrials]);
+ntrials = size(input.tGratingDirectionDeg,2);
+%ntrials = 374;
+data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
 data_g_dfof = (data_g_on-data_g_f)./data_g_f;
 clear data_g_trial data_g_on data_g_f
 
 %find the different directions and sizes
-tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:nTrials));
+tDir = celleqel2mat_padded(input.tGratingDirectionDeg(1:ntrials));
 dirs = unique(tDir);
 nDir = length(dirs);
 
-tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:nTrials));
+tSize = celleqel2mat_padded(input.tGratingDiameterDeg(1:ntrials));
 sizes = unique(tSize);
 nSize = length(sizes);
 ind_dir = find(tDir == max(sizes(:)));
@@ -410,12 +413,12 @@ save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 %% deprecated code archive
 
 % DEPRECATED - FIND EXACT FRAMES IN A TRIAL (CREATES UNEVEN TRIALS)
-% [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
-% nTrials = length(cStimOn);
+% [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+% nTrials = length(stimOns);
 % [nFrames nCells] = size(npSub_tc);
 % % nOn = input.nScansOn;
 % % nOff = input.nScansOff;
-% MAXnFrames = max(max(diff(cStimOn)),nFrames - stimOffs(end)); % find
+% MAXnFrames = max(max(diff(stimOns)),nFrames - stimOffs(end)); % find
 % % nFrames for the trial with the most frames
 % data_tc = nan(MAXnFrames,nCells,nTrials);
 % data_f_trial = nan(nCells,nTrials);
@@ -426,11 +429,11 @@ save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 %     else
 %         baseFrame = stimOffs(itrial-1); 
 %     end
-%     nOn = stimOffs(itrial) - cStimOn (itrial);
-%     nOff = cStimOn(itrial) - baseFrame;
+%     nOn = stimOffs(itrial) - stimOns (itrial);
+%     nOff = stimOns(itrial) - baseFrame;
 %     trialFrames = nan(MAXnFrames,nCells);
 %     trialFrames(1:nOn+nOff,:) = npSub_tc(baseFrame:stimOffs(itrial)-1,:);
-%     %if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
+%     %if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
 %         data_tc(:,:,itrial) = trialFrames;
 %     %end
 % end
@@ -448,23 +451,25 @@ save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
 %% find stim info from photodiode
 % LG code
+
 cd(CD);
 load([runFolder '_000_000.mat']);
-[cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
-nTrials = length(cStimOn);
+[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+nTrials = length(stimOns);
 [nFrames nCells] = size(npSub_tc);
-nOn = input.nScansOn;
-nOff = input.nScansOff;
+nOn = input.nScansOn(1);
+nOff = input.nScansOff(1);
 data_tc = nan(nOn+nOff,nCells,nTrials);
-
+% stimOns = stimOns_correct;
+% stimOffs = stimOffs_correct;
 for itrial = 1:nTrials
-  if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
-    data_tc(:,:,itrial) = npSub_tc(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2,:);
+  if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
+    data_tc(:,:,itrial) = npSub_tc(stimOns(itrial)-nOff/2:stimOns(itrial)-1+nOn+nOff/2,:);
   end
 end
 %% dfof calculation
 %data_tc = data_tc(:,:,1:end-1);
-data_f_trial = mean(data_tc(1:nOff/2,:,:),1);
+data_f_trial = nanmean(data_tc(1:nOff/2,:,:),1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc, data_f_trial), data_f_trial);
 data_dfof_trial = permute(data_dfof_trial,[1 3 2]); %nFrames x nTrials x nCells
 % plot tc sanity check
@@ -489,6 +494,7 @@ data_dfof_trial = permute(data_dfof_trial,[1 3 2]); %nFrames x nTrials x nCells
 %% calculate responsive cells
 resp_win = nOff/2:nOff/2+nOn;
 base_win = 1:nOff/2;
+
 data_resp = zeros(nCells, nSize, nDir,2);
 h = zeros(nCells, nSize, nDir);
 p = zeros(nCells, nSize, nDir);
@@ -599,31 +605,55 @@ print(fullfile(fnout,'rawTCs.pdf'),'-dpdf','-bestfit');
 
 %% add diagnostic plots
 
-[cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
-nTrials = length(cStimOn);
-[nFrames nCells] = size(npSub_tc);
-MAXnFrames = max(max(diff(cStimOn)),nFrames - stimOffs(end)); % find
-% nFrames for the trial with the most frames
-data_tc = nan(MAXnFrames,nCells,nTrials);
-data_f_trial = nan(nCells,nTrials);
-stimOffs(end+1) = nFrames;
+%[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+nTrials = length(stimOns);
+nCells = size(data_dfof_trial,3);
+trialLength = nOn+nOff;
+nFrames = trialLength*nTrials;
+AllTrialsNFrames = nan(nTrials,1);
+l1 = length(stimOns);
+l2 = length(stimOffs);
+if l1 > l2
+    stimOffs(end+1) = 86400;
+end
+%MAXnFrames
 for itrial = 1:nTrials
     if itrial == 1
-        baseFrame = 1;
+        startFrame = 0;
     else
-        baseFrame = stimOffs(itrial-1); 
+        startFrame = stimOffs(itrial-1);
     end
-    nOn = stimOffs(itrial) - cStimOn (itrial);
-    nOff = cStimOn(itrial) - baseFrame;
+    iOn_pd = stimOns(itrial);
+    nOff_pd = iOn_pd - startFrame; 
+    nOn_pd = stimOffs(itrial) - stimOns(itrial);
+    thisTrialNFrames = nOn_pd+nOff_pd;
+    AllTrialsNFrames(itrial) = thisTrialNFrames;
+end
+MAXnFrames = max(AllTrialsNFrames);
+data_tc = nan(MAXnFrames,nCells,nTrials);
+data_f_trial = nan(nCells,nTrials);
+%stimOffs(end+1) = nFrames;
+for itrial = 1:nTrials
+    if itrial == 1
+        firstFrame = 0;
+        startFrame = 1; % for indexing later
+    else
+        firstFrame = stimOffs(itrial-1);
+        startFrame = firstFrame;
+    end
+    iOn_pd = stimOns(itrial);
+    nOff_pd = iOn_pd - startFrame; 
+    nOn_pd = stimOffs(itrial) - stimOns(itrial);
+    thisTrialNFrames = nOn_pd+nOff_pd;
     trialFrames = nan(MAXnFrames,nCells);
-    trialFrames(1:nOn+nOff,:) = npSub_tc(baseFrame:stimOffs(itrial)-1,:);
-    %if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
+    trialFrames(1:nOn_pd+nOff_pd,:) = npSub_tc(startFrame:stimOffs(itrial)-1,:);
+    %if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
         data_tc(:,:,itrial) = trialFrames;
     %end
 end
 
-elements = zeros(960,1);
-for m = 1:960
+elements = zeros(size(data_tc,3),1);
+for m = 1:nTrials
     elements(m,1) = sum(~isnan(data_tc(:,1,m)));
 end
 % plot 
@@ -647,14 +677,18 @@ ylabel('number of trials')
 
 print(fullfile(fnout,'TrialLengthDistribution.pdf'),'-dpdf','-bestfit');
 
-figure
-ptdcounter = cStimOn;
-mwcounter = [60:90:86400];
-plot(ptdcounter-mwcounter);
-sgtitle('Counter Value Diff')
-xlabel('trial number')
-ylabel('Photodiode Counter - mWorks Counter')
-print(fullfile(fnout,'ptd-mw.pdf'),'-dpdf','-bestfit');
+if doMWCmPD == true
+    figure
+    ptdcounter = stimOns;
+    mwcounter = [60:90:86400];
+    plot(ptdcounter-mwcounter);
+    sgtitle('Counter Value Diff')
+    xlabel('trial number')
+    ylabel('Photodiode Counter - mWorks Counter')
+    print(fullfile(fnout,'ptd-mw.pdf'),'-dpdf','-bestfit');
+else
+    fprintf('No MWorks Counter - Photodiode Counter plot generated');
+end
 
 
 %% look at running trials
@@ -701,8 +735,8 @@ end
 figure
 bar(RunTrialsN)
 sgtitle('Number of Running Trials in Each Stimulus Condition')
-ylim([0 max(RunTrialsN+1)])
-yticks([0:1:max(RunTrialsN+1)])
+ylim([0 max(RunTrialsN)+1])
+yticks([0:1:max(RunTrialsN)+1])
 xticks([1:1:length(all_conds)])
 xticklabels(all_conds)
 ylabel('# of Running Trials')
