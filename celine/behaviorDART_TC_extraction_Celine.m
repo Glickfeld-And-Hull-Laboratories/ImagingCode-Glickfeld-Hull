@@ -3,7 +3,7 @@
 close all;clear all;clc;
 ds = 'DART_behavior_ExptList';
 experimentFolder = 'SST_behavior';
-iexp = 1; 
+iexp = 11; 
 eval(ds)
 
 %%
@@ -54,8 +54,8 @@ for irun = 1:nrun
     load(fName);
     
     temp(irun) = input;
-   %nframes = [temp(irun).counterValues{end}(end) info.config.frames];
-    nframes=85000
+    nframes = [temp(irun).counterValues{end}(end) info.config.frames];
+    
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
     data_temp = sbxread(imgMatFile(1,1:11),0,min(nframes));
     if size(data_temp,1)== 2
@@ -237,7 +237,7 @@ clear data_rr data_rg data_rg_reg data_rr_reg
 
 %% cell segmentation 
 close all
-data_dfof = cat(3, data_dfof, data_reg_avg,data_reg_avg, pixelCorr);
+data_dfof = cat(3, data_dfof, data_reg_avg,data_reg_avg,data_reg_avg, pixelCorr);
 redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
@@ -311,7 +311,7 @@ npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 
 save(fullfile(fnout,'TCs.mat'), 'data_tc', 'np_tc', 'npSub_tc')
 
-clear data_tc data_tc_down np_tc np_tc_down mask_np 
+
 
 %% finding trial types
 %find trials within nframes
@@ -335,16 +335,19 @@ for iCon = 1:nCon
     block1Inds = intersect(conInds,block1trials); %find trials for block 1 at this contrast
     hitInds = intersect(hit, block1Inds); %hit trials for block 1 at this contrast
     missInds = intersect(miss,block1Inds); %miss trials for block1 at this contrast
-    hitTargetTimes = cell2mat(input.cTargetOn(hitInds));
-    missTargetTimes = cell2mat(input.cTargetOn(missInds));
+    hitTargetTimes = cell2mat(input.cTargetOn(hitInds)); %find when the target comes on for the hit trials for this contrast, in frames
+    missTargetTimes = cell2mat(input.cTargetOn(missInds)); %find when the target comes on for the miss trials for this contrast, in frames
     hitsTemp = nan(60,nCells,length(hitInds));
     missTemp = nan(60,nCells,length(missInds));
-    for iHit = 1:length(hitInds)
-        hitsTemp(:,:,iHit)=npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit),:),1);
+    for iHit = 1:length(hitInds) %loop through the hit trials for this contrast
+        hitsTemp(:,:,iHit)=npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc(hitTargetTimes(iHit)-15:hitTargetTimes(iHit),:),1);
+        %to get dfof, take the np subtracted timecourse for t=-1 before stim through 1
+        %second, and subtract the mean of the -0.5 through 0 (using the
+        %last half second before stim onset as the baseline F
     end
     trialAvrg_tcs(:,:,iCon,1)=mean(hitsTemp,3);
-    for iMiss = 1:length(missInds)
-        missTemp(:,:,iMiss)=npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss),:),1);
+    for iMiss = 1:length(missInds) %loop through the miss trials for this contrast
+        missTemp(:,:,iMiss)=npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc(missTargetTimes(iMiss)-15:missTargetTimes(iMiss),:),1);
     end
     trialAvrg_tcs(:,:,iCon,2)=mean(missTemp,3);
     hitRate(iCon, 1) = length(hitInds)/(length(hitInds)+length(missInds));
@@ -358,11 +361,11 @@ for iCon = 1:nCon
     hitsTemp = nan(60,nCells,length(hitInds));
     missTemp = nan(60,nCells,length(missInds));
     for iHit = 1:length(hitInds)
-        hitsTemp(:,:,iHit)=npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit),:),1);
+        hitsTemp(:,:,iHit)=npSub_tc(hitTargetTimes(iHit)-29:hitTargetTimes(iHit)+30,:)-mean(npSub_tc(hitTargetTimes(iHit)-15:hitTargetTimes(iHit),:),1);
     end
     trialAvrg_tcs(:,:,iCon,3)=mean(hitsTemp,3);
     for iMiss = 1:length(missInds)
-        missTemp(:,:,iMiss)=npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss),:),1);
+        missTemp(:,:,iMiss)=npSub_tc(missTargetTimes(iMiss)-29:missTargetTimes(iMiss)+30,:)-mean(npSub_tc(missTargetTimes(iMiss)-15:missTargetTimes(iMiss),:),1);
     end
     trialAvrg_tcs(:,:,iCon,4)=mean(missTemp,3);
     hitRate(iCon, 2) = length(hitInds)/(length(hitInds)+length(missInds));
@@ -389,11 +392,11 @@ for iCon = 1:nCon
     stdMiss=std(trialAvrg_tcs(:,pyr,iCon,2),[],2);
     seMiss=stdMiss./sqrt(sum(pyr));
     shadedErrorBar(t,meanMiss,seMiss,'r')
-    title(num2str(cons(iCon)))
+    title(['Block1, contrast ' num2str(cons(iCon))])
     box off
-    ylim([-20 200])
-    % txt = {num2str(hitRate(iCon,1))};
-    % text(-0.75,75,txt)
+    ylim([-30 40])
+    txt = {num2str(hitRate(iCon,1))};
+    text(-0.75,30,txt)
 end
 
 for iCon = 1:nCon
@@ -407,57 +410,73 @@ for iCon = 1:nCon
     stdMiss=std(trialAvrg_tcs(:,pyr,iCon,4),[],2);
     seMiss=stdMiss./sqrt(sum(pyr));
     shadedErrorBar(t,meanMiss,seMiss,'r')
-    title(num2str(cons(iCon)))
+    title(['Block2, contrast ' num2str(cons(iCon))])
     box off
-    ylim([-20 200])
-    % txt = {num2str(hitRate(iCon,2))};
-    % text(-0.75,75,txt)
+    ylim([-30 40])
+    txt = {num2str(hitRate(iCon,2))};
+    text(-0.75,30,txt)
 end
-print(fullfile(fnout,'Active_HitvsMiss.pdf'),'-dpdf', '-bestfit')
-%% plot responses comparing block 1 and 2
+sgtitle('Pyr cells')
+
+x0=5;
+y0=0;
+width=6;
+height=9;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'Pyr_Active_HitvsMiss.pdf'),'-dpdf', '-bestfit')
+
+%% plot mean responses
+
+sst = logical(mask_label);
+
+t=(-29:30)/30;
 positions=[1,3,5,7,9,11];
 
 figure;
 for iCon = 1:nCon
     subplot(nCon,2,positions(iCon))
-    meanHit=mean(trialAvrg_tcs(:,pyr,iCon,1),2);
-    stdHit=std(trialAvrg_tcs(:,pyr,iCon,1),[],2);
-    seHit=stdHit./sqrt(sum(pyr));
-    shadedErrorBar(t,meanHit,seHit,'b')
+    meanHit=mean(trialAvrg_tcs(:,sst,iCon,1),2);
+    stdHit=std(trialAvrg_tcs(:,sst,iCon,1),[],2);
+    seHit=stdHit./sqrt(sum(sst));
+    shadedErrorBar(t,meanHit,seHit)
     hold on
-    meanHit=mean(trialAvrg_tcs(:,pyr,iCon,3),2);
-    stdHit=std(trialAvrg_tcs(:,pyr,iCon,3),[],2);
-    seHit=stdHit./sqrt(sum(pyr));
-    shadedErrorBar(t,meanHit,seHit,'g')
-
-    title(num2str(cons(iCon)))
+    meanMiss=mean(trialAvrg_tcs(:,sst,iCon,2),2);
+    stdMiss=std(trialAvrg_tcs(:,sst,iCon,2),[],2);
+    seMiss=stdMiss./sqrt(sum(sst));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(['Block1, contrast ' num2str(cons(iCon))])
     box off
-    ylim([-20 200])
-    % 
-    % txt = {num2str(hitRate(iCon,1))};
-    % text(-0.75,85,txt,'Color','b')
-    % 
-    % txt = {num2str(hitRate(iCon,2))};
-    % text(-0.75,55,txt,'Color','g')
+    ylim([-30 40])
+    txt = {num2str(hitRate(iCon,1))};
+    text(-0.75,30,txt)
 end
 
 for iCon = 1:nCon
     subplot(nCon,2,iCon*2)
-    meanMiss=mean(trialAvrg_tcs(:,pyr,iCon,2),2);
-    stdMiss=std(trialAvrg_tcs(:,pyr,iCon,2),[],2);
-    seMiss=stdMiss./sqrt(sum(pyr));
-    shadedErrorBar(t,meanMiss,seMiss,'b')
+    meanHit=mean(trialAvrg_tcs(:,sst,iCon,3),2);
+    stdHit=std(trialAvrg_tcs(:,sst,iCon,3),[],2);
+    seHit=stdHit./sqrt(sum(sst));
+    shadedErrorBar(t,meanHit,seHit)
     hold on
-    meanMiss=mean(trialAvrg_tcs(:,pyr,iCon,4),2);
-    stdMiss=std(trialAvrg_tcs(:,pyr,iCon,4),[],2);
-    seMiss=stdMiss./sqrt(sum(pyr));
-    shadedErrorBar(t,meanMiss,seMiss,'g')
-    title(num2str(cons(iCon)))
+    meanMiss=mean(trialAvrg_tcs(:,sst,iCon,4),2);
+    stdMiss=std(trialAvrg_tcs(:,sst,iCon,4),[],2);
+    seMiss=stdMiss./sqrt(sum(sst));
+    shadedErrorBar(t,meanMiss,seMiss,'r')
+    title(['Block2, contrast ' num2str(cons(iCon))])
     box off
-    ylim([-20 200])
+    ylim([-30 40])
+    txt = {num2str(hitRate(iCon,2))};
+    text(-0.75,30,txt)
 end
+sgtitle('SST cells')
 
-print(fullfile(fnout,'Active_B1vsB2.pdf'),'-dpdf', '-bestfit')
+x0=5;
+y0=0;
+width=6;
+height=9;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'SST_Active_HitvsMiss.pdf'),'-dpdf', '-bestfit')
+
 %% read in the passive dataset
 ImgFolderPassive = expt(iexp).passive_runs;
 time = expt(iexp).passive_time;
@@ -728,13 +747,13 @@ positions=[1,3,5,7,9,11];
 figure;
 for iCon = 1:nCon
     subplot(nCon,2,positions(iCon))
-    meanHit=mean(trialAvrg_tcs(:,sst,iCon,1),2,'omitmissing');
-    stdHit=std(trialAvrg_tcs(:,sst,iCon,1),[],2,'omitmissing');
+    meanHit=mean(trialAvrg_tcs(:,logical(sst),iCon,1),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs(:,logical(sst),iCon,1),[],2,'omitmissing');
     seHit=stdHit./sqrt(sum(sst));
     shadedErrorBar(t,meanHit,seHit)
     hold on
-    meanMiss=mean(trialAvrg_tcs(:,sst,iCon,2),2,'omitmissing');
-    stdMiss=std(trialAvrg_tcs(:,sst,iCon,2),[],2,'omitmissing');
+    meanMiss=mean(trialAvrg_tcs(:,logical(sst),iCon,2),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs(:,logical(sst),iCon,2),[],2,'omitmissing');
     seMiss=stdMiss./sqrt(sum(sst));
     shadedErrorBar(t,meanMiss,seMiss,'r')
     title(num2str(cons(iCon)))
@@ -746,13 +765,13 @@ end
 
 for iCon = 1:nCon
     subplot(nCon,2,iCon*2)
-    meanHit=mean(trialAvrg_tcs(:,sst,iCon,3),2,'omitmissing');
-    stdHit=std(trialAvrg_tcs(:,sst,iCon,3),[],2,'omitmissing');
+    meanHit=mean(trialAvrg_tcs(:,logical(sst),iCon,3),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs(:,logical(sst),iCon,3),[],2,'omitmissing');
     seHit=stdHit./sqrt(sum(sst));
     shadedErrorBar(t,meanHit,seHit)
     hold on
-    meanMiss=mean(trialAvrg_tcs(:,sst,iCon,4),2,'omitmissing');
-    stdMiss=std(trialAvrg_tcs(:,sst,iCon,4),[],2,'omitmissing');
+    meanMiss=mean(trialAvrg_tcs(:,logical(sst),iCon,4),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs(:,logical(sst),iCon,4),[],2,'omitmissing');
     seMiss=stdMiss./sqrt(sum(sst));
     shadedErrorBar(t,meanMiss,seMiss,'r')
     title(num2str(cons(iCon)))
@@ -771,13 +790,13 @@ positions=[1,3,5,7];
 figure;
 for iCon = 1:nCon
     subplot(nCon,2,positions(iCon))
-    meanHit=mean(trialAvrg_tcs_passive(:,sst,iCon,1),2,'omitmissing');
-    stdHit=std(trialAvrg_tcs_passive(:,sst,iCon,1),[],2,'omitmissing');
+    meanHit=mean(trialAvrg_tcs_passive(:,logical(sst),iCon,1),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs_passive(:,logical(sst),iCon,1),[],2,'omitmissing');
     seHit=stdHit./sqrt(sum(sst));
     shadedErrorBar(t,meanHit,seHit)
     hold on
-    meanMiss=mean(trialAvrg_tcs_passive(:,sst,iCon,2),2,'omitmissing');
-    stdMiss=std(trialAvrg_tcs_passive(:,sst,iCon,2),[],2,'omitmissing');
+    meanMiss=mean(trialAvrg_tcs_passive(:,logical(sst),iCon,2),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs_passive(:,logical(sst),iCon,2),[],2,'omitmissing');
     seMiss=stdMiss./sqrt(sum(sst));
     shadedErrorBar(t,meanMiss,seMiss,'r')
     title(num2str(cons(iCon)))
@@ -789,17 +808,17 @@ end
 
 for iCon = 1:nCon
     subplot(nCon,2,iCon*2)
-    meanHit=mean(trialAvrg_tcs_passive(:,sst,iCon,3),2,'omitmissing');
-    stdHit=std(trialAvrg_tcs_passive(:,sst,iCon,3),[],2,'omitmissing');
+    meanHit=mean(trialAvrg_tcs_passive(:,logical(sst),iCon,3),2,'omitmissing');
+    stdHit=std(trialAvrg_tcs_passive(:,logical(sst),iCon,3),[],2,'omitmissing');
     seHit=stdHit./sqrt(sum(sst));
     shadedErrorBar(t,meanHit,seHit)
     hold on
-    meanMiss=mean(trialAvrg_tcs_passive(:,sst,iCon,4),2,'omitmissing');
-    stdMiss=std(trialAvrg_tcs_passive(:,sst,iCon,4),[],2,'omitmissing');
+    meanMiss=mean(trialAvrg_tcs_passive(:,logical(sst),iCon,4),2,'omitmissing');
+    stdMiss=std(trialAvrg_tcs_passive(:,logical(sst),iCon,4),[],2,'omitmissing');
     seMiss=stdMiss./sqrt(sum(sst));
     shadedErrorBar(t,meanMiss,seMiss,'r')
     title(num2str(cons(iCon)))
-    box off
+    % box off
     ylim([-20 200])
     % txt = {num2str(hitRate_passive(iCon,2))};
     % text(-0.75,75,txt)

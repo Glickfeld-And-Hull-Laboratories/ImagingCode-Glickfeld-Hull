@@ -49,7 +49,7 @@ nframes = input.counterValues{end}(end);
 wheel_speed = nan(1,nframes);
 for iframe = 1:nframes-1
     fr_time_start = counterTimes(find(counterValues==iframe,1,'last'));
-    fr_time_end = counterTimes(find(counterValues==iframe+1));
+    fr_time_end = counterTimes(find(counterValues==iframe+1,1,'first'));
     if isempty(fr_time_start)
         fr_time_start = fr_time_end - mean(diff(counterTimes),2);
     end

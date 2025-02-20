@@ -13,7 +13,9 @@ close all
 %dataset = 'exp_list_darklight_actual_tjw';
 dataset = 'exp_list_ket_1wk_tjw'; %experiment list to pick files from
 eval(dataset); %load dataset
-d1 = 4; %from expt list
+d1 = 12; %from expt list
+doNewD1 = 0;
+doNewD1Match = 1;
 mouse = expt(d1).mouse; %mouse
 ref_str = ['runs-' expt(d1).runs];
 img_area = expt(d1).img_loc{1};
@@ -23,8 +25,14 @@ img_folder = expt(d1).runs; %img folder of day 1
 time = expt(d1).time_mat;
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' ref_str];
-% fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P', datemouse, datemouserun); %folder to load files from
-fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\reverse_match', datemouse, datemouserun); %folder to load files from
+fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P', datemouse, datemouserun); %folder to load files from
+if doNewD1
+    fnout = fullfile(fnout, 'newD1');
+end
+if doNewD1Match
+    fnout = fullfile(fnout, 'newD1Match');
+end
+%fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\reverse_match', datemouse, datemouserun); %folder to load files from
 
 
 %%
@@ -32,6 +40,7 @@ fnout = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home
 CD = fnout; %finds current directory
 cd(CD); %sets current directory
 files = dir('*.mat');
+
  for k = 1 : length(files)
     baseFileName = files(k).name;
     fullFileName = fullfile(files(k).folder, baseFileName);

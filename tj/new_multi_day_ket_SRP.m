@@ -10,10 +10,10 @@ close all
 %%
 %find folders to load and experiment info
 
-d = [8:10 12];
+d = [2 4 6];
 newD1Match = 0;
 
-dataset = 'exp_list_ket_1wk_tjw'; %experiment list to pick files from
+dataset = 'exp_list_ket_SRP'; %experiment list to pick files from
 eval(dataset); %load dataset
 data_owner = expt(d(1)).folder;
 drug_list = {expt(d).drug};
@@ -23,7 +23,7 @@ if strcmp(data_owner,'lindsey')
 elseif strcmp(data_owner,'tj')
     fnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P'; %folder to load files from
 end
-newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\ket\'; %folder to save files to
+newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\ket_SRP\'; %folder to save files to
 % newfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\reverse_match\ket_4sess\'; %folder to save files to
 
 if ~exist(newfnout)
@@ -35,29 +35,33 @@ mouse = expt(d(1)).mouse;
 img_area = expt(d(1)).img_loc{1};
 img_layer = expt(d(1)).img_loc{2};
 for i = 1:length(d);
-    ref_str{i} = ['runs-',expt(d(i)).runs];
+    ori_str{i} = ['runs-',expt(d(i)).ori_run];
+    srp_str{i} = ['runs-',expt(d(i)).srp_run];
     date{i} = expt(d(i)).date; 
-    img_folder{i} = expt(d(i)).runs; 
     %load ori info for each day
     if newD1Match & i == 1
-        fnout_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' ref_str{i}], 'newD1');
+        fnout_ori_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' ori_str{i}], 'newD1');
+        fnout_srp_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' srp_str{i}], 'newD1');
     elseif  newD1Match & i > 1
-        fnout_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' ref_str{i}], 'newD1Match');
+        fnout_ori_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' ori_str{i}], 'newD1Match');
+        fnout_srp_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' srp_str{i}], 'newD1Match');
     else 
-        fnout_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' ref_str{i}]);
+        fnout_ori_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' ori_str{i}]);
+        fnout_srp_use = fullfile(fnout, [date{i} '_' mouse], [date{i} '_' mouse '_' srp_str{i}]);
     end
 
-    alld_ori{i} = load(fullfile(fnout_use, [date{i} '_' mouse '_' ref_str{i} '_' 'oriTuningInfo.mat']));
-    alld_fits{i} = load(fullfile(fnout_use, [date{i} '_' mouse '_' ref_str{i} '_' 'oriTuningAndFits.mat']));
-    alld_new_pref{i} = load(fullfile(fnout_use, [date{i} '_' mouse '_' ref_str{i} '_' 'new_pref.mat']));
+    alld_ori{i} = load(fullfile(fnout_ori_use, [date{i} '_' mouse '_' ori_str{i} '_' 'oriTuningInfo.mat']));
+    alld_fits{i} = load(fullfile(fnout_ori_use, [date{i} '_' mouse '_' ori_str{i} '_' 'oriTuningAndFits.mat']));
+    alld_srp{i} = load(fullfile(fnout_srp_use, [date{i} '_' mouse '_' srp_str{i} '_' 'respData.mat']));
+    %alld_new_pref{i} = load(fullfile(fnout_use, [date{i} '_' mouse '_' ref_str{i} '_' 'new_pref.mat']));
     %k and max vals
-    alld_k_and_max{i} = load(fullfile(fnout_use, [date{i} '_' mouse '_' ref_str{i} '_' 'k_and_max_vals.mat']));
+    %alld_k_and_max{i} = load(fullfile(fnout_use, [date{i} '_' mouse '_' ref_str{i} '_' 'k_and_max_vals.mat']));
 
     if i > 1
-        alld_matches{i} = load(fullfile(fnout_use, [date{i} '_' mouse '_' ref_str{i} '_' 'multiday_alignment.mat']));
+        alld_matches{i} = load(fullfile(fnout_ori_use, [date{i} '_' mouse '_' ori_str{i} '_' 'multiday_alignment.mat']));
     end
     alld_tuned{i} = alld_ori{i}.ind_theta90;
-
+    alld_rsquare{i} = alld_fits{i}.R_square(1,:);
     legend_str{i} = ['Session ' num2str(i)];
 end
 
@@ -68,103 +72,155 @@ for i = 1:length(d)-1
             if i == 1
                 d_match{ii} =  find([alld_matches{ii}.cellImageAlign.pass]);
             end
-            tuned_comp{i,ii} = intersect(alld_tuned{i}, alld_tuned{ii});
-            match_comp{i,ii} =  intersect(tuned_comp{ii},d_match{ii});
+            tuned_comp{i,ii} = intersect(intersect(alld_tuned{i},find(alld_rsquare{i}>0)), intersect(alld_tuned{ii},find(alld_rsquare{ii}>0)));
+            match_comp{i,ii} =  intersect(tuned_comp{i,ii},d_match{ii});
         end
     end
 end
 
-temp_tuned = [];
-for ii = 1:length(d)
-    temp_tuned = [temp_tuned alld_tuned{i}];
-end
-%tuned on at least one day
-tuned_all = unique(temp_tuned);
-
-if length(d)>2
-    temp_match = [];
-    for ii = 2:length(d)-1
-        temp_match = intersect(d_match{ii+1},d_match{ii});
-    end
-else
-    temp_match = d_match{2};
-end
-match_all = intersect(temp_match,tuned_all);
+% temp_tuned = [];
+% for ii = 1:length(d)
+%     temp_tuned = [temp_tuned alld_tuned{ii}];
+% end
+% %tuned on at least one day
+% tuned_all = unique(temp_tuned);
+% 
+% if length(d)>2
+%     temp_match = [];
+%     for ii = 2:length(d)-1
+%         temp_match = intersect(d_match{ii+1},d_match{ii});
+%     end
+% else
+%     temp_match = d_match{2};
+% end
+% match_all = intersect(temp_match,tuned_all);
 for i = 1:length(d)
-    alld_k{i} = alld_k_and_max{i}.k1(match_all);
-    alld_max{i} = alld_k_and_max{i}.max_dfof(match_all);
+    %alld_k{i} = alld_k_and_max{i}.k1(match_all);
+    [alld_ori_max{i} alld_ori_maxind{i}] = max(alld_fits{i}.avgResponseEaOri,[],2);
+    alld_srp_max{i} = nanmean(alld_srp{i}.data_resp,2);
 end
 
 
 %%
 %Tuning width
-fig = figure;
-sgtitle('Tuning Width (k) by Session-')
-subplot(2,1,1)
-for i = 1:length(d)
-    cdfplot(alld_k{i});
-    hold on    
-end
-legend(legend_str, 'Location', 'southeast')
-xlabel(['Tuning Width (k)'])
-ylabel(['% of cells'])
-title([])
-hold off
-subplot(2,1,2)
-for i = 2
-    temp = (alld_k{1}-alld_k{i})./(alld_k{1}+alld_k{i});
-    histogram(temp,[-1:.1:1])
-    hold on
-end
-xlim([-1 1])
-xlabel('D1-DN/D1+DN')
-ylabel('Number of cells')
-print(fullfile(newfnout, [mouse,  '_k_by_sess.pdf']), '-dpdf', '-bestfit')
+% fig = figure;
+% sgtitle('Tuning Width (k) by Session-')
+% subplot(2,1,1)
+% for i = 1:length(d)
+%     cdfplot(alld_k{i});
+%     hold on    
+% end
+% legend(legend_str, 'Location', 'southeast')
+% xlabel(['Tuning Width (k)'])
+% ylabel(['% of cells'])
+% title([])
+% hold off
+% subplot(2,1,2)
+% for i = 2
+%     temp = (alld_k{1}-alld_k{i})./(alld_k{1}+alld_k{i});
+%     histogram(temp,[-1:.1:1])
+%     hold on
+% end
+% xlim([-1 1])
+% xlabel('D1-DN/D1+DN')
+% ylabel('Number of cells')
+% print(fullfile(newfnout, [mouse,  '_k_by_sess.pdf']), '-dpdf', '-bestfit')
 
 %Max dF/F
 fig = figure;
-subplot(2,1,1)
-sgtitle('Max df/f by Session')
-for i = 1:length(d)
-    cdfplot(alld_max{i});
+sgtitle('Max df/f by Session - All Ori')
+n = length(d)-1;
+for i = 1:length(d)-1
+    subplot(2,length(d)-1,i)
+    cdfplot(alld_ori_max{1}(d_match{i+1},:));
     hold on    
-end
-legend(legend_str, 'Location', 'southeast')
-xlabel(['Max df/f'])
-ylabel(['% of cells'])
-title([])
-hold off
-subplot(2,1,2)
-for i = 2
-    temp = (alld_max{1}-alld_max{i})./(alld_max{1}+alld_max{i});
+    cdfplot(alld_ori_max{i+1}(d_match{i+1},:));
+    legend(legend_str{[1 i+1]}, 'Location', 'southeast')
+    xlabel(['Max df/f'])
+    ylabel(['% of cells'])
+    title([])
+    hold off
+    subplot(2,length(d)-1,i+n)
+    temp = (alld_ori_max{1}(d_match{i+1},:)-alld_ori_max{i+1}(d_match{i+1},:))./(alld_ori_max{1}(d_match{i+1},:)+alld_ori_max{i+1}(d_match{i+1},:));
     histogram(temp,[-1:.1:1])
     hold on
+    xlim([-1 1])
+    xlabel('D1-DN/D1+DN')
+    ylabel('Number of cells')
 end
-xlim([-1 1])
-xlabel('D1-DN/D1+DN')
-ylabel('Number of cells')
-print(fullfile(newfnout, [mouse,  '_max_by_sess.pdf']), '-dpdf', '-bestfit')
-
-%within session pref ori change
-for i = 1:length(d)
-    alld_within_prefori{i,1} = changeprefto90TJ(alld_new_pref{i}.prefOri_1);
-    alld_within_prefori{i,2} = changeprefto90TJ(alld_new_pref{i}.prefOri_2);
-    alld_score_prefori_within{i} = abs(alld_within_prefori{i,1}(alld_tuned{i})-alld_within_prefori{i,2}(alld_tuned{i}));
-end
+print(fullfile(newfnout, [mouse,  '_allOri_max_by_sess.pdf']), '-dpdf', '-bestfit')
 
 fig = figure;
-sgtitle('Pref Ori Changes within Session')
-for i = 1:length(d)
-    cdfplot(alld_score_prefori_within{i});
+sgtitle('Max df/f by Session - SRP')
+n = length(d)-1;
+for i = 1:length(d)-1
+    subplot(2,length(d)-1,i)
+    cdfplot(alld_srp_max{1}(d_match{i+1},:));
     hold on    
+    cdfplot(alld_srp_max{i+1}(d_match{i+1},:));
+    legend(legend_str{[1 i+1]}, 'Location', 'southeast')
+    xlabel(['Max df/f'])
+    ylabel(['% of cells'])
+    title([])
+    hold off
+    subplot(2,length(d)-1,i+n)
+    temp = (alld_srp_max{1}(d_match{i+1},:)-alld_srp_max{i+1}(d_match{i+1},:))./(alld_srp_max{1}(d_match{i+1},:)+alld_srp_max{i+1}(d_match{i+1},:));
+    histogram(temp,[-1:.1:1])
+    hold on
+    xlim([-1 1])
+    xlabel('D1-DN/D1+DN')
+    ylabel('Number of cells')
 end
-legend(legend_str, 'Location', 'southeast')
-xlim([0 90])
-xlabel(['Change in Pref Ori w/i Session'])
-ylabel(['% of cells'])
-title([])
-hold off
-print(fullfile(newfnout, [mouse,  '_prefori_change_within_sess.pdf']), '-dpdf', '-bestfit')
+print(fullfile(newfnout, [mouse,  '_SRP_max_by_sess.pdf']), '-dpdf', '-bestfit')
+
+
+%within session pref ori change
+% for i = 1:length(d)
+%     alld_within_prefori{i,1} = changeprefto90TJ(alld_new_pref{i}.prefOri_1);
+%     alld_within_prefori{i,2} = changeprefto90TJ(alld_new_pref{i}.prefOri_2);
+%     alld_score_prefori_within{i} = abs(alld_within_prefori{i,1}(alld_tuned{i})-alld_within_prefori{i,2}(alld_tuned{i}));
+% end
+% 
+% fig = figure;
+% sgtitle('Pref Ori Changes within Session')
+% for i = 1:length(d)
+%     cdfplot(alld_score_prefori_within{i});
+%     hold on    
+% end
+% legend(legend_str, 'Location', 'southeast')
+% xlim([0 90])
+% xlabel(['Change in Pref Ori w/i Session'])
+% ylabel(['% of cells'])
+% title([])
+% hold off
+% print(fullfile(newfnout, [mouse,  '_prefori_change_within_sess.pdf']), '-dpdf', '-bestfit')
+
+%pref ori values 
+
+fig = figure;
+sgtitle('Pref Ori')
+n = length(d)-1;
+for i = 1:length(d)-1
+    subplot(2,length(d)-1,i)
+    cdfplot(alld_ori{1}.prefOri(1,match_comp{1,i+1}));
+    hold on    
+    cdfplot(alld_ori{i+1}.prefOri(1,match_comp{1,i+1}));
+    legend(legend_str{[1 i+1]}, 'Location', 'southeast')
+    xlabel(['Pref Ori'])
+    ylabel(['% of cells'])
+    title([])
+    hold off
+    subplot(2,length(d)-1,i+n)
+    histogram(alld_ori{1}.prefOri(1,match_comp{1,i+1}),[0:15:180]);
+    hold on
+    histogram(alld_ori{i+1}.prefOri(1,match_comp{1,i+1}),[0:15:180]);
+    xlim([0 180])
+    legend(legend_str{[1 i+1]}, 'Location', 'southeast')
+    xlabel(['Pref Ori'])
+    ylabel(['# of cells'])
+    title([])
+end
+print(fullfile(newfnout, [mouse,  '_prefori_dist_bySession.pdf']), '-dpdf', '-bestfit')
 
 %pref ori changes
 for i = 1:length(d)
@@ -213,20 +269,20 @@ title([])
 hold off
 print(fullfile(newfnout, [mouse,  '_prefori_change_fromd1.pdf']), '-dpdf', '-bestfit')
 
-fig = figure;
-sgtitle('Pref Ori Changes All Sessions')
-for i = 1:nDiff
-    cdfplot(sessDiff_comp_prefori{i});
-    hold on    
-end
-xlim([0 90])
-legend(sessDiff_comp_legend, 'Location', 'southeast')
-xlabel(['Change in Pref Ori'])
-ylabel(['% of cells'])
-title([])
-hold off
-print(fullfile(newfnout, [mouse,  '_prefori_change_all.pdf']), '-dpdf', '-bestfit')
-save(fullfile(newfnout, [mouse '_matchedData.mat']),'alld_k','alld_max','d1_comp_prefori','alld_score_prefori_within','drug_list')
+% fig = figure;
+% sgtitle('Pref Ori Changes All Sessions')
+% for i = 1:nDiff
+%     cdfplot(sessDiff_comp_prefori{i});
+%     hold on    
+% end
+% xlim([0 90])
+% legend(sessDiff_comp_legend, 'Location', 'southeast')
+% xlabel(['Change in Pref Ori'])
+% ylabel(['% of cells'])
+% title([])
+% hold off
+% print(fullfile(newfnout, [mouse,  '_prefori_change_all.pdf']), '-dpdf', '-bestfit')
+% save(fullfile(newfnout, [mouse '_matchedData.mat']),'alld_k','alld_max','d1_comp_prefori','alld_score_prefori_within','drug_list')
 
 %% fraction matched/unmatched
 for i = 2:length(d)

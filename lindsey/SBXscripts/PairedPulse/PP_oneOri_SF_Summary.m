@@ -8,9 +8,9 @@ ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
 
-area = 'V1_GC6s';
+area = 'V1_GC6s_WT';
 
-expt_use = 4:6;
+expt_use = 26;
 totCells = 0;
 norm_sf = [];
 norm_prefsf = [];
@@ -28,7 +28,11 @@ for iexp = expt_use
         
         fprintf([mouse ' ' date '\n'])
         
-        load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
+        if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
+        else
+            fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat'])
+        end
         load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
     
         norm_sf_temp =  [reshape(norm_dfof_stim_nan, [nCells.*nSF 1]) reshape(repmat(sfs,[nCells 1]), [nCells.*nSF 1])];
