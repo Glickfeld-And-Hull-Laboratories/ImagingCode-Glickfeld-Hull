@@ -1,15 +1,16 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_atropine_Celine'; %dataset info
+%ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_expt_info';
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =77;
-experimentFolder = 'SST_atropine';
+day_id =63;
+experimentFolder = 'VIP_YM90K';
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
@@ -247,6 +248,7 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
     else
         data_rr = squeeze(data_temp(1,:,:,:));
     end
+
     clear data_temp
 
     if exist('redChImg')
