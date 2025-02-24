@@ -1,7 +1,7 @@
 clear all; clear global; 
 close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'VIP_atropine';
+experimentFolder = 'VIP_YM90K';
 
 mouse = expt(day_id).mouse;
 
@@ -372,17 +372,24 @@ for id = 1:nd
 
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
+
+
     for iCell = 1:nCells
-        [max_val, pref_dir(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),3)),2));
-        %averaging over contrast, then averaging over size, then finding
-        %the max direction
-        %[max_val, pref_dir(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],3),[],4));
-          %the indexing seems weird here, but its becuase we first find the
-          %maximum value for each direction by taking the max across
-          %contrasts, then we fine the maximum of those max's. So we use
-          %the contrast index to eventually get max direction and vice
-          %versa.
-%          [max_val_con, pref_con(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],4),[],2)); 
+        if nDir == 1
+            pref_dir(1,iCell)=1; %if there is only one direction, we don't need to find the preferred direction.
+            
+        else
+            [max_val, pref_dir(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),3)),2));
+            %averaging over contrast, then averaging over size, then finding
+            %the max direction
+            %[max_val, pref_dir(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],3),[],4));
+              %the indexing seems weird here, but its becuase we first find the
+              %maximum value for each direction by taking the max across
+              %contrasts, then we fine the maximum of those max's. So we use
+              %the contrast index to eventually get max direction and vice
+              %versa.
+    %          [max_val_con, pref_con(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],4),[],2)); 
+        end
         [max_val_con, pref_con(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),2)),2));
 
           %I should change this to find preferred size at pref dir
