@@ -12,8 +12,12 @@ function [times vals] = plotCounterIntervals(input);
     figure
     subplot(3,1,1)
     plot(diff(vals(ind:end)))
+    ylabel('Frame count diff')
     subplot(3,1,2)
     plot(diff(times(ind:end)))
+    ylabel('Frame interval diff (us)')
+    ylim([0 inf])
     subplot(3,1,3)
     plot(ncount)
+    ylabel('Frame count per trial')
 end
