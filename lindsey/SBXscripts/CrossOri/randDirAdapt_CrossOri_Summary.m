@@ -20,15 +20,16 @@ for iexp  = 1:nexp
     ImgFolder = expt(iexp).coFolder;
     nrun = length(ImgFolder);
     run_str = catRunName(cell2mat(ImgFolder), nrun);
+    saveLoc = expt(iexp).saveLoc;
     
-    LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
+    base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\';
     
     fprintf([mouse ' ' date '\n'])
     
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
-    load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+    load(fullfile(base, saveLoc, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
+    load(fullfile(base, saveLoc, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+    load(fullfile(base, saveLoc, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+    load(fullfile(base, saveLoc, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
     
     maskDiff_all = celleqel2mat_padded(input.tMaskTwoGratingDirectionDeg) - celleqel2mat_padded(input.tStimTwoGratingDirectionDeg);
     maskDiffs = unique(maskDiff_all);
@@ -69,7 +70,7 @@ for iexp  = 1:nexp
     Zc_all = [Zc_all Zc];
         
     avg_resp_dir_shift = avg_resp_dir;
-    avg_resp_dir_shift(:,:,2,:,:) = circshift(avg_resp_dir_shift(:,:,2,:,:),3,2);
+    avg_resp_dir_shift(:,:,2,:,:) = circshift(avg_resp_dir_shift(:,:,2,:,:),(maskDiffs/2)./int,2);
     avg_resp_dir_shift_all = cat(1, avg_resp_dir_shift_all, avg_resp_dir_shift);
 
     maxDir_all = [maxDir_all; maxDir];
@@ -106,7 +107,7 @@ end
 start = start+2;
 end
 
-print(fullfile(LG_base, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_polarByPref.pdf'),'-dpdf','-bestfit')
+print(fullfile(base,saveLoc, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_polarByPref.pdf'),'-dpdf','-bestfit')
 
 
 ind = [3 11];
@@ -146,7 +147,7 @@ for i = 1:length(ind_orth_Zp)
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift_all(ind_orth_Zp(i),:,1,2,1),1) mean(avg_resp_dir_shift_all(ind_orth_Zp(i),1,1,2,1),1)])
 end
 suptitle('Zp cells - Gratings')
-print(fullfile(LG_base, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_exZpGratings.pdf'),'-dpdf','-bestfit')
+print(fullfile(base, saveLoc,'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_exZpGratings.pdf'),'-dpdf','-bestfit')
 figure;
 for i = 1:length(ind_orth_Zp)
     subplot(n,n2,i)
@@ -155,7 +156,7 @@ for i = 1:length(ind_orth_Zp)
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift_all(ind_orth_Zp(i),:,2,2,1),1) mean(avg_resp_dir_shift_all(ind_orth_Zp(i),1,2,2,1),1)])
 end
 suptitle('Zp cells - Plaids')
-print(fullfile(LG_base, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_exZpPlaids.pdf'),'-dpdf','-bestfit')
+print(fullfile(base, saveLoc,'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_exZpPlaids.pdf'),'-dpdf','-bestfit')
 
 avg_resp_dir_align_all = avg_resp_dir_shift_all;
 totCells = size(avg_resp_dir_align_all,1);
@@ -216,7 +217,7 @@ xlabel('Zp- control')
 ylabel('Zp- adapt')
 title(['p = ' num2str(chop(p,2))])
 suptitle(['Pref: 60 & 300- n = ' num2str(length(ind_use))])
-print(fullfile(LG_base, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_ZcZpEffects.pdf'),'-dpdf','-bestfit')
+print(fullfile(base, saveLoc, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_ZcZpEffects.pdf'),'-dpdf','-bestfit')
 
 ind_use = intersect(resp_ind_dir_use, orth_ind);
 figure;
@@ -259,7 +260,7 @@ xlabel('Zp- control')
 ylabel('Zp- adapt')
 title(['p = ' num2str(chop(p,2))])
 suptitle(['Pref: 60, 90 120, 240, 270, 300- n = ' num2str(length(ind_use))])
-print(fullfile(LG_base, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_ZcZpEffects_allOrth.pdf'),'-dpdf','-bestfit')
+print(fullfile(base, saveLoc, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_ZcZpEffects_allOrth.pdf'),'-dpdf','-bestfit')
 
 
 figure;
@@ -300,7 +301,7 @@ hold on
 polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,2,1),1)])
 title(num2str(length(ind_use)))
 suptitle({'Left: 0, 30, 150, 180, 210, 330; Right: 60, 90, 120, 240, 270, 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
-print(fullfile(LG_base, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_adaptVortho.pdf'),'-dpdf','-bestfit')
+print(fullfile(base, saveLoc, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_adaptVortho.pdf'),'-dpdf','-bestfit')
 
 figure;
 subplot(3,2,1)
@@ -340,4 +341,4 @@ hold on
 polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,2,1),1)])
 title(num2str(length(ind_use)))
 suptitle({'Left: 0 & 180; Right: 60 & 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
-print(fullfile(LG_base, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_0v60.pdf'),'-dpdf','-bestfit')
+print(fullfile(base, saveLoc, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_0v60.pdf'),'-dpdf','-bestfit')
