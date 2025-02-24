@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '250220';
+date = '250223';
 ImgFolder = {'002'};
-time = strvcat('1248');
-mouse = 'i1413';
+time = strvcat('1116');
+mouse = 'i1412';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -97,44 +97,19 @@ data_one_dfof = (data_one-data_f)./data_f;
 clear data_one
 
 
-ori_targ_mat = celleqel2mat_padded(input.tTargetOneGratingDirectionDeg);
-oris = unique(ori_targ_mat);
-nOri = length(oris);
-az_targ_mat = celleqel2mat_padded(input.tTargetOneGratingAzimuthDeg);
-azs = unique(az_targ_mat);
-nAz = length(azs);
-data_dfof_target = zeros(sz(1),sz(2),nOri*nAz);
+stim_mat = celleqel2mat_padded(input.tstimOne);
+stims = unique(stim_mat);
+nStim = length(stims);
+data_dfof_stim = zeros(sz(1),sz(2),nStim);
 figure;
 start = 1;
-for it = 1:nOri
-    ind = find(ori_targ_mat == oris(it));
-    for i = 1:nAz
-        ind_use{start} = intersect(ind, find(az_targ_mat == azs(i)));    
-        data_dfof_target(:,:,start) = nanmean(data_one_dfof(:,:,ind_use{start}),3);
-        subplot(3,3,start)
-        imagesc(data_dfof_target(:,:,start))
-        title(['Targ- ori: ' num2str(oris(it)) '; pos ' num2str(azs(i))])
-        start = 1+start;
-    end
+for is = 1:nStim
+    ind = find(stim_mat == stims(is));
+    data_dfof_stim(:,:,start) = nanmean(data_one_dfof(:,:,ind),3);
+    subplot(3,3,start)
+    imagesc(data_dfof_stim(:,:,start))
+    start = 1+start;
 end
-
-ori_dist_mat = celleqel2mat_padded(input.tDistractOneGratingDirectionDeg);
-data_dfof_dist = zeros(sz(1),sz(2),nOri*nAz);
-restart = 1;
-for it = 1:nOri
-    ind = find(ori_dist_mat == oris(it));
-    for i = nAz:-1:1
-        ind_use{restart} = intersect(ind, find(az_targ_mat == azs(i)));   
-        data_dfof_dist(:,:,restart) = nanmean(data_one_dfof(:,:,ind_use{restart}),3);
-        subplot(3,3,start)
-        imagesc(data_dfof_dist(:,:,restart))
-        title(['Dist- ori: ' num2str(oris(it)) '; pos ' num2str(azs(i))])
-        start = 1+start;
-        restart = 1+restart;
-    end
-end
-
-data_dfof_stim = cat(3,data_dfof_target,data_dfof_dist);
 
 ind = 1:nTrials;
 data_dfof_stim = cat(3,data_dfof_stim,nanmean(data_one_dfof(:,:,ind),3));
@@ -218,7 +193,7 @@ tc_two_f = mean(tc_two(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-base_win = 21:23;
+base_win = 20:22;
 resp_win = 25:27;
 figure;
 subplot(2,1,1)
@@ -232,30 +207,18 @@ resp_mat = zeros(nCells,nTrials,2);
 resp_mat(:,:,1) = squeeze(mean(tc_one_dfof(resp_win,:,:),1)-mean(tc_one_dfof(base_win,:,:),1));
 resp_mat(:,:,2) = squeeze(mean(tc_two_dfof(resp_win,:,:),1)-mean(tc_two_dfof(base_win,:,:),1));
 
-h1_ori = zeros(nCells,2,nOri,nAz,2);
-h2_ori = zeros(nCells,2,nOri,nAz,2);
-p1_ori = zeros(nCells,2,nOri,nAz,2);
-p2_ori = zeros(nCells,2,nOri,nAz,2);
-resp_stim = zeros(nCells,2,nOri,nAz,2);
-%cells stim1/stim2 ori az targ/dist 
+h1_ori = zeros(nCells,2,nStim);
+h2_ori = zeros(nCells,2,nStim);
+p1_ori = zeros(nCells,2,nStim);
+p2_ori = zeros(nCells,2,nStim);
+resp_stim = zeros(nCells,2,nStim);
+%cells stim1/stim2 img 
 
-for iOri = 1:nOri
-    ind = find(ori_targ_mat == oris(iOri));
-    for iAz = 1:nAz
-        ind_use = intersect(ind,find(az_targ_mat == azs(iAz)));
-        [h1_ori(:,1,iOri,iAz,1) p1_ori(:,1,iOri,iAz,1)] = ttest(squeeze(mean(tc_one_dfof(resp_win,:,ind_use),1)),squeeze(mean(tc_one_dfof(base_win,:,ind_use),1)),'tail','right','dim',2,'alpha',0.05./(nAz*nOri));
-        [h2_ori(:,2,iOri,iAz,1) p2_ori(:,2,iOri,iAz,1)] = ttest(squeeze(mean(tc_two_dfof(resp_win,:,ind_use),1)),squeeze(mean(tc_two_dfof(base_win,:,ind_use),1)),'tail','right','dim',2,'alpha',0.05./(nAz*nOri));
-        resp_stim(:,:,iOri,iAz,1) = squeeze(mean(resp_mat(:,ind_use,:),2,'omitnan'));
-    end
-end
-for iOri = 1:nOri
-        ind = find(ori_dist_mat == oris(iOri));
-    for iAz = 1:nAz
-        ind_use = intersect(ind,find(az_targ_mat == azs(iAz)));
-        [h1_ori(:,1,iOri,iAz,2) p1_ori(:,1,iOri,iAz,2)] = ttest(squeeze(mean(tc_one_dfof(resp_win,:,ind_use),1)),squeeze(mean(tc_one_dfof(base_win,:,ind_use),1)),'tail','right','dim',2,'alpha',0.05./(nAz*nOri));
-        [h2_ori(:,2,iOri,iAz,2) p2_ori(:,2,iOri,iAz,2)] = ttest(squeeze(mean(tc_two_dfof(resp_win,:,ind_use),1)),squeeze(mean(tc_two_dfof(base_win,:,ind_use),1)),'tail','right','dim',2,'alpha',0.05./(nAz*nOri));
-        resp_stim(:,:,iOri,iAz,2) = squeeze(mean(resp_mat(:,ind_use,:),2,'omitnan'));
-    end
+for is = 1:nStim
+    ind = find(stim_mat == stims(is));
+    [h1_ori(:,1,is) p1_ori(:,1,is)] = ttest(squeeze(mean(tc_one_dfof(resp_win,:,ind),1)),squeeze(mean(tc_one_dfof(base_win,:,ind),1)),'tail','right','dim',2,'alpha',0.05./(nStim));
+    [h2_ori(:,2,is) p2_ori(:,2,is)] = ttest(squeeze(mean(tc_two_dfof(resp_win,:,ind),1)),squeeze(mean(tc_two_dfof(base_win,:,ind),1)),'tail','right','dim',2,'alpha',0.05./(nStim));
+    resp_stim(:,:,is) = squeeze(mean(resp_mat(:,ind,:),2,'omitnan'));
 end
    
 [h1 p1] = ttest(squeeze(mean(tc_one_dfof(resp_win,:,:),1)),squeeze(mean(tc_one_dfof(base_win,:,:),1)),'tail','right','dim',2);
@@ -265,11 +228,11 @@ good_ind = unique([find(h1); find(sum(sum(sum(h1_ori,3),4),5))]);
 
 
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','cStimTwo', 'ori_targ_mat', 'ori_dist_mat', 'oris', 'nOri', 'az_targ_mat', 'azs','nAz','good_ind', 'base_win', 'resp_win', 'h1','h1_ori');
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','cStimTwo', 'stim_mat', 'stims', 'nStim','good_ind', 'base_win', 'resp_win', 'h1','h1_ori');
         
 %% if do second run for tuning
 ImgFolder = {'003'};
-time = strvcat('1445');
+time = strvcat('1309');
 singleStim = 0;
 ref_str = run_str;
 run_str = catRunName(ImgFolder, nrun);
@@ -316,38 +279,22 @@ end
 data_one_dfof = (data_one-data_f)./data_f;
 clear data_one
 
-
-ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
-oris = unique(ori_mat);
-nOri = length(oris);
-sf_mat = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
-sfs = unique(sf_mat);
-nSF = length(sfs);
-az_mat = celleqel2mat_padded(input.tStimOneGratingAzimuthDeg);
-azs = unique(az_mat);
-nAz = length(azs);
+stim_mat = celleqel2mat_padded(input.tstimOne);
+stims = unique(stim_mat);
+nStim = length(stims);
 
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_mask_cell.mat']))
-data_dfof_avg = zeros(sz(1),sz(2),nOri*nSF*nAz);
-n = nOri*nSF*nAz;
-[n1 n2] = subplotn(n);
+data_dfof_stim = zeros(sz(1),sz(2),nStim);
+[n1 n2] = subplotn(nStim);
 figure;
 start = 1;
-for it = 1:nOri
-    ind_ori = find(ori_mat == oris(it));
-    for is = 1:nSF
-        ind_sf = find(sf_mat == sfs(is));
-        for i = 1:nAz
-            ind_az = find(az_targ_mat == azs(i));
-            ind_use = intersect(ind_ori, intersect(ind_sf,ind_az));    
-            data_dfof_avg(:,:,start) = nanmean(data_one_dfof(:,:,ind_use),3);
-            shade_img = imShade(data_dfof_avg(:,:,start), mask_cell);
-            subplot(n1,n2,start)
-            imagesc(shade_img)
-            title(['ori: ' num2str(oris(it)) '; sf- ' num2str(sfs(is)) '; pos ' num2str(azs(i))])
-            start = 1+start;
-        end
-    end
+for is = 1:nStim
+    ind = find(stim_mat == stims(is));
+    data_dfof_stim(:,:,start) = nanmean(data_one_dfof(:,:,ind),3);
+    shade_img = imShade(data_dfof_stim(:,:,start), mask_cell);
+    subplot(n1,n2,start)
+    imagesc(shade_img)
+    start = 1+start;
 end
 
 % neuropil subtraction
@@ -398,7 +345,7 @@ tc_one_f = mean(tc_one(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-resp_win = 26:28;
+%resp_win = 26:28;
 figure;
 shadedErrorBar(1:100,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
 vline([base_win resp_win])
@@ -408,4 +355,4 @@ resp_mat(:,:,1) = squeeze(mean(tc_one_dfof(resp_win,:,:),1)-mean(tc_one_dfof(bas
 resp_mat(:,:,2) = squeeze(mean(tc_two_dfof(resp_win,:,:),1)-mean(tc_two_dfof(base_win,:,:),1));
 ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','ori_mat', 'oris', 'nOri', 'sf_mat', 'sfs', 'nSF', 'az_mat','azs','nAz',        'base_win', 'resp_win');
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','stim_mat', 'stims', 'nStim', 'base_win', 'resp_win');

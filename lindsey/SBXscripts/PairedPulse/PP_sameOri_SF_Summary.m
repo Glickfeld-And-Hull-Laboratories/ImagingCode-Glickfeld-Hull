@@ -8,7 +8,7 @@ ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
 
-area = 'LM';
+area = 'V1';
 area_ind = find(strcmp([expt.img_loc], area));
 randDir = 1;
 nDir = 6;
