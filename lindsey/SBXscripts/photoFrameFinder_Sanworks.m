@@ -3,7 +3,10 @@ function [stimOnFrames stimOffFrames] = photoFrameFinder_Sanworks(events);
 %events is info.frame from scanbox .mat file
     %fix discontinuity
     if find(diff(events)<0)
-        events(find(diff(events)<0)+1:end) = events(find(diff(events)<0)+1:end)+2^16;
+        ind = find(diff(events)<0);
+        for i = 1:length(ind)
+            events(ind(i)+1:end) = events(ind(i)+1:end)+2^16;
+        end
     end
         %remove any 0s from frame list
     if find(events == 0)
