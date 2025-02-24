@@ -80,7 +80,7 @@ data_align_f = mean(data_align_p(:,:,:,1:delay),4);
 data_align_dfof = (data_align_p-data_align_f)./data_align_f;
 data_align_dfof_avg = squeeze(nanmean(data_align_dfof,3));
 data_align_avg = squeeze(nanmean(data_align_p,3));
-writetiff(data_align_avg,fullfile(fnout, datemouse, datemouserun, [datemouserun '_avgMovie.tif'])) %edit
+%writetiff(data_align_avg,fullfile(fnout, datemouse, datemouserun, [datemouserun '_avgMovie.tif'])) %edit
 data_align_dfof_down = stackGroupProject(data_align_dfof_avg,frame_rate);
 n = (delay*2)./frame_rate;
 figure;
@@ -112,22 +112,16 @@ title([mouse ' ' date])
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_runAlignFOV_filtered.pdf']), '-dpdf') %edit
 %save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_stimActFOV.mat']),'data_dfof_avg_all','ind_use') %edit
 
-thresh = 0.08;
-mask_data = data_dfof_avg_all>thresh;
-mask_data(1:10,:) = 0;
-mask_data(:,1:10) = 0;
-mask_data(sz(1)-9:sz(1),:) = 0;
-mask_data(:,sz(2)-9:sz(2)) = 0;
-figure; imagesc(mask_data)
-mask_cell = bwlabel(mask_data);
-figure; imagesc(mask_cell)
+roi = impoly;
+mask = createMask(roi);
+figure; imagesc(mask)
 print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_masks.pdf']), '-dpdf')
 
 %save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'mask_data', 'mask_cell', 'thresh')
 clear data_align data_align_p data_align_f data_align_dfof data_align_dfof_avg data_align_dfof_down
 
 %% Extract cell timecourses
-data_tc = stackGetTimeCourses(data, mask_cell); %applies mask to stack (averages all pixels in each frame for each cell) to get timecourses
+data_tc = stackGetTimeCourses(data, mask); %applies mask to stack (averages all pixels in each frame for each cell) to get timecourses
             %Timecourses are nFrames x nCells
 fprintf(['data_tc is ' num2str(size(data_tc))]) 
 [nFrames, nCells] = size(data_tc);
@@ -150,11 +144,8 @@ resp_win = delay+1:delay+frame_rate;
 data_f = mean(data_align(base_win,:,:),1);
 data_dfof = bsxfun(@rdivide,bsxfun(@minus,data_align,data_f),data_f);
 
-[h p] = ttest(nanmean(data_dfof(resp_win,:,:),1),nanmean(data_dfof(base_win,:,:),1),'Dim',3,'tail','right');
-resp_ind = find(h);
-
 tt_ms = tt.*(1000./frame_rate);
-figure; plot(tt_ms,nanmean(nanmean(data_dfof(:,resp_ind,:),2),3))
+figure; plot(tt_ms,nanmean(nanmean(data_dfof(:,:,:),2),3))
 xlabel('Time from running onset')
 ylabel('dF/F')
 title([mouse ' ' date])
