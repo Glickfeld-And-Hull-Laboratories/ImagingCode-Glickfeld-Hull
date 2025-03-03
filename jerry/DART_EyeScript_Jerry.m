@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);
 
-experimentFolder = 'VIP_atropine';
+experimentFolder = 'VIP_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;

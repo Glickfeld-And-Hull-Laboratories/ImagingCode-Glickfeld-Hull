@@ -11,7 +11,7 @@ ExperimentFolder = 'VIP_atropine';
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 60;
+day_id = 61;
 %% load data for day
 
 mouse = expt(day_id).mouse;

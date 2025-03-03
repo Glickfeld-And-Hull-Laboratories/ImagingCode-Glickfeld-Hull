@@ -123,7 +123,7 @@ for id = 1:nd
     tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
     tSize_match{id} = celleqel2mat_padded(input(id).tGratingDiameterDeg(1:nTrials(id)));
 end
-oris = unique(tOri_match{1});
+oris = unique(tOri_match{1}); 
 dirs = unique(tDir_match{1});
 cons = unique(tCon_match{1});
 sizes = unique(tSize_match{1});

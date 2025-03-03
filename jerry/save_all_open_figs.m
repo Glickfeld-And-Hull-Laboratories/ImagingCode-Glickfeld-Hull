@@ -11,6 +11,7 @@ this_fig = get(figHandles,'Name');
 for i = 1:numel(figHandles)
     t = this_fig{i,1};
     saveas(figHandles(i),fullfile(path,[t '.pdf']));
+    saveas(figHandles(i),fullfile(path,[t '.fig']));
 end
 
 status = "Figures saved!";

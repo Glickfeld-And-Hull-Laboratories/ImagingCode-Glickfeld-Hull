@@ -1,17 +1,17 @@
 
 close all
 
-date = '250218';
-mouse = 'i2191';
-ImgFolder = '002';
-time = '1257';
-doReg = 0;
+date = '250303';
+mouse = 'i3325';
+ImgFolder = '003';
+time = '0947';
+doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
 datemouse = [date '_' mouse]
 saveRet = 1;
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'VIP_atropine';
 
 isilon_home = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\';
 analysis_root = [isilon_home 'ACh\Analysis\2p_analysis'];

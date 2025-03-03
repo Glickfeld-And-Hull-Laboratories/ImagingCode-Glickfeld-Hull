@@ -10,13 +10,15 @@ eval(ds);
 
 fnroot = fullfile(rc.achAnalysis,'PV_YM90K','summary_analyses');
 fn_epi = fullfile(fnroot,'epileptiform');
-
+cd(fn_epi);
 
 nOn = 30;
 nOff = 60;
 nTot = nOn+nOff;
 ntrials = 960;
 
+%%
+load('prepped_np_TCs.mat');
 %% PV_DART off_np_tc epileptiform quantification
 
 % off_np_tc: each row is a mouse. Each mouse cell contains a n x 2 cell array
@@ -326,45 +328,80 @@ hold off
 %% power frequency curve
 
 % extract just i3309 and i3310, the two high dose YM90K mice
-% mus = off_np_tc(2:3,:);
-mus = off_np_tc(2:4,:);
+% load('prepped_np_TCs.mat');
+% first column stores raw F TC (but only the last 30 off frames of every trial), 
+% second stores mean-subtracted (same structure as the first), third stores nan-padded (full trial
+% length), fourth is full np tc (full trial length)
+
+mus = prepped_np_TCs(2:4,:);
 nMice = size(mus,1);
 close all
-norm_dataset = cell(nMice,3);
-norm_pks = zeros(nMice,3);
+mus_rawPwr = cell(size(mus,1),2);
+mus_rawPwr(:,2) = mus(:,2);
+% norm_dataset = cell(nMice,3);
+% norm_pks = zeros(nMice,3);
 for iMouse = 1:nMice
     mouse = mus{iMouse,1};
     intact_tc = mouse(:,1);
     meanSub_tc = mouse(:,2);
+    nanpad_tc = mouse(:,3);
+    full_tc = mouse(:,4);
+    meanSub_full_tc = mouse(:,5);
     nSesh = size(mouse,1);
     curr_mus = mus{iMouse,2};
-
+    sesh_fits = cell(nSesh,1);
+    sesh_db = cell(nSesh,1);
+    sesh_f = cell(size(mouse,1),1);
     for sesh = 1:nSesh
         f1 = figure;
         [p,f] = pspectrum(meanSub_tc{sesh},15); 
         dbp = pow2db(p);
-        plot(f,pow2db(p));
-        ylim([-15 30]);
+        plot(f,p);
+        % ylim([-15 30]);
         %xlim([0 100]);
         sgtitle([curr_mus ' Session ' num2str(sesh) ' Power Spectrum'])
         xlabel('frequency (Hz)')
-        ylabel('Power (dB)')
-        f1.Name = [curr_mus '_Session' num2str(sesh) '_ps'];
+        ylabel('Power')
+        f1.Name = [curr_mus '_Session' num2str(sesh) '_ps_noLog'];
+        sesh_f{sesh} = p;
+        % full sesh PS
+        % f1 = figure;
+        % [p,f] = pspectrum(meanSub_full_tc{sesh},15); 
+        % dbp2 = pow2db(p);
+        % plot(f,dbp2);
+        % dbp_fit = smooth(dbp2,0.03,'lowess'); 
+        % hold on
+        % plot(f,dbp_fit,"LineWidth",2);
+        % hold off
+        % ylim([-15 30]);
+        % %xlim([0 100]);
+        % sgtitle([curr_mus ' Session ' num2str(sesh) ' Full Session'])
+        % xlabel('frequency (Hz)')
+        % ylabel('Power (dB)')
+        % f1.Name = [curr_mus '_Session' num2str(sesh) '_ps_full_fit'];
+        % sesh_fits{sesh} = dbp_fit;
+        % sesh_db{sesh} = f;
+        
+        % f2 = figure;
+        % spectrogram(meanSub_full_tc{sesh},900,[],[],15,'yaxis',MinThreshold=-20);
+        % clim([-20 55]);
+        % sgtitle([curr_mus ' Session ' num2str(sesh) ' Full Session Spectrogram']);
+        % f2.Name = [curr_mus '_Session' num2str(sesh) '_TimeFreq'];
 
-        this_norm_p = normalize(dbp,'range',[0 1]);
-        norm_dataset{iMouse,sesh} = this_norm_p;
-        [norm_pks(iMouse,sesh),idx_max] = max(this_norm_p(2501:end));
-        linex = f(2500+idx_max);
-
-        f2 = figure;
-        plot(f,this_norm_p);
-        hold on
-        xline(linex);
-        hold off
-        f2.Name = [curr_mus '_Session' num2str(sesh) '_normalized'];
-        xlabel('frequency (Hz)')
-        ylabel('z-score')
-        sgtitle([curr_mus ' Session ' num2str(sesh) ' Normalized PS']);
+        % this_norm_p = normalize(dbp,'range',[0 1]);
+        % norm_dataset{iMouse,sesh} = this_norm_p;
+        % [norm_pks(iMouse,sesh),idx_max] = max(this_norm_p(2501:end));
+        % linex = f(2500+idx_max);
+        % 
+        % f2 = figure;
+        % plot(f,this_norm_p);
+        % hold on
+        % xline(linex);
+        % hold off
+        % f2.Name = [curr_mus '_Session' num2str(sesh) '_normalized'];
+        % xlabel('frequency (Hz)')
+        % ylabel('z-score')
+        % sgtitle([curr_mus ' Session ' num2str(sesh) ' Normalized PS']);
         % f2 = figure;
         % plot(meanSub_tc{sesh});
         % ylim([-200 1100]);
@@ -373,30 +410,201 @@ for iMouse = 1:nMice
         % ylabel('F')
         % f2.Name = [curr_mus '_Session' num2str(sesh) '_MSNPTC'];
     end
+    mus_rawPwr{iMouse,1} = sesh_f;
+    % for sesh = 1:nSesh
+    %     if sesh == 1
+    %         continue
+    %     end
+    %     this_curve = sesh_fits{sesh} - sesh_fits{1};
+    %     this_f = sesh_db{sesh};
+    %     f3 = figure;
+    %     plot(this_f,this_curve);
+    %     ylim([-8 16]);
+    %     %xlim([0 100]);
+    %     sgtitle([curr_mus ' Session ' num2str(sesh) ' Over Baseline, Full Session'])
+    %     xlabel('frequency (Hz)')
+    %     ylabel('Power (dB)')
+    %     f3.Name = [curr_mus '_Session' num2str(sesh) '_ps_full_fit_ovb'];
+    % end
     % pause
     % disp('press any key to continue');
 end
 
-save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\summary_analyses\epileptiform\plots\power');
 
+
+% figHandles = findall(0,'Type','figure'); 
+% this_fig = get(figHandles,'Name');
+% [a,b] = subplotn(size(this_fig,1));
+% figure;
+% 
+% tile_plot = tiledlayout(a,b);
+% this_fig = flip(this_fig);
+% for i = 1:a
+%     for j = 1:b
+%        subplot() 
+%     end
+% end
+
+
+
+% save(fullfile(fn_epi,'rawPwrTCs'),'mus_rawPwr','-v7.3');
+%save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\summary_analyses\epileptiform\plots\power');
+
+%% integral
+if exist('mus_rawPwr','var') == 0
+    load(fullfile(fn_epi,"rawPwrTCs.mat"))
+end
+
+nMice = size(mus_rawPwr,1);
+
+spacing = 7.5/4096;
+idx_freq_range = spacing:spacing:7.5;
+intValues1 = nan(nMice,3);
+intValues2 = nan(nMice,3);
+intValues3 = nan(nMice,3);
+intValues4 = nan(nMice,3);
+
+for mouse = 1:nMice
+    thisMousePs = mus_rawPwr{mouse,1};
+    nSesh = length(thisMousePs);
+    for sesh = 1:nSesh
+        thisCurve = thisMousePs{sesh};
+        % integral of curve where freq >= 0.5 Hz
+        idx4int = idx_freq_range >= 0.5;
+        intValues1(mouse,sesh) = trapz(thisCurve(idx4int));
+        % integral of curve across whole freq
+        intValues2(mouse,sesh) = trapz(thisCurve);
+        % integral of curve where freq <= 0.5 Hz
+        idx4int = idx_freq_range <= 0.5;
+        intValues3(mouse,sesh) = trapz(thisCurve(idx4int));
+        % integral of curve where freq <= 1 Hz
+        idx4int = idx_freq_range <= 1;
+        intValues4(mouse,sesh) = trapz(thisCurve(idx4int));
+    end
+end
+
+% T1 = array2table(intValues1,"VariableNames",{'session 1','session 2','session 3'},"RowNames",{'i3309','i3310','i3311'});
+% fig1 = uifigure;
+% uitable(fig1,"Data",T1,"Position",[0 0 1 1],'Units', 'Normalized', 'Position',[0, 0, 1, 1]);
+% lbl1 = uilabel(fig1, 'Position',[100 100 125 250]);
+% %lbl1.Text = '$$\int_{0.5}^{7.5} f(freq)\;d freq$$';
+% lbl1.Text = "freq $\ge$ 0.5 Hz";
+% lbl1.Interpreter = "latex";
+% fig1.Name = ('Integral of Power Spectrum, freq >= 0.5 Hz');
+% 
+% T2 = array2table(intValues2,"VariableNames",{'session 1','session 2','session 3'},"RowNames",{'i3309','i3310','i3311'});
+% fig2 = uifigure;
+% uitable(fig2,"Data",T2,"Position",[0 0 1 1],'Units', 'Normalized', 'Position',[0, 0, 1, 1]);
+% lbl2 = uilabel(fig2, 'Position',[100 100 125 250]);
+% %lbl1.Text = '$$\int_{0.5}^{7.5} f(freq)\;d freq$$';
+% lbl2.Text = "All freq";
+% fig2.Name = ('Integral of Power Spectrum, All freq');
+% 
+% T3 = array2table(intValues3,"VariableNames",{'session 1','session 2','session 3'},"RowNames",{'i3309','i3310','i3311'});
+% fig3 = uifigure;
+% uitable(fig3,"Data",T3,"Position",[0 0 1 1],'Units', 'Normalized', 'Position',[0, 0, 1, 1]);
+% lbl3 = uilabel(fig3, 'Position',[100 100 125 250]);
+% %lbl1.Text = '$$\int_{0.5}^{7.5} f(freq)\;d freq$$';
+% lbl3.Text = "freq $\le$ 0.5 Hz";
+% lbl3.Interpreter = "latex";
+% fig3.Name = ('Integral of Power Spectrum, freq <= 0.5 Hz');
+% 
+% T4 = array2table(intValues3,"VariableNames",{'session 1','session 2','session 3'},"RowNames",{'i3309','i3310','i3311'});
+% fig4 = uifigure;
+% uitable(fig4,"Data",T4,"Position",[0 0 1 1],'Units', 'Normalized', 'Position',[0, 0, 1, 1]);
+% lbl4 = uilabel(fig4, 'Position',[100 100 125 250]);
+% %lbl1.Text = '$$\int_{0.5}^{7.5} f(freq)\;d freq$$';
+% lbl4.Text = 'freq $\le$ 1 Hz';
+% lbl4.Interpreter = "latex";
+% fig4.Name = ('Integral of Power Spectrum, freq <= 1 Hz');
 
 %%
-Fs = 15; % freq
-T = 1/Fs; % period length
-L = length(meanSub_tc{sesh});  % length of sample       
-t = (0:L-1)*T;  % Time vector
-y = fft(meanSub_tc{sesh});
-figure;
-plot(Fs/L*(0:L-1),abs(y));
+fig1 = figure;
+fig1.Name = 'IntPS_fGE0.5Hz_norm';
+hold on
+% for mouse = 1:nMice
+%     plot(log10(intValues1(mouse,:)),"Marker",'o',"LineWidth",1.5);
+% end
+for mouse = 1:nMice
+    plot(intValues1(mouse,:)/intValues1(mouse,1),"Marker",'o',"LineWidth",1.5);
+end
+hold off
+legend('i3309','i3310','i3311');
+sgtitle('Normalized Integral of Power Spectrum, freq $\ge$ 0.5 Hz','Interpreter', 'LaTeX')
+ylabel('Normalized Integral Value (AU)')
+xlabel('Session #')
+xticks([1 2 3])
+xticklabels({'1','2','3'})
 
-P2 = abs(y/L);
-P1 = P2(1:L/2+1);
-P1(2:end-1) = 2*P1(2:end-1);
+fig2 = figure;
+fig2.Name = 'IntPS_FR_norm';
+hold on
+% for mouse = 1:nMice
+%     plot(log10(intValues2(mouse,:)),"Marker",'o',"LineWidth",1.5);
+% end
+for mouse = 1:nMice
+    plot(intValues2(mouse,:)/intValues2(mouse,1),"Marker",'o',"LineWidth",1.5);
+end
+hold off
+legend('i3309','i3310','i3311');
+sgtitle('Normalized Integral of Power Spectrum, Full Range','Interpreter', 'LaTeX')
+ylabel('Normalized Integral Value (AU)')
+xlabel('Session #')
+xticks([1 2 3])
+xticklabels({'1','2','3'})
 
-f = Fs/L*(0:(L/2));
-figure
-plot(f,pow2db(P1.^2),'LineWidth',0.1);
-ylim([-15 25]);
+fig3 = figure;
+fig3.Name = 'IntPS_fLE0.5Hz_norm';
+hold on
+% for mouse = 1:nMice
+%     plot(log10(intValues3(mouse,:)),"Marker",'o',"LineWidth",1.5);
+% end
+for mouse = 1:nMice
+    plot(intValues3(mouse,:)/intValues3(mouse,1),"Marker",'o',"LineWidth",1.5);
+end
+hold off
+legend('i3309','i3310','i3311');
+sgtitle('Normalized Integral of Power Spectrum, freq $\le$ 0.5 Hz','Interpreter', 'LaTeX')
+ylabel('Normalized Integral Value (AU)')
+xlabel('Session #')
+xticks([1 2 3])
+xticklabels({'1','2','3'})
+
+fig4 = figure;
+fig4.Name = 'IntPS_fLE1Hz_norm';
+hold on
+% for mouse = 1:nMice
+%     plot(log10(intValues4(mouse,:)),"Marker",'o',"LineWidth",1.5);
+% end
+for mouse = 1:nMice
+    plot(intValues4(mouse,:)/intValues4(mouse,1),"Marker",'o',"LineWidth",1.5);
+end
+hold off
+legend('i3309','i3310','i3311');
+sgtitle('Normalized Integral of Power Spectrum, freq $\le$ 1 Hz','Interpreter', 'LaTeX')
+ylabel('Normalized Integral Value (AU)')
+xlabel('Session #')
+xticks([1 2 3])
+xticklabels({'1','2','3'})
+
+save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\summary_analyses\epileptiform\plots');
+%% manually calculate ps
+% Fs = 15; % freq
+% T = 1/Fs; % period length
+% L = length(meanSub_tc{sesh});  % length of sample       
+% t = (0:L-1)*T;  % Time vector
+% y = fft(meanSub_tc{sesh});
+% figure;
+% plot(Fs/L*(0:L-1),abs(y));
+% 
+% P2 = abs(y/L);
+% P1 = P2(1:L/2+1);
+% P1(2:end-1) = 2*P1(2:end-1);
+% 
+% f = Fs/L*(0:(L/2));
+% figure
+% plot(f,pow2db(P1.^2),'LineWidth',0.1);
+% ylim([-15 25]);
 
 % x = spectrogram(meanSub_tc{sesh});
 % f3 = figure;

@@ -1793,6 +1793,8 @@ expt(61).contrastxori_time = {'1304'};
 expt(61).data_loc = 'ACh';
 expt(61).wheelColor = 'orange';
 expt(61).exptType = 'VIP_YM90K';
+% note that of thr 12 red "cells" segmented, ~5 were just bright spots that
+% I segmented to get them out of the way
 %% 62 i2191 baseline
 expt(62).SubNum = 'i2191';
 expt(62).mouse = 'i2191';
