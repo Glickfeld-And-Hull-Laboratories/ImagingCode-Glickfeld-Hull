@@ -1,7 +1,7 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 experimentFolder = 'VIP_atropine';
 
@@ -9,7 +9,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [70 68];%enter all the sessions you want to concatenate4
+sess_list = [59];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -198,7 +198,7 @@ for iSess = 1:nSess
         conBySize_resp_stat_concat{id}=cat(1,conBySize_resp_stat_concat{id},conBySize_resp_stat_keep{id});
         conBySize_resp_loc_concat{id}=cat(1,conBySize_resp_loc_concat{id},conBySize_resp_loc_keep{id});
         data_resp_concat{id} = cat(1,data_resp_concat{id},data_resp_keep{id});
-        data_dfof_runOnset_concat{id}=cat(2,data_dfof_runOnset_concat{id},data_dfof_runOnset_keep{id});
+        % data_dfof_runOnset_concat{id}=cat(2,data_dfof_runOnset_concat{id},data_dfof_runOnset_keep{id});
 
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
@@ -289,12 +289,17 @@ dirMean = mean(squeeze(mean(data_resp_concat{pre}(:,:,:,:,1),3)),3);
 dirMean(find(dirMean<0))=0;
 %left with average response at each dir, averaged over size and contrast,
 %for each cell, for the baseline day only
-orthOrder=[3     4     1     2];
-for iCell = 1:nKeep_total
-    [prefResp, prefDir] = max(dirMean(iCell,:));
-    orthInd = orthOrder(prefDir);
-    orthResp = dirMean(iCell,orthInd);
-    OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
+nDir = length(dirs_concat);
+
+if nDir > 1
+
+    orthOrder=[3     4     1     2];
+    for iCell = 1:nKeep_total
+        [prefResp, prefDir] = max(dirMean(iCell,:));
+        orthInd = orthOrder(prefDir);
+        orthResp = dirMean(iCell,orthInd);
+        OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
+    end
 end
 
 % %histogram(OSI_baseline);
@@ -864,7 +869,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle('Stationary')
 print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
-%%
+%for running 
 ymin=-0.015;
 ymax=.35;
 % contrast response running
