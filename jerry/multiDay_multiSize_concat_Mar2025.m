@@ -5,11 +5,12 @@ ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 experimentFolder = 'VIP_atropine';
 
+postsesh = [65]; 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [59];%enter all the sessions you want to concatenate4
+sess_list = postsesh;%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -28,6 +29,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
                   "post-DART used as reference"
             end
 clear x prompt
+
 
 targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 
@@ -49,7 +51,6 @@ if nSess == 1
 else
     fnout= fullfile(rc.achAnalysis,experimentFolder,strcat('concat', sess_title),d);
 end
-%fnout = 'G:\home\ACh\Analysis\2p_analysis\PV_CMPDA\concat48_55\alternate_20241219';
 mkdir(fnout);
 cd(fnout)
 clear d sess_title
@@ -105,6 +106,7 @@ motorByPupil_concat=nan(nd,2,nSess);
 pupilCounts_concat=nan(nd,2,nSess);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
+data_dfof_runOnset_concat=cell(1,nd);
 
 responseByCondProps_concat=nan(6,2,nSess);
 
@@ -187,7 +189,7 @@ for iSess = 1:nSess
         pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,:));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
-        meanF=nanmean(fullTC_keep{id},1);
+        meanF=mean(fullTC_keep{id},1);
         meanF_concat{id}=cat(2,meanF_concat{id}, meanF);
         norm_dir_resp_stat_concat{id}=cat(1,norm_dir_resp_stat_concat{id},norm_dir_resp_stat{id});
         norm_dir_resp_loc_concat{id}=cat(1,norm_dir_resp_loc_concat{id},norm_dir_resp_loc{id});
@@ -198,7 +200,7 @@ for iSess = 1:nSess
         conBySize_resp_stat_concat{id}=cat(1,conBySize_resp_stat_concat{id},conBySize_resp_stat_keep{id});
         conBySize_resp_loc_concat{id}=cat(1,conBySize_resp_loc_concat{id},conBySize_resp_loc_keep{id});
         data_resp_concat{id} = cat(1,data_resp_concat{id},data_resp_keep{id});
-
+        % data_dfof_runOnset_concat{id}=cat(2,data_dfof_runOnset_concat{id},data_dfof_runOnset_keep{id});
 
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
@@ -218,6 +220,7 @@ for iSess = 1:nSess
     
 iSess
 end
+
 
 red_ind_concat = find(red_concat);
 green_ind_concat = find(green_concat);
@@ -247,14 +250,21 @@ haveStat_pre=(sum(squeeze((sum(~isnan(conBySize_resp_stat_concat{pre}),2))),2)==
 haveStat_post=(sum(squeeze((sum(~isnan(conBySize_resp_stat_concat{post}),2))),2)==nSize*nCon); 
 haveStat_both= find(haveStat_pre.* haveStat_post); %find cells that meet this criteria for both days - now in indices, not logical
 
-
 runningCells = intersect(haveStat_both, haveRunning_both);
 
-runningGreen = intersect(runningCells, green_ind_concat); %green cells that have running data at ALL stim conditions
-runningRed= intersect(runningCells, red_ind_concat);%red cells that have running data at ALL stim conditions
 
+% %have running for large only
+% 
+% haveRunning_pre=squeeze((sum(~isnan(conBySize_resp_loc_concat{pre}(:,:,2)),2)))==nCon; %find cells that have a no NAN values for any size (the total of non-NAN should == the number of size)
+% haveRunning_post=squeeze((sum(~isnan(conBySize_resp_loc_concat{post}(:,:,2)),2)))==nCon;
+% haveRunning_both= find(haveRunning_pre.* haveRunning_post); %find cells that meet this criteria for both days - now in indices, not logical
+% 
+% haveStat_pre=squeeze((sum(~isnan(conBySize_resp_stat_concat{pre}(:,:,2)),2)))==nCon; %find cells that have a no NAN values for any size (the total of non-NAN should == the number of size)
+% haveStat_post=squeeze((sum(~isnan(conBySize_resp_stat_concat{post}(:,:,2)),2)))==nCon;
+% haveStat_both= find(haveStat_pre.* haveStat_post); %find cells that meet this criteria for both days - now in indices, not logical
+% 
+% runningCells = intersect(haveStat_both, haveRunning_both);
 
-statGreen = green_ind_concat;
 
 %find cells responsive to a given size
 mySize = 1; %1 is the smallest size
@@ -271,28 +281,38 @@ for id = 1:nd
 end
 respToLarge = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
-%clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
+clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
 
 % to find the OSI of each cell
 
 OSI_baseline=nan(nKeep_total,1);
 
-dirMean = nanmean(squeeze(nanmean(data_resp_concat{pre}(:,:,:,:,1),3)),3);
+dirMean = mean(squeeze(mean(data_resp_concat{pre}(:,:,:,:,1),3)),3);
 dirMean(find(dirMean<0))=0;
 %left with average response at each dir, averaged over size and contrast,
 %for each cell, for the baseline day only
-orthOrder=[3     4     1     2];
-for iCell = 1:nKeep_total
-    [prefResp, prefDir] = max(dirMean(iCell,:));
-    orthInd = orthOrder(prefDir);
-    orthResp = dirMean(iCell,orthInd);
-    OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
+nDir = length(dirs_concat);
+
+if nDir > 1
+
+    orthOrder=[3     4     1     2];
+    for iCell = 1:nKeep_total
+        [prefResp, prefDir] = max(dirMean(iCell,:));
+        orthInd = orthOrder(prefDir);
+        orthResp = dirMean(iCell,orthInd);
+        OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
+    end
 end
 
 % %histogram(OSI_baseline);
 % green_ind_concat = intersect(green_ind_concat, find(respToLarge));
 % red_ind_concat = intersect(red_ind_concat, find(respToLarge));
 
+runningGreen = intersect(runningCells, green_ind_concat);
+runningRed= intersect(runningCells, red_ind_concat);
+
+
+statGreen = green_ind_concat;
 statRed = red_ind_concat;
 
 %get an array with indices for each mouse
@@ -306,11 +326,11 @@ clear start iMouse
 
 
 %find how many haveRunning red cells I got for each mouse
-cellCountsRed = nan(nSess,2);
+cellCounts = nan(nSess,2);
 mouseNames=[];
 for iMouse = 1:nSess
-   cellCountsRed(iMouse,1)=length(intersect(runningRed',(mouseInds{iMouse})));
-   cellCountsRed(iMouse,2)=length(intersect(statRed',(mouseInds{iMouse})));
+   cellCounts(iMouse,1)=length(intersect(runningRed',(mouseInds{iMouse})));
+   cellCounts(iMouse,2)=length(intersect(statRed',(mouseInds{iMouse})));
    mouseNames=[mouseNames, string(mice(iMouse,:))];
 end
 
@@ -325,10 +345,10 @@ for iMouse = 1:nSess
 end
 
 
-cellCountTable = table(cellCountsRed, RowNames=mouseNames)
+cellCountTable = table(cellCounts, RowNames=mouseNames)
 cellCountTableGreen = table(cellCountsGreen, RowNames=mouseNames)
 %writetable(cellCountTable,fullfile(fnout,['cellCounts.csv']),'WriteRowNames',true)
-clear cellCountsRed cellCountsGreen
+clear cellCounts cellCountsGreen
 
 %to find the cells that have 
 runningByCondition = nan(nKeep_total,nCon,nSize);
@@ -341,28 +361,6 @@ for iCon = 1:nCon
     end
 end
 
-
-%find cells that have pupil data on both days
-have_LARGE_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
-have_LARGE_post = ~isnan(pref_responses_stat_largePupil_concat{post});
-
-have_SMALL_pre = ~isnan(pref_responses_stat_smallPupil_concat{pre});
-have_SMALL_post = ~isnan(pref_responses_stat_smallPupil_concat{post});
-
-have_bothPupil=cell(1,3);
-for iCon =1:nCon
-    have_HI_both= find(have_LARGE_pre(:,iCon).* have_LARGE_post(:,iCon));
-    have_LOW_both=find(have_SMALL_pre(:,iCon).* have_SMALL_post(:,iCon));
-    have_bothPupil{iCon}=intersect(have_HI_both,have_LOW_both);
-end
- 
-clear have_LARGE_pre have_LARGE_post have_SMALL_pre have_SMALL_post have_HI_both have_LOW_both
-
-have_allPupil = intersect(have_bothPupil{1},have_bothPupil{2});
-have_allPupil = intersect(have_allPupil, have_bothPupil{3});
-
-have_allPupil_green = intersect(have_allPupil, green_ind_concat);
-have_allPupil_red = intersect(have_allPupil, red_ind_concat);
 
 
 %% plot stationary timecourses for all cells
@@ -638,13 +636,13 @@ sizeResp_red_se_stat = cell(1,nd); %same for red
 
 
 for id = 1:nd
-    green_data=squeeze(nanmean(conBySize_resp_stat_concat{id}(statGreen,:,:),2));%pulling the green cells and averaging over contrast
+    green_data=squeeze(mean(conBySize_resp_stat_concat{id}(statGreen,:,:),2));%pulling the green cells and averaging over contrast
     sizeResp_green_avrg_stat{id}=nanmean(green_data,1);
     green_std=nanstd(green_data,1);
     sizeResp_green_se_stat{id}=green_std/sqrt(length(statGreen));
     
     
-    red_data=squeeze(nanmean(conBySize_resp_stat_concat{id}(statRed,:,:),2));%pulling the red cells and averaging over contrast
+    red_data=squeeze(mean(conBySize_resp_stat_concat{id}(statRed,:,:),2));%pulling the red cells and averaging over contrast
     sizeResp_red_avrg_stat{id}=nanmean(red_data,1);
     red_std=nanstd(red_data,1);
     sizeResp_red_se_stat{id}=red_std/sqrt(length(statRed));
@@ -663,12 +661,12 @@ sizeResp_red_se_loc = cell(1,nd); %same for red
 
 
 for id = 1:nd
-    green_data=squeeze(nanmean(conBySize_resp_loc_concat{id}(runningGreen,:,:),2));%pulling the green cells and averaging over contrast
+    green_data=squeeze(mean(conBySize_resp_loc_concat{id}(runningGreen,:,:),2));%pulling the green cells and averaging over contrast
     sizeResp_green_avrg_loc{id}=nanmean(green_data,1);
     green_std=nanstd(green_data,1);
     sizeResp_green_se_loc{id}=green_std/sqrt(length(runningGreen));
     
-    red_data=squeeze(nanmean(conBySize_resp_loc_concat{id}(runningRed,:,:),2));%pulling the red cells and averaging over contrast
+    red_data=squeeze(mean(conBySize_resp_loc_concat{id}(runningRed,:,:),2));%pulling the red cells and averaging over contrast
     sizeResp_red_avrg_loc{id}=nanmean(red_data,1);
     red_std=nanstd(red_data,1);
     sizeResp_red_se_loc{id}=red_std/sqrt(length(runningRed));
@@ -873,7 +871,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle('Stationary')
 print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
-%%
+%for running 
 ymin=-0.015;
 ymax=.35;
 % contrast response running
@@ -1117,14 +1115,14 @@ for i = 1:nKeep_total
     for iCon = 1:nCon
         for iSize = 1:nSize 
             %for stationary trials
-            mean_pre_stat = nanmean(pref_allTrials_stat_concat{iCon,iSize,pre}{i});
-            mean_post_stat=nanmean(pref_allTrials_stat_concat{iCon,iSize,post}{i});
+            mean_pre_stat = mean(pref_allTrials_stat_concat{iCon,iSize,pre}{i});
+            mean_post_stat=mean(pref_allTrials_stat_concat{iCon,iSize,post}{i});
             std_pre_stat = std(pref_allTrials_stat_concat{iCon,iSize,pre}{i});
             norm_diff_stat = (mean_post_stat-mean_pre_stat) / std_pre_stat;
     
             %for running trials
-            mean_pre_loc = nanmean(pref_allTrials_loc_concat{iCon,iSize,pre}{i});
-            mean_post_loc=nanmean(pref_allTrials_loc_concat{iCon,iSize,post}{i});
+            mean_pre_loc = mean(pref_allTrials_loc_concat{iCon,iSize,pre}{i});
+            mean_post_loc=mean(pref_allTrials_loc_concat{iCon,iSize,post}{i});
             std_pre_loc = std(pref_allTrials_loc_concat{iCon,iSize,pre}{i});
             norm_diff_loc = (mean_post_loc-mean_pre_loc)/ std_pre_loc;
     
@@ -1570,3 +1568,63 @@ for iCon = 1:nCon
     print(fullfile(fnout,[num2str(cons(iCon)) '_' num2str(sizes(iSize)) 'matched_large_cellType_timecourses.pdf']),'-dpdf');
     end
 end 
+%%  plot shaded error bar for running onsets
+
+tc_green_avrg_runOnset = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_runOnset = cell(1,nd); %same for red
+tc_green_se_runOnset = cell(1,nd); %this will be the se across all green cells
+tc_red_se_runOnset = cell(1,nd); %same for red
+
+
+for id = 1:nd
+
+        tc_green_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(data_dfof_runOnset_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_runOnset{id}=green_std/sqrt(length(green_ind_concat));
+        
+        tc_red_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(data_dfof_runOnset_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_runOnset{id}=red_std/sqrt(length(red_ind_concat));
+        
+        
+        clear green_std red_st
+end
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_red_avrg_runOnset{id},1));
+t=(t-(double(frame_rate)-1))/double(frame_rate);
+
+figure
+    subplot(1,2,1) %for the first day
+
+    ylim([-.01 .05]);
+    hold on
+    shadedErrorBar(t,tc_green_avrg_runOnset{pre},tc_green_se_runOnset{pre},'--k');
+    hold on
+    shadedErrorBar(t,tc_green_avrg_runOnset{post},tc_green_se_runOnset{post},'--b','transparent');
+    %line([-.8,-.8],[0,.01],'Color','black','LineWidth',2);
+    title(['-HTP',' n = ', num2str(length(green_ind_concat))])
+    ylabel('dF/F') 
+    xlabel('s') 
+    box off
+    
+    
+    subplot(1,2,2) %+HTP
+    shadedErrorBar(t,tc_red_avrg_runOnset{pre},tc_red_se_runOnset{pre},'k');
+    hold on
+    shadedErrorBar(t,tc_red_avrg_runOnset{post},tc_red_se_runOnset{post},'b');
+    ylim([-.01 .05]);
+    %line([-.8,-.8],[0,.01],'Color','black','LineWidth',2);
+    ylabel('dF/F') 
+    xlabel('s') 
+    title(['+HTP',' n = ', num2str(length(red_ind_concat))])
+    
+    x0=5;
+    y0=5;
+    width=4;
+    height=3;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    box off
+    sgtitle('Running onset')
+print(fullfile(fnout,'runOnset_timecourse.pdf'),'-dpdf');

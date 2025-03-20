@@ -9,7 +9,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART CMPDA 
 % 299 289 304 312 320 330
-sess_list = [59];%enter all the sessions you want to concatenate
+sess_list = [65];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -49,7 +49,7 @@ if nSess == 1
 else
     fnout= fullfile(rc.achAnalysis,experimentFolder,strcat('concat', sess_title),d);
 end
-fnout = 'G:\home\ACh\Analysis\2p_analysis\PV_CMPDA\concat48_55\alternate2_20241219';
+%fnout = 'G:\home\ACh\Analysis\2p_analysis\PV_CMPDA\concat48_55\alternate2_20241219';
 mkdir(fnout);
 cd(fnout)
 clear d sess_title

@@ -13,7 +13,7 @@ ExperimentFolder = 'VIP_atropine';
 
 %to use the post-DART timepoint as the template
 
-day_id(1) =59; %enter the refrence day ID here 
+day_id(1) =65; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 

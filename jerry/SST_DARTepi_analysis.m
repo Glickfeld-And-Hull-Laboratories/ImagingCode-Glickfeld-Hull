@@ -1,14 +1,14 @@
 clear all; clear global; close all;
 clc
 
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_contrast_ori_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 
 % day_id = [24 29 32 35 38 40 42 44]; % concat days, enter one post-DART day id for each mouse
 
-fnroot = fullfile(rc.achAnalysis,'PV_YM90K','summary_analyses');
+fnroot = fullfile(rc.achAnalysis,'SST_YM90K','summary_analyses');
 fn_epi = fullfile(fnroot,'epileptiform');
 cd(fn_epi);
 
@@ -20,40 +20,51 @@ ntrials = 960;
 %%
 load('prepped_np_TCs.mat');
 %% PV_DART off_np_tc epileptiform quantification
+% these commented out chunks were for MI and graphing, requires a lot of
+% manual input
 
 % off_np_tc: each row is a mouse. Each mouse cell contains a n x 2 cell array
 % where n is the number of imaging sessions for the mouse, the 1st column
 % is an averaged-across-cells timecourse made from a concatenation of the last 30 off-frames of
 % every trial, and the 2nd column is the mean-subtracted timecourse of the
 % 1st column. 
-% if exist('prepped_np_TCs','var') == 1
-%     mouse_list = convertCharsToStrings(off_np_tc(:,2)); 
-% else
-%     load('prepped_np_TCs.mat');
-%     mouse_list = convertCharsToStrings(off_np_tc(:,2));
-% end
 
 cd(fn_epi);
 nMice = size(prepped_np_TCs,1);
+
+% get rid of problem sessions from i2066
 mice = prepped_np_TCs(:,2);
+mouse_ids = strings(length(mice),1);
+
+for row = 1:length(mice)
+    mouse_ids(row,1) = convertCharsToStrings(mice{row});
+end
+
+whereIsi2066 = find(mouse_ids == 'i2066');
+new_2066_data = cell(4,4);
+old_2066_data = prepped_np_TCs{whereIsi2066,1};
+new_2066_data(1:2,:) = old_2066_data(1:2,:);
+new_2066_data(3:4,:) = old_2066_data(4:5,:);
+prepped_np_TCs{whereIsi2066,1} = new_2066_data;
 
 std_cell = cell(nMice,2);
 std_cell(:,2) = mice;
 
 for mouse = 1:nMice %iterate through mouse
+    
     mouse_data = prepped_np_TCs{mouse,1};
     mouse_id = prepped_np_TCs{mouse,2};
-    this_sessions = query_expt(str2double(mouse_id(2:end)));
     nSesh = size(mouse_data,1);
-
     perc_mat = NaN(nSesh,1);
     std_mat = NaN(nSesh,1);
     t_since_drug_mat = strings(nSesh,1);
 
+    this_sessions = query_expt_celine(str2double(mouse_id(2:end)));
+    
     all_raw_f = cat(1,mouse_data{:,1});
     ylim_max = 20 + max(all_raw_f);
     ylim_min = min(all_raw_f)-20;
-
+    
     figure;
     sgtitle(mouse_id);
     for sess_idx = 1:size(mouse_data,1)
@@ -71,7 +82,7 @@ for mouse = 1:nMice %iterate through mouse
 
         mean_curr_sesh = mean(curr_sesh);
         std_curr_sesh = std(curr_sesh);
-        frac_past = sum(curr_sesh > (mean_curr_sesh+3*std_curr_sesh))/length(curr_sesh);
+        frac_past = sum(abs(curr_sesh-mean_curr_sesh) > std_curr_sesh*3) / length(curr_sesh);
         perc_mat(sess_idx) = frac_past;
         std_mat(sess_idx) = std_curr_sesh;
 
@@ -79,265 +90,280 @@ for mouse = 1:nMice %iterate through mouse
         plot(curr_sesh);
         ylim([ylim_min ylim_max]);
         title([this_tp_title ' std= ' num2str(std_curr_sesh) ' frac=' num2str(frac_past)]);
+           
     end
     std_cell{mouse,1} = std_mat;
-    % saveas(gcf,fullfile(fn_epi,'plots',[mouse_id '.pdf']));
+    % saveas(gcf,fullfile(fn_epi,'plots',[mouse_id '.m']));
 end
 
-std_cell_PV = std_cell;
-save(fullfile(fn_epi,'std_cell_PV.mat'),"std_cell_PV");
+for iMouse = 1:size(std_cell,1)
+    old_data = std_cell{iMouse,1};
+    std_cell{iMouse,2} = convertCharsToStrings(std_cell{iMouse,2});
+    if std_cell{iMouse,2} == "i2062"
+        new_data = [old_data(3) old_data(5)];
+    elseif std_cell{iMouse,2} == "i2067"
+        new_data = [old_data(1) old_data(2)];
+    elseif std_cell{iMouse,2} == "i2066"
+        new_data = [old_data(1) old_data(2)];
+    end
+    std_cell{iMouse,1} = new_data;
+end
 
+std_cell_SST = std_cell;
+save(fullfile(fn_epi,'std_cell_SST.mat'),"std_cell_SST");
+
+% save(fullfile(fn_epi,'epi_data.mat'),"std_mat","perc_mat","t_since_drug_mat");
 % clear all_raw_f ylim_max ylim_min std_mat perc_mat curr_sesh off_np_tc
-%% plot epilepsy data as modulation index
-
-cd(fn_epi);
-load('epi_data.mat');
-load('DART_expt_info.mat');
-% for dart_expt_info, 2nd column is dart dosage, 3rd column is virus titer
-% DART:
-% 1 = YM90K-PEG 10:1 alx647-COOH
-% 2 = 1:10:1 YM90K-DART:blank-DART:alx-DART
-% 3 = 4:6:1 YM90K-DART:blank-DART:alx-DART
-% 4 = 5:5:1 YM90K-DART:blank-DART:alx-DART
-% 5 = YM90K-DART 10:1 alx647-DART
-% virus:
-% 1 = GCaMP6s 1:1 MB HTP
-% 2 = GCaMP8f 1:1 NES HTP
-% 3 = 2:1:1 GCaMP8f:NES HTP:aCSF
-
-if exist('off_np_tc','var') == 1
-    mouse_list = convertCharsToStrings(off_np_tc(:,2)); 
-    clear off_np_tc
-else
-    load('off_np_tc.mat');
-    mouse_list = convertCharsToStrings(off_np_tc(:,2));
-    clear off_np_tc
-end
-
-nMice = size(mouse_list,1);
-TPs_mat = t_since_drug_mat(:,2:3);
-std_index_mat = nan(nMice,3);
-frac_index_mat = nan(nMice,3);
-
-% Fig 1 frac norm
-figure;
-set(gcf, 'Name', 'EpiPlot_frac_norm');
-title('Modulation of Epileptic Activity, frac, normalized');
-xlim([0 26]);
-ylim([0 3.7]);
-xlabel('Time Since DART Infusion (hrs)');
-ylabel('Fraction Modulation Index (AU)');
-hold on
-
-for mouse = 1:nMice
-    if sum(~isnan(std_mat(mouse,:))) == 2
-        nTP = 2;
-    elseif sum(~isnan(std_mat(mouse,:))) == 3
-        nTP = 3;
-    else
-        error('Incorrect number of timepoints, check data matrix dimensions')
-    end
-    % calculate normalized fraction value
-    for tp = 1:nTP
-        std_index_mat(mouse,tp) = std_mat(mouse,tp)/std_mat(mouse,1);
-        frac_index_mat(mouse,tp) = perc_mat(mouse,tp)/perc_mat(mouse,1);
-    end
-
-    % color code by dart dosage 
-    if expt_info{mouse,2} == 1
-        this_col = "#D95319"; % mute orange-ish
-    elseif expt_info{mouse,2} == 2
-        this_col = "#40E0D0"; % turquoise
-    elseif expt_info{mouse,2} == 3
-        this_col = "#89CFF0"; % baby blue
-    elseif expt_info{mouse,2} == 4
-        this_col = "#7393B3"; % blue gray
-    elseif expt_info{mouse,2} == 5
-        this_col = "#0047AB"; % cobalt blue
-    else
-        error('Unrecognized DART dosage value. Check metadata values.')
-    end
-
-    % line style code by virus titer/type
-    if expt_info{mouse,3} == 1
-        this_marker = "o"; 
-    elseif expt_info{mouse,3} == 2
-        this_marker = "^"; 
-    elseif expt_info{mouse,3} == 3
-        this_marker = "square"; 
-    else
-        error('Unrecognized viral titer. Check metadata values.');
-    end
-    plot(str2double(t_since_drug_mat(mouse,:)),frac_index_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
-end
-
-legend
-hold off
-
-% fig 2 frac un-norm
-
-figure;
-set(gcf, 'Name', 'EpiPlot_frac_raw');
-title('Modulation of Epileptic Activity, frac, raw value');
-xlim([0 26]);
-ylim([0 0.027]);
-xlabel('Time Since DART Infusion (hrs)');
-ylabel('Fraction of Frames');
-hold on
-
-for mouse = 1:nMice
-    if sum(~isnan(std_mat(mouse,:))) == 2
-        nTP = 2;
-    elseif sum(~isnan(std_mat(mouse,:))) == 3
-        nTP = 3;
-    else
-        error('Incorrect number of timepoints, check data matrix dimensions')
-    end
-
-    % color code by dart dosage 
-    if expt_info{mouse,2} == 1
-        this_col = "#D95319"; % mute orange-ish
-    elseif expt_info{mouse,2} == 2
-        this_col = "#40E0D0"; % turquoise
-    elseif expt_info{mouse,2} == 3
-        this_col = "#89CFF0"; % baby blue
-    elseif expt_info{mouse,2} == 4
-        this_col = "#7393B3"; % blue gray
-    elseif expt_info{mouse,2} == 5
-        this_col = "#0047AB"; % cobalt blue
-    else
-        error('Unrecognized DART dosage value. Check metadata values.')
-    end
-
-    % line style code by virus titer/type
-    if expt_info{mouse,3} == 1
-        this_marker = "o"; 
-    elseif expt_info{mouse,3} == 2
-        this_marker = "^"; 
-    elseif expt_info{mouse,3} == 3
-        this_marker = "square"; 
-    else
-        error('Unrecognized viral titer. Check metadata values.');
-    end
-    plot(str2double(t_since_drug_mat(mouse,:)),perc_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
-end
-legend
-hold off
-
-% Fig 3 std norm
-figure;
-set(gcf, 'Name', 'EpiPlot_std_norm');
-title('Modulation of Epileptic Activity, std, normalized');
-xlim([0 26]);
-% ylim([0 3.7]);
-xlabel('Time Since DART Infusion (hrs)');
-ylabel('Std Modulation Index (AU)');
-hold on
-
-for mouse = 1:nMice
-    if sum(~isnan(std_mat(mouse,:))) == 2
-        nTP = 2;
-    elseif sum(~isnan(std_mat(mouse,:))) == 3
-        nTP = 3;
-    else
-        error('Incorrect number of timepoints, check data matrix dimensions')
-    end
-    % calculate normalized fraction value
-    for tp = 1:nTP
-        std_index_mat(mouse,tp) = std_mat(mouse,tp)/std_mat(mouse,1);
-        frac_index_mat(mouse,tp) = perc_mat(mouse,tp)/perc_mat(mouse,1);
-    end
-
-    % color code by dart dosage 
-    if expt_info{mouse,2} == 1
-        this_col = "#D95319"; % mute orange-ish
-    elseif expt_info{mouse,2} == 2
-        this_col = "#40E0D0"; % turquoise
-    elseif expt_info{mouse,2} == 3
-        this_col = "#89CFF0"; % baby blue
-    elseif expt_info{mouse,2} == 4
-        this_col = "#7393B3"; % blue gray
-    elseif expt_info{mouse,2} == 5
-        this_col = "#0047AB"; % cobalt blue
-    else
-        error('Unrecognized DART dosage value. Check metadata values.')
-    end
-
-    % line style code by virus titer/type
-    if expt_info{mouse,3} == 1
-        this_marker = "o"; 
-    elseif expt_info{mouse,3} == 2
-        this_marker = "^"; 
-    elseif expt_info{mouse,3} == 3
-        this_marker = "square"; 
-    else
-        error('Unrecognized viral titer. Check metadata values.');
-    end
-    plot(str2double(t_since_drug_mat(mouse,:)),std_index_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
-end
-
-legend
-hold off
-
-% fig 4 std un-norm
-
-figure;
-set(gcf, 'Name', 'EpiPlot_std_raw');
-title('Modulation of Epileptic Activity, std, raw value');
-xlim([0 26]);
-% ylim([0 0.027]);
-xlabel('Time Since DART Infusion (hrs)');
-ylabel('Standard Deviation of F');
-hold on
-
-for mouse = 1:nMice
-    if sum(~isnan(std_mat(mouse,:))) == 2
-        nTP = 2;
-    elseif sum(~isnan(std_mat(mouse,:))) == 3
-        nTP = 3;
-    else
-        error('Incorrect number of timepoints, check data matrix dimensions')
-    end
-
-    % color code by dart dosage 
-    if expt_info{mouse,2} == 1
-        this_col = "#D95319"; % mute orange-ish
-    elseif expt_info{mouse,2} == 2
-        this_col = "#40E0D0"; % turquoise
-    elseif expt_info{mouse,2} == 3
-        this_col = "#89CFF0"; % baby blue
-    elseif expt_info{mouse,2} == 4
-        this_col = "#7393B3"; % blue gray
-    elseif expt_info{mouse,2} == 5
-        this_col = "#0047AB"; % cobalt blue
-    else
-        error('Unrecognized DART dosage value. Check metadata values.')
-    end
-
-    % line style code by virus titer/type
-    if expt_info{mouse,3} == 1
-        this_marker = "o"; 
-    elseif expt_info{mouse,3} == 2
-        this_marker = "^"; 
-    elseif expt_info{mouse,3} == 3
-        this_marker = "square"; 
-    else
-        error('Unrecognized viral titer. Check metadata values.');
-    end
-    plot(str2double(t_since_drug_mat(mouse,:)),std_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
-end
-legend
-hold off
-
-% figHandles = findall(0,'Type','figure');
-% this_figname = get(figHandles,'Name');
-% for i = 1:numel(figHandles)
-%     t = this_figname{i,1};
-%     saveas(figHandles(i),fullfile(fn_epi,'plots',[t '.pdf']));
+% %% plot epilepsy data as modulation index
+% 
+% cd(fn_epi);
+% load('epi_data.mat');
+% load('DART_expt_info.mat');
+% % for dart_expt_info, 2nd column is dart dosage, 3rd column is virus titer
+% % DART:
+% % 1 = YM90K-PEG 10:1 alx647-COOH
+% % 2 = 1:10:1 YM90K-DART:blank-DART:alx-DART
+% % 3 = 4:6:1 YM90K-DART:blank-DART:alx-DART
+% % 4 = 5:5:1 YM90K-DART:blank-DART:alx-DART
+% % 5 = YM90K-DART 10:1 alx647-DART
+% % virus:
+% % 1 = GCaMP6s 1:1 MB HTP
+% % 2 = GCaMP8f 1:1 NES HTP
+% % 3 = 2:1:1 GCaMP8f:NES HTP:aCSF
+% 
+% if exist('off_np_tc','var') == 1
+%     mouse_list = convertCharsToStrings(off_np_tc(:,2)); 
+%     clear off_np_tc
+% else
+%     load('off_np_tc.mat');
+%     mouse_list = convertCharsToStrings(off_np_tc(:,2));
+%     clear off_np_tc
 % end
-%
-% or use "save_all_open_figs(directory_to_be_saved_to)"
-
+% 
+% nMice = size(mouse_list,1);
+% TPs_mat = t_since_drug_mat(:,2:3);
+% std_index_mat = nan(nMice,3);
+% frac_index_mat = nan(nMice,3);
+% 
+% % Fig 1 frac norm
+% figure;
+% set(gcf, 'Name', 'EpiPlot_frac_norm');
+% title('Modulation of Epileptic Activity, frac, normalized');
+% xlim([0 26]);
+% ylim([0 3.7]);
+% xlabel('Time Since DART Infusion (hrs)');
+% ylabel('Fraction Modulation Index (AU)');
+% hold on
+% 
+% for mouse = 1:nMice
+%     if sum(~isnan(std_mat(mouse,:))) == 2
+%         nTP = 2;
+%     elseif sum(~isnan(std_mat(mouse,:))) == 3
+%         nTP = 3;
+%     else
+%         error('Incorrect number of timepoints, check data matrix dimensions')
+%     end
+%     % calculate normalized fraction value
+%     for tp = 1:nTP
+%         std_index_mat(mouse,tp) = std_mat(mouse,tp)/std_mat(mouse,1);
+%         frac_index_mat(mouse,tp) = perc_mat(mouse,tp)/perc_mat(mouse,1);
+%     end
+% 
+%     % color code by dart dosage 
+%     if expt_info{mouse,2} == 1
+%         this_col = "#D95319"; % mute orange-ish
+%     elseif expt_info{mouse,2} == 2
+%         this_col = "#40E0D0"; % turquoise
+%     elseif expt_info{mouse,2} == 3
+%         this_col = "#89CFF0"; % baby blue
+%     elseif expt_info{mouse,2} == 4
+%         this_col = "#7393B3"; % blue gray
+%     elseif expt_info{mouse,2} == 5
+%         this_col = "#0047AB"; % cobalt blue
+%     else
+%         error('Unrecognized DART dosage value. Check metadata values.')
+%     end
+% 
+%     % line style code by virus titer/type
+%     if expt_info{mouse,3} == 1
+%         this_marker = "o"; 
+%     elseif expt_info{mouse,3} == 2
+%         this_marker = "^"; 
+%     elseif expt_info{mouse,3} == 3
+%         this_marker = "square"; 
+%     else
+%         error('Unrecognized viral titer. Check metadata values.');
+%     end
+%     plot(str2double(t_since_drug_mat(mouse,:)),frac_index_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
+% end
+% 
+% legend
+% hold off
+% 
+% % fig 2 frac un-norm
+% 
+% figure;
+% set(gcf, 'Name', 'EpiPlot_frac_raw');
+% title('Modulation of Epileptic Activity, frac, raw value');
+% xlim([0 26]);
+% ylim([0 0.027]);
+% xlabel('Time Since DART Infusion (hrs)');
+% ylabel('Fraction of Frames');
+% hold on
+% 
+% for mouse = 1:nMice
+%     if sum(~isnan(std_mat(mouse,:))) == 2
+%         nTP = 2;
+%     elseif sum(~isnan(std_mat(mouse,:))) == 3
+%         nTP = 3;
+%     else
+%         error('Incorrect number of timepoints, check data matrix dimensions')
+%     end
+% 
+%     % color code by dart dosage 
+%     if expt_info{mouse,2} == 1
+%         this_col = "#D95319"; % mute orange-ish
+%     elseif expt_info{mouse,2} == 2
+%         this_col = "#40E0D0"; % turquoise
+%     elseif expt_info{mouse,2} == 3
+%         this_col = "#89CFF0"; % baby blue
+%     elseif expt_info{mouse,2} == 4
+%         this_col = "#7393B3"; % blue gray
+%     elseif expt_info{mouse,2} == 5
+%         this_col = "#0047AB"; % cobalt blue
+%     else
+%         error('Unrecognized DART dosage value. Check metadata values.')
+%     end
+% 
+%     % line style code by virus titer/type
+%     if expt_info{mouse,3} == 1
+%         this_marker = "o"; 
+%     elseif expt_info{mouse,3} == 2
+%         this_marker = "^"; 
+%     elseif expt_info{mouse,3} == 3
+%         this_marker = "square"; 
+%     else
+%         error('Unrecognized viral titer. Check metadata values.');
+%     end
+%     plot(str2double(t_since_drug_mat(mouse,:)),perc_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
+% end
+% legend
+% hold off
+% 
+% % Fig 3 std norm
+% figure;
+% set(gcf, 'Name', 'EpiPlot_std_norm');
+% title('Modulation of Epileptic Activity, std, normalized');
+% xlim([0 26]);
+% % ylim([0 3.7]);
+% xlabel('Time Since DART Infusion (hrs)');
+% ylabel('Std Modulation Index (AU)');
+% hold on
+% 
+% for mouse = 1:nMice
+%     if sum(~isnan(std_mat(mouse,:))) == 2
+%         nTP = 2;
+%     elseif sum(~isnan(std_mat(mouse,:))) == 3
+%         nTP = 3;
+%     else
+%         error('Incorrect number of timepoints, check data matrix dimensions')
+%     end
+%     % calculate normalized fraction value
+%     for tp = 1:nTP
+%         std_index_mat(mouse,tp) = std_mat(mouse,tp)/std_mat(mouse,1);
+%         frac_index_mat(mouse,tp) = perc_mat(mouse,tp)/perc_mat(mouse,1);
+%     end
+% 
+%     % color code by dart dosage 
+%     if expt_info{mouse,2} == 1
+%         this_col = "#D95319"; % mute orange-ish
+%     elseif expt_info{mouse,2} == 2
+%         this_col = "#40E0D0"; % turquoise
+%     elseif expt_info{mouse,2} == 3
+%         this_col = "#89CFF0"; % baby blue
+%     elseif expt_info{mouse,2} == 4
+%         this_col = "#7393B3"; % blue gray
+%     elseif expt_info{mouse,2} == 5
+%         this_col = "#0047AB"; % cobalt blue
+%     else
+%         error('Unrecognized DART dosage value. Check metadata values.')
+%     end
+% 
+%     % line style code by virus titer/type
+%     if expt_info{mouse,3} == 1
+%         this_marker = "o"; 
+%     elseif expt_info{mouse,3} == 2
+%         this_marker = "^"; 
+%     elseif expt_info{mouse,3} == 3
+%         this_marker = "square"; 
+%     else
+%         error('Unrecognized viral titer. Check metadata values.');
+%     end
+%     plot(str2double(t_since_drug_mat(mouse,:)),std_index_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
+% end
+% 
+% legend
+% hold off
+% 
+% % fig 4 std un-norm
+% 
+% figure;
+% set(gcf, 'Name', 'EpiPlot_std_raw');
+% title('Modulation of Epileptic Activity, std, raw value');
+% xlim([0 26]);
+% % ylim([0 0.027]);
+% xlabel('Time Since DART Infusion (hrs)');
+% ylabel('Standard Deviation of F');
+% hold on
+% 
+% for mouse = 1:nMice
+%     if sum(~isnan(std_mat(mouse,:))) == 2
+%         nTP = 2;
+%     elseif sum(~isnan(std_mat(mouse,:))) == 3
+%         nTP = 3;
+%     else
+%         error('Incorrect number of timepoints, check data matrix dimensions')
+%     end
+% 
+%     % color code by dart dosage 
+%     if expt_info{mouse,2} == 1
+%         this_col = "#D95319"; % mute orange-ish
+%     elseif expt_info{mouse,2} == 2
+%         this_col = "#40E0D0"; % turquoise
+%     elseif expt_info{mouse,2} == 3
+%         this_col = "#89CFF0"; % baby blue
+%     elseif expt_info{mouse,2} == 4
+%         this_col = "#7393B3"; % blue gray
+%     elseif expt_info{mouse,2} == 5
+%         this_col = "#0047AB"; % cobalt blue
+%     else
+%         error('Unrecognized DART dosage value. Check metadata values.')
+%     end
+% 
+%     % line style code by virus titer/type
+%     if expt_info{mouse,3} == 1
+%         this_marker = "o"; 
+%     elseif expt_info{mouse,3} == 2
+%         this_marker = "^"; 
+%     elseif expt_info{mouse,3} == 3
+%         this_marker = "square"; 
+%     else
+%         error('Unrecognized viral titer. Check metadata values.');
+%     end
+%     plot(str2double(t_since_drug_mat(mouse,:)),std_mat(mouse,:),"Color",this_col,"Marker",this_marker,"LineWidth",1.5);
+% end
+% legend
+% hold off
+% 
+% % figHandles = findall(0,'Type','figure');
+% % this_figname = get(figHandles,'Name');
+% % for i = 1:numel(figHandles)
+% %     t = this_figname{i,1};
+% %     saveas(figHandles(i),fullfile(fn_epi,'plots',[t '.pdf']));
+% % end
+% %
+% % or use "save_all_open_figs(directory_to_be_saved_to)"
+% 
 
 %% power frequency curve
 
@@ -347,7 +373,7 @@ hold off
 % second stores mean-subtracted (same structure as the first), third stores nan-padded (full trial
 % length), fourth is full np tc (full trial length)
 
-mus = prepped_np_TCs(2:4,:);
+mus = prepped_np_TCs(:,:);
 nMice = size(mus,1);
 close all
 mus_rawPwr = cell(size(mus,1),2);
@@ -358,32 +384,32 @@ for iMouse = 1:nMice
     mouse = mus{iMouse,1};
     intact_tc = mouse(:,1);
     meanSub_tc = mouse(:,2);
-    nanpad_tc = mouse(:,3);
-    full_tc = mouse(:,4);
-    meanSub_full_tc = mouse(:,5);
+    full_tc = mouse(:,3);
+    meanSub_full_tc = mouse(:,4);
     nSesh = size(mouse,1);
     curr_mus = mus{iMouse,2};
     sesh_fits = cell(nSesh,1);
-    sesh_db = cell(nSesh,1);
     sesh_f = cell(size(mouse,1),1);
     for sesh = 1:nSesh
+        % just your normal power spectrum with cropped mean-sub npTC
         f1 = figure;
         [p,f] = pspectrum(meanSub_tc{sesh},15); 
         dbp = pow2db(p);
-        plot(f,p);
+        plot(f,dbp);
         % ylim([-15 30]);
         %xlim([0 100]);
         sgtitle([curr_mus ' Session ' num2str(sesh) ' Power Spectrum'])
         xlabel('frequency (Hz)')
-        ylabel('Power')
-        f1.Name = [curr_mus '_Session' num2str(sesh) '_ps_noLog'];
+        ylabel('Power (dB)')
+        f1.Name = [curr_mus '_Session' num2str(sesh) '_ps'];
         sesh_f{sesh} = p;
+
         % full sesh PS
-        % f1 = figure;
+        % f2 = figure;
         % [p,f] = pspectrum(meanSub_full_tc{sesh},15); 
         % dbp2 = pow2db(p);
         % plot(f,dbp2);
-        % dbp_fit = smooth(dbp2,0.03,'lowess'); 
+        % dbp_fit = smooth(dbp2,0.05,'lowess'); 
         % hold on
         % plot(f,dbp_fit,"LineWidth",2);
         % hold off
@@ -424,7 +450,7 @@ for iMouse = 1:nMice
         % ylabel('F')
         % f2.Name = [curr_mus '_Session' num2str(sesh) '_MSNPTC'];
     end
-    mus_rawPwr{iMouse,1} = sesh_f;
+    % mus_rawPwr{iMouse,1} = sesh_f;
     % for sesh = 1:nSesh
     %     if sesh == 1
     %         continue
@@ -446,23 +472,10 @@ end
 
 
 
-% figHandles = findall(0,'Type','figure'); 
-% this_fig = get(figHandles,'Name');
-% [a,b] = subplotn(size(this_fig,1));
-% figure;
-% 
-% tile_plot = tiledlayout(a,b);
-% this_fig = flip(this_fig);
-% for i = 1:a
-%     for j = 1:b
-%        subplot() 
-%     end
-% end
-
 
 
 % save(fullfile(fn_epi,'rawPwrTCs'),'mus_rawPwr','-v7.3');
-%save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\summary_analyses\epileptiform\plots\power');
+% save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\SST_YM90K\summary_analyses\epileptiform\plots');
 
 %% integral
 if exist('mus_rawPwr','var') == 0
@@ -601,7 +614,7 @@ xlabel('Session #')
 xticks([1 2 3])
 xticklabels({'1','2','3'})
 
-save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\summary_analyses\epileptiform\plots');
+% save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\summary_analyses\epileptiform\plots');
 %% manually calculate ps
 % Fs = 15; % freq
 % T = 1/Fs; % period length

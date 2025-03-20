@@ -7,15 +7,15 @@ rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;  
-ExperimentFolder = 'VIP_atropine';
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 61;
+day_id = 65;
 %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
+ExperimentFolder = expt(day_id).exptType;
 
 fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
