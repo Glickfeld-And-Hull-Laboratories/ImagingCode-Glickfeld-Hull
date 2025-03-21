@@ -341,6 +341,7 @@ dfof_summary = table(mouseIDcol,cellID_col,cell_type_col,contrast,behStateCol,da
 
 %calculate norm_diff
 norm_diff = nan(2,nCon,nKeep_total);
+bsln_std =  nan(2,nCon,nKeep_total);
 for i = 1:nKeep_total
     for iCon = 1:nCon
         %for stationary trials
@@ -358,7 +359,9 @@ for i = 1:nKeep_total
         %putting data into matrix
         norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
         norm_diff(2,iCon,i)=norm_diff_loc; %second is running
-clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
+        bsln_std(1,iCon,i)=std_pre_stat; %std for stationary trials on basline day
+        bsln_std(2,iCon,i)=std_pre_loc; %std for running trials on basline day
+clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc norm_diff_stat norm_diff_loc
     end 
 end
 %remove any infiinty values resulting from divisions by zero, and turn
@@ -1839,3 +1842,176 @@ y0=5;
 width=1.1;
 height=1.1;
 set(gcf,'units','inches','position',[x0,y0,width,height])
+
+%% comparing normalized difference to noise correlation
+
+mySample = red_ind_concat;
+% Extract data (stationary state only)
+stationary_norm_diff = squeeze(norm_diff(1,:,mySample)); % [contrast, neuron]
+stationary_bsln_std = squeeze(bsln_std(1,:,mySample));   % [contrast, neuron]
+baseline_noise_corr = noiseCorr_OG_concat{2}(1,mySample); % [1, neuron]
+
+% Number of contrasts and neurons
+[num_contrasts, num_neurons] = size(stationary_norm_diff);
+
+% Store results
+slopes = zeros(num_contrasts, 1);
+intercepts = zeros(num_contrasts, 1);
+r_squared = zeros(num_contrasts, 1);
+p_values = zeros(num_contrasts, 1);
+std_errors = zeros(num_contrasts, 1);
+
+% Create figure
+figure('Position', [100, 100, 1200, 400]);
+
+% Analyze each contrast
+for contrast = 1:num_contrasts
+    % Extract data for this contrast
+    y = stationary_norm_diff(contrast, :)';  % neural response difference
+    x = baseline_noise_corr';                 % noise correlations
+    
+    % Handle NaNs and missing data
+    valid_idx = ~isnan(x) & ~isnan(y) & isfinite(x) & isfinite(y);
+    
+    % Check if we have enough valid data points
+    if sum(valid_idx) < 3
+        warning('Not enough valid data points for contrast %d. Skipping.', contrast);
+        title(sprintf('Contrast %d: Insufficient Data', contrast));
+        continue;
+    end
+    
+    % Use only valid data
+    x_valid = x(valid_idx);
+    y_valid = y(valid_idx);
+    
+    % Perform unweighted linear regression
+    [p, stats] = polyfit(x_valid, y_valid, 1);
+    
+    % Store results
+    intercepts(contrast) = p(2);
+    slopes(contrast) = p(1);
+    
+    % Calculate standard error of the slope
+    yfit = polyval(p, x_valid);
+    residuals = y_valid - yfit;
+    SSE = sum(residuals.^2);
+    n = length(x_valid);
+    
+    % Standard error of the regression
+    SE_regression = sqrt(SSE / (n-2));
+    
+    % Sum of squares of x deviations
+    SS_x = sum((x_valid - mean(x_valid)).^2);
+    
+    % Standard error of the slope
+    std_errors(contrast) = SE_regression / sqrt(SS_x);
+    
+    % Calculate R-squared
+    SS_total = sum((y_valid - mean(y_valid)).^2);
+    r_squared(contrast) = 1 - SSE/SS_total;
+    
+    % Calculate p-value for slope
+    t_stat = slopes(contrast) / std_errors(contrast);
+    p_values(contrast) = 2 * (1 - tcdf(abs(t_stat), length(x_valid) - 2));
+    
+    % Plot regression
+    subplot(1, 3, contrast);
+    
+    % Create scatter plot with uniform size
+    scatter(x_valid, y_valid, 50, 'filled', 'MarkerFaceAlpha', 0.7);
+    hold on;
+    
+    % Add regression line
+    x_range = linspace(min(x_valid), max(x_valid), 100);
+    y_line = p(1) * x_range + p(2);
+    plot(x_range, y_line, 'r-', 'LineWidth', 2);
+    
+    % Labels and title
+    contrasts = [25, 50, 100];
+    title(sprintf('Contrast: %d%%', contrasts(contrast)), 'FontSize', 12);
+    xlabel('Noise Correlation (Baseline)', 'FontSize', 11);
+    ylabel('Normalized Difference', 'FontSize', 11);
+    
+    xlim([-.2 1])
+    ylim([-8 8])
+
+    % Add horizontal line at y=0
+    hline(0)
+    
+    % Add regression equation and stats
+    % Calculate text position dynamically
+    x_range = max(x_valid) - min(x_valid);
+    y_range = range(ylim);
+    text_x = min(x_valid);
+    text_y_start = max(ylim) - 0.2 * y_range;
+    text_y_step = 0.08 * y_range;
+    
+    text(text_x, text_y_start, sprintf('y = %.3fx + %.3f', slopes(contrast), intercepts(contrast)), 'FontSize', 10);
+    text(text_x, text_y_start - text_y_step, sprintf('R² = %.3f', r_squared(contrast)), 'FontSize', 10);
+    text(text_x, text_y_start - 2*text_y_step, sprintf('p = %.4f', p_values(contrast)), 'FontSize', 10);
+    
+    % Add sample size
+    text(text_x, text_y_start - 3*text_y_step, sprintf('n = %d', sum(valid_idx)), 'FontSize', 10);
+    
+    % Set box style and tick direction
+    box off;
+    set(gca, 'TickDir', 'out');
+end
+
+% Adjust spacing
+sgtitle('Unweighted Regression: Noise Correlation vs. Normalized Difference (Stationary State)', 'FontSize', 14);
+set(gcf, 'Color', 'w');
+
+% Create a results table
+contrast_labels = {'25%', '50%', '100%'};
+results_table = table(contrast_labels', slopes, std_errors, intercepts, r_squared, p_values, ...
+    'VariableNames', {'Contrast', 'Slope', 'StdError', 'Intercept', 'RSquared', 'PValue'});
+
+% Display results table
+disp('Unweighted Regression Results:');
+disp(results_table);
+
+% Save figure
+saveas(gcf, 'unweighted_regression_plot.png');
+fprintf('Figure saved as unweighted_regression_plot.png\n');
+
+% Optional: Save results to CSV
+writetable(results_table, 'unweighted_regression_results.csv');
+fprintf('Results saved to unweighted_regression_results.csv\n');
+
+% Additional analysis: Test if slopes are significantly different across contrasts
+fprintf('\nComparing slopes across contrast levels:\n');
+
+% Pairwise comparison of slopes (z-test)
+for i = 1:num_contrasts
+    for j = i+1:num_contrasts
+        % Calculate Z-statistic for difference between slopes
+        z_diff = (slopes(i) - slopes(j)) / sqrt(std_errors(i)^2 + std_errors(j)^2);
+        p_diff = 2 * (1 - normcdf(abs(z_diff)));
+        fprintf('Contrast %s vs %s: Difference = %.3f, z = %.3f, p = %.4f\n', ...
+            contrast_labels{i}, contrast_labels{j}, slopes(i) - slopes(j), z_diff, p_diff);
+    end
+end
+
+% Additional figure: Compare slopes across contrasts
+figure('Position', [100, 500, 500, 400]);
+bar(1:num_contrasts, slopes);
+ylim([-2,2])
+hold on;
+
+% Add error bars
+errorbar(1:num_contrasts, slopes, std_errors, 'k.', 'LineWidth', 1.5);
+
+% Add labels and title
+xlabel('Contrast', 'FontSize', 12);
+ylabel('Regression Slope', 'FontSize', 12);
+title('Comparison of Regression Slopes Across Contrasts', 'FontSize', 14);
+xticks(1:num_contrasts);
+xticklabels(contrast_labels);
+grid on;
+box off;
+set(gca, 'TickDir', 'out');
+
+% Save comparison figure
+saveas(gcf, 'slope_comparison.png');
+fprintf('Slope comparison figure saved as slope_comparison.png\n');
