@@ -4,20 +4,14 @@
 
 % Define the mouse ID and date
 mouse = 'i3323';
-date = '250316';
+date = '250319';
 
 % Define the image parameters for each acquisition
 % Format: {redFolder, greenFolder, depth, redWavelength, greenWavelength}
 acquisitions = {
-    {'000', '000', '100, 1x', '800', '800'},
-    {'001', '001', '170, 1x', '800', '800'},
-    {'002', '002', '235, 1x', '800', '800'},
-    {'003', '003', '100, 1x', '980', '980'},
-    {'004', '004', '170, 1x', '980', '980'},
-    {'005', '005', '235, 1x', '980', '980'},
-    {'006', '006', '100, 1x', '1040', '1040'},
-    {'007', '007', '170, 1x', '1040', '1040'},
-    {'008', '008', '235, 1x', '1040', '1040'}
+    {'000', '000', '182, 1x, 4%', '800', '800'},
+    {'001', '001', '182, 1x, 18%', '980', '980'},
+    {'002', '002', '182, 1x, 46%', '1040', '1040'}
     % Add more acquisitions as needed
 };
 % Base path for outputs (adjust as needed)
@@ -31,6 +25,8 @@ end
 red_images = cell(length(acquisitions), 1);
 green_images = cell(length(acquisitions), 1);
 depth_labels = cell(length(acquisitions), 1);
+red_wavelength_labels= cell(length(acquisitions), 1);
+green_wavelength_labels= cell(length(acquisitions), 1);
 
 % Process all acquisitions and store the results
 for i = 1:length(acquisitions)
@@ -54,6 +50,8 @@ for i = 1:length(acquisitions)
     red_images{i} = red_img;
     green_images{i} = green_img;
     depth_labels{i} = depth_val;
+    red_wavelength_labels{i}=redWavelength;
+    green_wavelength_labels{i}=greenWavelength;
 end
 
 % Create a composite PDF with all red images
@@ -72,7 +70,7 @@ for i = 1:length(red_images)
     nexttile;
     imagesc(red_images{i});
     colormap gray;
-    title([depth_labels{i} 'μm at ' redWavelength 'nm']);
+    title([depth_labels{i} 'm at ' red_wavelength_labels{i} 'nm']);
     set(gca, 'TickDir', 'out');
     grid off;
     box off;
@@ -97,7 +95,7 @@ for i = 1:length(green_images)
     nexttile;
     imagesc(green_images{i});
     colormap gray;
-    title([depth_labels{i} 'μm at ' greenWavelength 'nm']);
+    title([depth_labels{i} 'm at ' green_wavelength_labels{i} 'nm']);
     set(gca, 'TickDir', 'out');
     grid off;
     box off;

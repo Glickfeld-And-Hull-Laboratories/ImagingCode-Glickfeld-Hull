@@ -818,6 +818,12 @@ for iCon = 1:nCon
     clear txt1 highRed lowRed
 end 
 
+%% scatterplots for matched cells
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_all,green_all,'stationaryMatched')
+
+scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_all,green_all,'runningMatched')
+
+
 %% Fig 3D - contrast response split by correlation value
 
 conResp_redHigh_avrg_stat = cell(1,nd); %this will be the average across all redHigh cells - a single line
@@ -1947,7 +1953,7 @@ for contrast = 1:num_contrasts
     text_y_step = 0.08 * y_range;
     
     text(text_x, text_y_start, sprintf('y = %.3fx + %.3f', slopes(contrast), intercepts(contrast)), 'FontSize', 10);
-    text(text_x, text_y_start - text_y_step, sprintf('R² = %.3f', r_squared(contrast)), 'FontSize', 10);
+    text(text_x, text_y_start - text_y_step, sprintf('R� = %.3f', r_squared(contrast)), 'FontSize', 10);
     text(text_x, text_y_start - 2*text_y_step, sprintf('p = %.4f', p_values(contrast)), 'FontSize', 10);
     
     % Add sample size
