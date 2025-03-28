@@ -1,5 +1,7 @@
-function greenImage = processGreenImage(mouse, date, greenFolder, depth, greenWavelength, varargin)
+function greenImage = processGreenImage(mouse, date, greenFolder, depth, varargin)
 % PROCESSGREENIMAGE Processes green channel microscopy images and returns processed image
+%   greenImage = processGreenImage(mouse, date, greenFolder, depth)
+%   greenImage = processGreenImage(mouse, date, greenFolder, depth, greenWavelength)
 %   greenImage = processGreenImage(mouse, date, greenFolder, depth, greenWavelength, nframes)
 %
 %   Inputs:
@@ -7,19 +9,28 @@ function greenImage = processGreenImage(mouse, date, greenFolder, depth, greenWa
 %   date - Date of recording (e.g., '241217')
 %   greenFolder - First three digits of green channel folder (e.g., '000')
 %   depth - Imaging depth information (e.g., '133, 2x')
-%   greenWavelength - Wavelength used for green channel (e.g., '920')
+%   greenWavelength - (Optional) Wavelength used for green channel (default: 920)
 %   nframes - (Optional) Number of frames to process (default: 200)
 %
 %   Outputs:
 %   greenImage - Processed green channel image
+
+    % Parse input arguments
+    p = inputParser;
+    addOptional(p, 'greenWavelength', 920, @isnumeric);
+    addOptional(p, 'nframes', 200, @isnumeric);
+    parse(p, varargin{:});
+    
+    greenWavelength = p.Results.greenWavelength;
+    nframes_green = p.Results.nframes;
 
     % Determine base paths based on computer type
     if strcmp(computer, 'GLNXA64')
         base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\Bonnie\Data';
         out_base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Analysis/2p_analysis/SST_YM90K';
     else
-        base = 'Z:\home\ACh\Data\2p_data';
-        out_base = 'Z:\home\ACh\Analysis\2p_analysis';
+        base = '\home\ACh\Data\2p_data';
+        out_base = '\home\ACh\Analysis\2p_analysis';
     end
 
     % Create paths
@@ -32,12 +43,6 @@ function greenImage = processGreenImage(mouse, date, greenFolder, depth, greenWa
     end
     
     % Process green channel
-    % Parse input arguments for number of frames
-    p = inputParser;
-    addOptional(p, 'nframes', 200, @isnumeric);
-    parse(p, varargin{:});
-    nframes_green = p.Results.nframes;
-    
     cd(data_path_green);
     
     % Load green channel data
@@ -57,7 +62,7 @@ function greenImage = processGreenImage(mouse, date, greenFolder, depth, greenWa
     imagesc(greenImage);
     colormap gray;
     %caxis([200 4000]);
-    title([' ' depth ' green at ' greenWavelength]);
+    title([' ' depth ' green at ' num2str(greenWavelength)]);
     set(gca, 'TickDir', 'out');
     grid off;
     box off;

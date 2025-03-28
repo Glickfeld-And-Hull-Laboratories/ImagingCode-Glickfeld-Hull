@@ -1889,8 +1889,6 @@ ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
 
 %corrected for three tests
 sst_pvalues_stat = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
-contrasts = cons';
-table(contrasts,sst_pvalues_stat)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
@@ -1900,7 +1898,7 @@ table(contrasts,sst_pvalues_stat)
 %corrected for three tests
 sst_pvalues_loc = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
-table(contrasts,sst_pvalues_loc)
+table(contrasts,sst_pvalues_stat,sst_pvalues_loc)
 
 %% Supplemental figure related to 4B
 %stationary and running contrast response for Pyr cells
