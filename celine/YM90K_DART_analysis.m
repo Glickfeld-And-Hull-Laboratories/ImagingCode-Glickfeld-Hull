@@ -506,7 +506,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_3D.pdf'),'-dpdf');
 %% scatterplot with histogram
-scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat)
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat,'Figure2')
 
 %% Figure 3D statistics
 % prepare data for ANOVA
@@ -2537,12 +2537,12 @@ print(fullfile(fnout,'Fig_S5b.pdf'),'-dpdf');
 % confirm that there's no difference in size across days within the "small"
 % pupil trials
 [h p] = ttest(pupilMeans_concat(pre,2,:),pupilMeans_concat(post,2,:))
-% large pupil trials are significantly
+% large pupil trials are significantly larger
 [h p] = ttest(pupilMeans_concat(pre,1,:),pupilMeans_concat(post,1,:))
 
 
 
-%confirm that pupil is significantly large in large trials, averaging over
+%confirm that pupil is significantly larger in large trials, averaging over
 %days
 [h p] = ttest(pupilMeans_clean(1,:),pupilMeans_clean(2,:))
 %test whether pupuil is different between large trials and running
@@ -2582,8 +2582,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_s5c.pdf'),'-dpdf');
 
 
-%look at how motor activity differs with pupil size
-%control day
+%look at how motor activity differs with pupil size control day
 [h p] = ttest(motorByPupil_clean(1,:),motorByPupil_clean(2,:))
 
 %% contrast response pupil
@@ -2769,8 +2768,6 @@ ranova(rm_Pyr_large, 'withinmodel', 'DART*contrast')
 
 %corrected for three tests
 sst_pvalues_small = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
-contrasts = cons';
-table(contrasts,sst_pvalues_small)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_red,1));
@@ -2780,7 +2777,7 @@ table(contrasts,sst_pvalues_small)
 %corrected for three tests
 sst_pvalues_large = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
-table(contrasts,sst_pvalues_large)
+table(contrasts,sst_pvalues_small,sst_pvalues_large)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_smallPupil_concat{post}(have_allPupil_green,1));
@@ -2789,8 +2786,7 @@ table(contrasts,sst_pvalues_large)
 
 %corrected for three tests
 pyr_pvalues_small = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
-contrasts = cons';
-table(contrasts,pyr_pvalues_small)
+
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_green,1));
@@ -2800,7 +2796,7 @@ table(contrasts,pyr_pvalues_small)
 %corrected for three tests
 pyr_pvalues_large = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 contrasts = cons';
-table(contrasts,pyr_pvalues_large)
+table(contrasts,pyr_pvalues_small,pyr_pvalues_large)
 
 %calculate norm_diff
 norm_diff_pupil = nan(2,nCon,nKeep_total);

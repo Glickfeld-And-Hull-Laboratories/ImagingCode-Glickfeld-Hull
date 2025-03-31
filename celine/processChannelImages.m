@@ -9,13 +9,22 @@ function [redImage, greenImage, compositeImage] = processChannelImages(mouse, da
 %   redFolder - First three digits of red channel folder (e.g., '001')
 %   greenFolder - First three digits of green channel folder (e.g., '000')
 %   depth - Imaging depth information (e.g., '133, 2x')
-%   redWavelength - Wavelength used for red channel (e.g., '1040')
-%   greenWavelength - Wavelength used for green channel (e.g., '920')
+%   redWavelength - (Optional) Wavelength used for red channel (default: '1040')
+%   greenWavelength - (Optional) Wavelength used for green channel (default: '920')
 %
 %   Outputs:
 %   redImage - Processed red channel image
 %   greenImage - Processed green channel image
 %   compositeImage - Composite of red and green channels
+
+    % Set default values for optional parameters
+    if nargin < 7 || isempty(greenWavelength)
+        greenWavelength = '920';
+    end
+    
+    if nargin < 6 || isempty(redWavelength)
+        redWavelength = '1040';
+    end
 
     % Determine base paths based on computer type
     if strcmp(computer, 'GLNXA64')

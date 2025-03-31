@@ -1,4 +1,4 @@
-function scatter_signedHypDist(dataset, pre, post, interneuron_indices, pyramidal_indices,filename)
+function scatter_signedHypDist(dataset, pre, post, interneuron_indices, pyramidal_indices, filename)
 % scatter_signedHypDist Creates scatter plots with signed hypotenuse probability distributions for neural responses and saves to PDF
 %
 % INPUTS:
@@ -7,6 +7,7 @@ function scatter_signedHypDist(dataset, pre, post, interneuron_indices, pyramida
 %   post - Index for post condition in dataset
 %   interneuron_indices - Indices for interneurons
 %   pyramidal_indices - Indices for pyramidal cells
+%   filename - Base filename for saving PDFs
 %
 % This function creates scatter plots of pre vs. post neural responses
 % for both interneurons and pyramidal cells, along with probability density plots of post-pre differences,
@@ -15,7 +16,60 @@ function scatter_signedHypDist(dataset, pre, post, interneuron_indices, pyramida
 % Get number of contrast conditions
 [~, nCon] = size(dataset{pre});
 
-% Loop through each contrast condition
+% FIRST PASS: Find global min/max values across all contrasts for consistent axes
+int_min_global = Inf;
+int_max_global = -Inf;
+pyr_min_global = Inf;
+pyr_max_global = -Inf;
+
+% Calculate global axis limits for interneurons and pyramidal cells
+for iCon = 1:nCon
+    % Extract data for this contrast condition
+    pre_interneuron = dataset{pre}(interneuron_indices, iCon);
+    post_interneuron = dataset{post}(interneuron_indices, iCon);
+    pre_pyramidal = dataset{pre}(pyramidal_indices, iCon);
+    post_pyramidal = dataset{post}(pyramidal_indices, iCon);
+    
+    % Update global min/max for interneurons
+    int_min_raw = min([pre_interneuron; post_interneuron]);
+    int_min_global = min(int_min_global, int_min_raw);
+    
+    int_max_raw = max([pre_interneuron; post_interneuron]);
+    int_max_global = max(int_max_global, int_max_raw);
+    
+    % Update global min/max for pyramidal cells
+    pyr_min_raw = min([pre_pyramidal; post_pyramidal]);
+    pyr_min_global = min(pyr_min_global, pyr_min_raw);
+    
+    pyr_max_raw = max([pre_pyramidal; post_pyramidal]);
+    pyr_max_global = max(pyr_max_global, pyr_max_raw);
+end
+
+% Round down global min to integer with 1 decimal place
+int_min_global = floor(int_min_global * 10) / 10;
+pyr_min_global = floor(pyr_min_global * 10) / 10;
+
+% Round up global max to integer with 1 decimal place and double it
+int_max_global = ceil(int_max_global * 10) / 10 * 2;
+pyr_max_global = ceil(pyr_max_global * 10) / 10 * 2;
+
+% Set consistent axis limits
+int_axis_lim = [int_min_global int_max_global];
+pyr_axis_lim = [pyr_min_global pyr_max_global];
+
+% Calculate axis limits for signed hypotenuse distributions based on global ranges
+int_leg_length = int_axis_lim(2) - int_axis_lim(1);
+pyr_leg_length = pyr_axis_lim(2) - pyr_axis_lim(1);
+
+% Calculate hypotenuse of right triangle with leg length = x-axis range of scatterplot
+int_hyp_bound = int_leg_length / 2; % Half of diagonal length for consistent scaling
+pyr_hyp_bound = pyr_leg_length / 2; % Half of diagonal length for consistent scaling
+
+% Set symmetric axis limits for signed hypotenuse
+hyp_int_axis_lim = [-int_hyp_bound int_hyp_bound];
+hyp_pyr_axis_lim = [-pyr_hyp_bound pyr_hyp_bound];
+
+% SECOND PASS: Create plots using consistent axis limits
 for iCon = 1:nCon
     % Create a new figure with a 2x2 grid layout with explicit size in inches
     fig = figure('Units', 'inches', 'Position', [1 1 4 4]);
@@ -34,37 +88,6 @@ for iCon = 1:nCon
     % Add sign based on whether pre > post (reversed from previous version)
     signed_hyp_interneuron = hyp_interneuron .* sign(pre_interneuron - post_interneuron);
     signed_hyp_pyramidal = hyp_pyramidal .* sign(pre_pyramidal - post_pyramidal);
-    
-    % Calculate axis limits for interneurons - find min and double the max
-    int_min_raw = min([pre_interneuron; post_interneuron]);
-    % Round down to integer with 1 decimal place (e.g., 1.23  1.0)
-    int_min = floor(int_min_raw * 10) / 10;
-    int_max_raw = max([pre_interneuron; post_interneuron]);
-    % Round up to integer with 1 decimal place
-    int_max = ceil(int_max_raw * 10) / 10 * 2; % Double the max value after rounding
-    int_axis_lim = [int_min int_max];
-    
-    % Calculate axis limits for pyramidal cells - find min and double the max
-    pyr_min_raw = min([pre_pyramidal; post_pyramidal]);
-    % Round down to integer with 1 decimal place (e.g., 1.23  1.0)
-    pyr_min = floor(pyr_min_raw * 10) / 10;
-    pyr_max_raw = max([pre_pyramidal; post_pyramidal]);
-    % Round up to integer with 1 decimal place
-    pyr_max = ceil(pyr_max_raw * 10) / 10 * 2; % Double the max value after rounding
-    pyr_axis_lim = [pyr_min pyr_max];
-    
-    % Calculate axis limits for signed hypotenuse distributions based on scatterplot ranges
-    % Calculate leg length of scatterplots
-    int_leg_length = int_axis_lim(2) - int_axis_lim(1);
-    pyr_leg_length = pyr_axis_lim(2) - pyr_axis_lim(1);
-    
-    % Calculate hypotenuse of right triangle with leg length = x-axis range of scatterplot
-    int_hyp_bound = int_leg_length / 2; % Half of diagonal length for consistent scaling
-    pyr_hyp_bound = pyr_leg_length / 2; % Half of diagonal length for consistent scaling
-    
-    % Set symmetric axis limits for signed hypotenuse
-    hyp_int_axis_lim = [-int_hyp_bound int_hyp_bound];
-    hyp_pyr_axis_lim = [-pyr_hyp_bound pyr_hyp_bound];
     
     % Calculate x-values for signed hypotenuse distributions 
     x_smooth_hyp_int = linspace(hyp_int_axis_lim(1), hyp_int_axis_lim(2), 100);
@@ -93,14 +116,14 @@ for iCon = 1:nCon
     xlim(int_axis_lim);
     ylim(int_axis_lim);
     axis square
-    xlabel('Pre Response', 'FontSize', 10);
-    ylabel('Post Response', 'FontSize', 10);
-    title('Interneurons');
+    % xlabel('Pre Response', 'FontSize', 10);
+    % ylabel('Post Response', 'FontSize', 10);
+    % title('Interneurons');
     
     % Create exactly 3 tick marks at min, middle, max with one decimal place
     % Ensure middle tick is exactly halfway between min and max
-    int_middle = (int_min + int_max) / 2;
-    x_ticks = [int_min, int_middle, int_max];
+    int_middle = (int_axis_lim(1) + int_axis_lim(2)) / 2;
+    x_ticks = [int_axis_lim(1), int_middle, int_axis_lim(2)];
     y_ticks = x_ticks;
     
     xticks(x_ticks);
@@ -108,7 +131,6 @@ for iCon = 1:nCon
     xticklabels(compose('%.1f', x_ticks));
     yticklabels(compose('%.1f', y_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
-    grid off
     box off
     
     % Interneuron signed hypotenuse distribution - top right
@@ -116,9 +138,9 @@ for iCon = 1:nCon
     area(x_smooth_hyp_int, hyp_int_density, 'FaceColor', interneuron_color, 'EdgeColor', 'none', 'FaceAlpha', 0.5);
     xlim(hyp_int_axis_lim);
     ylim([0 1.1]);  % Fixed y-axis for normalized density
-    title('Interneurons (Signed Hypotenuse)');
-    xlabel('Signed Magnitude (+ if Pre > Post)', 'FontSize', 10);
-    ylabel('Normalized Density', 'FontSize', 10);
+    % title('Interneurons (Signed Hypotenuse)');
+    % xlabel('Signed Magnitude (+ if Pre > Post)', 'FontSize', 10);
+    % ylabel('Normalized Density', 'FontSize', 10);
     % Add vertical line at zero
     hold on;
     plot([0 0], [0 1.1], 'k--');
@@ -127,7 +149,6 @@ for iCon = 1:nCon
     xticks(x_ticks);
     xticklabels(compose('%.1f', x_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
-    grid off
     box off
     
     % Pyramidal cell scatter - bottom left
@@ -141,14 +162,14 @@ for iCon = 1:nCon
     xlim(pyr_axis_lim);
     ylim(pyr_axis_lim);
     axis square
-    xlabel('Pre Response', 'FontSize', 10);
-    ylabel('Post Response', 'FontSize', 10);
-    title('Pyramidal Cells');
+    % xlabel('Pre Response', 'FontSize', 10);
+    % ylabel('Post Response', 'FontSize', 10);
+    % title('Pyramidal Cells');
     
     % Create exactly 3 tick marks at min, middle, max with one decimal place
     % Ensure middle tick is exactly halfway between min and max
-    pyr_middle = (pyr_min + pyr_max) / 2;
-    x_ticks = [pyr_min, pyr_middle, pyr_max];
+    pyr_middle = (pyr_axis_lim(1) + pyr_axis_lim(2)) / 2;
+    x_ticks = [pyr_axis_lim(1), pyr_middle, pyr_axis_lim(2)];
     y_ticks = x_ticks;
     
     xticks(x_ticks);
@@ -156,7 +177,6 @@ for iCon = 1:nCon
     xticklabels(compose('%.1f', x_ticks));
     yticklabels(compose('%.1f', y_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
-    grid off
     box off
     
     % Pyramidal signed hypotenuse distribution - bottom right
@@ -164,9 +184,9 @@ for iCon = 1:nCon
     area(x_smooth_hyp_pyr, hyp_pyr_density, 'FaceColor', pyramidal_color, 'EdgeColor', 'none', 'FaceAlpha', 0.5);
     xlim(hyp_pyr_axis_lim);
     ylim([0 1.1]);  % Fixed y-axis for normalized density
-    title('Pyramidal Cells (Signed Hypotenuse)');
-    xlabel('Signed Magnitude (+ if Pre > Post)', 'FontSize', 10);
-    ylabel('Normalized Density', 'FontSize', 10);
+    % title('Pyramidal Cells (Signed Hypotenuse)');
+    % xlabel('Signed Magnitude (+ if Pre > Post)', 'FontSize', 10);
+    % ylabel('Normalized Density', 'FontSize', 10);
     % Add vertical line at zero
     hold on;
     plot([0 0], [0 1.1], 'k--');
@@ -175,7 +195,6 @@ for iCon = 1:nCon
     xticks(x_ticks);
     xticklabels(compose('%.1f', x_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
-    grid off
     box off
     
     % Set scatterplot size to 0.75 inch square
