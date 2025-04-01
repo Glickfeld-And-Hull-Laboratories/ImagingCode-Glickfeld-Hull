@@ -30,9 +30,12 @@ function [redImage, greenImage, compositeImage] = processChannelImages(mouse, da
     if strcmp(computer, 'GLNXA64')
         base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\Bonnie\Data';
         out_base = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_Staff/home/ACh/Analysis/2p_analysis/SST_YM90K';
-    else
-        base = 'Z:\home\ACh\Data\2p_data';
-        out_base = 'Z:\home\ACh\Analysis\2p_analysis';
+    % else if strcmp(computer, 'PCWIN64')
+    %     base = 'G:\home\ACh\Data\2p_data';
+    %     out_base = 'G:\home\ACh\Analysis\2p_analysis';
+    % else
+        base = '\home\ACh\Data\2p_data';
+        out_base = '\home\ACh\Analysis\2p_analysis';
     end
 
     % Create paths

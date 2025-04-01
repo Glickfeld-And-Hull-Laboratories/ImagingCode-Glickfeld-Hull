@@ -1900,6 +1900,24 @@ sst_pvalues_loc = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
 table(contrasts,sst_pvalues_stat,sst_pvalues_loc)
 
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
+
+%corrected for three tests
+pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
+
+%corrected for three tests
+pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+contrasts = cons';
+table(contrasts,pyr_pvalues_stat,pyr_pvalues_loc)
 %% Supplemental figure related to 4B
 %stationary and running contrast response for Pyr cells
 figure

@@ -120,10 +120,9 @@ for iCon = 1:nCon
     % ylabel('Post Response', 'FontSize', 10);
     % title('Interneurons');
     
-    % Create exactly 3 tick marks at min, middle, max with one decimal place
-    % Ensure middle tick is exactly halfway between min and max
-    int_middle = (int_axis_lim(1) + int_axis_lim(2)) / 2;
-    x_ticks = [int_axis_lim(1), int_middle, int_axis_lim(2)];
+    % Create tick marks at 0, half of max, and max with one decimal place
+    int_half_max = int_axis_lim(2) / 2;
+    x_ticks = [0, int_half_max, int_axis_lim(2)];
     y_ticks = x_ticks;
     
     xticks(x_ticks);
@@ -132,6 +131,7 @@ for iCon = 1:nCon
     yticklabels(compose('%.1f', y_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
     box off
+    grid off
     
     % Interneuron signed hypotenuse distribution - top right
     subplot(2, 2, 2);
@@ -150,6 +150,7 @@ for iCon = 1:nCon
     xticklabels(compose('%.1f', x_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
     box off
+    grid off
     
     % Pyramidal cell scatter - bottom left
     subplot(2, 2, 3);
@@ -166,10 +167,9 @@ for iCon = 1:nCon
     % ylabel('Post Response', 'FontSize', 10);
     % title('Pyramidal Cells');
     
-    % Create exactly 3 tick marks at min, middle, max with one decimal place
-    % Ensure middle tick is exactly halfway between min and max
-    pyr_middle = (pyr_axis_lim(1) + pyr_axis_lim(2)) / 2;
-    x_ticks = [pyr_axis_lim(1), pyr_middle, pyr_axis_lim(2)];
+    % Create tick marks at 0, half of max, and max with one decimal place
+    pyr_half_max = pyr_axis_lim(2) / 2;
+    x_ticks = [0, pyr_half_max, pyr_axis_lim(2)];
     y_ticks = x_ticks;
     
     xticks(x_ticks);
@@ -178,6 +178,7 @@ for iCon = 1:nCon
     yticklabels(compose('%.1f', y_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
     box off
+    grid off
     
     % Pyramidal signed hypotenuse distribution - bottom right
     subplot(2, 2, 4);
@@ -196,6 +197,7 @@ for iCon = 1:nCon
     xticklabels(compose('%.1f', x_ticks));
     set(gca, 'TickDir', 'out', 'FontSize', 8, 'XTickLabelRotation', 0, 'YTickLabelRotation', 0)
     box off
+    grid off
     
     % Set scatterplot size to 0.75 inch square
     ax1 = subplot(2, 2, 1);
