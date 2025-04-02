@@ -187,8 +187,6 @@ for iSess = 1:nSess
    if size(pref_responses_stat_concat{id},1) ~= size(pref_responses_stat_smallPupil_concat{id},1)
        break
    end
-       
-
 
 
 iSess
@@ -319,6 +317,7 @@ mouseID=mouseID';
 
 %calculate norm_diff
 norm_diff = nan(2,nCon,nKeep_total);
+bsln_std =  nan(2,nCon,nKeep_total);
 for i = 1:nKeep_total
     for iCon = 1:nCon
         %for stationary trials
@@ -336,6 +335,8 @@ for i = 1:nKeep_total
         %putting data into matrix
         norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
         norm_diff(2,iCon,i)=norm_diff_loc; %second is running
+        bsln_std(1,iCon,i)=std_pre_stat; %std for stationary trials on basline day
+        bsln_std(2,iCon,i)=std_pre_loc; %std for running trials on basline day
 clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc norm_diff_stat norm_diff_loc
     end 
 end
@@ -343,6 +344,9 @@ end
 %those into NANs instead
 norm_diff(find(norm_diff == -Inf))=NaN;
 norm_diff(find(norm_diff == Inf))=NaN;
+
+bsln_std(find(bsln_std == -Inf))=NaN;
+bsln_std(find(bsln_std == Inf))=NaN;
 
 % cells with high correlation in the baseline day
 highRInds = find(noiseCorr_OG_concat{pre}(1,:)>0.5);
@@ -501,6 +505,8 @@ height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_3D.pdf'),'-dpdf');
+%% scatterplot with histogram
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat,'Figure2')
 
 %% Figure 3D statistics
 % prepare data for ANOVA
@@ -853,7 +859,7 @@ z=double(nOn)/double(frame_rate);
 t=1:(size(hi_avrg_stat{1,1,1},1));
 t=(t-(double(stimStart)-1))/double(frame_rate);
 
-%Makes a plot for each contrast - 50 contrast used in paper
+%Makes a plot for each contrast - 25 contrast used in paper
 for iCon = 1:nCon
     figure
     subplot(1,2,1) 
@@ -900,9 +906,9 @@ for iCon = 1:nCon
     set(gca,'XColor', 'none','YColor','none')
     
     sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
-     if iCon==2
+     if iCon==1
         print(fullfile(fnout,'Fig_4B.pdf'),'-dpdf');
-     % else %option to print the plots for 25 and 100 contrast as well,
+     % else %option to print the plots for 50 and 100 contrast as well,
      % rather than just displaying them
      %     print(fullfile(fnout,[num2str(cons(iCon)) 'stat_R_timecourses.pdf']),'-dpdf');
      end
@@ -1669,6 +1675,10 @@ set(gca,'XColor', 'none','YColor','none')
 
 end  
 print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
+%% scatterplots for matched cells
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_all,green_all,'stationaryMatched')
+
+scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_all,green_all,'runningMatched')
 
 %% Fig 5C- timecourses for Pyr cells running trials
 tc_green_avrg_stat = cell(1,nd);
@@ -1879,8 +1889,6 @@ ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
 
 %corrected for three tests
 sst_pvalues_stat = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
-contrasts = cons';
-table(contrasts,sst_pvalues_stat)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
@@ -1890,8 +1898,26 @@ table(contrasts,sst_pvalues_stat)
 %corrected for three tests
 sst_pvalues_loc = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
-table(contrasts,sst_pvalues_loc)
+table(contrasts,sst_pvalues_stat,sst_pvalues_loc)
 
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
+
+%corrected for three tests
+pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
+
+%corrected for three tests
+pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+contrasts = cons';
+table(contrasts,pyr_pvalues_stat,pyr_pvalues_loc)
 %% Supplemental figure related to 4B
 %stationary and running contrast response for Pyr cells
 figure
@@ -2529,12 +2555,12 @@ print(fullfile(fnout,'Fig_S5b.pdf'),'-dpdf');
 % confirm that there's no difference in size across days within the "small"
 % pupil trials
 [h p] = ttest(pupilMeans_concat(pre,2,:),pupilMeans_concat(post,2,:))
-% large pupil trials are significantly
+% large pupil trials are significantly larger
 [h p] = ttest(pupilMeans_concat(pre,1,:),pupilMeans_concat(post,1,:))
 
 
 
-%confirm that pupil is significantly large in large trials, averaging over
+%confirm that pupil is significantly larger in large trials, averaging over
 %days
 [h p] = ttest(pupilMeans_clean(1,:),pupilMeans_clean(2,:))
 %test whether pupuil is different between large trials and running
@@ -2574,8 +2600,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_s5c.pdf'),'-dpdf');
 
 
-%look at how motor activity differs with pupil size
-%control day
+%look at how motor activity differs with pupil size control day
 [h p] = ttest(motorByPupil_clean(1,:),motorByPupil_clean(2,:))
 
 %% contrast response pupil
@@ -2761,8 +2786,6 @@ ranova(rm_Pyr_large, 'withinmodel', 'DART*contrast')
 
 %corrected for three tests
 sst_pvalues_small = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
-contrasts = cons';
-table(contrasts,sst_pvalues_small)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_red,1));
@@ -2772,7 +2795,7 @@ table(contrasts,sst_pvalues_small)
 %corrected for three tests
 sst_pvalues_large = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
-table(contrasts,sst_pvalues_large)
+table(contrasts,sst_pvalues_small,sst_pvalues_large)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_smallPupil_concat{post}(have_allPupil_green,1));
@@ -2781,8 +2804,7 @@ table(contrasts,sst_pvalues_large)
 
 %corrected for three tests
 pyr_pvalues_small = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
-contrasts = cons';
-table(contrasts,pyr_pvalues_small)
+
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_green,1));
@@ -2792,7 +2814,7 @@ table(contrasts,pyr_pvalues_small)
 %corrected for three tests
 pyr_pvalues_large = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 contrasts = cons';
-table(contrasts,pyr_pvalues_large)
+table(contrasts,pyr_pvalues_small,pyr_pvalues_large)
 
 %calculate norm_diff
 norm_diff_pupil = nan(2,nCon,nKeep_total);
@@ -3408,31 +3430,511 @@ ylim([-5 7.5])
 title('SST')
 
 %% comparing normalized difference to noise correlation
-%get a normalized difference averaged over contrasts
-norm_diff_average_stat = squeeze(mean(norm_diff(1,:,:),2,'omitmissing'));
-norm_diff_average_loc = squeeze(mean(norm_diff(2,:,:),2,'omitmissing'));
 
-figure
-scatter(noiseCorr_OG_concat{pre}(1,green_ind_concat),norm_diff_average_stat(green_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('Pyr')
-ylim([-5, 10])
-figure
-scatter(noiseCorr_OG_concat{pre}(1,red_ind_concat),norm_diff_average_stat(red_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('SST')
+mySample = red_ind_concat;
+% Extract data (stationary state only)
+stationary_norm_diff = squeeze(norm_diff(1,:,mySample)); % [contrast, neuron]
+stationary_bsln_std = squeeze(bsln_std(1,:,mySample));   % [contrast, neuron]
+baseline_noise_corr = noiseCorr_OG_concat{2}(1,mySample); % [1, neuron]
 
-figure
-scatter(noiseCorr_OG_concat{pre}(1,green_ind_concat),norm_diff_average_loc(green_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('Pyr')
-ylim([-5, 10])
-figure
-scatter(noiseCorr_OG_concat{pre}(1,red_ind_concat),norm_diff_average_loc(red_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('SST')
-ylim([-5, 10])
+% Number of contrasts and neurons
+[num_contrasts, num_neurons] = size(stationary_norm_diff);
+
+% Store results
+slopes = zeros(num_contrasts, 1);
+intercepts = zeros(num_contrasts, 1);
+r_squared = zeros(num_contrasts, 1);
+p_values = zeros(num_contrasts, 1);
+std_errors = zeros(num_contrasts, 1);
+
+% Create figure
+figure('Position', [100, 100, 1200, 400]);
+
+% Analyze each contrast
+for contrast = 1:num_contrasts
+    % Extract data for this contrast
+    y = stationary_norm_diff(contrast, :)';  % neural response difference
+    x = baseline_noise_corr';                 % noise correlations
+    
+    % Handle NaNs and missing data
+    valid_idx = ~isnan(x) & ~isnan(y) & isfinite(x) & isfinite(y);
+    
+    % Check if we have enough valid data points
+    if sum(valid_idx) < 3
+        warning('Not enough valid data points for contrast %d. Skipping.', contrast);
+        title(sprintf('Contrast %d: Insufficient Data', contrast));
+        continue;
+    end
+    
+    % Use only valid data
+    x_valid = x(valid_idx);
+    y_valid = y(valid_idx);
+    
+    % Perform unweighted linear regression
+    [p, stats] = polyfit(x_valid, y_valid, 1);
+    
+    % Store results
+    intercepts(contrast) = p(2);
+    slopes(contrast) = p(1);
+    
+    % Calculate standard error of the slope
+    yfit = polyval(p, x_valid);
+    residuals = y_valid - yfit;
+    SSE = sum(residuals.^2);
+    n = length(x_valid);
+    
+    % Standard error of the regression
+    SE_regression = sqrt(SSE / (n-2));
+    
+    % Sum of squares of x deviations
+    SS_x = sum((x_valid - mean(x_valid)).^2);
+    
+    % Standard error of the slope
+    std_errors(contrast) = SE_regression / sqrt(SS_x);
+    
+    % Calculate R-squared
+    SS_total = sum((y_valid - mean(y_valid)).^2);
+    r_squared(contrast) = 1 - SSE/SS_total;
+    
+    % Calculate p-value for slope
+    t_stat = slopes(contrast) / std_errors(contrast);
+    p_values(contrast) = 2 * (1 - tcdf(abs(t_stat), length(x_valid) - 2));
+    
+    % Plot regression
+    subplot(1, 3, contrast);
+    
+    % Create scatter plot with uniform size
+    scatter(x_valid, y_valid, 50, 'filled', 'MarkerFaceAlpha', 0.7);
+    hold on;
+    
+    % Add regression line
+    x_range = linspace(min(x_valid), max(x_valid), 100);
+    y_line = p(1) * x_range + p(2);
+    plot(x_range, y_line, 'r-', 'LineWidth', 2);
+    
+    % Labels and title
+    contrasts = [25, 50, 100];
+    title(sprintf('Contrast: %d%%', contrasts(contrast)), 'FontSize', 12);
+    xlabel('Noise Correlation (Baseline)', 'FontSize', 11);
+    ylabel('Normalized Difference', 'FontSize', 11);
+    
+    xlim([-.2 1])
+    ylim([-8 8])
+
+    % Add horizontal line at y=0
+    hline(0)
+    
+    % Add regression equation and stats
+    % Calculate text position dynamically
+    x_range = max(x_valid) - min(x_valid);
+    y_range = range(ylim);
+    text_x = min(x_valid);
+    text_y_start = max(ylim) - 0.2 * y_range;
+    text_y_step = 0.08 * y_range;
+    
+    text(text_x, text_y_start, sprintf('y = %.3fx + %.3f', slopes(contrast), intercepts(contrast)), 'FontSize', 10);
+    text(text_x, text_y_start - text_y_step, sprintf('R = %.3f', r_squared(contrast)), 'FontSize', 10);
+    text(text_x, text_y_start - 2*text_y_step, sprintf('p = %.4f', p_values(contrast)), 'FontSize', 10);
+    
+    % Add sample size
+    text(text_x, text_y_start - 3*text_y_step, sprintf('n = %d', sum(valid_idx)), 'FontSize', 10);
+    
+    % Set box style and tick direction
+    box off;
+    set(gca, 'TickDir', 'out');
+end
+
+% Adjust spacing
+sgtitle('Unweighted Regression: Noise Correlation vs. Normalized Difference (Stationary State)', 'FontSize', 14);
+set(gcf, 'Color', 'w');
+
+% Create a results table
+contrast_labels = {'25%', '50%', '100%'};
+results_table = table(contrast_labels', slopes, std_errors, intercepts, r_squared, p_values, ...
+    'VariableNames', {'Contrast', 'Slope', 'StdError', 'Intercept', 'RSquared', 'PValue'});
+
+% Display results table
+disp('Unweighted Regression Results:');
+disp(results_table);
+
+% Save figure
+saveas(gcf, 'unweighted_regression_plot.png');
+fprintf('Figure saved as unweighted_regression_plot.png\n');
+
+% Optional: Save results to CSV
+writetable(results_table, 'unweighted_regression_results.csv');
+fprintf('Results saved to unweighted_regression_results.csv\n');
+
+% Additional analysis: Test if slopes are significantly different across contrasts
+fprintf('\nComparing slopes across contrast levels:\n');
+
+% Pairwise comparison of slopes (z-test)
+for i = 1:num_contrasts
+    for j = i+1:num_contrasts
+        % Calculate Z-statistic for difference between slopes
+        z_diff = (slopes(i) - slopes(j)) / sqrt(std_errors(i)^2 + std_errors(j)^2);
+        p_diff = 2 * (1 - normcdf(abs(z_diff)));
+        fprintf('Contrast %s vs %s: Difference = %.3f, z = %.3f, p = %.4f\n', ...
+            contrast_labels{i}, contrast_labels{j}, slopes(i) - slopes(j), z_diff, p_diff);
+    end
+end
+
+% Additional figure: Compare slopes across contrasts
+figure('Position', [100, 500, 500, 400]);
+bar(1:num_contrasts, slopes);
+ylim([-2,2])
+hold on;
+
+% Add error bars
+errorbar(1:num_contrasts, slopes, std_errors, 'k.', 'LineWidth', 1.5);
+
+% Add labels and title
+xlabel('Contrast', 'FontSize', 12);
+ylabel('Regression Slope', 'FontSize', 12);
+title('Comparison of Regression Slopes Across Contrasts', 'FontSize', 14);
+xticks(1:num_contrasts);
+xticklabels(contrast_labels);
+grid on;
+box off;
+set(gca, 'TickDir', 'out');
+
+% Save comparison figure
+saveas(gcf, 'slope_comparison.png');
+fprintf('Slope comparison figure saved as slope_comparison.png\n');
+%% Plot norm_diff by contrast for high and low noiseCorr cells
+% Ask user if they want to remove outliers
+remove_outliers = input('Do you want to remove outliers? (1 for yes, 0 for no): ');
+
+% If user chooses to remove outliers, ask for standard deviation threshold
+std_threshold = 2; % Default value
+if remove_outliers
+    std_threshold = input('Enter the number of standard deviations to use for outlier detection (default is 2): ');
+    if isempty(std_threshold)
+        std_threshold = 2;
+    end
+end
+
+% Create filtered copies of the data
+high_filtered = norm_diff(1, :, redHigh);
+low_filtered = norm_diff(1, :, redLow);
+
+% Initialize counters for outliers
+high_outliers_count = 0;
+low_outliers_count = 0;
+
+% For each contrast level, optionally remove outliers
+for contrast = 1:size(norm_diff, 2)
+    % For high correlation neurons
+    high_contrast_data = squeeze(high_filtered(1, contrast, :));
+    
+    if remove_outliers
+        high_mean = nanmean(high_contrast_data);
+        high_std = nanstd(high_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(high_contrast_data - high_mean) > std_threshold * high_std;
+        high_contrast_outliers = sum(outlier_indices);
+        high_outliers_count = high_outliers_count + high_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, High correlation neurons: %d outliers removed\n', contrast, high_contrast_outliers);
+
+        high_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    high_filtered(1, contrast, :) = high_contrast_data;
+
+    % For low correlation neurons
+    low_contrast_data = squeeze(low_filtered(1, contrast, :));
+    
+    if remove_outliers
+        low_mean = nanmean(low_contrast_data);
+        low_std = nanstd(low_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(low_contrast_data - low_mean) > std_threshold * low_std;
+        low_contrast_outliers = sum(outlier_indices);
+        low_outliers_count = low_outliers_count + low_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, Low correlation neurons: %d outliers removed\n', contrast, low_contrast_outliers);
+
+        low_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    low_filtered(1, contrast, :) = low_contrast_data;
+end
+
+% Print total outliers removed in first dataset (if applicable)
+if remove_outliers
+    fprintf('\nFirst dataset (Stationary):\n');
+    fprintf('Total outliers removed from high correlation neurons: %d\n', high_outliers_count);
+    fprintf('Total outliers removed from low correlation neurons: %d\n', low_outliers_count);
+    fprintf('Combined total outliers removed: %d\n\n', high_outliers_count + low_outliers_count);
+end
+
+% Calculate means for high and low correlation neurons at each contrast, ignoring NaNs
+high_means = squeeze(nanmean(high_filtered, 3));
+low_means = squeeze(nanmean(low_filtered, 3));
+
+% Calculate SEM for high and low correlation neurons at each contrast, ignoring NaNs
+% First get the standard deviation ignoring NaNs
+high_std = squeeze(nanstd(high_filtered, 0, 3));
+low_std = squeeze(nanstd(low_filtered, 0, 3));
+
+% Count the actual number of non-NaN values for each contrast
+high_count = squeeze(sum(~isnan(high_filtered), 3));
+low_count = squeeze(sum(~isnan(low_filtered), 3));
+
+% Calculate SEM using the actual counts of non-NaN values
+high_sem = high_std ./ sqrt(high_count);
+low_sem = low_std ./ sqrt(low_count);
+
+% Define x-axis (contrast levels)
+contrasts = 1:size(norm_diff, 2);
+contrast_labels = {'25%', '50%', '100%'};
+
+% Create a figure optimized for PDF output (using standard paper size proportions)
+figure('Position', [100, 100, 800, 600], 'PaperPositionMode', 'auto', 'PaperSize', [8.5 11], 'PaperUnits', 'inches');
+
+% First subplot
+subplot(1, 2, 1)
+hold on;
+
+% Plot high correlation neurons with error bars
+errorbar(contrasts, high_means, high_sem, '-o', 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+
+% Plot low correlation neurons with error bars
+errorbar(contrasts, low_means, low_sem, '-o', 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+xlim([.75 3.25])
+
+% Add labels and legend
+xlabel('Contrast');
+ylabel('Mean Raw Difference');
+title('Stationary (SST)');
+legend('High Correlation Neurons', 'Low Correlation Neurons', 'Location', 'best');
+
+% Set x-axis ticks and labels
+set(gca, 'XTick', contrasts, 'XTickLabel', contrast_labels, 'TickDir', 'out');
+
+% Customize plot appearance
+grid off;
+box off;
+set(gca, 'FontSize', 12);
+
+% Create filtered copies of the data for the second subplot
+high_filtered2 = norm_diff(2, :, highRInds);
+low_filtered2 = norm_diff(2, :, lowRInds);
+
+% Initialize counters for outliers in second dataset
+high_outliers_count2 = 0;
+low_outliers_count2 = 0;
+
+% For each contrast level, optionally remove outliers
+for contrast = 1:size(norm_diff, 2)
+    % For high correlation neurons
+    high_contrast_data = squeeze(high_filtered2(1, contrast, :));
+    
+    if remove_outliers
+        high_mean = nanmean(high_contrast_data);
+        high_std = nanstd(high_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(high_contrast_data - high_mean) > std_threshold * high_std;
+        high_contrast_outliers = sum(outlier_indices);
+        high_outliers_count2 = high_outliers_count2 + high_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, High correlation neurons (Running): %d outliers removed\n', contrast, high_contrast_outliers);
+
+        high_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    high_filtered2(1, contrast, :) = high_contrast_data;
+
+    % For low correlation neurons
+    low_contrast_data = squeeze(low_filtered2(1, contrast, :));
+    
+    if remove_outliers
+        low_mean = nanmean(low_contrast_data);
+        low_std = nanstd(low_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(low_contrast_data - low_mean) > std_threshold * low_std;
+        low_contrast_outliers = sum(outlier_indices);
+        low_outliers_count2 = low_outliers_count2 + low_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, Low correlation neurons (Running): %d outliers removed\n', contrast, low_contrast_outliers);
+
+        low_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    low_filtered2(1, contrast, :) = low_contrast_data;
+end
+
+% Print total outliers removed in second dataset (if applicable)
+if remove_outliers
+    fprintf('\nSecond dataset (Running):\n');
+    fprintf('Total outliers removed from high correlation neurons: %d\n', high_outliers_count2);
+    fprintf('Total outliers removed from low correlation neurons: %d\n', low_outliers_count2);
+    fprintf('Combined total outliers removed: %d\n\n', high_outliers_count2 + low_outliers_count2);
+
+    % Print grand total
+    fprintf('GRAND TOTAL outliers removed across both datasets: %d\n', high_outliers_count + low_outliers_count + high_outliers_count2 + low_outliers_count2);
+end
+
+% Calculate means for high and low correlation neurons at each contrast, ignoring NaNs
+high_means2 = squeeze(nanmean(high_filtered2, 3));
+low_means2 = squeeze(nanmean(low_filtered2, 3));
+
+% Calculate SEM for high and low correlation neurons at each contrast, ignoring NaNs
+% First get the standard deviation ignoring NaNs
+high_std2 = squeeze(nanstd(high_filtered2, 0, 3));
+low_std2 = squeeze(nanstd(low_filtered2, 0, 3));
+
+% Count the actual number of non-NaN values for each contrast
+high_count2 = squeeze(sum(~isnan(high_filtered2), 3));
+low_count2 = squeeze(sum(~isnan(low_filtered2), 3));
+
+% Calculate SEM using the actual counts of non-NaN values
+high_sem2 = high_std2 ./ sqrt(high_count2);
+low_sem2 = low_std2 ./ sqrt(low_count2);
+
+% Second subplot
+subplot(1, 2, 2)
+hold on;
+
+% Plot high correlation neurons with error bars
+errorbar(contrasts, high_means2, high_sem2, '-o', 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+
+% Plot low correlation neurons with error bars
+errorbar(contrasts, low_means2, low_sem2, '-o', 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+xlim([.75 3.25])
+
+% Add labels and legend
+xlabel('Contrast');
+ylabel('Mean Raw Difference');
+title('Running (SST)');
+
+% Set x-axis ticks and labels
+set(gca, 'XTick', contrasts, 'XTickLabel', contrast_labels, 'TickDir', 'out');
+
+% Customize plot appearance
+grid off;
+box off;
+set(gca, 'FontSize', 12);
+
+% Add more space between subplots
+set(gcf, 'Position', get(gcf, 'Position') .* [1 1 1.2 1]);
+
+% Add title to indicate whether outliers were removed
+if remove_outliers
+    suptitle(sprintf('Analysis with outliers (>%g SD) removed', std_threshold));
+else
+    suptitle('Analysis without outlier removal');
+end
+
+% Save figure with appropriate filename
+if remove_outliers
+    print('-dpdf', '-bestfit', sprintf('normDiff_vs_contrast_outliers_removed_%gSD.pdf', std_threshold));
+else
+    print('-dpdf', '-bestfit', 'normDiff_vs_contrast_no_outlier_removal.pdf');
+end
+
+
+%% contrast modulation vs noise corr
+% modulation index will be slope of the line between norm diff at 25% and
+% at 100%
+normDiff_slopes = calculateContrastSlopes(raw_diff);
+
+% Create a new figure
+figure;
+
+% Extract x and y data for regression
+x_data = noiseCorr_OG_concat{pre}(1,red_ind_concat);
+y_data = normDiff_slopes(1,red_ind_concat);
+
+% Remove NaN values for regression analysis
+valid_idx = ~isnan(x_data) & ~isnan(y_data) & ~isinf(x_data) & ~isinf(y_data);
+x_valid = x_data(valid_idx);
+y_valid = y_data(valid_idx);
+
+% Check if we have enough valid data points
+if length(x_valid) < 2
+    error('Not enough valid data points for regression analysis');
+end
+
+% Create scatter plot (using all data points, NaNs will be automatically excluded)
+scatter(x_data, y_data, 50, 'filled', 'MarkerFaceAlpha', 0.7);
+
+% Hold the plot to add the regression line
+hold on;
+
+% Compute linear regression on valid data
+[p, S] = polyfit(x_valid, y_valid, 1);
+
+% Create a sequence of x values for smoother line plotting
+x_range = linspace(min(x_valid), max(x_valid), 100);
+y_fit = polyval(p, x_range);
+
+% Plot regression line
+plot(x_range, y_fit, 'r-', 'LineWidth', 2);
+
+% Calculate R-squared
+yresid = y_valid - polyval(p, x_valid);
+SSresid = sum(yresid.^2);
+SStotal = (length(y_valid)-1) * var(y_valid);
+Rsq = 1 - SSresid/SStotal;
+
+% Calculate p-value for the correlation
+[R, P] = corrcoef(x_valid, y_valid);
+correlation_coef = R(1,2);
+p_value = P(1,2);
+
+% Calculate standard error of the slope
+n = length(x_valid);
+se_slope = sqrt(SSresid/(n-2)) / sqrt(sum((x_valid - mean(x_valid)).^2));
+
+% Calculate t-statistic and p-value for the slope
+t_stat = p(1) / se_slope;
+slope_p_value = 2 * (1 - tcdf(abs(t_stat), n-2));
+
+% Display only essential regression statistics on the plot
+equation = sprintf(' = %.4f', p(1));
+r_squared = sprintf('R^2 = %.4f', Rsq);
+p_val = sprintf('p = %.4g', p_value);
+n_points = sprintf('n = %d', n);
+
+% Create simplified text box with statistics
+dim = [.2 .02 .3 .3];
+str = {equation, r_squared, p_val, n_points};
+annotation('textbox', dim, 'String', str, 'FitBoxToText', 'on', 'BackgroundColor', 'white');
+
+% Print only the requested statistics to command window
+fprintf('\nRegression Statistics:\n');
+fprintf('Beta: %.4f\n', p(1));
+fprintf('R-squared: %.4f\n', Rsq);
+fprintf('p-value: %.6f\n', p_value);
+fprintf('Sample size: %d\n', n);
+
+% Add prediction intervals (95%)
+[y_fit_pred, delta] = polyval(p, x_range, S);
+plot(x_range, y_fit_pred + delta, 'r--', 'LineWidth', 1);
+plot(x_range, y_fit_pred - delta, 'r--', 'LineWidth', 1);
+
+% Customize appearance
+set(gca, 'TickDir', 'out');
+box off;
+xlabel('R value');
+ylabel('Raw Diff Slope');
+title('R value vs Raw Difference Slope');
+
+
+hold off;
+
+

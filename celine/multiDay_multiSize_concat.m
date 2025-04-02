@@ -1,15 +1,15 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'VIP_atropine';
+experimentFolder = 'VIP_YM90K';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [70 68];%enter all the sessions you want to concatenate4
+sess_list = [61 63];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -279,7 +279,17 @@ for id = 1:nd
 end
 respToLarge = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
+
+responCriteria = cell(1,nd); %cell array that will have indices of cells that meet our response criteria on each day
+for id = 1:nd
+    responseCheck =sum(squeeze(sum(h_concat{id}(:,:,2:4,nSize),2)),2); %finding cells that responded large size size, within the top three contrasts
+    responCriteria{id}=find(logical(responseCheck));
+end
+
+includeCells = intersect(responCriteria{pre},find(haveRunning_pre));
+
 clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
+
 
 % to find the OSI of each cell
 
@@ -289,13 +299,18 @@ dirMean = mean(squeeze(mean(data_resp_concat{pre}(:,:,:,:,1),3)),3);
 dirMean(find(dirMean<0))=0;
 %left with average response at each dir, averaged over size and contrast,
 %for each cell, for the baseline day only
-orthOrder=[3     4     1     2];
-for iCell = 1:nKeep_total
-    [prefResp, prefDir] = max(dirMean(iCell,:));
-    orthInd = orthOrder(prefDir);
-    orthResp = dirMean(iCell,orthInd);
-    OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
-end
+nDir = length(dirs_concat);
+
+% if nDir > 1
+% 
+%     orthOrder=[3     4     1     2];
+%     for iCell = 1:nKeep_total
+%         [prefResp, prefDir] = max(dirMean(iCell,:));
+%         orthInd = orthOrder(prefDir);
+%         orthResp = dirMean(iCell,orthInd);
+%         OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
+%     end
+% end
 
 % %histogram(OSI_baseline);
 % green_ind_concat = intersect(green_ind_concat, find(respToLarge));
@@ -864,7 +879,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle('Stationary')
 print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
-%%
+%for running 
 ymin=-0.015;
 ymax=.35;
 % contrast response running
@@ -1571,12 +1586,12 @@ tc_red_se_runOnset = cell(1,nd); %same for red
 
 for id = 1:nd
 
-        tc_green_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,green_ind_concat,iCon,iSize),2);
-        green_std=nanstd(data_dfof_runOnset_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,green_ind_concat),2);
+        green_std=nanstd(data_dfof_runOnset_concat{id}(:,green_ind_concat),[],2);
         tc_green_se_runOnset{id}=green_std/sqrt(length(green_ind_concat));
         
-        tc_red_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,red_ind_concat,iCon,iSize),2);
-        red_std=nanstd(data_dfof_runOnset_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,red_ind_concat),2);
+        red_std=nanstd(data_dfof_runOnset_concat{id}(:,red_ind_concat),[],2);
         tc_red_se_runOnset{id}=red_std/sqrt(length(red_ind_concat));
         
         
