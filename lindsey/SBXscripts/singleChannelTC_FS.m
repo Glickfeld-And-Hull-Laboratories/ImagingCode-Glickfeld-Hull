@@ -1,11 +1,13 @@
+%% get path names
+
 close all
 clear all
 clc
-%% get path names
-date = '240529';
-ImgFolder = [{'002'}];
-time = strvcat('1640');
-mouse = 'i1397';
+
+date = '241202';
+ImgFolder = [{'003'}];
+time = strvcat('1254');
+mouse = 'i2585';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,1);
@@ -117,6 +119,12 @@ tCyc = cell2mat(input.tCyclesOn);
 cStart = cell2mat(input.cFirstStim);
 cStim = cell2mat(input.cStimOn);
 cTarget = celleqel2mat_padded(input.cTargetOn);
+
+[cStimOns cStimOffs] = photoFrameFinder_Sanworks(info.frame);
+cStart = cStimOns(1:2:end);
+cStim = cStimOns(1:2:end);
+cTarget = cStimOns(2:2:end);
+
 nTrials = length(tCyc);
 sz = size(data_reg);
 data_f = zeros(sz(1),sz(2),nTrials);
@@ -259,8 +267,8 @@ end
 prewin_frames = 30;
 postwin_frames = 90;
 tCyc = cell2mat(input.tCyclesOn);
-cStart = celleqel2mat_padded(input.cFirstStim);
-cTarget = celleqel2mat_padded(input.cTargetOn);
+% cStart = celleqel2mat_padded(input.cFirstStim);
+% cTarget = celleqel2mat_padded(input.cTargetOn);
 nTrials = length(tCyc);
 nCells = size(npSub_tc,2);
 maxCyc = max(tCyc,[],2);
@@ -336,7 +344,7 @@ noff = length(offs);
 frameRateHz = input.frameRateHz;
 
 base_win =32:34;
-resp_win =39:41; 
+resp_win =40:42; 
 
 % figure;
 % if nCells<25

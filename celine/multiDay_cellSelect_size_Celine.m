@@ -8,7 +8,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =51;
+day_id =77;
 experimentFolder = 'SST_atropine';
 
 if computer == 'GLNXA64'
@@ -36,7 +36,7 @@ expDate = expt(day_id).date;
 
 fn = fullfile(isilonName,base,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
-
+dat = 'data-';
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
 times = eval(['expt(day_id).' cell2mat(dataStructLabels) '_time']);
 nruns = length(runs);
@@ -49,7 +49,7 @@ for irun = 1:nruns
     %fName = [imgFolder '_000_000'];
 
     CD = fullfile(isilonName,datapath, mouse, expDate, runFolder);
-    dat = 'data-';
+    
 
     cd(CD);
 
@@ -163,8 +163,8 @@ end
 nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
-%ntrials = size(input.tGratingDirectionDeg,2);
-ntrials = 960;
+ntrials = size(input.tGratingDirectionDeg,2);
+
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
@@ -290,16 +290,10 @@ elseif ~exist('redChImg')
 end
 
 
-%create red image where any pixel value above a certain percentile of the max is set to 90%
-%of the max - removing the highest 10% of pixel values to create a lower
-%direction image for segmenting
-threshPercentile = 99;
 
-highValues = find(redChImg>prctile(redChImg,threshPercentile,'all'));
-redThresh = redChImg;
-redThresh(highValues)=prctile(redChImg,threshPercentile,'all');
+
+
 figure; imagesc(redChImg);colormap gray;
-figure; imagesc(redThresh);colormap gray;
 
 clear data_rr data_rg data_rg_reg data_rr_reg
 %% segment cells

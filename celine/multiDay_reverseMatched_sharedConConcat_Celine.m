@@ -1,7 +1,7 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 
 dataStructLabels = {'contrastxori'};
 
@@ -12,8 +12,8 @@ eval(ds);
 % 178 190 294 %good quality SOM YM90K
 %138 142 163 171 178 190 294 307 for retreat talk
 %294 307 323 NES with DART
-experimentFolder = 'SST_YM90K';
-sess_list = [138 142 163 171 178 190 294 307 333 323 303 311 319 329 355 359];%enter all the sessions you want to concatenate
+experimentFolder = 'SST_atropine';
+sess_list = [4 8 12];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -85,7 +85,7 @@ cd(fnout)
 clear d sess_title
 
 zscor_xnan = @(x) bsxfun(@rdivide, bsxfun(@minus, x, mean(x,'omitnan')), std(x, 'omitnan'));
-%% concatenating data
+% concatenating data
 nCon = length(targetCon)
 
 mice={};
@@ -154,13 +154,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'locomotion.mat'));
     load(fullfile(fn_multi,'fluor_intensity.mat'));
    load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
-%   temp_table =readtable(fullfile(fn_multi,'dataTable.csv'));
 
-   %  temp_table.z_speed=zscor_xnan(temp_table.speed);
-   %  temp_table.z_pupil=zscor_xnan(temp_table.pupil);
-   %  temp_table.cell_ID_unique=temp_table.cellID + cellID_adjustment;
-   % 
-   %  dataTableConat=[dataTableConat; temp_table];
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -1365,9 +1359,7 @@ title('+HTP')
 set(gca, 'TickDir', 'out')
 print(fullfile(fnout,['prefDir_change.pdf']),'-dpdf','-bestfit')
 
-%%
-
-
+%% split timecourses by correlation
 % Identify high and low correlation cells
 
 % cells with high correlation in the baseline day
@@ -2797,31 +2789,32 @@ end
 z=12;
 y=z-1;
 
+cmap = jet(length(mice)); % Make nMice colors.
+
 
 for iCon = 1:nCon
 figure; movegui('center') 
 subplot(2,2,1)
-% scatter((green_means_stat{pre}(:,iCon)),(green_means_stat{post}(:,iCon)),10,'filled')
-% hold on
-scatter((green_means_stat{pre}(z:nSess,iCon)),(green_means_stat{post}(z:nSess,iCon)),10,'filled')
+scatter((green_means_stat{pre}(:,iCon)),(green_means_stat{post}(:,iCon)),10,cmap,'filled')
+hold on
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
-% ylim([0 .2])
-% xlim([0 .2])
+ylim([0 .2])
+xlim([0 .2])
+axis square
 hline=refline(1);
 hline.Color = 'k';
 hline.LineStyle = ':';
 title('-HTP stationary')
-axis square
 set(gca, 'TickDir', 'out')
 uistack(hline,'bottom');
 hold off
 
 
 subplot(2,2,2)
-% scatter(red_means_stat{pre}(:,iCon),red_means_stat{post}(:,iCon),10, 'filled')
-% hold on
-scatter(red_means_stat{pre}(z:nSess,iCon),red_means_stat{post}(z:nSess,iCon),10,'filled')
+scatter(red_means_stat{pre}(:,iCon),red_means_stat{post}(:,iCon),10,cmap, 'filled')
+hold on
+axis square
 % ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([0 .2])
@@ -2832,13 +2825,12 @@ hline.LineStyle = ':';
 set(gca, 'TickDir', 'out')
 uistack(hline,'bottom');
 title('+HTP stationary')
-axis square
 hold off
 
 subplot(2,2,3)
-% scatter((green_means_loc{pre}(:,iCon)),(green_means_loc{post}(:,iCon)),10, 'filled')
-% hold on
-scatter((green_means_loc{pre}(z:nSess,iCon)),(green_means_loc{post}(z:nSess,iCon)),10,'filled')
+scatter((green_means_loc{pre}(:,iCon)),(green_means_loc{post}(:,iCon)),10,cmap, 'filled')
+hold on
+axis square
 ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
 ylim([0 .4])
@@ -2847,17 +2839,16 @@ hline=refline(1);
 hline.Color = 'k';
 hline.LineStyle = ':';
 title('-HTP running')
-axis square
 set(gca, 'TickDir', 'out')
 uistack(hline,'bottom');
 hold off
 
 subplot(2,2,4)
-% scatter((red_means_loc{pre}(:,iCon)),(red_means_loc{post}(:,iCon)),10, 'filled')
-% hold on
-scatter((red_means_loc{pre}(z:nSess,iCon)),(red_means_loc{post}(z:nSess,iCon)),10,'filled')
+scatter((red_means_loc{pre}(:,iCon)),(red_means_loc{post}(:,iCon)),10, cmap,'filled')
+hold on
 % ylabel('post-DART dF/F')
 xlabel('pre-DART  dF/F')
+axis square
 ylim([0 .4])
 xlim([0 .4])
 hline=refline(1);
@@ -2865,7 +2856,6 @@ hline.Color = 'k';
 hline.LineStyle = ':';
 title('+HTP running')
 uistack(hline,'bottom');
-axis square
 hold off
 set(gca, 'TickDir', 'out')
 
@@ -4518,4 +4508,38 @@ ylim([-.04 .04])
 
 clear green_means_stat green_means_loc red_mean_stat red_means_loc green_se_stat green_se_loc red_se_stat red_se_loc green_std red_std
 
+%% scattering R value vs. mean response
+%% scatterplot of max df/f for day 1 vs day 2
+
+for iCon = 1:nCon
+figure; movegui('center') 
+subplot(1,2,1)
+scatter(noiseCorr_OG_concat{pre}(1,haveRunning_green{iCon}),(pref_responses_stat_concat{pre}(haveRunning_green{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+hold on
+xlim([0 1])
+ylim([-.2 1])
+ylabel('pre-DART dF/F')
+xlabel('pre-DART  R')
+title('-HTP stationary')
+axis square
+set(gca, 'TickDir', 'out')
+hold off
+
+
+subplot(1,2,2)
+scatter(noiseCorr_OG_concat{pre}(1,haveRunning_red{iCon}),(pref_responses_stat_concat{pre}(haveRunning_red{iCon},iCon)),10,'MarkerEdgeColor',[.5 .5 .5],'jitter', 'on', 'jitterAmount',.01)
+ylabel('pre-DART dF/F')
+xlabel('pre-DART  R')
+xlim([0 1])
+ylim([-.2 1])
+set(gca, 'TickDir', 'out')
+title('+HTP stationary')
+axis square
+hold off
+
+
+sgtitle(num2str(cons(iCon)))
+print(fullfile(fnout,[num2str(cons(iCon)) 'maxResp_crossDay.pdf']),'-dpdf','-bestfit')
+clear mean_pre_stat mean_post_stat stderror_post stderror_pre
+end
 

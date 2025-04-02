@@ -91,8 +91,11 @@ iexp = 4;
 
     % Determine pattern and component direction selectivity
     int = nDirs;
-    component = avg_resp_dir(:,:,1,1,1)+circshift(avg_resp_dir(:,:,1,1,1),-120./int,2);
-    pattern = circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
+    % component = avg_resp_dir(:,:,1,1,1)+circshift(avg_resp_dir(:,:,1,1,1),-120./int,2);
+    % pattern = circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
+
+    component = circshift(avg_resp_dir(:,:,1,1,1),+60./int,2)+circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
+    pattern = avg_resp_dir(:,:,1,1,1);
     
     comp_corr = zeros(nPhas,nCells);
     patt_corr = zeros(nPhas,nCells);
@@ -236,7 +239,7 @@ for i = 1:4
     plotZcZpBorders
 end
 sgtitle('Pattern direction selective cells at four phases')
-print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZpZc.pdf']),'-dpdf', '-fillpage') 
+print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZpZc_unshifted.pdf']),'-dpdf', '-fillpage') 
 
 
 %% Plot grating tuning curves by cell
@@ -366,7 +369,7 @@ for iCell =1:length(ind)
     start = start+1;    
     if start>20
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Polar plots'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_US_' num2str(n) '.pdf']), '-dpdf','-fillpage')
         figure;
         movegui('center')
         start = 1;
@@ -374,7 +377,7 @@ for iCell =1:length(ind)
     end
     if iCell == nCells
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Polar plots'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_US_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end
 end     
 close all
@@ -405,7 +408,7 @@ for iCell = 1:length(ind)
     start = start+1;    
     if start>20
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Zp Zc by cell'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_US_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
         figure;
         movegui('center')
         start = 1;
@@ -413,7 +416,7 @@ for iCell = 1:length(ind)
     end
     if iCell == nCells
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Zp Zc by cell'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_US_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end        
 end
 close all

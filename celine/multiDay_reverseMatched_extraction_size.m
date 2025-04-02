@@ -154,7 +154,9 @@ for id = 1:nd %cycle through days
     nCells = size(cellTCs_match{id},2);
     fractTimeActive_match{id} = zeros(1,nCells);
     %I will trim 30 frames of the start and add 30 frames of padding to the
-    %end (padding is nans)
+    %end (padding is nans). This is for a 15hz dataset with 60 frames (4s)
+    %off and 30 frames (2 seconds) on. Shifts the 2 seconds when stim is on
+    %to the center.
     cellTCs_match{id} = cellTCs_match{id}(stimStart:size(cellTCs_match{id},1),:);
     
     cellTCs_match{id} = padarray(cellTCs_match{id},30,999,'post'); 
@@ -475,8 +477,7 @@ save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_mat
 %% narrow down to the stimuli preferred for each cell each day
 
 
-%%
-
+%
 tc_trial_avrg_stat_largePupil=cell(1,nd);
 tc_trial_avrg_stat_smallPupil=cell(1,nd);
 
@@ -867,7 +868,8 @@ for i = 1:size(match_ind,2)
 end
 
 figure;
-imagesc(corrmap{1});
+subplot(1,2,1)
+imagesc(fov_avg{1});
 colormap gray
 %caxis([0.05 .3])
 title('average FOV reference day');
@@ -877,6 +879,22 @@ plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
 bound = cell2mat(bwboundaries(mask_match{post}(:,:,1)));
 plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 hold off
+subplot(1,2,2)
+imagesc(fov_avg{3});
+colormap gray
+%caxis([0.05 .3])
+title('average FOV matched day');
+hold on
+bound = cell2mat(bwboundaries(mask_match{pre}(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','k','MarkerSize',2);
+bound = cell2mat(bwboundaries(mask_match{post}(:,:,1)));
+plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
+hold off
+x0=5;
+y0=5;
+width=10;
+height=4;
+set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fn_multi,'matchCells.pdf'),'-dpdf');
 
 
@@ -898,7 +916,6 @@ for i = 1:length(keep_cells)
 end
 
 
-
 %I am converting these to be labelled by their position in the keep cell
 %index
 
@@ -912,14 +929,30 @@ for i = 1:length(keep_cells)
 end
 
 figure;
-imagesc(fov_red{3});
+subplot(1,2,1)
+imagesc(fov_avg{1});
 colormap gray
 %caxis([10 100])
 title('matched red cells');
 hold on
 bound = cell2mat(bwboundaries(keep_red_masks));
-%plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
+
+subplot(1,2,2)
+imagesc(fov_avg{3});
+colormap gray
+%caxis([10 100])
+title('matched red cells');
+hold on
+bound = cell2mat(bwboundaries(keep_red_masks));
+plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
+hold off
+x0=5;
+y0=5;
+width=10;
+height=4;
+set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')

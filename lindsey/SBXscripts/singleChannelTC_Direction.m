@@ -11,11 +11,11 @@ mworks_fn = fullfile(fn_base, 'Behavior', 'Data');
 fnout = fullfile(lg_fn, 'Analysis', '2P');
 
 %Specific experiment information
-date = '230607';
-ImgFolder = '004';
-time = '1610';
-mouse = 'i2906';
-frame_rate = 30;
+date = '250101';
+ImgFolder = '003';
+time = '1558';
+mouse = 'i2188';
+frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
 datemouserun = [date '_' mouse '_' run_str];
@@ -99,29 +99,22 @@ clear data
 if isfield(input,'nScansOn')
     nOn = input.nScansOn;
     nOff = input.nScansOff;
-    ntrials = size(input.tGratingDirectionDeg,2); %this is a cell array with one value per trial, so length = ntrials
-    sz = size(data_reg);
-    %        Each trial has nOff frames followed by nOn frames, so can reshape stack so nYpix x nXpix x nFrames/Trial (nOn+nOff) x nTrials
-    data_tr = reshape(data_reg,[sz(1), sz(2), nOn+nOff, ntrials]);
-    data_tr_inv = mean(mean(data_tr(:,:,nOff/2:nOff,:),3),4)-mean(mean(data_tr(:,:,nOff+1:nOn+nOff,:),3),4);
-    %    b. Find baseline F from last half of off period- avoids decay of previous on trial
-    data_f = mean(data_tr(:,:,nOff/2:nOff,:),3);
+    nTrials = size(input.tGratingContrast,2);
 elseif isfield(input,'cStimOneOn')
-    ntrials = size(input.cStimOneOn,2);
-    sz = size(data_reg);
-    totFrames = frame_rate*(input.stimOneGratingOnTimeMs/1000)+frame_rate;
+    nTrials = size(input.cStimOneOn,2);
     nOn = frame_rate*(input.stimOneGratingOnTimeMs/1000);
     nOff = frame_rate;
-    data_tr = zeros(sz(1),sz(2),totFrames,ntrials);
-    cStimOneOn = celleqel2mat_padded(input.cStimOneOn);
-    for itrial = 1:ntrials
-        data_tr(:,:,:,itrial) = data_reg(:,:,cStimOneOn(itrial)-frame_rate+1:cStimOneOn(itrial)+frame_rate);
-    end
-    data_tr_inv = mean(mean(data_tr(:,:,(frame_rate/2)+1:frame_rate,:),3),4)-mean(mean(data_tr(:,:,frame_rate+1:frame_rate+nOn,:),3),4);
-    %    b. Find baseline F from last half of off period- avoids decay of previous on trial
-    data_f = mean(data_tr(:,:,frame_rate/2:frame_rate,:),3);
 end
-
+[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+sz = size(data_reg);
+data_f = nan(sz(1),sz(2),nTrials);
+data_tr = nan(sz(1),sz(2),nTrials);
+for itrial = 1:nTrials
+    if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn)<sz(3)
+        data_f(:,:,itrial) = mean(data_reg(:,:,stimOns(itrial)-nOff/2:stimOns(itrial)-1),3);
+        data_tr(:,:,itrial) = mean(data_reg(:,:,stimOns(itrial)+5:stimOns(itrial)+nOn),3);
+    end
+end
 
 fprintf(['Size of data_tr is ' num2str(size(data_tr))])
  
@@ -144,13 +137,10 @@ figure; movegui('center')
 [n, n2] = subplotn(nDirs); %function to optimize subplot number/dimensions
 for idir = 1:nDirs
     ind = find(tDir == Dirs(idir)); %find all trials with each direction
-    data_dfof_avg(:,:,idir) = mean(mean(data_dfof(:,:,nOff+1:nOn+nOff,ind),3),4); %average all On frames and all trials
+    data_dfof_avg(:,:,idir) = mean(data_dfof(:,:,ind),3); %average all On frames and all trials
     subplot(n,n2,idir)
     imagesc(data_dfof_avg(:,:,idir))
 end
-
-data_dfof_avg = cat(3,data_reg_avg,data_dfof_avg);
-data_dfof_avg = cat(3,data_dfof_avg,data_tr_inv);
 
 clear data_dfof
 %        Filtering data helps make cells more visible for selection
@@ -237,15 +227,14 @@ save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_TCs.mat']), 'data_
 %% make tuning curves
 base_win = nOff/2:nOff;
 resp_win = nOff+5:nOff+nOn;
-if isfield(input,'nScansOn')
-    data_trial = reshape(npSub_tc, [nOn+nOff ntrials nCells]);
-elseif isfield(input,'cStimOneOn')
-    data_trial = zeros(nOn+nOff,nCells,ntrials);
-    for itrial = 1:ntrials
-        data_trial(:,:,itrial) = npSub_tc(cStimOneOn(itrial)-frame_rate+1:cStimOneOn(itrial)+frame_rate,:);
+ntrials = length(input.tGratingDirectionDeg);
+data_trial = zeros(nOn+nOff,nCells,ntrials);
+for itrial = 1:ntrials
+    if stimOns(itrial)+nOn+nOff/2-1 <= size(npSub_tc,1)
+        data_trial(:,:,itrial) = npSub_tc(stimOns(itrial)-nOff/2:stimOns(itrial)+nOn+nOff/2-1,:); 
     end
-    data_trial = permute(data_trial,[1 3 2]);
 end
+data_trial = permute(data_trial,[1 3 2]);
 data_f = mean(data_trial(base_win,:,:),1);
 data_dfof = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
 

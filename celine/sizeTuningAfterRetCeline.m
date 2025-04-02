@@ -8,7 +8,7 @@
 clear all;clc;close all;
 netSupp_expt
 
-expt_num = 25;
+expt_num = 1;
 doRed=1;
 
 mouse = expt(expt_num).mouse

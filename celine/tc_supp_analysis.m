@@ -4,7 +4,8 @@ clear all; clear global; close all
 %identifying animal and run
 netSupp_expt
 
-expt_num = 25;
+expt_num = 5;
+%[1,2,3,4,11,12,13,14,16,17,18,19,20,21,22,23,24,25];
 
 mouse = expt(expt_num).mouse
 date = expt(expt_num).date;
@@ -17,11 +18,11 @@ frame_rate = expt(expt_num).frame_rate;
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
-    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis/NetworkSuppression');
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
 else
     isilonName = 'duhs-user-nc1.dhe.duke.edu/';
-    base = fullfile('/home/ACh/Analysis/2p_analysis');
+    base = fullfile('/home/ACh/Analysis/2p_analysis/NetworkSuppression');
    
    beh_prefix = strcat('Z:\Behavior\Data\data-');
 end
@@ -51,7 +52,7 @@ load(fullfile(base, mouse,date,ori_run, [date '_' mouse '_runs-' ori_run '_prefO
 %NEED TO LOAD MASKS TO GET THE INDEXES OF RED CELLS
 
 load(fullfile(base, mouse, date, RetImgFolder, [date '_' mouse '_runs-' RetImgFolder '_mask_cell.mat']))
-%% convert to trials
+% convert to trials
 nOn = input.nScansOn;
 nOff=input.nScansOff;
 %change this to use a padded array, where I add zeros at the end. test=padarray(cellTCs_match{1},30,0,'post');
@@ -60,7 +61,7 @@ stimEnd=stimStart+nOn-1;
 nTrialsOG=length(input.tGratingDiameterDeg);
 nTrials= nTrialsOG-1;
 
-cellTCs_OG = npSub_tc;
+cellTCs = npSub_tc;
 
 %use the list of direction by trial to figure out how many trials there are
 %currently the way I center the stim on period requires me to cut out
@@ -74,9 +75,25 @@ nFrames = size(npSub_tc,1);
 data_trial = reshape(npSub_tc,[nOn+nOff nTrialsOG nCells]);
 data_f= mean(data_trial(1: (nOff/2),:,:),1);
 data_tc_trial = bsxfun(@rdivide,bsxfun(@minus,data_trial,data_f),data_f);
-data_tc_trial = data_tc_trial(:,1:nTrials-1,:);
+data_tc_trial = data_tc_trial(:,1:nTrials,:);
 clear data_trial data_f
 %plot(squeeze(mean(data_tc_trial, 2)))
+% looking at wheel speed
+wheel_speed = wheelSpeedCalc(input,32,'orange'); 
+nanmean(wheel_speed)
+
+
+
+wheel_tc = zeros(nOn+nOff, nTrials);
+
+for iTrial = 1:nTrials
+    wheel_tc(:,iTrial) = wheel_speed(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
+end
+wheel_trial_avg = mean(wheel_tc(nOff:nOn+nOff,:),1);
+RIx = wheel_trial_avg>2; %.55 is the noise level in the wheel movement
+mean(RIx)
+sum(RIx)
+mean(wheel_trial_avg(RIx))
 %% find the stimulus conditions
 tCons = celleqel2mat_padded(input.tGratingContrast(1:nTrials-1)); %transforms cell array into matrix (1 x ntrials)
 Cons = unique(tCons);
@@ -95,7 +112,7 @@ p = zeros(nCells, nSizes,nCons);
 h_short = zeros(nCells, nSizes,nCons);
 p_short = zeros(nCells, nSizes,nCons);
 
-resp_win = stimStart+2:stimStart+8;
+resp_win = stimStart+2:stimStart+5;
 resp_win_short = stimStart+2:stimStart+4;
 base_win = (stimStart - nOff/2):stimStart-1;
 
@@ -184,8 +201,8 @@ sgtitle([mouse, ', ', num2str(length(goodFitResp)),' cells'])
 %print(fullfile(base, mouse, date, depth, ['tc_matrix.pdf']), '-dpdf')
 %% same as above split by cell type
 interNrns = mask_label(goodFitResp);
-interNrns_inds= find(interNrns);
-pyrCells_inds = find(~interNrns_inds); %DOUBLE CHECK
+pyrCells_inds = intersect(goodFitResp, find(~mask_label));
+interNrns_inds = intersect(goodFitResp, find(mask_label));
 
 %
 
@@ -294,21 +311,59 @@ sgtitle([mouse, ', ', num2str(length(goodFitResp)),' cells'])
 % end
 
 
-%% looking at wheel speed
-wheel_speed = wheelSpeedCalc(input,32,'orange'); 
-nanmean(wheel_speed)
+
+%% get mean-subtracted trial responses for each cell
 
 
+subTrialResp=nan(size(data_tc_trial,2),size(data_tc_trial,3));
+trialResp = squeeze(mean(data_tc_trial(stimStart:(stimStart+nOn-1),:,:),1));
+conditionMeans=NaN(nSizes,nCons,nCells);
 
-wheel_tc = zeros(nOn+nOff, nTrials);
 
-for iTrial = 1:nTrials
-    wheel_tc(:,iTrial) = wheel_speed(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
+for iSize = 1:nSizes
+    ind_size = find(tSize == Sizes(iSize));
+    for iCon = 1:nCons
+        ind_con = find(tCons == Cons(iCon));
+        inds1 = intersect(ind_size,ind_con);
+        %for stationary
+        inds=intersect(inds1,find(~RIx));
+        tempData=trialResp(inds,:);
+        tempCellMeans=mean(tempData,1); %find the mean for each cell in this contrast x direction
+        tempSubData = tempData - tempCellMeans; %subtract the mean for each cell from that cell's response to each trial
+        subTrialResp(inds,:)=tempSubData; %put this into the trial by trial matrix, 
+        % for the trials that meet these conditions
+        conditionMeans(iSize,iCon,:)=tempCellMeans;
+
+    end
 end
-wheel_trial_avg = mean(wheel_tc(nOff:nOn+nOff,:),1);
-RIx = wheel_trial_avg>2; %.55 is the noise level in the wheel movement
-mean(RIx)
-sum(RIx)
+
+
+
+%% Find noise correlation
+
+noiseCorr=nan(2,nCells);
+
+for iCell = 1:nCells 
+    thisCell=subTrialResp(find(~RIx),iCell);
+    %if this is a red cell, compare to all green cells. If its a green
+    %cell, compare it to all other green cells
+    otherCells = setdiff(pyrCells_inds,iCell);
+    otherCellsMean = mean(subTrialResp(find(~RIx),otherCells),2,"omitnan");
+    [R,p]=corrcoef(otherCellsMean,thisCell,'rows','complete');
+        if ismember(iCell,interNrns_inds)
+        
+            figure
+            scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            hold on
+            h = lsline;
+            title([' R= ' num2str(R(2))]);
+
+        end
+
+    noiseCorr(1,iCell)=R(2);
+    noiseCorr(2,iCell)=p(2);
+ 
+end
 %%
 
 pyrCells_inds = intersect(goodFitResp, find(~mask_label));
@@ -571,4 +626,15 @@ keepPrefOri = prefOri(goodFitResp); %make a subset of preOri for the responsive 
     end
 %% save data summary
 save(fullfile(base, mouse, date,ImgFolder,'goodFitResp_summary_updated.mat'), ...
-    'TC_byConditionLoc','TC_byConditionStat','h_keep','h_short_keep','interNrns','keepDists','keepPrefOri')
+    'TC_byConditionLoc','TC_byConditionStat','h_keep','h_short_keep','interNrns','keepDists','keepPrefOri','noiseCorr')
+
+
+
+
+
+
+
+
+
+
+

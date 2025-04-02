@@ -8,13 +8,9 @@ ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
 
-area = 'AL';
-area_ind = find(strcmp([expt.img_loc], area));
-randDir = 0;
-dir_ind = find([expt.randDir]==randDir);
+area = 'V1_GC6s_WT';
 
-expt_use = intersect(area_ind,dir_ind);
-
+expt_use = 26;
 totCells = 0;
 norm_sf = [];
 norm_prefsf = [];
@@ -32,7 +28,11 @@ for iexp = expt_use
         
         fprintf([mouse ' ' date '\n'])
         
-        load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
+        if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
+        else
+            fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat'])
+        end
         load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
     
         norm_sf_temp =  [reshape(norm_dfof_stim_nan, [nCells.*nSF 1]) reshape(repmat(sfs,[nCells 1]), [nCells.*nSF 1])];
@@ -223,3 +223,25 @@ print(fullfile(summaryDir,['adaptationBySFonly_' area '.pdf']),'-dpdf','-bestfit
 % ylabel('Fraction of cells')
 % title([num2str(uniqueCells) ' cells; ' num2str(nexp) ' mice'])
 % print(fullfile(summaryDir,'adaptationDiffFromPrefSF.pdf'),'-dpdf','-bestfit','-painters');
+
+figure; 
+subplot(1,2,1)
+errorbar(sfs,norm_prefsf_avg(:,1),norm_prefsf_avg(:,2),'or')
+set(gca,'XScale','log')
+ylabel('Normalized dF/F')
+xlabel('Pref. Spatial frequency')
+ylim([0 1.4])
+xlim([0.02 1])
+hline(1)
+
+subplot(1,2,2)
+errorbar(sfs,resp_pref_avg(:,1),resp_pref_avg(:,2),'or')
+set(gca,'XScale','log')
+ylabel('R1 dF/F')
+xlabel('Pref. Spatial frequency')
+ylim([0 0.4])
+xlim([0.02 1])
+
+sgtitle(mice')
+
+print(fullfile(summaryDir,['adaptationBySFAvgonly_' area '.pdf']),'-dpdf','-bestfit');

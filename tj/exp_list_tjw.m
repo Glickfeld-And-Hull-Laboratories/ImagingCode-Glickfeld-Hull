@@ -876,3 +876,116 @@ expt(51).obj = '16x';
 expt(51).zoom = 2.0;
 expt(51).wheel = 1;
 
+%%
+%Layer 4 imaging%
+%%
+%% i2714 Day 1
+expt(51).mouse = 'i2714';
+expt(51).date = '240327';
+expt(51).ref_date = '240327';
+expt(51).img_day = '1';
+expt(51).img_loc  = {'V1';'L4'};
+expt(51).img_strct  = {'cells'};
+expt(51).indicator = {'AAV';'GCaMP6s'};
+expt(51).driver = 'SCNN1a';
+expt(51).time_mat = ['1221'];
+expt(51).runs = ['001'];
+expt(51).nrun = size(expt(1).runs,1);
+expt(51).folder = 'tj';
+expt(51).z = 353.9;
+expt(51).obj = '16x';
+expt(51).zoom = 2.0;
+expt(51).wheel = 1;
+
+%% i2715 Day 1
+expt(52).mouse = 'i2715';
+expt(52).date = '240327';
+expt(52).ref_date = '240327';
+expt(52).img_day = '1';
+expt(52).img_loc  = {'V1';'L4'};
+expt(52).img_strct  = {'cells'};
+expt(52).indicator = {'AAV';'GCaMP6s'};
+expt(52).driver = 'SCNN1a';
+expt(52).time_mat = ['1059'];
+expt(52).runs = ['001'];
+expt(52).nrun = size(expt(1).runs,1);
+expt(52).folder = 'tj';
+expt(52).z = 353.9;
+expt(52).obj = '16x';
+expt(52).zoom = 2.0;
+expt(52).wheel = 1;
+
+%% i2714 Day 2
+expt(53).mouse = 'i2714';
+expt(53).date = '240329';
+expt(53).ref_date = '240327';
+expt(53).img_day = '2';
+expt(53).img_loc  = {'V1';'L4'};
+expt(53).img_strct  = {'cells'};
+expt(53).indicator = {'AAV';'GCaMP6s'};
+expt(53).driver = 'SCNN1a';
+expt(53).time_mat = ['1530'];
+expt(53).runs = ['001'];
+expt(53).nrun = size(expt(1).runs,1);
+expt(53).folder = 'tj';
+expt(53).z = 367.96;
+expt(53).obj = '16x';
+expt(53).zoom = 2.0;
+expt(53).wheel = 1;
+
+%% i2715 Day 2
+expt(54).mouse = 'i2715';
+expt(54).date = '240329';
+expt(54).ref_date = '240327';
+expt(54).img_day = '2';
+expt(54).img_loc  = {'V1';'L4'};
+expt(54).img_strct  = {'cells'};
+expt(54).indicator = {'AAV';'GCaMP6s'};
+expt(54).driver = 'SCNN1a';
+expt(54).time_mat = ['1403'];
+expt(54).runs = ['001'];
+expt(54).nrun = size(expt(1).runs,1);
+expt(54).folder = 'tj';
+expt(54).z = 360.93;
+expt(54).obj = '16x';
+expt(54).zoom = 2.0;
+expt(54).wheel = 1;
+
+%% i2714 Day 3
+expt(55).mouse = 'i2714';
+expt(55).date = '240403';
+expt(55).ref_date = '240327';
+expt(55).img_day = '3';
+expt(55).img_loc  = {'V1';'L4'};
+expt(55).img_strct  = {'cells'};
+expt(55).indicator = {'AAV';'GCaMP6s'};
+expt(55).driver = 'SCNN1a';
+expt(55).time_mat = ['0955'];
+expt(55).runs = ['001'];
+expt(55).nrun = size(expt(1).runs,1);
+expt(55).folder = 'tj';
+expt(55).z = 361.71;
+expt(55).obj = '16x';
+expt(55).zoom = 2.0;
+expt(55).wheel = 1;
+
+%% i2715 Day 3
+expt(56).mouse = 'i2715';
+expt(56).date = '240403';
+expt(56).ref_date = '240327';
+expt(56).img_day = '3';
+expt(56).img_loc  = {'V1';'L4'};
+expt(56).img_strct  = {'cells'};
+expt(56).indicator = {'AAV';'GCaMP6s'};
+expt(56).driver = 'SCNN1a';
+expt(56).time_mat = ['0835'];
+expt(56).runs = ['001'];
+expt(56).nrun = size(expt(1).runs,1);
+expt(56).folder = 'tj';
+expt(56).z = 342.96;
+expt(56).obj = '16x';
+expt(56).zoom = 2.0;
+expt(56).wheel = 1;
+
+
+

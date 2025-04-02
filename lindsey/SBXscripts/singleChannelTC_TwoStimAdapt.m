@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '240129';
+date = '241114';
 ImgFolder = {'002'};
-time = strvcat('1421');
-mouse = 'i1381';
+time = strvcat('1313');
+mouse = 'i1411';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -76,8 +76,10 @@ figure; imagesq(mean(data_reg(:,:,1:10000),3)); truesize;
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_FOV_avg.pdf']),'-dpdf', '-bestfit')
 
 %% find activated cells
-
-cStimOn = cell2mat(input.cStimTwoOn);
+close all
+[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+cStimTwo = stimOns(2:2:end);
+cStimOn = cStimTwo;
 nTrials = length(cStimOn);
 
 sz = size(data_reg);
@@ -115,7 +117,12 @@ adaptStim = celleqel2mat_padded(input.tStimOneGratingContrast);
 ind_adapt = find(adaptStim);
 ind_noadapt = find(adaptStim==0);
 
-nStim = nStimDir*2;
+
+if maskCons == 0
+    nStim = nStimDir;
+else
+    nStim = nStimDir*2;
+end
 
 if nStimDir > 1 & ~input.doTwoStimTogether
     data_dfof = zeros(sz(1),sz(2), nStim);
@@ -127,23 +134,27 @@ if nStimDir > 1 & ~input.doTwoStimTogether
         subplot(3,4,is)
         imagesc(data_dfof(:,:,start))
         start = start+1;
-        ind_plaidstim = intersect(intersect(ind_plaid,find(stimDir_all == stimDirs(is))),find(adaptStim==0));
-        data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_plaidstim),3);        
-        figure(2)
-        subplot(3,4,is)
-        imagesc(data_dfof(:,:,start))
-        start = start+1;
+        if maskCons > 0
+            ind_plaidstim = intersect(intersect(ind_plaid,find(stimDir_all == stimDirs(is))),find(adaptStim==0));
+            data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_plaidstim),3);        
+            figure(2)
+            subplot(3,4,is)
+            imagesc(data_dfof(:,:,start))
+            start = start+1;
+        end
     end
     figure; 
     subplot(2,1,1); 
     imagesc(mean(data_dfof(:,:,1:2:end),3,"omitnan"))
     title('Grating')
     colormap gray
-    subplot(2,1,2); 
-    imagesc(mean(data_dfof(:,:,2:2:end),3,"omitnan"))
-    title('Plaid')
-    colormap gray
-    sgtitle([mouse ' ' date])
+    if maskCons > 0
+        subplot(2,1,2); 
+        imagesc(mean(data_dfof(:,:,2:2:end),3,"omitnan"))
+        title('Plaid')
+        colormap gray
+        sgtitle([mouse ' ' date])
+    end
     print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_GratingVsPlaid.pdf']),'-dpdf')
 end
 

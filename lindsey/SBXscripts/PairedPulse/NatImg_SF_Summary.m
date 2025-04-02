@@ -10,6 +10,7 @@ nat_stim = [7:14];
 nnat = length(nat_stim);
 stim_set = 'Grat6_Img8';
 
+LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey';
 fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Adaptation\SFSummary\NatImg', stim_set);
 if ~exist(fn_out)
     mkdir(fn_out)
@@ -48,7 +49,7 @@ for iexp = 1:nexp
 
     stims = unique(stim_seq);
     nStim = length(stims);
-    nCells = size(R1_cell_trial,1);
+    [nCells nTrials] = size(R1_cell_trial);
     
     h_stim = zeros(nStim,nCells);
     p_stim = zeros(nStim,nCells);
@@ -71,6 +72,17 @@ for iexp = 1:nexp
             p_stim(istim,:) = nan(1,nCells);
         end
     end
+%     [h1 p1] = ttest(R1_cell_trial,0,'tail','right','alpha',0.05,'Dim',2);
+%     good_ind = unique([find(h1)' find(sum(h_stim,1))]);
+%     resp_mat = zeros(nCells,nTrials,2);
+%     resp_mat(:,:,1) = R1_cell_trial;
+%     resp_mat(:,:,2) = R2_cell_trial;
+% 
+%     if ~exist(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)]))
+%         mkdir(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)]))
+%     end
+%     save(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)], [date(iexp,:) '_' mouse(iexp,:) '_respData.mat']),'resp_mat','good_ind','h1','h_stim','stim_seq')
+% end
 
     h_stim(find(R1_avg<min_resp)) = 0; %minimum response amp
     nonsigind = find(h_stim==0);
@@ -104,6 +116,99 @@ for iexp = 1:nexp
     h_stim_all = [h_stim_all h_stim];
 end
 
+%% 241123 analysis
+outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2024';
+nCells = size(R1_avg_resp_all,2);
+R1_avg_resp_all_nan = R1_avg_resp_all;
+R1_avg_resp_all_nan(find(h_stim_all==0)) = nan;
+R1_avg_resp_all_nan(find(R1_avg_resp_all_nan<min_resp)) = nan;
+norm_resp_sf = mean(R2_avg_resp_all(4,:)./R1_avg_resp_all_nan(4,:),1,'omitnan'); 
+R1_resp_sf = mean(R1_avg_resp_all_nan(4,:),1,'omitnan'); 
+norm_resp_nat = zeros(1,nCells);
+R1_resp_nat = zeros(1,nCells);
+for i = 1:nCells
+    norm_resp_nat(i) = R2_avg_resp_all(pref_nat_all(i)+nsf,i)./R1_avg_resp_all_nan(pref_nat_all(i)+nsf,i);
+    R1_resp_nat(i) = R1_avg_resp_all_nan(pref_nat_all(i)+nsf,i);
+end
+
+ind_sf = find(~isnan(norm_resp_sf));
+ind_nat = find(~isnan(norm_resp_nat));
+n_sf = sum(~isnan(norm_resp_sf));
+n_nat = sum(~isnan(norm_resp_nat));
+
+figure;
+subplot(2,2,1)
+errorbar([1 2], [mean(norm_resp_sf,2,'omitnan') mean(norm_resp_nat,2,'omitnan')],[std(norm_resp_sf,[],2,'omitnan')./sqrt(n_sf) std(norm_resp_nat,[],2,'omitnan')./sqrt(n_nat)])
+ylim([0 1])
+xlim([0 3])
+ylabel('Norm dF/F')
+[h p] = ttest2(norm_resp_sf,norm_resp_nat);
+title(['p = ' num2str(p)])
+subplot(2,2,2)
+errorbar([1 2], [mean(R1_resp_sf,2,'omitnan') mean(R1_resp_nat,2,'omitnan')],[std(R1_resp_sf,[],2,'omitnan')./sqrt(n_sf) std(R1_resp_nat,[],2,'omitnan')./sqrt(n_nat)])
+ylim([0 0.1])
+xlim([0 3])
+ylabel('R1 dF/F')
+[h p] = ttest2(R1_resp_sf,R1_resp_nat);
+title(['p = ' num2str(p)])
+ind_sub_sf = find(R1_resp_sf>0.05 & R1_resp_sf<0.5);
+n_sub_sf = length(ind_sub_sf);
+ind_sub_nat = find(R1_resp_nat>0.05 & R1_resp_nat<0.5);
+n_sub_nat = length(ind_sub_nat);
+subplot(2,2,3)
+errorbar([1 2], [mean(norm_resp_sf(ind_sub_sf),2,'omitnan') mean(norm_resp_nat(ind_sub_nat),2,'omitnan')],[std(norm_resp_sf(ind_sub_sf),[],2,'omitnan')./sqrt(n_sub_sf) std(norm_resp_nat(ind_sub_nat),[],2,'omitnan')./sqrt(n_sub_nat)])
+ylim([0 1])
+xlim([0 3])
+ylabel('Norm dF/F')
+[h p] = ttest2(norm_resp_sf(ind_sub_sf),norm_resp_nat(ind_sub_nat));
+title(['p = ' num2str(p)])
+subplot(2,2,4)
+errorbar([1 2], [mean(R1_resp_sf(ind_sub_sf),2,'omitnan') mean(R1_resp_nat(ind_sub_nat),2,'omitnan')],[std(R1_resp_sf(ind_sub_sf),[],2,'omitnan')./sqrt(n_sub_sf) std(R1_resp_nat(ind_sub_nat),[],2,'omitnan')./sqrt(n_sub_nat)])
+ylim([0 0.1])
+xlim([0 3])
+ylabel('R1 dF/F')
+[h p] = ttest2(R1_resp_sf(ind_sub_sf),R1_resp_nat(ind_sub_nat));
+title(['p = ' num2str(p)])
+sgtitle('All cells resp to 0.16 OR any nat image')
+print(fullfile(outpn,'NatImgVGratingAdapt_RespEither.pdf'),'-dpdf')
+
+figure;
+subplot(2,2,1)
+ind_match = intersect(ind_sf,ind_nat);
+ind_match_n = length(ind_match);
+errorbar([1 2], [mean(norm_resp_sf(ind_match),2,'omitnan') mean(norm_resp_nat(ind_match),2,'omitnan')],[std(norm_resp_sf(ind_match),[],2,'omitnan')./sqrt(ind_match_n) std(norm_resp_nat(ind_match),[],2,'omitnan')./sqrt(ind_match_n)])
+ylim([0 1])
+xlim([0 3])
+ylabel('Norm dF/F')
+[h p] = ttest(norm_resp_sf(ind_match),norm_resp_nat(ind_match));
+title(['p = ' num2str(p)])
+subplot(2,2,2)
+errorbar([1 2], [mean(R1_resp_sf(ind_match),2,'omitnan') mean(R1_resp_nat(ind_match),2,'omitnan')],[std(R1_resp_sf(ind_match),[],2,'omitnan')./sqrt(ind_match_n) std(R1_resp_nat(ind_match),[],2,'omitnan')./sqrt(ind_match_n)])
+ylim([0 0.1])
+xlim([0 3])
+ylabel('R1 dF/F')
+[h p] = ttest(R1_resp_sf(ind_match),R1_resp_nat(ind_match));
+title(['p = ' num2str(p)])
+ind_sub_match = intersect(ind_match,intersect(ind_sub_sf,ind_sub_nat));
+n_sub_match = length(ind_sub_match);
+subplot(2,2,3)
+errorbar([1 2], [mean(norm_resp_sf(ind_sub_match),2,'omitnan') mean(norm_resp_nat(ind_sub_match),2,'omitnan')],[std(norm_resp_sf(ind_sub_match),[],2,'omitnan')./sqrt(n_sub_match) std(norm_resp_nat(ind_sub_match),[],2,'omitnan')./sqrt(n_sub_match)])
+ylim([0 1])
+xlim([0 3])
+ylabel('Norm dF/F')
+[h p] = ttest(norm_resp_sf(ind_sub_match),norm_resp_nat(ind_sub_match));
+title(['p = ' num2str(p)])
+subplot(2,2,4)
+errorbar([1 2], [mean(R1_resp_sf(ind_sub_match),2,'omitnan') mean(R1_resp_nat(ind_sub_match),2,'omitnan')],[std(R1_resp_sf(ind_sub_match),[],2,'omitnan')./sqrt(n_sub_match) std(R1_resp_nat(ind_sub_match),[],2,'omitnan')./sqrt(n_sub_match)])
+ylim([0 0.1])
+xlim([0 3])
+ylabel('R1 dF/F')
+[h p] = ttest(R1_resp_sf(ind_sub_match),R1_resp_nat(ind_sub_match));
+title(['p = ' num2str(p)])
+sgtitle('All cells resp to 0.16 AND any nat image')
+
+print(fullfile(outpn,'NatImgVGratingAdapt_RespBoth.pdf'),'-dpdf')
+%% 
 Adapt_avg_resp_grating_mean = cell(1,nsf+1);
 Adapt_avg_resp_natimg_mean = cell(1,nsf+1);
 Adapt_avg_resp_grating_max = cell(1,nsf+1);

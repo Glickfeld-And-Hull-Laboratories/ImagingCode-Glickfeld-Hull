@@ -14,7 +14,7 @@
 % vectors) in field .timestamps (GoodUnitStruct).
 %
 %
-%
+
 function [cluster_struct, NoiseUnits, GoodUnits, MUnits, AllUnitStruct, GoodUnitStruct, MultiUnitStruct] = ImportKSdata (); % Add LaserStim to left side if wanted
 
     SpikeTimes = SampToSec();         % use SampToSec funtion to get spiketimes and convert them to seconds using exact sampling rate

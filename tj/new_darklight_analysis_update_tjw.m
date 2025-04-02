@@ -175,12 +175,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 % a=subplot(2,2,1)
 h=cdfplot(d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -196,14 +196,14 @@ fig = figure;
 % sgtitle('k values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_k_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_k_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_k_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_k_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 30])
 xlabel(['k value'])
@@ -218,14 +218,14 @@ fig = figure;
 % sgtitle('Max dF/F values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_max_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_max_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_max_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_max_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 1])
 xlabel(['Max dF/F'])
@@ -240,14 +240,14 @@ fig = figure;
 % sgtitle('Reliability dF/F values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_reliability_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_reliability_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_reliability_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_reliability_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Fit Reliability'])
@@ -264,12 +264,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 % a=subplot(2,2,1)
 h=cdfplot(d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -286,12 +286,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 a=subplot(2,2,1)
 h=cdfplot(bot_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(bot_d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(bot_d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -301,12 +301,12 @@ title(['Bottom 50% Responsivity'])
 % sgtitle('Pref Ori Changes')
 b=subplot(2,2,2)
 h=cdfplot(bot_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(bot_d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(bot_d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -315,12 +315,12 @@ title(['Bottom 50% Responsivity'])
 
 c=subplot(2,2,3)
 h=cdfplot(top_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(top_d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(top_d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -329,12 +329,12 @@ title(['Top 50% Responsivity'])
 
 d=subplot(2,2,4)
 h=cdfplot(top_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(top_d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(top_d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -508,12 +508,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 % a=subplot(2,2,1)
 h=cdfplot(d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -529,14 +529,14 @@ fig = figure;
 % sgtitle('k values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_k_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_k_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_k_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_k_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 30])
 xlabel(['k value'])
@@ -551,14 +551,14 @@ fig = figure;
 % sgtitle('Max dF/F values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_max_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_max_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_max_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_max_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 1])
 xlabel(['Max dF/F'])
@@ -573,14 +573,14 @@ fig = figure;
 % sgtitle('Reliability dF/F values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_reliability_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_reliability_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_reliability_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_reliability_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Fit Reliability'])
@@ -595,12 +595,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 % a=subplot(2,2,1)
 h=cdfplot(d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -617,12 +617,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 a=subplot(2,2,1)
 h=cdfplot(bot_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(bot_d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(bot_d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -632,12 +632,12 @@ title(['Bottom 50% Responsivity'])
 % sgtitle('Pref Ori Changes')
 b=subplot(2,2,2)
 h=cdfplot(bot_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(bot_d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(bot_d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -646,12 +646,12 @@ title(['Bottom 50% Responsivity'])
 
 c=subplot(2,2,3)
 h=cdfplot(top_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(top_d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(top_d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -660,12 +660,12 @@ title(['Top 50% Responsivity'])
 
 d=subplot(2,2,4)
 h=cdfplot(top_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(top_d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(top_d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -839,12 +839,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 % a=subplot(2,2,1)
 h=cdfplot(d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -860,14 +860,14 @@ fig = figure;
 % sgtitle('k values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_k_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_k_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_k_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_k_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 30])
 xlabel(['k value'])
@@ -882,14 +882,14 @@ fig = figure;
 % sgtitle('Max dF/F values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_max_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_max_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_max_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_max_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 1])
 xlabel(['Max dF/F'])
@@ -904,14 +904,14 @@ fig = figure;
 % sgtitle('Reliability dF/F values')
 % a=subplot(2,2,1)
 h=cdfplot(d1_reliability_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d2_reliability_all);
-set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.3 .3 .3], 'LineWidth',2);
 l=cdfplot(d3_reliability_all);
-set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.6 .6 .6], 'LineWidth',2);
 m=cdfplot(d4_reliability_all);
-set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',1);
+set(m, 'LineStyle', '-', 'Color', [.9 .9 .9], 'LineWidth',2);
 legend(['Base1'], ['Base2'], ['Post-dark'], ['Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Fit Reliability'])
@@ -926,12 +926,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 % a=subplot(2,2,1)
 h=cdfplot(d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -948,12 +948,12 @@ fig = figure;
 % sgtitle('Pref Ori Changes')
 a=subplot(2,2,1)
 h=cdfplot(bot_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(bot_d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(bot_d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -963,12 +963,12 @@ title(['Bottom 50% Responsivity'])
 % sgtitle('Pref Ori Changes')
 b=subplot(2,2,2)
 h=cdfplot(bot_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(bot_d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(bot_d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -977,12 +977,12 @@ title(['Bottom 50% Responsivity'])
 
 c=subplot(2,2,3)
 h=cdfplot(top_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(top_d2_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(top_d3_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base2 - Post-dark'], ['Post-dark - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
@@ -991,12 +991,12 @@ title(['Top 50% Responsivity'])
 
 d=subplot(2,2,4)
 h=cdfplot(top_d1_d2_pref_d_all);
-set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',1);
+set(h, 'LineStyle', '-', 'Color', [0 0 0], 'LineWidth',2);
 hold on
 j=cdfplot(top_d1_d3_pref_d_all);
-set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',1);
+set(j, 'LineStyle', '-', 'Color', [.5 .5 .5], 'LineWidth',2);
 l=cdfplot(top_d1_d4_pref_d_all);
-set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',1);
+set(l, 'LineStyle', '-', 'Color', [.8 .8 .8], 'LineWidth',2);
 legend(['Base1 - Base2'], ['Base1 - Post-dark'], ['Base1 - Post-dark+7d'], 'Location', 'southeast')
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
