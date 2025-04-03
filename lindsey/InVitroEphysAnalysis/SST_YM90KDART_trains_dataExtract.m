@@ -31,6 +31,7 @@ end
 run_ind = find(~isnan(freq_list));
 nfile = length(run_ind);
 offset = firstFile-run_ind(1);
+data = [];
 
 for i = 1:nfile
     run = run_ind(i)+offset;
@@ -116,7 +117,7 @@ for i = 1:nfile
 end
 
 data_sub = data_resp-data_base;
-print(fullfile(fn_out_use,[abfdate firstFile_str '_EPSCTraces.pdf']),'-dpdf','-fillpage')
+%print(fullfile(fn_out_use,[abfdate firstFile_str '_EPSCTraces.pdf']),'-dpdf','-fillpage')
 
 
 figure;
@@ -135,7 +136,7 @@ xlabel('Stimulus #')
 subplot(3,1,1)
 legend({'Control','YM90K-DART'})
 sgtitle('Raw EPSC amplitude')
-print(fullfile(fn_out_use,[abfdate firstFile_str '_rawEPSCAmp.pdf']),'-dpdf','-fillpage')
+%print(fullfile(fn_out_use,[abfdate firstFile_str '_rawEPSCAmp.pdf']),'-dpdf','-fillpage')
 
 figure;
 for i = 1:size(match,1)
@@ -153,7 +154,7 @@ xlabel('Stimulus #')
 subplot(3,1,1)
 legend({'Control','YM90K-DART'})
 sgtitle('Norm to baseline EPSC amplitude')
-print(fullfile(fn_out_use,[abfdate firstFile_str '_normToBaseline.pdf']),'-dpdf','-fillpage')
+%print(fullfile(fn_out_use,[abfdate firstFile_str '_normToBaseline.pdf']),'-dpdf','-fillpage')
 
 
 figure;
@@ -173,9 +174,9 @@ end
 xlabel('Stimulus #')
 subplot(3,1,1)
 sgtitle('Norm to control EPSC amplitude')
-print(fullfile(fn_out_use,[abfdate firstFile_str '_normToControl.pdf']),'-dpdf','-fillpage')
+%print(fullfile(fn_out_use,[abfdate firstFile_str '_normToControl.pdf']),'-dpdf','-fillpage')
 
-save(fullfile(fn_out_use,[abfdate firstFile_str '_dataSub.mat']),'data_sub','match','freq_list')
+save(fullfile(fn_out_use,[abfdate firstFile_str '_dataSub.mat']),'data', 'data_resp', 'data_base', 'resp_start','resp_end','base_start','base_end','data_sub','match','freq_list')
 
 %% First response control, wash and DART
 

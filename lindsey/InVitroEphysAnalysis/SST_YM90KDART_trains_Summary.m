@@ -34,6 +34,8 @@ for iexp = 1:nexpt
     data_norm2con_all = cat(3,data_norm2con_all,data_norm2con);
 end
 
+save(fullfile(fn_out_summary,'SST_YM90KDART_Trains_Summary.mat'), 'data_norm2base_all', 'data_norm2con_all', 'match', 'freq_list');
+
 p_n2B = zeros(3,3);
 figure;
 for i = 1:size(match,1)
