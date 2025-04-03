@@ -1,12 +1,18 @@
+close all
+clear all
+clc
+
+exp = 3;
+
 ds = 'SST_YM90KDART_trains_ExptList';
 eval(ds);
 
-exp = 2;
 date = expt(exp).date;
 abfdate = expt(exp).abfdate;
 firstFile = expt(exp).firstFile;
 freq_list= expt(exp).freqList;
 drug_list = expt(exp).drugList;
+omit_list = expt(exp).omit_run_trace;
 
 data_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Data\InVitroRecordings\';
 fn_out = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\InVitroRecordings\';
@@ -33,32 +39,86 @@ for i = 1:nfile
     else
         [temp si] = abfload(fullfile(data_pn,date,[abfdate '_00' num2str(run) '.abf']));
     end
+    if ~isempty(omit_list)
+        ind = find(omit_list(:,1) == run_ind(i));
+        if ~isempty(ind)
+            rem = omit_list(ind,2);
+            temp(:,:,rem) = [];
+            fprintf(['Remove run ' num2str(run_ind(i)) ' trace ' num2str(rem') '\n']) 
+        end
+    end
     data(:,i) = squeeze(mean(temp,3));
 end
 
+freq_temp = unique(freq_list);
+freq = freq_temp(~isnan(freq_temp));
+match = zeros(length(freq),2);
+for i = 1:length(freq)
+    match(i,:) = find(freq_list(run_ind) == freq(i));
+end
+
+% resp_start = zeros(nfile,nstim);
+% resp_end = zeros(nfile,nstim);
+% data_base = zeros(nfile,nstim);
+% data_resp = zeros(nfile,nstim);
+% 
+% figure;
+% for i = 1:nfile
+%     interval = 1000./freq_list(run_ind(i));
+%     subplot(2,3,i)
+%     plot(data(:,i))
+%     hold on
+%     for ii = 1:nstim
+%         base_start = firstStim_ind-10+((ii-1)*interval*10);
+%         base_end = firstStim_ind+((ii-1)*interval*10);
+%         [peak_val peak_ind] = min(data(base_end+20:base_end+60,i));
+%         resp_start(i,ii) = base_end+10+peak_ind;
+%         resp_end(i,ii) = base_end+30+peak_ind;
+%         vline([base_start base_end resp_start(i,ii) resp_end(i,ii)])
+%         data_base(i,ii) = mean(data(base_start:base_end,i),1);
+%         data_resp(i,ii) = mean(data(resp_start(i,ii):resp_end(i,ii),i),1);
+%     end
+%     xlim([firstStim_ind 5000])
+%     ylim([-500 100])
+%     title(num2str(freq_list(run_ind(i))))
+% end
+
+resp_start = zeros(nfile,nstim);
+resp_end = zeros(nfile,nstim);
 data_base = zeros(nfile,nstim);
 data_resp = zeros(nfile,nstim);
+
+figure;
 for i = 1:nfile
     interval = 1000./freq_list(run_ind(i));
-    % figure;
-    % plot(data(:,i))
+    subplot(2,3,i)
+    plot(data(:,i))
     hold on
     for ii = 1:nstim
         base_start = firstStim_ind-10+((ii-1)*interval*10);
         base_end = firstStim_ind+((ii-1)*interval*10);
-        [peak_val peak_ind] = min(data(base_end+20:base_end+60,i));
-        resp_start = base_end+10+peak_ind;
-        resp_end = base_end+30+peak_ind;
-        % vline([base_start base_end resp_start resp_end])
+        if i<4
+            [peak_val peak_ind] = min(data(base_end+20:base_end+60,i));
+            resp_start(i,ii) = base_end+10+peak_ind;
+            resp_end(i,ii) = base_end+30+peak_ind;
+        else
+            ind = find(match(:,2)==i);
+            resp_start(i,ii) = resp_start(match(ind,1),ii);
+            resp_end(i,ii) = resp_end(match(ind,1),ii);
+        end
+        vline([base_start base_end resp_start(i,ii) resp_end(i,ii)])
         data_base(i,ii) = mean(data(base_start:base_end,i),1);
-        data_resp(i,ii) = mean(data(resp_start:resp_end,i),1);
+        data_resp(i,ii) = mean(data(resp_start(i,ii):resp_end(i,ii),i),1);
     end
     xlim([firstStim_ind 5000])
+    ylim([-500 100])
+    title(num2str(freq_list(run_ind(i))))
 end
+
 data_sub = data_resp-data_base;
+print(fullfile(fn_out_use,[abfdate firstFile_str '_EPSCTraces.pdf']),'-dpdf','-fillpage')
 
 
-match = [1 5; 2 4; 3 6];
 figure;
 for i = 1:size(match,1)
     subplot(size(match,1),1,i)
@@ -100,6 +160,8 @@ figure;
 for i = 1:size(match,1)
     subplot(size(match,1),1,i)
     for ii = 2
+        fprintf([num2str(freq_list(match(i,1))) ' Hz /n'])
+        data_sub(match(i,ii),1)./data_sub(match(i,1),1)
         plot(data_sub(match(i,ii),:)./data_sub(match(i,1),:))
         hold on
     end
