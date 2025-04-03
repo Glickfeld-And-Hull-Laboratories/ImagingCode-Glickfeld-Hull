@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '240821';
-mouse = 'i1396';
+date = '250314';
+mouse = 'i1415';
 ImgFolder = '001';
-time = ['1257'];
+time = ['1443'];
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -24,12 +24,18 @@ for irun = 1:nrun
     cd(CD);
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
+    if isfield(info,'frame')
+        fprintf('Photodiode data collected \n')
+    else
+        fprintf('WARNING- NO PHOTODIODE DATA!!!!! \n')
+    end
+
     fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
     load(fName);
     
     nframes = info.config.frames;
     %nframes = 4050;
-    nframes = input.counterValues{end}(end);
+    %nframes = input.counterValues{end}(end);
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
 

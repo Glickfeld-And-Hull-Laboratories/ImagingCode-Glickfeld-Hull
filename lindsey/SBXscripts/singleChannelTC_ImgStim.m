@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '250223';
+date = '250307';
 ImgFolder = {'002'};
-time = strvcat('1116');
-mouse = 'i1412';
+time = strvcat('1108');
+mouse = 'i1411';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -194,7 +194,7 @@ tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
 base_win = 20:22;
-resp_win = 25:27;
+resp_win = 24:26;
 figure;
 subplot(2,1,1)
 shadedErrorBar(1:100,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
@@ -232,7 +232,7 @@ save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
         
 %% if do second run for tuning
 ImgFolder = {'003'};
-time = strvcat('1309');
+time = strvcat('1336');
 singleStim = 0;
 ref_str = run_str;
 run_str = catRunName(ImgFolder, nrun);
@@ -353,6 +353,5 @@ vline([base_win resp_win])
 resp_mat = zeros(nCells,nTrials,2);
 resp_mat(:,:,1) = squeeze(mean(tc_one_dfof(resp_win,:,:),1)-mean(tc_one_dfof(base_win,:,:),1));
 resp_mat(:,:,2) = squeeze(mean(tc_two_dfof(resp_win,:,:),1)-mean(tc_two_dfof(base_win,:,:),1));
-ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','stim_mat', 'stims', 'nStim', 'base_win', 'resp_win');

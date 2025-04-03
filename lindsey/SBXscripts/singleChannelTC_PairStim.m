@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '250220';
+date = '250225';
 ImgFolder = {'002'};
-time = strvcat('1248');
-mouse = 'i1413';
+time = strvcat('1222');
+mouse = 'i1406';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -218,7 +218,7 @@ tc_two_f = mean(tc_two(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-base_win = 21:23;
+base_win = 20:22;
 resp_win = 25:27;
 figure;
 subplot(2,1,1)
@@ -269,7 +269,7 @@ save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
         
 %% if do second run for tuning
 ImgFolder = {'003'};
-time = strvcat('1445');
+time = strvcat('1500');
 singleStim = 0;
 ref_str = run_str;
 run_str = catRunName(ImgFolder, nrun);
@@ -333,23 +333,38 @@ n = nOri*nSF*nAz;
 [n1 n2] = subplotn(n);
 figure;
 start = 1;
-for it = 1:nOri
-    ind_ori = find(ori_mat == oris(it));
-    for is = 1:nSF
-        ind_sf = find(sf_mat == sfs(is));
-        for i = 1:nAz
-            ind_az = find(az_targ_mat == azs(i));
-            ind_use = intersect(ind_ori, intersect(ind_sf,ind_az));    
+if nAz>1
+    for it = 1:nOri
+        ind_ori = find(ori_mat == oris(it));
+        for is = 1:nSF
+            ind_sf = find(sf_mat == sfs(is));
+            for i = 1:nAz
+                ind_az = find(az_targ_mat == azs(i));
+                ind_use = intersect(ind_ori, intersect(ind_sf,ind_az));    
+                data_dfof_avg(:,:,start) = nanmean(data_one_dfof(:,:,ind_use),3);
+                shade_img = imShade(data_dfof_avg(:,:,start), mask_cell);
+                subplot(n1,n2,start)
+                imagesc(shade_img)
+                title(['ori: ' num2str(oris(it)) '; sf- ' num2str(sfs(is)) '; pos ' num2str(azs(i))])
+                start = 1+start;
+            end
+        end
+    end
+else
+    for it = 1:nOri
+        ind_ori = find(ori_mat == oris(it));
+        for is = 1:nSF
+            ind_sf = find(sf_mat == sfs(is));
+            ind_use = intersect(ind_ori, ind_sf);    
             data_dfof_avg(:,:,start) = nanmean(data_one_dfof(:,:,ind_use),3);
             shade_img = imShade(data_dfof_avg(:,:,start), mask_cell);
             subplot(n1,n2,start)
             imagesc(shade_img)
-            title(['ori: ' num2str(oris(it)) '; sf- ' num2str(sfs(is)) '; pos ' num2str(azs(i))])
+            title(['ori: ' num2str(oris(it)) '; sf- ' num2str(sfs(is))])
             start = 1+start;
         end
     end
 end
-
 % neuropil subtraction
 down = 5;
 sz = size(data_reg);
@@ -398,7 +413,7 @@ tc_one_f = mean(tc_one(1:20,:,:));
 tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
 tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
 
-resp_win = 26:28;
+resp_win = 25:27;
 figure;
 shadedErrorBar(1:100,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
 vline([base_win resp_win])
@@ -406,6 +421,5 @@ vline([base_win resp_win])
 resp_mat = zeros(nCells,nTrials,2);
 resp_mat(:,:,1) = squeeze(mean(tc_one_dfof(resp_win,:,:),1)-mean(tc_one_dfof(base_win,:,:),1));
 resp_mat(:,:,2) = squeeze(mean(tc_two_dfof(resp_win,:,:),1)-mean(tc_two_dfof(base_win,:,:),1));
-ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','ori_mat', 'oris', 'nOri', 'sf_mat', 'sfs', 'nSF', 'az_mat','azs','nAz',        'base_win', 'resp_win');
