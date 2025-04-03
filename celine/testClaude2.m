@@ -268,21 +268,22 @@ for id = 1:nd
 end
 
 %% extract running onsets
-% Note: This section requires cStimOn variable from photoFrameFinder method
-% Will only run if that processing method was chosen
+
 prompt = 'Do you want to extract running onsets? (0-no, 1-yes) ';
 x = input(prompt);
 if x == 1
     % First check if we have required variables
-    if ~exist('cStimOn', 'var')
-        disp('Running onset extraction requires photoFrameFinder method.');
-        disp('This variable is not available. Skipping running onset extraction.');
-    else
-        data_dfof_runOnset_match = cell(1,nd);
-        nRunOnsets=[];
+   
         for id = 1:nd
+            mouse = expt(allDays(id)).mouse;
+            date = expt(allDays(id)).date;
+            imgFolder = expt(allDays(id)).contrastxori_runs{1};
+            imgMatFile = [imgFolder '_000_000.mat'];
+            dataPath = fullfile(rc.achData, mouse, date, imgFolder);
+            load(fullfile(dataPath,imgMatFile));
+            [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
             [nFrames, nCells] = size(cellTCs_match{id});
-            
+            nRunOnsets=[];
             fwdWheelClean = wheel_speed_clean{id};
             fwdWheelClean(fwdWheelClean<0)=0;
             
@@ -390,14 +391,14 @@ if x == 1
                 end
             end
             
-            figure; plot(nanmean(runConfirmation,2)) %to check whether running actually does increase around the time of these onsets.
+            figure; plot(nanmean(runConfirmation,2));title(['Sanity check for locomotion increase, day = ', num2str(id)]) %to check whether running actually does increase around the time of these onsets.
             
             data_dfof_runOnset_match{id} = mean(data_dfof_runOnset,3,'omitmissing'); %frames x cells (for all matched cells) averaged over all the onsets
             nRunOnsets=[nRunOnsets length(ITIOnsets)];
         end
 
         fprintf('Number of running onsets per day: %s\n', mat2str(nRunOnsets));
-    end
+    
 end
 clear x
 
