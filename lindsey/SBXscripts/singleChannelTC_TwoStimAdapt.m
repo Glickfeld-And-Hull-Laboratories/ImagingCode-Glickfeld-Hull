@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '241114';
+date = '250212';
 ImgFolder = {'002'};
-time = strvcat('1313');
-mouse = 'i1411';
+time = strvcat('1618');
+mouse = 'i1412';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -134,7 +134,7 @@ if nStimDir > 1 & ~input.doTwoStimTogether
         subplot(3,4,is)
         imagesc(data_dfof(:,:,start))
         start = start+1;
-        if maskCons > 0
+        if nMaskCon > 0
             ind_plaidstim = intersect(intersect(ind_plaid,find(stimDir_all == stimDirs(is))),find(adaptStim==0));
             data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_plaidstim),3);        
             figure(2)
@@ -143,12 +143,12 @@ if nStimDir > 1 & ~input.doTwoStimTogether
             start = start+1;
         end
     end
-    figure; 
+    figure(3) 
     subplot(2,1,1); 
     imagesc(mean(data_dfof(:,:,1:2:end),3,"omitnan"))
     title('Grating')
     colormap gray
-    if maskCons > 0
+    if nMaskCon > 0
         subplot(2,1,2); 
         imagesc(mean(data_dfof(:,:,2:2:end),3,"omitnan"))
         title('Plaid')
