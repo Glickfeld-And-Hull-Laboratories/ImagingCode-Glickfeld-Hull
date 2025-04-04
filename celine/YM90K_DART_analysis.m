@@ -236,11 +236,11 @@ for iMouse = 1:nSess
 end
 clear start iMouse
 
-green_all = intersect(haveRunning_green{1},haveRunning_green{2});
-green_all = intersect(green_all, haveRunning_green{3});
+green_matched = intersect(haveRunning_green{1},haveRunning_green{2});
+green_matched = intersect(green_matched, haveRunning_green{3});
 
-red_all = intersect(haveRunning_red{1},haveRunning_red{2});
-red_all = intersect(red_all, haveRunning_red{3});
+red_matched = intersect(haveRunning_red{1},haveRunning_red{2});
+red_matched = intersect(red_matched, haveRunning_red{3});
 
 %find cells that have pupil data on both days
 have_LARGE_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
@@ -270,7 +270,7 @@ mouseNames=[];
 for iMouse = 1:nSess
     
     cellCountsRed(iMouse, 1,1)=length(intersect(red_ind_concat,(mouseInds{iMouse})));
-    cellCountsRed(iMouse, 2,1)=length(intersect(red_all,(mouseInds{iMouse})));
+    cellCountsRed(iMouse, 2,1)=length(intersect(red_matched,(mouseInds{iMouse})));
     cellCountsRed(iMouse, 3,1)=length(intersect(have_allPupil_red,(mouseInds{iMouse})));
         
     mouseNames=[mouseNames, string(mice(iMouse,:))]
@@ -283,7 +283,7 @@ mouseNames=[];
 for iMouse = 1:nSess
     
     cellCountsGreen(iMouse, 1,1)=length(intersect(green_ind_concat,(mouseInds{iMouse})));
-    cellCountsGreen(iMouse, 2,1)=length(intersect(green_all,(mouseInds{iMouse})));
+    cellCountsGreen(iMouse, 2,1)=length(intersect(green_matched,(mouseInds{iMouse})));
     cellCountsGreen(iMouse, 3,1)=length(intersect(have_allPupil_green,(mouseInds{iMouse})));
         
     mouseNames=[mouseNames, string(mice(iMouse,:))]
@@ -299,7 +299,7 @@ writetable(cellCountTableGreen,fullfile(fnout,'cellCounts_Green.csv'),'WriteRowN
 %find how many haveRunning red cells exist for each mouse
 cellCountsRedAll = nan(nSess,1);
 for iMouse = 1:nSess
-    cellCountsRedAll(iMouse)=length(intersect(red_all,(mouseInds{iMouse})));
+    cellCountsRedAll(iMouse)=length(intersect(red_matched,(mouseInds{iMouse})));
 end
 clear  iMouse
 
@@ -1609,13 +1609,13 @@ tc_red_se_loc = cell(1,nd);
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_all,iCon),2);
-    red_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,red_all,iCon),[],2);
-    tc_red_se_stat{id}(:,iCon)=red_std_stat/sqrt(length(red_all));
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_matched,iCon),2);
+    red_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,red_matched,iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std_stat/sqrt(length(red_matched));
     
-    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,red_all,iCon),2);
-    red_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,red_all,iCon),[],2);
-    tc_red_se_loc{id}(:,iCon)=red_std_loc/sqrt(length(red_all));
+    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,red_matched,iCon),2);
+    red_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,red_matched,iCon),[],2);
+    tc_red_se_loc{id}(:,iCon)=red_std_loc/sqrt(length(red_matched));
     
     clear red_std_stat red_std_loc
     end
@@ -1663,7 +1663,7 @@ elseif iCon==3
 end
 set(gca,'XColor', 'none','YColor','none')
 
-sgtitle(['SST',' n = ', num2str(length(red_all))])
+sgtitle(['SST',' n = ', num2str(length(red_matched))])
 
 x0=5;
 y0=0;
@@ -1676,9 +1676,9 @@ set(gca,'XColor', 'none','YColor','none')
 end  
 print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
 %% scatterplots for matched cells
-scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_all,green_all,'stationaryMatched')
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_matched,green_matched,'stationaryMatched')
 
-scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_all,green_all,'runningMatched')
+scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_matched,green_matched,'runningMatched')
 
 %% Fig 5C- timecourses for Pyr cells running trials
 tc_green_avrg_stat = cell(1,nd);
@@ -1689,13 +1689,13 @@ tc_green_se_loc = cell(1,nd);
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_all,iCon),2);
-    green_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,green_all,iCon),[],2);
-    tc_green_se_stat{id}(:,iCon)=green_std_stat/sqrt(length(green_all));
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_matched,iCon),2);
+    green_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,green_matched,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std_stat/sqrt(length(green_matched));
     
-    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,green_all,iCon),2);
-    green_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,green_all,iCon),[],2);
-    tc_green_se_loc{id}(:,iCon)=green_std_loc/sqrt(length(green_all));
+    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,green_matched,iCon),2);
+    green_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,green_matched,iCon),[],2);
+    tc_green_se_loc{id}(:,iCon)=green_std_loc/sqrt(length(green_matched));
     
     clear green_std_stat green_std_loc
     end
@@ -1741,7 +1741,7 @@ elseif iCon==3
 end
 set(gca,'XColor', 'none','YColor','none')
 
-sgtitle(['Pyr',' n = ', num2str(length(green_all))])
+sgtitle(['Pyr',' n = ', num2str(length(green_matched))])
 
 x0=5;
 y0=0;
@@ -1769,23 +1769,23 @@ conResp_red_se_loc = cell(1,nd); %same for red
 for id = 1:nd
    
         
-    conResp_green_avrg_stat{id}=mean(pref_responses_stat_concat{id}(green_all,:),1,'omitnan');
-    green_std=std(pref_responses_stat_concat{id}(green_all,:),1,'omitnan');
-    conResp_green_se_stat{id}=green_std/sqrt(length(green_all));
+    conResp_green_avrg_stat{id}=mean(pref_responses_stat_concat{id}(green_matched,:),1,'omitnan');
+    green_std=std(pref_responses_stat_concat{id}(green_matched,:),1,'omitnan');
+    conResp_green_se_stat{id}=green_std/sqrt(length(green_matched));
     
-    conResp_red_avrg_stat{id}=mean(pref_responses_stat_concat{id}(red_all,:),1,'omitnan');
-    red_std=std(pref_responses_stat_concat{id}(red_all,:),1,'omitnan');
-    conResp_red_se_stat{id}=red_std/sqrt(length(red_all));
+    conResp_red_avrg_stat{id}=mean(pref_responses_stat_concat{id}(red_matched,:),1,'omitnan');
+    red_std=std(pref_responses_stat_concat{id}(red_matched,:),1,'omitnan');
+    conResp_red_se_stat{id}=red_std/sqrt(length(red_matched));
     
     clear green_std red_std
     
-    conResp_green_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(green_all ,:),1);
-    green_std=nanstd(pref_responses_loc_concat{id}(green_all,:),1);
-    conResp_green_se_loc{id}=green_std/sqrt(length(green_all));
+    conResp_green_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(green_matched ,:),1);
+    green_std=nanstd(pref_responses_loc_concat{id}(green_matched,:),1);
+    conResp_green_se_loc{id}=green_std/sqrt(length(green_matched));
     
-    conResp_red_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(red_all,:),1);
-    red_std=nanstd(pref_responses_loc_concat{id}(red_all,:),1);
-    conResp_red_se_loc{id}=red_std/sqrt(length(red_all));
+    conResp_red_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(red_matched,:),1);
+    red_std=nanstd(pref_responses_loc_concat{id}(red_matched,:),1);
+    conResp_red_se_loc{id}=red_std/sqrt(length(red_matched));
     
     clear green_std red_std
  
@@ -1830,7 +1830,7 @@ print(fullfile(fnout,'Fig_4B.pdf'),'-dpdf');
 %% Fig 5B statistics
 
 % prepare data for ANOVA
-all_cells = union(red_all,green_all);
+all_cells = union(red_matched,green_matched);
 
 dfof_stat = horzcat(pref_responses_stat_concat{pre},pref_responses_stat_concat{post});
 dfof_loc = horzcat(pref_responses_loc_concat{pre},pref_responses_loc_concat{post});
@@ -1883,17 +1883,17 @@ ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
 
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_all,1),pref_responses_stat_concat{post}(red_all,1));
-[sst_h2, sst_p2]= ttest(pref_responses_stat_concat{pre}(red_all,2),pref_responses_stat_concat{post}(red_all,2));
-[sst_h3, sst_p3]= ttest(pref_responses_stat_concat{pre}(red_all,3),pref_responses_stat_concat{post}(red_all,3));
+[sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_matched,1),pref_responses_stat_concat{post}(red_matched,1));
+[sst_h2, sst_p2]= ttest(pref_responses_stat_concat{pre}(red_matched,2),pref_responses_stat_concat{post}(red_matched,2));
+[sst_h3, sst_p3]= ttest(pref_responses_stat_concat{pre}(red_matched,3),pref_responses_stat_concat{post}(red_matched,3));
 
 %corrected for three tests
 sst_pvalues_stat = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
-[sst_h2, sst_p2]= ttest(pref_responses_loc_concat{pre}(red_all,2),pref_responses_loc_concat{post}(red_all,2));
-[sst_h3, sst_p3]= ttest(pref_responses_loc_concat{pre}(red_all,3),pref_responses_loc_concat{post}(red_all,3));
+[sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_matched,1),pref_responses_loc_concat{post}(red_matched,1));
+[sst_h2, sst_p2]= ttest(pref_responses_loc_concat{pre}(red_matched,2),pref_responses_loc_concat{post}(red_matched,2));
+[sst_h3, sst_p3]= ttest(pref_responses_loc_concat{pre}(red_matched,3),pref_responses_loc_concat{post}(red_matched,3));
 
 %corrected for three tests
 sst_pvalues_loc = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
@@ -1902,17 +1902,17 @@ table(contrasts,sst_pvalues_stat,sst_pvalues_loc)
 
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_matched,1),pref_responses_stat_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_matched,2),pref_responses_stat_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_matched,3),pref_responses_stat_concat{post}(green_matched,3));
 
 %corrected for three tests
 pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_matched,1),pref_responses_loc_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_matched,2),pref_responses_loc_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_matched,3),pref_responses_loc_concat{post}(green_matched,3));
 
 %corrected for three tests
 pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
@@ -1925,7 +1925,7 @@ subplot(1,2,1) %for the first day
 errorbar(cons,conResp_green_avrg_stat{pre},conResp_green_se_stat{pre},'--k');
 hold on
 errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'--b');
-%title(['-HTP',' n = ', num2str(length(green_all))])
+%title(['-HTP',' n = ', num2str(length(green_matched))])
 ylabel('dF/F') 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
@@ -1942,7 +1942,7 @@ subplot(1,2,2) %for the first day
 errorbar(cons,conResp_green_avrg_loc{pre},conResp_green_se_loc{pre},'--k');
 hold on
 errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'--b');
-%title(['-HTP',' n = ', num2str(length(green_all))])
+%title(['-HTP',' n = ', num2str(length(green_matched))])
 xlabel('contrast') 
 ylim([0 .3])
 xlim([0 1.2])
@@ -1961,9 +1961,9 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_S6B.pdf'),'-dpdf');
 %%
 % pairwise ttests for dfof response at each contrast for SST cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_matched,1),pref_responses_stat_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_matched,2),pref_responses_stat_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_matched,3),pref_responses_stat_concat{post}(green_matched,3));
 
 %corrected for three tests
 pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
@@ -1971,9 +1971,9 @@ contrasts = cons';
 table(contrasts,pyr_pvalues_stat)
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_matched,1),pref_responses_loc_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_matched,2),pref_responses_loc_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_matched,3),pref_responses_loc_concat{post}(green_matched,3));
 
 %corrected for three tests
 pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
@@ -1992,12 +1992,12 @@ print(fullfile(fnout,'Fig_S5B.pdf'),'-dpdf');
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
 %reselect norm_diff)red to be only the "red all" subset
-norm_diff_red = norm_diff(:,:,red_all);
+norm_diff_red = norm_diff(:,:,red_matched);
 
 facil_red=norm_diff_red(:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:)<=-1;
 
-N=length(red_all);
+N=length(red_matched);
 facil_table_stat = sum(facil_red(1,:,:),3)/N;
 supp_table_stat = sum(supp_red(1,:,:),3)/N;
 facil_table_loc = sum(facil_red(2,:,:),3)/N;
@@ -2098,12 +2098,12 @@ clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
 %reselect norm_diff)green to be only the "green all" subset
-norm_diff_green = norm_diff(:,:,green_all);
+norm_diff_green = norm_diff(:,:,green_matched);
 
 facil_green=norm_diff_green(:,:,:)>=1;
 supp_green=norm_diff_green(:,:,:)<=-1;
 
-N=length(green_all);
+N=length(green_matched);
 facil_table_stat = sum(facil_green(1,:,:),3)/N;
 supp_table_stat = sum(supp_green(1,:,:),3)/N;
 facil_table_loc = sum(facil_green(2,:,:),3)/N;
@@ -2227,15 +2227,15 @@ red_dir_se_stat = cell(1,nd); %same for red
 
     for id = 1:nd
        
-        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(green_all,:,:),3),1);
-        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(green_all,:,:),3),[],1);
-        green_dir_se_stat{id}=green_std/sqrt(length(green_all));
+        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(green_matched,:,:),3),1);
+        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(green_matched,:,:),3),[],1);
+        green_dir_se_stat{id}=green_std/sqrt(length(green_matched));
         green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
         green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
         
-        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(red_all,:,:),3),1);
-        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(red_all,:,:),3),[],1);
-        red_dir_se_stat{id}=red_std/sqrt(length(red_all));
+        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(red_matched,:,:),3),1);
+        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(red_matched,:,:),3),[],1);
+        red_dir_se_stat{id}=red_std/sqrt(length(red_matched));
         red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
         red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
         clear green_std red_std
@@ -2250,15 +2250,15 @@ red_dir_se_stat = cell(1,nd); %same for red
     
      for id = 1:nd
        
-        green_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(green_all,:,:),3),1);
-        green_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(green_all,:,:),3),[],1);
-        green_dir_se_loc{id}=green_std/sqrt(length(green_all));
+        green_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(green_matched,:,:),3),1);
+        green_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(green_matched,:,:),3),[],1);
+        green_dir_se_loc{id}=green_std/sqrt(length(green_matched));
         green_dir_avrg_loc{id}=circshift(green_dir_avrg_loc{id},4);
         green_dir_se_loc{id}=circshift(green_dir_se_loc{id},4);
         
-        red_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(red_all,:,:),3),1);
-        red_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(red_all,:,:),3),[],1);
-        red_dir_se_loc{id}=red_std/sqrt(length(red_all));
+        red_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(red_matched,:,:),3),1);
+        red_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(red_matched,:,:),3),[],1);
+        red_dir_se_loc{id}=red_std/sqrt(length(red_matched));
         red_dir_avrg_loc{id}=circshift(red_dir_avrg_loc{id},4);
         red_dir_se_loc{id}=circshift(red_dir_se_loc{id},4);
         clear green_std red_std
@@ -2849,12 +2849,12 @@ norm_diff_pupil(find(norm_diff_pupil == Inf))=NaN;
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
 %reselect norm_diff)red to be only the "red all" subset
-norm_diff_red = norm_diff_pupil(:,:,red_all);
+norm_diff_red = norm_diff_pupil(:,:,red_matched);
 
 facil_red=norm_diff_red(:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:)<=-1;
 
-N=length(red_all);
+N=length(red_matched);
 facil_table_smallPupil = sum(facil_red(1,:,:),3)/N;
 supp_table_smallPupil = sum(supp_red(1,:,:),3)/N;
 facil_table_largePupil = sum(facil_red(2,:,:),3)/N;
@@ -2950,12 +2950,12 @@ clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
 
 %% For pyramidal cells
 
-norm_diff_green = norm_diff_pupil(:,:,green_all);
+norm_diff_green = norm_diff_pupil(:,:,green_matched);
 
 facil_green=norm_diff_green(:,:,:)>=1;
 supp_green=norm_diff_green(:,:,:)<=-1;
 
-N=length(green_all);
+N=length(green_matched);
 facil_table_smallPupil_green = sum(facil_green(1,:,:),3)/N;
 supp_table_smallPupil_green = sum(supp_green(1,:,:),3)/N;
 facil_table_largePupil_green = sum(facil_green(2,:,:),3)/N;
@@ -3337,9 +3337,9 @@ end
 
 figure;
 subplot(1,2,1)
-boxplot([squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all))]);
+boxplot([squeeze(R_by_state(1,pre,red_matched)),squeeze(R_by_state(4,pre,red_matched))]);
 hold on
-scatter([1, 2],squeeze(R_by_state([1,4],pre,red_all)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2],squeeze(R_by_state([1,4],pre,red_matched)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 xticklabels({'Stationary','Running'})
 %ylim([-.3 1.3])
 ylabel(["Mean R value"]) 
@@ -3347,16 +3347,16 @@ set(gca,'TickDir','out')
 box off
 hold on
 subplot(1,2,2)
-boxplot([squeeze(R_by_state(1,post,red_all)),squeeze(R_by_state(4,post,red_all))]);
+boxplot([squeeze(R_by_state(1,post,red_matched)),squeeze(R_by_state(4,post,red_matched))]);
 hold on
-scatter([1, 2],squeeze(R_by_state([1,4],post,red_all)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2],squeeze(R_by_state([1,4],post,red_matched)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 xticklabels({'Stationary','Running'})
 %ylim([-.3 1.3])
 ylabel(["Mean R value"]) 
 set(gca,'TickDir','out')        
 box off
 
-[h1,p1] =ttest(squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all)))
+[h1,p1] =ttest(squeeze(R_by_state(1,pre,red_matched)),squeeze(R_by_state(4,pre,red_matched)))
 
 %%
 %does the average R value differ between contrasts within a behvaioral
