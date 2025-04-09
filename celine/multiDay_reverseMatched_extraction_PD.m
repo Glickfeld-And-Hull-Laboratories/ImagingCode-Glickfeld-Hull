@@ -1,7 +1,7 @@
 clear all; clear global; 
 close all
 clc
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'Pyr_atropine';
+experimentFolder = 'SST_atropine';
 
 mouse = expt(day_id).mouse;
 
@@ -62,15 +62,14 @@ for i = 1:nCells
 red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
 end
 
-red_fluor_all = red_fluor_mask-red_fluor_np;
-    %load in the pupil data for each day
-    
-    
+%red_fluor_all = red_fluor_mask-red_fluor_np; 
 
 % clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
 end
 %using the reference day
-red_fluor_match=red_fluor_all(:,match_ind);
+%red_fluor_match=red_fluor_all(:,match_ind); %if we want to use the
+%np-subtracted red
+red_fluor_match=red_fluor_mask(:,match_ind); %to find the red within a cell, NOT no-subtracted
 z_red_fluor=zscore(red_fluor_match);
 load(fullfile(fn_multi,'multiday_alignment.mat'))
 clear red_fluor_all red_fluor_mask red_fluor_np
