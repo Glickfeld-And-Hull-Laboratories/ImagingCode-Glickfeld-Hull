@@ -9,7 +9,7 @@ eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =79;
+day_id =80;
 experimentFolder = 'Pyr_atropine';
 
 if computer == 'GLNXA64'
@@ -26,7 +26,7 @@ else
     isilonName = '';
     base = fullfile('/home/ACh/Analysis/2p_analysis',experimentFolder);
     datapath = fullfile('/home/ACh/Data/2p_data');
-    beh_prefix = strcat('\Behavior\Data\');
+    beh_prefix = strcat('/Behavior/Data/');
 end
 
 
@@ -61,17 +61,14 @@ for irun = 1:nruns
     switch tHostname
         case {'nb-nuke'}
             if username == 'cc735' 
-                fName = ['Z:\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+                fName = ['/All_staff/Behavior/Data/' dat mouse '-' expDate '-' times{irun} '.mat'];
 
             else
-                fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+                fName = ['//duhs-user-nc1.dhe.duke.edu/dusom_glickfeldlab/All_staff/Behavior/Data/' dat mouse '-' expDate '-' times{irun} '.mat'];
             end
         case{'nb-hubel'}
-                if username == 'cc735'
-                    fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                else
-                    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                 end
+                    fName = ['/Behavior/Data/' dat mouse '-' expDate '-' times{irun} '.mat'];
+
     end
     
     load(fName); %load the mworks behavioral file
