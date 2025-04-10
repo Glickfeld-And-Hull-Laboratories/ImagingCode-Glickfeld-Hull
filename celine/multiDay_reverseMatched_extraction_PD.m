@@ -46,36 +46,34 @@ frame_rate = input.frameImagingRateMs;
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
 
-for id = 1 %currently only doing this for the baseline day
-mouse = expt(allDays(id)).mouse;
-date = expt(allDays(id)).date;
-imgFolder = expt(allDays(id)).contrastxori_runs{1};
-fn = fullfile(rc.achAnalysis,experimentFolder, mouse,date,imgFolder);
-cd(fn);
-load(fullfile(fn,'redImage.mat'));
-load(fullfile(fn,'mask_cell.mat'));
- 
-%use stackGetTimeCourses to extract the red fluorescence within each mask
-red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
-nCells=max(max(mask_cell));
-for i = 1:nCells
-red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
-end
+for id = 1 %currently only doing this for the reference day, regardless of 
+    % which direction the data was matched
+    mouse = expt(allDays(id)).mouse;
+    date = expt(allDays(id)).date;
+    imgFolder = expt(allDays(id)).contrastxori_runs{1};
+    fn = fullfile(rc.achAnalysis,experimentFolder, mouse,date,imgFolder);
+    cd(fn);
+    load(fullfile(fn,'redImage.mat'));
+    load(fullfile(fn,'mask_cell.mat'));
+     
+    %use stackGetTimeCourses to extract the red fluorescence within each mask
+    red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
+    nCells=max(max(mask_cell));
+        for i = 1:nCells
+            red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
+        end
+    %using the reference day
+    %red_fluor_match=red_fluor_all(:,match_ind); %if we want to use the
+    %np-subtracted red
+    red_fluor_match=red_fluor_mask(:,match_ind); %to find the red within a cell, NOT no-subtracted
+    z_red_fluor=zscore(red_fluor_match);
+    load(fullfile(fn_multi,'multiday_alignment.mat'))
+    clear red_fluor_all red_fluor_mask red_fluor_np
+    % get green fluor level
+    %using the reference day
+    green_fluor_match=mean(cellTCs_match{1},1);   
 
-%red_fluor_all = red_fluor_mask-red_fluor_np; 
-
-% clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
 end
-%using the reference day
-%red_fluor_match=red_fluor_all(:,match_ind); %if we want to use the
-%np-subtracted red
-red_fluor_match=red_fluor_mask(:,match_ind); %to find the red within a cell, NOT no-subtracted
-z_red_fluor=zscore(red_fluor_match);
-load(fullfile(fn_multi,'multiday_alignment.mat'))
-clear red_fluor_all red_fluor_mask red_fluor_np
-% get green fluor level
-%using the reference day
-green_fluor_match=mean(cellTCs_match{1},1);   
 
 
 pupil=cell(1,nd);

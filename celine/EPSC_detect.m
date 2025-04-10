@@ -1,18 +1,18 @@
 %% EPSC Detection in Whole Cell Recordings (.abf format)
 % This script detects excitatory postsynaptic currents (EPSCs) in 
 % whole cell voltage clamp recordings from .abf files.
-% Handles multiple sweeps (time × channel × sweep data structure).
+% Handles multiple sweeps (time � channel � sweep data structure).
 % Modified to prevent overlapping events and start detection after 200 ms.
 
 clear all; close all; clc;
 
 %% Parameters for EPSC detection
 params.minAmplitude = 5;       % Minimum amplitude for EPSC detection (pA)
-params.maxAmplitude = 300;      % Maximum amplitude for EPSC detection (pA)
+params.maxAmplitude = 100;      % Maximum amplitude for EPSC detection (pA)
 params.minSlope = 5;            % Minimum slope for EPSC onset (pA/ms)
 params.minWidth = 2;            % Minimum width of EPSC (ms)
 params.baseline = 'pre';        % Method for baseline calculation ('pre', 'local', or 'median')
-params.smoothWindow = 0.2;      % Window size for smoothing (ms)
+params.smoothWindow = .5;      % Window size for smoothing (ms)
 params.channel = 1;             % Channel to analyze (default: 1)
 params.inverted = true;         % Set to true for inward currents (negative deflections)
 params.conversionFactor = 1;    % Some recordings had units other than pA 
@@ -326,7 +326,7 @@ grid(params.plotStyle.grid);
 
 % Link the x-axes of the two plots
 linkaxes([ax1, ax2], 'x');
-
+%%
 % Highlight a random EPSC if any are detected
 if epscCount > 0
     % Create a new figure for detailed view of a single EPSC
@@ -340,7 +340,7 @@ if epscCount > 0
     eventPeak = epscs(epscIdx).peak;
     eventOffset = epscs(epscIdx).offset;
     
-    % Create window around the event (±20ms)
+    % Create window around the event (�20ms)
     windowStart = max(1, eventOnset - round(20/samplingInterval));
     windowEnd = min(length(timeVector), eventOffset + round(20/samplingInterval));
     
@@ -380,9 +380,9 @@ if epscCount > 0
     halfWidth = epscs(epscIdx).halfWidth;
     area = epscs(epscIdx).area;
     
-    textStr = sprintf('Amplitude: %.1f pA\nHalf-width: %.2f ms\nArea: %.1f pA·ms', amplitude, halfWidth, area);
+    textStr = sprintf('Amplitude: %.1f pA\nHalf-width: %.2f ms\nArea: %.1f pA�ms', amplitude, halfWidth, area);
     if isfield(epscs, 'tau') && ~isnan(epscs(epscIdx).tau)
-        textStr = [textStr sprintf('\nDecay τ: %.2f ms', epscs(epscIdx).tau)];
+        textStr = [textStr sprintf('\nDecay : %.2f ms', epscs(epscIdx).tau)];
     end
     
     text(timeVector(windowStart) + 5, max(currentSmoothed(windowStart:windowEnd)), textStr, 'VerticalAlignment', 'top');
@@ -424,13 +424,13 @@ fprintf('Average EPSCs per sweep: %.2f\n', totalEvents/numSweeps);
 
 if totalEvents > 0
     % Calculate overall stats
-    fprintf('\nEPSC Characteristics (mean ± std):\n');
-    fprintf('Amplitude: %.2f ± %.2f pA\n', mean(allAmplitudes), std(allAmplitudes));
-    fprintf('Half-width: %.2f ± %.2f ms\n', mean(allHalfWidths), std(allHalfWidths));
-    fprintf('Area (charge): %.2f ± %.2f pA·ms\n', mean(allAreas), std(allAreas));
+    fprintf('\nEPSC Characteristics (mean � std):\n');
+    fprintf('Amplitude: %.2f � %.2f pA\n', mean(allAmplitudes), std(allAmplitudes));
+    fprintf('Half-width: %.2f � %.2f ms\n', mean(allHalfWidths), std(allHalfWidths));
+    fprintf('Area (charge): %.2f � %.2f pA�ms\n', mean(allAreas), std(allAreas));
     
     if ~isempty(allTaus)
-        fprintf('Decay time constant (tau): %.2f ± %.2f ms\n', mean(allTaus), std(allTaus));
+        fprintf('Decay time constant (tau): %.2f � %.2f ms\n', mean(allTaus), std(allTaus));
     end
     
     % Plot histogram of EPSC amplitudes
@@ -524,7 +524,7 @@ if totalEvents > 0
         % Setup figure for stack plot
         figure('Position', [300, 200, 1000, 800]);
         
-        % Define time window around peak for alignment (±20ms)
+        % Define time window around peak for alignment (�20ms)
         windowSize = round(20/samplingInterval);
         
         % Collect aligned traces
@@ -643,7 +643,7 @@ function [d,si,h] = abfload_simple(fn)
         
         % Get sampling interval
         fseek(fid, h.ProtocolSection(1) + 92, 'bof');
-        si = fread(fid, 1, 'float') * 1000000; % convert to µs
+        si = fread(fid, 1, 'float') * 1000000; % convert to �s
         
         % Read ADC section for channel info
         fseek(fid, h.ADCSection(1), 'bof');
@@ -681,7 +681,7 @@ function [d,si,h] = abfload_simple(fn)
         tmpData = reshape(tmpData, h.nADCNumChannels, h.dataPoints * h.numSweeps);
         tmpData = tmpData';
         
-        % Arrange into output format (time × channel × sweep)
+        % Arrange into output format (time � channel � sweep)
         for sweepIndex = 1:h.numSweeps
             startIndex = (sweepIndex-1) * h.dataPoints + 1;
             endIndex = sweepIndex * h.dataPoints;
