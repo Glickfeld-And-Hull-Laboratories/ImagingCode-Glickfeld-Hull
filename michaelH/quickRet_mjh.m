@@ -47,15 +47,15 @@ for irun = 1:nrun
     end
     
     
-    if strcmp(rc.name,'ashle')        
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
-    elseif strcmp(rc.name,'celine')
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' subnum '-' date '-' time(irun,:) '.mat'];
-    elseif strcmp(rc.name,'tw299')
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
-    else
-    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse  date '-' time(irun,:) '.mat'];
-    end
+    % if strcmp(rc.name,'ashle')        
+    % fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
+    % elseif strcmp(rc.name,'celine')
+    % fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' subnum '-' date '-' time(irun,:) '.mat'];
+    % elseif strcmp(rc.name,'tw299')
+    % fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-i' subnum '-' date '-' time(irun,:) '.mat'];
+    % else
+    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\Behavior\Data\data-' mouse '-' date '-' time(irun,:) '.mat'];
+    %end
     load(fName);
     expt_input = input;
     temp(irun) = expt_input;
