@@ -250,7 +250,7 @@ for id = 1:nd
     wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
     wheel_trial_avg_raw{id} = mean(wheel_tc_raw{id}(nOff:nOn+nOff,:),1);
     RIx{id} = wheel_trial_avg{id}>2; %~5 is the noise level in the wheel movement
-    fprintf('Fraction trials running: %s\n', num2str(mean(RIx{id})));
+    mean(RIx{id})
 end
 
 %% extract running onsets
@@ -530,31 +530,37 @@ conBySize_resp_loc_match{id} =conBySize_resp_loc;
 end
 clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat data_sizeBycon_resp_loc data_resp p h_pass  resp pref_dir pref_con data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp  baseStd baseMean thresh pass
  
-%% identify HTP+ and HTP- cells and get basic counts 
+%% get basic counts 
 
 
-% Ask user if they want to use pre-loaded red_ind_match or designate all
-% cells as HTP+
-prompt = 'Do you want to: 0- use pre-loaded red cell indices, 1- call all cells red? ';
+% Ask user if they want to use the findRedCells function or pre-loaded red_ind_match
+prompt = 'Do you want to: 0- use pre-loaded red cell indices, 1- calculate red cells based on percentile threshold? ';
 x = input(prompt);
-allCellsRed=0;
 switch x
     case 0
-        % Use pre-loaded red_ind_match 
+        % Use pre-loaded red_ind_match - nothing to do here as it's already loaded
         fprintf('Using pre-loaded red cell indices.\n');
-        red_ind_match_list = find(red_ind_match==1);
-        % This is a list of indices of all the green cells
-        green_ind_match = ~(red_ind_match);
-        green_ind_match_list = find(green_ind_match);
     case 1
-        fprintf('All cells will be designated as red\n');
-        allCellsRed=1; %will use this logical to determin subsequent analyses
-        red_ind_match = ones(1,nCells);
-        red_ind_match_list = find(red_ind_match==1);
-        green_ind_match = zeros(1,nCells);%empty
-        green_ind_match_list = find(green_ind_match);
+        % Ask for percentile threshold
+        prompt = 'Enter the percentile threshold for red cell detection (e.g., 75): ';
+        percentile = input(prompt);
+        
+        % Use the existing findRedCells function to identify red cells
+        fprintf('Identifying red cells using the %dth percentile threshold...\n', percentile);
+        red_ind_match = findRedCells(redChImg, mask_cell, percentile);
+        % Convert the returned indices to the logical format expected by the script
+        temp_red_ind = zeros(1, length(match_ind));
+        temp_red_ind(ismember(match_ind, red_ind_match)) = 1;
+        red_ind_match = logical(temp_red_ind);
 end
 clear x prompt
+
+% Continue with creating lists of red and green cells
+red_ind_match_list = find(red_ind_match==1);
+
+% This is a list of indices of all the green cells
+green_ind_match = ~(red_ind_match);
+green_ind_match_list = find(green_ind_match);
 
 
 
@@ -562,9 +568,10 @@ clear x prompt
 green_match_respd1 = intersect(green_ind_match_list,find(resp_match{2}==1));
 green_match_respd2 = intersect(green_ind_match_list,find(resp_match{1}==1));
 
-red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));
+red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
 red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
 
+%
 %find cells that were active on at least one day
 resp_green_either_temp = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
 resp_red_either_temp = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
@@ -950,7 +957,7 @@ colormap gray
 %caxis([10 100])
 title('matched red cells');
 hold on
-bound = cell2mat(bwboundaries(keep_masks));
+bound = cell2mat(bwboundaries(keep_green_masks));
 plot(bound(:,2),bound(:,1),'.','color','y','MarkerSize',2);
 bound = cell2mat(bwboundaries(keep_red_masks));
 plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
@@ -1027,8 +1034,6 @@ end
 
 
 %% get correlation structure for noise correlation
-% MAKE AN UPDATED VERSION TO LOOK AT CORRELATIONS AMONG HTP+ CELLS FOR PYR
-% CELL EXPERIMENTS
 % Prompt user for plotting preference (default is no plotting)
 plotChoice = input('Plot correlation figures as a sanity check? (y/n) [default: n]: ', 's');
 if isempty(plotChoice) || ~strcmpi(plotChoice, 'y')

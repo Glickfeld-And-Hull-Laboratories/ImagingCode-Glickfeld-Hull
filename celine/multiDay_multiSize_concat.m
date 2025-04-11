@@ -1,15 +1,15 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'Pyr_atropine';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [61 63];%enter all the sessions you want to concatenate4
+sess_list = [79];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -126,7 +126,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'resp_keep.mat'));
     load(fullfile(fn_multi,'input.mat'));
     load(fullfile(fn_multi,'locomotion.mat'));
-    load(fullfile(fn_multi,'fluor_intensity.mat'));
+%    load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
     load(fullfile(fn_multi,'pupilMeans.mat'));
 
@@ -213,8 +213,8 @@ for iSess = 1:nSess
         clear meanF i
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon,:));
-   green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
-   red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
+   % green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
+   % red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
     
 iSess
 end
@@ -373,15 +373,12 @@ end
 
 %% plot stationary timecourses for all cells
 
-
 % make figure with se shaded, one figure per contrast - stationary
 
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_stat = cell(1,nd); %same for red
 tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
 tc_red_se_stat = cell(1,nd); %same for red
-
-
 
 
 for id = 1:nd
@@ -547,7 +544,7 @@ for iCon = 1:nCon
     end
 end 
 
-%% plots for running trials with cell matched across behavioral state
+% plots for running trials with cell matched across behavioral state
 
 tc_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_loc = cell(1,nd); %same for red
