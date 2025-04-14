@@ -88,7 +88,6 @@ end
         R1_tmp = in(3);
         R2_tmp = in(4);
         u1_tmp = in(5);
-
         y_fit = b_tmp+R1_tmp.*exp(k_tmp.*(cos(theta-u1_tmp)-1))+R2_tmp.*exp(k_tmp.*(cos(theta-u1_tmp-pi)-1));
         
         residuals = data - y_fit;

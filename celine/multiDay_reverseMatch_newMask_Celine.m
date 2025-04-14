@@ -7,12 +7,18 @@ eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-%to use the post-DART timepoint as the template
 
+<<<<<<< HEAD
 day_id(1) = 63; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 experimentFolder = 'VIP_YM90K';
+=======
+day_id(1) = 79; %enter the refrence day ID here
+day_id(2) = expt(day_id(1)).multiday_matchdays;
+
+experimentFolder = 'Pyr_atropine';
+>>>>>>> origin/master
 
 
 nd = length(day_id);

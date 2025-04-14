@@ -268,21 +268,22 @@ for id = 1:nd
 end
 
 %% extract running onsets
-% Note: This section requires cStimOn variable from photoFrameFinder method
-% Will only run if that processing method was chosen
+
 prompt = 'Do you want to extract running onsets? (0-no, 1-yes) ';
 x = input(prompt);
 if x == 1
     % First check if we have required variables
-    if ~exist('cStimOn', 'var')
-        disp('Running onset extraction requires photoFrameFinder method.');
-        disp('This variable is not available. Skipping running onset extraction.');
-    else
-        data_dfof_runOnset_match = cell(1,nd);
-        nRunOnsets=[];
+   
         for id = 1:nd
+            mouse = expt(allDays(id)).mouse;
+            date = expt(allDays(id)).date;
+            imgFolder = expt(allDays(id)).contrastxori_runs{1};
+            imgMatFile = [imgFolder '_000_000.mat'];
+            dataPath = fullfile(rc.achData, mouse, date, imgFolder);
+            load(fullfile(dataPath,imgMatFile));
+            [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
             [nFrames, nCells] = size(cellTCs_match{id});
-            
+            nRunOnsets=[];
             fwdWheelClean = wheel_speed_clean{id};
             fwdWheelClean(fwdWheelClean<0)=0;
             
@@ -390,14 +391,14 @@ if x == 1
                 end
             end
             
-            figure; plot(nanmean(runConfirmation,2)) %to check whether running actually does increase around the time of these onsets.
+            figure; plot(nanmean(runConfirmation,2));title(['Sanity check for locomotion increase, day = ', num2str(id)]) %to check whether running actually does increase around the time of these onsets.
             
             data_dfof_runOnset_match{id} = mean(data_dfof_runOnset,3,'omitmissing'); %frames x cells (for all matched cells) averaged over all the onsets
             nRunOnsets=[nRunOnsets length(ITIOnsets)];
         end
 
         fprintf('Number of running onsets per day: %s\n', mat2str(nRunOnsets));
-    end
+    
 end
 clear x
 
@@ -544,11 +545,37 @@ end
 clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat data_sizeBycon_resp_loc data_resp p h_pass  resp pref_dir pref_con data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp  baseStd baseMean thresh pass
  
 %% get basic counts 
+
+
+% Ask user if they want to use the findRedCells function or pre-loaded red_ind_match
+prompt = 'Do you want to: 0- use pre-loaded red cell indices, 1- calculate red cells based on percentile threshold? ';
+x = input(prompt);
+switch x
+    case 0
+        % Use pre-loaded red_ind_match - nothing to do here as it's already loaded
+        fprintf('Using pre-loaded red cell indices.\n');
+    case 1
+        % Ask for percentile threshold
+        prompt = 'Enter the percentile threshold for red cell detection (e.g., 75): ';
+        percentile = input(prompt);
+        
+        % Use the existing findRedCells function to identify red cells
+        fprintf('Identifying red cells using the %dth percentile threshold...\n', percentile);
+        red_ind_match = findRedCells(redChImg, mask_cell, percentile);
+        % Convert the returned indices to the logical format expected by the script
+        temp_red_ind = zeros(1, length(match_ind));
+        temp_red_ind(ismember(match_ind, red_ind_match)) = 1;
+        red_ind_match = logical(temp_red_ind);
+end
+clear x prompt
+
+% Continue with creating lists of red and green cells
 red_ind_match_list = find(red_ind_match==1);
 
-%this is a list of indices of all the green cells
+% This is a list of indices of all the green cells
 green_ind_match = ~(red_ind_match);
 green_ind_match_list = find(green_ind_match);
+
 
 
 %find cells that were matched and were active
@@ -607,7 +634,7 @@ nRed_keep_respd2 = length(red_match_respd2);%how many of those responded on d2
 
 
 % make table of values
-countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1],[nGreen_keep_respd2;nRed_keep_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
+countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1],[nGreen_keep_respd2;nRed_keep_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'HT- cells'  'HT+ cells'})
 writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
 clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
@@ -649,7 +676,7 @@ green_fluor_keep=green_fluor_match(keep_cells);
 
 
 
-conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
+conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'HT- cells'  'HT+ cells'})
 writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
 save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
 
@@ -1131,8 +1158,7 @@ for i = 1:length(keep_cells)
 end
 
 figure;
-subplot(1,2,1)
-imagesc(fov_avg{1});
+imagesc(redChImg);
 colormap gray
 %caxis([10 100])
 title('matched red cells');
@@ -1141,20 +1167,6 @@ bound = cell2mat(bwboundaries(keep_red_masks));
 plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
 
-subplot(1,2,2)
-imagesc(fov_avg{3});
-colormap gray
-%caxis([10 100])
-title('matched red cells');
-hold on
-bound = cell2mat(bwboundaries(keep_red_masks));
-plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
-hold off
-x0=5;
-y0=5;
-width=10;
-height=4;
-set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
