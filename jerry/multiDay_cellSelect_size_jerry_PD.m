@@ -10,7 +10,7 @@ doCorrImg = true;
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 65;
+day_id = 71;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -166,8 +166,8 @@ input = mWStruct;
 clear mWStruct;
 %
 %reg red data 
-%register the red data from the 920 nm run (same run used for green
-%above)to the output of the green registration
+% register the red data from the 920 nm run (same run used for green
+% above)to the output of the green registration
 % if info.config.pmt1_gain > 0.5
 %     [~,data_r_reg] = stackRegister_MA(data_r,[],[],double(outs));
 %     redChImg = mean(data_r_reg,3);
@@ -267,6 +267,7 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
     if exist('redChImg')
         [out, data_rr_reg] = stackRegister(stackGroupProject(data_rr,100), redChImg);
         redChImg = mean(data_rr_reg,3);
+        disp('used option 1');
     elseif info.config.pmt0_gain>0.5 %if there is a green channel in this run, it gets registered to the registration image from green channel from the 920 run
         %data_rr = padarray(data_rr,9,0,'pre');
         redAvg = mean(data_rr,3);
@@ -276,17 +277,18 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
         rg_avg = mean(data_rg_reg,3);
         [out2, ~] = stackRegister(rg_avg,data_avg);
         [~,redChImg]=stackRegister_MA(redChImgTemp,[],[],out2);
-        
+        disp('used option 2');
 %         [out, data_rg_reg] = stackRegister(data_rg,data_avg); %register the green channel from the 1040 run to the green channel from the 920 run
 %         [~, data_rr_reg]=stackRegister_MA(data_rr,[],[],out); %use those shifts to register the red 1040 run
 %         redChImg = mean(data_rr_reg,3);
-        
+
         
     else %if there is no green channel in this run
         redAvg = mean(data_rr,3);
         [out, data_rr_reg] = stackRegister(data_rr,redAvg);
         redChImgTemp = mean(data_rr_reg,3);
         [~,redChImg] = stackRegister(redChImgTemp,data_avg);
+        disp('used option 3');
     end
     
     figure; colormap gray; imagesc(redChImg);  movegui('center');title('registration image for red channel');
@@ -316,7 +318,27 @@ redThresh(highValues)=prctile(redChImg,threshPercentile,'all');
 figure; imagesc(redChImg);colormap gray;
 figure; imagesc(redThresh);colormap gray;
 
-clear data_rr data_rg data_rg_reg data_rr_reg
+%clear data_rr data_rg data_rg_reg data_rr_reg
+
+% %% troubleshoot movie
+% 
+%  writerObj = VideoWriter('myVideo.avi');
+%  writerObj.FrameRate = 15;
+% 
+%  % % set the seconds per image
+%  % secsPerImage = [5 10 15];
+%  % open the video writer
+%  open(writerObj);
+%  u8 = im2uint8(data_rr);
+%  % write the frames to the video
+%  for u=1:size(data_rr,3)
+%      % convert the image to a frame
+%      frame = im2frame(u8(:,:,u));
+%      writeVideo(writerObj, frame);
+%  end
+%  % close the writer object
+%  close(writerObj);
+
 %% segment cells
 close all
 
@@ -377,7 +399,6 @@ rgb = zeros(sz(1),sz(2),3);
 % bound = cell2mat(bwboundaries(mask_cell_red));
 % plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
 % hold off
-
 
 %% extract timecourses
 

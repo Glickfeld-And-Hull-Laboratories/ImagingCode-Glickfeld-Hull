@@ -1,17 +1,17 @@
 
 close all
 
-date = '250314';
-mouse = 'i3323';
-ImgFolder = '005';
-time = '1040';
-doReg = 1;
+date = '250401';
+mouse = 'i3328';
+ImgFolder = '010';
+time = '1711';
+doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
 datemouse = [date '_' mouse]
 saveRet = 1;
-experimentFolder = '';
+experimentFolder = 'PV_YM90K';
 
 isilon_home = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\';
 analysis_root = [isilon_home 'ACh\Analysis\2p_analysis'];
@@ -62,6 +62,32 @@ for irun = 1:nrun
     data = cat(3,data,data_temp);
 end
 
+% %% plot F std over time
+% frame_vector = nan(size(data_temp,3),1);
+% 
+% for frame = 1:size(data_temp,3)
+%     this_frame = data_temp(:,:,frame);
+%     frame_pix = reshape(this_frame,[],1);
+%     frame_mean = mean(double(frame_pix));
+%     frame_vector(frame) = frame_mean;
+% end
+% 
+% std_session = std(frame_vector);
+% 
+% figure;
+% plot(frame_vector);
+% sgtitle(['i3328 Retinotopy Mean F; STD = ' num2str(std_session)]);
+% ylabel("Average F")
+% xlabel('Frame #')
+% 
+% % clear frame_pix
+% %% resume retinotopy
+
+
+
+
+
+
 clear data_temp
 expt_input = concatenateDataBlocks(temp);
 
@@ -84,6 +110,7 @@ expt_input = concatenateDataBlocks(temp);
     end
     
     sz = size(data);
+    ntrials = 45;
     data = data(:,:,1:(nOn+nOff)*ntrials);
     if size(data,3) < 100000
        
@@ -218,7 +245,6 @@ expt_input = concatenateDataBlocks(temp);
     else
         fprintf('WARNING- NOT PHOTODIODE DATA!!!!!')
     end
-
 %     if strcmp(rc.name,'linds')
 %     print(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
 %     elseif strcmp(rc.name,'robin')

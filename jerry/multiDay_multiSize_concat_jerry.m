@@ -8,7 +8,7 @@ eval(ds);
 ExperimentFolder = 'VIP_atropine';
 %285 295 300 308 324 334 DART CMPDA 
 % 299 289 304 312 320 330
-sess_list = [65];%enter all the sessions you want to concatenate
+sess_list = [67];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session

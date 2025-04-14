@@ -9,7 +9,7 @@ doGreenOnly = true;
 doCorrImg = true;  
 ExperimentFolder = 'VIP_atropine';
 
-day_id = 51;
+day_id = 71;
 %% load data for day
 
 mouse = expt(day_id).mouse;

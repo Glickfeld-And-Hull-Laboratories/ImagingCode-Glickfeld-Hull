@@ -6,14 +6,14 @@ rc = behavConstsDART; %directories
 eval(ds)
 doGreenOnly = false;
 doCorrImg = true; 
-ExperimentFolder = 'VIP_atropine';
+ExperimentFolder = 'PV_YM90K';
 
 %BEFORE RUNNING THIS SCRIPT, IF IT HAS BEEN DONE FOR THE SAME MOUSE, DELETE
 %RELATED FILES IN THE MULTIDAY ANALYSIS FOLDER
 
 %to use the post-DART timepoint as the template
 
-day_id(1) =65; %enter the refrence day ID here 
+day_id(1) =71; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 

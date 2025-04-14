@@ -21,7 +21,7 @@ ntrials = 960;
 
 % read data for every experiment session and put into cells (1st column
 % data, 2nd column mouse ID)
-prepped_np_TCs = cell(size(day_id,2),2);
+prepped_np_TCs_SST = cell(size(day_id,2),2);
 
 
 for idx = 1:length(day_id)
@@ -50,11 +50,51 @@ for idx = 1:length(day_id)
         mouse_data_cell{j,3} = np_tc;
         mouse_data_cell{j,4} = meanSub_full_tc;
     end
-    prepped_np_TCs{idx,1} = mouse_data_cell; % save off frames np tc for all mice into the big cell array
-    prepped_np_TCs{idx,2} = this_mouse;
+    prepped_np_TCs_SST{idx,1} = mouse_data_cell; % save off frames np tc for all mice into the big cell array
+    prepped_np_TCs_SST{idx,2} = this_mouse;
 end
 
-% d=string(datetime('today'));
-save(fullfile(fn_epi,'prepped_np_TCs'),'prepped_np_TCs','day_id','-v7.3');
+% d=string(datetime('today'));wheelspeedcalc
+save(fullfile(fn_epi,'prepped_np_TCs_SST'),'prepped_np_TCs_SST','day_id','-v7.3');
 
 
+%% behavior file
+
+runTrials_SST = cell(length(day_id),2);
+
+for idx = 1:length(day_id)
+    mouse = expt(day_id(idx)).mouse;
+    runTrials_SST{idx,2} = mouse;
+    this_mouse_num = str2double(mouse(2:end));
+    % these_sesh = query_expt_celine(this_mouse_num);
+    
+    if mouse == "i2062"
+        these_sesh = [167;169];
+    elseif mouse == "i2066"
+        these_sesh = [182;183];
+    elseif mouse == "i2067"
+        these_sesh = [176;177];
+    else
+        errow('Wrong Mouse');
+    end
+
+    nSesh = length(these_sesh);
+    run_by_sesh = cell(nSesh,1);
+    for sesh = 1:nSesh
+        this_day = these_sesh(sesh);
+        expDate = expt(this_day).date;
+        expTime = expt(this_day).contrastxori_time{1};
+        bRoot = 'data-';
+        behFName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' bRoot mouse '-' expDate '-' expTime '.mat'];
+        load(behFName);
+        ws = wheelSpeedCalc(input,32,expt(this_day).wheelColor); 
+        ws_trial = reshape(ws,90,[]);
+        ws_stimoff = ws_trial(31:60,:);
+        haveRunning = mean(ws_stimoff,1) > 2;
+        run_by_sesh{sesh,1} = haveRunning;
+    end
+    runTrials_SST{idx,1} = run_by_sesh;
+end
+
+% save(fullfile(fn_epi,'runTrials_SST'),'runTrials_SST','-v7.3');
+save(fullfile('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis','runTrials_SST'),'runTrials_SST','-v7.3');

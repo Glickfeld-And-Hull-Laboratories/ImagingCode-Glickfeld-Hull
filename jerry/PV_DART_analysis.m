@@ -18,7 +18,7 @@ nTot = nOn+nOff;
 ntrials = 960;
 
 %%
-load('prepped_np_TCs.mat');
+load('prepped_np_TCs_PV.mat');
 %% PV_DART off_np_tc epileptiform quantification
 
 % off_np_tc: each row is a mouse. Each mouse cell contains a n x 2 cell array
@@ -26,23 +26,23 @@ load('prepped_np_TCs.mat');
 % is an averaged-across-cells timecourse made from a concatenation of the last 30 off-frames of
 % every trial, and the 2nd column is the mean-subtracted timecourse of the
 % 1st column. 
-% if exist('prepped_np_TCs','var') == 1
+% if exist('prepped_np_TCs_PV','var') == 1
 %     mouse_list = convertCharsToStrings(off_np_tc(:,2)); 
 % else
-%     load('prepped_np_TCs.mat');
+%     load('prepped_np_TCs_PV.mat');
 %     mouse_list = convertCharsToStrings(off_np_tc(:,2));
 % end
 
 cd(fn_epi);
-nMice = size(prepped_np_TCs,1);
-mice = prepped_np_TCs(:,2);
+nMice = size(prepped_np_TCs_PV,1);
+mice = prepped_np_TCs_PV(:,2);
 
 std_cell = cell(nMice,2);
 std_cell(:,2) = mice;
 
 for mouse = 1:nMice %iterate through mouse
-    mouse_data = prepped_np_TCs{mouse,1};
-    mouse_id = prepped_np_TCs{mouse,2};
+    mouse_data = prepped_np_TCs_PV{mouse,1};
+    mouse_id = prepped_np_TCs_PV{mouse,2};
     this_sessions = query_expt(str2double(mouse_id(2:end)));
     nSesh = size(mouse_data,1);
 
@@ -86,8 +86,91 @@ end
 
 std_cell_PV = std_cell;
 save(fullfile(fn_epi,'std_cell_PV.mat'),"std_cell_PV");
+save('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis\std_cell_PV.mat',"std_cell_PV");
+
 
 % clear all_raw_f ylim_max ylim_min std_mat perc_mat curr_sesh off_np_tc
+%% std by running PV
+
+load(fullfile('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis','runTrials_PV.mat'));
+
+moi_np_tc = vertcat(prepped_np_TCs_PV(2:4,:),prepped_np_TCs_PV(10:11,:));
+moi_runTrials = vertcat(runTrials_PV(2:4,:),runTrials_PV(10:11,:));
+
+nMice = size(moi_np_tc,1);
+mice = moi_np_tc(:,2);
+
+std_stat = cell(nMice,2);
+std_stat(:,2) = mice;
+std_loc = cell(nMice,2);
+std_loc(:,2) = mice;
+
+for mouse = 1:nMice %iterate through mouse
+    mouse_data = moi_np_tc{mouse,1};
+    mouse_id = moi_np_tc{mouse,2};
+    this_sessions = query_expt(str2double(mouse_id(2:end)));
+    nSesh = size(mouse_data,1);
+    this_mouse_moves = moi_runTrials{mouse,1};
+
+    std_stat_mat = NaN(nSesh,1);
+    std_loc_mat = NaN(nSesh,1);
+    t_since_drug_mat = strings(nSesh,1);
+
+    % all_raw_f = cat(1,mouse_data{:,1});
+    % ylim_max = 20 + max(all_raw_f);
+    % ylim_min = min(all_raw_f)-20;
+    % 
+    % figure;
+    % sgtitle(mouse_id);
+    for sess_idx = 1:size(mouse_data,1)
+        curr_sesh = mouse_data{sess_idx,1}; % data for the current imaging session of the current mouse
+        curr_run_mat = this_mouse_moves{sess_idx};
+        this_session_num = this_sessions(sess_idx);
+        t_since_drug_hrs = expt(this_session_num).multiday_timesincedrug_hours;
+        t_since_drug_mat(mouse,sess_idx) = t_since_drug_hrs;
+        % nplots = length(this_sessions);
+
+        if t_since_drug_hrs == '0'
+            this_tp_title = 'baseline';
+        else
+            this_tp_title = [t_since_drug_hrs ' hrs post-DART'];
+        end
+
+        %partition by locomotion status
+        curr_sesh_trial = reshape(curr_sesh,30,[]);
+        curr_stat_mat = ~curr_run_mat;
+        stat_frames_trial = curr_sesh_trial(:,curr_stat_mat);
+        loc_frames_trial = curr_sesh_trial(:,curr_run_mat);
+        stat_frames = reshape(stat_frames_trial,[],1);
+        loc_frames = reshape(loc_frames_trial,[],1);
+
+        std_stat_mat(sess_idx) = std(stat_frames);
+        std_loc_mat(sess_idx) = std(loc_frames);
+
+
+
+
+        % mean_curr_sesh = mean(curr_sesh);
+        % std_curr_sesh = std(curr_sesh);
+        % frac_past = sum(curr_sesh > (mean_curr_sesh+3*std_curr_sesh))/length(curr_sesh);
+        % perc_mat(sess_idx) = frac_past;
+        % std_mat(sess_idx) = std_curr_sesh;
+
+        % subplot(nplots,1,sess_idx);
+        % plot(curr_sesh);
+        % ylim([ylim_min ylim_max]);
+        % title([this_tp_title ' std= ' num2str(std_curr_sesh) ' frac=' num2str(frac_past)]);
+    end
+    std_stat{mouse,1} = std_stat_mat;
+    std_loc{mouse,1} = std_loc_mat;
+    % saveas(gcf,fullfile(fn_epi,'plots',[mouse_id '.pdf']));
+end
+
+std_stat_PV = std_stat;
+std_loc_PV = std_loc;
+
+save('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis\std_running_PV.mat',"std_stat_PV","std_loc_PV");
+
 %% plot epilepsy data as modulation index
 
 cd(fn_epi);
@@ -342,12 +425,12 @@ hold off
 %% power frequency curve
 
 % extract just i3309 and i3310, the two high dose YM90K mice
-% load('prepped_np_TCs.mat');
+% load('prepped_np_TCs_PV.mat');
 % first column stores raw F TC (but only the last 30 off frames of every trial), 
 % second stores mean-subtracted (same structure as the first), third stores nan-padded (full trial
 % length), fourth is full np tc (full trial length)
 
-mus = prepped_np_TCs(2:4,:);
+mus = prepped_np_TCs_PV(2:4,:);
 nMice = size(mus,1);
 close all
 mus_rawPwr = cell(size(mus,1),2);

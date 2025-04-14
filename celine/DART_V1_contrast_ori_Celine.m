@@ -4637,6 +4637,7 @@ expt(167).rettuning = {};
 expt(167).contrastxori_runs = {'002'};
 expt(167).contrastxori_time = {'1500'};
 expt(167).data_loc = 'ACh';
+expt(167).wheelColor = 'purple';
 %
 %% i2062 baseline 2, 200 ms
 expt(168).SubNum = 'i2062';
