@@ -1,18 +1,18 @@
 %% EPSC Detection in Whole Cell Recordings (.abf format)
 % This script detects excitatory postsynaptic currents (EPSCs) in 
 % whole cell voltage clamp recordings from .abf files.
-% Handles multiple sweeps (time × channel × sweep data structure).
+% Handles multiple sweeps (time  channel  sweep data structure).
 % Modified to prevent overlapping events and start detection after 200 ms.
 
 clear all; close all; clc;
-
+cd('\home\celine\Data\patch_data')
 %% Parameters for EPSC detection
 params.minAmplitude = 5;       % Minimum amplitude for EPSC detection (pA)
 params.maxAmplitude = 100;      % Maximum amplitude for EPSC detection (pA)
 params.minSlope = 5;            % Minimum slope for EPSC onset (pA/ms)
-params.minWidth = 2;            % Minimum width of EPSC (ms)
+params.minWidth = 1;            % Minimum width of EPSC (ms)
 params.baseline = 'pre';        % Method for baseline calculation ('pre', 'local', or 'median')
-params.smoothWindow = 0.2;      % Window size for smoothing (ms)
+params.smoothWindow = .5;       % Window size for smoothing (ms)
 params.channel = 1;             % Channel to analyze (default: 1)
 params.inverted = true;         % Set to true for inward currents (negative deflections)
 params.conversionFactor = 1;    % Some recordings had units other than pA 
@@ -28,31 +28,13 @@ params.startTime = 200;         % Start detection after this time (ms)
 
 % Define the filename directly or use dialog if not provided
 % To use directly, specify the full path to the file
-fileNameInput = '24110000'; % Enter your filename here, e.g., 'C:\Data\recording.abf'
-fileNameInput = [fileNameInput,'.abf']
-if isempty(fileNameInput)
-    % Use dialog if no filename is provided
-    [fileName, filePath] = uigetfile('*.abf', 'Select ABF file');
-    if fileName == 0
-        error('No file selected');
-    end
-    fullPath = fullfile(filePath, fileName);
-else
-    % Use the direct filename input
-    fullPath = fileNameInput;
-    [filePath, fileName, fileExt] = fileparts(fullPath);
-    fileName = [fileName, fileExt]; % Add extension back to filename
-end
-
-try
-    [data, si, h] = abfload(fullPath);
-catch
-    error(['Could not load ABF file. Make sure abfload.m is in your path. ' ...
-           'Alternative: try using importdata for simple .abf files.']);
-end
+fileName = '24110000'; % Enter your filename here, e.g., 'C:\Data\recording.abf'
+filePath = [fileName,'.abf']
+[data, si, h] = abfload(filePath);
 
 % Extract data and convert sampling interval to ms
 samplingInterval = si/1000; % Convert to ms
+samplesPerMs = 1/samplingInterval;
 timeVector = (0:size(data,1)-1)' * samplingInterval;
 
 % Check data dimensions
@@ -144,8 +126,8 @@ for sweepIdx = 1:numSweeps
         end
         
         % Determine baseline
-        baselineStart = 2.5/samplingInterval; % baseline will start 25ms before the event
-        baselineEnd = 0.5/samplingInterval; % baseline will end 5 ms before the event
+        baselineStart = 10*samplesPerMs; % baseline will start 20ms before the event
+        baselineEnd = 5*samplesPerMs; % baseline will end 5 ms before the event
         if strcmp(params.baseline, 'pre')
             if onsetIdx < baselineStart
                 continue; % Skip if too close to the beginning
@@ -159,11 +141,37 @@ for sweepIdx = 1:numSweeps
             baseline = median(currentSmoothed(baselineWindow));
         end
         
-        % Find peak within a reasonable window after onset, here more than
-        % 1ms after onset
-        [peakValue, peakOffset] = max(currentSmoothed(onsetIdx:min(onsetIdx+(1/samplingInterval), length(currentSmoothed))));
-        peakIdx = onsetIdx + peakOffset - 1;
+        %% find peaks
+        % Find peak based on derivative zero-crossing (slope reversal)
+        % We already have currentSlope calculated from earlier
         
+        % Find where the derivative changes from positive to negative
+        % (indicating a switch from rising to falling)
+        zeroIdx = []; % Will store indices where slope crosses zero
+        for i = onsetIdx+2:min(onsetIdx+(15*samplesPerMs), length(currentSlope)-1)
+            % Check if slope crosses from positive to negative
+            if currentSlope(i-1) > 0 && currentSlope(i) <= 0
+                zeroIdx = [zeroIdx, i];
+            end
+        end
+        
+        % If we found zero crossings, use the first one after onset
+        if ~isempty(zeroIdx)
+            % Find the first zero crossing
+            firstZero = zeroIdx(1);
+            
+            % Look for maximum value within a few samples of the zero crossing
+            % (2 samples should capture the true peak)
+            searchStart = max(1, firstZero-2);
+            searchEnd = min(length(currentSmoothed), firstZero+2);
+            [peakValue, peakOffset] = max(currentSmoothed(searchStart:searchEnd));
+            peakIdx = searchStart + peakOffset - 1;
+        else
+            % Fallback: if no zero crossing found, use older method
+            [peakValue, peakOffset] = max(currentSmoothed(onsetIdx+(.5*samplesPerMs):min(onsetIdx+(10*samplesPerMs), length(currentSmoothed))));
+            peakIdx = onsetIdx + peakOffset + floor(0.5*samplesPerMs) - 1;
+        end
+        %%
         % Calculate amplitude
         amplitude = peakValue - baseline;
         
@@ -215,9 +223,8 @@ for sweepIdx = 1:numSweeps
         epscs(epscCount).halfWidth = halfWidth;
         epscs(epscCount).area = area;
         epscs(epscCount).time = timeVector(onsetIdx); % Store actual time in ms
-        if exist('tau', 'var')
-            epscs(epscCount).tau = tau;
-        end
+
+
         
         % Add this event to the list of detected intervals
         detectedIntervals(end+1, :) = [onsetIdx, offsetIdx];
@@ -235,10 +242,6 @@ for sweepIdx = 1:numSweeps
         allResults(sweepIdx).stats.meanHalfWidth = mean([epscs.halfWidth]);
         % Calculate frequency based on effective duration (after start time)
         allResults(sweepIdx).stats.frequency = epscCount/effectiveDuration; % in Hz
-        if isfield(epscs, 'tau') && ~all(isnan([epscs.tau]))
-            validTaus = [epscs.tau];
-            allResults(sweepIdx).stats.meanTau = mean(validTaus(~isnan(validTaus)));
-        end
     else
         allResults(sweepIdx).stats = struct();
         allResults(sweepIdx).stats.meanAmplitude = NaN;
@@ -250,3 +253,193 @@ for sweepIdx = 1:numSweeps
     allResults(sweepIdx).analysisStartTime = params.startTime;
     allResults(sweepIdx).effectiveDuration = effectiveDuration;
 end
+
+
+%% Step 5: Display EPSC statistics and summaries
+% Summary statistics across all sweeps
+totalEvents = 0;
+allAmplitudes = [];
+allHalfWidths = [];
+allAreas = [];
+allTaus = [];
+sweepsWithEvents = 0;
+
+for s = 1:numSweeps
+    epscCount = length(allResults(s).epscs);
+    if epscCount > 0
+        totalEvents = totalEvents + epscCount;
+        allAmplitudes = [allAmplitudes, [allResults(s).epscs.amplitude]];
+        allHalfWidths = [allHalfWidths, [allResults(s).epscs.halfWidth]];
+        allAreas = [allAreas, [allResults(s).epscs.area]];
+
+        
+        sweepsWithEvents = sweepsWithEvents + 1;
+    end
+end
+
+% Display overall summary
+fprintf('\n===== EPSC ANALYSIS SUMMARY =====\n');
+fprintf('Total sweeps: %d\n', numSweeps);
+fprintf('Sweeps with EPSCs: %d (%.1f%%)\n', sweepsWithEvents, 100*sweepsWithEvents/numSweeps);
+fprintf('Total EPSCs detected: %d\n', totalEvents);
+fprintf('Average EPSCs per sweep: %.2f\n', totalEvents/numSweeps);
+
+if totalEvents > 0
+    % Calculate overall stats
+    fprintf('\nEPSC Characteristics (mean  std):\n');
+    fprintf('Amplitude: %.2f  %.2f pA\n', mean(allAmplitudes), std(allAmplitudes));
+    fprintf('Half-width: %.2f  %.2f ms\n', mean(allHalfWidths), std(allHalfWidths));
+    fprintf('Area (charge): %.2f  %.2f pAms\n', mean(allAreas), std(allAreas));
+
+
+    % Plot histogram of EPSC amplitudes
+    figure('Position', [100, 500, 800, 400]);
+
+    subplot(1,2,1);
+    histogram(allAmplitudes, min(20, ceil(sqrt(length(allAmplitudes)))));
+    title('EPSC Amplitude Distribution');
+    xlabel('Amplitude (pA)');
+    ylabel('Count');
+    set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+    grid(params.plotStyle.grid);
+
+    subplot(1,2,2);
+    histogram(allHalfWidths, min(20, ceil(sqrt(length(allHalfWidths)))));
+    title('EPSC Half-Width Distribution');
+    xlabel('Half-Width (ms)');
+    ylabel('Count');
+    set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+    grid(params.plotStyle.grid);
+
+    % Create summary table for each sweep
+    sweepSummary = table();
+    sweepSummary.Sweep = (1:numSweeps)';
+
+    for s = 1:numSweeps
+        sweepSummary.EPSCCount(s) = length(allResults(s).epscs);
+
+        if sweepSummary.EPSCCount(s) > 0
+            sweepSummary.MeanAmplitude(s) = allResults(s).stats.meanAmplitude;
+            sweepSummary.MeanHalfWidth(s) = allResults(s).stats.meanHalfWidth;
+            sweepSummary.Frequency(s) = allResults(s).stats.frequency;
+        else
+            sweepSummary.MeanAmplitude(s) = NaN;
+            sweepSummary.MeanHalfWidth(s) = NaN;
+            sweepSummary.Frequency(s) = 0;
+        end
+    end
+
+    % Display sweep summary
+    disp('Sweep-by-Sweep Summary:');
+    disp(sweepSummary);
+
+    % Plot event frequency across sweeps
+    figure('Position', [100, 100, 900, 400]);
+
+    subplot(1,2,1);
+    bar(sweepSummary.Sweep, sweepSummary.EPSCCount);
+    title('EPSC Count by Sweep');
+    xlabel('Sweep Number');
+    ylabel('Number of EPSCs');
+    set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+    grid(params.plotStyle.grid);
+
+    subplot(1,2,2);
+    bar(sweepSummary.Sweep, sweepSummary.Frequency);
+    title('EPSC Frequency by Sweep');
+    xlabel('Sweep Number');
+    ylabel('Frequency (Hz)');
+    set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+    grid(params.plotStyle.grid);
+
+    % Save results automatically rather than asking
+    [~, fileName, ~] = fileparts(fullPath);
+    saveFile = [fileName '_epsc_results.mat'];
+    save(saveFile, 'allResults', 'sweepSummary', 'params');
+    fprintf('Results saved to %s\n', saveFile);
+
+    % Export event times to text file automatically
+    exportFile = [fileName '_epsc_events.txt'];
+    fid = fopen(exportFile, 'w');
+
+    fprintf(fid, 'Sweep\tEvent\tOnset(ms)\tPeak(ms)\tAmplitude(pA)\tHalfWidth(ms)\n');
+
+    for s = 1:numSweeps
+        for e = 1:length(allResults(s).epscs)
+            fprintf(fid, '%d\t%d\t%.2f\t%.2f\t%.2f\t%.2f\n', ...
+                s, e, ...
+                timeVector(allResults(s).epscs(e).onset), ...
+                timeVector(allResults(s).epscs(e).peak), ...
+                allResults(s).epscs(e).amplitude, ...
+                allResults(s).epscs(e).halfWidth);
+        end
+    end
+
+    fclose(fid);
+    fprintf('Event times exported to %s\n', exportFile);
+
+    % Create a stack of aligned EPSCs automatically if not too many
+    if totalEvents > 0 && totalEvents <= 500
+        % Setup figure for stack plot
+        figure('Position', [300, 200, 1000, 800]);
+
+        % Define time window around peak for alignment (20ms)
+        windowSize = round(20/samplingInterval);
+
+        % Collect aligned traces
+        alignedTraces = [];
+        colorCodes = [];
+
+        for s = 1:numSweeps
+            for e = 1:length(allResults(s).epscs)
+                peakIdx = allResults(s).epscs(e).peak;
+
+                % Define window around peak
+                startIdx = max(1, peakIdx - windowSize);
+                endIdx = min(length(timeVector), peakIdx + windowSize);
+
+                % Extract and align trace
+                currentData = data(:, params.channel, s);
+                if params.inverted
+                    currentData = -currentData;
+                end
+
+                if endIdx - startIdx == 2*windowSize
+                    trace = currentData(startIdx:endIdx);
+                    alignedTraces = [alignedTraces; trace'];
+                    colorCodes = [colorCodes; s];
+                end
+            end
+        end
+
+        % Create time vector centered at 0 (peak)
+        alignedTime = (-windowSize:windowSize) * samplingInterval;
+
+        % Plot aligned traces
+        subplot(2,1,1);
+        plot(alignedTime, alignedTraces', 'Color', [0.7 0.7 0.7]);
+        hold on;
+        plot(alignedTime, mean(alignedTraces), 'k', 'LineWidth', 2);
+
+        title('Aligned EPSCs');
+        xlabel('Time from Peak (ms)');
+        ylabel(yLabel);
+        set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+        grid(params.plotStyle.grid);
+
+        % Plot heatmap of aligned traces
+        subplot(2,1,2);
+        imagesc(alignedTime, 1:size(alignedTraces,1), alignedTraces);
+        colormap(jet);
+        colorbar;
+
+        title('EPSC Heatmap');
+        xlabel('Time from Peak (ms)');
+        ylabel('Event Number');
+        set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+    end
+else
+    disp('No EPSCs detected in any sweep.');
+end
+
+

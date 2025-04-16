@@ -343,7 +343,7 @@ if x == 1
             for iOnset = 1:length(ITIOnsets)
                 %find inds for a window around the onset
                 fullWindow = [(ITIOnsets(iOnset)-(onsetWin*frame_rate)):(ITIOnsets(iOnset)+(onsetWin*frame_rate)-1)];
-                bslnWindow = [(ITIOnsets(iOnset)-(frame_rate/2)):ITIOnsets(iOnset)];
+                bslnWindow = [(ITIOnsets(iOnset)-(frame_rate)):(ITIOnsets(iOnset)-(frame_rate/2))];
                 
                 % Make sure indices are within bounds
                 fullWindow = fullWindow(fullWindow > 0 & fullWindow <= nFrames);
@@ -354,8 +354,8 @@ if x == 1
                     tempBsln=mean(cellTCs_match{id}(bslnWindow,:));
                     %this is F, convert to dfof. 
                     tempDfof = bsxfun(@rdivide,bsxfun(@minus,tempFull,tempBsln),tempBsln);
-                    
-                    % Handle case when window size doesn't match expected size
+
+                    %Handle case when window size doesn't match expected size
                     if size(tempDfof,1) == onsetWin*2*frame_rate
                         data_dfof_runOnset(:,:,iOnset)=tempDfof;
                     else
@@ -364,7 +364,7 @@ if x == 1
                         tmp(1:min(size(tempDfof,1), onsetWin*2*frame_rate), :) = tempDfof(1:min(size(tempDfof,1), onsetWin*2*frame_rate), :);
                         data_dfof_runOnset(:,:,iOnset) = tmp;
                     end
-                    
+
                     % Handle wheelspeed data similarly
                     if length(fullWindow) == onsetWin*2*frame_rate && all(fullWindow <= length(fwdWheelClean))
                         runConfirmation(:,iOnset) = fwdWheelClean(fullWindow);

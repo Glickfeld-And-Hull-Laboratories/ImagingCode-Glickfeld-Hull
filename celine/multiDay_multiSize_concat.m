@@ -1,15 +1,15 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'Pyr_atropine';
+experimentFolder = 'VIP_atropine';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [79];%enter all the sessions you want to concatenate4
+sess_list = [57 65 67];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -355,7 +355,7 @@ end
 
 cellCountTable = table(cellCounts, RowNames=mouseNames)
 cellCountTableGreen = table(cellCountsGreen, RowNames=mouseNames)
-%writetable(cellCountTable,fullfile(fnout,['cellCounts.csv']),'WriteRowNames',true)
+writetable(cellCountTable,fullfile(fnout,['cellCounts.csv']),'WriteRowNames',true)
 clear cellCounts cellCountsGreen
 
 %to find the cells that have 
@@ -848,7 +848,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_stat{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_stat{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['VIP n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -951,7 +951,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_loc{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['VIP n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -1063,7 +1063,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
-   title('Stationary, SST')
+   title('Stationary, VIP')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1089,7 +1089,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
-    title('Running, SST')
+    title('Running, VIP')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1166,7 +1166,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction SST cells"]) 
+    ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1179,7 +1179,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction SST cells"]) 
+    %ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1210,7 +1210,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction SST cells"]) 
+    ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1223,7 +1223,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction SST cells"]) 
+    %ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1269,7 +1269,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed 20-deg')
 ylim([0 .6])
-ylabel(["Fraction SST cells"]) 
+ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1282,7 +1282,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated 20-deg')
 ylim([0 .6])
-%ylabel(["Fraction SST cells"]) 
+%ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1297,7 +1297,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed fullfield')
 ylim([0 .6])
-ylabel(["Fraction SST cells"]) 
+ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1310,7 +1310,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated fullfield')
 ylim([0 .6])
-%ylabel(["Fraction SST cells"]) 
+%ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1423,13 +1423,13 @@ nRed = nan(nCon,nSize);
 for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
-        tc_green_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_green,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_green,iCon,iSize),[],2);
-        tc_green_se_small{id}(:,iCon,iSize)=green_std/sqrt(length(have_allPupil_green));
+        tc_green_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_small{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
         
-        tc_red_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_red,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_red,iCon,iSize),[],2);
-        tc_red_se_small{id}(:,iCon,iSize)=red_std/sqrt(length(have_allPupil_red));
+        tc_red_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_small{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
         
         
         clear green_std red_std
@@ -1505,13 +1505,13 @@ nRed = nan(nCon,nSize);
 for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
-        tc_green_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_green,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_green,iCon,iSize),[],2);
-        tc_green_se_large{id}(:,iCon,iSize)=green_std/sqrt(length(have_allPupil_green));
+        tc_green_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_large{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
         
-        tc_red_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_red,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_red,iCon,iSize),[],2);
-        tc_red_se_large{id}(:,iCon,iSize)=red_std/sqrt(length(have_allPupil_red));
+        tc_red_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_large{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
         
         
         clear green_std red_std
