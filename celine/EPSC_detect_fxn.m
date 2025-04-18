@@ -1,15 +1,16 @@
+function [] = EPSC_detect_fxn(filename,outpath)
 %% EPSC Detection in Whole Cell Recordings (.abf format)
 % This script detects excitatory postsynaptic currents (EPSCs) in 
 % whole cell voltage clamp recordings from .abf files.
-% Handles multiple sweeps (time  channel  sweep data structure).
+% Handles multiple sweeps (time  channel  sweep data structure).
 % Modified to prevent overlapping events and start detection after 200 ms.
 
-clear all; close all; clc;
+close all; clc;
 cd('\home\celine\Data\patch_data')
 %% Parameters for EPSC detection
-params.minAmplitude = 2.5;       % Minimum amplitude for EPSC detection (pA)
+params.minAmplitude = 5;       % Minimum amplitude for EPSC detection (pA)
 params.maxAmplitude = 100;      % Maximum amplitude for EPSC detection (pA)
-params.minSlope = 1;            % Minimum slope for EPSC onset (pA/ms)
+params.minSlope = 2;            % Minimum slope for EPSC onset (pA/ms)
 params.minWidth = 1;            % Minimum width of EPSC (ms)
 params.baseline = 'pre';        % Method for baseline calculation ('pre', 'local', or 'median')
 params.smoothWindow = 1;       % Window size for smoothing (ms)
@@ -27,8 +28,8 @@ params.startTime = 350;         % Start detection after this time (ms)
 
 % Define the filename directly or use dialog if not provided
 % To use directly, specify the full path to the file
-fileName = '24110000'; % Enter your filename here, e.g., 'C:\Data\recording.abf'
-filePath = [fileName,'.abf']
+
+filePath = [filename,'.abf']
 [data, si, h] = abfload(filePath);
 
 if h.recChUnits{1,1}=='pA'
@@ -39,18 +40,15 @@ else
     error('Units are not nA or pA')
 end
 
-
-
-
 % Extract data and convert sampling interval to ms
 samplingInterval = si/1000; % Convert to ms
 samplesPerMs = 1/samplingInterval;
 timeVector = (0:size(data,1)-1)' * samplingInterval;
-
+Fs = samplesPerMs*1000;
 % Check data dimensions
 [numTimePoints, numChannels, numSweeps] = size(data);
 fprintf('File loaded: %d time points, %d channels, %d sweeps\n', numTimePoints, numChannels, numSweeps);
-fprintf('File: %s\n', fileName);
+fprintf('File: %s\n', filename);
 
 % Apply conversion factor
 data = data * params.conversionFactor;
@@ -71,13 +69,94 @@ fprintf('Effective duration for rate calculation: %.2f seconds\n', effectiveDura
 %% Step 2: Process each sweep
 % Initialize results structure for each sweep
 allResults = struct('sweep', {}, 'epscs', {}, 'stats', {});
-
+firstPlotMade=false
 % Process each sweep individually
 for sweepIdx = 1:numSweeps
     fprintf('\nProcessing sweep %d of %d...\n', sweepIdx, numSweeps);
     
     % Extract current data for this sweep
-    currentData = data(:, params.channel, sweepIdx);
+    currentDataRaw = data(:, params.channel, sweepIdx);
+%% frequency filtering
+    cutoffFreq = 1300; % Cutoff frequency for lowpass filter (1.3 kHz)
+    notchFreq = 60;    % Frequency to remove (60 Hz)
+    order = 4;         % Filter order for lowpass filter
+    
+    % Design and apply lowpass filter
+    Wn_low = cutoffFreq/(Fs/2);
+    [b_low, a_low] = butter(order, Wn_low, 'low');
+    lowpassData = filtfilt(b_low, a_low, currentDataRaw);
+    
+    % Design notch filter to remove 60 Hz
+    notchQ = 35;       % Quality factor - higher Q = narrower notch
+    wo = notchFreq/(Fs/2);  % Normalized frequency
+    bw = wo/notchQ;         % Bandwidth
+    [b_notch, a_notch] = iirnotch(wo, bw);
+    
+    % Apply notch filter to the already lowpass filtered data
+    currentData = filtfilt(b_notch, a_notch, lowpassData);
+    % the median filter, smoothing, etc will move on with the current data
+    % that has done through the frequency filtering.
+
+    
+%% Check for baseline drift
+% Find the index corresponding to the start time
+startTimeIdx = find(timeVector >= params.startTime, 1);
+if isempty(startTimeIdx)
+    error('Start time exceeds recording duration');
+end
+
+% Only analyze from the start time onwards
+filteredDataForAnalysis = currentDataRaw(startTimeIdx:end);
+timeVectorForAnalysis = timeVector(startTimeIdx:end);
+
+% Get the start portion after the startTime
+startPortion = filteredDataForAnalysis(1:min(round(0.1*length(filteredDataForAnalysis)), 1000));
+endPortion = filteredDataForAnalysis(max(1, end-min(round(0.1*length(filteredDataForAnalysis)), 1000)):end);
+
+% Calculate mean values
+startMean = mean(startPortion);
+endMean = mean(endPortion);
+
+% Check if baseline drift exceeds threshold
+baselineDriftCheck = abs(startMean - endMean) <= 5; % pA
+
+% Also check if any extended portion differs from baseline by more than 5 pA
+extendedDeviationCheck = true;
+windowSize = round(200 / samplingInterval); % 200 ms window converted to samples
+baselineThreshold = 5; % pA
+
+if windowSize < length(filteredDataForAnalysis)
+    % Use a sliding window approach to check for extended deviations
+    for i = 1:windowSize:length(filteredDataForAnalysis)-windowSize
+        windowMean = mean(filteredDataForAnalysis(i:i+windowSize-1));
+        if abs(windowMean - startMean) > baselineThreshold
+            extendedDeviationCheck = false;
+            break;
+        end
+    end
+end
+
+% Skip this sweep if either check fails
+if ~baselineDriftCheck || ~extendedDeviationCheck
+    fprintf('Skipping sweep %d due to baseline instability after start time (%.2f ms)\n', sweepIdx, params.startTime);
+    
+    % Store empty results for this sweep with NaN values
+    allResults(sweepIdx).sweep = sweepIdx;
+    allResults(sweepIdx).epscs = struct('onset', {}, 'peak', {}, 'offset', {}, 'amplitude', {}, 'slope', {}, 'halfWidth', {}, 'area', {});
+    allResults(sweepIdx).stats = struct();
+    allResults(sweepIdx).stats.meanAmplitude = NaN;
+    allResults(sweepIdx).stats.meanHalfWidth = NaN;
+    allResults(sweepIdx).stats.frequency = NaN;
+    allResults(sweepIdx).analysisStartTime = params.startTime;
+    allResults(sweepIdx).effectiveDuration = effectiveDuration;
+    allResults(sweepIdx).baselineStable = false;
+    
+    % Skip to the next sweep
+    continue;
+else
+    allResults(sweepIdx).baselineStable = true;
+end
+
     
     % If inverted (inward currents are negative), flip the sign
     if params.inverted
@@ -99,6 +178,8 @@ for sweepIdx = 1:numSweeps
         currentSlope = currentSlope';
     end
     currentSlope = [NaN(1, size(currentSlope, 2))'; currentSlope]; % Pad to match original length
+
+    %figure;plot(currentDataRaw*-1);hold on;plot(currentData);hold on;plot(currentFiltered);hold on;plot(currentSmoothed)
 
     %% Step 3: Detect potential EPSCs for this sweep
     % Find local maxima in the slope (potential EPSC onsets), starting after the specified start time
@@ -160,10 +241,10 @@ for sweepIdx = 1:numSweeps
         % Find where the derivative changes from positive to negative
         % (indicating a switch from rising to falling)
         zeroIdx = []; % Will store indices where slope crosses zero
-        for i = onsetIdx+2:min(onsetIdx+(15*samplesPerMs), length(currentSlope)-1)
+        for j = onsetIdx+2:min(onsetIdx+(15*samplesPerMs), length(currentSlope)-1)
             % Check if slope crosses from positive to negative
-            if currentSlope(i-1) > 0 && currentSlope(i) <= 0
-                zeroIdx = [zeroIdx, i];
+            if currentSlope(j-1) > 0 && currentSlope(j) <= 0
+                zeroIdx = [zeroIdx, j];
             end
         end
         
@@ -173,7 +254,7 @@ for sweepIdx = 1:numSweeps
             firstZero = zeroIdx(1);
             
             % Look for maximum value within a few samples of the zero crossing
-            % (2 samples should capture the true peak)
+            % (2 samples should capture the true peak)
             searchStart = max(1, firstZero-2);
             searchEnd = min(length(currentSmoothed), firstZero+2);
             [peakValue, peakOffset] = max(currentSmoothed(searchStart:searchEnd));
@@ -235,15 +316,16 @@ for sweepIdx = 1:numSweeps
         epscs(epscCount).halfWidth = halfWidth;
         epscs(epscCount).area = area;
         epscs(epscCount).time = timeVector(onsetIdx); % Store actual time in ms
-        if exist('tau', 'var')
-            epscs(epscCount).tau = tau;
-        end
         
         % Add this event to the list of detected intervals
         detectedIntervals(end+1, :) = [onsetIdx, offsetIdx];
     end
     
-    fprintf('Detected %d EPSCs in sweep %d (after %.1f ms)\n', epscCount, sweepIdx, params.startTime);
+    % Calculate frequency for this sweep (events per second)
+    frequency = epscCount / effectiveDuration;
+    
+    fprintf('Detected %d EPSCs in sweep %d (after %.1f ms), Frequency: %.2f Hz\n', ...
+        epscCount, sweepIdx, params.startTime, frequency);
     
     % Store results for this sweep
     allResults(sweepIdx).sweep = sweepIdx;
@@ -254,11 +336,7 @@ for sweepIdx = 1:numSweeps
         allResults(sweepIdx).stats.meanAmplitude = mean([epscs.amplitude]);
         allResults(sweepIdx).stats.meanHalfWidth = mean([epscs.halfWidth]);
         % Calculate frequency based on effective duration (after start time)
-        allResults(sweepIdx).stats.frequency = epscCount/effectiveDuration; % in Hz
-        if isfield(epscs, 'tau') && ~all(isnan([epscs.tau]))
-            validTaus = [epscs.tau];
-            allResults(sweepIdx).stats.meanTau = mean(validTaus(~isnan(validTaus)));
-        end
+        allResults(sweepIdx).stats.frequency = frequency; % in Hz
     else
         allResults(sweepIdx).stats = struct();
         allResults(sweepIdx).stats.meanAmplitude = NaN;
@@ -269,142 +347,63 @@ for sweepIdx = 1:numSweeps
     % Store start time information
     allResults(sweepIdx).analysisStartTime = params.startTime;
     allResults(sweepIdx).effectiveDuration = effectiveDuration;
-end
 
-%% Step 4: Plot the results
-% Figure for event detection
-figure('Position', [100, 100, 1200, 800]);
-
-% Select the first sweep with events (or first sweep if none have events)
-sweepToPlot = 20;
-for i = 1:length(allResults)
-    if ~isempty(allResults(i).epscs)
-        sweepToPlot = i;
-        break;
-    end
-end
-
-% Get current data for selected sweep
-currentData = data(:, params.channel, sweepToPlot);
-if params.inverted
-    currentData = -currentData; % Invert if looking at inward currents
-    yLabel = 'Current (pA, inverted)';
-else
-    yLabel = 'Current (pA)';
-end
-
-% Apply preprocessing to match detection algorithm
-currentFiltered = medfilt1(currentData, 5);
-smoothWindow = ceil(params.smoothWindow / samplingInterval);
-currentSmoothed = smooth(currentFiltered, smoothWindow);
-currentSlope = diff(currentSmoothed)' / samplingInterval;
-currentSlope = [0; currentSlope];
-
-% Plot the current trace
-ax1 = subplot(2,1,1);
-plot(timeVector, currentSmoothed, 'k');
-hold on;
-
-% Get events for this sweep
-epscs = allResults(sweepToPlot).epscs;
-epscCount = length(epscs);
-
-% Mark detected EPSCs
-if epscCount > 0
+    % Plot the first sweep that has events
+if epscCount > 0 && ~firstPlotMade
+    % Create a new figure for this sweep
+    figure('Position', [100, 100, 1200, 800]);
+    
+    % Plot the smoothed signal
+    ax1 = subplot(2,1,1);
+    plot(timeVector, currentSmoothed, 'k');
+    hold on;
+    
+    % Mark onsets, peaks, and offsets
     onsetTimes = timeVector([epscs.onset]);
     peakTimes = timeVector([epscs.peak]);
     offsetTimes = timeVector([epscs.offset]);
     
-    % Mark onsets, peaks, and offsets
     plot(onsetTimes, currentSmoothed([epscs.onset]), 'go', 'MarkerSize', 5, 'LineWidth', 1.5);
     plot(peakTimes, currentSmoothed([epscs.peak]), 'ro', 'MarkerSize', 5, 'LineWidth', 1.5);
     plot(offsetTimes, currentSmoothed([epscs.offset]), 'bo', 'MarkerSize', 5, 'LineWidth', 1.5);
-end
-
-title(sprintf('Detected EPSCs in Sweep %d (%d events)', sweepToPlot, epscCount));
-xlabel('Time (ms)');
-ylabel(yLabel);
-set(ax1, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
-grid(params.plotStyle.grid);
-
-% Plot the slope
-ax2 = subplot(2,1,2);
-plot(timeVector, currentSlope, 'b');
-hold on;
-
-% Mark EPSC onsets on slope trace
-if epscCount > 0
-    plot(onsetTimes, currentSlope([epscs.onset]), 'go', 'MarkerSize', 5, 'LineWidth', 1.5);
-end
-
-title('Current Slope (First Derivative)');
-xlabel('Time (ms)');
-ylabel('Slope (pA/ms)');
-set(ax2, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
-grid(params.plotStyle.grid);
-
-% Link the x-axes of the two plots
-linkaxes([ax1, ax2], 'x');
-%%
-% Highlight a random EPSC if any are detected
-if epscCount > 0
-    % Create a new figure for detailed view of a single EPSC
-    figure('Position', [500, 100, 800, 400]);
-
-    % Select a random EPSC to highlight
-    epscIdx = randi(epscCount);
-
-    % Extract event times
-    eventOnset = epscs(epscIdx).onset;
-    eventPeak = epscs(epscIdx).peak;
-    eventOffset = epscs(epscIdx).offset;
-
-    % Create window around the event (20ms)
-    windowStart = max(1, eventOnset - round(20/samplingInterval));
-    windowEnd = min(length(timeVector), eventOffset + round(20/samplingInterval));
-
-    % Plot the event
-    plot(timeVector(windowStart:windowEnd), currentSmoothed(windowStart:windowEnd), 'k', 'LineWidth', 1.5);
-    hold on;
-
-    % Mark key points
-    plot(timeVector(eventOnset), currentSmoothed(eventOnset), 'go', 'MarkerSize', 8, 'LineWidth', 2);
-    plot(timeVector(eventPeak), currentSmoothed(eventPeak), 'ro', 'MarkerSize', 8, 'LineWidth', 2);
-    plot(timeVector(eventOffset), currentSmoothed(eventOffset), 'bo', 'MarkerSize', 8, 'LineWidth', 2);
-
-    % Plot baseline
-    if strcmp(params.baseline, 'pre')
-        baselineWindow = max(1, eventOnset-30):eventOnset-5;
-        baseline = mean(currentSmoothed(baselineWindow));
-    else
-        baseline = currentSmoothed(eventOnset);
-    end
-
-    line([timeVector(windowStart), timeVector(windowEnd)], [baseline, baseline], 'Color', 'r', 'LineStyle', '--');
-
-    % Add half-width markers
-    halfAmp = baseline + epscs(epscIdx).amplitude/2;
-    line([timeVector(windowStart), timeVector(windowEnd)], [halfAmp, halfAmp], 'Color', 'g', 'LineStyle', ':');
-
-    % Add labels
-    title(sprintf('EPSC Event #%d from Sweep %d', epscIdx, sweepToPlot));
+    
+    % Add frequency information to the plot title
+    title(sprintf('Detected EPSCs in Sweep %d (%d events, %.2f Hz)', sweepIdx, epscCount, frequency));
+    
+    % Set axis labels and style
     xlabel('Time (ms)');
-    ylabel(yLabel);
-    legend('Current', 'Onset', 'Peak', 'Offset', 'Baseline', 'Half-amplitude');
-    set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
-    grid(params.plotStyle.grid);
-
-    % Add event properties as text
-    amplitude = epscs(epscIdx).amplitude;
-    halfWidth = epscs(epscIdx).halfWidth;
-    area = epscs(epscIdx).area;
-
-    textStr = sprintf('Amplitude: %.1f pA\nHalf-width: %.2f ms\nArea: %.1f pAms', amplitude, halfWidth, area);
-    if isfield(epscs, 'tau') && ~isnan(epscs(epscIdx).tau)
-        textStr = [textStr sprintf('\nDecay : %.2f ms', epscs(epscIdx).tau)];
+    if params.inverted
+        ylabel('Current (pA, inverted)');
+    else
+        ylabel('Current (pA)');
     end
-
-    text(timeVector(windowStart) + 5, max(currentSmoothed(windowStart:windowEnd)), textStr, 'VerticalAlignment', 'top');
+    set(ax1, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+    grid(params.plotStyle.grid);
+    
+    % Plot the slope in the second subplot
+    ax2 = subplot(2,1,2);
+    plot(timeVector, currentSlope, 'b');
+    hold on;
+    
+    % Mark EPSC onsets on slope trace
+    plot(onsetTimes, currentSlope([epscs.onset]), 'go', 'MarkerSize', 5, 'LineWidth', 1.5);
+    
+    title('Current Slope (First Derivative)');
+    xlabel('Time (ms)');
+    ylabel('Slope (pA/ms)');
+    set(ax2, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+    grid(params.plotStyle.grid);
+    
+    % Link the x-axes of the two plots
+    linkaxes([ax1, ax2], 'x');
+    sgtitle(filename);
+    
+    % Save the figure
+    savefig(fullfile(outpath, [filename '_sweep' num2str(sweepIdx) '.fig']));
+    
+    % Add a flag to indicate that we've already made the first plot
+    firstPlotMade = true;
+end
 end
 
 
@@ -416,41 +415,44 @@ allHalfWidths = [];
 allAreas = [];
 allTaus = [];
 sweepsWithEvents = 0;
+validSweeps = 0; % Count of sweeps with valid baseline
 
 for s = 1:numSweeps
-    epscCount = length(allResults(s).epscs);
-    if epscCount > 0
-        totalEvents = totalEvents + epscCount;
-        allAmplitudes = [allAmplitudes, [allResults(s).epscs.amplitude]];
-        allHalfWidths = [allHalfWidths, [allResults(s).epscs.halfWidth]];
-        allAreas = [allAreas, [allResults(s).epscs.area]];
+    % Check if this sweep had a stable baseline
+    if isfield(allResults(s), 'baselineStable') && allResults(s).baselineStable
+        validSweeps = validSweeps + 1;
+        
+        epscCount = length(allResults(s).epscs);
+        if epscCount > 0
+            totalEvents = totalEvents + epscCount;
+            allAmplitudes = [allAmplitudes, [allResults(s).epscs.amplitude]];
+            allHalfWidths = [allHalfWidths, [allResults(s).epscs.halfWidth]];
+            allAreas = [allAreas, [allResults(s).epscs.area]];
 
-        if isfield(allResults(s).epscs, 'tau')
-            taus = [allResults(s).epscs.tau];
-            allTaus = [allTaus, taus(~isnan(taus))];
+            sweepsWithEvents = sweepsWithEvents + 1;
         end
-
-        sweepsWithEvents = sweepsWithEvents + 1;
     end
 end
+
+% Calculate overall frequency across all valid sweeps
+totalDuration = validSweeps * effectiveDuration; % Total recording time in seconds
+overallFrequency = totalEvents / totalDuration;
 
 % Display overall summary
 fprintf('\n===== EPSC ANALYSIS SUMMARY =====\n');
 fprintf('Total sweeps: %d\n', numSweeps);
-fprintf('Sweeps with EPSCs: %d (%.1f%%)\n', sweepsWithEvents, 100*sweepsWithEvents/numSweeps);
+fprintf('Valid sweeps (stable baseline): %d\n', validSweeps);
+fprintf('Sweeps with EPSCs: %d (%.1f%% of valid sweeps)\n', sweepsWithEvents, 100*sweepsWithEvents/max(1,validSweeps));
 fprintf('Total EPSCs detected: %d\n', totalEvents);
-fprintf('Average EPSCs per sweep: %.2f\n', totalEvents/numSweeps);
+fprintf('Average EPSCs per sweep: %.2f\n', totalEvents/max(1,validSweeps));
+fprintf('Overall frequency: %.2f Hz\n', overallFrequency);
 
 if totalEvents > 0
     % Calculate overall stats
-    fprintf('\nEPSC Characteristics (mean  std):\n');
-    fprintf('Amplitude: %.2f  %.2f pA\n', mean(allAmplitudes), std(allAmplitudes));
-    fprintf('Half-width: %.2f  %.2f ms\n', mean(allHalfWidths), std(allHalfWidths));
-    fprintf('Area (charge): %.2f  %.2f pAms\n', mean(allAreas), std(allAreas));
-
-    if ~isempty(allTaus)
-        fprintf('Decay time constant (tau): %.2f  %.2f ms\n', mean(allTaus), std(allTaus));
-    end
+    fprintf('\nEPSC Characteristics (mean � std):\n');
+    fprintf('Amplitude: %.2f � %.2f pA\n', mean(allAmplitudes), std(allAmplitudes));
+    fprintf('Half-width: %.2f � %.2f ms\n', mean(allHalfWidths), std(allHalfWidths));
+    fprintf('Area (charge): %.2f � %.2f pAms\n', mean(allAreas), std(allAreas));
 
     % Plot histogram of EPSC amplitudes
     figure('Position', [100, 500, 800, 400]);
@@ -470,6 +472,7 @@ if totalEvents > 0
     ylabel('Count');
     set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
     grid(params.plotStyle.grid);
+    print(fullfile(outpath,[filename '_histograms.pdf']),'-dpdf');
 
     % Create summary table for each sweep
     sweepSummary = table();
@@ -477,6 +480,13 @@ if totalEvents > 0
 
     for s = 1:numSweeps
         sweepSummary.EPSCCount(s) = length(allResults(s).epscs);
+        
+        % Set baselineStable column
+        if isfield(allResults(s), 'baselineStable')
+            sweepSummary.BaselineStable(s) = allResults(s).baselineStable;
+        else
+            sweepSummary.BaselineStable(s) = false;
+        end
 
         if sweepSummary.EPSCCount(s) > 0
             sweepSummary.MeanAmplitude(s) = allResults(s).stats.meanAmplitude;
@@ -485,42 +495,25 @@ if totalEvents > 0
         else
             sweepSummary.MeanAmplitude(s) = NaN;
             sweepSummary.MeanHalfWidth(s) = NaN;
-            sweepSummary.Frequency(s) = 0;
+            if sweepSummary.BaselineStable(s)
+                sweepSummary.Frequency(s) = 0;
+            else
+                sweepSummary.Frequency(s) = NaN;
+            end
         end
     end
 
-    % Display sweep summary
-    disp('Sweep-by-Sweep Summary:');
+    % Display the summary table
     disp(sweepSummary);
 
-    % Plot event frequency across sweeps
-    figure('Position', [100, 100, 900, 400]);
+    % Save results automatically 
+    saveFile = fullfile(outpath, [filename '_epsc_results.mat']);
+    save(saveFile, 'allResults', 'sweepSummary', 'params', 'overallFrequency');
+    fprintf('Results saved to %s\n', saveFile);
 
-    subplot(1,2,1);
-    bar(sweepSummary.Sweep, sweepSummary.EPSCCount);
-    title('EPSC Count by Sweep');
-    xlabel('Sweep Number');
-    ylabel('Number of EPSCs');
-    set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
-    grid(params.plotStyle.grid);
-
-    subplot(1,2,2);
-    bar(sweepSummary.Sweep, sweepSummary.Frequency);
-    title('EPSC Frequency by Sweep');
-    xlabel('Sweep Number');
-    ylabel('Frequency (Hz)');
-    set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
-    grid(params.plotStyle.grid);
-
-    % Save results automatically rather than asking
-
-    saveFile = [fileName '_epsc_results.mat'];
-    % save(saveFile, 'allResults', 'sweepSummary', 'params');
-    % fprintf('Results saved to %s\n', saveFile);
-    % 
-    % % Export event times to text file automatically
-    % exportFile = [fileName '_epsc_events.txt'];
-    % fid = fopen(exportFile, 'w');
+    % Export event times to text file automatically
+    exportFile = fullfile(outpath, [filename '_epsc_events.txt']);
+    fid = fopen(exportFile, 'w');
 
     fprintf(fid, 'Sweep\tEvent\tOnset(ms)\tPeak(ms)\tAmplitude(pA)\tHalfWidth(ms)\n');
 
@@ -538,68 +531,116 @@ if totalEvents > 0
     fclose(fid);
     fprintf('Event times exported to %s\n', exportFile);
 
-    % Create a stack of aligned EPSCs automatically if not too many
-    if totalEvents > 0 && totalEvents <= 500
-        % Setup figure for stack plot
-        figure('Position', [300, 200, 1000, 800]);
-
-        % Define time window around peak for alignment (20ms)
-        windowSize = round(20/samplingInterval);
-
-        % Collect aligned traces
-        alignedTraces = [];
-        colorCodes = [];
-
-        for s = 1:numSweeps
-            for e = 1:length(allResults(s).epscs)
-                peakIdx = allResults(s).epscs(e).peak;
-
-                % Define window around peak
-                startIdx = max(1, peakIdx - windowSize);
-                endIdx = min(length(timeVector), peakIdx + windowSize);
-
-                % Extract and align trace
-                currentData = data(:, params.channel, s);
-                if params.inverted
-                    currentData = -currentData;
-                end
-
-                if endIdx - startIdx == 2*windowSize
-                    trace = currentData(startIdx:endIdx);
-                    alignedTraces = [alignedTraces; trace'];
-                    colorCodes = [colorCodes; s];
-                end
-            end
+    % Create and save a frequency summary file
+    freqFile = fullfile(outpath, [filename '_frequency_summary.txt']);
+    fid = fopen(freqFile, 'w');
+    
+    fprintf(fid, 'Sweep\tFrequency(Hz)\tEvent_Count\tBaseline_Stable\n');
+    for s = 1:numSweeps
+        if isfield(allResults(s), 'baselineStable')
+            baselineStable = allResults(s).baselineStable;
+        else
+            baselineStable = false;
         end
-
-        % Create time vector centered at 0 (peak)
-        alignedTime = (-windowSize:windowSize) * samplingInterval;
-
-        % Plot aligned traces
-        subplot(2,1,1);
-        plot(alignedTime, alignedTraces', 'Color', [0.7 0.7 0.7]);
-        hold on;
-        plot(alignedTime, mean(alignedTraces), 'k', 'LineWidth', 2);
-
-        title('Aligned EPSCs');
-        xlabel('Time from Peak (ms)');
-        ylabel(yLabel);
-        set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
-        grid(params.plotStyle.grid);
-
-        % Plot heatmap of aligned traces
-        subplot(2,1,2);
-        imagesc(alignedTime, 1:size(alignedTraces,1), alignedTraces);
-        colormap(jet);
-        colorbar;
-
-        title('EPSC Heatmap');
-        xlabel('Time from Peak (ms)');
-        ylabel('Event Number');
-        set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+        
+        if baselineStable && isfield(allResults(s), 'stats') && isfield(allResults(s).stats, 'frequency')
+            frequency = allResults(s).stats.frequency;
+        else
+            frequency = NaN;
+        end
+        
+        eventCount = length(allResults(s).epscs);
+        
+        fprintf(fid, '%d\t%.2f\t%d\t%d\n', s, frequency, eventCount, baselineStable);
     end
+    
+    % Write overall summary
+    fprintf(fid, '\n===== SUMMARY =====\n');
+    fprintf(fid, 'Overall Frequency: %.2f Hz\n', overallFrequency);
+    fprintf(fid, 'Total Events: %d\n', totalEvents);
+    fprintf(fid, 'Valid Sweeps: %d\n', validSweeps);
+    fprintf(fid, 'Sweeps With Events: %d\n', sweepsWithEvents);
+    
+    fclose(fid);
+    fprintf('Frequency summary exported to %s\n', freqFile);
+
+  
 else
     disp('No EPSCs detected in any sweep.');
 end
 
+%% Create a frequency plot across sweeps
+figure('Position', [100, 100, 900, 400]);
 
+% Extract frequencies and event counts for plotting
+sweepNumbers = 1:numSweeps;
+frequencies = zeros(1, numSweeps);
+eventCounts = zeros(1, numSweeps);
+stableBaseline = false(1, numSweeps);
+
+for s = 1:numSweeps
+    if isfield(allResults(s), 'baselineStable')
+        stableBaseline(s) = allResults(s).baselineStable;
+    end
+    
+    if stableBaseline(s) && isfield(allResults(s), 'stats') && isfield(allResults(s).stats, 'frequency')
+        frequencies(s) = allResults(s).stats.frequency;
+        eventCounts(s) = length(allResults(s).epscs);
+    else
+        frequencies(s) = NaN;
+        eventCounts(s) = 0;
+    end
+end
+
+% Plot frequencies across sweeps
+subplot(2,1,1);
+bar(sweepNumbers, frequencies);
+hold on;
+
+% Add overall frequency reference line
+if validSweeps > 0
+    plot([0.5, numSweeps+0.5], [overallFrequency, overallFrequency], 'r--', 'LineWidth', 1.5);
+    text(numSweeps/2, overallFrequency*1.1, sprintf('Overall: %.2f Hz', overallFrequency), ...
+        'HorizontalAlignment', 'center', 'Color', 'r');
+end
+
+% Mark unstable baseline sweeps
+for s = 1:numSweeps
+    if ~stableBaseline(s)
+        % Mark unstable sweeps with a light red bar
+        bar(s, 0, 'FaceColor', [1 0.8 0.8], 'EdgeColor', [0.8 0 0]);
+    end
+end
+
+title('EPSC Frequency by Sweep');
+xlabel('Sweep Number');
+ylabel('Frequency (Hz)');
+set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+grid(params.plotStyle.grid);
+xlim([0.5, numSweeps+0.5]);
+
+% Plot event counts across sweeps
+subplot(2,1,2);
+bar(sweepNumbers, eventCounts);
+
+% Mark unstable baseline sweeps
+hold on;
+for s = 1:numSweeps
+    if ~stableBaseline(s)
+        % Mark unstable sweeps with a light red bar
+        bar(s, 0, 'FaceColor', [1 0.8 0.8], 'EdgeColor', [0.8 0 0]);
+    end
+end
+
+title('EPSC Count by Sweep');
+xlabel('Sweep Number');
+ylabel('Event Count');
+set(gca, 'TickDir', params.plotStyle.tickDir, 'Box', params.plotStyle.box);
+grid(params.plotStyle.grid);
+xlim([0.5, numSweeps+0.5]);
+
+
+% Save the frequency plot
+print(fullfile(outpath,[filename '_frequency_plot.pdf']),'-dpdf');
+
+end
