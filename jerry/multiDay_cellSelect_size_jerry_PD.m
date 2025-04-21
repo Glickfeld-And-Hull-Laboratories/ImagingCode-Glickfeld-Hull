@@ -10,7 +10,7 @@ doCorrImg = true;
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 71;
+day_id = 73;
 %% load data for day
 
 mouse = expt(day_id).mouse;
