@@ -4638,6 +4638,7 @@ expt(167).contrastxori_runs = {'002'};
 expt(167).contrastxori_time = {'1500'};
 expt(167).data_loc = 'ACh';
 expt(167).wheelColor = 'purple';
+expt(167).exptType = 'SST_YM90K';
 %
 %% i2062 baseline 2, 200 ms
 expt(168).SubNum = 'i2062';
@@ -4695,6 +4696,7 @@ expt(169).contrastxori_runs = {'003'};
 expt(169).contrastxori_time = {'1549'};
 expt(169).data_loc = 'ACh';
 expt(169).wheelColor = 'orange';
+expt(169).exptType = 'SST_YM90K';
 %
 %% i2062 5 hour post DART 200 ms
 expt(170).SubNum = 'i2062';
@@ -4895,6 +4897,7 @@ expt(176).contrastxori_runs = {'004'};
 expt(176).contrastxori_time = {'1547'};
 expt(176).data_loc = 'ACh';
 expt(176).wheelColor = 'orange';
+expt(176).exptType = 'SST_YM90K';
 %
 %% i2067 SAME DAY
 expt(177).SubNum = 'i2067';
@@ -4924,6 +4927,7 @@ expt(177).contrastxori_runs = {'002'};
 expt(177).contrastxori_time = {'1825'};
 expt(177).data_loc = 'ACh';
 expt(177).wheelColor = 'orange';
+expt(177).exptType = 'SST_YM90K';
 %% i2067 17 hour
 expt(178).SubNum = 'i2067';
 expt(178).mouse = 'i2067';
@@ -5067,6 +5071,7 @@ expt(182).contrastxori_runs = {'002'};
 expt(182).contrastxori_time = {'1520'};
 expt(182).data_loc = 'ACh';
 expt(182).wheelColor = 'orange';
+expt(182).exptType = 'SST_YM90K';
 %
 %% i2066
 expt(183).SubNum = 'i2066';
@@ -5096,6 +5101,7 @@ expt(183).contrastxori_runs = {'002'};
 expt(183).contrastxori_time = {'1520'};
 expt(183).data_loc = 'ACh';
 expt(183).wheelColor = 'orange';
+expt(183).exptType = 'SST_YM90K';
 %
 %% i2066
 expt(184).SubNum = 'i2066';
