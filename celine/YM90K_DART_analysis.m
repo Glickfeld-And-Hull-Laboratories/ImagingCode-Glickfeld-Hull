@@ -80,8 +80,11 @@ motorByPupil_concat=nan(nd,2,nSess);
 pupilCounts_concat=nan(nd,2,nSess);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
-
 responseByCondProps_concat=nan(6,2,nSess);
+
+F0_stat_concat=NaN(2,2,nSess);
+F0_loc_concat=NaN(2,2,nSess);  
+
 
 cellID_adjustment=0;
 for iSess = 1:nSess
@@ -103,6 +106,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
     load(fullfile(fn_multi,'pupilMeans.mat'));
+    load(fullfile(fn_multi,'F0_means.mat'));
 
 
     nKeep = size(tc_trial_avrg_stat{post},2);
@@ -137,6 +141,8 @@ for iSess = 1:nSess
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
     responseByCondProps_concat(:,:,iSess)=responseByCondProps;
+    F0_stat_concat(:,:,iSess)=cellTypeMean_F0_stat_keep;
+    F0_loc_concat (:,:,iSess)=cellTypeMean_F0_loc_keep;
 
     clear cons
     
@@ -367,6 +373,114 @@ for iSess = 1:nSess
     RbyExp(2,iSess) = length(intersect(mouseIndsTemp,redLow));
 end
 array2table(RbyExp,RowNames={'high R'  'low R'})
+
+%% comparing F0 values
+
+figure;
+subplot(1,2,1)
+scatter(squeeze(F0_stat_concat(pre,1,:)),squeeze(F0_stat_concat(post,1,:)),'MarkerEdgeColor','k')
+hold on
+scatter(squeeze(F0_stat_concat(pre,2,:)),squeeze(F0_stat_concat(post,2,:)),'MarkerEdgeColor','r')
+refline(1)
+xlabel('Control')
+ylabel('DART')
+axis square
+box off
+title('Stationary')
+
+subplot(1,2,2)
+scatter(squeeze(F0_loc_concat(pre,1,:)),squeeze(F0_loc_concat(post,1,:)),'MarkerEdgeColor','k')
+hold on
+scatter(squeeze(F0_loc_concat(pre,2,:)),squeeze(F0_loc_concat(post,2,:)),'MarkerEdgeColor','r')
+refline(1)
+xlabel('Control')
+ylabel('DART')
+axis square
+box off
+title('Running')
+
+%%
+% Create figure
+figure('Position', [100 100 600 400]);
+subplot(2,1,1)
+% Extract data for Pyramidal cells
+pyr_stat_ratios = (squeeze(F0_stat_concat(post,1,:)))./(squeeze(F0_stat_concat(pre,1,:)));
+pyr_loc_ratios = (squeeze(F0_loc_concat(post,1,:)))./(squeeze(F0_loc_concat(pre,1,:)));
+
+% Extract data for SST cells
+sst_stat_ratios = (squeeze(F0_stat_concat(post,2,:)))./(squeeze(F0_stat_concat(pre,2,:)));
+sst_loc_ratios = (squeeze(F0_loc_concat(post,2,:)))./(squeeze(F0_loc_concat(pre,2,:)));
+
+
+positions = [1, 1.25, 1.75, 2]; 
+
+% Pyramidal cells - black
+swarmchart(positions(1)*ones(size(pyr_stat_ratios(:))), pyr_stat_ratios(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+hold on;
+swarmchart(positions(3)*ones(size(pyr_loc_ratios(:))), pyr_loc_ratios(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+
+% SST cells - red
+swarmchart(positions(2)*ones(size(sst_stat_ratios(:))), sst_stat_ratios(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+swarmchart(positions(4)*ones(size(sst_loc_ratios(:))), sst_loc_ratios(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+
+
+% Add mean indicators
+plot(positions(1), nanmean(pyr_stat_ratios(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
+plot(positions(3), nanmean(pyr_loc_ratios(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
+plot(positions(2), nanmean(sst_stat_ratios(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
+plot(positions(4), nanmean(sst_loc_ratios(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
+
+
+% Add labels and title
+xlabel('Cell Type and Condition');
+set(gca, 'XTick', positions, 'XTickLabel', {'Pyr-Stat', 'SST-Stat','Pyr-Loc', 'SST-Loc'});
+ylabel('DART F0 / Control F0');
+title('DART Effects by Cell Type and Behavioral State');
+set(gca, 'TickDir', 'out');
+box off;
+% Create second subplot
+subplot(2,1,2)
+
+% Calculate locomotion/stationary ratios
+% Pyramidal cells
+pyr_pre_ratio = (squeeze(F0_loc_concat(pre,1,:)))./(squeeze(F0_stat_concat(pre,1,:)));
+pyr_post_ratio = (squeeze(F0_loc_concat(post,1,:)))./(squeeze(F0_stat_concat(post,1,:)));
+
+% SST cells
+sst_pre_ratio = (squeeze(F0_loc_concat(pre,2,:)))./(squeeze(F0_stat_concat(pre,2,:)));
+sst_post_ratio = (squeeze(F0_loc_concat(post,2,:)))./(squeeze(F0_stat_concat(post,2,:)));
+
+% Create positions for the groups
+positions = [1, 1.25, 1.75, 2];
+
+% Pyramidal cells - black
+swarmchart(positions(1)*ones(size(pyr_pre_ratio(:))), pyr_pre_ratio(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+hold on;
+swarmchart(positions(3)*ones(size(pyr_post_ratio(:))), pyr_post_ratio(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+
+% SST cells - red
+swarmchart(positions(2)*ones(size(sst_pre_ratio(:))), sst_pre_ratio(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+swarmchart(positions(4)*ones(size(sst_post_ratio(:))), sst_post_ratio(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+
+
+% Add mean indicators
+plot(positions(1), nanmean(pyr_pre_ratio(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
+plot(positions(3), nanmean(pyr_post_ratio(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
+plot(positions(2), nanmean(sst_pre_ratio(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
+plot(positions(4), nanmean(sst_post_ratio(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
+
+% Add labels and title
+xlabel('Cell Type and Condition');
+set(gca, 'XTick', positions, 'XTickLabel', {'Pyr-Ctrl', 'SST-Ctrl', 'Pyr-DART', 'SST-DART'});
+ylabel('Locomotion F0 / Stationary F0');
+title('Locomotion Effects by Cell Type and Condition');
+set(gca, 'TickDir', 'out');
+box off;
+
+% Add overall title
+sgtitle('Comparison of DART and Locomotion Effects', 'FontSize', 12);
+
+
 %% 
 fractHigh = RbyExp(1,:)./sum(RbyExp,1);
 mean(fractHigh)
@@ -3432,96 +3546,179 @@ title('SST')
 
 %% comparing normalized difference to noise correlation
 %this plots the scatter for the 25% contrast only, then makes the bar
-%chartf of beta values for all contrasts
-%% For the 25% contrast scatter plot only
-% Extract data for 25% contrast (index 1)
-contrast = 1;
-y = stationary_norm_diff(contrast, :)';  % neural response difference
-x = baseline_noise_corr';                 % noise correlations
+%chart of beta values for all contrasts
 
-% Handle NaNs and missing data
-valid_idx = ~isnan(x) & ~isnan(y) & isfinite(x) & isfinite(y);
+mySample = red_ind_concat;
+% Extract data (stationary state only)
+stationary_norm_diff = squeeze(norm_diff(1,:,mySample)); % [contrast, neuron]
+stationary_bsln_std = squeeze(bsln_std(1,:,mySample));   % [contrast, neuron]
+baseline_noise_corr = noiseCorr_OG_concat{2}(1,mySample); % [1, neuron]
 
-% Use only valid data
-x_valid = x(valid_idx);
-y_valid = y(valid_idx);
+% Number of contrasts and neurons
+[num_contrasts, num_neurons] = size(stationary_norm_diff);
 
-% Perform unweighted linear regression
-[p, stats] = polyfit(x_valid, y_valid, 1);
+% Store results
+slopes = zeros(num_contrasts, 1);
+intercepts = zeros(num_contrasts, 1);
+r_squared = zeros(num_contrasts, 1);
+p_values = zeros(num_contrasts, 1);
+std_errors = zeros(num_contrasts, 1);
 
-% Create figure with exact dimensions
-fig1 = figure;
-% Set figure size in inches
-set(fig1, 'Units', 'inches');
-set(fig1, 'Position', [1, 1, 1, 1]);
-% Set paper size to match figure size
-set(fig1, 'PaperUnits', 'inches');
-set(fig1, 'PaperSize', [1, 1]);
-set(fig1, 'PaperPosition', [0, 0, 1, 1]);
+% Create figure
+figure('Position', [100, 100, 1200, 400]);
 
-% Create scatter plot with smaller black points, 50% transparency, and white outline
-scatter(x_valid, y_valid, 10, 'MarkerFaceColor', 'k', 'MarkerEdgeColor', 'w', 'MarkerFaceAlpha', 0.5);
-hold on;
+% Analyze each contrast
+for contrast = 1:num_contrasts
+    % Extract data for this contrast
+    y = stationary_norm_diff(contrast, :)';  % neural response difference
+    x = baseline_noise_corr';                 % noise correlations
+    
+    % Handle NaNs and missing data
+    valid_idx = ~isnan(x) & ~isnan(y) & isfinite(x) & isfinite(y);
+    
+    % Check if we have enough valid data points
+    if sum(valid_idx) < 3
+        warning('Not enough valid data points for contrast %d. Skipping.', contrast);
+        title(sprintf('Contrast %d: Insufficient Data', contrast));
+        continue;
+    end
+    
+    % Use only valid data
+    x_valid = x(valid_idx);
+    y_valid = y(valid_idx);
+    
+    % Perform unweighted linear regression
+    [p, stats] = polyfit(x_valid, y_valid, 1);
+    
+    % Store results
+    intercepts(contrast) = p(2);
+    slopes(contrast) = p(1);
+    
+    % Calculate standard error of the slope
+    yfit = polyval(p, x_valid);
+    residuals = y_valid - yfit;
+    SSE = sum(residuals.^2);
+    n = length(x_valid);
+    
+    % Standard error of the regression
+    SE_regression = sqrt(SSE / (n-2));
+    
+    % Sum of squares of x deviations
+    SS_x = sum((x_valid - mean(x_valid)).^2);
+    
+    % Standard error of the slope
+    std_errors(contrast) = SE_regression / sqrt(SS_x);
+    
+    % Calculate R-squared
+    SS_total = sum((y_valid - mean(y_valid)).^2);
+    r_squared(contrast) = 1 - SSE/SS_total;
+    
+    % Calculate p-value for slope
+    t_stat = slopes(contrast) / std_errors(contrast);
+    p_values(contrast) = 2 * (1 - tcdf(abs(t_stat), length(x_valid) - 2));
+    
+    % Plot regression
+    subplot(1, 3, contrast);
+    
+    % Create scatter plot with uniform size
+    scatter(x_valid, y_valid, 50, 'filled', 'MarkerFaceAlpha', 0.7);
+    hold on;
+    
+    % Add regression line
+    x_range = linspace(min(x_valid), max(x_valid), 100);
+    y_line = p(1) * x_range + p(2);
+    plot(x_range, y_line, 'r-', 'LineWidth', 2);
+    
+    % Labels and title
+    contrasts = [25, 50, 100];
+    title(sprintf('Contrast: %d%%', contrasts(contrast)), 'FontSize', 12);
+    xlabel('Noise Correlation (Baseline)', 'FontSize', 11);
+    ylabel('Normalized Difference', 'FontSize', 11);
+    
+    xlim([-.2 1])
+    ylim([-8 8])
 
-% Add regression line
-x_range = linspace(min(x_valid), max(x_valid), 100);
-y_line = p(1) * x_range + p(2);
-plot(x_range, y_line, 'r-', 'LineWidth', 1);
+    % Add horizontal line at y=0
+    hline(0)
+    
+    % Add regression equation and stats
+    % Calculate text position dynamically
+    x_range = max(x_valid) - min(x_valid);
+    y_range = range(ylim);
+    text_x = min(x_valid);
+    text_y_start = max(ylim) - 0.2 * y_range;
+    text_y_step = 0.08 * y_range;
+    
+    text(text_x, text_y_start, sprintf('y = %.3fx + %.3f', slopes(contrast), intercepts(contrast)), 'FontSize', 10);
+    text(text_x, text_y_start - text_y_step, sprintf('R = %.3f', r_squared(contrast)), 'FontSize', 10);
+    text(text_x, text_y_start - 2*text_y_step, sprintf('p = %.4f', p_values(contrast)), 'FontSize', 10);
+    
+    % Add sample size
+    text(text_x, text_y_start - 3*text_y_step, sprintf('n = %d', sum(valid_idx)), 'FontSize', 10);
+    
+    % Set box style and tick direction
+    box off;
+    set(gca, 'TickDir', 'out');
+end
 
-% Add horizontal line at y=0
-yline(0, 'k--');
+% Adjust spacing
+sgtitle('Unweighted Regression: Noise Correlation vs. Normalized Difference (Stationary State)', 'FontSize', 14);
+set(gcf, 'Color', 'w');
 
-% Set axis limits
-xlim([-.2 1]);
-ylim([-8 8]);
+% Create a results table
+contrast_labels = {'25%', '50%', '100%'};
+results_table = table(contrast_labels', slopes, std_errors, intercepts, r_squared, p_values, ...
+    'VariableNames', {'Contrast', 'Slope', 'StdError', 'Intercept', 'RSquared', 'PValue'});
 
-% Customize appearance
-box off;
-set(gca, 'TickDir', 'out');
-grid off;
-% Reduce font size
-set(gca, 'FontSize', 6);
-% Make axes occupy most of the figure
-set(gca, 'Position', [0.2, 0.2, 0.75, 0.75]);
+% Display results table
+disp('Unweighted Regression Results:');
+disp(results_table);
 
-% Save as PDF
-print('-dpdf', 'scatter_25pct_contrast.pdf', '-painters');
+% Save figure
+saveas(gcf, 'unweighted_regression_plot.png');
+fprintf('Figure saved as unweighted_regression_plot.png\n');
 
-% Create figure with exact dimensions
-fig2 = figure;
-% Set figure size in inches
-set(fig2, 'Units', 'inches');
-set(fig2, 'Position', [1, 1, 1, 1]);
-% Set paper size to match figure size
-set(fig2, 'PaperUnits', 'inches');
-set(fig2, 'PaperSize', [1, 1]);
-set(fig2, 'PaperPosition', [0, 0, 1, 1]);
+% Optional: Save results to CSV
+writetable(results_table, 'unweighted_regression_results.csv');
+fprintf('Results saved to unweighted_regression_results.csv\n');
 
-% Create bar chart
+% Additional analysis: Test if slopes are significantly different across contrasts
+fprintf('\nComparing slopes across contrast levels:\n');
+
+% Pairwise comparison of slopes (z-test)
+for i = 1:num_contrasts
+    for j = i+1:num_contrasts
+        % Calculate Z-statistic for difference between slopes
+        z_diff = (slopes(i) - slopes(j)) / sqrt(std_errors(i)^2 + std_errors(j)^2);
+        p_diff = 2 * (1 - normcdf(abs(z_diff)));
+        fprintf('Contrast %s vs %s: Difference = %.3f, z = %.3f, p = %.4f\n', ...
+            contrast_labels{i}, contrast_labels{j}, slopes(i) - slopes(j), z_diff, p_diff);
+    end
+end
+
+% Additional figure: Compare slopes across contrasts
+figure('Position', [100, 500, 500, 400]);
 bar(1:num_contrasts, slopes);
+ylim([-2,2])
 hold on;
 
 % Add error bars
-errorbar(1:num_contrasts, slopes, std_errors, 'k.', 'LineWidth', 1);
+errorbar(1:num_contrasts, slopes, std_errors, 'k.', 'LineWidth', 1.5);
 
-% Set axis limits
-ylim([-2, 2]);
-
-% Labels
+% Add labels and title
+xlabel('Contrast', 'FontSize', 12);
+ylabel('Regression Slope', 'FontSize', 12);
+title('Comparison of Regression Slopes Across Contrasts', 'FontSize', 14);
 xticks(1:num_contrasts);
-xticklabels({'25%', '50%', '100%'});
-
-% Customize appearance
+xticklabels(contrast_labels);
+grid on;
 box off;
 set(gca, 'TickDir', 'out');
-grid off;
-% Reduce font size
-set(gca, 'FontSize', 6);
-% Make axes occupy most of the figure
-set(gca, 'Position', [0.2, 0.2, 0.75, 0.75]);
 
-% Save as PDF
-print('-dpdf', 'slope_comparison.pdf', '-painters');
+% Save comparison figure
+saveas(gcf, 'slope_comparison.png');
+fprintf('Slope comparison figure saved as slope_comparison.png\n');
+
 
 %% Plot norm_diff by contrast for high and low noiseCorr cells
 % Ask user if they want to remove outliers
@@ -3767,96 +3964,3 @@ if remove_outliers
 else
     print('-dpdf', '-bestfit', 'normDiff_vs_contrast_no_outlier_removal.pdf');
 end
-
-
-%% contrast modulation vs noise corr
-% modulation index will be slope of the line between norm diff at 25% and
-% at 100%
-normDiff_slopes = calculateContrastSlopes(raw_diff);
-
-% Create a new figure
-figure;
-
-% Extract x and y data for regression
-x_data = noiseCorr_OG_concat{pre}(1,red_ind_concat);
-y_data = normDiff_slopes(1,red_ind_concat);
-
-% Remove NaN values for regression analysis
-valid_idx = ~isnan(x_data) & ~isnan(y_data) & ~isinf(x_data) & ~isinf(y_data);
-x_valid = x_data(valid_idx);
-y_valid = y_data(valid_idx);
-
-% Check if we have enough valid data points
-if length(x_valid) < 2
-    error('Not enough valid data points for regression analysis');
-end
-
-% Create scatter plot (using all data points, NaNs will be automatically excluded)
-scatter(x_data, y_data, 50, 'filled', 'MarkerFaceAlpha', 0.7);
-
-% Hold the plot to add the regression line
-hold on;
-
-% Compute linear regression on valid data
-[p, S] = polyfit(x_valid, y_valid, 1);
-
-% Create a sequence of x values for smoother line plotting
-x_range = linspace(min(x_valid), max(x_valid), 100);
-y_fit = polyval(p, x_range);
-
-% Plot regression line
-plot(x_range, y_fit, 'r-', 'LineWidth', 2);
-
-% Calculate R-squared
-yresid = y_valid - polyval(p, x_valid);
-SSresid = sum(yresid.^2);
-SStotal = (length(y_valid)-1) * var(y_valid);
-Rsq = 1 - SSresid/SStotal;
-
-% Calculate p-value for the correlation
-[R, P] = corrcoef(x_valid, y_valid);
-correlation_coef = R(1,2);
-p_value = P(1,2);
-
-% Calculate standard error of the slope
-n = length(x_valid);
-se_slope = sqrt(SSresid/(n-2)) / sqrt(sum((x_valid - mean(x_valid)).^2));
-
-% Calculate t-statistic and p-value for the slope
-t_stat = p(1) / se_slope;
-slope_p_value = 2 * (1 - tcdf(abs(t_stat), n-2));
-
-% Display only essential regression statistics on the plot
-equation = sprintf(' = %.4f', p(1));
-r_squared = sprintf('R^2 = %.4f', Rsq);
-p_val = sprintf('p = %.4g', p_value);
-n_points = sprintf('n = %d', n);
-
-% Create simplified text box with statistics
-dim = [.2 .02 .3 .3];
-str = {equation, r_squared, p_val, n_points};
-annotation('textbox', dim, 'String', str, 'FitBoxToText', 'on', 'BackgroundColor', 'white');
-
-% Print only the requested statistics to command window
-fprintf('\nRegression Statistics:\n');
-fprintf('Beta: %.4f\n', p(1));
-fprintf('R-squared: %.4f\n', Rsq);
-fprintf('p-value: %.6f\n', p_value);
-fprintf('Sample size: %d\n', n);
-
-% Add prediction intervals (95%)
-[y_fit_pred, delta] = polyval(p, x_range, S);
-plot(x_range, y_fit_pred + delta, 'r--', 'LineWidth', 1);
-plot(x_range, y_fit_pred - delta, 'r--', 'LineWidth', 1);
-
-% Customize appearance
-set(gca, 'TickDir', 'out');
-box off;
-xlabel('R value');
-ylabel('Raw Diff Slope');
-title('R value vs Raw Difference Slope');
-
-
-hold off;
-
-
