@@ -44,7 +44,7 @@ control_data.drug_frequency = [];
 control_data.baseline_amplitude = [];
 control_data.drug_amplitude = [];
 control_data.all_baseline_amps = [];
-control_data.all_baseline_durations = 0;
+control_data.total_baseline_durations = 0;
 control_data.all_drug_amps=[];    
 
 
@@ -55,7 +55,7 @@ DART_data.drug_frequency = [];
 DART_data.baseline_amplitude = [];
 DART_data.drug_amplitude = [];
 DART_data.all_baseline_amps = [];
-DART_data.all_baseline_durations =0;
+DART_data.total_baseline_durations =0;
 DART_data.all_drug_amps=[]; 
 
 for iFile = 1:length(file_config)
@@ -75,7 +75,7 @@ for iFile = 1:length(file_config)
     baseline_freq_temp = [];
     baseline_amp_temp = [];
     all_baseline_amps_temp = [];
-    all_baseline_time=[];
+
     if duration > 5
         baseline_sweeps = [baseline_start:baseline_start+10];
     else
@@ -123,7 +123,7 @@ if strcmpi(group, 'control')
             control_data.baseline_amplitude(end+1) = mean(baseline_amp_temp, 'omitmissing');
             control_data.drug_amplitude(end+1) = mean(drug_amp_temp, 'omitmissing');
             control_data.all_baseline_amps = [control_data.all_baseline_amps, all_baseline_amps_temp];
-            control_data.all_baseline_durations = control_data.all_baseline_durations+all_baseline_durations_temp;
+            control_data.total_baseline_durations = control_data.total_baseline_durations+all_baseline_durations_temp;
             control_data.all_drug_amps = [control_data.all_drug_amps, all_drug_amps_temp];  
 elseif strcmpi(group, 'DART')
             DART_data.cell_ids{end+1} = cell_id;
@@ -131,9 +131,9 @@ elseif strcmpi(group, 'DART')
             DART_data.drug_frequency(end+1) = mean(drug_freq_temp, 'omitmissing');
             DART_data.baseline_amplitude(end+1) = mean(baseline_amp_temp, 'omitmissing');
             DART_data.drug_amplitude(end+1) = mean(drug_amp_temp, 'omitmissing');
-            DART_data.all_baseline_amps = [control_data.all_baseline_amps, all_baseline_amps_temp];
-            DART_data.all_baseline_durations = DART_data.all_baseline_durations+all_baseline_durations_temp;
-            DART_data.all_drug_amps = [control_data.all_drug_amps, all_drug_amps_temp];    
+            DART_data.all_baseline_amps = [DART_data.all_baseline_amps, all_baseline_amps_temp];
+            DART_data.total_baseline_durations = DART_data.total_baseline_durations+all_baseline_durations_temp;
+            DART_data.all_drug_amps = [DART_data.all_drug_amps, all_drug_amps_temp];    
 else
     error('neither control nor experimetnal group')
 end
@@ -175,12 +175,14 @@ if plottingEnabled
     sgtitle(['cell ' cell_id, ', ', group])
     print(fullfile(outpath,[cell_id, '_freqVsSweep.pdf']),'-dpdf');
 end
-clear baseline_freq_temp drug_freq_temp baseline_amp_temp drug_amp_temp allResults all_drug_amps_temp all_baseline_amps_temp cell_id filename group overallFrequency sweepSummary
+clear baseline_freq_temp drug_freq_temp baseline_amp_temp drug_amp_temp 
+clear allResults all_drug_amps_temp all_baseline_amps_temp cell_id filename
+clear group overallFrequency sweepSummary reject_sweeps params baseline_start
+clear drug_start duration_temp duration sweepNumbers
 
 
 end
-clear iSweep iFile drug_sweeps baseline_sweeps
-
+clear iSweep iFile drug_sweeps baseline_sweeps plottingEnabled d
 %% Distributions of amplitudes
 hypothetical_DART_amp = control_data.all_baseline_amps * .4;
 %Plot normalized distributions for control and DART. 
@@ -194,9 +196,9 @@ xlabel('Amplitude (pA)')
 vline(5)
 print(fullfile(outpath,'hypothetical_amp_distribution.pdf'),'-dpdf');
 %% Thresholding effect on frequency
-control_all_frequency = length(control_data.all_baseline_amps)./control_data.all_baseline_durations;
-hypothetical_DART_freq = length(find(hypothetical_DART_amp>5))./control_data.all_baseline_durations;
-DART_all_frequency = length(DART_data.all_baseline_amps)./DART_data.all_baseline_durations;
+control_all_frequency = length(control_data.all_baseline_amps)./control_data.total_baseline_durations;
+hypothetical_DART_freq = length(find(hypothetical_DART_amp>5))./control_data.total_baseline_durations;
+DART_all_frequency = length(DART_data.all_baseline_amps)./DART_data.total_baseline_durations;
 table1 = table(control_all_frequency,hypothetical_DART_freq,DART_all_frequency,'VariableNames',{'Control total freq','Hypothetical thresholded DART freq','Observed total DART freq'})
 % Option 2: Save as CSV file
 writetable(table1, 'hypothetical_frequency_data.csv');
@@ -409,13 +411,12 @@ samplesPerMs = 1/samplingInterval;
 timeVector = (0:size(data,1)-1)' * samplingInterval;
 Fs = samplesPerMs*1000;
 
-
-%get a lisst of event times for each example sweep
-baselineEventsTimes = [];
-baselineEventsTimes = [baselineEventsTimes, allResults(baselineSweep).epscs.time];
+baselineEventsTimes_control = [];
+baselineEventsTimes_control = [baselineEventsTimes_control, allResults(CntrlbaselineSweep).epscs.time];
+eventTimes_control = baselineEventsTimes_control*samplesPerMs;
 
 %collect the two example traces
-tracesRaw = [data(:,1,baselineSweep)];
+tracesRaw = [data(:,1,CntrlbaselineSweep)];
 
 if h.recChUnits{1,1}=='nA'
     tracesRaw = tracesRaw*1000;
@@ -449,15 +450,36 @@ for iTrace = 1:1
     currentCentered = currentSmoothed-mean(currentSmoothed);
     processedTraces(:,iTrace)=currentCentered;
 end
-eventTimes = baselineEventsTimes*samplesPerMs;
+
 figure;
 subplot(2,1,1)
 plot(processedTraces(:,1),'k')
+hold on
 ylim([-40, 5])
-vline(eventTimes)
+for i = 1:length(eventTimes_control)
+    if eventTimes_control(i) >= 10000 && eventTimes_control(i) <= 20000  % Only add markers within the visible range
+        hold on
+        plot([eventTimes_control(i) eventTimes_control(i)], [-40], 'r^', 'MarkerFaceColor', 'r', 'MarkerSize', 6)
+    end
+end
 box off
 xlim([10000,20000])
 hold on
+axis off
+% Add scale bars
+% Horizontal scale bar (200 ms)
+samplesIn200ms = 200 * samplesPerMs;
+x_start = 19000;  % Position near the end of the visible range
+y_position = -35;
+plot([x_start, x_start + samplesIn200ms], [y_position, y_position], 'k', 'LineWidth', 2)
+text(x_start + samplesIn200ms/2, y_position - 3, '200 ms', 'HorizontalAlignment', 'center')
+
+% Vertical scale bar (10 pA)
+x_position = 19800;  % Position near the end of the visible range
+y_start = -35;
+plot([x_position, x_position], [y_start, y_start + 10], 'k', 'LineWidth', 2)
+text(x_position + 200, y_start + 5, '10 pA', 'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle')
+
 
 DARTexFile = 11
 DARTbaselineSweep=1;
@@ -478,13 +500,12 @@ samplesPerMs = 1/samplingInterval;
 timeVector = (0:size(data,1)-1)' * samplingInterval;
 Fs = samplesPerMs*1000;
 
-
-%get a lisst of event times for each example sweep
-baselineEventsTimes = [];
-baselineEventsTimes = [baselineEventsTimes, allResults(baselineSweep).epscs.time];
+baselineEventsTimes_DART = [];
+baselineEventsTimes_DART = [baselineEventsTimes_DART, allResults(DARTbaselineSweep).epscs.time];
+eventTimes_DART = baselineEventsTimes_DART*samplesPerMs;
 
 %collect the two example traces
-tracesRaw = [data(:,1,baselineSweep)];
+tracesRaw = [data(:,1,DARTbaselineSweep)];
 
 if h.recChUnits{1,1}=='nA'
     tracesRaw = tracesRaw*1000;
@@ -519,13 +540,19 @@ for iTrace = 1:1
     processedTraces(:,iTrace)=currentCentered;
 end
 
-eventTimes = baselineEventsTimes*samplesPerMs;
 
 subplot(2,1,2)
 plot(processedTraces(:,1),'b')
+hold on
 ylim([-40, 5])
-vline(eventTimes)
+for i = 1:length(eventTimes_DART)
+    if eventTimes_DART(i) >= 10000 && eventTimes_DART(i) <= 20000  % Only add markers within the visible range
+        hold on
+        plot([eventTimes_DART(i) eventTimes_DART(i)], [-40], 'r^', 'MarkerFaceColor', 'r', 'MarkerSize', 6)
+    end
+end
 box off
+axis off
 xlim([10000,20000])
 
 print(fullfile(outpath,'ExampleTraces.pdf'),'-dpdf');
