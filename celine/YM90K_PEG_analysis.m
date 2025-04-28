@@ -818,11 +818,6 @@ for iCon = 1:nCon
     clear txt1 highRed lowRed
 end 
 
-%% scatterplots for all cells stationary and matched cells running
-
-scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat,'stationaryUnMatched')
-scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_matched,green_matched,'runningMatched')
-
 
 %% Fig 3D - contrast response split by correlation value
 
@@ -1010,6 +1005,11 @@ set(gca,'XColor', 'none','YColor','none')
 
 end  
 print(fullfile(fnout,'Fig_4A_vertical.pdf'),'-dpdf');
+%% scatterplots for all cells stationary and matched cells running
+
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat,'stationaryUnMatched')
+scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_matched,green_matched,'runningMatched')
+
 
 %% Fig S4 A - related to Fig 4A - timecourses for Pyr cells running trials
 tc_green_avrg_stat = cell(1,nd);

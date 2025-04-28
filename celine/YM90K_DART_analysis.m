@@ -375,61 +375,41 @@ end
 array2table(RbyExp,RowNames={'high R'  'low R'})
 
 %% comparing F0 values
-
-figure;
-subplot(1,2,1)
-scatter(squeeze(F0_stat_concat(pre,1,:)),squeeze(F0_stat_concat(post,1,:)),'MarkerEdgeColor','k')
-hold on
-scatter(squeeze(F0_stat_concat(pre,2,:)),squeeze(F0_stat_concat(post,2,:)),'MarkerEdgeColor','r')
-refline(1)
-xlabel('Control')
-ylabel('DART')
-axis square
-box off
-title('Stationary')
-
-subplot(1,2,2)
-scatter(squeeze(F0_loc_concat(pre,1,:)),squeeze(F0_loc_concat(post,1,:)),'MarkerEdgeColor','k')
-hold on
-scatter(squeeze(F0_loc_concat(pre,2,:)),squeeze(F0_loc_concat(post,2,:)),'MarkerEdgeColor','r')
-refline(1)
-xlabel('Control')
-ylabel('DART')
-axis square
-box off
-title('Running')
-
-%%
 % Create figure
 figure('Position', [100 100 600 400]);
 subplot(2,1,1)
 % Extract data for Pyramidal cells
 pyr_stat_ratios = (squeeze(F0_stat_concat(post,1,:)))./(squeeze(F0_stat_concat(pre,1,:)));
 pyr_loc_ratios = (squeeze(F0_loc_concat(post,1,:)))./(squeeze(F0_loc_concat(pre,1,:)));
-
 % Extract data for SST cells
 sst_stat_ratios = (squeeze(F0_stat_concat(post,2,:)))./(squeeze(F0_stat_concat(pre,2,:)));
 sst_loc_ratios = (squeeze(F0_loc_concat(post,2,:)))./(squeeze(F0_loc_concat(pre,2,:)));
+positions = [1, 1.25, 1.75, 2];
 
+% Calculate means and SEMs
+pyr_stat_mean = nanmean(pyr_stat_ratios(:));
+pyr_loc_mean = nanmean(pyr_loc_ratios(:));
+sst_stat_mean = nanmean(sst_stat_ratios(:));
+sst_loc_mean = nanmean(sst_loc_ratios(:));
 
-positions = [1, 1.25, 1.75, 2]; 
+pyr_stat_sem = nanstd(pyr_stat_ratios(:))/sqrt(sum(~isnan(pyr_stat_ratios(:))));
+pyr_loc_sem = nanstd(pyr_loc_ratios(:))/sqrt(sum(~isnan(pyr_loc_ratios(:))));
+sst_stat_sem = nanstd(sst_stat_ratios(:))/sqrt(sum(~isnan(sst_stat_ratios(:))));
+sst_loc_sem = nanstd(sst_loc_ratios(:))/sqrt(sum(~isnan(sst_loc_ratios(:))));
 
 % Pyramidal cells - black
 swarmchart(positions(1)*ones(size(pyr_stat_ratios(:))), pyr_stat_ratios(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
 hold on;
 swarmchart(positions(3)*ones(size(pyr_loc_ratios(:))), pyr_loc_ratios(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
-
 % SST cells - red
 swarmchart(positions(2)*ones(size(sst_stat_ratios(:))), sst_stat_ratios(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
 swarmchart(positions(4)*ones(size(sst_loc_ratios(:))), sst_loc_ratios(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
 
-
-% Add mean indicators
-plot(positions(1), nanmean(pyr_stat_ratios(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
-plot(positions(3), nanmean(pyr_loc_ratios(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
-plot(positions(2), nanmean(sst_stat_ratios(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
-plot(positions(4), nanmean(sst_loc_ratios(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
-
+% Add mean indicators with error bars
+errorbar(positions(1), pyr_stat_mean, pyr_stat_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(3), pyr_loc_mean, pyr_loc_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(2), sst_stat_mean, sst_stat_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
+errorbar(positions(4), sst_loc_mean, sst_loc_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
 
 % Add labels and title
 xlabel('Cell Type and Condition');
@@ -438,36 +418,44 @@ ylabel('DART F0 / Control F0');
 title('DART Effects by Cell Type and Behavioral State');
 set(gca, 'TickDir', 'out');
 box off;
+grid off;
+
 % Create second subplot
 subplot(2,1,2)
-
 % Calculate locomotion/stationary ratios
 % Pyramidal cells
 pyr_pre_ratio = (squeeze(F0_loc_concat(pre,1,:)))./(squeeze(F0_stat_concat(pre,1,:)));
 pyr_post_ratio = (squeeze(F0_loc_concat(post,1,:)))./(squeeze(F0_stat_concat(post,1,:)));
-
 % SST cells
 sst_pre_ratio = (squeeze(F0_loc_concat(pre,2,:)))./(squeeze(F0_stat_concat(pre,2,:)));
 sst_post_ratio = (squeeze(F0_loc_concat(post,2,:)))./(squeeze(F0_stat_concat(post,2,:)));
 
+% Calculate means and SEMs for second subplot
+pyr_pre_mean = nanmean(pyr_pre_ratio(:));
+pyr_post_mean = nanmean(pyr_post_ratio(:));
+sst_pre_mean = nanmean(sst_pre_ratio(:));
+sst_post_mean = nanmean(sst_post_ratio(:));
+
+pyr_pre_sem = nanstd(pyr_pre_ratio(:))/sqrt(sum(~isnan(pyr_pre_ratio(:))));
+pyr_post_sem = nanstd(pyr_post_ratio(:))/sqrt(sum(~isnan(pyr_post_ratio(:))));
+sst_pre_sem = nanstd(sst_pre_ratio(:))/sqrt(sum(~isnan(sst_pre_ratio(:))));
+sst_post_sem = nanstd(sst_post_ratio(:))/sqrt(sum(~isnan(sst_post_ratio(:))));
+
 % Create positions for the groups
 positions = [1, 1.25, 1.75, 2];
-
 % Pyramidal cells - black
 swarmchart(positions(1)*ones(size(pyr_pre_ratio(:))), pyr_pre_ratio(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
 hold on;
 swarmchart(positions(3)*ones(size(pyr_post_ratio(:))), pyr_post_ratio(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
-
 % SST cells - red
 swarmchart(positions(2)*ones(size(sst_pre_ratio(:))), sst_pre_ratio(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
 swarmchart(positions(4)*ones(size(sst_post_ratio(:))), sst_post_ratio(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
 
-
-% Add mean indicators
-plot(positions(1), nanmean(pyr_pre_ratio(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
-plot(positions(3), nanmean(pyr_post_ratio(:)), 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k');
-plot(positions(2), nanmean(sst_pre_ratio(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
-plot(positions(4), nanmean(sst_post_ratio(:)), 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r');
+% Add mean indicators with error bars
+errorbar(positions(1), pyr_pre_mean, pyr_pre_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(3), pyr_post_mean, pyr_post_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(2), sst_pre_mean, sst_pre_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
+errorbar(positions(4), sst_post_mean, sst_post_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
 
 % Add labels and title
 xlabel('Cell Type and Condition');
@@ -476,10 +464,31 @@ ylabel('Locomotion F0 / Stationary F0');
 title('Locomotion Effects by Cell Type and Condition');
 set(gca, 'TickDir', 'out');
 box off;
+grid off;
 
 % Add overall title
 sgtitle('Comparison of DART and Locomotion Effects', 'FontSize', 12);
+print(fullfile(fnout,'F0_comparison.pdf'),'-dpdf');
 
+% Create a table of means and SEMs
+figure('Position', [700 100 500 300]);
+columnNames = {'Group', 'Mean', 'SEM'};
+rowNames = {'Pyr-Stat DART/Ctrl', 'SST-Stat DART/Ctrl', 'Pyr-Loc DART/Ctrl', 'SST-Loc DART/Ctrl', ...
+            'Pyr-Ctrl Loc/Stat', 'SST-Ctrl Loc/Stat', 'Pyr-DART Loc/Stat', 'SST-DART Loc/Stat'};
+tableData = {pyr_stat_mean, pyr_stat_sem; 
+             sst_stat_mean, sst_stat_sem; 
+             pyr_loc_mean, pyr_loc_sem; 
+             sst_loc_mean, sst_loc_sem;
+             pyr_pre_mean, pyr_pre_sem;
+             sst_pre_mean, sst_pre_sem;
+             pyr_post_mean, pyr_post_sem;
+             sst_post_mean, sst_post_sem};
+
+t = uitable('Data', tableData, 'ColumnName', columnNames(2:3), 'RowName', rowNames);
+t.Position(3:4) = t.Extent(3:4);
+t.Parent.Position(3:4) = t.Extent(3:4) + [40 40];
+title('Summary Statistics');
+print(fullfile(fnout,'F0_table.pdf'),'-dpdf');
 
 %% 
 fractHigh = RbyExp(1,:)./sum(RbyExp,1);

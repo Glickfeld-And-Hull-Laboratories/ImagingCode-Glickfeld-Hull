@@ -197,11 +197,15 @@ vline(5)
 print(fullfile(outpath,'hypothetical_amp_distribution.pdf'),'-dpdf');
 %% Thresholding effect on frequency
 control_all_frequency = length(control_data.all_baseline_amps)./control_data.total_baseline_durations;
-hypothetical_DART_freq = length(find(hypothetical_DART_amp>5))./control_data.total_baseline_durations;
+detectableDART = find(hypothetical_DART_amp>5);
+hypothetical_DART_freq = length(detectableDART)./control_data.total_baseline_durations;
 DART_all_frequency = length(DART_data.all_baseline_amps)./DART_data.total_baseline_durations;
 table1 = table(control_all_frequency,hypothetical_DART_freq,DART_all_frequency,'VariableNames',{'Control total freq','Hypothetical thresholded DART freq','Observed total DART freq'})
 % Option 2: Save as CSV file
 writetable(table1, fullfile(outpath,'hypothetical_frequency_data.csv'));
+
+detectableDART_amp = mean(hypothetical_DART_amp(:,detectableDART));
+table(mean(control_data.baseline_amplitude),detectableDART_amp,mean(DART_data.baseline_amplitude),'VariableNames',{'Control amp','Hypothetical thresholded DART amp','Observed DART amp'})
 %% plotting frequency
 
 combinedControlFreq = [control_data.baseline_frequency;control_data.drug_frequency]';
