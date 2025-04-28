@@ -3545,6 +3545,7 @@ title('SST')
 
 
 %% comparing normalized difference to noise correlation
+%% comparing normalized difference to noise correlation
 %this plots the scatter for the 25% contrast only, then makes the bar
 %chart of beta values for all contrasts
 
@@ -3564,8 +3565,15 @@ r_squared = zeros(num_contrasts, 1);
 p_values = zeros(num_contrasts, 1);
 std_errors = zeros(num_contrasts, 1);
 
-% Create figure
-figure('Position', [100, 100, 1200, 400]);
+% Define contrasts
+contrasts = [25, 50, 100];
+
+% Create figure with fixed size
+figure('Units', 'inches', 'Position', [0, 0, 5, 2], 'PaperUnits', 'inches', 'PaperSize', [5, 2]);
+
+% Use tiledlayout - much better for PDF export
+t = tiledlayout(1, 3, 'TileSpacing', 'compact', 'Padding', 'compact');
+title(t, 'Unweighted Regression: Noise Correlation vs. Normalized Difference', 'FontSize', 10);
 
 % Analyze each contrast
 for contrast = 1:num_contrasts
@@ -3579,7 +3587,6 @@ for contrast = 1:num_contrasts
     % Check if we have enough valid data points
     if sum(valid_idx) < 3
         warning('Not enough valid data points for contrast %d. Skipping.', contrast);
-        title(sprintf('Contrast %d: Insufficient Data', contrast));
         continue;
     end
     
@@ -3617,11 +3624,11 @@ for contrast = 1:num_contrasts
     t_stat = slopes(contrast) / std_errors(contrast);
     p_values(contrast) = 2 * (1 - tcdf(abs(t_stat), length(x_valid) - 2));
     
-    % Plot regression
-    subplot(1, 3, contrast);
+    % Create a nexttile for this contrast
+    ax = nexttile;
     
-    % Create scatter plot with uniform size
-    scatter(x_valid, y_valid, 50, 'filled', 'MarkerFaceAlpha', 0.7);
+    % Create scatter plot with smaller grey points and white outlines
+    scatter(x_valid, y_valid, 15, 'MarkerFaceColor','black','MarkerEdgeColor', 'white', 'LineWidth', 0.5, 'MarkerFaceAlpha', 0.5);
     hold on;
     
     % Add regression line
@@ -3630,39 +3637,42 @@ for contrast = 1:num_contrasts
     plot(x_range, y_line, 'r-', 'LineWidth', 2);
     
     % Labels and title
-    contrasts = [25, 50, 100];
-    title(sprintf('Contrast: %d%%', contrasts(contrast)), 'FontSize', 12);
-    xlabel('Noise Correlation (Baseline)', 'FontSize', 11);
-    ylabel('Normalized Difference', 'FontSize', 11);
+    title(sprintf('Contrast: %d%%', contrasts(contrast)), 'FontSize', 8);
+    xlabel('Noise Correlation (Baseline)', 'FontSize', 7);
+    ylabel('Normalized Difference', 'FontSize', 7);
     
-    xlim([-.2 1])
-    ylim([-8 8])
+    % Set axis limits
+    xlim([-.2 1]);
+    ylim([-8 8]);
 
     % Add horizontal line at y=0
-    hline(0)
+    hline(0);
     
-    % Add regression equation and stats
+    % Add regression equation and stats - using smaller font size
     % Calculate text position dynamically
-    x_range = max(x_valid) - min(x_valid);
     y_range = range(ylim);
-    text_x = min(x_valid);
-    text_y_start = max(ylim) - 0.2 * y_range;
-    text_y_step = 0.08 * y_range;
+    text_x = -0.15;  % Fixed position to align across plots
+    text_y_start = 7;  % Fixed position near top
+    text_y_step = 1;  % Fixed step size
     
-    text(text_x, text_y_start, sprintf('y = %.3fx + %.3f', slopes(contrast), intercepts(contrast)), 'FontSize', 10);
-    text(text_x, text_y_start - text_y_step, sprintf('R = %.3f', r_squared(contrast)), 'FontSize', 10);
-    text(text_x, text_y_start - 2*text_y_step, sprintf('p = %.4f', p_values(contrast)), 'FontSize', 10);
-    
-    % Add sample size
-    text(text_x, text_y_start - 3*text_y_step, sprintf('n = %d', sum(valid_idx)), 'FontSize', 10);
+    text(text_x, text_y_start, sprintf('y = %.3fx + %.3f', slopes(contrast), intercepts(contrast)), 'FontSize', 6);
+    text(text_x, text_y_start - text_y_step, sprintf('R^2 = %.3f', r_squared(contrast)), 'FontSize', 6);
+    text(text_x, text_y_start - 2*text_y_step, sprintf('p = %.4f', p_values(contrast)), 'FontSize', 6);
+    text(text_x, text_y_start - 3*text_y_step, sprintf('n = %d', sum(valid_idx)), 'FontSize', 6);
     
     % Set box style and tick direction
     box off;
     set(gca, 'TickDir', 'out');
+    grid off;
+    
+    % Make the axis ticks and numbers smaller
+    set(gca, 'FontSize', 6);
+    
+    % Make sure the plots have equal sizes
+    axis square;
 end
 
-% Adjust spacing
-sgtitle('Unweighted Regression: Noise Correlation vs. Normalized Difference (Stationary State)', 'FontSize', 14);
+% Set global figure properties
 set(gcf, 'Color', 'w');
 
 % Create a results table
@@ -3674,9 +3684,22 @@ results_table = table(contrast_labels', slopes, std_errors, intercepts, r_square
 disp('Unweighted Regression Results:');
 disp(results_table);
 
-% Save figure
-saveas(gcf, 'unweighted_regression_plot.png');
-fprintf('Figure saved as unweighted_regression_plot.png\n');
+% Export the figure in various formats
+% First, ensure the figure has the correct size
+set(gcf, 'PaperUnits', 'inches');
+set(gcf, 'PaperSize', [5, 2]);
+set(gcf, 'PaperPositionMode', 'manual');
+set(gcf, 'PaperPosition', [0, 0, 5, 2]);
+
+% Try multiple export methods - one of these should work
+print('-dpdf', 'unweighted_regression_plot_1.pdf', '-bestfit');
+saveas(gcf, 'unweighted_regression_plot_2.pdf');
+print('-dpdf', 'unweighted_regression_plot_3.pdf');
+exportgraphics(gcf, 'unweighted_regression_plot_4.pdf', 'Resolution', 300);
+
+fprintf('Multiple versions of the figure saved as PDF files\n');
+
+
 
 % Optional: Save results to CSV
 writetable(results_table, 'unweighted_regression_results.csv');
@@ -3716,8 +3739,8 @@ box off;
 set(gca, 'TickDir', 'out');
 
 % Save comparison figure
-saveas(gcf, 'slope_comparison.png');
-fprintf('Slope comparison figure saved as slope_comparison.png\n');
+saveas(gcf, 'slope_comparison.pdf');
+fprintf('Slope comparison figure saved as slope_comparison.pdf\n');
 
 
 %% Plot norm_diff by contrast for high and low noiseCorr cells

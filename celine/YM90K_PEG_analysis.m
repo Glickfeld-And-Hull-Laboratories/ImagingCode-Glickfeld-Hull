@@ -809,7 +809,7 @@ for iCon = 1:nCon
     set(gca,'XColor', 'none','YColor','none')
     
     sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
-     if iCon==2
+     if iCon==1
         print(fullfile(fnout,'Fig_3C.pdf'),'-dpdf');
      % else %option to print the plots for 25 and 100 contrast as well,
      % rather than just displaying them

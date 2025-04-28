@@ -187,9 +187,9 @@ clear iSweep iFile drug_sweeps baseline_sweeps plottingEnabled d
 hypothetical_DART_amp = control_data.all_baseline_amps * .4;
 %Plot normalized distributions for control and DART. 
 figure;
-histogram(control_data.all_baseline_amps,'BinWidth',4,'DisplayName', 'Control', 'FaceColor','k')
+histogram(control_data.all_baseline_amps,'BinWidth',1,'DisplayName', 'Control', 'FaceAlpha', 0.25,'FaceColor','k')
 hold on
-histogram(hypothetical_DART_amp,'BinWidth',4,'DisplayName', 'DART', 'FaceAlpha', 0.25,'FaceColor','b')
+histogram(hypothetical_DART_amp,'BinWidth',1,'DisplayName', 'DART', 'FaceColor','b')
 box off
 set(gca,'TickDir','out')
 xlabel('Amplitude (pA)')
@@ -201,7 +201,7 @@ hypothetical_DART_freq = length(find(hypothetical_DART_amp>5))./control_data.tot
 DART_all_frequency = length(DART_data.all_baseline_amps)./DART_data.total_baseline_durations;
 table1 = table(control_all_frequency,hypothetical_DART_freq,DART_all_frequency,'VariableNames',{'Control total freq','Hypothetical thresholded DART freq','Observed total DART freq'})
 % Option 2: Save as CSV file
-writetable(table1, 'hypothetical_frequency_data.csv');
+writetable(table1, fullfile(outpath,'hypothetical_frequency_data.csv'));
 %% plotting frequency
 
 combinedControlFreq = [control_data.baseline_frequency;control_data.drug_frequency]';
@@ -225,10 +225,10 @@ scatter([1,2],combinedControlFreq',20, ...
     "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
 errorbar([1,2],meanControlFreq, seControlFreq,'.-k','MarkerSize',15)
 xticks([1,2])
-xticklabels({'Baseline','NBQX'})
+xticklabels({'Ctrl','+NBQX'})
 set(gca,'TickDir','out')
 box off
-ylim([0 25])
+ylim([0 30])
 xlim([0.5 2.5])
 ylabel('Hz')
 subplot(1,2,2)
@@ -238,15 +238,15 @@ scatter([1,2],combinedExpFreq',20, ...
     "MarkerEdgeColor","none","MarkerFaceColor",'b',"MarkerFaceAlpha",.25)
 errorbar([1,2],meanExpFreq, seExperimentalFreq,'.-b','MarkerSize',15)
 xticks([1,2])
-xticklabels({'Baseline','NBQX'})
+xticklabels({'DART','+NBQX'})
 set(gca,'TickDir','out')
 box off
-ylim([0 25])
+ylim([0 30])
 xlim([0.5 2.5])
 x0=5;
 y0=5;
-width=2;
-height=1.5;
+width=1.75;
+height=1.2;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 
@@ -268,34 +268,40 @@ seExperimentalAmp=stdExpAmp/nExperimentalCells;
 
 figure
 subplot(1,2,1)
-plot(combinedControlAmp','k','LineWidth',.25)
-hold on
-scatter([1,2],combinedControlAmp',20, ...
+scatter([1],control_data.baseline_amplitude,20, ...
     "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
-errorbar([1,2],meanControlAmp, seControlAmp,'.-k','MarkerSize',15)
+hold on
+errorbar([1],meanControlAmp(1), seControlAmp(1),'.-k','MarkerSize',15)
+scatter([2],DART_data.baseline_amplitude,20, ...
+    "MarkerEdgeColor","none","MarkerFaceColor",'b',"MarkerFaceAlpha",.25)
+hold on
+errorbar([2],meanExpAmp(1), seExperimentalAmp(1),'.-b','MarkerSize',15)
 xticks([1,2])
-xticklabels({'Baseline','NBQX'})
+xticklabels({'Ctrl','DART'})
 set(gca,'TickDir','out')
 box off
 ylim([0 25])
 xlim([0.5 2.5])
 ylabel('pA')
 subplot(1,2,2)
-plot(combinedExpAmp','b','LineWidth',.25)
+scatter([1],control_data.drug_amplitude,20, ...
+    "MarkerEdgeColor","none","MarkerFaceColor",[0 0 0],"MarkerFaceAlpha",.25)
 hold on
-scatter([1,2],combinedExpAmp',20, ...
+errorbar([1],meanControlAmp(2), seControlAmp(2),'.-k','MarkerSize',15)
+scatter([2],DART_data.drug_amplitude,20, ...
     "MarkerEdgeColor","none","MarkerFaceColor",'b',"MarkerFaceAlpha",.25)
-errorbar([1,2],meanExpAmp, seExperimentalAmp,'.-b','MarkerSize',15)
+hold on
+errorbar([2],meanExpAmp(2), seExperimentalAmp(2),'.-b','MarkerSize',15)
 xticks([1,2])
-xticklabels({'Baseline','NBQX'})
+xticklabels({'Ctrl','DART'})
 set(gca,'TickDir','out')
 box off
 ylim([0 25])
 xlim([0.5 2.5])
 x0=5;
 y0=5;
-width=2;
-height=1.5;
+width=1.75;
+height=1.2;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(outpath,'amplitude.pdf'),'-dpdf');
@@ -379,17 +385,7 @@ anova(lme_amp)
 [p1*4, p2*4, p3*4, p4*4]
 
 %% t-tests for DART and NBQX for amplitude 
-[h,p1,~,stats1] =ttest2(control_data.baseline_amplitude,DART_data.baseline_amplitude);
-%two-sample t-test to test whether control cells have sig different amplitude from DART in the baseline (ACSF)
-[h,p2,~,stats2] =ttest2(control_data.drug_amplitude,DART_data.drug_amplitude);
-%two-sample t-test to test whether control cells have sig different amplitude from DART in the drug (NBQX)
-
-[h,p3,~,stats3] =ttest(control_data.baseline_amplitude,control_data.drug_amplitude); 
-%paired test whether control cells have sig different amplitude in baseline vs NBQX
-[h,p4,~,stats4] =ttest(DART_data.baseline_amplitude,DART_data.drug_amplitude); 
-%paired test whether DART cells have sig different amplitude in baseline vs NBQX
-
-[p1*4, p2*4, p3*4, p4*4]
+[h,p1,~,stats1] =ttest2(control_data.baseline_amplitude,DART_data.baseline_amplitude)
 %% example trace
 
 CntrlExFile = 3
