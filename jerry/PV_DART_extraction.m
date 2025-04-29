@@ -15,7 +15,7 @@ mkdir(fn_epi);
 
 nOn = 30;
 nOff = 60;
-nTot = nOn+nOff;
+nTot = nOn+nOff
 ntrials = 960;
 %% extract off_np_tc data
 

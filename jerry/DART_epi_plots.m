@@ -537,99 +537,58 @@ legend('i2062','i2067','i2066')
 
 
 %% movie (THIS SECTION RUNS SLOWLY)
-
-% 3328 sesh 2
-
-load('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\i3328\250401\011\regOuts&Img.mat');
-cd('G:\home\ACh\Data\2p_data\i3328\250401\011');
-data_g = sbxread('011_000_000',80000,4800);
-data_g = squeeze(data_g(1,:,:,:));
-
-% g = gpuDevice;
-% fprintf('Free memory: %.2f MB\n', g.FreeMemory / 1024^2);
 % 
-% data_g_1 = gpuArray(data_g);
-% [~,data_try_reg1] = stackRegister_TH(data_g_1,[],[],double(outs(1:4800,:)));
+% % 3328 sesh 2
 % 
-% data_try_reg1 = gather(data_try_reg1);
-% clear data_g_1
+% load('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\i3328\250401\011\regOuts&Img.mat');
+% cd('G:\home\ACh\Data\2p_data\i3328\250401\011');
+% data_g = sbxread('011_000_000',80000,4800);
+% data_g = squeeze(data_g(1,:,:,:));
 % 
-% tic
-% [outs_ini,data_g_reg] = stackRegister(data_g,regImg);
-% toc
+% % g = gpuDevice;
+% % fprintf('Free memory: %.2f MB\n', g.FreeMemory / 1024^2);
+% % 
+% % data_g_1 = gpuArray(data_g);
+% % [~,data_try_reg1] = stackRegister_TH(data_g_1,[],[],double(outs(1:4800,:)));
+% % 
+% % data_try_reg1 = gather(data_try_reg1);
+% % clear data_g_1
+% % 
+% % tic
+% % [outs_ini,data_g_reg] = stackRegister(data_g,regImg);
+% % toc
+% % 
+% % 
+% % tic
+% % data_g_gpu = gpuArray(data_g);
+% % [outs_ini2,data_g_reg2] = stackRegister_ini(data_g_gpu,gpuArray(regImg));
+% % data_g_reg2 = gather(data_g_reg2);
+% % clear data_g_gpu
+% % toc
 % 
+% % outs_cpu = outs(80001:84800,:);
+% % [~,data_cpu_reg] = stackRegister_MA(data_g,[],[],outs_cpu);
 % 
-% tic
-% data_g_gpu = gpuArray(data_g);
-% [outs_ini2,data_g_reg2] = stackRegister_ini(data_g_gpu,gpuArray(regImg));
-% data_g_reg2 = gather(data_g_reg2);
-% clear data_g_gpu
-% toc
-
-% outs_cpu = outs(80001:84800,:);
-% [~,data_cpu_reg] = stackRegister_MA(data_g,[],[],outs_cpu);
-
-outs_gpu = gpuArray(outs(80001:84800,:));
-data_gpu = gpuArray(data_g);
-[~,data_gpu_reg] = stackRegister_TH(data_gpu,[],[],outs_gpu);
-max_data = max(data_gpu_reg,[],3);
-max_data_cpu = gather(max_data);
-sorted = sort(max_data_cpu(:));
-[N,edges] = histcounts(max_data_cpu,20);
-data_g_reg = gather(data_gpu_reg);
-clear data_gpu_reg outs_gpu max_data data_gpu
-
-avg_img = mean(data_g_reg,3);
-imagesc(avg_img)
-
-normA = double(data_g_reg);
-normA = normA - min(normA(:));
-normA = normA ./ double(sorted(end-1000));
-normA(normA>1) = 1;
-
-imagesc(mean(normA,3))
-
-v = VideoWriter('myMovie.avi', 'MPEG-4');
-v.FrameRate = 15;
-open(v);
-for k = 1:size(normA, 3)
-    writeVideo(v, normA(:, :, k));
-end
-close(v);
-
-% try
-%     A = gpuArray.ones(529,796,5099,'uint16');
-% catch ME
-%     disp(ME.message);
-% end
-
-%% i3327 session 2 video
-
-load('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\i3327\250331\008\regOuts&Img.mat');
-cd('G:\home\ACh\Data\2p_data\i3327\250331\008');
-data_g = sbxread('008_000_000',20000,4800);
-data_g = squeeze(data_g(1,:,:,:));
-
-outs_gpu = gpuArray(outs(20001:24800,:));
-data_gpu = gpuArray(data_g);
-[~,data_gpu_reg] = stackRegister_TH(data_gpu,[],[],outs_gpu);
-max_data = max(data_gpu_reg,[],3);
-max_data_cpu = gather(max_data);
-sorted = sort(max_data_cpu(:));
-[N,edges] = histcounts(max_data_cpu,20);
-data_g_reg = gather(data_gpu_reg);
-clear data_gpu_reg outs_gpu max_data data_gpu
-
-avg_img = mean(data_g_reg,3);
-imagesc(avg_img)
-
-normA = double(data_g_reg);
-normA = normA - min(normA(:));
-normA = normA ./ double(sorted(end-1000));
-normA(normA>1) = 1;
-
-% ---- Original Version ----
-
+% outs_gpu = gpuArray(outs(80001:84800,:));
+% data_gpu = gpuArray(data_g);
+% [~,data_gpu_reg] = stackRegister_TH(data_gpu,[],[],outs_gpu);
+% max_data = max(data_gpu_reg,[],3);
+% max_data_cpu = gather(max_data);
+% sorted = sort(max_data_cpu(:));
+% [N,edges] = histcounts(max_data_cpu,20);
+% data_g_reg = gather(data_gpu_reg);
+% clear data_gpu_reg outs_gpu max_data data_gpu
+% 
+% avg_img = mean(data_g_reg,3);
+% imagesc(avg_img)
+% 
+% normA = double(data_g_reg);
+% normA = normA - min(normA(:));
+% normA = normA ./ double(sorted(end-1000));
+% normA(normA>1) = 1;
+% 
+% imagesc(mean(normA,3))
+% 
 % v = VideoWriter('myMovie.avi', 'MPEG-4');
 % v.FrameRate = 15;
 % open(v);
@@ -637,30 +596,74 @@ normA(normA>1) = 1;
 %     writeVideo(v, normA(:, :, k));
 % end
 % close(v);
+% 
+% % try
+% %     A = gpuArray.ones(529,796,5099,'uint16');
+% % catch ME
+% %     disp(ME.message);
+% % end
+% 
+% %% i3327 session 2 video
+% 
+% load('G:\home\ACh\Analysis\2p_analysis\PV_YM90K\i3327\250331\008\regOuts&Img.mat');
+% cd('G:\home\ACh\Data\2p_data\i3327\250331\008');
+% data_g = sbxread('008_000_000',20000,4800);
+% data_g = squeeze(data_g(1,:,:,:));
+% 
+% outs_gpu = gpuArray(outs(20001:24800,:));
+% data_gpu = gpuArray(data_g);
+% [~,data_gpu_reg] = stackRegister_TH(data_gpu,[],[],outs_gpu);
+% max_data = max(data_gpu_reg,[],3);
+% max_data_cpu = gather(max_data);
+% sorted = sort(max_data_cpu(:));
+% [N,edges] = histcounts(max_data_cpu,20);
+% data_g_reg = gather(data_gpu_reg);
+% clear data_gpu_reg outs_gpu max_data data_gpu
+% 
+% avg_img = mean(data_g_reg,3);
+% imagesc(avg_img)
+% 
+% normA = double(data_g_reg);
+% normA = normA - min(normA(:));
+% normA = normA ./ double(sorted(end-1000));
+% normA(normA>1) = 1;
+% 
+% % ---- Original Version ----
+% 
+% % v = VideoWriter('myMovie.avi', 'MPEG-4');
+% % v.FrameRate = 15;
+% % open(v);
+% % for k = 1:size(normA, 3)
+% %     writeVideo(v, normA(:, :, k));
+% % end
+% % close(v);
+% 
+% % ---- Marker Settings ----
+% N_marker = 90;     % Show marker every 90 frames
+% duration = 30;      % Marker persists for 30 frames
+% markerPos = [30, 30];            % x, y
+% radius = 20;                      % circle radius
+% 
+% % ---- Write video with marker ----
+% v = VideoWriter('myMovie_with_marker.avi', 'MPEG-4');
+% v.FrameRate = 15;
+% open(v);
+% 
+% for k = 1:size(normA, 3)
+%     % Convert frame to uint8 RGB
+%     frame_gray = uint8(normA(:,:,k) * 255);
+%     frame_rgb = repmat(frame_gray, [1 1 3]);
+% 
+%     % Add marker every N frames
+%     if mod(k, N_marker) < duration
+%         frame_rgb = insertShape(frame_rgb, 'FilledCircle', [markerPos, radius], ...
+%                                 'Color', 'red', 'Opacity', 1);
+%     end
+% 
+%     writeVideo(v, frame_rgb);
+% end
+% 
+% close(v);
 
-% ---- Marker Settings ----
-N_marker = 90;     % Show marker every 90 frames
-duration = 30;      % Marker persists for 30 frames
-markerPos = [30, 30];            % x, y
-radius = 20;                      % circle radius
+%% mask from impoly
 
-% ---- Write video with marker ----
-v = VideoWriter('myMovie_with_marker.avi', 'MPEG-4');
-v.FrameRate = 15;
-open(v);
-
-for k = 1:size(normA, 3)
-    % Convert frame to uint8 RGB
-    frame_gray = uint8(normA(:,:,k) * 255);
-    frame_rgb = repmat(frame_gray, [1 1 3]);
-
-    % Add marker every N frames
-    if mod(k, N_marker) < duration
-        frame_rgb = insertShape(frame_rgb, 'FilledCircle', [markerPos, radius], ...
-                                'Color', 'red', 'Opacity', 1);
-    end
-
-    writeVideo(v, frame_rgb);
-end
-
-close(v);
