@@ -43,6 +43,9 @@ ent_PV(:,2) = mice;
 
 for mouse = 1:nMice %iterate through mouse
     mouse_data = TCs_PV{mouse,1};
+    for row = 1:length(mouse_data)
+        mouse_data{row,1} = mouse_data{row,1} - mean(mouse_data{row,1});
+    end
     mouse_id = TCs_PV{mouse,2};
     nSesh = size(mouse_data,1);
 
@@ -197,6 +200,9 @@ ent_SST(:,2) = mice;
 
 for mouse = 1:nMice %iterate through mouse
     mouse_data = TCs_SST{mouse,1};
+    for row = 1:length(mouse_data)
+        mouse_data{row,1} = mouse_data{row,1} - mean(mouse_data{row,1});
+    end
     mouse_id = TCs_SST{mouse,2};
     nSesh = size(mouse_data,1);
 
@@ -322,6 +328,15 @@ if NoIntermediateFigures == 1
     close all
 end
 
+iti_synch_PV_DART = vertcat(iti_synch_PV(1:2,:),iti_synch_PV(4,:));
+[nrow ncol] = size(iti_synch_PV_DART);
+synch_value = nan(nrow,ncol);
+for row = 1:nrow
+    for col = 1:ncol
+        synch_value(row,col) = mean(iti_synch_PV_DART{row,col});
+    end
+end
+
 nMice_PV = size(iti_synch_PV,1);
 nDay = 2;
 start = 1;
@@ -367,6 +382,14 @@ SI_PV_PEG(3) = NaN;
 anova_mat = [SI_PV_DART SI_PV_PEG SI_SST];
 [p,tbl,stats] = anova1(anova_mat);
 [c,m,h,gnames] = multcompare(stats);
+
+[h,p,ci,stats] = ttest(SI_PV_DART,1);
+sem_SI = std(SI_PV_DART)/sqrt(length(SI_PV_DART));
+
+
+%paired
+[h,p,ci,stats] = ttest(synch_value(:,1),synch_value(:,2));
+
 %% plot adjacent delta F
 
 vector_df = cell2mat(burst_PV(:,1));
@@ -402,6 +425,8 @@ hold off
 %% plotting something else
 load('i3309_itiTC_pre.mat');
 load('i3309_itiTC_post.mat');
+i3309_ITI_tc_pre = i3309_ITI_tc_pre - mean(i3309_ITI_tc_pre);
+i3309_ITI_tc_post = i3309_ITI_tc_post - mean(i3309_ITI_tc_post);
 ymax = max(vertcat(i3309_ITI_tc_pre,i3309_ITI_tc_post))+100;
 ymin = min(vertcat(i3309_ITI_tc_pre,i3309_ITI_tc_post))-100;
 f3 = figure;
@@ -446,16 +471,16 @@ hold off
 ymax = max(vertcat(tc3309pre,tc3309post))+100;
 ymin = min(vertcat(tc3309pre,tc3309post))-100;
 f6 = figure;
-f6.Name = 'i3309_TC_10min';
-sgtitle('i3309 10min Timecourses with Stim')
+f6.Name = 'i3309_TC_6min';
+sgtitle('i3309 6min Timecourses with Stim')
 hold on
 subplot(2,1,1)
-plot(tc3309pre(9001:18000));
+plot(tc3309pre(9001:14400));
 title('Control')
 ylim([ymin ymax])
 ylabel('F')
 subplot(2,1,2)
-plot(tc3309post(9001:18000));
+plot(tc3309post(9001:14400));
 title('Post-DART')
 ylim([ymin ymax])
 ylabel('F')
@@ -464,9 +489,10 @@ hold off
 
 save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis\finalPlots');
 
-%% sample entropy ITI full session
+%% sample entropy full session
 ent_PV_mat = reshape(cell2mat(ent_PV(:,1)),2,[])';
 ent_SST_mat = reshape(cell2mat(ent_SST(:,1)),2,[])';
+ent_PV_DART = vertcat(ent_PV_mat(1:2,:),ent_PV_mat(4,:));
 
 EI_PV = ent_PV_mat(:,2) ./ ent_PV_mat(:,1);
 EI_PV_DART = vertcat(EI_PV(1:2,:),EI_PV(4,:));
@@ -492,6 +518,13 @@ EI_PV_PEG(3) = NaN;
 EI_anovamat = [EI_PV_DART EI_PV_PEG EI_SST];
 [p,tbl,stats] = anova1(EI_anovamat);
 [c,m,h,gnames] = multcompare(stats);
+
+[h,p,ci,stats] = ttest(EI_PV_DART,1);
+sem_EI = std(EI_PV_DART)/sqrt(length(EI_PV_DART));
+
+%paired
+
+[h,p,ci,stats] = ttest(ent_PV_DART(:,1),ent_PV_DART(:,2));
 
 %% test
 

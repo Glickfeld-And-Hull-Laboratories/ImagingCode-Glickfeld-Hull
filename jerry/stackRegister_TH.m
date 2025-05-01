@@ -110,7 +110,11 @@ for chk = 1:nChunks
         end
         if nargout > 1
             wS = warning('off'); 
-            stack(:,:,(chk-1)*chunkSize+index) = gather(abs(ifft2(temp)));    
+            if class(temp) == "gpuArray"
+                stack(:,:,(chk-1)*chunkSize+index) = gather(abs(ifft2(temp)));  
+            else
+                stack(:,:,(chk-1)*chunkSize+index) = abs(ifft2(temp));
+            end
             warning(wS);
         end
     end

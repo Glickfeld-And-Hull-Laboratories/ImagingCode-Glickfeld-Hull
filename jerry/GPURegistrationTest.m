@@ -61,7 +61,9 @@ id = 1;
         [~,data_g_reg_gpu] = stackRegister_TH(data_g,[],[],outs);
         t2 = toc;
 
+        
 
+        % full reg
         tic
         [outs_fresh1,data_g_reg] = stackRegister(data_g,regImg);
         t3 = toc;
