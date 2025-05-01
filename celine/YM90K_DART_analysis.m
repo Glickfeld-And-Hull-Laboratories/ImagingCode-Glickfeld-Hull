@@ -3555,7 +3555,6 @@ title('SST')
 
 
 %% comparing normalized difference to noise correlation
-%% comparing normalized difference to noise correlation
 %this plots the scatter for the 25% contrast only, then makes the bar
 %chart of beta values for all contrasts
 
@@ -3752,6 +3751,68 @@ set(gca, 'TickDir', 'out');
 saveas(gcf, 'slope_comparison.pdf');
 fprintf('Slope comparison figure saved as slope_comparison.pdf\n');
 
+%% Test linear relationship between beta values and contrast using linear model
+fprintf('\nTesting linear relationship between beta values and contrast:\n');
+
+% Extract the beta values (slopes) and contrast levels
+beta_values = slopes;  % These are already calculated in your original code
+contrast_levels = [25, 50, 100]';  % Make it a column vector
+
+% Fit linear model
+mdl = fitlm(contrast_levels, beta_values);
+fprintf('Linear model summary:\n');
+disp(mdl);
+
+% Extract key statistics
+slope = mdl.Coefficients.Estimate(2);
+slope_pval = mdl.Coefficients.pValue(2);
+r_squared = mdl.Rsquared.Ordinary;
+
+fprintf('Slope: %.4f (p = %.4f)\n', slope, slope_pval);
+fprintf('R-squared: %.4f\n', r_squared);
+
+% Create visualization of the relationship
+figure('Position', [100, 300, 500, 400]);
+plot(contrast_levels, beta_values, 'o', 'MarkerFaceColor', 'b', 'MarkerEdgeColor', 'none', 'MarkerSize', 10);
+hold on;
+
+% Add regression line - FIXED CODE HERE
+contrast_smooth = linspace(min(contrast_levels), max(contrast_levels), 100)';  % Make column vector
+beta_predicted = mdl.Coefficients.Estimate(1) + mdl.Coefficients.Estimate(2) * contrast_smooth;  % Manual prediction
+plot(contrast_smooth, beta_predicted, 'r-', 'LineWidth', 2);
+
+% Calculate confidence intervals manually (optional)
+% For simple linear regression, the standard error of the prediction
+t_crit = tinv(0.975, mdl.DFE);  % 95% CI
+SE_fit = sqrt(1/length(contrast_levels) + ...
+              (contrast_smooth - mean(contrast_levels)).^2 / ...
+              sum((contrast_levels - mean(contrast_levels)).^2));
+SE_pred = sqrt(SE_fit.^2 + mdl.MSE);
+margin_fit = t_crit * SE_fit * sqrt(mdl.MSE);
+
+% Plot confidence intervals
+lower_ci = beta_predicted - margin_fit;
+upper_ci = beta_predicted + margin_fit;
+plot(contrast_smooth, lower_ci, 'r--', 'LineWidth', 1);
+plot(contrast_smooth, upper_ci, 'r--', 'LineWidth', 1);
+fill([contrast_smooth; flipud(contrast_smooth)], [lower_ci; flipud(upper_ci)], 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none');
+
+% Format plot
+xlabel('Contrast (%)', 'FontSize', 12);
+ylabel('Beta Value', 'FontSize', 12);
+title('Linear Relationship Between Beta Values and Contrast', 'FontSize', 14);
+box off;
+set(gca, 'TickDir', 'out');
+grid off;
+
+% Add text with model information
+text(0.05, 0.95, sprintf('Slope = %.4f', slope), 'Units', 'normalized', 'FontSize', 10);
+text(0.05, 0.90, sprintf('p-value = %.4f', slope_pval), 'Units', 'normalized', 'FontSize', 10);
+text(0.05, 0.85, sprintf('R² = %.4f', r_squared), 'Units', 'normalized', 'FontSize', 10);
+
+% Save the figure
+saveas(gcf, 'beta_vs_contrast_linear_model.pdf');
+fprintf('Linear model figure saved as beta_vs_contrast_linear_model.pdf\n');
 
 %% Plot norm_diff by contrast for high and low noiseCorr cells
 % Ask user if they want to remove outliers
