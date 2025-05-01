@@ -9,7 +9,7 @@ fn_analysis_root = 'G:\home\ACh\Analysis\2p_analysis';
 fn_data_root = 'G:\home\ACh\Data\2p_data';
 fn_out_root = 'G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis\movies';
 
-session_id_TH = [31 34]; % enter post-DART session IDs for movies to be made;
+session_id_TH = [28 31 34]; % enter post-DART session IDs for movies to be made;
 session_id_CC = [169 177 183]; % enter post-DART session IDs for movies to be made;
 pre_mov_TH = 1;
 post_mov_TH = 1;
@@ -68,6 +68,7 @@ for id = 1:length(session_id_TH)
         sesh2load = [cell2mat(expt(day).contrastxori_runs) '_000_000'];
         data_g = sbxread(sesh2load,startFrame-1,totFrames);
         data_g = squeeze(data_g(1,:,:,:));
+        clear global
         
         outs_gpu = gpuArray(outs(startFrame:endFrame,:));
         data_gpu = gpuArray(data_g);
@@ -154,7 +155,7 @@ end
 ds = 'DART_V1_contrast_ori_Celine';
 eval(ds);
 
-startFrame = 18601;
+startFrame = 151;
 totFrames = 450;
 endFrame = startFrame+totFrames-1;
 trimmedStart = startFrame + 90;
@@ -202,6 +203,7 @@ for id = 1:length(session_id_CC)
         sesh2load = [cell2mat(expt(day).contrastxori_runs) '_000_000'];
         data_g = sbxread(sesh2load,startFrame-1,totFrames);
         data_g = squeeze(data_g(1,:,:,:));
+        clear global
         
         outs_gpu = gpuArray(outs(startFrame:endFrame,:));
         data_gpu = gpuArray(data_g);
