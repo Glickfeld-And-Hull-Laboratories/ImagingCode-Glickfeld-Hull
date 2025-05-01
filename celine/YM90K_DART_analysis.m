@@ -80,6 +80,7 @@ motorByPupil_concat=nan(nd,2,nSess);
 pupilCounts_concat=nan(nd,2,nSess);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
+OSI_concat=cell(1,nd);
 responseByCondProps_concat=nan(6,2,nSess);
 
 F0_stat_concat=NaN(2,2,nSess);
@@ -148,7 +149,7 @@ for iSess = 1:nSess
     
     
     for id = 1:nd
-        
+        OSI_concat{id}=cat(1,OSI_concat{id},OSI_keep{id});
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon));
         tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon));
         tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon));

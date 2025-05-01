@@ -38,7 +38,7 @@ end
 meanLMI = mean(LMI, 2);
 
 % check LMI distribution
-figure; histogram(meanLMI)
+%figure; histogram(meanLMI)
 
 %% Calculate Arousal Modulation Index AMI
 % Initialize matrix for AMI values
@@ -63,7 +63,7 @@ end
 % Calculate mean AMI for each neuron (averaging across contrasts)
 meanAMI = mean(AMI, 2);
 % check LMI distribution
-figure; histogram(meanAMI)
+%figure; histogram(meanAMI)
 
 %% Calculate contrast response slope
 % best fit line is found with a linear regression
@@ -184,40 +184,24 @@ for i = 1:min(5, size(pref_responses_stat_concat{pre}, 1))
     box off;
     hold off;
 end
-%% Exploring relationship with R value
-% In the data strucutre noiseCorr_OG_concat{pre} the first dimension is
-% behavioral state (1=stationary, 2=running) and the second dimension is
-% neuron. 
-% meanLMI, mean AMI, and response_slopes all have dependent variables with
-% one value per neuron.
-% For each of these three dependent variables, plot the relationship of
-% noiseCorr_OG_concat{pre} with the dependent variable, compute a linear
-% regression, and visualize the results. 
-% I only need to do this for the stationary state, and I want to do this 
-% for a subset of neurons defined in the variable mySample
-% Analysis of relationship between noise correlations and neural measures
-% for the stationary state, using only neurons in mySample
-
-%In this script, I want to add an additional dependent variable of response 
-% amplitude, which is stored in pref_responses_stat_concat{pre}(:,1)
-
+%% Exploring relationship with OSI added as an independent variable
+% Add OSI to the individual correlations and the regression
 
 mySample = red_ind_concat;
 
 % Define the state (1 = stationary)
 state_idx = 1;
 
-% Create a figure with 4 subplots (one for each dependent variable)
-% Narrower width (600 instead of 800) but keeping height proportional
-figure('Position', [100 100 600 1000]);
+% Create a figure with 5 subplots (one for each dependent variable, including OSI)
+figure('Position', [100 100 600 1200]);
 
-% Loop through dependent variables
-dep_vars = {meanLMI, meanAMI, response_slopes, pref_responses_stat_concat{pre}(:,1)};
-dep_var_names = {'Mean LMI', 'Mean AMI', 'Response Slopes', 'Response Amplitude'};
+% Loop through dependent variables, now including OSI
+dep_vars = {meanLMI, response_slopes, pref_responses_stat_concat{pre}(:,3), OSI_concat{pre}};
+dep_var_names = {'Mean LMI', 'Response Slopes', 'Response Amplitude', 'Orientation Selectivity (OSI)'};
 
 for dep_var_idx = 1:length(dep_vars)
     % Calculate subplot position
-    subplot(4, 1, dep_var_idx);
+    subplot(5, 1, dep_var_idx);
     
     % Extract noise correlations for stationary state
     noise_corr = noiseCorr_OG_concat{pre}(state_idx, :);
@@ -291,19 +275,19 @@ end
 % Adjust spacing and use a more compact title
 sgtitle('Noise Correlations vs. Neural Measures (SST)', 'FontSize', 12);
 set(gcf, 'Color', 'w');
-%% compare all these metrics and the noise_corr as IVs for 25% contrast normalized difference
+print('-dpdf', 'scattersVsNoiseCorr.pdf', '-bestfit');
 
+%% Update the analysis of stationary_norm_diff_25 to include OSI
 mySample = red_ind_concat;
 % Extract data (stationary state only, 25% only)
 stationary_norm_diff_25 = squeeze(norm_diff(1,1,mySample)); 
-%% Analyzing stationary_norm_diff_25 against other variables
 
-% Create a figure for individual correlations
+% Create a figure for individual correlations with OSI included
 figure('Position', [100 100 800 1000]);
 
-% Define independent variables
-raw_ind_vars = {meanLMI(mySample), meanAMI(mySample), response_slopes(mySample), pref_responses_stat_concat{pre}(mySample,1), noiseCorr_OG_concat{pre}(1,mySample)'};
-ind_var_names = {'Mean LMI', 'Mean AMI', 'Response Slopes', 'Response Amplitude', 'Noise Correlation'};
+% Define independent variables including OSI
+raw_ind_vars = {meanLMI(mySample), response_slopes(mySample), pref_responses_stat_concat{pre}(mySample,3), noiseCorr_OG_concat{pre}(1,mySample)', OSI_concat{pre}(mySample)};
+ind_var_names = {'Mean LMI', 'Response Slopes', 'Response Amplitude', 'Noise Correlation', 'Orientation Selectivity (OSI)'};
 
 % Z-score the independent variables
 ind_vars = cell(size(raw_ind_vars));
@@ -374,15 +358,17 @@ end
 % Adjust spacing between subplots
 sgtitle('Correlations with Normalized Difference at 25% Contrast', 'FontSize', 12);
 set(gcf, 'Color', 'w');
+print('-dpdf', 'scattersVsNormDiff.pdf', '-bestfit');
 
-%% Multiple regression analysis
+
+%% Multiple regression analysis with OSI included
 
 % Define your sample - using the mySample variable from your original code
 mySample = red_ind_concat;
 
-% Define independent variables and their names
-raw_ind_vars = {meanLMI(mySample), meanAMI(mySample), response_slopes(mySample), pref_responses_stat_concat{pre}(mySample,1), noiseCorr_OG_concat{pre}(1,mySample)'};
-ind_var_names = {'MeanLMI', 'MeanAMI', 'ResponseSlopes', 'ResponseAmplitude', 'NoiseCorrelation'};
+% Define independent variables and their names with OSI added
+raw_ind_vars = {meanLMI(mySample), response_slopes(mySample), pref_responses_stat_concat{pre}(mySample,3), noiseCorr_OG_concat{pre}(1,mySample)', OSI_concat{pre}(mySample)};
+ind_var_names = {'MeanLMI', 'ResponseSlopes', 'ResponseAmplitude', 'NoiseCorrelation', 'OSI'};
 
 % Dependent variable
 y = stationary_norm_diff_25; % Your normalized difference at 25% contrast
@@ -423,14 +409,13 @@ else
     tbl.y = y_clean;
 
     % Fit linear model
-    mdl = fitlm(tbl, 'y ~ 1 + MeanLMI + MeanAMI + ResponseSlopes + ResponseAmplitude + NoiseCorrelation');
+    mdl = fitlm(tbl, 'y ~ 1 + MeanLMI + ResponseSlopes + ResponseAmplitude + NoiseCorrelation + OSI');
 
     % Display model results
     disp(mdl);
 
-
     % Create a figure with appropriate size
-    figure('Units', 'inches', 'Position', [1 1 6 3]);
+    figure('Units', 'inches', 'Position', [1 1 7 3]);
     
     % Get standardized coefficients (betas)
     beta_values = mdl.Coefficients.Estimate(2:end); % Skip intercept
@@ -439,7 +424,7 @@ else
     coef_names = mdl.CoefficientNames(2:end);
     
     % Create the axes with 1 inch height and width
-    ax = axes('Units', 'inches', 'Position', [1.5 1 1 1]);
+    ax = axes('Units', 'inches', 'Position', [1.5 1 2 1]);
     
     % Create the bar chart with error bars
     b = bar(beta_values);
@@ -481,5 +466,79 @@ else
     set(gca, 'TickDir', 'out');
     grid off;
     box off;
-    print('-dpdf', 'NoisecorrMixedModel.pdf', '-bestfit');
+    title('Standardized Coefficients (All Variables)', 'FontSize', 9);
+    print('-dpdf', 'NoisecorrMixedModel_withOSI_1.pdf', '-bestfit');
+end
+
+%% Regression model without amplitude, but with OSI
+
+% Check if we have enough data for regression
+if size(X_clean, 1) < length(ind_vars) + 1
+    warning('Not enough valid data points for multiple regression');
+    disp(['Only ' num2str(size(X_clean, 1)) ' complete cases available, but need at least ' num2str(length(ind_vars) + 1)]);
+else
+    % Create a table with appropriate variable names
+    tbl = array2table(X_clean, 'VariableNames', ind_var_names);
+    tbl.y = y_clean;
+
+    % Fit linear model (excluding ResponseAmplitude)
+    mdl = fitlm(tbl, 'y ~ 1 + MeanLMI + ResponseSlopes + NoiseCorrelation + OSI');
+
+    % Display model results
+    disp(mdl);
+
+    % Create a figure with appropriate size
+    figure('Units', 'inches', 'Position', [1 1 6 3]);
+    
+    % Get standardized coefficients (betas)
+    beta_values = mdl.Coefficients.Estimate(2:end); % Skip intercept
+    beta_errors = mdl.Coefficients.SE(2:end);
+    beta_pvalues = mdl.Coefficients.pValue(2:end);
+    coef_names = mdl.CoefficientNames(2:end);
+    
+    % Create the axes with 1 inch height and width
+    ax = axes('Units', 'inches', 'Position', [1.5 1 1.5 1]);
+    
+    % Create the bar chart with error bars
+    b = bar(beta_values);
+    hold on;
+    errorbar(1:length(beta_values), beta_values, beta_errors, '.k');
+    
+    % Add a horizontal line at y=0
+    plot([0.5, length(beta_values)+0.5], [0, 0], 'k--');
+    
+    % Add p-values above each bar
+    for i = 1:length(beta_values)
+        if beta_pvalues(i) < 0.05
+            % Format p-value with appropriate precision
+            if beta_pvalues(i) < 0.001
+                p_text = 'p<0.001';
+            else
+                p_text = ['p=' num2str(beta_pvalues(i), '%.3f')];
+            end
+        else
+            p_text = 'n.s.';
+        end
+        
+        % Position text above or below bar depending on bar direction
+        if beta_values(i) >= 0
+            text_pos = beta_values(i) + beta_errors(i) + 0.05*max(abs(beta_values));
+        else
+            text_pos = beta_values(i) - beta_errors(i) - 0.15*max(abs(beta_values));
+        end
+        
+        text(i, text_pos, p_text, 'HorizontalAlignment', 'center', 'FontSize', 8);
+    end
+    
+    % Format plot
+    set(gca, 'XTick', 1:length(coef_names), 'XTickLabel', coef_names, 'XTickLabelRotation', 45);
+    set(gca, 'FontSize', 8);
+    ylabel('Standardized Coefficient (Beta)', 'FontSize', 8);
+    
+    % Apply user preferences
+    set(gca, 'TickDir', 'out');
+    grid off;
+    box off;
+    title('Standardized Coefficients (Excluding Amplitude)', 'FontSize', 9);
+    print('-dpdf', 'NoisecorrMixedModel_withOSI_2.pdf', '-bestfit');
 end
