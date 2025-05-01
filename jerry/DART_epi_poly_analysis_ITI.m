@@ -81,7 +81,7 @@ for mouse = 1:nMice %iterate through mouse
         % get only ITI frames 
         curr_sesh = reshape(data_trial_ITI,[],1);
 
-        ent_mat(sesh) = perm_entropy(curr_sesh,3,1);
+        ent_mat(sesh) = SampleEn_TH(curr_data,0.2,3);
 
         this_burst = abs(diff(data_trial_ITI));
         mean_burst = mean(mean(this_burst));
@@ -227,7 +227,7 @@ for mouse = 1:nMice %iterate through mouse
         data_trial_ITI = data_trial(nOff/2+1:nOff,:);
 
         curr_sesh = reshape(data_trial_ITI,[],1);
-        % ent_mat(sesh) = SampleEn_TH(curr_sesh,0.2,3);
+        ent_mat(sesh) = SampleEn_TH(curr_data,0.2,3);
 
         this_burst = abs(diff(data_trial_ITI));
         mean_burst = mean(mean(this_burst));
@@ -282,7 +282,7 @@ for mouse = 1:nMice %iterate through mouse
     std_cell_SST_ITI{mouse,1} = std_mat;
     frac_rms_SST_ITI{mouse,1} = perc_mat;
     burst_SST{mouse,1} = burst_mat;
-    % ent_SST{mouse,1} = ent_mat;
+    ent_SST{mouse,1} = ent_mat;
     % skew_cell_SST_ITI{mouse,1} = skew_mat;
     % saveas(gcf,fullfile(fn_out_root,[mouse_id 'combinedTC_ITI.pdf']));
     % saveas(gcf,fullfile(fn_out_root,[mouse_id 'combinedTC_ITI_bot50.pdf']));
@@ -363,7 +363,10 @@ xticks([0.7 1.4 2.1])
 xticklabels({'PV+DART','PV+PEG','SST+DART'})
 hold off
 
-
+SI_PV_PEG(3) = NaN;
+anova_mat = [SI_PV_DART SI_PV_PEG SI_SST];
+[p,tbl,stats] = anova1(anova_mat);
+[c,m,h,gnames] = multcompare(stats);
 %% plot adjacent delta F
 
 vector_df = cell2mat(burst_PV(:,1));
@@ -391,6 +394,11 @@ xticklabels({'PV+DART','PV+PEG','SST+DART'})
 hold off
 
 
+
+% PV_dfIdx_peg(3) = NaN;
+% dfIdx_anovamat =[PV_dfIdx_dart PV_dfIdx_peg SST_dfIdx];
+% [p,tbl,stats] = anova1(dfIdx_anovamat);
+% [c,m,h,gnames] = multcompare(stats);
 %% plotting something else
 load('i3309_itiTC_pre.mat');
 load('i3309_itiTC_post.mat');
@@ -420,13 +428,13 @@ f4.Name = 'Synch_hist';
 sgtitle('i3309 Percent Active Histogram');
 hold on
 subplot(2,1,1)
-histogram(i3309_iti_sync(:,1),[0:0.01:1]);
+histogram(i3309_iti_sync(:,1),[0:0.05:1]);
 xlim([0 1])
 ylim([0 100])
 title('Baseline')
 ylabel('nFrames')
 subplot(2,1,2)
-histogram(i3309_iti_sync(:,2),[0:0.01:1]);
+histogram(i3309_iti_sync(:,2),[0:0.05:1]);
 xlim([0 1])
 ylim([0 100])
 title('Post-DART')
@@ -434,7 +442,57 @@ ylabel('nFrames')
 xlabel('Percent Active')
 hold off
 
-% save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis\finalPlots');
+%
+ymax = max(vertcat(tc3309pre,tc3309post))+100;
+ymin = min(vertcat(tc3309pre,tc3309post))-100;
+f6 = figure;
+f6.Name = 'i3309_TC_10min';
+sgtitle('i3309 10min Timecourses with Stim')
+hold on
+subplot(2,1,1)
+plot(tc3309pre(9001:18000));
+title('Control')
+ylim([ymin ymax])
+ylabel('F')
+subplot(2,1,2)
+plot(tc3309post(9001:18000));
+title('Post-DART')
+ylim([ymin ymax])
+ylabel('F')
+hold off
+
+
+save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis\finalPlots');
+
+%% sample entropy ITI full session
+ent_PV_mat = reshape(cell2mat(ent_PV(:,1)),2,[])';
+ent_SST_mat = reshape(cell2mat(ent_SST(:,1)),2,[])';
+
+EI_PV = ent_PV_mat(:,2) ./ ent_PV_mat(:,1);
+EI_PV_DART = vertcat(EI_PV(1:2,:),EI_PV(4,:));
+EI_PV_PEG = vertcat(EI_PV(3,:),EI_PV(5,:));
+EI_SST = ent_SST_mat(:,2) ./ ent_SST_mat(:,1);
+
+f5 = figure;
+f5.Name = 'SampleEntropy';
+sgtitle('FullSessionSample Entropy');
+hold on
+plot(0.7,EI_PV_DART(:,1),'o','Color',"#0047AB")
+plot(1.4,EI_PV_PEG(:,1),'o','Color',"#89CFF0")
+plot(2.1,EI_SST(:,1),'o','Color',"#D95319")
+ylim([0.5 2.5])
+ylabel('Sample Entropy Post/Pre')
+xlim([0 2.8])
+xticks([0.7 1.4 2.1])
+xticklabels({'PV+DART','PV+PEG','SST+DART'})
+hold off
+
+
+EI_PV_PEG(3) = NaN;
+EI_anovamat = [EI_PV_DART EI_PV_PEG EI_SST];
+[p,tbl,stats] = anova1(EI_anovamat);
+[c,m,h,gnames] = multcompare(stats);
+
 %% test
 
 x = curr_sesh;         % example time series
