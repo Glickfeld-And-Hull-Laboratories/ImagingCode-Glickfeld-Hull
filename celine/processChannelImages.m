@@ -33,7 +33,7 @@ function [redImage, greenImage, compositeImage] = processChannelImages(mouse, da
     % else if strcmp(computer, 'PCWIN64')
     %     base = 'G:\home\ACh\Data\2p_data';
     %     out_base = 'G:\home\ACh\Analysis\2p_analysis';
-    % else
+    else
         base = '\home\ACh\Data\2p_data';
         out_base = '\home\ACh\Analysis\2p_analysis';
     end

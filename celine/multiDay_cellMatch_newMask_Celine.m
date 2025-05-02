@@ -1,6 +1,6 @@
  clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
@@ -8,7 +8,7 @@ doGreenOnly = false;
 doCorrImg = true;
 
 
-day_id(2) = 366;
+day_id(2) = 79;
 day_id(1) = expt(day_id(2)).multiday_matchdays;
 
 nd = length(day_id);

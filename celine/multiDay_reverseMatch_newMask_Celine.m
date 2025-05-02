@@ -1,18 +1,24 @@
 clear all; clear global; close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
 doGreenOnly = false;
 doCorrImg = true;
 
-%to use the post-DART timepoint as the template
 
-day_id(1) = 78; %enter the refrence day ID here
+<<<<<<< HEAD
+day_id(1) = 63; %enter the refrence day ID here
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
-experimentFolder = 'SST_atropine';
+experimentFolder = 'VIP_YM90K';
+=======
+day_id(1) = 79; %enter the refrence day ID here
+day_id(2) = expt(day_id(1)).multiday_matchdays;
+
+experimentFolder = 'Pyr_atropine';
+>>>>>>> origin/master
 
 
 nd = length(day_id);

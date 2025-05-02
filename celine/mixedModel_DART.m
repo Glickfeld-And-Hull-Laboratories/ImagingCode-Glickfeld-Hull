@@ -1,7 +1,7 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_contrast_ori_Celine'; %dataset info
+ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
 
 eval(ds);
@@ -15,7 +15,7 @@ eval(ds);
 %Oct 2023: 138 142 163 171 178 190 294 307 323 333
 
 
-sess_list = [138 142 163 171 178 190 294 307 333 323 303 311 319 329 355 359];%enter all the sessions you want to concatenate
+sess_list = [42 44];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -35,7 +35,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
             end
 clear x prompt
 
-targetCon = [.25 .5 1]%what contrast to extract for all data - must be one that all datasets had
+targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 
 frame_rate = 15;
 
@@ -50,8 +50,8 @@ if computer == 'GLNXA64'
     base = fullfile(isilonName, '/All_Staff/home/ACh/Data/2p_data');
     
 else
-    isilonName = 'Z:';
-    base = fullfile(isilonName, '\home\ACh\Analysis\2p_analysis');
+    isilonName = 'G:';
+    base = fullfile(isilonName, '\home\ACh\Analysis\2p_analysis\PV_YM90K');
       
 end
 

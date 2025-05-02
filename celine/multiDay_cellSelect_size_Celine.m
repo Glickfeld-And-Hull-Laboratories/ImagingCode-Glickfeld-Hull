@@ -1,16 +1,16 @@
 clear all; clear global;  close all
 clc
 
-%ds = 'DART_V1_atropine_Celine'; %dataset info
-ds = 'DART_expt_info';
+ds = 'DART_V1_atropine_Celine'; %dataset info
+%ds = 'DART_expt_info';
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
 doGreenOnly = true;
 doCorrImg = true;
 
-day_id =63;
-experimentFolder = 'VIP_YM90K';
+day_id =80;
+experimentFolder = 'Pyr_atropine';
 
 if computer == 'GLNXA64'
     isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
@@ -18,15 +18,15 @@ if computer == 'GLNXA64'
     base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis',experimentFolder);
     beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/');
 elseif string(hostname) == 'NB-NUKE'
-    isilonName = 'Z:/All_Staff';
+    isilonName = '/All_Staff';
     base = fullfile('/home/ACh/Analysis/2p_analysis/',experimentFolder);
     datapath = fullfile('/home/ACh/Data/2p_data');
-    beh_prefix = strcat('Z:/All_Staff/Behavior/Data/');
+    beh_prefix = strcat('/All_Staff/Behavior/Data/');
 else
     isilonName = '';
     base = fullfile('/home/ACh/Analysis/2p_analysis',experimentFolder);
     datapath = fullfile('/home/ACh/Data/2p_data');
-    beh_prefix = strcat('Z:\Behavior\Data\');
+    beh_prefix = strcat('/Behavior/Data/');
 end
 
 
@@ -61,17 +61,14 @@ for irun = 1:nruns
     switch tHostname
         case {'nb-nuke'}
             if username == 'cc735' 
-                fName = ['Z:\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+                fName = ['/All_staff/Behavior/Data/' dat mouse '-' expDate '-' times{irun} '.mat'];
 
             else
-                fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
+                fName = ['//duhs-user-nc1.dhe.duke.edu/dusom_glickfeldlab/All_staff/Behavior/Data/' dat mouse '-' expDate '-' times{irun} '.mat'];
             end
         case{'nb-hubel'}
-                if username == 'cc735'
-                    fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                else
-                    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                 end
+                    fName = ['/Behavior/Data/' dat mouse '-' expDate '-' times{irun} '.mat'];
+
     end
     
     load(fName); %load the mworks behavioral file
@@ -360,7 +357,7 @@ rgb = zeros(sz(1),sz(2),3);
 % hold off
 
 
-%% extract timecourses
+%% extract timecourses and np subtraction
 
 
 data_tc = stackGetTimeCourses(data_g_reg, mask_cell);
