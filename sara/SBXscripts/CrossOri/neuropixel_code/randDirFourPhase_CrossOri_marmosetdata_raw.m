@@ -1,16 +1,16 @@
-%% Analyze raw marmoset data sent from Nicholas Priebe, 9/23/2024
+%% Analyze raw marmoset data sent from Nicholas Priebe, 4/18/2025
 clc; clear all; close all;
 base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 svName = 'randDirFourPhase_CrossOri';
 bnsz = 10; %spike binsize = 10 ms
 
-doPlot=0;
+doPlot=1;
 doGratPlot=0;
 
-expts = strvcat('g01', 'g06', 'g12', 'g17'); %Four acute penetrations in V1, 1 marmoset
+expts = strvcat('g01b', 'g06b', 'g12b', 'g17b'); %Four acute penetrations in V1, 1 marmoset
 nexp = length(expts);
 
-iexp = 4;
+iexp = 3;
 
     fprintf([expts(iexp,:) '\n'])
 
@@ -74,175 +74,95 @@ iexp = 4;
     end
     p_dir = find(p_anova_dir<0.05);
 
-    % Determine direction selectivity
-    for iCell = 1:nCells
-        [max_val max_ind] = max(avg_resp_dir(iCell,:,1,1,1));
-        null_ind = max_ind+(nDirs./2);
-        null_ind(find(null_ind>nDirs)) = null_ind(find(null_ind>nDirs))-nDirs;
-        min_val = avg_resp_dir(iCell,null_ind,1,1,1);
-        if min_val < 0; min_val = 0; end
-        DSI(iCell) = (max_val-min_val)./(max_val+min_val);
-        DSI_maxInd(iCell) = max_ind; 
-    end
 
-    DSI_ind = find(DSI>0.5); %direction selective to gratings
-    OSI_ind = find(DSI<0.5);
+    % Do all fits at once
+    [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phaseModStruct] = bigFits(avg_resp_dir);
 
-
-    % Determine pattern and component direction selectivity
-    int = nDirs;
-    % component = avg_resp_dir(:,:,1,1,1)+circshift(avg_resp_dir(:,:,1,1,1),-120./int,2);
-    % pattern = circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
-
-    component = circshift(avg_resp_dir(:,:,1,1,1),+60./int,2)+circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
-    pattern = avg_resp_dir(:,:,1,1,1);
+    % Get direction selectivity
+        DSI         = DSIstruct.DSI;
+        DSI_ind     = DSIstruct.DS_ind;
+        DSI_maxInd  = DSIstruct.prefDir;
+        g_dsi       = DSIstruct.gDSI;
+        g_osi       = DSIstruct.gOSI;
+        ang_dir     = DSIstruct.gDSI_prefDir;
+        ang_ori     = DSIstruct.gOSI_prefDir;
     
-    comp_corr = zeros(nPhas,nCells);
-    patt_corr = zeros(nPhas,nCells);
-    comp_patt_corr = zeros(nPhas,nCells);
-    plaid_corr = zeros(1,nCells);
-    plaid_corr1 = zeros(1,nCells);
-    plaid_corr2 = zeros(1,nCells);
-    plaid_corr3 = zeros(1,nCells);
-    plaid_corr4 = zeros(1,nCells);
-    plaid_corr5 = zeros(1,nCells);
-    plaid_corr6 = zeros(1,nCells);
-    
-    for iCell = 1:nCells
-        for ip = 1:nPhas
-            comp_corr(ip,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,ip,2,1),component(iCell,:)));
-            patt_corr(ip,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,ip,2,1),pattern(iCell,:)));
-            comp_patt_corr(ip,iCell) = triu2vec(corrcoef(component(iCell,:),pattern(iCell,:)));
-        end
-        plaid_corr1(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,1,2,1),avg_resp_dir(iCell,:,2,2,1)));
-        plaid_corr2(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,1,2,1),avg_resp_dir(iCell,:,3,2,1)));
-        plaid_corr3(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,1,2,1),avg_resp_dir(iCell,:,4,2,1)));
-        plaid_corr4(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,2,2,1),avg_resp_dir(iCell,:,3,2,1)));
-        plaid_corr5(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,2,2,1),avg_resp_dir(iCell,:,4,2,1)));
-        plaid_corr6(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,3,2,1),avg_resp_dir(iCell,:,4,2,1)));
-        plaid_corr(1,iCell) = (plaid_corr1(1,iCell)+plaid_corr2(1,iCell)+plaid_corr3(1,iCell)+plaid_corr4(1,iCell)+plaid_corr5(1,iCell)+plaid_corr6(1,iCell))/6;
-    end
-    
-    Rp = ((patt_corr)-(comp_corr.*comp_patt_corr))./sqrt((1-comp_corr.^2).*(1-comp_patt_corr.^2));
-    Rc = ((comp_corr)-(patt_corr.*comp_patt_corr))./sqrt((1-patt_corr.^2).*(1-comp_patt_corr.^2));
-    Zp = (0.5.*log((1+Rp)./(1-Rp)))./sqrt(1./(nDirs-3));
-    Zc = (0.5.*log((1+Rc)./(1-Rc)))./sqrt(1./(nDirs-3));
-    
-    ZcZp_diff = Zc-Zp;
-    ind1 = intersect(find(Zp(1,:)>1.28),find(Zp(1,:)-Zc(1,:)>1.28));
-    ind2 = intersect(find(Zp(2,:)>1.28),find(Zp(2,:)-Zc(2,:)>1.28));
-    ind3 = intersect(find(Zp(3,:)>1.28),find(Zp(3,:)-Zc(3,:)>1.28));
-    ind4 = intersect(find(Zp(4,:)>1.28),find(Zp(4,:)-Zc(4,:)>1.28));
-    ind = {ind1,ind2,ind3,ind4};
-    ind_arr = [ind1,ind2,ind3,ind4];
-    ind_pds = unique(ind_arr);
+    % Get direction tuning curve fit
+        dir_b_hat_all           = gratingFitStruct.b;
+        k1_hat_all          = gratingFitStruct.k1;
+        R1_hat_all          = gratingFitStruct.R1;
+        R2_hat_all          = gratingFitStruct.R2;
+        u1_hat_all          = gratingFitStruct.u1;
+        u2_hat_all          = gratingFitStruct.u2;
+        dir_sse_all         = gratingFitStruct.sse;
+        dir_R_square_all    = gratingFitStruct.Rsq;
+        dir_yfit_all        = gratingFitStruct.yfit;
 
+    % Get partial correlations
+        Zp = ZpZcStruct.Zp;
+        Zc = ZpZcStruct.Zc;
+        Rp = ZpZcStruct.Rp;
+        Rc = ZpZcStruct.Rc;
+    % Get PCI fit, get amplitude and baseline
+        PCI             = phaseModStruct.PCI;
+        yfit_all        = phaseModStruct.yfit;
+        amp_hat_all     = phaseModStruct.amp;
+        b_hat_all       = phaseModStruct.b;
+        sse_all         = phaseModStruct.sse;
+        R_square_all    = phaseModStruct.rsq;
 
-    % Calculate pairwise dist between Zp Zc points
-    ZpZc = [];
-    for iCell = 1:nCells
-        ZpZc(:,1,iCell) = Zp(:,iCell);
-        ZpZc(:,2,iCell) = Zc(:,iCell);
-    end
-    
-    ZpZcPWdist = double.empty(6,0);
-    for iCell = 1:nCells
-        ZpZcPWdist(:,iCell) = pdist(ZpZc(:,:,iCell));
-    end
-    
-
-    % Calculate PCI fit, get amplitude and baseline
-    PCI = (Zp-Zc);
-    phase = [0 90 180 270];
-    phase_range = 0:1:359;
-
-    for iCell = 1:nCells
-        [b_hat_all(iCell,1), amp_hat_all(iCell,1), per_hat_all(iCell,1),pha_hat_all(iCell,1),sse_all(iCell,1),R_square_all(iCell,1)] = sinefit_PCI(deg2rad(phase),PCI(:,iCell));
-        yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
-    end
-
-
-    % Direction tuning curve fit
-    y_fits = zeros(360,nCells);
-    stimDirs = [0:30:330];
-    dirs = deg2rad(0:1:359);
-    for iCell = 1:nCells
-        [dir_b_hat_all(iCell,1), k1_hat_all(iCell,1), R1_hat_all(iCell,1), R2_hat_all(iCell,1), u1_hat_all(iCell,1), u2_hat_all(iCell,1), dir_sse_all(iCell,1),dir_R_square_all(iCell,1)] = miaovonmisesfit_dir(deg2rad(stimDirs),avg_resp_dir(iCell,:,1,1,1));
-        dir_yfit_all(:,iCell) = b_hat_all(iCell,1)+R1_hat_all(iCell,1).*exp(k1_hat_all(iCell,1).*(cos(dirs-u1_hat_all(iCell,1))-1))+R2_hat_all(iCell,1).*exp(k1_hat_all(iCell,1).*(cos(dirs-u1_hat_all(iCell,1))-1));
-    end
-
+% 
+% 
+% % global DSI
+%     angs = 0:30:330;
+%     eps_val = 1e-3;  % Small epsilon to prevent division by zero
+%     for j = 1:nCells
+%         amps        = avg_resp_dir(j,:,1,1,1); %our responses  
+%         amps(amps < 0) = 0;
+%         total_response = sum(amps); % Normalize factor
+%         if total_response < eps_val
+%             g_dsi(j) = NaN; % Assign NaN if total response is too small
+%             g_osi(j) = NaN;
+%             ang(j) = NaN;
+%             ang_ori(j) = NaN;
+%         continue
+%         end
+%         % Direction Selectivity Index (gDSI)
+%             vec_x = sum(cos(deg2rad(angs)) .* amps);
+%             vec_y = sum(sin(deg2rad(angs)) .* amps);
+%             g_dsi(j) = sqrt(vec_x^2 + vec_y^2) / total_response;
+%         % Orientation Selectivity Index (gOSI)
+%             vec_x_ori = sum(cos(deg2rad(2 * angs)) .* amps);
+%             vec_y_ori = sum(sin(deg2rad(2 * angs)) .* amps);
+%             g_osi(j) = sqrt(vec_x_ori^2 + vec_y_ori^2) / total_response;
+%         % Preferred direction (in degrees)
+%             ang_dir(j) = mod(rad2deg(atan2(vec_y, vec_x)), 360);
+%         % Preferred orientation (in degrees, folded into [0, 180))
+%             ang_ori(j) = mod(0.5 * rad2deg(atan2(vec_y_ori, vec_x_ori)), 180);
+%     end
+% 
 
     if ~exist(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)]))
         mkdir(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)]))
     end
-    save(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_fitsSG.mat']), 'resp_ind_dir','nCells','nTrials','nDirs','avg_resp_dir','p_dir','DSI','plaid_corr','Rp','Rc','Zp','Zc','ZpZcPWdist','yfit_all','amp_hat_all','b_hat_all','sse_all','R_square_all','dir_yfit_all','k1_hat_all','dir_sse_all','dir_R_square_all');
+    save(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_fitsSG.mat']), 'g_dsi', 'g_osi', 'ang_dir', 'ang_ori', 'resp_ind_dir','nCells','nTrials','nDirs','avg_resp_dir','p_dir','DSI','plaid_corr','Rp','Rc','Zp','Zc','ZpZcPWdist','yfit_all','amp_hat_all','b_hat_all','sse_all','R_square_all','dir_yfit_all','k1_hat_all','dir_sse_all','dir_R_square_all');
 
 
 %% set inclusion criteria
-resp_ind = intersect(resp_ind_dir,find(DSI>0.5));
+resp_ind    = intersect(intersect(resp_ind_dir,p_dir),find(DSI>0.5));
+ind         = resp_ind;
 
 
 if doPlot == 1
-%%
-figure; 
-movegui('center')
-for i = 1:4
-    subplot(4,4,i)
-    scatter(Zc(i,resp_ind), Zp(i,resp_ind),'.')
-    hold on
-    scatter(Zc(i,ind{1}),Zp(i,ind{1}),'.');
-    xlabel('Zc')
-    ylabel('Zp')
-    ylim([-4 8])
-    xlim([-4 8])
-    hold on
-    if i==1; title('pattern cells at 0'); end
-    plotZcZpBorders
-end
-for i = 1:4
-    subplot(4,4,i+4)
-    scatter(Zc(i,resp_ind), Zp(i,resp_ind),'.')
-    hold on
-    scatter(Zc(i,ind{2}),Zp(i,ind{2}),'.');
-    xlabel('Zc')
-    ylabel('Zp')
-    ylim([-4 8])
-    xlim([-4 8])
-    hold on
-    if i==1; title('pattern cells at 90'); end
-    plotZcZpBorders
-end
-for i = 1:4
-    subplot(4,4,i+8)
-    scatter(Zc(i,resp_ind), Zp(i,resp_ind),'.')
-    hold on
-    scatter(Zc(i,ind{3}),Zp(i,ind{3}),'.');
-    xlabel('Zc')
-    ylabel('Zp')
-    ylim([-4 8])
-    xlim([-4 8])
-    hold on
-    if i==1; title('pattern cells at 180'); end
-    plotZcZpBorders
-end
-for i = 1:4
-    subplot(4,4,i+12)
-    scatter(Zc(i,resp_ind), Zp(i,resp_ind),'.')
-    hold on
-    scatter(Zc(i,ind{4}),Zp(i,ind{4}),'.');
-    xlabel('Zc')
-    ylabel('Zp')
-    ylim([-4 8])
-    xlim([-4 8])
-    hold on
-    if i==1; title('pattern cells at 270'); end
-    plotZcZpBorders
-end
-sgtitle('Pattern direction selective cells at four phases')
-print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZpZc_unshifted.pdf']),'-dpdf', '-fillpage') 
+%% Plot population ZpZc
+plotZpZc4PhasePopulation(ZpZcStruct,resp_ind,30)
+    movegui('center')
+    sgtitle('Pattern direction selective cells at four phases')
+print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZpZc.pdf']),'-dpdf', '-fillpage') 
 
 
 %% Plot grating tuning curves by cell
+
 
 ind=resp_ind;
 
@@ -348,7 +268,7 @@ figure;
 start = 1;
 n = 1;
 
-avg_resp_plddir = circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
+[avg_resp_grat avg_resp_plddir] = getAlignedGratPlaidTuning(avg_resp_dir);
 
 x=[-150:30:180];
 x_rad = deg2rad(x);
@@ -356,10 +276,10 @@ for iCell =1:length(ind)
     ic = ind(iCell);
     subplot(5,4,start)
         for im = 1:nPhas
-            polarplot([x_rad x_rad(1)], [avg_resp_dir(ic,:,im,2,1) avg_resp_dir(ic,1,im,2,1)])
+            polarplot([x_rad x_rad(1)], [avg_resp_plddir(ic,:,im) avg_resp_plddir(ic,1,im)])
             hold on
         end
-        polarplot([x_rad x_rad(1)], [avg_resp_plddir(ic,:,1,1,1) avg_resp_plddir(ic,1,1,1,1)],'k', 'LineWidth',2) 
+        polarplot([x_rad x_rad(1)], [avg_resp_grat(ic,:) avg_resp_grat(ic,1)],'k', 'LineWidth',2) 
         idx = ic==ind;
         if any(idx)
             subtitle(['cell ' num2str(ic)],'fontweight','bold')
@@ -369,7 +289,7 @@ for iCell =1:length(ind)
     start = start+1;    
     if start>20
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Polar plots'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_US_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_' num2str(n) '.pdf']), '-dpdf','-fillpage')
         figure;
         movegui('center')
         start = 1;
@@ -377,38 +297,34 @@ for iCell =1:length(ind)
     end
     if iCell == nCells
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Polar plots'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_US_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end
 end     
 close all
 
 %% Plot Zp Zc classifications by cell
 
+
+sz  = 25;
+
 figure;
 start = 1;
 n = 1;
-
-for iCell = 1:length(ind)
-    ic = ind(iCell);
+for iCell = 1:nCells
     subplot(5,4,start)
-        for im = 1:nPhas
-            scatter(Zc(im,ic), Zp(im,ic),8,'filled')
-            hold on
-        end
-        ylabel('Zp'); ylim([-4 8]);
-        xlabel('Zc'); xlim([-4 8]);
-        if ic ==1; legend('0 deg','90 deg','180 deg', '270 deg'); end;
-        idx = ic==ind;
+        plotZpZc4PhaseCell(ZpZcStruct,iCell,sz)
+        if iCell ==1; legend('0 deg','90 deg','180 deg', '270 deg'); end;
+        idx = iCell==ind;
         if any(idx)
-            subtitle(['cell ' num2str(ic)],'fontweight','bold')
+            subtitle(['cell ' num2str(iCell)],'fontweight','bold')
         else
-            subtitle(['cell ' num2str(ic)])
+            subtitle(['cell ' num2str(iCell)])
         end
-        plotZcZpBorders; set(gca,'TickDir','out'); axis square
-    start = start+1;    
+        plotZcZpBorders; set(gca,'TickDir','out'); axis square    
+    start = start +1;
     if start>20
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Zp Zc by cell'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_US_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
         figure;
         movegui('center')
         start = 1;
@@ -416,10 +332,59 @@ for iCell = 1:length(ind)
     end
     if iCell == nCells
         sgtitle(['expt ' num2str(expts(iexp,:)) ' - Zp Zc by cell'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_US_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end        
 end
 close all
+
+
+
+%% Direction tuning curves with sem
+
+[sem_resp_grat] = getAlignedGratSEM(avg_resp_dir);
+
+gDSIvals = round(g_dsi,2);
+
+
+figure;
+n=1;
+start=1;
+x=[-150:30:180];
+    for iCell = 1:nCells
+        subplot(6,3,start)
+            plot(x, avg_resp_grat(iCell,:),'k') 
+            hold on
+            shadedErrorBar(x,avg_resp_grat(iCell,:),sem_resp_grat(iCell,:))
+            ylim([0 20])
+            ylabel('hz')
+            DirIdx = iCell==p_dir;
+            IndIdx = iCell==ind;
+            if any(IndIdx)
+                subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell)) ' anova ✓'],'fontweight','bold')
+            elseif any(DirIdx)
+                subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell)) ' anova ✓'])
+            else
+                subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell))])
+            end
+        start = start+1;    
+        if start>18
+            movegui('center')
+            sgtitle(['expt ' num2str(expts(iexp,:)) ' - Grating tuning'])
+            print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_GratingTuningCurve_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+            figure;
+            movegui('center')
+            start = 1;
+            n = n+1;
+        end
+        if iCell == nCells
+            movegui('center')
+            sgtitle(['expt ' num2str(expts(iexp,:)) ' - Grating tuning'])
+            print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_GratingTuningCurve_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        end
+    end
+   
+
+
 
 
 else 

@@ -1579,3 +1579,18 @@ expt(112).SF = 0.05;
 expt(112).TF = 2;
 expt(112).saveLoc = 'sara';
 
+%% i1399 250425, V1 L4 (162000 frames)
+expt(113).mouse = 'i1399';
+expt(113).date = '250425';
+expt(113).img_loc  = {'V1'};
+expt(113).z = -350;
+expt(113).img_strct  = {'cells'};
+expt(113).driver = {'SCN'};
+expt(113).indicator = {'tg';'GCaMP8m'};
+expt(113).coFolder = {'002'};
+expt(113).coTime = {'0945'};
+expt(113).SF = 0.05;
+expt(113).TF = 2;
+expt(113).saveLoc = 'lindsey';
+
+

@@ -9,7 +9,7 @@ seed = rng;
 
 max_dist = 10;
 
-for iexp = [74] %27 58 74
+for iexp = [47] %27 58 74
 
 %%
 mouse = expt(iexp).mouse;
@@ -21,6 +21,7 @@ nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
 base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
+LGbase = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 
 fprintf([mouse ' ' date '\n'])
 
@@ -141,21 +142,46 @@ for iCell = 1:nCells
     end
 end
     p_dir = find(p_anova_dir<0.05);
-    p_plaid1 = find(p_anova_plaid(1,:)<0.05);
-    p_plaid2 = find(p_anova_plaid(2,:)<0.05);
-    p_plaid3 = find(p_anova_plaid(3,:)<0.05);
-    p_plaid4 = find(p_anova_plaid(4,:)<0.05);
-    p_all = unique([p_dir,p_plaid1,p_plaid2,p_plaid3,p_plaid4]); %significantly responsive to a direction (anova) for gratings or any plaid set
-    p_dir = find(p_anova_dir<0.05);
-    p_plaid1 = find(p_anova_plaid(1,:)<0.05);
-    p_all = unique([p_dir,p_plaid1]); %significantly responsive to a direction (anova) for gratings or any plaid set
+    if nMaskPhas == 4
+        p_plaid1 = find(p_anova_plaid(1,:)<0.05);
+        p_plaid2 = find(p_anova_plaid(2,:)<0.05);
+        p_plaid3 = find(p_anova_plaid(3,:)<0.05);
+        p_plaid4 = find(p_anova_plaid(4,:)<0.05);
+        p_all = unique([p_dir,p_plaid1,p_plaid2,p_plaid3,p_plaid4]); %significantly responsive to a direction (anova) for gratings or any plaid set
+    end
 
 
-DSIstruct = getDSIstruct(avg_resp_dir);
-    DSI         = DSIstruct.DSI;
-    DSI_ind     = DSIstruct.DS_ind;
-    DSI_maxInd  = DSIstruct.prefDir;
+    % Do all fits at once
+    [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phaseModStruct] = bigFits(avg_resp_dir);
 
+    % Get direction selectivity
+        DSI         = DSIstruct.DSI;
+        DSI_ind     = DSIstruct.DS_ind;
+        DSI_maxInd  = DSIstruct.prefDir;
+    % Get direction tuning curve fit
+        dir_b_hat_all           = gratingFitStruct.b;
+        k1_hat_all          = gratingFitStruct.k1;
+        R1_hat_all          = gratingFitStruct.R1;
+        R2_hat_all          = gratingFitStruct.R2;
+        u1_hat_all          = gratingFitStruct.u1;
+        u2_hat_all          = gratingFitStruct.u2;
+        dir_sse_all         = gratingFitStruct.sse;
+        dir_R_square_all    = gratingFitStruct.Rsq;
+        dir_yfit_all        = gratingFitStruct.yfit;
+    % Get partial correlations
+        Zp          = ZpZcStruct.Zp;
+        Zc          = ZpZcStruct.Zc;
+        Rp          = ZpZcStruct.Rp;
+        Rc          = ZpZcStruct.Rc;
+        ind         = ZpZcStruct.PDSind_byphase;
+        ind_pds     = ZpZcStruct.PDSind_all;
+    % Get PCI fit, get amplitude and baseline
+        PCI             = phaseModStruct.PCI;
+        yfit_all        = phaseModStruct.yfit;
+        amp_hat_all     = phaseModStruct.amp;
+        b_hat_all       = phaseModStruct.b;
+        sse_all         = phaseModStruct.sse;
+        R_square_all    = phaseModStruct.rsq;
 
 %Calculate "reliability" of preferred grating direction
 DSI_maxInd_boot = bootstrap_fourphase_randsamptrials(resp_cell,100)';
@@ -170,26 +196,20 @@ if ~exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ru
     mkdir(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str],['centroid_dist_max_' num2str(max_dist)]))
 end
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_respData.mat']), 'resp_cell', 'data_dfof_tc', 'resp_ind', 'frame_rate', 'h_resp', 'avg_resp_dir','p_anova_dir','p_anova_plaid', 'trialInd');
-save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'ind_stimAlone', 'ind_maskAlone', 'ind_plaid', 'ind_blank','trialsperstim','DSI_ind','OSI_ind','resp_ind_dir','p_dir','prefDir_resamp');
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'ind_stimAlone', 'ind_maskAlone', 'ind_plaid', 'ind_blank','trialsperstim','DSI_ind','resp_ind_dir','p_dir','prefDir_resamp');
 
 
-%%
+%% Old save commands 
 
-ZpZcStruct = getZpZcStruct(avg_resp_dir);
-    Zp = ZpZcStruct.Zp;
-    Zc = ZpZcStruct.Zc;
+% plaid corr
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_plaidCorr.mat']), 'plaid_corr');
 
-plaid_corr = getPlaidTuningCorrelations(avg_resp_dir);
+% ZpZc pairwise dist
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZpZc_pairwiseDist.mat']), 'ZpZcPWdist');
 
-% save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_plaidCorr.mat']), 'plaid_corr', 'plaid_corr1', 'plaid_corr2', 'plaid_corr3', 'plaid_corr4', 'plaid_corr5', 'plaid_corr6');
+% grating tuning curve fit
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_DirectionTuningFit.mat']), 'dir_yfit_all', 'dir_b_hat_all', 'k1_hat_all', 'R1_hat_all','R2_hat_all', 'u1_hat_all','u2_hat_all', 'sse_all', 'R_square_all')
 
-
-
-%% Calculate pairwise euclidean distance between ZpZc pairs
-
-
-ZpZcPWdist = getZpZcPWdist(ZpZcStruct);
-% save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZpZc_pairwiseDist.mat']), 'ZpZcPWdist');
 
 
 %% Trials per stimulus condition
@@ -214,7 +234,7 @@ print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_st
 
 %% ZcZp of population (resp_ind)
 
-plotZpZc4PhasePopulation(ZpZcStruct,resp_ind,30edit )
+plotZpZc4PhasePopulation(ZpZcStruct,resp_ind,30)
 sgtitle('Pattern direction selective cells at four phases')
 
 print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZcZp.pdf']),'-dpdf', '-fillpage')       
@@ -239,12 +259,6 @@ end
 phase = [0 90 180 270];
 phase_range = 0:1:359;
 
-phaseModStruct = get4PhaseModulationFit(ZpZcStruct);
-    PCI         = phaseModStruct.PCI;
-    yfit_all    = phaseModStruct.yfit;
-    amp_hat_all = phaseModStruct.amp;
-    b_hat_all   = phaseModStruct.b;
-
 figure;
 start=1;
 n=1;
@@ -265,7 +279,7 @@ for iCell = 1:nCells
     start = start+1;
     if start >20
         sgtitle([mouse ' ' date ' PCI modulation across mask phase by cell'])
-        % print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_PCImodulation_' num2str(n) '.pdf']),'-dpdf', '-fillpage')       
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_PCImodulation_' num2str(n) '.pdf']),'-dpdf', '-fillpage')       
         figure;
         movegui('center')
         start = 1;
@@ -273,10 +287,10 @@ for iCell = 1:nCells
     end
     if iCell == nCells
         sgtitle([mouse ' ' date ' PCI modulation across mask phase by cell'])
-        % print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_PCImodulation_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_PCImodulation_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end        
 end
-    % save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_PatternCorrelationIndexFits.mat']), 'ind', 'Zp', 'Zc', 'PCI', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all','DSI')
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_PatternCorrelationIndexFits.mat']), 'ind', 'Zp', 'Zc', 'PCI', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'sse_all', 'R_square_all','DSI')
     close all
     
 %% Shuffled modulation
@@ -297,28 +311,10 @@ for iCell = 1:nCells
 end
     save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_PatternCorrelationIndexFits_Shuffled.mat']), 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all')
 
-%% Direction tuning curve FIT
-
-gratingFitStruct = getGratingTuningCurveFit(avg_resp_dir);
-    b_hat_all       = gratingFitStruct.b;
-    k1_hat_all      = gratingFitStruct.k1;
-    R1_hat_all      = gratingFitStruct.R1;
-    R2_hat_all      = gratingFitStruct.R2;
-    u1_hat_all      = gratingFitStruct.u1;
-    u2_hat_all      = gratingFitStruct.u2;
-    sse_all         = gratingFitStruct.sse;
-    R_square_all    = gratingFitStruct.Rsq;
-    dir_yfit_all    = gratingFitStruct.yfit;
-
-    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_DirectionTuningFit.mat']), 'dir_yfit_all', 'b_hat_all', 'k1_hat_all', 'R1_hat_all','R2_hat_all', 'u1_hat_all','u2_hat_all', 'sse_all', 'R_square_all')
-
-
-
     
 %% Direction tuning curves plotted
 
 [avg_resp_grat, avg_resp_plaid] = getAlignedGratPlaidTuning(avg_resp_dir);
-
 
 figure;
 start = 1;
@@ -407,10 +403,9 @@ for iCell = 1:nCells
             subtitle(['cell ' num2str(iCell)])
         end
         plotZcZpBorders; set(gca,'TickDir','out'); axis square
-    start = start+1;    
     if start>20
         sgtitle([mouse ' ' date ' - Zp Zc by cell'])
-        % print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
         figure;
         movegui('center')
         start = 1;
@@ -418,7 +413,7 @@ for iCell = 1:nCells
     end
     if iCell == nCells
         sgtitle([mouse ' ' date ' - Zp Zc by cell'])
-        % print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
+        print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end        
 end
 close all
