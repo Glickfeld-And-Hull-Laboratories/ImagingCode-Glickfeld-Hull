@@ -3555,8 +3555,6 @@ title('SST')
 
 
 %% comparing normalized difference to noise correlation
-%this plots the scatter for the 25% contrast only, then makes the bar
-%chart of beta values for all contrasts
 
 mySample = red_ind_concat;
 % Extract data (stationary state only)
@@ -3646,7 +3644,7 @@ for contrast = 1:num_contrasts
     plot(x_range, y_line, 'r-', 'LineWidth', 2);
     
     % Labels and title
-    title(sprintf('Contrast: %d%%', contrasts(contrast)), 'FontSize', 8);
+    title(sprintf('Contrast: %d%%', cons(contrast)), 'FontSize', 8);
     xlabel('Noise Correlation (Baseline)', 'FontSize', 7);
     ylabel('Normalized Difference', 'FontSize', 7);
     
@@ -3808,7 +3806,7 @@ grid off;
 % Add text with model information
 text(0.05, 0.95, sprintf('Slope = %.4f', slope), 'Units', 'normalized', 'FontSize', 10);
 text(0.05, 0.90, sprintf('p-value = %.4f', slope_pval), 'Units', 'normalized', 'FontSize', 10);
-text(0.05, 0.85, sprintf('R² = %.4f', r_squared), 'Units', 'normalized', 'FontSize', 10);
+text(0.05, 0.85, sprintf('R� = %.4f', r_squared), 'Units', 'normalized', 'FontSize', 10);
 
 % Save the figure
 saveas(gcf, 'beta_vs_contrast_linear_model.pdf');
