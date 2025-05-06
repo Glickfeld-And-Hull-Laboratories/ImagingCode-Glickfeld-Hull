@@ -18,10 +18,6 @@ function plotNeuralTimecourse(data1, data2, cell_indices1, cell_indices2, vararg
 %                Default: {'k', 'b'}
 %   'Colors2' - Colors for pre and post in second dataset [pre_color, post_color]
 %                Default: {'k', 'b'}
-%   'YLim1' - Y axis limits for first dataset [min, max]
-%                Default: [-0.02, 0.17]
-%   'YLim2' - Y axis limits for second dataset [min, max]
-%                Default: [-0.02, 0.25]
 %   'Titles' - Cell array with titles for each dataset {'title1', 'title2'}
 %                Default: {'Dataset 1', 'Dataset 2'}
 %   'StimDuration' - Duration of stimulus in seconds
@@ -42,8 +38,6 @@ addRequired(p, 'cell_indices2', @isnumeric);
 addParameter(p, 'UseDashedLines', [false, false], @(x) islogical(x) && length(x)==2);
 addParameter(p, 'Colors1', {'k', 'b'}, @(x) iscell(x) && length(x)==2);
 addParameter(p, 'Colors2', {'k', 'b'}, @(x) iscell(x) && length(x)==2);
-addParameter(p, 'YLim1', [-0.02, 0.17], @(x) isnumeric(x) && length(x)==2);
-addParameter(p, 'YLim2', [-0.02, 0.25], @(x) isnumeric(x) && length(x)==2);
 addParameter(p, 'Titles', {'Dataset 1', 'Dataset 2'}, @(x) iscell(x) && length(x)==2);
 addParameter(p, 'StimDuration', 2, @isnumeric);
 addParameter(p, 'FrameRate', 15, @isnumeric);
@@ -56,8 +50,6 @@ parse(p, data1, data2, cell_indices1, cell_indices2, varargin{:});
 use_dashed_lines = p.Results.UseDashedLines;
 colors1 = p.Results.Colors1;
 colors2 = p.Results.Colors2;
-ylim1 = p.Results.YLim1;
-ylim2 = p.Results.YLim2;
 titles = p.Results.Titles;
 stim_duration = p.Results.StimDuration;
 frame_rate = p.Results.FrameRate;
@@ -103,6 +95,49 @@ t = (t - (double(stimStart) - 1)) / double(frame_rate);
 % Create a stimulus marker
 z = stim_duration;
 
+% Find global min and max for y-axis scaling
+ymin = Inf;
+ymax = -Inf;
+
+% Check dataset 1
+for id = 1:nd
+    for iCon = 1:nCon
+        % Calculate min considering error bars
+        temp_min = min(tc_data1_avrg{id}(:, iCon) - tc_data1_se{id}(:, iCon));
+        if ~isnan(temp_min) && temp_min < ymin
+            ymin = temp_min;
+        end
+        
+        % Calculate max considering error bars
+        temp_max = max(tc_data1_avrg{id}(:, iCon) + tc_data1_se{id}(:, iCon));
+        if ~isnan(temp_max) && temp_max > ymax
+            ymax = temp_max;
+        end
+    end
+end
+
+% Check dataset 2
+for id = 1:nd
+    for iCon = 1:nCon
+        % Calculate min considering error bars
+        temp_min = min(tc_data2_avrg{id}(:, iCon) - tc_data2_se{id}(:, iCon));
+        if ~isnan(temp_min) && temp_min < ymin
+            ymin = temp_min;
+        end
+        
+        % Calculate max considering error bars
+        temp_max = max(tc_data2_avrg{id}(:, iCon) + tc_data2_se{id}(:, iCon));
+        if ~isnan(temp_max) && temp_max > ymax
+            ymax = temp_max;
+        end
+    end
+end
+
+% Add some padding to the y-axis limits (10% of the range)
+padding = 0.1 * (ymax - ymin);
+ymin = ymin - padding;
+ymax = ymax + padding;
+
 % Create figure
 figure('Units', 'inches', 'Position', [5, 0, figure_size(1), figure_size(2)]);
 
@@ -130,13 +165,17 @@ for iCon = 1:nCon
     hold on;
     shadedErrorBar(t, tc_data1_avrg{post}(:, iCon), tc_data1_se{post}(:, iCon), [line_style1_post, colors1{2}]);
     
-    ylim(ylim1);
+    % Apply common y-axis limits
+    ylim([ymin, ymax]);
     hold on;
-    line([0, z], [-0.01, -0.01], 'Color', 'black', 'LineWidth', 2);
+    line([0, z], [ymin + 0.1*padding, ymin + 0.1*padding], 'Color', 'black', 'LineWidth', 2);
     
     if iCon == 1
         title([titles{1}, ' n = ', num2str(length(cell_indices1))]);
-        line([-1.8, -1.8], [0.01, 0.06], 'Color', 'black', 'LineWidth', 2);
+        % Scale the vertical calibration bar based on the y-axis range
+        y_bar_height = 0.05 * (ymax - ymin);
+        y_bar_start = ymin + 2*padding;
+        line([-1.8, -1.8], [y_bar_start, y_bar_start + y_bar_height], 'Color', 'black', 'LineWidth', 2);
     end
     set(gca, 'TickDir', 'out', 'XColor', 'none', 'YColor', 'none', 'box', 'off');
     grid off;
@@ -157,13 +196,17 @@ for iCon = 1:nCon
     hold on;
     shadedErrorBar(t, tc_data2_avrg{post}(:, iCon), tc_data2_se{post}(:, iCon), [line_style2_post,colors2{2}]);
     
-    ylim(ylim2);
+    % Apply common y-axis limits
+    ylim([ymin, ymax]);
     hold on;
-    line([0, z], [-0.01, -0.01], 'Color', 'black', 'LineWidth', 2);
+    line([0, z], [ymin + 0.1*padding, ymin + 0.1*padding], 'Color', 'black', 'LineWidth', 2);
     
     if iCon == 1
         title([titles{2}, ' n = ', num2str(length(cell_indices2))]);
-        line([-1.8, -1.8], [0.01, 0.06], 'Color', 'black', 'LineWidth', 2);
+        % Scale the vertical calibration bar based on the y-axis range
+        y_bar_height = 0.05 * (ymax - ymin);
+        y_bar_start = ymin + 2*padding;
+        line([-1.8, -1.8], [y_bar_start, y_bar_start + y_bar_height], 'Color', 'black', 'LineWidth', 2);
     end
     set(gca, 'TickDir', 'out', 'XColor', 'none', 'YColor', 'none', 'box', 'off');
     grid off;

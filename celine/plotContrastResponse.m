@@ -19,8 +19,6 @@ function plotContrastResponse(data1, data2, cell_indices1, cell_indices2, contra
 %               Default: {'k', 'b'}
 %   'Colors2' - Colors for pre and post in second dataset [pre_color, post_color]
 %               Default: {'k', 'b'}
-%   'YLim' - Y axis limits [min, max]
-%            Default: [0, 0.18]
 %   'XLim' - X axis limits [min, max]
 %            Default: [0, 1.2]
 %   'Titles' - Cell array with titles for each dataset {'title1', 'title2'}
@@ -42,7 +40,6 @@ addRequired(p, 'contrasts', @isnumeric);
 addParameter(p, 'UseDashedLines', [false, false], @(x) islogical(x) && length(x)==2);
 addParameter(p, 'Colors1', {'k', 'b'}, @(x) iscell(x) && length(x)==2);
 addParameter(p, 'Colors2', {'k', 'b'}, @(x) iscell(x) && length(x)==2);
-addParameter(p, 'YLim', [0, 0.18], @(x) isnumeric(x) && length(x)==2);
 addParameter(p, 'XLim', [0, 1.2], @(x) isnumeric(x) && length(x)==2);
 addParameter(p, 'Titles', {'Dataset 1', 'Dataset 2'}, @(x) iscell(x) && length(x)==2);
 addParameter(p, 'YLabel', 'dF/F', @ischar);
@@ -55,7 +52,6 @@ parse(p, data1, data2, cell_indices1, cell_indices2, contrasts, varargin{:});
 use_dashed_lines = p.Results.UseDashedLines;
 colors1 = p.Results.Colors1;
 colors2 = p.Results.Colors2;
-ylim_range = p.Results.YLim;
 xlim_range = p.Results.XLim;
 titles = p.Results.Titles;
 y_label = p.Results.YLabel;
@@ -86,6 +82,45 @@ for id = 1:nd
     conResp_data2_se{id} = data2_std / sqrt(length(cell_indices2));
 end
 
+% Find global min and max for y-axis scaling
+ymin = Inf;
+ymax = -Inf;
+
+% Check dataset 1
+for id = 1:nd
+    % Calculate min considering error bars
+    temp_min = min(conResp_data1_avrg{id} - conResp_data1_se{id});
+    if ~isnan(temp_min) && temp_min < ymin
+        ymin = temp_min;
+    end
+    
+    % Calculate max considering error bars
+    temp_max = max(conResp_data1_avrg{id} + conResp_data1_se{id});
+    if ~isnan(temp_max) && temp_max > ymax
+        ymax = temp_max;
+    end
+end
+
+% Check dataset 2
+for id = 1:nd
+    % Calculate min considering error bars
+    temp_min = min(conResp_data2_avrg{id} - conResp_data2_se{id});
+    if ~isnan(temp_min) && temp_min < ymin
+        ymin = temp_min;
+    end
+    
+    % Calculate max considering error bars
+    temp_max = max(conResp_data2_avrg{id} + conResp_data2_se{id});
+    if ~isnan(temp_max) && temp_max > ymax
+        ymax = temp_max;
+    end
+end
+
+% Add some padding to the y-axis limits (10% of the range)
+padding = 0.1 * (ymax - ymin);
+ymin = max(0, ymin - padding); % Ensure we don't go below zero if data is all positive
+ymax = ymax + padding;
+
 % Create figure
 figure('Units', 'inches', 'Position', [5, 5, figure_size(1), figure_size(2)]);
 
@@ -112,9 +147,10 @@ errorbar(contrasts, conResp_data1_avrg{post}, conResp_data1_se{post}, ...
 % Set axis properties
 ylabel(y_label);
 xlim(xlim_range);
-ylim(ylim_range);
+ylim([ymin, ymax]);
 xticks(contrasts);
 set(gca, 'TickDir', 'out', 'box', 'off');
+grid off;
 if ~isempty(x_label)
     xlabel(x_label);
 end
@@ -144,9 +180,10 @@ errorbar(contrasts, conResp_data2_avrg{post}, conResp_data2_se{post}, ...
 
 % Set axis properties
 xlim(xlim_range);
-ylim(ylim_range);
+ylim([ymin, ymax]);
 xticks(contrasts);
 set(gca, 'TickDir', 'out', 'box', 'off');
+grid off;
 if ~isempty(x_label)
     xlabel(x_label);
 end

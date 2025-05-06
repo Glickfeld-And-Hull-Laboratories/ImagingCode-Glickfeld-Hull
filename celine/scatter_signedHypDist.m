@@ -1,4 +1,4 @@
-function scatter_signedHypDist(dataset, pre, post, interneuron_indices, pyramidal_indices, filename)
+function scatter_signedHypDist(dataset, pre, post, interneuron_indices, pyramidal_indices)
 % scatter_signedHypDist Creates scatter plots with signed hypotenuse probability distributions for neural responses and saves to PDF
 %
 % INPUTS:
@@ -7,7 +7,6 @@ function scatter_signedHypDist(dataset, pre, post, interneuron_indices, pyramida
 %   post - Index for post condition in dataset
 %   interneuron_indices - Indices for interneurons
 %   pyramidal_indices - Indices for pyramidal cells
-%   filename - Base filename for saving PDFs
 %
 % This function creates scatter plots of pre vs. post neural responses
 % for both interneurons and pyramidal cells, along with probability density plots of post-pre differences,
@@ -228,8 +227,7 @@ for iCon = 1:nCon
     % Add contrast condition information
     sgtitle(['Contrast Condition: ' num2str(iCon)]);
     
-    % Save figure as PDF with explicit size control
-    fullfilename = sprintf([filename '_scatter_signed_hyp_contrast_%d.pdf'], iCon);
+
     
     % Set paper size to match figure size
     set(fig, 'PaperUnits', 'inches');
@@ -237,10 +235,7 @@ for iCon = 1:nCon
     set(fig, 'PaperPositionMode', 'manual');
     set(fig, 'PaperPosition', [0 0 fig.Position(3) fig.Position(4)]);
     
-    % Save with high resolution
-    print(fig, fullfilename, '-dpdf', '-r300');
-    
-    fprintf('Saved figure for contrast %d as %s\n', iCon, fullfilename);
+
 end
 end
 
