@@ -4,8 +4,8 @@ summaryDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase\summaries'])
 outDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase']);
 svName = 'randDirFourPhase_CrossOri';
 
-
-expts = strvcat('g01', 'g06', 'g12', 'g17'); %Four acute penetrations in V1, 1 marmoset
+expts = strvcat('g01b', 'g06b','g12b','g17b'); %Four acute penetrations in V1, 1 marmoset
+%expts = strvcat('g01', 'g06', 'g12', 'g17'); %Four acute penetrations in V1, 1 marmoset
 nexp = length(expts);
 
 sig_stim = [];
@@ -33,6 +33,11 @@ dir_yfits = [];
 
 plaid_corr_all = [];
 
+g_dsi_all = [];
+g_osi_all = [];
+ang_dir_all = [];
+ang_ori_all = [];
+
 
 start=1;
 for iexp=1:nexp
@@ -40,6 +45,11 @@ for iexp=1:nexp
     load(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_fitsSG.mat']))
 
     plaid_corr_all = [plaid_corr_all; plaid_corr'];
+
+    g_dsi_all = [g_dsi_all; g_dsi'];
+    g_osi_all = [g_osi_all; g_osi'];
+    ang_dir_all = [ang_dir_all; ang_dir'];
+    ang_ori_all = [ang_ori_all; ang_ori'];
     
     b_all = [b_all; b_hat_all];
     amp_all = [amp_all; amp_hat_all];
@@ -76,7 +86,7 @@ for iexp=1:nexp
 start=start+1;
 end
 
-    save(fullfile(summaryDir,[svName '_Summary_V1_MAR.mat']),  'sig_dir','sig_stim','plaid_corr_all','ZpZcPWdist_all','k1_all','dir_Rsq_all','dir_sse_all','totCells','Zp_all','Zc_all','b_all','amp_all','Rsq_all','yfit_all_all','sse_all_all', 'DSI_all','expts')
+    save(fullfile(summaryDir,[svName '_Summary_V1_MAR.mat']), 'ang_dir_all', 'ang_ori_all', 'g_dsi_all', 'g_osi_all', 'sig_dir','sig_stim','plaid_corr_all','ZpZcPWdist_all','k1_all','dir_Rsq_all','dir_sse_all','totCells','Zp_all','Zc_all','b_all','amp_all','Rsq_all','yfit_all_all','sse_all_all', 'DSI_all','expts')
 
 %%
 
@@ -151,11 +161,11 @@ figure;
 
     ind_patt(1) = length(intersect(intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)),resp_ind));
     ind_patt(2) = length(intersect(intersect(find(Zp_all(2,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)),resp_ind));
-    ind_patt(3) = length(intersect(intersect(find(Zp_all(3,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)),resp_ind));
+    ind_patt(3) = length(intersect(intersect(find(Zp_all(3,:)>1.28),find(Zp_all(3,:)-Zc_all(3,:)>1.28)),resp_ind));
     ind_patt(4) = length(intersect(intersect(find(Zp_all(4,:)>1.28),find(Zp_all(4,:)-Zc_all(4,:)>1.28)),resp_ind));
     ind_comp(1) = length(intersect(intersect(find(Zc_all(1,:)>1.28),find(Zc_all(1,:)-Zp_all(1,:)>1.28)),resp_ind));
     ind_comp(2) = length(intersect(intersect(find(Zc_all(2,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28)),resp_ind));
-    ind_comp(3) = length(intersect(intersect(find(Zc_all(3,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28)),resp_ind));
+    ind_comp(3) = length(intersect(intersect(find(Zc_all(3,:)>1.28),find(Zc_all(3,:)-Zp_all(3,:)>1.28)),resp_ind));
     ind_comp(4) = length(intersect(intersect(find(Zc_all(4,:)>1.28),find(Zc_all(4,:)-Zp_all(4,:)>1.28)),resp_ind));
 
     avg_classification(1) = mean(ind_patt(:))/length(resp_ind);
@@ -163,11 +173,11 @@ figure;
 
     ind_patt1 = intersect(intersect(find(Zp_all(1,:)>1.28),find(Zp_all(1,:)-Zc_all(1,:)>1.28)),resp_ind);
     ind_patt2 = intersect(intersect(find(Zp_all(2,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)),resp_ind);
-    ind_patt3 = intersect(intersect(find(Zp_all(3,:)>1.28),find(Zp_all(2,:)-Zc_all(2,:)>1.28)),resp_ind);
+    ind_patt3 = intersect(intersect(find(Zp_all(3,:)>1.28),find(Zp_all(3,:)-Zc_all(3,:)>1.28)),resp_ind);
     ind_patt4 = intersect(intersect(find(Zp_all(4,:)>1.28),find(Zp_all(4,:)-Zc_all(4,:)>1.28)),resp_ind);
     ind_comp1 = intersect(intersect(find(Zc_all(1,:)>1.28),find(Zc_all(1,:)-Zp_all(1,:)>1.28)),resp_ind);
     ind_comp2 = intersect(intersect(find(Zc_all(2,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28)),resp_ind);
-    ind_comp3 = intersect(intersect(find(Zc_all(3,:)>1.28),find(Zc_all(2,:)-Zp_all(2,:)>1.28)),resp_ind);
+    ind_comp3 = intersect(intersect(find(Zc_all(3,:)>1.28),find(Zc_all(3,:)-Zp_all(3,:)>1.28)),resp_ind);
     ind_comp4 = intersect(intersect(find(Zc_all(4,:)>1.28),find(Zc_all(4,:)-Zp_all(4,:)>1.28)),resp_ind);
     
     max_classification(1) = length(unique([ind_patt1;ind_patt2;ind_patt3;ind_patt4]))/length(resp_ind);

@@ -1,4 +1,4 @@
-function [outs,stack]=stackRegister_TH(stack,target,usFacs,shifts_xy)
+function [outs,stack]=stackRegGPU_byFrame(stack,target,usFacs,shifts_xy)
 %STACKREGISTER Fourier-domain subpixel 2d rigid body registration.
 % [OUTS]=STACKREGISTER(STACK,TARGET) where 
 %      stack is 3d array containing stack to register
@@ -12,6 +12,8 @@ function [outs,stack]=stackRegister_TH(stack,target,usFacs,shifts_xy)
 % [OUTS,REG]=STACKREGISTER(STACK,TARGET) returns registered stack REG.
 %
 % based on DFTREGISTRATION by Manuel Guizar
+% TH MAY 2025: added by-frame version that doesn't use chunking. Instead it
+% loads each frame onto the gpu as the loop progresses. 
 % TH ADDED APR 2025: Based on stackRegister_MA, shifting operations
 % chunk-wise onto the GPU. VRAM usage during is 12G max. CPU ~11% usage
 % with GPU use, instead of CPU ~24% with CPU only.
@@ -49,12 +51,12 @@ chunkSize = 5000;
 c = class(stack);
 
 shifts_xy = gpuArray(shifts_xy);
-TARGET = gpuArray(fft2(double(target)));
+TARGET = fft2(double(gpuArray(target)));
 
 [ny,nx,nframes]=size(stack);
 
 % outs = zeros(nframes,4,"gpuArray");
-outs = zeros(nframes,4);
+outs = nan(nframes,4);
 
 % if nargout > 1
 %     reg = zeros(size(stack),c);
@@ -69,41 +71,41 @@ if ~isempty(shifts_xy)
     Nr = ifftshift([-fix(nr/2):ceil(nr/2)-1]);
     Nc = ifftshift([-fix(nc/2):ceil(nc/2)-1]);
     [Nc,Nr] = meshgrid(Nc,Nr);
-    outs = gather(shifts_xy);
+    % outs = shifts_xy;
 end
 
-nChunks = floor(nframes/chunkSize) + 1;
-rmd = mod(nframes,chunkSize);
+% nChunks = floor(nframes/chunkSize) + 1;
+% rmd = mod(nframes,chunkSize);
 
 tic;
-fprintf(1, 'Starting Registration of %i frames on the GPU\nSplit into %i chunks of %i frames with a remainder %i frames\n',nframes,nChunks-1,chunkSize,rmd);
-for chk = 1:nChunks
-    cStartFrame = chunkSize * (chk-1) +1;
-    if chk == max(nChunks)
-        cEndFrame = nframes;
-        chunkNFrames = rmd;
-    else
-        cEndFrame = chunkSize * chk;
-        chunkNFrames = chunkSize;
-    end
-    this_gpu_stack = gpuArray(stack(:,:,cStartFrame:cEndFrame));
-    if ~isempty(shifts_xy)
-        this_shifts_xy = shifts_xy(cStartFrame:cEndFrame,:);
-    end
-    for index = 1:chunkNFrames
+fprintf(1, 'Starting Registration of %i frames on the GPU\n',nframes);
+% for chk = 1:nChunks
+    % cStartFrame = chunkSize * (chk-1) +1;
+    % if chk == max(nChunks)
+    %     cEndFrame = nframes;
+    %     chunkNFrames = rmd;
+    % else
+    %     cEndFrame = chunkSize * chk;
+    %     chunkNFrames = chunkSize;
+    % end
+    % this_gpu_stack = gpuArray(stack(:,:,cStartFrame:cEndFrame));
+    % if ~isempty(shifts_xy)
+    %     this_shifts_xy = shifts_xy(cStartFrame:cEndFrame,:);
+    % end
+    for index = 1:nframes
         if mod(index,250)==0 
-            fprintf(1,'Chunk %i/%i Frame %i/%i (%2.1f fps)\n',chk,nChunks,index,chunkNFrames,((chk-1)*chunkSize+index)/toc);
+            fprintf(1,'Frame %i/%i (%2.1f fps)\n',index,nframes,index/toc);
         end
-        SLICE = fft2(double(this_gpu_stack(:,:,index)));
+        SLICE = fft2(double(gpuArray(stack(:,:,index))));
     
         %note: if shifts_xy = [], then standard correg, otherwise, uses this
         %program to return shifted version of fft2...
         if isempty(shifts_xy)
-            [outs((chk-1)*chunkSize+index,:),temp] = dftregistration(TARGET,SLICE,usFacs);
+            [outs(index,:),temp] = dftregistration(TARGET,SLICE,usFacs);
         else
-            row_shift = this_shifts_xy(index,3);
-            col_shift = this_shifts_xy(index,4);
-            diffphase = this_shifts_xy(index,2);
+            row_shift = shifts_xy(index,3);
+            col_shift = shifts_xy(index,4);
+            diffphase = shifts_xy(index,2);
     
             temp = SLICE.*exp(i*2*pi*(-row_shift*Nr/nr-col_shift*Nc/nc));
             temp = temp*exp(i*diffphase);
@@ -111,17 +113,21 @@ for chk = 1:nChunks
         if nargout > 1
             wS = warning('off'); 
             if class(temp) == "gpuArray"
-                stack(:,:,(chk-1)*chunkSize+index) = gather(abs(ifft2(temp)));  
+                stack(:,:,index) = gather(abs(ifft2(temp)));  
             else
-                stack(:,:,(chk-1)*chunkSize+index) = abs(ifft2(temp));
+                stack(:,:,index) = abs(ifft2(temp));
             end
             warning(wS);
         end
     end
-end
+% end
 t = toc;
-% outs = gather(outs);
 
 fprintf('Registered %i frames in %2.1f seconds (%2.1f fps)\n',nframes,t,nframes/t);
+
+if ~isempty(shifts_xy)
+    outs = gather(shifts_xy);
+end
+
 gpuDevice([]);
 return;

@@ -5,7 +5,7 @@ ds = 'CrossOriRandDirFourPhase_ExptList_SG';
 rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
-iexp = 112; 
+iexp = 113; 
 frame_rate = 15;
 
 %%
@@ -17,15 +17,16 @@ time = expt(iexp).coTime;
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
+dataBase = (['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\' expt(iexp).saveLoc]);
 base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 %base = '\\CRASH.dhe.duke.edu\data\home\lindsey';
 
 fprintf([mouse ' ' date '\n'])
 
 %% Pref direction analysis
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(dataBase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
+load(fullfile(dataBase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+load(fullfile(dataBase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 
 %%
 if doRedChannel == 0
@@ -141,7 +142,9 @@ end
 
 DSI_ind = find(DSI>0.5); %direction selective to gratings
 
-
+if ~exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]), 'dir')
+    mkdir(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]));
+end
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_cell', 'data_dfof_tc', 'resp_ind', 'frame_rate', 'h_resp', 'avg_resp_dir','p_anova_dir','p_anova_plaid');
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'ind_stimAlone', 'ind_maskAlone', 'ind_plaid', 'ind_blank');
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_varsforGLM.mat']), 'resp_cell','stimDir_all','trialInd','ind_diralone','ind_dirplaid','ind_dpplaid');
@@ -160,51 +163,39 @@ for i = 1:nStimDir
     avg_resp_dir_rand(:,i,2) = mean(resp_cell{i,1,2}(:,ind2),2);
 end
     
-int = unique(diff(stimDirs));
-component = avg_resp_dir(:,:,1,1,1)+circshift(avg_resp_dir(:,:,1,1,1),-120./int,2);
-pattern = circshift(avg_resp_dir(:,:,1,1,1),-60./int,2);
+% Do all fits at once
+    [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phaseModStruct] = bigFits(avg_resp_dir);
+
+    % Get direction selectivity
+        DSI         = DSIstruct.DSI;
+        DSI_ind     = DSIstruct.DS_ind;
+        DSI_maxInd  = DSIstruct.prefDir;
+    % Get direction tuning curve fit
+        dir_b_hat_all           = gratingFitStruct.b;
+        k1_hat_all          = gratingFitStruct.k1;
+        R1_hat_all          = gratingFitStruct.R1;
+        R2_hat_all          = gratingFitStruct.R2;
+        u1_hat_all          = gratingFitStruct.u1;
+        u2_hat_all          = gratingFitStruct.u2;
+        dir_sse_all         = gratingFitStruct.sse;
+        dir_R_square_all    = gratingFitStruct.Rsq;
+        dir_yfit_all        = gratingFitStruct.yfit;
+    % Get partial correlations
+        Zp      = ZpZcStruct.Zp;
+        Zc      = ZpZcStruct.Zc;
+        Rp      = ZpZcStruct.Rp;
+        Rc      = ZpZcStruct.Rc;
+        ind     = ZpZcStruct.PDSind_byphase;
+        ind_pds = ZpZcStruct.PDSind_all;
+    % Get PCI fit, get amplitude and baseline
+        PCI             = phaseModStruct.PCI;
+        yfit_all        = phaseModStruct.yfit;
+        amp_hat_all     = phaseModStruct.amp;
+        b_hat_all       = phaseModStruct.b;
+        sse_all         = phaseModStruct.sse;
+        R_square_all    = phaseModStruct.rsq;
 
 
-comp_corr = zeros(nMaskPhas,nCells);
-patt_corr = zeros(nMaskPhas,nCells);
-comp_patt_corr = zeros(nMaskPhas,nCells);
-plaid_corr = zeros(1,nCells);
-plaid_corr1 = zeros(1,nCells);
-plaid_corr2 = zeros(1,nCells);
-plaid_corr3 = zeros(1,nCells);
-plaid_corr4 = zeros(1,nCells);
-plaid_corr5 = zeros(1,nCells);
-plaid_corr6 = zeros(1,nCells);
-plaid_corr_rand = zeros(1,nCells);
-
-for iCell = 1:nCells
-    for ip = 1:nMaskPhas
-        comp_corr(ip,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,ip,2,1),component(iCell,:)));
-        patt_corr(ip,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,ip,2,1),pattern(iCell,:)));
-        comp_patt_corr(ip,iCell) = triu2vec(corrcoef(component(iCell,:),pattern(iCell,:)));
-    end
-    plaid_corr1(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,1,2,1),avg_resp_dir(iCell,:,2,2,1)));
-    plaid_corr2(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,1,2,1),avg_resp_dir(iCell,:,3,2,1)));
-    plaid_corr3(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,1,2,1),avg_resp_dir(iCell,:,4,2,1)));
-    plaid_corr4(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,2,2,1),avg_resp_dir(iCell,:,3,2,1)));
-    plaid_corr5(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,2,2,1),avg_resp_dir(iCell,:,4,2,1)));
-    plaid_corr6(1,iCell) = triu2vec(corrcoef(avg_resp_dir(iCell,:,3,2,1),avg_resp_dir(iCell,:,4,2,1)));
-    plaid_corr(1,iCell) = (plaid_corr1(1,iCell)+plaid_corr2(1,iCell)+plaid_corr3(1,iCell)+plaid_corr4(1,iCell)+plaid_corr5(1,iCell)+plaid_corr6(1,iCell))/6;
-    plaid_corr_rand(1,iCell) = triu2vec(corrcoef(avg_resp_dir_rand(iCell,:,1),avg_resp_dir_rand(iCell,:,2)));
-end
-Rp = ((patt_corr)-(comp_corr.*comp_patt_corr))./sqrt((1-comp_corr.^2).*(1-comp_patt_corr.^2));
-Rc = ((comp_corr)-(patt_corr.*comp_patt_corr))./sqrt((1-patt_corr.^2).*(1-comp_patt_corr.^2));
-Zp = (0.5.*log((1+Rp)./(1-Rp)))./sqrt(1./(nStimDir-3));
-Zc = (0.5.*log((1+Rc)./(1-Rc)))./sqrt(1./(nStimDir-3));
-
-ZcZp_diff = Zc-Zp;
-ind1 = intersect(find(Zp(1,:)>1.28),find(Zp(1,:)-Zc(1,:)>1.28));
-ind2 = intersect(find(Zp(2,:)>1.28),find(Zp(2,:)-Zc(2,:)>1.28));
-ind3 = intersect(find(Zp(3,:)>1.28),find(Zp(3,:)-Zc(3,:)>1.28));
-ind4 = intersect(find(Zp(4,:)>1.28),find(Zp(4,:)-Zc(4,:)>1.28));
-ind = {ind1,ind2,ind3,ind4};
-ind_arr = [ind1,ind2,ind3,ind4];
-ind_pds = unique(ind_arr);
 
 %% ZcZp of population (resp_ind)
 
@@ -272,17 +263,12 @@ ind = intersect(intersect(resp_ind_dir,DSI_ind),p_dir); %resp to 1 grating, DSI>
 
 %% PCI modulation
 
-% PCI = (Zp-Zc)./(Zp+Zc);
-PCI = (Zp-Zc);
-PCI_high = find(PCI>100);
-PCI(PCI_high) = NaN;
 
 figure;
 for i = 1:nMaskPhas
     cdfplot(PCI(i,:));
     hold on
 end
-
 
 %fit sinusoid
 phase = [0 90 180 270];
@@ -294,8 +280,6 @@ for iCell = 1:nCells
     subplot(5,4,start)
         scatter(phase,PCI(:,iCell),'LineWidth',1.25);
         hold on
-        [b_hat_all(iCell,1), amp_hat_all(iCell,1), per_hat_all(iCell,1),pha_hat_all(iCell,1),sse_all(iCell,1),R_square_all(iCell,1)] = sinefit(deg2rad(phase),PCI(:,iCell));
-        yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
         idx = iCell==ind; %does iCell equal any value in the index?
         if any(idx)  %if yes, plot in red. if not, plot in black
             plot(phase_range, yfit_all(iCell,:,1),'k'); 
@@ -319,29 +303,14 @@ for iCell = 1:nCells
         print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_PCImodulation_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end        
 end
-    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_PatternCorrelationIndexFits.mat']), 'ind', 'Zp', 'Zc', 'PCI', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'per_hat_all', 'pha_hat_all', 'sse_all', 'R_square_all')
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_PatternCorrelationIndexFits.mat']), 'ind', 'Zp', 'Zc', 'PCI', 'yfit_all', 'b_hat_all', 'amp_hat_all', 'sse_all', 'R_square_all')
     close all
 
 
 
 %% direction tuning curves
 
-respgrat = avg_resp_dir(:,:,1,1,1);
-[prefresp, prefdir] = max(respgrat,[],2);
-vecshift = zeros(size(respgrat,1),1)+6; 
-vecshift = vecshift - prefdir;
-respplaid = avg_resp_dir(:,:,:,2,1);
-
-avg_resp_grat =[];
-avg_resp_plaid = [];
-
-for iCell = 1:size(respgrat,1)
-    avg_resp_grat(iCell,:) = circshift(respgrat(iCell,:),vecshift(iCell),2);
-    for i = 1:nMaskPhas
-        avg_resp_plaid(iCell,:,i) = circshift(respplaid(iCell,:,i),vecshift(iCell)+(60./int),2);
-    end
-end
-
+[avg_resp_grat, avg_resp_plaid] = getAlignedGratPlaidTuning(avg_resp_dir);
 
 figure;
 start = 1;

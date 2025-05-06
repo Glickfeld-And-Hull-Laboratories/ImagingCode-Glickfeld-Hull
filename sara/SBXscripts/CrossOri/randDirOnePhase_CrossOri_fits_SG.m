@@ -47,7 +47,7 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-iexp = 112; 
+iexp = 24; 
 max_dist = 10;
 
 frame_rate = 15;
@@ -161,8 +161,6 @@ for id = 1:nStimDir
     ntrial_g = [ntrial_g; size(resp_cell{id,1,1},2)];
 end
 
-
-
 resp_ind = find(sum(sum(sum(h_resp,2),3),4));
 resp_ind_dir = find(sum(h_resp(:,:,1,1),2)); %sig responsive to gratings
 resp_ind_plaid = find(sum(sum(h_resp(:,:,:,2),2),3));
@@ -186,6 +184,7 @@ for iCell = 1:nCells
     if min_val < 0; min_val = 0; end
     DSI(iCell) = (max_val-min_val)./(max_val+min_val);
 end
+
 
 DSI_ind = find(DSI>0.5); %direction selective to gratings
 OSI_ind = find(DSI<0.5);
