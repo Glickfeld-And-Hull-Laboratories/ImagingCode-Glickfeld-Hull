@@ -1835,7 +1835,7 @@ print(fullfile(fnout,'Fig_Sy_B.pdf'),'-dpdf');
 
 %% get a table of capture values
 capture = getCaptureValues_annulus_peg(mice(2:length(mice)));
-table(mice(2:length(mice)),capture(3,:)')
+capture_table = table(mice(2:length(mice)),capture(3,:)')
 edges = linspace(1, 2, 10); % Create 20 bins.
 histogram(capture(3,:),'BinEdges',edges);
 xlim([1 2])

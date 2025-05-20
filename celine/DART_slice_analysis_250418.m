@@ -466,15 +466,15 @@ box off
 xlim([10000,20000])
 hold on
 axis off
-Add scale bars
-Horizontal scale bar (200 ms)
+% Add scale bars
+% Horizontal scale bar (200 ms)
 samplesIn200ms = 200 * samplesPerMs;
 x_start = 19000;  % Position near the end of the visible range
 y_position = -35;
 plot([x_start, x_start + samplesIn200ms], [y_position, y_position], 'k', 'LineWidth', 2)
 text(x_start + samplesIn200ms/2, y_position - 3, '200 ms', 'HorizontalAlignment', 'center')
 
-Vertical scale bar (10 pA)
+%Vertical scale bar (10 pA)
 x_position = 19800;  % Position near the end of the visible range
 y_start = -35;
 plot([x_position, x_position], [y_start, y_start + 10], 'k', 'LineWidth', 2)

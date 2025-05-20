@@ -7,7 +7,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %136 141 153 161 169 177 183 189
 
-sess_list = [138 142 163 171 178 190];%enter all the sessions you want to concatenate
+sess_list = [138 142 163 171 178 190, 294,307,333,323,303,311,319,329,355,359];%enter all the sessions you want to concatenate
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -29,7 +29,7 @@ if nSess == 1
             dart_str = 'control';
         end
         
-        fnout = fullfile(rc.achAnalysis,expt(sess_list(1)).mouse,['multiday_' dart_str],d);
+        fnout = fullfile(rc.achAnalysis,'SST_YM90K',expt(sess_list(1)).mouse,['multiday_' dart_str],d);
 else
     fnout= fullfile(rc.achAnalysis,strcat('concat', sess_title),d);
 end
@@ -75,14 +75,14 @@ for iSess = 1:nSess
     else
         dart_str = 'control';
     end
-    fn_multi = fullfile(rc.achAnalysis,mouse,['multiday_' dart_str]);
+    fn_multi = fullfile(rc.achAnalysis,'SST_YM90K',mouse,['multiday_' dart_str]);
 
     load(fullfile(fn_multi,'tc_keep.mat'))
     load(fullfile(fn_multi,'resp_keep.mat'))
     load(fullfile(fn_multi,'input.mat'))
-    load(fullfile(fn_multi,'locomotion.mat'))
-    load(fullfile(fn_multi,'fluor_intensity.mat'))
-    load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
+    % load(fullfile(fn_multi,'locomotion.mat'))
+    % load(fullfile(fn_multi,'fluor_intensity.mat'))
+    % load(fullfile(fn_multi,'HT_pyr_relationship.mat'))
 
     nKeep = size(tc_trial_avrg_stat{post},2);
 
@@ -110,7 +110,7 @@ for iSess = 1:nSess
     red_concat = [red_concat, red_keep_logical];
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
-    redRsq_concat = [redRsq_concat,Rsq_red];
+%    redRsq_concat = [redRsq_concat,Rsq_red];
     clear cons
 for id = 1:nd
         tc_trial_avrg_keep_allCon_stat_concat{id} =cat(2,tc_trial_avrg_keep_allCon_stat_concat{id},tc_trial_avrg_keep_allCon_stat{id}(:,:));

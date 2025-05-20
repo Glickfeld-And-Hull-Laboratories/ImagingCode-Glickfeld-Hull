@@ -39,8 +39,8 @@ for iDrug = 1:2
 end
 
 
-PEG = 1;
-DART=2;
+PEG = 2;
+DART=1;
 
 figure
 subplot(1,2,1) %for the second day
@@ -267,14 +267,14 @@ clear h1 p1 h2 p2 h3 p3
 cellID=(1:nKeep_total)';
 drugCol=categorical(drug);
 %beh_state_col = repmat('sta',nKeep_total,1);
-highR_col = categorical(logical(noiseCorr_OG_concat{pre}(1,:)>0.5))';
+%highR_col = categorical(logical(noiseCorr_OG_concat{pre}(1,:)>0.5))';
 norm_delta_stat_table = array2table(norm_delta_stat,'VariableNames',{'S25','S50','S100'});
 labels_table =table(mouseID,cellID,highR_col,drugCol,'VariableNames',{'mouseID' 'cellID' 'highR' 'drugCond'});
 norm_delta_summary_stat = [labels_table,norm_delta_stat_table];
 
 %beh_state_col = repmat('loc',nKeep_total,1);
 norm_delta_loc_table = array2table(norm_delta_loc,'VariableNames',{'L25','L50','L100'});
-labels_table =table(mouseID,cellID,highR_col,drugCol,'VariableNames',{'mouseID' 'cellID' 'highR' 'drugCond'});
+labels_table =table(mouseID,cellID,drugCol,'VariableNames',{'mouseID' 'cellID' 'drugCond'});
 norm_delta_summary_loc = [labels_table,norm_delta_loc_table];
 
 norm_delta_full =horzcat(norm_delta_summary_stat,norm_delta_loc_table);

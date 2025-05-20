@@ -3175,7 +3175,7 @@ clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
 
 %% get a table of capture values
 capture = getCaptureValues_annulus(mice);
-table(mice,capture(3,:)')
+capture_table = table(mice,capture(3,:)')
 edges = linspace(1, 2, 10); % Create 20 bins.
 % Plot the histogram.
 histogram(capture(3,:),'BinEdges',edges);
@@ -3806,7 +3806,7 @@ grid off;
 % Add text with model information
 text(0.05, 0.95, sprintf('Slope = %.4f', slope), 'Units', 'normalized', 'FontSize', 10);
 text(0.05, 0.90, sprintf('p-value = %.4f', slope_pval), 'Units', 'normalized', 'FontSize', 10);
-text(0.05, 0.85, sprintf('R� = %.4f', r_squared), 'Units', 'normalized', 'FontSize', 10);
+text(0.05, 0.85, sprintf('R = %.4f', r_squared), 'Units', 'normalized', 'FontSize', 10);
 
 % Save the figure
 saveas(gcf, 'beta_vs_contrast_linear_model.pdf');
