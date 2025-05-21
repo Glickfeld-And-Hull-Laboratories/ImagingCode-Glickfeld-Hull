@@ -1,18 +1,19 @@
 clear all; clear global; 
 close all
 clc
-prompt = 'Which dataset do you want to use: 0- DART_expt_info, 1- DART_V1_atropine_Celine? ';
-x = input(prompt);
-switch x
-    case 0
-        ds = 'DART_expt_info'; %dataset info
-    case 1
-        ds = 'DART_V1_atropine_Celine'; %dataset info
-end
-prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
-experimentFolder = input(prompt, 's');
-clear x prompt
-
+% prompt = 'Which dataset do you want to use: 0- DART_expt_info, 1- DART_V1_atropine_Celine? ';
+% x = input(prompt);
+% switch x
+%     case 0
+%         ds = 'DART_expt_info'; %dataset info
+%     case 1
+%         ds = 'DART_V1_atropine_Celine'; %dataset info
+% end
+% prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
+% experimentFolder = input(prompt, 's');
+% clear x prompt
+ds = 'DART_V1_atropine_Celine';
+experimentFolder = 'SST_atropine'
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
