@@ -1,7 +1,7 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
@@ -10,12 +10,12 @@ doCorrImg = true;
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 27;
+day_id = 2;
 %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
-ExperimentFolder = expt(day_id).exptType;
+ExperimentFolder = 'VIP_YM90K';
 
 fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
@@ -41,28 +41,9 @@ for irun = 1:nruns
         fName = [imgFolder '_000_000'];
     end
 
-
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        root = rc.data;
-        CD = fullfile(root,mouse,expDate,runFolder);
-        dat = 'data-';
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        root = rc.ashleyData;
-        CD = fullfile(root,mouse,'two-photon imaging', expDate,runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        root = rc.tammyData;
-        CD = fullfile(root, mouse, '2P',expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'celine')
-        root = rc.Data;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-';
-    end
+    root = rc.achData;
+    CD = fullfile(root, mouse, expDate, runFolder);
+    dat = 'data-';
     cd(CD);
 
     imgMatFile = [imgFolder '_000_000.mat'];
@@ -683,7 +664,7 @@ figure
 histogram(elements);
 set(gca,'YScale','log')
 sgtitle('Log Trial Length Distribution')
-ylim([0.1 max(n)+max(n)*1/10])
+%ylim([0.1 max(n)+max(n)*1/10])
 xlabel('nFrames')
 ylabel('log number of trials')
 
@@ -692,7 +673,7 @@ print(fullfile(fnout,'LogTrialLengthDistribution.pdf'),'-dpdf','-bestfit');
 figure
 histogram(elements);
 sgtitle('Trial Length Distribution')
-ylim([0.1 max(n)+max(n)*1/10])
+%ylim([0.1 max(n)+max(n)*1/10])
 xlabel('nFrames')
 ylabel('number of trials')
 

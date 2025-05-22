@@ -59,7 +59,7 @@ red_concat=[];
 redRsq_concat=[];
 dfof_max_diff_concat=[];
 nKeep_concat=[];
-LMI_concat = cell(1,nd);
+%LMI_concat = cell(1,nd);
 data_resp_concat = cell(1,nd);
 red_fluor_concat=[];
 green_fluor_concat=[];
@@ -119,18 +119,18 @@ for id = 1:nd
         tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,:));
         resp_keep_concat{id}=cat(1,resp_keep_concat{id},resp_keep{id});
         resp_max_keep_concat{id}=cat(1,resp_max_keep_concat{id},resp_max_keep{id}(:,:));
-        LMI_concat{id}=cat(1,LMI_concat{id},LMI{id}(:,:));
+%        LMI_concat{id}=cat(1,LMI_concat{id},LMI{id}(:,:));
         pref_responses_loc_concat{id}=cat(1,pref_responses_loc_concat{id},pref_responses_loc{id}(:,:));
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,:));
         pref_responses_allCon__stat_concat{1,id}=cat(2,pref_responses_allCon__stat_concat{1,id},pref_responses_allCon_stat{1,id}(:,:));
         pref_responses_allCon__stat_concat{2,id}=cat(2,pref_responses_allCon__stat_concat{2,id},pref_responses_allCon_stat{2,id}(:,:));
         pref_responses_allCon__loc_concat{1,id}=cat(2,pref_responses_allCon__loc_concat{1,id},pref_responses_allCon_loc{1,id}(:,:));
         pref_responses_allCon__loc_concat{2,id}=cat(2,pref_responses_allCon__loc_concat{2,id},pref_responses_allCon_loc{2,id}(:,:));
-        RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
+%        RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff);
-    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
-    red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
+%    green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
+ %   red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
 end
 
 clear mouse day_id nKeep iSess fn_multi cons dirs
@@ -149,6 +149,21 @@ nCon = length(cons)
 dirs=unique(dirs_concat);
 nDir=length(dirs);
 nKeep_total = sum(nKeep_concat);
+
+mouseNames=[];
+for iMouse = 1:nSess
+    mouseNames=[mouseNames, string(mice(iMouse,:))]
+end
+clear  iMouse
+
+% make dfof summary table for statistics
+mouseID=[];
+for imouse =1:nSess
+   ID_string=mouseNames(imouse);
+   thisID = repelem(ID_string,nKeep_concat(imouse));
+   mouseID=[mouseID,thisID];
+end
+mouseID=mouseID';
 %% find cells that I have running data for on both days
 haveRunning_pre = ~isnan(pref_responses_loc_concat{pre});
 haveRunning_post = ~isnan(pref_responses_loc_concat{post});
