@@ -223,16 +223,9 @@ if exist(fullfile(fnout,'redImage.mat'))
 elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find and load it
     redRun = expt(day_id).redChannelRun;
     imgMatFile = [redRun '_000_000.mat'];
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        cd(fullfile(root,mouse, expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        cd(fullfile(root,mouse,'two-photon imaging', expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        cd(fullfile(root, mouse, '2P',expDate, redRun));
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        cd(fullfile(root, mouse, expDate, redRun));
-    end
+    root = rc.achData;
+    cd(fullfile(root, mouse, expDate, redRun));
+  
     load(imgMatFile);
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
@@ -323,7 +316,7 @@ figure; imagesc(redThresh);colormap gray;
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redThresh,redThresh,redThresh); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
