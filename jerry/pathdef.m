@@ -4804,10 +4804,13 @@ end
 
 if matlab.internal.feature('mpm')
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     filetimestamp = 0x6360AD927865Au64;
     p = [userpath separator getenv('MATLABPATH') separator p separator ...
         matlab.internal.packages.getPathForPackagesInstalledAfter(filetimestamp)];
 =======
+=======
+>>>>>>> Stashed changes
     filetimestamp = 0x63699F6660C12u64;
     [bp, ep] = matlab.internal.packages.getPathForPackagesInstalledAfter(filetimestamp);
     p = [bp separator userpath separator getenv('MATLABPATH') separator ...
