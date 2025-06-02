@@ -1,4 +1,4 @@
-clear all;
+clear all; clear global; close all;
 %paths
 ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};

@@ -1,11 +1,11 @@
 
 close all
 
-date = '250417';
-mouse = 'i2199';
-ImgFolder = '003';
-time = '1156';
-doReg = 0;
+date = '250530';
+mouse = 'i2202';
+ImgFolder = '002';
+time = '1054';
+doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
@@ -104,7 +104,7 @@ expt_input = concatenateDataBlocks(temp);
     
     if doReg
     data_avg = mean(data(:,:,1000:1500),3);
-    [out data_reg] = stackRegister(data,data_avg);
+    [out data_reg] = stackRegGPU(data,data_avg);
     data = data_reg;
     clear data_reg
     end

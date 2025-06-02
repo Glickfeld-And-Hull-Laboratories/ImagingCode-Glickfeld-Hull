@@ -3,14 +3,13 @@ clear all; clear global; close all
 clc
 ds = 'DART_expt_info'; %dataset info
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'PV_YM90K';
+experimentFolder = 'VIP_YM90K';
 
-postsesh = [69]; 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = postsesh;%enter all the sessions you want to concatenate4
+sess_list = [75];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -29,7 +28,6 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
                   "post-DART used as reference"
             end
 clear x prompt
-
 
 targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 
@@ -128,7 +126,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'resp_keep.mat'));
     load(fullfile(fn_multi,'input.mat'));
     load(fullfile(fn_multi,'locomotion.mat'));
-    load(fullfile(fn_multi,'fluor_intensity.mat'));
+%    load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
     load(fullfile(fn_multi,'pupilMeans.mat'));
 
@@ -200,7 +198,7 @@ for iSess = 1:nSess
         conBySize_resp_stat_concat{id}=cat(1,conBySize_resp_stat_concat{id},conBySize_resp_stat_keep{id});
         conBySize_resp_loc_concat{id}=cat(1,conBySize_resp_loc_concat{id},conBySize_resp_loc_keep{id});
         data_resp_concat{id} = cat(1,data_resp_concat{id},data_resp_keep{id});
-        % data_dfof_runOnset_concat{id}=cat(2,data_dfof_runOnset_concat{id},data_dfof_runOnset_keep{id});
+        data_dfof_runOnset_concat{id}=cat(2,data_dfof_runOnset_concat{id},data_dfof_runOnset_keep{id});
 
         for i = 1:length(sharedCon)
             iCon=sharedCon(i);
@@ -215,8 +213,8 @@ for iSess = 1:nSess
         clear meanF i
     end
     dfof_max_diff_concat=cat(1,dfof_max_diff_concat,dfof_max_diff(:,sharedCon,:));
-   green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
-   red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
+   % green_fluor_concat=cat(2,green_fluor_concat,green_fluor_keep);
+   % red_fluor_concat=cat(2,red_fluor_concat,red_fluor_keep);
     
 iSess
 end
@@ -281,7 +279,17 @@ for id = 1:nd
 end
 respToLarge = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
-clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
+
+responCriteria = cell(1,nd); %cell array that will have indices of cells that meet our response criteria on each day
+for id = 1:nd
+    responseCheck =sum(squeeze(sum(h_concat{id}(:,:,2:4,nSize),2)),2); %finding cells that responded large size size, within the top three contrasts
+    responCriteria{id}=find(logical(responseCheck));
+end
+
+includeCells = intersect(responCriteria{pre},find(haveRunning_pre));
+
+% clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
+
 
 % to find the OSI of each cell
 
@@ -293,16 +301,16 @@ dirMean(find(dirMean<0))=0;
 %for each cell, for the baseline day only
 nDir = length(dirs_concat);
 
-if nDir > 1
-
-    orthOrder=[3     4     1     2];
-    for iCell = 1:nKeep_total
-        [prefResp, prefDir] = max(dirMean(iCell,:));
-        orthInd = orthOrder(prefDir);
-        orthResp = dirMean(iCell,orthInd);
-        OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
-    end
-end
+% if nDir > 1
+% 
+%     orthOrder=[3     4     1     2];
+%     for iCell = 1:nKeep_total
+%         [prefResp, prefDir] = max(dirMean(iCell,:));
+%         orthInd = orthOrder(prefDir);
+%         orthResp = dirMean(iCell,orthInd);
+%         OSI_baseline(iCell)=(prefResp-orthResp)/(prefResp+orthResp);
+%     end
+% end
 
 % %histogram(OSI_baseline);
 % green_ind_concat = intersect(green_ind_concat, find(respToLarge));
@@ -347,7 +355,7 @@ end
 
 cellCountTable = table(cellCounts, RowNames=mouseNames)
 cellCountTableGreen = table(cellCountsGreen, RowNames=mouseNames)
-%writetable(cellCountTable,fullfile(fnout,['cellCounts.csv']),'WriteRowNames',true)
+writetable(cellCountTable,fullfile(fnout,['cellCounts.csv']),'WriteRowNames',true)
 clear cellCounts cellCountsGreen
 
 %to find the cells that have 
@@ -365,15 +373,12 @@ end
 
 %% plot stationary timecourses for all cells
 
-
 % make figure with se shaded, one figure per contrast - stationary
 
 tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_stat = cell(1,nd); %same for red
 tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
 tc_red_se_stat = cell(1,nd); %same for red
-
-
 
 
 for id = 1:nd
@@ -407,7 +412,7 @@ for iCon = 1:nCon
     
     
     
-    ylim([-.05 .25]);
+    ylim([-.02 .1]);
     hold on
     shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon,iSize),tc_green_se_stat{pre}(:,iCon,iSize),'--k');
     hold on
@@ -427,7 +432,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon,iSize),tc_red_se_stat{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon,iSize),tc_red_se_stat{post}(:,iCon,iSize),'b');
-    ylim([-.05 .25]);
+   ylim([-.02 .1]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -497,7 +502,7 @@ for iCon = 1:nCon
     
     
     
-    ylim([-.05 .25]);
+    ylim([-.02 .1]);
     hold on
     shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon,iSize),tc_green_se_stat{pre}(:,iCon,iSize),'--k');
     hold on
@@ -517,7 +522,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon,iSize),tc_red_se_stat{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon,iSize),tc_red_se_stat{post}(:,iCon,iSize),'b');
-    ylim([-.05 .25]);
+    ylim([-.02 .1]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -539,7 +544,7 @@ for iCon = 1:nCon
     end
 end 
 
-%% plots for running trials with cell matched across behavioral state
+% plots for running trials with cell matched across behavioral state
 
 tc_green_avrg_loc = cell(1,nd); %this will be the average across all green cells - a single line
 tc_red_avrg_loc = cell(1,nd); %same for red
@@ -579,7 +584,7 @@ for iCon = 1:nCon
     
     
     
-    ylim([-.05 .45]);
+    ylim([-.02 .2]);
     hold on
     shadedErrorBar(t,tc_green_avrg_loc{pre}(:,iCon,iSize),tc_green_se_loc{pre}(:,iCon,iSize),'--k');
     hold on
@@ -599,7 +604,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_loc{pre}(:,iCon,iSize),tc_red_se_loc{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_loc{post}(:,iCon,iSize),tc_red_se_loc{post}(:,iCon,iSize),'b');
-    ylim([-.05 .45]);
+    ylim([-.02 .2]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -791,7 +796,7 @@ sgtitle(['population size tuning' ])
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 %% contrast response
 ymin=-0.015;
-ymax=.1;
+ymax=.05;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(nSize,nd); %same for red
@@ -801,15 +806,15 @@ conResp_red_se_stat = cell(nSize,nd); %same for red
 consForPlotting = [12.5 25 50 100];
 for id = 1:nd
     for iSize = 1:nSize
-        green_data=conBySize_resp_stat_concat{id}(runningGreen,:,iSize);%pulling the green cells at this size
+        green_data=conBySize_resp_stat_concat{id}(green_ind_concat,:,iSize);%pulling the green cells at this size
         conResp_green_avrg_stat{id}(iSize,:)=nanmean(green_data,1);
         green_std=nanstd(green_data,[],1);
-        conResp_green_se_stat{id}(iSize,:)=green_std/sqrt(length(runningGreen));
+        conResp_green_se_stat{id}(iSize,:)=green_std/sqrt(length(green_ind_concat));
         
-        red_data=conBySize_resp_stat_concat{id}(runningRed,:,iSize);%pulling the red cells at this size
+        red_data=conBySize_resp_stat_concat{id}(red_ind_concat,:,iSize);%pulling the red cells at this size
         conResp_red_avrg_stat{id}(iSize,:)=nanmean(red_data,1);
         red_std=nanstd(red_data,[],1);
-        conResp_red_se_stat{id}(iSize,:)=red_std/sqrt(length(runningRed));
+        conResp_red_se_stat{id}(iSize,:)=red_std/sqrt(length(red_ind_concat));
         
         clear green_std red_std green_data red_data
     end
@@ -823,7 +828,7 @@ errorbar(consForPlotting,conResp_green_avrg_stat{pre}(1,:),conResp_green_se_stat
 hold on
 errorbar(consForPlotting,conResp_green_avrg_stat{post}(1,:),conResp_green_se_stat{post}(1,:),'--b');
 title(['Pyr n = ' , num2str(length(runningGreen))])
-ylabel('dF/F, 20 deg') 
+ylabel('dF/F, 20 deg')
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -843,7 +848,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_stat{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_stat{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['VIP n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -873,7 +878,7 @@ print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
 %for running 
 ymin=-0.015;
-ymax=.35;
+ymax=.15;
 % contrast response running
 % errorbar for loc resp and loc resp vs size, where error is across mice
 conResp_green_avrg_loc = cell(nSize,nd); %this will be the average across all green cells - a single line
@@ -884,15 +889,15 @@ conResp_red_se_loc = cell(nSize,nd); %same for red
 consForPlotting = [12.5 25 50 100];
 for id = 1:nd
     for iSize = 1:nSize
-        green_data=conBySize_resp_loc_concat{id}(runningGreen,:,iSize);%pulling the green cells at this size
+        green_data=conBySize_resp_loc_concat{id}(green_ind_concat,:,iSize);%pulling the green cells at this size
         conResp_green_avrg_loc{id}(iSize,:)=nanmean(green_data,1);
         green_std=nanstd(green_data,1);
-        conResp_green_se_loc{id}(iSize,:)=green_std/sqrt(length(runningGreen));
+        conResp_green_se_loc{id}(iSize,:)=green_std/sqrt(length(green_ind_concat));
         
-        red_data=conBySize_resp_loc_concat{id}(runningRed,:,iSize);%pulling the red cells at this size
+        red_data=conBySize_resp_loc_concat{id}(red_ind_concat,:,iSize);%pulling the red cells at this size
         conResp_red_avrg_loc{id}(iSize,:)=nanmean(red_data,1);
         red_std=nanstd(red_data,1);
-        conResp_red_se_loc{id}(iSize,:)=red_std/sqrt(length(runningRed));
+        conResp_red_se_loc{id}(iSize,:)=red_std/sqrt(length(red_ind_concat));
         
         clear green_std red_std green_data red_data
     end
@@ -905,15 +910,15 @@ conResp_red_se_loc = cell(nSize,nd); %same for red
 
 for id = 1:nd
     for iSize = 1:nSize
-        green_data=conBySize_resp_loc_concat{id}(runningGreen,:,iSize);%pulling the green cells at this size
+        green_data=conBySize_resp_loc_concat{id}(green_ind_concat,:,iSize);%pulling the green cells at this size
         conResp_green_avrg_loc{id}(iSize,:)=nanmean(green_data,1);
         green_std=nanstd(green_data,1);
-        conResp_green_se_loc{id}(iSize,:)=green_std/sqrt(length(runningGreen));
+        conResp_green_se_loc{id}(iSize,:)=green_std/sqrt(length(green_ind_concat));
         
-        red_data=conBySize_resp_loc_concat{id}(runningRed,:,iSize);%pulling the red cells at this size
+        red_data=conBySize_resp_loc_concat{id}(red_ind_concat,:,iSize);%pulling the red cells at this size
         conResp_red_avrg_loc{id}(iSize,:)=nanmean(red_data,1);
         red_std=nanstd(red_data,1);
-        conResp_red_se_loc{id}(iSize,:)=red_std/sqrt(length(runningRed));
+        conResp_red_se_loc{id}(iSize,:)=red_std/sqrt(length(red_ind_concat));
         
         clear green_std red_std green_data red_data
     end
@@ -946,7 +951,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_loc{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['VIP n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -1058,7 +1063,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
-   title('Stationary, SST')
+   title('Stationary, VIP')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1084,7 +1089,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
-    title('Running, SST')
+    title('Running, VIP')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1161,7 +1166,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction SST cells"]) 
+    ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1174,7 +1179,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction SST cells"]) 
+    %ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1205,7 +1210,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction SST cells"]) 
+    ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1218,7 +1223,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction SST cells"]) 
+    %ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1264,7 +1269,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed 20-deg')
 ylim([0 .6])
-ylabel(["Fraction SST cells"]) 
+ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1277,7 +1282,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated 20-deg')
 ylim([0 .6])
-%ylabel(["Fraction SST cells"]) 
+%ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1292,7 +1297,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed fullfield')
 ylim([0 .6])
-ylabel(["Fraction SST cells"]) 
+ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1305,7 +1310,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated fullfield')
 ylim([0 .6])
-%ylabel(["Fraction SST cells"]) 
+%ylabel(["Fraction VIP cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1418,13 +1423,13 @@ nRed = nan(nCon,nSize);
 for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
-        tc_green_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_green,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_green,iCon,iSize),[],2);
-        tc_green_se_small{id}(:,iCon,iSize)=green_std/sqrt(length(have_allPupil_green));
+        tc_green_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_small{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
         
-        tc_red_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_red,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,have_allPupil_red,iCon,iSize),[],2);
-        tc_red_se_small{id}(:,iCon,iSize)=red_std/sqrt(length(have_allPupil_red));
+        tc_red_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_small{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
         
         
         clear green_std red_std
@@ -1500,13 +1505,13 @@ nRed = nan(nCon,nSize);
 for id = 1:nd
   for iCon = 1:nCon
       for iSize = 1:nSize
-        tc_green_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_green,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_green,iCon,iSize),[],2);
-        tc_green_se_large{id}(:,iCon,iSize)=green_std/sqrt(length(have_allPupil_green));
+        tc_green_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_large{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
         
-        tc_red_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_red,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,have_allPupil_red,iCon,iSize),[],2);
-        tc_red_se_large{id}(:,iCon,iSize)=red_std/sqrt(length(have_allPupil_red));
+        tc_red_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_large{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
         
         
         clear green_std red_std
@@ -1578,12 +1583,12 @@ tc_red_se_runOnset = cell(1,nd); %same for red
 
 for id = 1:nd
 
-        tc_green_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,green_ind_concat,iCon,iSize),2);
-        green_std=nanstd(data_dfof_runOnset_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,green_ind_concat),2);
+        green_std=nanstd(data_dfof_runOnset_concat{id}(:,green_ind_concat),[],2);
         tc_green_se_runOnset{id}=green_std/sqrt(length(green_ind_concat));
         
-        tc_red_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,red_ind_concat,iCon,iSize),2);
-        red_std=nanstd(data_dfof_runOnset_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_avrg_runOnset{id}=nanmean(data_dfof_runOnset_concat{id}(:,red_ind_concat),2);
+        red_std=nanstd(data_dfof_runOnset_concat{id}(:,red_ind_concat),[],2);
         tc_red_se_runOnset{id}=red_std/sqrt(length(red_ind_concat));
         
         
