@@ -288,7 +288,7 @@ end
 
 includeCells = intersect(responCriteria{pre},find(haveRunning_pre));
 
-% clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
+clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
 
 
 % to find the OSI of each cell
@@ -432,7 +432,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon,iSize),tc_red_se_stat{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon,iSize),tc_red_se_stat{post}(:,iCon,iSize),'b');
-   ylim([-.02 .1]);
+    ylim([-.02 .1]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -828,7 +828,7 @@ errorbar(consForPlotting,conResp_green_avrg_stat{pre}(1,:),conResp_green_se_stat
 hold on
 errorbar(consForPlotting,conResp_green_avrg_stat{post}(1,:),conResp_green_se_stat{post}(1,:),'--b');
 title(['Pyr n = ' , num2str(length(runningGreen))])
-ylabel('dF/F, 20 deg')
+ylabel('dF/F, 20 deg') 
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -848,7 +848,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_stat{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_stat{post}(1,:),'b');
-title(['VIP n = ' , num2str(length(runningRed))])
+title(['SST n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -951,7 +951,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_loc{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['VIP n = ' , num2str(length(runningRed))])
+title(['SST n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -1063,7 +1063,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
-   title('Stationary, VIP')
+   title('Stationary, SST')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1089,7 +1089,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
-    title('Running, VIP')
+    title('Running, SST')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1166,7 +1166,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction VIP cells"]) 
+    ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1179,7 +1179,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction VIP cells"]) 
+    %ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1210,7 +1210,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction VIP cells"]) 
+    ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1223,7 +1223,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction VIP cells"]) 
+    %ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1269,7 +1269,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed 20-deg')
 ylim([0 .6])
-ylabel(["Fraction VIP cells"]) 
+ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1282,7 +1282,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated 20-deg')
 ylim([0 .6])
-%ylabel(["Fraction VIP cells"]) 
+%ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1297,7 +1297,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed fullfield')
 ylim([0 .6])
-ylabel(["Fraction VIP cells"]) 
+ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1310,7 +1310,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated fullfield')
 ylim([0 .6])
-%ylabel(["Fraction VIP cells"]) 
+%ylabel(["Fraction SST cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
