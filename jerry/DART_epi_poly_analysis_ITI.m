@@ -343,9 +343,9 @@ start = 1;
 SI_PV = NaN(nMice_PV,1);
 for iM = 1:nMice_PV
     for iD = 1:nDay
-        med_synch(iM,iD) = mean(iti_synch_PV{iM,iD});
+        mean_synch(iM,iD) = mean(iti_synch_PV{iM,iD});
     end
-    SI_PV(iM) = (med_synch(iM,2)./med_synch(iM,1));
+    SI_PV(iM) = (mean_synch(iM,2)./mean_synch(iM,1));
 end
 
 nMice_SST = size(iti_synch_SST,1);
@@ -355,9 +355,9 @@ SI_SST = NaN(nMice_SST,1);
 for iM = 1:nMice_SST
     for iD = 1:nDay
         start = start+1;
-        med_synch(iM,iD) = mean(iti_synch_SST{iM,iD});
+        mean_synch(iM,iD) = mean(iti_synch_SST{iM,iD});
     end
-    SI_SST(iM) = (med_synch(iM,2)./med_synch(iM,1));
+    SI_SST(iM) = (mean_synch(iM,2)./mean_synch(iM,1));
 end
 
 SI_PV_DART = vertcat(SI_PV(1:2),SI_PV(4));
@@ -443,6 +443,7 @@ plot(i3309_ITI_tc_post);
 title('Post-DART')
 ylim([ymin ymax])
 ylabel('F')
+xlabel('Frames')
 hold off
 
 
@@ -457,13 +458,13 @@ histogram(i3309_iti_sync(:,1),[0:0.05:1]);
 xlim([0 1])
 ylim([0 100])
 title('Baseline')
-ylabel('nFrames')
+ylabel('Frames')
 subplot(2,1,2)
 histogram(i3309_iti_sync(:,2),[0:0.05:1]);
 xlim([0 1])
 ylim([0 100])
 title('Post-DART')
-ylabel('nFrames')
+ylabel('Frames')
 xlabel('Percent Active')
 hold off
 
@@ -489,7 +490,7 @@ hold off
 
 save_all_open_figs('G:\home\ACh\Analysis\2p_analysis\epileptiform_analysis\finalPlots');
 
-%% sample entropy full session
+%% sample entropy
 ent_PV_mat = reshape(cell2mat(ent_PV(:,1)),2,[])';
 ent_SST_mat = reshape(cell2mat(ent_SST(:,1)),2,[])';
 ent_PV_DART = vertcat(ent_PV_mat(1:2,:),ent_PV_mat(4,:));

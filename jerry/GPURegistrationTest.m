@@ -72,7 +72,7 @@ id = 1;
         sgtitle(['CPU reg fov, t = ' num2str(round(t3,2))]);
 
         tic
-        [outs_fresh2,data_g_reg_gpu] = stackRegister_TH(data_g,regImg);
+        [outs_fresh2,data_g_reg_gpu] = stackRegister_TH_byFrame(data_g,regImg);
         t4 = toc;
         figure();
         imagesc(mean(data_g_reg_gpu,3))
@@ -81,3 +81,23 @@ id = 1;
     % end
 
 % end
+
+%% don't run this chunk 
+% frames = zeros(550,770,5000);
+% allframes = zeros(550,770,90000);
+% gpuFrames = zeros(550,770,90000);
+% 
+% tic
+% for i = 1:900
+%     t = gpuArray(allframes(:,:,i));
+% end
+% t1 = toc;
+% % Faster method:
+% tic
+% for j = 1:3
+%     temp = gpuArray(frames);
+% end
+% t2 = toc;
+% 
+% gpuDevice([]);
+% clear all;
