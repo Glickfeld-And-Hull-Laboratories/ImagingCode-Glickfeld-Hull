@@ -1,6 +1,6 @@
-clc; clear all; close all;
+clc; clear all close all;
 doRedChannel = 1;
-ds = 'CrossOriRandDirFourPhase_ExptList_SG';
+ds = 'CrossOriRandDirFourPhase_ExptList_SG'; %'CrossOriRandDirFourPhase_ExptList_SG'
 rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
@@ -9,7 +9,7 @@ seed = rng;
 
 max_dist = 10;
 
-for iexp = [47] %27 58 74
+for iexp = [97] %97 102 103 104 122
 
 %%
 mouse = expt(iexp).mouse;
@@ -158,6 +158,10 @@ end
         DSI         = DSIstruct.DSI;
         DSI_ind     = DSIstruct.DS_ind;
         DSI_maxInd  = DSIstruct.prefDir;
+        g_dsi       = DSIstruct.gDSI;
+        ang_ori     = DSIstruct.gDSI_prefDir;
+        g_osi       = DSIstruct.gOSI;
+        ang_dir     = DSIstruct.gOSI_prefDir;
     % Get direction tuning curve fit
         dir_b_hat_all           = gratingFitStruct.b;
         k1_hat_all          = gratingFitStruct.k1;
@@ -208,10 +212,10 @@ save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZpZc_pairwiseDist.mat']), 'ZpZcPWdist');
 
 % grating tuning curve fit
-save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_DirectionTuningFit.mat']), 'dir_yfit_all', 'dir_b_hat_all', 'k1_hat_all', 'R1_hat_all','R2_hat_all', 'u1_hat_all','u2_hat_all', 'sse_all', 'R_square_all')
+save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_DirectionTuningFit.mat']), 'dir_yfit_all', 'dir_b_hat_all', 'k1_hat_all', 'R1_hat_all','R2_hat_all', 'u1_hat_all','u2_hat_all', 'sse_all', 'R_square_all', 'g_dsi', 'g_osi', 'ang_dir', 'ang_ori')
 
 
-
+stop
 %% Trials per stimulus condition
 
 figure;
@@ -355,12 +359,13 @@ close all
 %% Polar plots by individual cell
 
 figure;
+movegui('center')
 start = 1;
 n = 1;
 
 x=[-150:30:180];
 x_rad = deg2rad(x);
-for iCell =1:10
+for iCell =1:nCells
     subplot(5,4,start)
         plotPolarTuning4Phase(avg_resp_grat, avg_resp_plaid, iCell)
         idx = iCell==ind;
@@ -395,7 +400,7 @@ n = 1;
 for iCell = 1:nCells
     subplot(5,4,start)
         plotZpZc4PhaseCell(ZpZcStruct,iCell,sz)
-        if iCell ==1; legend('0 deg','90 deg','180 deg', '270 deg'); end;
+        if iCell ==1; legend('0 deg','90 deg','180 deg', '270 deg'); end
         idx = iCell==ind;
         if any(idx)
             subtitle(['cell ' num2str(iCell)],'fontweight','bold')
@@ -403,6 +408,7 @@ for iCell = 1:nCells
             subtitle(['cell ' num2str(iCell)])
         end
         plotZcZpBorders; set(gca,'TickDir','out'); axis square
+        start=start+1;
     if start>20
         sgtitle([mouse ' ' date ' - Zp Zc by cell'])
         print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
@@ -416,7 +422,7 @@ for iCell = 1:nCells
         print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZcZpByCell_' num2str(n) '.pdf']), '-dpdf','-fillpage')
     end        
 end
-close all
+% close all
 
 
 stop

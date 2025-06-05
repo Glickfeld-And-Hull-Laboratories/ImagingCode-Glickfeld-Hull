@@ -47,7 +47,7 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-iexp = 24; 
+iexp = 120; 
 max_dist = 10;
 
 frame_rate = 15;
@@ -63,13 +63,15 @@ nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
 base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
+LGbase = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
+
 
 fprintf([mouse ' ' date '\n'])
 
 %% Pref direction analysis
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
+load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
 
 %%
@@ -369,6 +371,7 @@ for iCell =1:nCells
     end
 end     
 close all
+stop
 
 %% look at df/f across individual trials with comparison to statistical tests (ttest for grating, anova for plaid)
 

@@ -5,7 +5,7 @@ ds = 'CrossOriRandDirFourPhase_ExptList_SG';
 rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
-iexp = 113; 
+iexp = 122; 
 frame_rate = 15;
 
 %%

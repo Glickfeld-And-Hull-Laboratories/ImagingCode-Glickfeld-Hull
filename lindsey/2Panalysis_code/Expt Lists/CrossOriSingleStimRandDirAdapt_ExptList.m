@@ -146,7 +146,7 @@ expt(11).saveLoc = 'lindsey';
 %% i1412 250212 TF- 2Hz, 0.05cpd
 expt(12).mouse = 'i1412';
 expt(12).date = '250212';
-expt(12).img_loc  = {'V1';'L2/3'};
+expt(12).img_loc  = {'V1';'L2/3'};12
 expt(12).inj_loc = {'V1'};
 expt(12).z = -200;
 expt(12).img_strct  = {'cells'};
@@ -156,4 +156,16 @@ expt(12).coFolder = {'002'};
 expt(12).coTime = {'1618'};
 expt(12).saveLoc = 'lindsey';
 
+%% i1404 250514 TF- 2Hz, 0.05cpd 
+expt(13).mouse = 'i1404';
+expt(13).date = '250514';
+expt(13).img_loc  = {'V1';'L4'};
+expt(13).inj_loc = {'V1'};
+expt(13).z = -200;
+expt(13).img_strct  = {'cells'};
+expt(13).driver = {'SCN'};
+expt(13).indicator = {'tg';'GCaMP8m'};
+expt(13).coFolder = {'002'};
+expt(13).coTime = {'1401'};
+expt(13).saveLoc = 'lindsey';
 

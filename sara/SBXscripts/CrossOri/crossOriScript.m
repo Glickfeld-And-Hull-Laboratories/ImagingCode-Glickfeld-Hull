@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
 ds = 'CrossOriRandDirFourPhase_ExptList_SG';
-iexp = 113; 
+iexp = 122;  
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
@@ -33,7 +33,6 @@ nrun = length(ImgFolder);
 run_str = 'runs-002';
 
 base = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\' expt(iexp).saveLoc];
-
 
 fprintf(['2P imaging cross ori analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
 for irun=1:nrun

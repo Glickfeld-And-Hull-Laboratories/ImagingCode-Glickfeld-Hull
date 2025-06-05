@@ -8,8 +8,8 @@ ds = ['CrossOriRandDirFourPhase_ExptList_SG'];
 svName = 'randPhase';
 eval(ds)
 driver = 'SCN';
-img_area = {'LM';'L2/3'}; %LM
-inj_area = 'LM';
+img_area = {'V1';'L2/3'}; %LM
+inj_area = ['V1'];
 img_layer = 'L2/3';
 
 max_dist = 5;
@@ -31,9 +31,9 @@ plaid_corr_all = [];
 mouse_list = [];
 totCells = zeros(nexp,1);
 
-%V1 L2/3 - 5 24 46 47 79
-%V1 L4 - 62 66
-%LM L2/3 - 38 49 50 86
+% V1 L2/3 - 5 24 46 47 79
+% V1 L4 - 62 66 
+% LM L2/3 - 38 49 50 86
 % AL L2/3 - 76 82 83 84
 
 start=1;

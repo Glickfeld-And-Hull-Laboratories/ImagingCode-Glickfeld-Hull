@@ -1,12 +1,12 @@
 clc; clear all; close all;
 doRedChannel = 0;
-ds = 'CrossOriRandPhase_15Hz_ExptList_SG';
+ds = 'CrossOriRandDirFourPhase_ExptList_SG'; %'CrossOriSingleStimRandDirAdapt_ExptList'; 
 eval(ds)
 rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 %%
-for iexp = 20
+for iexp = 122
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
@@ -26,9 +26,9 @@ end
 
 %% load data
 
-load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
-load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
 load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
 
@@ -39,7 +39,7 @@ calib = 1/26.6; %mm per pixel
 nrun = length(ImgFolder);
 data = [];
 for irun =  1:nrun
-    CD = [SG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
+    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
     cd(CD);
     fn = [ImgFolder{irun} '_000_000_eye.mat'];
 
@@ -85,7 +85,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [5 20];
+rad_range = [1 20];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
