@@ -1,11 +1,11 @@
 
 mouse = 'i3329';
-date = '250604';
+date = '250605';
 redFolder = '000'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
 greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='180.46';
+depth='181.25';
 experimentType = 'PV_atropine';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'

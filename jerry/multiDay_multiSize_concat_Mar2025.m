@@ -1,15 +1,17 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
+% ds = 'DART_expt_info'
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'PV_atropine';
+% experimentFolder = 'PV_atropine';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [75];%enter all the sessions you want to concatenate4
+sess_list = [82];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -796,7 +798,7 @@ sgtitle(['population size tuning' ])
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 %% contrast response
 ymin=-0.015;
-ymax=.05;
+ymax=.08;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(nSize,nd); %same for red
@@ -848,7 +850,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_stat{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_stat{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['PV n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -951,7 +953,7 @@ subplot(2,2,2) %for the first day
 errorbar(consForPlotting,conResp_red_avrg_loc{pre}(1,:),conResp_red_se_loc{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_loc{post}(1,:),conResp_red_se_loc{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['PV n = ' , num2str(length(runningRed))])
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -1063,7 +1065,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_stat{pre},red_dir_se_stat{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_stat{post},red_dir_se_stat{post},'b')
-   title('Stationary, SST')
+   title('Stationary, PV')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1089,7 +1091,7 @@ for iCon = 1:nCon
     errorbar(dirs_for_plotting,red_dir_avrg_loc{pre},red_dir_se_loc{pre},'k')
     hold on
     errorbar(dirs_for_plotting,red_dir_avrg_loc{post},red_dir_se_loc{post},'b')
-    title('Running, SST')
+    title('Running, PV')
     set(gca, 'TickDir', 'out')
     axis square
     box off
@@ -1166,7 +1168,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction SST cells"]) 
+    ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1179,7 +1181,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction SST cells"]) 
+    %ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1210,7 +1212,7 @@ N=length(red_ind_concat);
     hold on
     title('Suppressed')
     ylim([0 .6])
-    ylabel(["Fraction SST cells"]) 
+    ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1223,7 +1225,7 @@ N=length(red_ind_concat);
     hold on
     title('Facilitated')
     ylim([0 .6])
-    %ylabel(["Fraction SST cells"]) 
+    %ylabel(["Fraction PV cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
     box off
@@ -1269,7 +1271,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed 20-deg')
 ylim([0 .6])
-ylabel(["Fraction SST cells"]) 
+ylabel(["Fraction PV cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1282,7 +1284,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated 20-deg')
 ylim([0 .6])
-%ylabel(["Fraction SST cells"]) 
+%ylabel(["Fraction PV cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1297,7 +1299,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Suppressed fullfield')
 ylim([0 .6])
-ylabel(["Fraction SST cells"]) 
+ylabel(["Fraction PV cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1310,7 +1312,7 @@ xticklabels({'12.5','25','50','100'})
 hold on
 title('Facilitated fullfield')
 ylim([0 .6])
-%ylabel(["Fraction SST cells"]) 
+%ylabel(["Fraction PV cells"]) 
 xlabel(["Contrast"])
 set(gca,'TickDir','out')
 box off
@@ -1327,11 +1329,11 @@ for iSize = 1:nSize
     subplot(1,2,1)
     boxchart(squeeze(norm_diff(1,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
     hold on
-    scatter([1, 2, 3, 4],squeeze(norm_diff(1,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+    scatter([1, 2, 3, 4],squeeze(norm_diff(1,:,iSize,red_ind_concat))',20,'filled','jitter', 'on', 'jitterAmount',.1)
     xticklabels({'12.5','25','50','100'})
     xlabel('Contrast(%)')
     ylabel('Normalized difference')
-    ylim([-10 10])
+    ylim([-2 2])
     title('Stationary')
     hold off
     set(gca,'TickDir','out')
@@ -1346,11 +1348,11 @@ for iSize = 1:nSize
     subplot(1,2,2)
     boxchart(squeeze(norm_diff(2,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
     hold on
-    scatter([1, 2, 3, 4],squeeze(norm_diff(2,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+    scatter([1, 2, 3, 4],squeeze(norm_diff(2,:,iSize,red_ind_concat))',20,'filled','jitter', 'on', 'jitterAmount',.1)
     xticklabels({'12.5','25','50','100'})
     xlabel('Contrast(%)')
     %ylabel('Normalized difference')
-    ylim([-35 35])
+    ylim([-2 2])
     title('Running')
     hold off
     set(gca,'TickDir','out')
@@ -1633,3 +1635,101 @@ figure
     box off
     sgtitle('Running onset')
 print(fullfile(fnout,'runOnset_timecourse.pdf'),'-dpdf');
+
+
+%% testing PCA
+close all
+
+loc_pre = tc_trial_avrg_loc_concat{pre};
+loc_post = tc_trial_avrg_loc_concat{post};
+stat_post = tc_trial_avrg_stat_concat{post};
+stat_pre = tc_trial_avrg_stat_concat{pre};
+
+loc_pre_red = loc_pre(:,red_ind_concat,:,:);
+loc_pre_green = loc_pre(:,green_ind_concat,:,:);
+stat_pre_green = stat_pre(:,green_ind_concat,:,:);
+stat_pre_red = stat_pre(:,red_ind_concat,:,:);
+loc_post_red = loc_post(:,red_ind_concat,:,:);
+stat_post_red = stat_post(:,red_ind_concat,:,:);
+stat_post_green = stat_post(:,green_ind_concat,:,:);
+loc_post_green = loc_post(:,green_ind_concat,:,:);
+
+size(stat_pre_green)
+s1 = squeeze(mean(squeeze(stat_pre_green(:,:,:,1)),3));
+s2 = squeeze(mean(squeeze(stat_pre_green(:,:,:,2)),3));
+
+s3 = squeeze(mean(squeeze(stat_post_green(:,:,:,1)),3));
+s4 = squeeze(mean(squeeze(stat_post_green(:,:,:,2)),3));
+
+% [coeff1,score1,latent1] = pca(s1);
+% [coeff2,score2,latent2] = pca(s2);
+
+% [d, Z, transform] = procrustes(score1(:,1:3), score2(:,1:3));
+% plot3(score1(:,1), score1(:,2), score1(:,3), 'r-')
+% hold on
+% plot3(Z(:,1), Z(:,2), Z(:,3), 'b-')
+% xlabel('PC1')
+% ylabel('PC2')
+% zlabel('PC3')
+% hold off
+
+s_combined = [s1; s2];  % Concatenate observations
+[coeff, score_combined,~,~,explained_1] = pca(s_combined);
+
+% Split scores
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot Pre Green')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20deg','fullfield')
+hold off
+
+% figure
+% [d, Z, transform] = procrustes(score1(:,1:3), score2(:,1:3));
+% plot3(score1(:,1), score1(:,2), score1(:,3), 'r-')
+% hold on
+% plot3(Z(:,1), Z(:,2), Z(:,3), 'b-')
+% xlabel('PC1')
+% ylabel('PC2')
+% zlabel('PC3')
+% hold off
+
+s_combined = [s3; s4];  % Concatenate observations
+[coeff, score_combined,~,~,explained_2] = pca(s_combined);
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot Post Green')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20dPost','FFPost')
+hold off
+
+s_combined = [s1;s2;s3;s4];
+[coeff, score_combined,~,~,explained_3] = pca(s_combined);
+score1 = score_combined(1:90,:);
+score2 = score_combined(91:180,:);
+score3 = score_combined(181:270,:);
+score4 = score_combined(271:360,:);
+figure;
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot Both Green')
+hold on
+plot3(score2(:,1),score1(:,2),score1(:,3))
+plot3(score3(:,1),score1(:,2),score1(:,3))
+plot3(score4(:,1),score1(:,2),score1(:,3))
+legend('20dPre','FFPre','20dPost','FFPost')
+hold off

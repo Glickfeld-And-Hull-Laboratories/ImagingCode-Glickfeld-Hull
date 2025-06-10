@@ -1,7 +1,7 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
@@ -10,7 +10,7 @@ doCorrImg = true;
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 75;
+day_id = 82;
 %% load data for day
 
 mouse = expt(day_id).mouse;

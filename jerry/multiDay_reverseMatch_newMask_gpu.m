@@ -1,19 +1,19 @@
 clear all; clear global; close all
 clc
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_atropine_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds)
 doGreenOnly = false;
 doCorrImg = true; 
-ExperimentFolder = 'VIP_YM90K';
+ExperimentFolder = 'PV_atropine';
 
 %BEFORE RUNNING THIS SCRIPT, IF IT HAS BEEN DONE FOR THE SAME MOUSE, DELETE
 %RELATED FILES IN THE MULTIDAY ANALYSIS FOLDER
 
 %to use the post-DART timepoint as the template
 
-day_id(1) =75; %enter the refrence day ID here 
+day_id(1) =82; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 

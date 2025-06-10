@@ -76,7 +76,7 @@ nChunks = floor(nframes/chunkSize) + 1;
 rmd = mod(nframes,chunkSize);
 
 tic;
-fprintf(1, 'Starting Registration of %i frames on the GPU\nSplit into %i chunks of %i frames with a remainder %i frames\n',nframes,nChunks-1,chunkSize,rmd);
+fprintf(1, 'Starting Registration of %i frames on the GPU\nSplit into %i chunks of %i frames + one remainder chunk of %i frames\n',nframes,nChunks-1,chunkSize,rmd);
 for chk = 1:nChunks
     cStartFrame = chunkSize * (chk-1) +1;
     if chk == max(nChunks)
