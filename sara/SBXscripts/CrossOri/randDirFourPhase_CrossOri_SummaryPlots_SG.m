@@ -142,7 +142,7 @@ for iA = 1:narea
     popZc_sem = popZc_std/(sqrt(length(resp_ind)));
     popZp_sem = popZp_std/(sqrt(length(resp_ind)));
 
-    subplot(3,6,1)
+    subplot(4,6,1)
         scatter(popZc_avg,popZp_avg,10,"filled")
         hold on
         ylim([0 0.5]); ylabel('avg Zp')
@@ -158,7 +158,7 @@ for iA = 1:narea
     inclusion_crit(3) = size(find(DSI_all>0.5),1)/totCells;
     inclusion_crit(4) = length(resp_ind)/totCells;
 
-    subplot(3,6,iA+2)
+    subplot(4,6,iA+2)
         bar(inclusion_crit);
         hold on
         ylim([0 1])
@@ -190,7 +190,7 @@ for iA = 1:narea
     max_classification(1) = length(unique([ind_patt1;ind_patt2;ind_patt3;ind_patt4]))/length(resp_ind);
     max_classification(2) = length(unique([ind_comp1;ind_comp2;ind_comp3;ind_comp4]))/length(resp_ind);
 
-    subplot(3,6,iAcount+2)
+    subplot(4,6,iAcount+2)
         bar(avg_classification);
         hold on
         ylim([0 0.6])
@@ -199,13 +199,13 @@ for iA = 1:narea
         xlabel('Average classification (PDS, CDS)')
         subtitle([area_list(iA,:) ' ' driver(iA,:) ' n=' num2str(length(resp_ind))])    
 
-    subplot(3,6,iAcount2+2)
+    subplot(4,6,iAcount2+2)
         bar(max_classification);
         hold on
         ylim([0 1.])
         yticks([0 0.5 1])
         set(gca,'TickDir','out'); box off; axis square; grid off
-        xlabel('Average classification (PDS, CDS)')
+        xlabel('Max classification (PDS, CDS)')
         subtitle([area_list(iA,:) ' ' driver(iA,:) ' n=' num2str(length(resp_ind))])    
 
 
@@ -215,6 +215,7 @@ iAcount2=iAcount2+1;
 end
 
 print(fullfile(outDir, [svName '_SummaryContinued.pdf']),'-dpdf', '-fillpage') 
+
 
 
 
@@ -329,17 +330,27 @@ for iA = 1:narea
     c2 = [0.9023    0.5742    0.5625];
     c3 = [0.8320    0.3672    0.3398];
     c4 = [0.7266    0.1094    0.1094];
-    
+
+    % Linear regression fit
+        pCoef = polyfit(-amp_all(resp_ind),pattind(resp_ind),1);
+        pFit = polyval(pCoef,-amp_all(resp_ind));
+        fprintf(['   slope of fit = ' num2str(pCoef(1)) ' \n'])
+    % Correlation
+        [rho, pval] = corr(-amp_all(resp_ind),pattind(resp_ind)');
+        fprintf(['   pval of correlation = ' num2str(pval) ' \n'])
+
     subplot(4,4,iA)
-        scatter(pattind(resp_ind),amp_all(resp_ind),20,'filled')
+        scatter(-amp_all(resp_ind),pattind(resp_ind),10,'filled')
         hold on
-        scatter(pattind(p1),amp_all(p1),20,c1,'filled')
-        scatter(pattind(p2),amp_all(p2),20,c2,'filled')
-        scatter(pattind(p3),amp_all(p3),20,c3,'filled')
-        scatter(pattind(p4),amp_all(p4),20,c4,'filled')
-        xlabel('Mean pattern index (Zp-Zc)')
-        ylabel('Spatial variance (amp)')
-        xlim([-4 8])
+        scatter(-amp_all(p1),pattind(p1),10,c1,'filled')
+        scatter(-amp_all(p2),pattind(p2),10,c2,'filled')
+        scatter(-amp_all(p3),pattind(p3),10,c3,'filled')
+        scatter(-amp_all(p4),pattind(p4),10,c4,'filled')
+        plot(-amp_all(resp_ind),pFit)
+        ylabel('Mean pattern index (Zp-Zc)')
+        xlabel('Spatial invariance (-amp)')
+        ylim([-4 8])
+        xlim([-6 0])
         set(gca,'TickDir','out'); axis square
         subtitle(leg_str(:,iA))
     
@@ -361,7 +372,7 @@ print(fullfile(outDir, [svName '_Summary_likeNicholas.pdf']),'-dpdf', '-fillpage
 
 
 
-stop
+
 figure;
 for iA = 1
     fprintf([area_list(iA,:) '\n'])
@@ -402,15 +413,16 @@ for iA = 1
     c4 = [0.7266    0.1094    0.1094];
     
     subplot(2,2,1)
-        scatter(pattind(resp_ind),amp_all(resp_ind),[],'filled')
+        scatter(-amp_all(resp_ind),pattind(resp_ind),[],'filled')
         hold on
-        scatter(pattind(p1),amp_all(p1),[],c1,'filled')
-        scatter(pattind(p2),amp_all(p2),[],c2,'filled')
-        scatter(pattind(p3),amp_all(p3),[],c3,'filled')
-        scatter(pattind(p4),amp_all(p4),[],c4,'filled')
-        xlabel('Mean pattern index (Zp-Zc)')
-        ylabel('Spatial variance (amp)')
-        xlim([-4 6])
+        scatter(-amp_all(p1),pattind(p1),[],c1,'filled')
+        scatter(-amp_all(p2),pattind(p2),[],c2,'filled')
+        scatter(-amp_all(p3),pattind(p3),[],c3,'filled')
+        scatter(-amp_all(p4),pattind(p4),[],c4,'filled')
+        ylabel('Mean pattern index (Zp-Zc)')
+        xlabel('Spatial invariance (-amp)')
+        ylim([-4 6])
+        
         set(gca,'TickDir','out'); axis square
         subtitle(leg_str(:,iA))
 
@@ -1358,9 +1370,9 @@ base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 summaryDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary', 'summaries');
 outDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary');
 svName = 'randPhase';
-exptn = strvcat('063', '064', '107', '109'); 
+exptn = strvcat('063','064','107','109','113','114','115','116'); 
 area = 'all_areas';
-area_list = strvcat('V1', 'V1', 'V1', 'V1');
+area_list = strvcat('V1','V1','V1','V1','V1','V1','V1','V1');
 narea = length(area_list);
 nCells = [];
 
@@ -1382,6 +1394,7 @@ for iA = 1:narea
 
     mean_avg_all(mean_avg_all<0) = 0;
 
+if iA<5 % Only plot first 4 experiments
     subplot(4,4,1)
         h(1,iA)=cdfplot(mean_avg_all(resp_ind));
         hold on
@@ -1431,6 +1444,14 @@ for iA = 1:narea
         hold on
         set(h(8,iA),'Color',c(iA,:))
         xlabel('avg ZpZc dist')
+        set(gca,'TickDir','out'); box off; axis square; grid off
+end
+
+% Now plot all amplitude modulations
+    subplot(4,4,9)
+        cdfplot(amp_all(resp_ind));
+        hold on
+        xlabel('phase mod amplitude')
         set(gca,'TickDir','out'); box off; axis square; grid off
 end
 sgtitle('L4 single cell comparison - local injection FLEX-6s (red), transgenic 8m (blue)')

@@ -121,7 +121,7 @@ load(fullfile(summaryDir,[svName '_Summary_V1_MAR.mat']))
     pattind = mean(pattern_ind,1);
     pattpeak = max(pattern_ind,[],1);   
 
-    resp_ind = intersect(sig_stim,find(DSI_all>0.5));
+    resp_ind = intersect(intersect(sig_stim,sig_dir),find(DSI_all>0.5));
 
     nan_ind = isnan(amp_all);
     amp_all(nan_ind)=0;
@@ -167,6 +167,7 @@ figure(2)
 
 
 %% print figs
+stop
     figure(1); print(fullfile(outDir, [svName '_mousemarmoset_population.pdf']),'-dpdf', '-fillpage') 
     figure(2); print(fullfile(outDir, [svName '_mousemarmoset_populationZpZc.pdf']),'-dpdf', '-fillpage') 
 

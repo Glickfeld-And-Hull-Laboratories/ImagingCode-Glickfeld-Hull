@@ -809,7 +809,7 @@ for iCon = 1:nCon
     set(gca,'XColor', 'none','YColor','none')
     
     sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
-     if iCon==2
+     if iCon==1
         print(fullfile(fnout,'Fig_3C.pdf'),'-dpdf');
      % else %option to print the plots for 25 and 100 contrast as well,
      % rather than just displaying them
@@ -817,11 +817,6 @@ for iCon = 1:nCon
      end
     clear txt1 highRed lowRed
 end 
-
-%% scatterplots for all cells stationary and matched cells running
-
-scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat,'stationaryUnMatched')
-scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_matched,green_matched,'runningMatched')
 
 
 %% Fig 3D - contrast response split by correlation value
@@ -1010,6 +1005,11 @@ set(gca,'XColor', 'none','YColor','none')
 
 end  
 print(fullfile(fnout,'Fig_4A_vertical.pdf'),'-dpdf');
+%% scatterplots for all cells stationary and matched cells running
+
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat,'stationaryUnMatched')
+scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_matched,green_matched,'runningMatched')
+
 
 %% Fig S4 A - related to Fig 4A - timecourses for Pyr cells running trials
 tc_green_avrg_stat = cell(1,nd);
@@ -1835,7 +1835,7 @@ print(fullfile(fnout,'Fig_Sy_B.pdf'),'-dpdf');
 
 %% get a table of capture values
 capture = getCaptureValues_annulus_peg(mice(2:length(mice)));
-table(mice(2:length(mice)),capture(3,:)')
+capture_table = table(mice(2:length(mice)),capture(3,:)')
 edges = linspace(1, 2, 10); % Create 20 bins.
 histogram(capture(3,:),'BinEdges',edges);
 xlim([1 2])

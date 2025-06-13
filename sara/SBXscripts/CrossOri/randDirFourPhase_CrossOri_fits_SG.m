@@ -9,7 +9,7 @@ seed = rng;
 
 max_dist = 10;
 
-for iexp = [111] %27 58 74
+for iexp = [122] %63 64 107 109
 
 %%
 mouse = expt(iexp).mouse;
@@ -21,13 +21,14 @@ nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
 base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
+LGbase = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 
 fprintf([mouse ' ' date '\n'])
 
 %% Pref direction analysis
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
+load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
 
 %%
@@ -449,10 +450,42 @@ for iCell = 1:nCells
     [b_hat_all(iCell,1), k1_hat_all(iCell,1), R1_hat_all(iCell,1), R2_hat_all(iCell,1), u1_hat_all(iCell,1), u2_hat_all(iCell,1), sse_all(iCell,1),R_square_all(iCell,1)] = miaovonmisesfit_dir(deg2rad(stimDirs),avg_resp_dir(iCell,:,1,1,1));
     dir_yfit_all(:,iCell) = b_hat_all(iCell,1)+R1_hat_all(iCell,1).*exp(k1_hat_all(iCell,1).*(cos(dirs-u1_hat_all(iCell,1))-1))+R2_hat_all(iCell,1).*exp(k1_hat_all(iCell,1).*(cos(dirs-u1_hat_all(iCell,1))-1));
 end
-    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_DirectionTuningFit.mat']), 'dir_yfit_all', 'b_hat_all', 'k1_hat_all', 'R1_hat_all','R2_hat_all', 'u1_hat_all','u2_hat_all', 'sse_all', 'R_square_all')
 
- 
 
+% global DSI
+    angs = 0:30:330;
+    eps_val = 1e-3;  % Small epsilon to prevent division by zero
+    for j = 1:nCells
+        amps        = avg_resp_dir(j,:,1,1,1); %our responses  
+        amps(amps < 0) = 0;
+
+        total_response = sum(amps); % Normalize factor
+        if total_response < eps_val
+            g_dsi(j) = NaN; % Assign NaN if total response is too small
+            g_osi(j) = NaN;
+            ang(j) = NaN;
+            ang_ori(j) = NaN;
+        continue
+        end
+
+        % Direction Selectivity Index (gDSI)
+            vec_x = sum(cos(deg2rad(angs)) .* amps);
+            vec_y = sum(sin(deg2rad(angs)) .* amps);
+            g_dsi(j) = sqrt(vec_x^2 + vec_y^2) / total_response;
+    
+        % Orientation Selectivity Index (gOSI)
+            vec_x_ori = sum(cos(deg2rad(2 * angs)) .* amps);
+            vec_y_ori = sum(sin(deg2rad(2 * angs)) .* amps);
+            g_osi(j) = sqrt(vec_x_ori^2 + vec_y_ori^2) / total_response;
+        
+        % Preferred direction (in degrees)
+            ang_dir(j) = mod(rad2deg(atan2(vec_y, vec_x)), 360);
+        
+        % Preferred orientation (in degrees, folded into [0, 180))
+            ang_ori(j) = mod(0.5 * rad2deg(atan2(vec_y_ori, vec_x_ori)), 180);
+    end
+
+    save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_DirectionTuningFit.mat']), 'g_dsi', 'g_osi', 'ang_dir', 'ang_ori', 'dir_yfit_all', 'b_hat_all', 'k1_hat_all', 'R1_hat_all','R2_hat_all', 'u1_hat_all','u2_hat_all', 'sse_all', 'R_square_all')
 
     
 %% Direction tuning curves plotted

@@ -6,14 +6,14 @@ rc = behavConstsDART; %directories
 eval(ds)
 doGreenOnly = false;
 doCorrImg = true; 
-ExperimentFolder = 'PV_YM90K';
+ExperimentFolder = 'VIP_YM90K';
 
 %BEFORE RUNNING THIS SCRIPT, IF IT HAS BEEN DONE FOR THE SAME MOUSE, DELETE
 %RELATED FILES IN THE MULTIDAY ANALYSIS FOLDER
 
 %to use the post-DART timepoint as the template
 
-day_id(1) =71; %enter the refrence day ID here 
+day_id(1) =73; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 
 
@@ -84,13 +84,13 @@ for id = 1:nd
             nframes = info.config.nframes;
             runFolder = [runFolder '_' imgFolder];
         end
-        fprintf(['Loading day ' num2str(id) ' data \n Mouse: ' expt(day_id(id)).mouse ' Date: ' expt(day_id(id)).date])
+        fprintf(['Loading day ' num2str(id) ' data \n Mouse: ' expt(day_id(id)).mouse ' Date: ' expt(day_id(id)).date '\n'])
         data_temp = sbxread(fName(1,1:11),0,nframes);
         data_g = cat(3, data_g, squeeze(data_temp(1,:,:,:)));
         clear data_temp
         out_all = [out_all; outs];
     end
-    [~,data{id}] = stackRegister_MA(data_g,[],[],double(out_all));
+    [~,data{id}] = stackRegister_TH(data_g,[],[],double(out_all));
     data_avg = mean(data{id},3);
     figure; imagesc(data_avg); title(['Avg FOV day ' num2str(id)])
     clear data_g

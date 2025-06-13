@@ -1,14 +1,9 @@
 clear all; clear global; 
 close all
 clc
-prompt = 'Which dataset do you want to use: 0- DART_expt_info, 1- DART_V1_atropine_Celine? ';
-x = input(prompt);
-switch x
-    case 0
-        ds = 'DART_expt_info'; %dataset info
-    case 1
-        ds = 'DART_V1_atropine_Celine'; %dataset info
-end
+prompt = 'Enter ds (e.g., DART_V1_YM90K_Celine): ';
+ds = input(prompt, 's');
+clear x prompt
 prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
 experimentFolder = input(prompt, 's');
 clear x prompt
@@ -254,6 +249,7 @@ for id = 1:nd
 end
 
 %% extract running onsets
+%% extract running onsets
 
 prompt = 'Do you want to extract running onsets? (0-no, 1-yes) ';
 x = input(prompt);
@@ -387,6 +383,8 @@ if x == 1
     
 end
 clear x
+
+
 
 %% get large/small pupil trials
 statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
@@ -990,12 +988,12 @@ end
 %% interneuron / pyr relationship
 % get mean-subtracted trial responses
 trialResp=cell(1,nd); %raw trial responses for each cell 
-subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
+subTrialResp=cell(1,nd); %trial responses with mean for that condition subtracted
 conditionMeans=cell(1,nd); %mean for each condition
 
 for id = 1:nd
 
-    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
+    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1,'omitmissing'));
     subTrialResp{id} = nan(size(trialResp{id}));
 
     conditionMeans{id}=nan(nDir,nCon,nSize,nKeep);
@@ -1011,16 +1009,16 @@ for id = 1:nd
             for iSize = 1:nSize
                 ind_size = find(tSize == sizes(iSize));
                 inds2 = intersect(inds1,ind_size);
-                inds=intersect(inds2,ind_stat);
+                inds=intersect(inds2,find(~RIx{id}));
                 tempData=trialResp{id}(inds,:);
-                tempCellMeans=mean(tempData,1);
+                tempCellMeans=mean(tempData,1,'omitmissing');
                 tempSubData = tempData - tempCellMeans;
                 subTrialResp{id}(inds,:)=tempSubData;
                 conditionMeans{id}(iDir,iCon,iSize,:)=tempCellMeans;
             end
         end
     end
-subTrialResp{id}=subTrialResp{id}(ind_stat,:);
+
 end
 
 
@@ -1037,7 +1035,7 @@ if isempty(plotChoice) || ~strcmpi(plotChoice, 'y')
 else
     doPlot = true;
     % Select 15 random cells to plot (or all if less than 15)
-    numToPlot = min(15, nKeep);
+    numToPlot = min(5, nKeep);
     cellsToPlot = randperm(nKeep, numToPlot);
     disp(['Plotting enabled for ' num2str(numToPlot) ' randomly selected cells.']);
 end
@@ -1054,7 +1052,7 @@ for id=1:nd
             otherCells = setdiff(green_ind_keep,iCell);
         end
         otherCellsMean = mean(subTrialResp{id}(:,otherCells),2,"omitnan");
-        
+        [R,p]=corrcoef(otherCellsMean(~isnan(otherCellsMean),:),thisCell(~isnan(thisCell),:));
         % Optional plotting code in conditional block - only for selected cells
         if doPlot && ismember(iCell, cellsToPlot)
             figure
@@ -1065,11 +1063,10 @@ for id=1:nd
             end
             hold on
             h = lsline;
-            title([' Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
+            title(['NoiseCorr Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
         end
         
-        [R,p]=corrcoef(otherCellsMean,thisCell);
-        % Title is now included in the plotting block above
+        
         
         noiseCorr{id}(1,iCell)=R(2);
         noiseCorr{id}(2,iCell)=p(2);
@@ -1089,7 +1086,7 @@ for id=1:nd
             otherCells = setdiff(green_ind_keep,iCell);
         end
         otherCellsMean = mean(tempconditionMeans(:,otherCells),2,"omitnan");
-        
+        [R,p]=corrcoef(otherCellsMean(~isnan(otherCellsMean),:),thisCell(~isnan(thisCell),:));
         % Optional plotting code in conditional block - only for selected cells
         if doPlot && ismember(iCell, cellsToPlot)
             figure
@@ -1100,10 +1097,9 @@ for id=1:nd
             end
             hold on
             h = lsline;
-            title([' Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
+            title(['SigCorr Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
         end
         
-        [R,p]=corrcoef(otherCellsMean,thisCell);
         sigCorr{id}(1,iCell)=R(2);
         sigCorr{id}(2,iCell)=p(2);
     end

@@ -1,7 +1,7 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_expt_info'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
@@ -10,12 +10,12 @@ doCorrImg = true;
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 73;
+day_id = 2;
 %% load data for day
 
 mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
-ExperimentFolder = expt(day_id).exptType;
+ExperimentFolder = 'VIP_YM90K';
 
 fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
@@ -41,28 +41,9 @@ for irun = 1:nruns
         fName = [imgFolder '_000_000'];
     end
 
-
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        root = rc.data;
-        CD = fullfile(root,mouse,expDate,runFolder);
-        dat = 'data-';
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        root = rc.ashleyData;
-        CD = fullfile(root,mouse,'two-photon imaging', expDate,runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        root = rc.tammyData;
-        CD = fullfile(root, mouse, '2P',expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'celine')
-        root = rc.Data;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-';
-    end
+    root = rc.achData;
+    CD = fullfile(root, mouse, expDate, runFolder);
+    dat = 'data-';
     cd(CD);
 
     imgMatFile = [imgFolder '_000_000.mat'];
@@ -242,16 +223,9 @@ if exist(fullfile(fnout,'redImage.mat'))
 elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find and load it
     redRun = expt(day_id).redChannelRun;
     imgMatFile = [redRun '_000_000.mat'];
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        cd(fullfile(root,mouse, expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        cd(fullfile(root,mouse,'two-photon imaging', expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        cd(fullfile(root, mouse, '2P',expDate, redRun));
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        cd(fullfile(root, mouse, expDate, redRun));
-    end
+    root = rc.achData;
+    cd(fullfile(root, mouse, expDate, redRun));
+  
     load(imgMatFile);
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
@@ -342,7 +316,7 @@ figure; imagesc(redThresh);colormap gray;
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redThresh,redThresh,redThresh); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image twice
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
@@ -683,7 +657,7 @@ figure
 histogram(elements);
 set(gca,'YScale','log')
 sgtitle('Log Trial Length Distribution')
-ylim([0.1 max(n)+max(n)*1/10])
+%ylim([0.1 max(n)+max(n)*1/10])
 xlabel('nFrames')
 ylabel('log number of trials')
 
@@ -692,7 +666,7 @@ print(fullfile(fnout,'LogTrialLengthDistribution.pdf'),'-dpdf','-bestfit');
 figure
 histogram(elements);
 sgtitle('Trial Length Distribution')
-ylim([0.1 max(n)+max(n)*1/10])
+%ylim([0.1 max(n)+max(n)*1/10])
 xlabel('nFrames')
 ylabel('number of trials')
 

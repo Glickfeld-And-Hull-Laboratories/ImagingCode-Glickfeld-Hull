@@ -7,9 +7,9 @@ doPlot = 1;
 ds = 'CrossOriRandDirFourPhase_ExptList_SG';
 svName = 'randPhase';
 eval(ds)
-driver = 'SCN';
-img_area = {'V1';'L2/3'}; %LM
-inj_area = 'V1';
+driver = 'SLC'; %Scn
+img_area = {'PM';'L4'}; %LM
+inj_area = 'PM';
 
 max_dist = 10;
 
@@ -58,19 +58,24 @@ mean_avg_all = [];
 grat_pref_all = [];
 plaid_pref_all = [];
 
+g_dsi_all = [];
+g_osi_all = [];
+ang_dir_all = [];
+ang_ori_all = [];
+
 red_cells_all = [];
 
 mouse_list = [];
 totCells = [];
 
 % V1 L2/3 -- 9 10 13 26 40 51 53 67 75
-% V1 L4 -- 63 64 107 109 
+% V1 L4 -- 63 64 107 109 113 114 115 116
 % AL L2/3 -- 17 27 58 70 74 90 92
 % LM L2/3 -- 19 30 60 73 78 87 88 91
-% PM L2/3 -- 97 102 103 104
+% PM L2/3 -- 97 102 103 104 122
 
 start=1;
-for iexp = [64] 
+for iexp = [97 102 103 104 122] 
     mouse = expt(iexp).mouse;
     mouse_list = strvcat(mouse_list, mouse);
     date = expt(iexp).date;
@@ -113,8 +118,6 @@ for iexp = [64]
     
     b_all = [b_all; b_hat_all];
     amp_all = [amp_all; amp_hat_all];
-    pha_all = [pha_all; pha_hat_all];
-    per_all = [per_all; per_hat_all];
     Rsq_all = [Rsq_all; R_square_all];
     sse_all_all = [sse_all_all; sse_all];
     
@@ -187,11 +190,16 @@ for iexp = [64]
     cellnum(start,1) = nCells;
     cellnum(start,2) = totCells;
     cellnum(start,3) = length(amp_hat_all);
+
+    g_dsi_all = [g_dsi_all; g_dsi'];
+    g_osi_all = [g_osi_all; g_osi'];
+    ang_dir_all = [ang_dir_all; ang_dir'];
+    ang_ori_all = [ang_ori_all; ang_ori'];
     
     start=start+1;
 end
-    % save(fullfile(summaryDir,[svName '_Summary_' inj_area  '_' driver '.mat']), 'grat_pref_all', 'plaid_pref_all', 'mean_avg_all', 'std_avg_all', 'prefDir_resamp_all', 'sig_dir','sig_stim','plaid_corr_all', 'red_cells_all', 'ZpZcPWdist_all', 'b_all_sh', 'amp_all_sh', 'Rsq_all_sh', 'sse_all_all_sh','dir_yfits','R2_all','u2_all','dir_b_all', 'k1_all', 'R1_all', 'u1_all', 'dir_Rsq_all', 'dir_sse_all', 'nCells', 'Zp_all', 'Zc_all', 'PCI_all', 'b_all','amp_all','Rsq_all','yfit_all_all','pha_all', 'sse_all_all', 'DSI_all','mouse_list')
-    save(fullfile(summaryDir,[svName '_Summary_' inj_area '_0' num2str(iexp) '.mat']), 'mean_avg_all', 'std_avg_all', 'prefDir_resamp_all','sig_dir','sig_stim','plaid_corr_all', 'red_cells_all', 'dir_yfits','ZpZcPWdist_all','R2_all','u2_all','dir_b_all', 'k1_all', 'R1_all', 'u1_all', 'dir_Rsq_all', 'dir_sse_all', 'nCells', 'Zp_all', 'Zc_all', 'PCI_all', 'b_all','amp_all','Rsq_all','yfit_all_all','pha_all', 'sse_all_all', 'DSI_all','mouse_list')
+    save(fullfile(summaryDir,[svName '_Summary_' inj_area  '_' driver '.mat']), 'ang_dir_all', 'ang_ori_all', 'g_dsi_all', 'g_osi_all', 'grat_pref_all', 'plaid_pref_all', 'mean_avg_all', 'std_avg_all', 'prefDir_resamp_all', 'sig_dir','sig_stim','plaid_corr_all', 'red_cells_all', 'ZpZcPWdist_all', 'b_all_sh', 'amp_all_sh', 'Rsq_all_sh', 'sse_all_all_sh','dir_yfits','R2_all','u2_all','dir_b_all', 'k1_all', 'R1_all', 'u1_all', 'dir_Rsq_all', 'dir_sse_all', 'nCells', 'Zp_all', 'Zc_all', 'PCI_all', 'b_all','amp_all','Rsq_all','yfit_all_all', 'sse_all_all', 'DSI_all','mouse_list')
+    %save(fullfile(summaryDir,[svName '_Summary_' inj_area '_' num2str(iexp) '.mat']), 'ang_dir_all', 'ang_ori_all', 'g_dsi_all', 'g_osi_all', 'mean_avg_all', 'std_avg_all', 'prefDir_resamp_all','sig_dir','sig_stim','plaid_corr_all', 'red_cells_all', 'dir_yfits','ZpZcPWdist_all','R2_all','u2_all','dir_b_all', 'k1_all', 'R1_all', 'u1_all', 'dir_Rsq_all', 'dir_sse_all', 'nCells', 'Zp_all', 'Zc_all', 'PCI_all', 'b_all','amp_all','Rsq_all','yfit_all_all', 'sse_all_all', 'DSI_all','mouse_list')
 
 %%
 close all; clear all; clc;
