@@ -1,17 +1,17 @@
 
 clear all; clear global; close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; %dataset info
 % ds = 'DART_expt_info'
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'PV_atropine';
+experimentFolder = 'VIP_YM90K';
 % experimentFolder = 'PV_atropine';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [82];%enter all the sessions you want to concatenate4
+sess_list = [2 4];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -1329,11 +1329,11 @@ for iSize = 1:nSize
     subplot(1,2,1)
     boxchart(squeeze(norm_diff(1,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
     hold on
-    scatter([1, 2, 3, 4],squeeze(norm_diff(1,:,iSize,red_ind_concat))',20,'filled','jitter', 'on', 'jitterAmount',.1)
+    scatter([1, 2, 3, 4],squeeze(norm_diff(1,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
     xticklabels({'12.5','25','50','100'})
     xlabel('Contrast(%)')
     ylabel('Normalized difference')
-    ylim([-2 2])
+    ylim([-10 10])
     title('Stationary')
     hold off
     set(gca,'TickDir','out')
@@ -1348,11 +1348,11 @@ for iSize = 1:nSize
     subplot(1,2,2)
     boxchart(squeeze(norm_diff(2,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
     hold on
-    scatter([1, 2, 3, 4],squeeze(norm_diff(2,:,iSize,red_ind_concat))',20,'filled','jitter', 'on', 'jitterAmount',.1)
+    scatter([1, 2, 3, 4],squeeze(norm_diff(2,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
     xticklabels({'12.5','25','50','100'})
     xlabel('Contrast(%)')
     %ylabel('Normalized difference')
-    ylim([-2 2])
+    ylim([-35 35])
     title('Running')
     hold off
     set(gca,'TickDir','out')
