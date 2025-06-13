@@ -1,4 +1,4 @@
-function [meanCounts, meanAmps] = eventCountAndAmp(dataIN,startSweep,stopSweep,conversionFact)
+function [meanCounts, meanAmps,nTotal, nRejectedHigh,nRejectedLow] = eventCountAndAmp(dataIN,startSweep,stopSweep,conversionFact)
 % Function that takes a file name for a .csv file of events and the sweep at which the drug arrived, and
 % returns four values: the mean number of events per min and the mean
 % amplitude
@@ -22,22 +22,19 @@ function [meanCounts, meanAmps] = eventCountAndAmp(dataIN,startSweep,stopSweep,c
     %now 1=Trace, 2=peak, and 3=rise slope
     %eliminate events the fail cirteria
 
-    mean(abs(data(:,2)));
+   
     ampTooHigh = abs(data(:,2))>ampMax;
+    nRejectedHigh = sum(ampTooHigh);
     data(ampTooHigh,:)=[];
-    mean(abs(data(:,2)));
 
-
-    mean(abs(data(:,2)));
     ampTooLow = abs(data(:,2))<ampMin;
+    nRejectedLow = sum(ampTooLow);
     data(ampTooLow,:)=[];
-    mean(abs(data(:,2)));
     
-    nanmean(abs(data(:,3)));
+    nTotal = size(data,1);
+    
     slopeCutOFf = abs(data(:,3))>slopeThreshold;
     data(slopeCutOFf,:)=[];
-    nanmean(abs(data(:,3)));
-
 
 
     %endSweep, the total number of sweeps to interrogate, will be set to the

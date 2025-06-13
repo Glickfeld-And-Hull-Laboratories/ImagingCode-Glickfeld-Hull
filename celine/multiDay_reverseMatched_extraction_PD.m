@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'VIP_atropine';
+experimentFolder = 'SST_atropine';
 
 mouse = expt(day_id).mouse;
 
@@ -46,37 +46,34 @@ frame_rate = input.frameImagingRateMs;
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
 
-for id = 1 %currently only doing this for the baseline day
-mouse = expt(allDays(id)).mouse;
-date = expt(allDays(id)).date;
-imgFolder = expt(allDays(id)).contrastxori_runs{1};
-fn = fullfile(rc.achAnalysis,experimentFolder, mouse,date,imgFolder);
-cd(fn);
-load(fullfile(fn,'redImage.mat'));
-load(fullfile(fn,'mask_cell.mat'));
- 
-%use stackGetTimeCourses to extract the red fluorescence within each mask
-red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
-nCells=max(max(mask_cell));
-for i = 1:nCells
-red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
-end
+for id = 1 %currently only doing this for the reference day, regardless of 
+    % which direction the data was matched
+    mouse = expt(allDays(id)).mouse;
+    date = expt(allDays(id)).date;
+    imgFolder = expt(allDays(id)).contrastxori_runs{1};
+    fn = fullfile(rc.achAnalysis,experimentFolder, mouse,date,imgFolder);
+    cd(fn);
+    load(fullfile(fn,'redImage.mat'));
+    load(fullfile(fn,'mask_cell.mat'));
+     
+    %use stackGetTimeCourses to extract the red fluorescence within each mask
+    red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
+    nCells=max(max(mask_cell));
+        for i = 1:nCells
+            red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
+        end
+    %using the reference day
+    %red_fluor_match=red_fluor_all(:,match_ind); %if we want to use the
+    %np-subtracted red
+    red_fluor_match=red_fluor_mask(:,match_ind); %to find the red within a cell, NOT no-subtracted
+    z_red_fluor=zscore(red_fluor_match);
+    load(fullfile(fn_multi,'multiday_alignment.mat'))
+    clear red_fluor_all red_fluor_mask red_fluor_np
+    % get green fluor level
+    %using the reference day
+    green_fluor_match=mean(cellTCs_match{1},1);   
 
-red_fluor_all = red_fluor_mask-red_fluor_np;
-    %load in the pupil data for each day
-    
-    
-
-% clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
 end
-%using the reference day
-red_fluor_match=red_fluor_all(:,match_ind);
-z_red_fluor=zscore(red_fluor_match);
-load(fullfile(fn_multi,'multiday_alignment.mat'))
-clear red_fluor_all red_fluor_mask red_fluor_np
-% get green fluor level
-%using the reference day
-green_fluor_match=mean(cellTCs_match{1},1);   
 
 
 pupil=cell(1,nd);
@@ -372,17 +369,24 @@ for id = 1:nd
 
     %I want to pull out the responses for each cell at it's preferred orientations, for
     %all contrasts, and at it's preferred contrast, for all orientations
+
+
     for iCell = 1:nCells
-        [max_val, pref_dir(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),3)),2));
-        %averaging over contrast, then averaging over size, then finding
-        %the max direction
-        %[max_val, pref_dir(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],3),[],4));
-          %the indexing seems weird here, but its becuase we first find the
-          %maximum value for each direction by taking the max across
-          %contrasts, then we fine the maximum of those max's. So we use
-          %the contrast index to eventually get max direction and vice
-          %versa.
-%          [max_val_con, pref_con(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],4),[],2)); 
+        if nDir == 1
+            pref_dir(1,iCell)=1; %if there is only one direction, we don't need to find the preferred direction.
+            
+        else
+            [max_val, pref_dir(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),3)),2));
+            %averaging over contrast, then averaging over size, then finding
+            %the max direction
+            %[max_val, pref_dir(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],3),[],4));
+              %the indexing seems weird here, but its becuase we first find the
+              %maximum value for each direction by taking the max across
+              %contrasts, then we fine the maximum of those max's. So we use
+              %the contrast index to eventually get max direction and vice
+              %versa.
+    %          [max_val_con, pref_con(1,iCell)] = max(max(max(resp_sig(iCell,:,:,:),[],4),[],2)); 
+        end
         [max_val_con, pref_con(1,iCell)] = max(mean(squeeze(mean(resp_sig(iCell,:,:,:),2)),2));
 
           %I should change this to find preferred size at pref dir

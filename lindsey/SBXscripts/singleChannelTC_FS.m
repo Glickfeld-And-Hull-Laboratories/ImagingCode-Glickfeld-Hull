@@ -4,10 +4,10 @@ close all
 clear all
 clc
 
-date = '241202';
+date = '250207';
 ImgFolder = [{'003'}];
-time = strvcat('1254');
-mouse = 'i2585';
+time = strvcat('1529');
+mouse = 'i2586';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,1);
@@ -78,7 +78,7 @@ nep = floor(size(data,3)./10000);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):300+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(300+((i-1)*10000))]); end
 
-data_avg = mean(data(:,:,50001:50500),3);
+data_avg = mean(data(:,:,40001:40500),3);
 %% Register data
 
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
@@ -343,8 +343,8 @@ offs = unique(tFramesOff(:,1));
 noff = length(offs);
 frameRateHz = input.frameRateHz;
 
-base_win =32:34;
-resp_win =40:42; 
+base_win =31:33;
+resp_win =36:38; 
 
 % figure;
 % if nCells<25

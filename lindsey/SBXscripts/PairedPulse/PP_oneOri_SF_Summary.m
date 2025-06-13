@@ -8,9 +8,17 @@ ds = 'AdaptSF_ExptList';
 eval(ds);
 nexp = size(expt,2);
 
-area = 'V1_GC6s_WT';
+area = 'V1';
+area_ind = find(strcmp([expt.img_loc], area));
+randDir = 0;
+nDir = 1;
+dir_ind = intersect(find([expt.randDir]==randDir),find([expt.nDir]==nDir));
+line = 'WT';
+line_ind = find(strcmp([expt.driver], line));
 
-expt_use = 26;
+area = 'V1_GC_WT';
+
+expt_use = intersect(line_ind,intersect(area_ind,dir_ind));
 totCells = 0;
 norm_sf = [];
 norm_prefsf = [];
@@ -31,9 +39,11 @@ for iexp = expt_use
         if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
             load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dfofData.mat']))
         else
-            fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat'])
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
         end
-        load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+        if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+            load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
+        end
     
         norm_sf_temp =  [reshape(norm_dfof_stim_nan, [nCells.*nSF 1]) reshape(repmat(sfs,[nCells 1]), [nCells.*nSF 1])];
         norm_prefsf_temp =  [norm_dfof_stim_pref sfs(pref_sf)'];
@@ -83,7 +93,7 @@ ind = find(table_all(:,end)<0.05);
 groups_all = mat2cell(sfs(table_all(ind,1:2)),ones(1,size(table_all(ind,:),1)));
 stats_all = table_all(ind,end);
 
-%sigstar(groups_all,stats_all);
+sigstar(groups_all,stats_all);
 
 
 subplot(3,2,2)

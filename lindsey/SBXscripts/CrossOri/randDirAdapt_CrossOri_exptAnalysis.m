@@ -17,20 +17,20 @@ time = expt(iexp).coTime;
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
-base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
+LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 %LG_base = '\\CRASH.dhe.duke.edu\data\home\lindsey';
 
 fprintf([mouse ' ' date '\n'])
 
 %% Test stim analysis
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 
 %%
-if doRedChannel == 0
-    red_cells = [];
-end
+% if doRedChannel == 0
+%     red_cells = [];
+% end
 
 prewin_frames = frame_rate;
 nFramesOn = unique(celleqel2mat_padded(input.nStimTwoFramesOn));
@@ -53,8 +53,8 @@ ind_maskAlone = intersect(find(stimCon_all==0),find(maskCon_all));
 ind_plaid = intersect(find(stimCon_all),find(maskCon_all));
 ind_blank = intersect(find(stimCon_all==0),find(maskCon_all==0));
 
-ind_noadapt = find(adaptTr == 0);
-ind_singadapt = find(adaptTr);
+ind_noadapt = find(adaptStim == 0);
+ind_singadapt = find(adaptStim);
 
 resp_cell_noadapt = cell(nStimDir,2);
 resp_cell_singadapt = cell(nStimDir,2);
@@ -129,8 +129,8 @@ for iCell = 1:nCells
     p_anova_plaid(iCell) = anova1(all_resp_plaid(iCell,:), all_plaid, 'off');
 end
 
-save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'data_dfof_dir_tc_avg_singadapt', 'resp_cell_singadapt','base_cell_singadapt','data_dfof_dir_tc_avg_noadapt', 'resp_cell_noadapt','base_cell_noadapt', 'data_dfof_tc', 'avg_resp_dir', 'h_resp','resp_ind', 'tt', 'frame_rate');
-save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'base_win', 'trialsperstim_singadapt','trialsperstim_noadapt','trialInd_singadapt','trialInd_noadapt');
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'data_dfof_dir_tc_avg_singadapt', 'resp_cell_singadapt','base_cell_singadapt','data_dfof_dir_tc_avg_noadapt', 'resp_cell_noadapt','base_cell_noadapt', 'data_dfof_tc', 'avg_resp_dir', 'h_resp','resp_ind', 'tt', 'frame_rate');
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'base_win', 'trialsperstim_singadapt','trialsperstim_noadapt','trialInd_singadapt','trialInd_noadapt');
 
 end
 %%
@@ -379,7 +379,7 @@ for i = 1:12
     ylim([-0.1 1.5])
 end
 suptitle([mouse ' ' date '- Grating: control (black), adapt (red)- Pref 0'])
-print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_gratingTCs_prefAdapt.pdf']),'-dpdf','-bestfit')
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_gratingTCs_prefAdapt.pdf']),'-dpdf','-bestfit')
 
 figure; 
 for i = 1:12
@@ -390,7 +390,7 @@ for i = 1:12
     ylim([-0.1 1.5])
 end
 suptitle([mouse ' ' date '- Plaid: control (black), adapt (red) - Pref 0'])
-print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidTCs_prefAdapt.pdf']),'-dpdf','-bestfit')
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidTCs_prefAdapt.pdf']),'-dpdf','-bestfit')
 
 figure; 
 for i = 1:12
@@ -401,7 +401,7 @@ for i = 1:12
     ylim([-0.1 1.5])
 end
 suptitle([mouse ' ' date '- Grating: control (black), adapt (red)- Pref 90'])
-print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_gratingTCs_orthAdapt.pdf']),'-dpdf','-bestfit')
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_gratingTCs_orthAdapt.pdf']),'-dpdf','-bestfit')
 
 figure; 
 for i = 1:12
@@ -412,7 +412,7 @@ for i = 1:12
     ylim([-0.1 1.5])
 end
 suptitle([mouse ' ' date '- Plaid: control (black), adapt (red)- Pref 90'])
-print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidTCs_orthAdapt.pdf']),'-dpdf','-bestfit')
+print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_plaidTCs_orthAdapt.pdf']),'-dpdf','-bestfit')
 
 
 figure; 

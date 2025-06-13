@@ -5,7 +5,7 @@ clc
 
 % ENTER DATASET NAME
 load('ds_YM90K_DART.mat');
-ds_name='YM90K_DART';
+% ds_name='YM90K_DART';
 nSess=length(ds_YM90K_DART);
 
 % setting key variables and output folder
@@ -80,8 +80,12 @@ motorByPupil_concat=nan(nd,2,nSess);
 pupilCounts_concat=nan(nd,2,nSess);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
-
+OSI_concat=cell(1,nd);
 responseByCondProps_concat=nan(6,2,nSess);
+
+F0_stat_concat=NaN(2,2,nSess);
+F0_loc_concat=NaN(2,2,nSess);  
+
 
 cellID_adjustment=0;
 for iSess = 1:nSess
@@ -103,6 +107,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
     load(fullfile(fn_multi,'pupilMeans.mat'));
+    load(fullfile(fn_multi,'F0_means.mat'));
 
 
     nKeep = size(tc_trial_avrg_stat{post},2);
@@ -137,12 +142,14 @@ for iSess = 1:nSess
     green_concat = [green_concat, green_keep_logical];
     nKeep_concat = [nKeep_concat,nKeep];
     responseByCondProps_concat(:,:,iSess)=responseByCondProps;
+    F0_stat_concat(:,:,iSess)=cellTypeMean_F0_stat_keep;
+    F0_loc_concat (:,:,iSess)=cellTypeMean_F0_loc_keep;
 
     clear cons
     
     
     for id = 1:nd
-        
+        OSI_concat{id}=cat(1,OSI_concat{id},OSI_keep{id});
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,sharedCon));
         tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon));
         tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon));
@@ -187,8 +194,6 @@ for iSess = 1:nSess
    if size(pref_responses_stat_concat{id},1) ~= size(pref_responses_stat_smallPupil_concat{id},1)
        break
    end
-       
-
 
 
 iSess
@@ -238,11 +243,11 @@ for iMouse = 1:nSess
 end
 clear start iMouse
 
-green_all = intersect(haveRunning_green{1},haveRunning_green{2});
-green_all = intersect(green_all, haveRunning_green{3});
+green_matched = intersect(haveRunning_green{1},haveRunning_green{2});
+green_matched = intersect(green_matched, haveRunning_green{3});
 
-red_all = intersect(haveRunning_red{1},haveRunning_red{2});
-red_all = intersect(red_all, haveRunning_red{3});
+red_matched = intersect(haveRunning_red{1},haveRunning_red{2});
+red_matched = intersect(red_matched, haveRunning_red{3});
 
 %find cells that have pupil data on both days
 have_LARGE_pre = ~isnan(pref_responses_stat_largePupil_concat{pre});
@@ -272,7 +277,7 @@ mouseNames=[];
 for iMouse = 1:nSess
     
     cellCountsRed(iMouse, 1,1)=length(intersect(red_ind_concat,(mouseInds{iMouse})));
-    cellCountsRed(iMouse, 2,1)=length(intersect(red_all,(mouseInds{iMouse})));
+    cellCountsRed(iMouse, 2,1)=length(intersect(red_matched,(mouseInds{iMouse})));
     cellCountsRed(iMouse, 3,1)=length(intersect(have_allPupil_red,(mouseInds{iMouse})));
         
     mouseNames=[mouseNames, string(mice(iMouse,:))]
@@ -285,7 +290,7 @@ mouseNames=[];
 for iMouse = 1:nSess
     
     cellCountsGreen(iMouse, 1,1)=length(intersect(green_ind_concat,(mouseInds{iMouse})));
-    cellCountsGreen(iMouse, 2,1)=length(intersect(green_all,(mouseInds{iMouse})));
+    cellCountsGreen(iMouse, 2,1)=length(intersect(green_matched,(mouseInds{iMouse})));
     cellCountsGreen(iMouse, 3,1)=length(intersect(have_allPupil_green,(mouseInds{iMouse})));
         
     mouseNames=[mouseNames, string(mice(iMouse,:))]
@@ -301,7 +306,7 @@ writetable(cellCountTableGreen,fullfile(fnout,'cellCounts_Green.csv'),'WriteRowN
 %find how many haveRunning red cells exist for each mouse
 cellCountsRedAll = nan(nSess,1);
 for iMouse = 1:nSess
-    cellCountsRedAll(iMouse)=length(intersect(red_all,(mouseInds{iMouse})));
+    cellCountsRedAll(iMouse)=length(intersect(red_matched,(mouseInds{iMouse})));
 end
 clear  iMouse
 
@@ -319,6 +324,7 @@ mouseID=mouseID';
 
 %calculate norm_diff
 norm_diff = nan(2,nCon,nKeep_total);
+bsln_std =  nan(2,nCon,nKeep_total);
 for i = 1:nKeep_total
     for iCon = 1:nCon
         %for stationary trials
@@ -336,6 +342,8 @@ for i = 1:nKeep_total
         %putting data into matrix
         norm_diff(1,iCon,i)=norm_diff_stat; %first is stationary
         norm_diff(2,iCon,i)=norm_diff_loc; %second is running
+        bsln_std(1,iCon,i)=std_pre_stat; %std for stationary trials on basline day
+        bsln_std(2,iCon,i)=std_pre_loc; %std for running trials on basline day
 clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc norm_diff_stat norm_diff_loc
     end 
 end
@@ -343,6 +351,9 @@ end
 %those into NANs instead
 norm_diff(find(norm_diff == -Inf))=NaN;
 norm_diff(find(norm_diff == Inf))=NaN;
+
+bsln_std(find(bsln_std == -Inf))=NaN;
+bsln_std(find(bsln_std == Inf))=NaN;
 
 % cells with high correlation in the baseline day
 highRInds = find(noiseCorr_OG_concat{pre}(1,:)>0.5);
@@ -363,6 +374,123 @@ for iSess = 1:nSess
     RbyExp(2,iSess) = length(intersect(mouseIndsTemp,redLow));
 end
 array2table(RbyExp,RowNames={'high R'  'low R'})
+
+%% comparing F0 values
+% Create figure
+figure('Position', [100 100 600 400]);
+subplot(2,1,1)
+% Extract data for Pyramidal cells
+pyr_stat_ratios = (squeeze(F0_stat_concat(post,1,:)))./(squeeze(F0_stat_concat(pre,1,:)));
+pyr_loc_ratios = (squeeze(F0_loc_concat(post,1,:)))./(squeeze(F0_loc_concat(pre,1,:)));
+% Extract data for SST cells
+sst_stat_ratios = (squeeze(F0_stat_concat(post,2,:)))./(squeeze(F0_stat_concat(pre,2,:)));
+sst_loc_ratios = (squeeze(F0_loc_concat(post,2,:)))./(squeeze(F0_loc_concat(pre,2,:)));
+positions = [1, 1.25, 1.75, 2];
+
+% Calculate means and SEMs
+pyr_stat_mean = nanmean(pyr_stat_ratios(:));
+pyr_loc_mean = nanmean(pyr_loc_ratios(:));
+sst_stat_mean = nanmean(sst_stat_ratios(:));
+sst_loc_mean = nanmean(sst_loc_ratios(:));
+
+pyr_stat_sem = nanstd(pyr_stat_ratios(:))/sqrt(sum(~isnan(pyr_stat_ratios(:))));
+pyr_loc_sem = nanstd(pyr_loc_ratios(:))/sqrt(sum(~isnan(pyr_loc_ratios(:))));
+sst_stat_sem = nanstd(sst_stat_ratios(:))/sqrt(sum(~isnan(sst_stat_ratios(:))));
+sst_loc_sem = nanstd(sst_loc_ratios(:))/sqrt(sum(~isnan(sst_loc_ratios(:))));
+
+% Pyramidal cells - black
+swarmchart(positions(1)*ones(size(pyr_stat_ratios(:))), pyr_stat_ratios(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+hold on;
+swarmchart(positions(3)*ones(size(pyr_loc_ratios(:))), pyr_loc_ratios(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+% SST cells - red
+swarmchart(positions(2)*ones(size(sst_stat_ratios(:))), sst_stat_ratios(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+swarmchart(positions(4)*ones(size(sst_loc_ratios(:))), sst_loc_ratios(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+
+% Add mean indicators with error bars
+errorbar(positions(1), pyr_stat_mean, pyr_stat_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(3), pyr_loc_mean, pyr_loc_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(2), sst_stat_mean, sst_stat_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
+errorbar(positions(4), sst_loc_mean, sst_loc_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
+
+% Add labels and title
+xlabel('Cell Type and Condition');
+set(gca, 'XTick', positions, 'XTickLabel', {'Pyr-Stat', 'SST-Stat','Pyr-Loc', 'SST-Loc'});
+ylabel('DART F0 / Control F0');
+title('DART Effects by Cell Type and Behavioral State');
+set(gca, 'TickDir', 'out');
+box off;
+grid off;
+
+% Create second subplot
+subplot(2,1,2)
+% Calculate locomotion/stationary ratios
+% Pyramidal cells
+pyr_pre_ratio = (squeeze(F0_loc_concat(pre,1,:)))./(squeeze(F0_stat_concat(pre,1,:)));
+pyr_post_ratio = (squeeze(F0_loc_concat(post,1,:)))./(squeeze(F0_stat_concat(post,1,:)));
+% SST cells
+sst_pre_ratio = (squeeze(F0_loc_concat(pre,2,:)))./(squeeze(F0_stat_concat(pre,2,:)));
+sst_post_ratio = (squeeze(F0_loc_concat(post,2,:)))./(squeeze(F0_stat_concat(post,2,:)));
+
+% Calculate means and SEMs for second subplot
+pyr_pre_mean = nanmean(pyr_pre_ratio(:));
+pyr_post_mean = nanmean(pyr_post_ratio(:));
+sst_pre_mean = nanmean(sst_pre_ratio(:));
+sst_post_mean = nanmean(sst_post_ratio(:));
+
+pyr_pre_sem = nanstd(pyr_pre_ratio(:))/sqrt(sum(~isnan(pyr_pre_ratio(:))));
+pyr_post_sem = nanstd(pyr_post_ratio(:))/sqrt(sum(~isnan(pyr_post_ratio(:))));
+sst_pre_sem = nanstd(sst_pre_ratio(:))/sqrt(sum(~isnan(sst_pre_ratio(:))));
+sst_post_sem = nanstd(sst_post_ratio(:))/sqrt(sum(~isnan(sst_post_ratio(:))));
+
+% Create positions for the groups
+positions = [1, 1.25, 1.75, 2];
+% Pyramidal cells - black
+swarmchart(positions(1)*ones(size(pyr_pre_ratio(:))), pyr_pre_ratio(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+hold on;
+swarmchart(positions(3)*ones(size(pyr_post_ratio(:))), pyr_post_ratio(:), 36, 'k', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+% SST cells - red
+swarmchart(positions(2)*ones(size(sst_pre_ratio(:))), sst_pre_ratio(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+swarmchart(positions(4)*ones(size(sst_post_ratio(:))), sst_post_ratio(:), 36, 'r', 'filled', 'MarkerFaceAlpha', 0.5, 'XJitterWidth', 0.1);
+
+% Add mean indicators with error bars
+errorbar(positions(1), pyr_pre_mean, pyr_pre_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(3), pyr_post_mean, pyr_post_sem, 'ks', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'k', 'CapSize', 10);
+errorbar(positions(2), sst_pre_mean, sst_pre_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
+errorbar(positions(4), sst_post_mean, sst_post_sem, 'rs', 'MarkerSize', 5, 'LineWidth', 2, 'MarkerFaceColor', 'r', 'CapSize', 10);
+
+% Add labels and title
+xlabel('Cell Type and Condition');
+set(gca, 'XTick', positions, 'XTickLabel', {'Pyr-Ctrl', 'SST-Ctrl', 'Pyr-DART', 'SST-DART'});
+ylabel('Locomotion F0 / Stationary F0');
+title('Locomotion Effects by Cell Type and Condition');
+set(gca, 'TickDir', 'out');
+box off;
+grid off;
+
+% Add overall title
+sgtitle('Comparison of DART and Locomotion Effects', 'FontSize', 12);
+print(fullfile(fnout,'F0_comparison.pdf'),'-dpdf');
+
+% Create a table of means and SEMs
+figure('Position', [700 100 500 300]);
+columnNames = {'Group', 'Mean', 'SEM'};
+rowNames = {'Pyr-Stat DART/Ctrl', 'SST-Stat DART/Ctrl', 'Pyr-Loc DART/Ctrl', 'SST-Loc DART/Ctrl', ...
+            'Pyr-Ctrl Loc/Stat', 'SST-Ctrl Loc/Stat', 'Pyr-DART Loc/Stat', 'SST-DART Loc/Stat'};
+tableData = {pyr_stat_mean, pyr_stat_sem; 
+             sst_stat_mean, sst_stat_sem; 
+             pyr_loc_mean, pyr_loc_sem; 
+             sst_loc_mean, sst_loc_sem;
+             pyr_pre_mean, pyr_pre_sem;
+             sst_pre_mean, sst_pre_sem;
+             pyr_post_mean, pyr_post_sem;
+             sst_post_mean, sst_post_sem};
+
+t = uitable('Data', tableData, 'ColumnName', columnNames(2:3), 'RowName', rowNames);
+t.Position(3:4) = t.Extent(3:4);
+t.Parent.Position(3:4) = t.Extent(3:4) + [40 40];
+title('Summary Statistics');
+print(fullfile(fnout,'F0_table.pdf'),'-dpdf');
+
 %% 
 fractHigh = RbyExp(1,:)./sum(RbyExp,1);
 mean(fractHigh)
@@ -501,6 +629,8 @@ height=3;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 
 print(fullfile(fnout,'Fig_3D.pdf'),'-dpdf');
+%% scatterplot with histogram
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_ind_concat,green_ind_concat,'Figure2')
 
 %% Figure 3D statistics
 % prepare data for ANOVA
@@ -853,7 +983,7 @@ z=double(nOn)/double(frame_rate);
 t=1:(size(hi_avrg_stat{1,1,1},1));
 t=(t-(double(stimStart)-1))/double(frame_rate);
 
-%Makes a plot for each contrast - 50 contrast used in paper
+%Makes a plot for each contrast - 25 contrast used in paper
 for iCon = 1:nCon
     figure
     subplot(1,2,1) 
@@ -900,9 +1030,9 @@ for iCon = 1:nCon
     set(gca,'XColor', 'none','YColor','none')
     
     sgtitle(['stationary, contrast = ' num2str(cons(iCon))])
-     if iCon==2
+     if iCon==1
         print(fullfile(fnout,'Fig_4B.pdf'),'-dpdf');
-     % else %option to print the plots for 25 and 100 contrast as well,
+     % else %option to print the plots for 50 and 100 contrast as well,
      % rather than just displaying them
      %     print(fullfile(fnout,[num2str(cons(iCon)) 'stat_R_timecourses.pdf']),'-dpdf');
      end
@@ -1603,13 +1733,13 @@ tc_red_se_loc = cell(1,nd);
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_all,iCon),2);
-    red_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,red_all,iCon),[],2);
-    tc_red_se_stat{id}(:,iCon)=red_std_stat/sqrt(length(red_all));
+    tc_red_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_matched,iCon),2);
+    red_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,red_matched,iCon),[],2);
+    tc_red_se_stat{id}(:,iCon)=red_std_stat/sqrt(length(red_matched));
     
-    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,red_all,iCon),2);
-    red_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,red_all,iCon),[],2);
-    tc_red_se_loc{id}(:,iCon)=red_std_loc/sqrt(length(red_all));
+    tc_red_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,red_matched,iCon),2);
+    red_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,red_matched,iCon),[],2);
+    tc_red_se_loc{id}(:,iCon)=red_std_loc/sqrt(length(red_matched));
     
     clear red_std_stat red_std_loc
     end
@@ -1657,7 +1787,7 @@ elseif iCon==3
 end
 set(gca,'XColor', 'none','YColor','none')
 
-sgtitle(['SST',' n = ', num2str(length(red_all))])
+sgtitle(['SST',' n = ', num2str(length(red_matched))])
 
 x0=5;
 y0=0;
@@ -1669,6 +1799,10 @@ set(gca,'XColor', 'none','YColor','none')
 
 end  
 print(fullfile(fnout,'Fig_5A.pdf'),'-dpdf');
+%% scatterplots for matched cells
+scatter_signedHypDist(pref_responses_stat_concat, pre,post,red_matched,green_matched,'stationaryMatched')
+
+scatter_signedHypDist(pref_responses_loc_concat, pre,post,red_matched,green_matched,'runningMatched')
 
 %% Fig 5C- timecourses for Pyr cells running trials
 tc_green_avrg_stat = cell(1,nd);
@@ -1679,13 +1813,13 @@ tc_green_se_loc = cell(1,nd);
 for id = 1:nd
     for iCon=1:nCon
         
-    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_all,iCon),2);
-    green_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,green_all,iCon),[],2);
-    tc_green_se_stat{id}(:,iCon)=green_std_stat/sqrt(length(green_all));
+    tc_green_avrg_stat{id}(:,iCon)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_matched,iCon),2);
+    green_std_stat=nanstd(tc_trial_avrg_stat_concat{id}(:,green_matched,iCon),[],2);
+    tc_green_se_stat{id}(:,iCon)=green_std_stat/sqrt(length(green_matched));
     
-    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,green_all,iCon),2);
-    green_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,green_all,iCon),[],2);
-    tc_green_se_loc{id}(:,iCon)=green_std_loc/sqrt(length(green_all));
+    tc_green_avrg_loc{id}(:,iCon)=nanmean(tc_trial_avrg_loc_concat{id}(:,green_matched,iCon),2);
+    green_std_loc=nanstd(tc_trial_avrg_loc_concat{id}(:,green_matched,iCon),[],2);
+    tc_green_se_loc{id}(:,iCon)=green_std_loc/sqrt(length(green_matched));
     
     clear green_std_stat green_std_loc
     end
@@ -1731,7 +1865,7 @@ elseif iCon==3
 end
 set(gca,'XColor', 'none','YColor','none')
 
-sgtitle(['Pyr',' n = ', num2str(length(green_all))])
+sgtitle(['Pyr',' n = ', num2str(length(green_matched))])
 
 x0=5;
 y0=0;
@@ -1759,23 +1893,23 @@ conResp_red_se_loc = cell(1,nd); %same for red
 for id = 1:nd
    
         
-    conResp_green_avrg_stat{id}=mean(pref_responses_stat_concat{id}(green_all,:),1,'omitnan');
-    green_std=std(pref_responses_stat_concat{id}(green_all,:),1,'omitnan');
-    conResp_green_se_stat{id}=green_std/sqrt(length(green_all));
+    conResp_green_avrg_stat{id}=mean(pref_responses_stat_concat{id}(green_matched,:),1,'omitnan');
+    green_std=std(pref_responses_stat_concat{id}(green_matched,:),1,'omitnan');
+    conResp_green_se_stat{id}=green_std/sqrt(length(green_matched));
     
-    conResp_red_avrg_stat{id}=mean(pref_responses_stat_concat{id}(red_all,:),1,'omitnan');
-    red_std=std(pref_responses_stat_concat{id}(red_all,:),1,'omitnan');
-    conResp_red_se_stat{id}=red_std/sqrt(length(red_all));
+    conResp_red_avrg_stat{id}=mean(pref_responses_stat_concat{id}(red_matched,:),1,'omitnan');
+    red_std=std(pref_responses_stat_concat{id}(red_matched,:),1,'omitnan');
+    conResp_red_se_stat{id}=red_std/sqrt(length(red_matched));
     
     clear green_std red_std
     
-    conResp_green_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(green_all ,:),1);
-    green_std=nanstd(pref_responses_loc_concat{id}(green_all,:),1);
-    conResp_green_se_loc{id}=green_std/sqrt(length(green_all));
+    conResp_green_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(green_matched ,:),1);
+    green_std=nanstd(pref_responses_loc_concat{id}(green_matched,:),1);
+    conResp_green_se_loc{id}=green_std/sqrt(length(green_matched));
     
-    conResp_red_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(red_all,:),1);
-    red_std=nanstd(pref_responses_loc_concat{id}(red_all,:),1);
-    conResp_red_se_loc{id}=red_std/sqrt(length(red_all));
+    conResp_red_avrg_loc{id}=nanmean(pref_responses_loc_concat{id}(red_matched,:),1);
+    red_std=nanstd(pref_responses_loc_concat{id}(red_matched,:),1);
+    conResp_red_se_loc{id}=red_std/sqrt(length(red_matched));
     
     clear green_std red_std
  
@@ -1820,7 +1954,7 @@ print(fullfile(fnout,'Fig_4B.pdf'),'-dpdf');
 %% Fig 5B statistics
 
 % prepare data for ANOVA
-all_cells = union(red_all,green_all);
+all_cells = union(red_matched,green_matched);
 
 dfof_stat = horzcat(pref_responses_stat_concat{pre},pref_responses_stat_concat{post});
 dfof_loc = horzcat(pref_responses_loc_concat{pre},pref_responses_loc_concat{post});
@@ -1873,25 +2007,41 @@ ranova(rm_Pyr_loc, 'withinmodel', 'DART*contrast')
 
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_all,1),pref_responses_stat_concat{post}(red_all,1));
-[sst_h2, sst_p2]= ttest(pref_responses_stat_concat{pre}(red_all,2),pref_responses_stat_concat{post}(red_all,2));
-[sst_h3, sst_p3]= ttest(pref_responses_stat_concat{pre}(red_all,3),pref_responses_stat_concat{post}(red_all,3));
+[sst_h1, sst_p1]= ttest(pref_responses_stat_concat{pre}(red_matched,1),pref_responses_stat_concat{post}(red_matched,1));
+[sst_h2, sst_p2]= ttest(pref_responses_stat_concat{pre}(red_matched,2),pref_responses_stat_concat{post}(red_matched,2));
+[sst_h3, sst_p3]= ttest(pref_responses_stat_concat{pre}(red_matched,3),pref_responses_stat_concat{post}(red_matched,3));
 
 %corrected for three tests
 sst_pvalues_stat = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
-contrasts = cons';
-table(contrasts,sst_pvalues_stat)
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_all,1),pref_responses_loc_concat{post}(red_all,1));
-[sst_h2, sst_p2]= ttest(pref_responses_loc_concat{pre}(red_all,2),pref_responses_loc_concat{post}(red_all,2));
-[sst_h3, sst_p3]= ttest(pref_responses_loc_concat{pre}(red_all,3),pref_responses_loc_concat{post}(red_all,3));
+[sst_h1, sst_p1]= ttest(pref_responses_loc_concat{pre}(red_matched,1),pref_responses_loc_concat{post}(red_matched,1));
+[sst_h2, sst_p2]= ttest(pref_responses_loc_concat{pre}(red_matched,2),pref_responses_loc_concat{post}(red_matched,2));
+[sst_h3, sst_p3]= ttest(pref_responses_loc_concat{pre}(red_matched,3),pref_responses_loc_concat{post}(red_matched,3));
 
 %corrected for three tests
 sst_pvalues_loc = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
-table(contrasts,sst_pvalues_loc)
+table(contrasts,sst_pvalues_stat,sst_pvalues_loc)
 
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_matched,1),pref_responses_stat_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_matched,2),pref_responses_stat_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_matched,3),pref_responses_stat_concat{post}(green_matched,3));
+
+%corrected for three tests
+pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+
+% pairwise ttests for dfof response at each contrast for SST cells
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_matched,1),pref_responses_loc_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_matched,2),pref_responses_loc_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_matched,3),pref_responses_loc_concat{post}(green_matched,3));
+
+%corrected for three tests
+pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
+contrasts = cons';
+table(contrasts,pyr_pvalues_stat,pyr_pvalues_loc)
 %% Supplemental figure related to 4B
 %stationary and running contrast response for Pyr cells
 figure
@@ -1899,7 +2049,7 @@ subplot(1,2,1) %for the first day
 errorbar(cons,conResp_green_avrg_stat{pre},conResp_green_se_stat{pre},'--k');
 hold on
 errorbar(cons,conResp_green_avrg_stat{post},conResp_green_se_stat{post},'--b');
-%title(['-HTP',' n = ', num2str(length(green_all))])
+%title(['-HTP',' n = ', num2str(length(green_matched))])
 ylabel('dF/F') 
 xlabel('contrast') 
 set(gca, 'TickDir', 'out')
@@ -1916,7 +2066,7 @@ subplot(1,2,2) %for the first day
 errorbar(cons,conResp_green_avrg_loc{pre},conResp_green_se_loc{pre},'--k');
 hold on
 errorbar(cons,conResp_green_avrg_loc{post},conResp_green_se_loc{post},'--b');
-%title(['-HTP',' n = ', num2str(length(green_all))])
+%title(['-HTP',' n = ', num2str(length(green_matched))])
 xlabel('contrast') 
 ylim([0 .3])
 xlim([0 1.2])
@@ -1935,9 +2085,9 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_S6B.pdf'),'-dpdf');
 %%
 % pairwise ttests for dfof response at each contrast for SST cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_all,1),pref_responses_stat_concat{post}(green_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_all,2),pref_responses_stat_concat{post}(green_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_all,3),pref_responses_stat_concat{post}(green_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_stat_concat{pre}(green_matched,1),pref_responses_stat_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_stat_concat{pre}(green_matched,2),pref_responses_stat_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_stat_concat{pre}(green_matched,3),pref_responses_stat_concat{post}(green_matched,3));
 
 %corrected for three tests
 pyr_pvalues_stat = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
@@ -1945,9 +2095,9 @@ contrasts = cons';
 table(contrasts,pyr_pvalues_stat)
 
 % pairwise ttests for dfof response at each contrast for SST cells
-[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_all,1),pref_responses_loc_concat{post}(green_all,1));
-[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_all,2),pref_responses_loc_concat{post}(green_all,2));
-[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_all,3),pref_responses_loc_concat{post}(green_all,3));
+[pyr_h1, pyr_p1]= ttest(pref_responses_loc_concat{pre}(green_matched,1),pref_responses_loc_concat{post}(green_matched,1));
+[pyr_h2, pyr_p2]= ttest(pref_responses_loc_concat{pre}(green_matched,2),pref_responses_loc_concat{post}(green_matched,2));
+[pyr_h3, pyr_p3]= ttest(pref_responses_loc_concat{pre}(green_matched,3),pref_responses_loc_concat{post}(green_matched,3));
 
 %corrected for three tests
 pyr_pvalues_loc = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
@@ -1966,12 +2116,12 @@ print(fullfile(fnout,'Fig_S5B.pdf'),'-dpdf');
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
 %reselect norm_diff)red to be only the "red all" subset
-norm_diff_red = norm_diff(:,:,red_all);
+norm_diff_red = norm_diff(:,:,red_matched);
 
 facil_red=norm_diff_red(:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:)<=-1;
 
-N=length(red_all);
+N=length(red_matched);
 facil_table_stat = sum(facil_red(1,:,:),3)/N;
 supp_table_stat = sum(supp_red(1,:,:),3)/N;
 facil_table_loc = sum(facil_red(2,:,:),3)/N;
@@ -2072,12 +2222,12 @@ clear h p1 p2 p3 chi2stat1 chi2stat2 chi2stat3 n1 n2 x1 x2
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
 %reselect norm_diff)green to be only the "green all" subset
-norm_diff_green = norm_diff(:,:,green_all);
+norm_diff_green = norm_diff(:,:,green_matched);
 
 facil_green=norm_diff_green(:,:,:)>=1;
 supp_green=norm_diff_green(:,:,:)<=-1;
 
-N=length(green_all);
+N=length(green_matched);
 facil_table_stat = sum(facil_green(1,:,:),3)/N;
 supp_table_stat = sum(supp_green(1,:,:),3)/N;
 facil_table_loc = sum(facil_green(2,:,:),3)/N;
@@ -2201,15 +2351,15 @@ red_dir_se_stat = cell(1,nd); %same for red
 
     for id = 1:nd
        
-        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(green_all,:,:),3),1);
-        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(green_all,:,:),3),[],1);
-        green_dir_se_stat{id}=green_std/sqrt(length(green_all));
+        green_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(green_matched,:,:),3),1);
+        green_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(green_matched,:,:),3),[],1);
+        green_dir_se_stat{id}=green_std/sqrt(length(green_matched));
         green_dir_avrg_stat{id}=circshift(green_dir_avrg_stat{id},4);
         green_dir_se_stat{id}=circshift(green_dir_se_stat{id},4);
         
-        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(red_all,:,:),3),1);
-        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(red_all,:,:),3),[],1);
-        red_dir_se_stat{id}=red_std/sqrt(length(red_all));
+        red_dir_avrg_stat{id}=nanmean(nanmean(norm_dir_resp_stat_concat{id}(red_matched,:,:),3),1);
+        red_std=nanstd(nanmean(norm_dir_resp_stat_concat{id}(red_matched,:,:),3),[],1);
+        red_dir_se_stat{id}=red_std/sqrt(length(red_matched));
         red_dir_avrg_stat{id}=circshift(red_dir_avrg_stat{id},4);
         red_dir_se_stat{id}=circshift(red_dir_se_stat{id},4);
         clear green_std red_std
@@ -2224,15 +2374,15 @@ red_dir_se_stat = cell(1,nd); %same for red
     
      for id = 1:nd
        
-        green_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(green_all,:,:),3),1);
-        green_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(green_all,:,:),3),[],1);
-        green_dir_se_loc{id}=green_std/sqrt(length(green_all));
+        green_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(green_matched,:,:),3),1);
+        green_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(green_matched,:,:),3),[],1);
+        green_dir_se_loc{id}=green_std/sqrt(length(green_matched));
         green_dir_avrg_loc{id}=circshift(green_dir_avrg_loc{id},4);
         green_dir_se_loc{id}=circshift(green_dir_se_loc{id},4);
         
-        red_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(red_all,:,:),3),1);
-        red_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(red_all,:,:),3),[],1);
-        red_dir_se_loc{id}=red_std/sqrt(length(red_all));
+        red_dir_avrg_loc{id}=nanmean(nanmean(norm_dir_resp_loc_concat{id}(red_matched,:,:),3),1);
+        red_std=nanstd(nanmean(norm_dir_resp_loc_concat{id}(red_matched,:,:),3),[],1);
+        red_dir_se_loc{id}=red_std/sqrt(length(red_matched));
         red_dir_avrg_loc{id}=circshift(red_dir_avrg_loc{id},4);
         red_dir_se_loc{id}=circshift(red_dir_se_loc{id},4);
         clear green_std red_std
@@ -2529,12 +2679,12 @@ print(fullfile(fnout,'Fig_S5b.pdf'),'-dpdf');
 % confirm that there's no difference in size across days within the "small"
 % pupil trials
 [h p] = ttest(pupilMeans_concat(pre,2,:),pupilMeans_concat(post,2,:))
-% large pupil trials are significantly
+% large pupil trials are significantly larger
 [h p] = ttest(pupilMeans_concat(pre,1,:),pupilMeans_concat(post,1,:))
 
 
 
-%confirm that pupil is significantly large in large trials, averaging over
+%confirm that pupil is significantly larger in large trials, averaging over
 %days
 [h p] = ttest(pupilMeans_clean(1,:),pupilMeans_clean(2,:))
 %test whether pupuil is different between large trials and running
@@ -2574,8 +2724,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Fig_s5c.pdf'),'-dpdf');
 
 
-%look at how motor activity differs with pupil size
-%control day
+%look at how motor activity differs with pupil size control day
 [h p] = ttest(motorByPupil_clean(1,:),motorByPupil_clean(2,:))
 
 %% contrast response pupil
@@ -2761,8 +2910,6 @@ ranova(rm_Pyr_large, 'withinmodel', 'DART*contrast')
 
 %corrected for three tests
 sst_pvalues_small = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
-contrasts = cons';
-table(contrasts,sst_pvalues_small)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [sst_h1, sst_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_red,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_red,1));
@@ -2772,7 +2919,7 @@ table(contrasts,sst_pvalues_small)
 %corrected for three tests
 sst_pvalues_large = [(sst_p1*3);(sst_p2*3);(sst_p3*3)];
 contrasts = cons';
-table(contrasts,sst_pvalues_large)
+table(contrasts,sst_pvalues_small,sst_pvalues_large)
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_smallPupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_smallPupil_concat{post}(have_allPupil_green,1));
@@ -2781,8 +2928,7 @@ table(contrasts,sst_pvalues_large)
 
 %corrected for three tests
 pyr_pvalues_small = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
-contrasts = cons';
-table(contrasts,pyr_pvalues_small)
+
 
 % pairwise ttests for dfof response at each contrast for SST cells
 [pyr_h1, pyr_p1]= ttest(pref_responses_stat_largePupil_concat{pre}(have_allPupil_green,1),pref_responses_stat_largePupil_concat{post}(have_allPupil_green,1));
@@ -2792,7 +2938,7 @@ table(contrasts,pyr_pvalues_small)
 %corrected for three tests
 pyr_pvalues_large = [(pyr_p1*3);(pyr_p2*3);(pyr_p3*3)];
 contrasts = cons';
-table(contrasts,pyr_pvalues_large)
+table(contrasts,pyr_pvalues_small,pyr_pvalues_large)
 
 %calculate norm_diff
 norm_diff_pupil = nan(2,nCon,nKeep_total);
@@ -2827,12 +2973,12 @@ norm_diff_pupil(find(norm_diff_pupil == Inf))=NaN;
 % find how many are facilitated or suppressed by more than 1 std from
 % baseline
 %reselect norm_diff)red to be only the "red all" subset
-norm_diff_red = norm_diff_pupil(:,:,red_all);
+norm_diff_red = norm_diff_pupil(:,:,red_matched);
 
 facil_red=norm_diff_red(:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:)<=-1;
 
-N=length(red_all);
+N=length(red_matched);
 facil_table_smallPupil = sum(facil_red(1,:,:),3)/N;
 supp_table_smallPupil = sum(supp_red(1,:,:),3)/N;
 facil_table_largePupil = sum(facil_red(2,:,:),3)/N;
@@ -2928,12 +3074,12 @@ clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
 
 %% For pyramidal cells
 
-norm_diff_green = norm_diff_pupil(:,:,green_all);
+norm_diff_green = norm_diff_pupil(:,:,green_matched);
 
 facil_green=norm_diff_green(:,:,:)>=1;
 supp_green=norm_diff_green(:,:,:)<=-1;
 
-N=length(green_all);
+N=length(green_matched);
 facil_table_smallPupil_green = sum(facil_green(1,:,:),3)/N;
 supp_table_smallPupil_green = sum(supp_green(1,:,:),3)/N;
 facil_table_largePupil_green = sum(facil_green(2,:,:),3)/N;
@@ -3029,7 +3175,7 @@ clear h p1 p2 p3 chi2smallPupil1 chi2smallPupil2 chi2smallPupil3 n1 n2 x1 x2
 
 %% get a table of capture values
 capture = getCaptureValues_annulus(mice);
-table(mice,capture(3,:)')
+capture_table = table(mice,capture(3,:)')
 edges = linspace(1, 2, 10); % Create 20 bins.
 % Plot the histogram.
 histogram(capture(3,:),'BinEdges',edges);
@@ -3315,9 +3461,9 @@ end
 
 figure;
 subplot(1,2,1)
-boxplot([squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all))]);
+boxplot([squeeze(R_by_state(1,pre,red_matched)),squeeze(R_by_state(4,pre,red_matched))]);
 hold on
-scatter([1, 2],squeeze(R_by_state([1,4],pre,red_all)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2],squeeze(R_by_state([1,4],pre,red_matched)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 xticklabels({'Stationary','Running'})
 %ylim([-.3 1.3])
 ylabel(["Mean R value"]) 
@@ -3325,16 +3471,16 @@ set(gca,'TickDir','out')
 box off
 hold on
 subplot(1,2,2)
-boxplot([squeeze(R_by_state(1,post,red_all)),squeeze(R_by_state(4,post,red_all))]);
+boxplot([squeeze(R_by_state(1,post,red_matched)),squeeze(R_by_state(4,post,red_matched))]);
 hold on
-scatter([1, 2],squeeze(R_by_state([1,4],post,red_all)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+scatter([1, 2],squeeze(R_by_state([1,4],post,red_matched)),20,'k', 'MarkerFaceAlpha',.5,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
 xticklabels({'Stationary','Running'})
 %ylim([-.3 1.3])
 ylabel(["Mean R value"]) 
 set(gca,'TickDir','out')        
 box off
 
-[h1,p1] =ttest(squeeze(R_by_state(1,pre,red_all)),squeeze(R_by_state(4,pre,red_all)))
+[h1,p1] =ttest(squeeze(R_by_state(1,pre,red_matched)),squeeze(R_by_state(4,pre,red_matched)))
 
 %%
 %does the average R value differ between contrasts within a behvaioral
@@ -3407,32 +3553,506 @@ xlim([-5 7.5])
 ylim([-5 7.5])
 title('SST')
 
+
 %% comparing normalized difference to noise correlation
-%get a normalized difference averaged over contrasts
-norm_diff_average_stat = squeeze(mean(norm_diff(1,:,:),2,'omitmissing'));
-norm_diff_average_loc = squeeze(mean(norm_diff(2,:,:),2,'omitmissing'));
 
-figure
-scatter(noiseCorr_OG_concat{pre}(1,green_ind_concat),norm_diff_average_stat(green_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('Pyr')
-ylim([-5, 10])
-figure
-scatter(noiseCorr_OG_concat{pre}(1,red_ind_concat),norm_diff_average_stat(red_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('SST')
+mySample = red_ind_concat;
+% Extract data (stationary state only)
+stationary_norm_diff = squeeze(norm_diff(1,:,mySample)); % [contrast, neuron]
+stationary_bsln_std = squeeze(bsln_std(1,:,mySample));   % [contrast, neuron]
+baseline_noise_corr = noiseCorr_OG_concat{2}(1,mySample); % [1, neuron]
 
-figure
-scatter(noiseCorr_OG_concat{pre}(1,green_ind_concat),norm_diff_average_loc(green_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('Pyr')
-ylim([-5, 10])
-figure
-scatter(noiseCorr_OG_concat{pre}(1,red_ind_concat),norm_diff_average_loc(red_ind_concat))
-ylabel('norm diff averaged over contrast')
-xlabel('R value')
-title('SST')
-ylim([-5, 10])
+% Number of contrasts and neurons
+[num_contrasts, num_neurons] = size(stationary_norm_diff);
+
+% Store results
+slopes = zeros(num_contrasts, 1);
+intercepts = zeros(num_contrasts, 1);
+r_squared = zeros(num_contrasts, 1);
+p_values = zeros(num_contrasts, 1);
+std_errors = zeros(num_contrasts, 1);
+
+% Define contrasts
+contrasts = [25, 50, 100];
+
+% Create figure with fixed size
+figure('Units', 'inches', 'Position', [0, 0, 5, 2], 'PaperUnits', 'inches', 'PaperSize', [5, 2]);
+
+% Use tiledlayout - much better for PDF export
+t = tiledlayout(1, 3, 'TileSpacing', 'compact', 'Padding', 'compact');
+title(t, 'Unweighted Regression: Noise Correlation vs. Normalized Difference', 'FontSize', 10);
+
+% Analyze each contrast
+for contrast = 1:num_contrasts
+    % Extract data for this contrast
+    y = stationary_norm_diff(contrast, :)';  % neural response difference
+    x = baseline_noise_corr';                 % noise correlations
+    
+    % Handle NaNs and missing data
+    valid_idx = ~isnan(x) & ~isnan(y) & isfinite(x) & isfinite(y);
+    
+    % Check if we have enough valid data points
+    if sum(valid_idx) < 3
+        warning('Not enough valid data points for contrast %d. Skipping.', contrast);
+        continue;
+    end
+    
+    % Use only valid data
+    x_valid = x(valid_idx);
+    y_valid = y(valid_idx);
+    
+    % Perform unweighted linear regression
+    [p, stats] = polyfit(x_valid, y_valid, 1);
+    
+    % Store results
+    intercepts(contrast) = p(2);
+    slopes(contrast) = p(1);
+    
+    % Calculate standard error of the slope
+    yfit = polyval(p, x_valid);
+    residuals = y_valid - yfit;
+    SSE = sum(residuals.^2);
+    n = length(x_valid);
+    
+    % Standard error of the regression
+    SE_regression = sqrt(SSE / (n-2));
+    
+    % Sum of squares of x deviations
+    SS_x = sum((x_valid - mean(x_valid)).^2);
+    
+    % Standard error of the slope
+    std_errors(contrast) = SE_regression / sqrt(SS_x);
+    
+    % Calculate R-squared
+    SS_total = sum((y_valid - mean(y_valid)).^2);
+    r_squared(contrast) = 1 - SSE/SS_total;
+    
+    % Calculate p-value for slope
+    t_stat = slopes(contrast) / std_errors(contrast);
+    p_values(contrast) = 2 * (1 - tcdf(abs(t_stat), length(x_valid) - 2));
+    
+    % Create a nexttile for this contrast
+    ax = nexttile;
+    
+    % Create scatter plot with smaller grey points and white outlines
+    scatter(x_valid, y_valid, 15, 'MarkerFaceColor','black','MarkerEdgeColor', 'white', 'LineWidth', 0.5, 'MarkerFaceAlpha', 0.5);
+    hold on;
+    
+    % Add regression line
+    x_range = linspace(min(x_valid), max(x_valid), 100);
+    y_line = p(1) * x_range + p(2);
+    plot(x_range, y_line, 'r-', 'LineWidth', 2);
+    
+    % Labels and title
+    title(sprintf('Contrast: %d%%', cons(contrast)), 'FontSize', 8);
+    xlabel('Noise Correlation (Baseline)', 'FontSize', 7);
+    ylabel('Normalized Difference', 'FontSize', 7);
+    
+    % Set axis limits
+    xlim([-.2 1]);
+    ylim([-8 8]);
+
+    % Add horizontal line at y=0
+    hline(0);
+    
+    % Add regression equation and stats - using smaller font size
+    % Calculate text position dynamically
+    y_range = range(ylim);
+    text_x = -0.15;  % Fixed position to align across plots
+    text_y_start = 7;  % Fixed position near top
+    text_y_step = 1;  % Fixed step size
+    
+    text(text_x, text_y_start, sprintf('y = %.3fx + %.3f', slopes(contrast), intercepts(contrast)), 'FontSize', 6);
+    text(text_x, text_y_start - text_y_step, sprintf('R^2 = %.3f', r_squared(contrast)), 'FontSize', 6);
+    text(text_x, text_y_start - 2*text_y_step, sprintf('p = %.4f', p_values(contrast)), 'FontSize', 6);
+    text(text_x, text_y_start - 3*text_y_step, sprintf('n = %d', sum(valid_idx)), 'FontSize', 6);
+    
+    % Set box style and tick direction
+    box off;
+    set(gca, 'TickDir', 'out');
+    grid off;
+    
+    % Make the axis ticks and numbers smaller
+    set(gca, 'FontSize', 6);
+    
+    % Make sure the plots have equal sizes
+    axis square;
+end
+
+% Set global figure properties
+set(gcf, 'Color', 'w');
+
+% Create a results table
+contrast_labels = {'25%', '50%', '100%'};
+results_table = table(contrast_labels', slopes, std_errors, intercepts, r_squared, p_values, ...
+    'VariableNames', {'Contrast', 'Slope', 'StdError', 'Intercept', 'RSquared', 'PValue'});
+
+% Display results table
+disp('Unweighted Regression Results:');
+disp(results_table);
+
+% Export the figure in various formats
+% First, ensure the figure has the correct size
+set(gcf, 'PaperUnits', 'inches');
+set(gcf, 'PaperSize', [5, 2]);
+set(gcf, 'PaperPositionMode', 'manual');
+set(gcf, 'PaperPosition', [0, 0, 5, 2]);
+
+% Try multiple export methods - one of these should work
+print('-dpdf', 'unweighted_regression_plot_1.pdf', '-bestfit');
+saveas(gcf, 'unweighted_regression_plot_2.pdf');
+print('-dpdf', 'unweighted_regression_plot_3.pdf');
+exportgraphics(gcf, 'unweighted_regression_plot_4.pdf', 'Resolution', 300);
+
+fprintf('Multiple versions of the figure saved as PDF files\n');
+
+
+
+% Optional: Save results to CSV
+writetable(results_table, 'unweighted_regression_results.csv');
+fprintf('Results saved to unweighted_regression_results.csv\n');
+
+% Additional analysis: Test if slopes are significantly different across contrasts
+fprintf('\nComparing slopes across contrast levels:\n');
+
+% Pairwise comparison of slopes (z-test)
+for i = 1:num_contrasts
+    for j = i+1:num_contrasts
+        % Calculate Z-statistic for difference between slopes
+        z_diff = (slopes(i) - slopes(j)) / sqrt(std_errors(i)^2 + std_errors(j)^2);
+        p_diff = 2 * (1 - normcdf(abs(z_diff)));
+        fprintf('Contrast %s vs %s: Difference = %.3f, z = %.3f, p = %.4f\n', ...
+            contrast_labels{i}, contrast_labels{j}, slopes(i) - slopes(j), z_diff, p_diff);
+    end
+end
+
+% Additional figure: Compare slopes across contrasts
+figure('Position', [100, 500, 500, 400]);
+bar(1:num_contrasts, slopes);
+ylim([-2,2])
+hold on;
+
+% Add error bars
+errorbar(1:num_contrasts, slopes, std_errors, 'k.', 'LineWidth', 1.5);
+
+% Add labels and title
+xlabel('Contrast', 'FontSize', 12);
+ylabel('Regression Slope', 'FontSize', 12);
+title('Comparison of Regression Slopes Across Contrasts', 'FontSize', 14);
+xticks(1:num_contrasts);
+xticklabels(contrast_labels);
+grid on;
+box off;
+set(gca, 'TickDir', 'out');
+
+% Save comparison figure
+saveas(gcf, 'slope_comparison.pdf');
+fprintf('Slope comparison figure saved as slope_comparison.pdf\n');
+
+%% Test linear relationship between beta values and contrast using linear model
+fprintf('\nTesting linear relationship between beta values and contrast:\n');
+
+% Extract the beta values (slopes) and contrast levels
+beta_values = slopes;  % These are already calculated in your original code
+contrast_levels = [25, 50, 100]';  % Make it a column vector
+
+% Fit linear model
+mdl = fitlm(contrast_levels, beta_values);
+fprintf('Linear model summary:\n');
+disp(mdl);
+
+% Extract key statistics
+slope = mdl.Coefficients.Estimate(2);
+slope_pval = mdl.Coefficients.pValue(2);
+r_squared = mdl.Rsquared.Ordinary;
+
+fprintf('Slope: %.4f (p = %.4f)\n', slope, slope_pval);
+fprintf('R-squared: %.4f\n', r_squared);
+
+% Create visualization of the relationship
+figure('Position', [100, 300, 500, 400]);
+plot(contrast_levels, beta_values, 'o', 'MarkerFaceColor', 'b', 'MarkerEdgeColor', 'none', 'MarkerSize', 10);
+hold on;
+
+% Add regression line - FIXED CODE HERE
+contrast_smooth = linspace(min(contrast_levels), max(contrast_levels), 100)';  % Make column vector
+beta_predicted = mdl.Coefficients.Estimate(1) + mdl.Coefficients.Estimate(2) * contrast_smooth;  % Manual prediction
+plot(contrast_smooth, beta_predicted, 'r-', 'LineWidth', 2);
+
+% Calculate confidence intervals manually (optional)
+% For simple linear regression, the standard error of the prediction
+t_crit = tinv(0.975, mdl.DFE);  % 95% CI
+SE_fit = sqrt(1/length(contrast_levels) + ...
+              (contrast_smooth - mean(contrast_levels)).^2 / ...
+              sum((contrast_levels - mean(contrast_levels)).^2));
+SE_pred = sqrt(SE_fit.^2 + mdl.MSE);
+margin_fit = t_crit * SE_fit * sqrt(mdl.MSE);
+
+% Plot confidence intervals
+lower_ci = beta_predicted - margin_fit;
+upper_ci = beta_predicted + margin_fit;
+plot(contrast_smooth, lower_ci, 'r--', 'LineWidth', 1);
+plot(contrast_smooth, upper_ci, 'r--', 'LineWidth', 1);
+fill([contrast_smooth; flipud(contrast_smooth)], [lower_ci; flipud(upper_ci)], 'r', 'FaceAlpha', 0.1, 'EdgeColor', 'none');
+
+% Format plot
+xlabel('Contrast (%)', 'FontSize', 12);
+ylabel('Beta Value', 'FontSize', 12);
+title('Linear Relationship Between Beta Values and Contrast', 'FontSize', 14);
+box off;
+set(gca, 'TickDir', 'out');
+grid off;
+
+% Add text with model information
+text(0.05, 0.95, sprintf('Slope = %.4f', slope), 'Units', 'normalized', 'FontSize', 10);
+text(0.05, 0.90, sprintf('p-value = %.4f', slope_pval), 'Units', 'normalized', 'FontSize', 10);
+text(0.05, 0.85, sprintf('R = %.4f', r_squared), 'Units', 'normalized', 'FontSize', 10);
+
+% Save the figure
+saveas(gcf, 'beta_vs_contrast_linear_model.pdf');
+fprintf('Linear model figure saved as beta_vs_contrast_linear_model.pdf\n');
+
+%% Plot norm_diff by contrast for high and low noiseCorr cells
+% Ask user if they want to remove outliers
+remove_outliers = input('Do you want to remove outliers? (1 for yes, 0 for no): ');
+
+% If user chooses to remove outliers, ask for standard deviation threshold
+std_threshold = 2; % Default value
+if remove_outliers
+    std_threshold = input('Enter the number of standard deviations to use for outlier detection (default is 2): ');
+    if isempty(std_threshold)
+        std_threshold = 2;
+    end
+end
+
+% Create filtered copies of the data
+high_filtered = norm_diff(1, :, redHigh);
+low_filtered = norm_diff(1, :, redLow);
+
+% Initialize counters for outliers
+high_outliers_count = 0;
+low_outliers_count = 0;
+
+% For each contrast level, optionally remove outliers
+for contrast = 1:size(norm_diff, 2)
+    % For high correlation neurons
+    high_contrast_data = squeeze(high_filtered(1, contrast, :));
+    
+    if remove_outliers
+        high_mean = nanmean(high_contrast_data);
+        high_std = nanstd(high_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(high_contrast_data - high_mean) > std_threshold * high_std;
+        high_contrast_outliers = sum(outlier_indices);
+        high_outliers_count = high_outliers_count + high_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, High correlation neurons: %d outliers removed\n', contrast, high_contrast_outliers);
+
+        high_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    high_filtered(1, contrast, :) = high_contrast_data;
+
+    % For low correlation neurons
+    low_contrast_data = squeeze(low_filtered(1, contrast, :));
+    
+    if remove_outliers
+        low_mean = nanmean(low_contrast_data);
+        low_std = nanstd(low_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(low_contrast_data - low_mean) > std_threshold * low_std;
+        low_contrast_outliers = sum(outlier_indices);
+        low_outliers_count = low_outliers_count + low_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, Low correlation neurons: %d outliers removed\n', contrast, low_contrast_outliers);
+
+        low_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    low_filtered(1, contrast, :) = low_contrast_data;
+end
+
+% Print total outliers removed in first dataset (if applicable)
+if remove_outliers
+    fprintf('\nFirst dataset (Stationary):\n');
+    fprintf('Total outliers removed from high correlation neurons: %d\n', high_outliers_count);
+    fprintf('Total outliers removed from low correlation neurons: %d\n', low_outliers_count);
+    fprintf('Combined total outliers removed: %d\n\n', high_outliers_count + low_outliers_count);
+end
+
+% Calculate means for high and low correlation neurons at each contrast, ignoring NaNs
+high_means = squeeze(nanmean(high_filtered, 3));
+low_means = squeeze(nanmean(low_filtered, 3));
+
+% Calculate SEM for high and low correlation neurons at each contrast, ignoring NaNs
+% First get the standard deviation ignoring NaNs
+high_std = squeeze(nanstd(high_filtered, 0, 3));
+low_std = squeeze(nanstd(low_filtered, 0, 3));
+
+% Count the actual number of non-NaN values for each contrast
+high_count = squeeze(sum(~isnan(high_filtered), 3));
+low_count = squeeze(sum(~isnan(low_filtered), 3));
+
+% Calculate SEM using the actual counts of non-NaN values
+high_sem = high_std ./ sqrt(high_count);
+low_sem = low_std ./ sqrt(low_count);
+
+% Define x-axis (contrast levels)
+contrasts = 1:size(norm_diff, 2);
+contrast_labels = {'25%', '50%', '100%'};
+
+% Create a figure optimized for PDF output (using standard paper size proportions)
+figure('Position', [100, 100, 800, 600], 'PaperPositionMode', 'auto', 'PaperSize', [8.5 11], 'PaperUnits', 'inches');
+
+% First subplot
+subplot(1, 2, 1)
+hold on;
+
+% Plot high correlation neurons with error bars
+errorbar(contrasts, high_means, high_sem, '-o', 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+
+% Plot low correlation neurons with error bars
+errorbar(contrasts, low_means, low_sem, '-o', 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+xlim([.75 3.25])
+
+% Add labels and legend
+xlabel('Contrast');
+ylabel('Mean Raw Difference');
+title('Stationary (SST)');
+legend('High Correlation Neurons', 'Low Correlation Neurons', 'Location', 'best');
+
+% Set x-axis ticks and labels
+set(gca, 'XTick', contrasts, 'XTickLabel', contrast_labels, 'TickDir', 'out');
+
+% Customize plot appearance
+grid off;
+box off;
+set(gca, 'FontSize', 12);
+
+% Create filtered copies of the data for the second subplot
+high_filtered2 = norm_diff(2, :, highRInds);
+low_filtered2 = norm_diff(2, :, lowRInds);
+
+% Initialize counters for outliers in second dataset
+high_outliers_count2 = 0;
+low_outliers_count2 = 0;
+
+% For each contrast level, optionally remove outliers
+for contrast = 1:size(norm_diff, 2)
+    % For high correlation neurons
+    high_contrast_data = squeeze(high_filtered2(1, contrast, :));
+    
+    if remove_outliers
+        high_mean = nanmean(high_contrast_data);
+        high_std = nanstd(high_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(high_contrast_data - high_mean) > std_threshold * high_std;
+        high_contrast_outliers = sum(outlier_indices);
+        high_outliers_count2 = high_outliers_count2 + high_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, High correlation neurons (Running): %d outliers removed\n', contrast, high_contrast_outliers);
+
+        high_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    high_filtered2(1, contrast, :) = high_contrast_data;
+
+    % For low correlation neurons
+    low_contrast_data = squeeze(low_filtered2(1, contrast, :));
+    
+    if remove_outliers
+        low_mean = nanmean(low_contrast_data);
+        low_std = nanstd(low_contrast_data);
+
+        % Find outliers and set them to NaN
+        outlier_indices = abs(low_contrast_data - low_mean) > std_threshold * low_std;
+        low_contrast_outliers = sum(outlier_indices);
+        low_outliers_count2 = low_outliers_count2 + low_contrast_outliers;
+
+        % Print number of outliers for this contrast level
+        fprintf('Contrast %d, Low correlation neurons (Running): %d outliers removed\n', contrast, low_contrast_outliers);
+
+        low_contrast_data(outlier_indices) = NaN;
+    end
+
+    % Update the filtered data
+    low_filtered2(1, contrast, :) = low_contrast_data;
+end
+
+% Print total outliers removed in second dataset (if applicable)
+if remove_outliers
+    fprintf('\nSecond dataset (Running):\n');
+    fprintf('Total outliers removed from high correlation neurons: %d\n', high_outliers_count2);
+    fprintf('Total outliers removed from low correlation neurons: %d\n', low_outliers_count2);
+    fprintf('Combined total outliers removed: %d\n\n', high_outliers_count2 + low_outliers_count2);
+
+    % Print grand total
+    fprintf('GRAND TOTAL outliers removed across both datasets: %d\n', high_outliers_count + low_outliers_count + high_outliers_count2 + low_outliers_count2);
+end
+
+% Calculate means for high and low correlation neurons at each contrast, ignoring NaNs
+high_means2 = squeeze(nanmean(high_filtered2, 3));
+low_means2 = squeeze(nanmean(low_filtered2, 3));
+
+% Calculate SEM for high and low correlation neurons at each contrast, ignoring NaNs
+% First get the standard deviation ignoring NaNs
+high_std2 = squeeze(nanstd(high_filtered2, 0, 3));
+low_std2 = squeeze(nanstd(low_filtered2, 0, 3));
+
+% Count the actual number of non-NaN values for each contrast
+high_count2 = squeeze(sum(~isnan(high_filtered2), 3));
+low_count2 = squeeze(sum(~isnan(low_filtered2), 3));
+
+% Calculate SEM using the actual counts of non-NaN values
+high_sem2 = high_std2 ./ sqrt(high_count2);
+low_sem2 = low_std2 ./ sqrt(low_count2);
+
+% Second subplot
+subplot(1, 2, 2)
+hold on;
+
+% Plot high correlation neurons with error bars
+errorbar(contrasts, high_means2, high_sem2, '-o', 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], 'MarkerFaceColor', [0, 0.4470, 0.7410]);
+
+% Plot low correlation neurons with error bars
+errorbar(contrasts, low_means2, low_sem2, '-o', 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], 'MarkerFaceColor', [0.8500, 0.3250, 0.0980]);
+xlim([.75 3.25])
+
+% Add labels and legend
+xlabel('Contrast');
+ylabel('Mean Raw Difference');
+title('Running (SST)');
+
+% Set x-axis ticks and labels
+set(gca, 'XTick', contrasts, 'XTickLabel', contrast_labels, 'TickDir', 'out');
+
+% Customize plot appearance
+grid off;
+box off;
+set(gca, 'FontSize', 12);
+
+% Add more space between subplots
+set(gcf, 'Position', get(gcf, 'Position') .* [1 1 1.2 1]);
+
+% Add title to indicate whether outliers were removed
+if remove_outliers
+    suptitle(sprintf('Analysis with outliers (>%g SD) removed', std_threshold));
+else
+    suptitle('Analysis without outlier removal');
+end
+
+% Save figure with appropriate filename
+if remove_outliers
+    print('-dpdf', '-bestfit', sprintf('normDiff_vs_contrast_outliers_removed_%gSD.pdf', std_threshold));
+else
+    print('-dpdf', '-bestfit', 'normDiff_vs_contrast_no_outlier_removal.pdf');
+end

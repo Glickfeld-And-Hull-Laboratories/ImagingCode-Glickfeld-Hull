@@ -1,11 +1,11 @@
 clear all;
 %paths
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-experimentFolder = 'SST_atropine';
+experimentFolder = 'VIP_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -52,6 +52,7 @@ for day = 1:2
     rad_range = [3 15]; %adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
     Eye_data = extractEyeData(data_crop,rad_range);
     %if pupil not found reliably, adjust the image cropping or the rad_range
+    
     
     % align to stimulus presentation
     [rad centroid] = alignEyeData(Eye_data,input);

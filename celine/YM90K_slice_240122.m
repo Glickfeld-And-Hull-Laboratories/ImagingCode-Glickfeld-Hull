@@ -1,14 +1,14 @@
 clear all
 fullData=readtable('experimentList_012224.csv');
 
-output=nan(size(fullData,2),2);
+output=nan(size(fullData,2),5);
 
 for i=1:size(fullData,1)
-    [count, amp]=eventCountAndAmp(cell2mat(fullData.eventFileName(i)), ...
+    [count, amp, nTotal, nHigh,nLow]=eventCountAndAmp(cell2mat(fullData.eventFileName(i)), ...
         fullData.startSweep(i), fullData.stopSweep(i),fullData.ConversionToPA(i));
-   output(i,:)=[count amp];
+   output(i,:)=[count amp nTotal nHigh nLow];
 end
-clear i
+clear i count amp nHigh nLow nTotal
 
 fullData.eventPerMin=output(:,1);
 fullData.eventAmp=output(:,2);

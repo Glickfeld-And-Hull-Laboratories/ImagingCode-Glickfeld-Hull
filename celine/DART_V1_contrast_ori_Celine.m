@@ -4637,6 +4637,8 @@ expt(167).rettuning = {};
 expt(167).contrastxori_runs = {'002'};
 expt(167).contrastxori_time = {'1500'};
 expt(167).data_loc = 'ACh';
+expt(167).wheelColor = 'purple';
+expt(167).exptType = 'SST_YM90K';
 %
 %% i2062 baseline 2, 200 ms
 expt(168).SubNum = 'i2062';
@@ -4694,6 +4696,7 @@ expt(169).contrastxori_runs = {'003'};
 expt(169).contrastxori_time = {'1549'};
 expt(169).data_loc = 'ACh';
 expt(169).wheelColor = 'orange';
+expt(169).exptType = 'SST_YM90K';
 %
 %% i2062 5 hour post DART 200 ms
 expt(170).SubNum = 'i2062';
@@ -4894,6 +4897,7 @@ expt(176).contrastxori_runs = {'004'};
 expt(176).contrastxori_time = {'1547'};
 expt(176).data_loc = 'ACh';
 expt(176).wheelColor = 'orange';
+expt(176).exptType = 'SST_YM90K';
 %
 %% i2067 SAME DAY
 expt(177).SubNum = 'i2067';
@@ -4923,6 +4927,7 @@ expt(177).contrastxori_runs = {'002'};
 expt(177).contrastxori_time = {'1825'};
 expt(177).data_loc = 'ACh';
 expt(177).wheelColor = 'orange';
+expt(177).exptType = 'SST_YM90K';
 %% i2067 17 hour
 expt(178).SubNum = 'i2067';
 expt(178).mouse = 'i2067';
@@ -5066,6 +5071,7 @@ expt(182).contrastxori_runs = {'002'};
 expt(182).contrastxori_time = {'1520'};
 expt(182).data_loc = 'ACh';
 expt(182).wheelColor = 'orange';
+expt(182).exptType = 'SST_YM90K';
 %
 %% i2066
 expt(183).SubNum = 'i2066';
@@ -5095,6 +5101,7 @@ expt(183).contrastxori_runs = {'002'};
 expt(183).contrastxori_time = {'1520'};
 expt(183).data_loc = 'ACh';
 expt(183).wheelColor = 'orange';
+expt(183).exptType = 'SST_YM90K';
 %
 %% i2066
 expt(184).SubNum = 'i2066';
@@ -5207,7 +5214,7 @@ expt(187).redChannelLabel = '';
 expt(187).redChannelTag = {'tdTomato','HT'};
 expt(187).redChannelRun = '000';
 expt(187).rettuning = {};
-expt(187).contrastxori_runs = {'003'};
+expt(187).contrastxori_runs = {'002'};
 expt(187).contrastxori_time = {'1047'};
 expt(187).data_loc = 'ACh';
 expt(187).wheelColor = 'orange';
@@ -8463,6 +8470,7 @@ expt(300).contrastxori_time = {'1607'};
 expt(300).data_loc = 'ACh';
 expt(300).wheelColor = 'orange';
 %% i2102 - baseline
+%% i2102 - baseline
 expt(301).SubNum = 'i2102';
 expt(301).mouse = 'i2102';
 expt(301).date = '230911';
@@ -9927,7 +9935,7 @@ expt(351).obj = '16x';
 expt(351).zoom = 2;
 expt(351).frame_rate = 15;
 expt(351).multiday_timesincedrug_hours = '0'
-expt(351).multiday_matchdays = [];
+expt(351).multiday_matchdays = [352];
 expt(351).regImgStartFrame = '';
 expt(351).motionThreshold = 0.05;
 expt(351).areaBorders = 0;
@@ -9967,7 +9975,7 @@ expt(352).greenredsimultaneous = 1;
 expt(352).greenChannelLabel = '';
 expt(352).redChannelLabel = '';
 expt(352).redChannelTag = {'tdTomato','NES-HTP'};
-expt(352).redChannelRun = '000';
+expt(352).redChannelRun = '001';
 expt(352).dyeChannelRun = '';
 expt(352).rettuning = {};
 expt(352).contrastxori_runs = {'004'};

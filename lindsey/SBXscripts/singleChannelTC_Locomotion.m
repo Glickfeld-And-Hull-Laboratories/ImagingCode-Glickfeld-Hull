@@ -12,10 +12,10 @@ mworks_fn = fullfile(fn_base, 'Behavior', 'Data');
 fnout = fullfile(lg_fn, 'Analysis', '2P');
 
 %Specific experiment information
-date = '250106';
-ImgFolder = '001';
-time = '1713';
-mouse = 'i2189';
+date = '250207';
+ImgFolder = '002';
+time = '1659';
+mouse = 'i2188';
 frame_rate = 15;
 run_str = catRunName(ImgFolder, 1);
 datemouse = [date '_' mouse];
@@ -180,6 +180,28 @@ print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_masks.pdf']), '-d
 
 save(fullfile(fnout, datemouse, datemouserun, [datemouserun '_mask_cell.mat']), 'mask_data', 'mask_cell', 'thresh')
 clear data_align data_align_p data_align_f data_align_dfof data_align_dfof_avg data_align_dfof_down
+%% visual response
+if input.gratingContrast 
+    [cStimOn cStimOff] = photoFrameFinder_Sanworks(info.frame);
+    ntrials = length(cStimOn);
+    prewin = input.nScansOff./2;
+    postwin = input.nScansOn;
+    data_resp = nan(sz(1),sz(2),prewin+postwin,ntrials);
+    wheel_resp = nan(prewin+postwin,ntrials);
+    for i = 1:ntrials
+        data_resp(:,:,:,i) = data_reg(:,:,cStimOn(i)-prewin:cStimOn(i)+postwin-1);
+        wheel_resp(:,i) = wheel_speed(1,cStimOn(i)-prewin:cStimOn(i)+postwin-1);
+    end
+    data_resp_f = mean(data_resp(:,:,1:prewin,:),3);
+    data_resp_dfof = (data_resp-data_resp_f)./data_resp_f;
+    
+    data_tc = squeeze(mean(mean(mean(data_resp_dfof,1),2),4));
+    wheel_tc = squeeze(mean(wheel_resp,2));
+    figure; plot(data_tc./max(data_tc(:)));
+    hold on
+    plot(wheel_tc./max(wheel_tc(:)));
+end
+
 
 %% Extract cell timecourses
 data_tc = stackGetTimeCourses(data_reg, mask_cell); %applies mask to stack (averages all pixels in each frame for each cell) to get timecourses

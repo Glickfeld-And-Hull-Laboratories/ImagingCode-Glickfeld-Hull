@@ -2,10 +2,10 @@
 close all 
 clear all global
 clc
-date = '241206';
-ImgFolder = {'004'};
-time = strvcat('1524');
-mouse = 'i1412';
+date = '250225';
+ImgFolder = {'002'};
+time = strvcat('1222');
+mouse = 'i1406';
 doFromRef = 0;
 ref = strvcat('002');
 nrun = size(ImgFolder,2);
@@ -42,7 +42,7 @@ nep = floor(size(data,3)./10000);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*10000):500+((i-1)*10000)),3)); title([num2str(1+((i-1)*10000)) '-' num2str(500+((i-1)*10000))]); end
 
 %% Register data
-data_avg = mean(data(:,:,40001:40500),3);
+data_avg = mean(data(:,:,100001:100500),3);
 if exist(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
     load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']), 'input')
@@ -267,25 +267,159 @@ good_ind = unique([find(h1); find(sum(sum(sum(h1_ori,3),4),5))]);
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','cStimTwo', 'ori_targ_mat', 'ori_dist_mat', 'oris', 'nOri', 'az_targ_mat', 'azs','nAz','good_ind', 'base_win', 'resp_win', 'h1','h1_ori');
         
-%%
+%% if do second run for tuning
+ImgFolder = {'003'};
+time = strvcat('1500');
+singleStim = 0;
+ref_str = run_str;
+run_str = catRunName(ImgFolder, nrun);
+
+data = [];
+CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{1}];
+cd(CD);
+imgMatFile = [ImgFolder{1} '_000_000.mat'];
+load(imgMatFile);
+fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time '.mat'];
+load(fName);
+nframes = [input.counterValues{end}(end) info.config.frames];
+fprintf(['Reading run ' ImgFolder{1} '- ' num2str(min(nframes)) ' frames \r\n'])
+data = sbxread(imgMatFile(1,1:11),1,min(nframes));
+if size(data,1)== 2
+    data = data(1,:,:,:);
+end
+data = squeeze(data);
+toc
+
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']), 'data_avg')
+[out, data_reg] = stackRegister(data,data_avg);
+mkdir(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str]))
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']), 'out', 'data_avg')
+
+[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+if singleStim
+    cStimOne = stimOns;
+else
+    cStimOne = stimOns(1:2:end);
+    cStimTwo = stimOns(2:2:end);
+end
+
+nTrials = length(cStimOne);
+sz = size(data_reg);
+data_f = nan(sz(1),sz(2),nTrials);
+data_one = nan(sz(1),sz(2),nTrials);
+for itrial = 1:nTrials
+    if ~isnan(cStimOne(itrial)) & (cStimOne(itrial)+30)<sz(3)
+        data_f(:,:,itrial) = mean(data_reg(:,:,cStimOne(itrial)-20:cStimOne(itrial)-1),3);
+        data_one(:,:,itrial) = mean(data_reg(:,:,cStimOne(itrial)+5:cStimOne(itrial)+25),3);
+    end
+end
+data_one_dfof = (data_one-data_f)./data_f;
+clear data_one
+
+
+ori_mat = celleqel2mat_padded(input.tStimOneGratingDirectionDeg);
+oris = unique(ori_mat);
+nOri = length(oris);
+sf_mat = celleqel2mat_padded(input.tStimOneGratingSpatialFreqCPD);
+sfs = unique(sf_mat);
+nSF = length(sfs);
+az_mat = celleqel2mat_padded(input.tStimOneGratingAzimuthDeg);
+azs = unique(az_mat);
+nAz = length(azs);
+
+load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_mask_cell.mat']))
+data_dfof_avg = zeros(sz(1),sz(2),nOri*nSF*nAz);
+n = nOri*nSF*nAz;
+[n1 n2] = subplotn(n);
 figure;
 start = 1;
-for iCell = good_ind(1:18)'
-    if start>36
-        start = 1;
-        figure;
+if nAz>1
+    for it = 1:nOri
+        ind_ori = find(ori_mat == oris(it));
+        for is = 1:nSF
+            ind_sf = find(sf_mat == sfs(is));
+            for i = 1:nAz
+                ind_az = find(az_targ_mat == azs(i));
+                ind_use = intersect(ind_ori, intersect(ind_sf,ind_az));    
+                data_dfof_avg(:,:,start) = nanmean(data_one_dfof(:,:,ind_use),3);
+                shade_img = imShade(data_dfof_avg(:,:,start), mask_cell);
+                subplot(n1,n2,start)
+                imagesc(shade_img)
+                title(['ori: ' num2str(oris(it)) '; sf- ' num2str(sfs(is)) '; pos ' num2str(azs(i))])
+                start = 1+start;
+            end
+        end
     end
-    subplot(6,6,start)
-    imagesc(squeeze(resp_stim(iCell,1,:,:,1)))
-    title(['Cell ' num2str(iCell) '- Targ'])
-    set(gca,'XTick',1:2,'YTick', 1:2, 'XTickLabel',oris,'YTickLabel',azs)
-    xlabel('Ori')
-    ylabel('Az')
-    subplot(6,6,start+1)
-    imagesc(squeeze(resp_stim(iCell,1,:,:,2)))
-    title(['Cell ' num2str(iCell) '- Dist'])
-    set(gca,'XTick',1:2,'YTick', 1:2,'XTickLabel',oris,'YTickLabel',azs)
-    xlabel('Ori')
-    ylabel('Az')
-    start = start+2;
+else
+    for it = 1:nOri
+        ind_ori = find(ori_mat == oris(it));
+        for is = 1:nSF
+            ind_sf = find(sf_mat == sfs(is));
+            ind_use = intersect(ind_ori, ind_sf);    
+            data_dfof_avg(:,:,start) = nanmean(data_one_dfof(:,:,ind_use),3);
+            shade_img = imShade(data_dfof_avg(:,:,start), mask_cell);
+            subplot(n1,n2,start)
+            imagesc(shade_img)
+            title(['ori: ' num2str(oris(it)) '; sf- ' num2str(sfs(is))])
+            start = 1+start;
+        end
+    end
 end
+% neuropil subtraction
+down = 5;
+sz = size(data_reg);
+
+data_tc = stackGetTimeCourses(data_reg, mask_cell);
+data_reg_down  = stackGroupProject(data_reg,down);
+data_tc_down = stackGetTimeCourses(data_reg_down, mask_cell);
+nCells = size(data_tc,2);
+np_tc = zeros(sz(3),nCells);
+np_tc_down = zeros(floor(sz(3)./down), nCells);
+for i = 1:nCells
+     np_tc(:,i) = stackGetTimeCourses(data_reg,mask_np(:,:,i));
+     np_tc_down(:,i) = stackGetTimeCourses(data_reg_down,mask_np(:,:,i));
+     fprintf(['Cell #' num2str(i) '%s/n']) 
+end
+%get weights by maximizing skew
+ii= 0.01:0.01:1;
+x = zeros(length(ii), nCells);
+for i = 1:100
+    x(i,:) = skewness(data_tc_down-tcRemoveDC(np_tc_down*ii(i)));
+end
+[max_skew ind] =  max(x,[],1);
+np_w = 0.01*ind;
+npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
+clear data_reg data_reg_down
+
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']), 'data_tc', 'np_tc', 'npSub_tc')
+
+nTrials = length(cStimOne);
+[sz(3) nCells] = size(npSub_tc);
+
+tc_one = nan(100,nCells,nTrials);
+tc_two = nan(100,nCells,nTrials);
+   
+for itrial = 1:nTrials
+    if ~isnan(cStimOne(itrial)) & (cStimOne(itrial)+79)<sz(3)
+        tc_one(:,:,itrial) = npSub_tc(cStimOne(itrial)-20:cStimOne(itrial)+79,:);
+        if ~singleStim
+            if ~isnan(cStimTwo(itrial)) & (cStimTwo(itrial)+79)<sz(3)
+                tc_two(:,:,itrial) = npSub_tc(cStimTwo(itrial)-20:cStimTwo(itrial)+79,:);
+            end
+        end
+    end
+end
+tc_one_f = mean(tc_one(1:20,:,:));
+tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
+tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
+
+resp_win = 25:27;
+figure;
+shadedErrorBar(1:100,squeeze(nanmean(nanmean(tc_one_dfof(:,:,:),3),2)),squeeze(nanstd(nanmean(tc_one_dfof(:,:,:),3),[],2))./sqrt(5));%-mean(tc_one_dfof_all(base_win,:,it),1),2)))
+vline([base_win resp_win])
+    
+resp_mat = zeros(nCells,nTrials,2);
+resp_mat(:,:,1) = squeeze(mean(tc_one_dfof(resp_win,:,:),1)-mean(tc_one_dfof(base_win,:,:),1));
+resp_mat(:,:,2) = squeeze(mean(tc_two_dfof(resp_win,:,:),1)-mean(tc_two_dfof(base_win,:,:),1));
+
+save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_mat', 'cStimOne','ori_mat', 'oris', 'nOri', 'sf_mat', 'sfs', 'nSF', 'az_mat','azs','nAz',        'base_win', 'resp_win');

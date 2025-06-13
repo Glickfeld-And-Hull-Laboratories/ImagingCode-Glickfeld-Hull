@@ -1,10 +1,10 @@
 pn = 'Z:\home\ACh\Data\2p_data';
-mouse = 'i3320';
-date = '241115';
+mouse = 'i3323';
+date = '250319';
 
-ImgType = 'GCaMP&flpHT&flexMCh';
-wl = [800 900 1040];
-Runs = [1 2 3];
+ImgType = 'flpMCh';
+wl = [800 980 1040];
+Runs = [0 1 2];
 
 
 for i = 1:length(wl)
@@ -34,8 +34,8 @@ end
 
 fn_out = 'Z:\home\ACh\Analysis\2p_analysis';
 mkdir(fullfile(fn_out,mouse,date));
-writetiff(data_r_avg, fullfile(fn_out,mouse,date,[ImgType '_Red.tif']))
-writetiff(data_g_avg, fullfile(fn_out,mouse,date,[ImgType '_Green.tif']))
+% writetiff(data_r_avg, fullfile(fn_out,mouse,date,[ImgType '_Red.tif']))
+% writetiff(data_g_avg, fullfile(fn_out,mouse,date,[ImgType '_Green.tif']))
 
 sz = size(data_r_avg);
 mask_data = data_r_avg;
