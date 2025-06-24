@@ -1,11 +1,11 @@
 clear all; clear global; close all;
 %paths
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories178
 eval(ds);
 
-experimentFolder = 'PV_atropine';
+experimentFolder = 'VIP_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;

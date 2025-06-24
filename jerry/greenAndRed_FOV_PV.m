@@ -1,12 +1,12 @@
 
-mouse = 'i3329';
-date = '250605';
+mouse = 'i2208';
+date = '250618';
 redFolder = '000'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
 greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='181.25';
-experimentType = 'PV_atropine';
+depth='221.09';
+experimentType = 'VIP_YM90K';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
 % base = 
@@ -38,8 +38,8 @@ data_g_avg = mean(data_g(:,:,:),3);
 data_r_avg = mean(data_r(:,:,:),3);
 
 % red snapshot, registered to red channel
-[out, data_r_reg] = stackRegister(data_r,data_r_avg);
-[outs, data_g_reg] = stackRegister_MA(data_g,[],[],out);
+[out, data_r_reg] = stackRegGPU(data_r,data_r_avg);
+[outs, data_g_reg] = stackRegGPU(data_g,[],[],out);
 
 data_g_reg_avg = mean(data_g_reg,3);
 data_r_reg_avg = mean(data_r_reg,3);
@@ -65,7 +65,7 @@ data_920 = sbxread([greenFolder '_000_' greenrun],0, nframes);
 data_g_920 = squeeze(data_920(1,:,:,:));
 data_g_920_avg = mean(data_g_920(:,:,:),3);
 
-[out, data_g_reg_920] = stackRegister(data_g_920,data_g_920_avg);
+[out, data_g_reg_920] = stackRegGPU(data_g_920,data_g_920_avg);
 regImg = mean(data_g_reg_920,3);
 
 fig2=figure; imagesc(regImg);

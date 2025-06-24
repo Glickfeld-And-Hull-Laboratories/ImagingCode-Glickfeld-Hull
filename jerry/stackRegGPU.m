@@ -66,8 +66,8 @@ if ~isempty(shifts_xy)
     %save time by doing this only once
     SLICE = fft2(double(stack(:,:,1)));
     [nr,nc]=size(SLICE);
-    Nr = ifftshift([-fix(nr/2):ceil(nr/2)-1]);
-    Nc = ifftshift([-fix(nc/2):ceil(nc/2)-1]);
+    Nr = ifftshift(-fix(nr/2):ceil(nr/2)-1);
+    Nc = ifftshift(-fix(nc/2):ceil(nc/2)-1);
     [Nc,Nr] = meshgrid(Nc,Nr);
     outs = gather(shifts_xy);
 end

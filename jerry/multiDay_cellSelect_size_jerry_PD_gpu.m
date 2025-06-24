@@ -1,7 +1,7 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
@@ -10,7 +10,7 @@ doCorrImg = true;
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
-day_id = 82;
+day_id = 6;
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -41,28 +41,9 @@ for irun = 1:nruns
         fName = [imgFolder '_000_000'];
     end
 
-
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        root = rc.data;
-        CD = fullfile(root,mouse,expDate,runFolder);
-        dat = 'data-';
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        root = rc.ashleyData;
-        CD = fullfile(root,mouse,'two-photon imaging', expDate,runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        root = rc.tammyData;
-        CD = fullfile(root, mouse, '2P',expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'celine')
-        root = rc.Data;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-i';
-    elseif strcmp(expt(day_id).data_loc,'ACh')
-        root = rc.achData;
-        CD = fullfile(root, mouse, expDate, runFolder);
-        dat = 'data-';
-    end
+    root = rc.achData;
+    CD = fullfile(root, mouse, expDate, runFolder);
+    dat = 'data-';
     cd(CD);
 
     imgMatFile = [imgFolder '_000_000.mat'];
@@ -242,16 +223,9 @@ if exist(fullfile(fnout,'redImage.mat'))
 elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find and load it
     redRun = expt(day_id).redChannelRun;
     imgMatFile = [redRun '_000_000.mat'];
-    if strcmp(expt(day_id).data_loc,'lindsey')
-        cd(fullfile(root,mouse, expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'ashley')
-        cd(fullfile(root,mouse,'two-photon imaging', expDate,redRun));
-    elseif strcmp(expt(day_id).data_loc,'tammy')
-        cd(fullfile(root, mouse, '2P',expDate, redRun));
-    elseif strcmp(expt(day_id).data_loc,'ACh')
         root = rc.achData;
         cd(fullfile(root, mouse, expDate, redRun));
-    end
+
     load(imgMatFile);
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
@@ -302,8 +276,8 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
 
     
     save(fullfile(fnout,'redImage'),'redChImg')
-elseif ~exist('redChImg')
-    redChImg = zeros(size(regImg));
+% elseif ~exist('redChImg')
+%     redChImg = zeros(size(regImg));
 end
 
 
