@@ -1,10 +1,10 @@
 
 close all
 
-date = '250522';
-mouse = 'i2205';
-ImgFolder = '003';
-time = '1008';
+date = '250624';
+mouse = 'i2207';
+ImgFolder = '004';
+time = '1432';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -131,23 +131,10 @@ expt_input = concatenateDataBlocks(temp);
 %             img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
             %clim([0 max(data_dfof_avg_all(:))./2])
         end
-        
-%         if strcmp(rc.name,'linds')
-%             mkdir(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
-%             print(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')
-%         elseif strcmp(rc.name,'robin')
-%             mkdir(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:)]);
-%             print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_retinotopy.pdf'], '-dpdf','-bestfit')    
-%         end
-% 
-%         if strcmp(rc.name,'ashle')
-%             if ~exist(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
-%                 mkdir(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder))
-%             end
-%             print(fullfile(rc.ashleyAnalysis,mouse,'two-photon imaging',date,ImgFolder,'quickRet.pdf'),'-dpdf','-fillpage')
-%         end
-%         
-        
+        fnout = fullfile('Z:\home\ACh\Analysis\2p_analysis',mouse,date,ImgFolder(irun,:));
+        mkdir(fnout);
+       print(fullfile(fnout,['retinotopy.pdf']),'-dpdf');
+
         pixThreshold = 0.2*max(data_dfof_avg_all(:));
         img_avg_resp = zeros(1,nStim);
         for i = 1:nStim 
@@ -202,8 +189,4 @@ expt_input = concatenateDataBlocks(temp);
     figure; imagesc(mean(data,3));
     axis off
     title([mouse ' ' date])
-%     if strcmp(rc.name,'linds')
-%     print(['\home\lindsey\Analysis\2P\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
-%     elseif strcmp(rc.name,'robin')
-%            print(['R:\home\robin\Imaging\Analysis\' date '_' mouse '\' date '_' mouse '_' ImgFolder(irun,:) '\' date '_' mouse '_' ImgFolder(irun,:) '_FOV.pdf'], '-dpdf','-bestfit')
-%     end
+

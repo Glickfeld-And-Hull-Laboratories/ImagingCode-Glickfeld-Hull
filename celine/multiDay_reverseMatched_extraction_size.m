@@ -1,13 +1,14 @@
 clear all; clear global; 
 close all
 clc
-prompt = 'Enter ds (e.g., DART_V1_YM90K_Celine): ';
-ds = input(prompt, 's');
-clear x prompt
-prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
-experimentFolder = input(prompt, 's');
-clear x prompt
-
+% prompt = 'Enter ds (e.g., DART_V1_YM90K_Celine): ';
+% ds = input(prompt, 's');
+% clear x prompt
+% prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
+% experimentFolder = input(prompt, 's');
+% clear x prompt
+ds='DART_V1_atropine_Celine';
+experimentFolder='SST_atropine';
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -49,6 +50,7 @@ load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
 % Rename input to inputStructure to avoid conflict with MATLAB's input function
 inputStructure = input;
+
 clear input
 frame_rate = inputStructure.frameImagingRateMs;
 % %% finding red fluorescence level
@@ -64,8 +66,7 @@ load(fullfile(fn,'redImage.mat'));
 load(fullfile(fn,'mask_cell.mat'));
  
 
-
-% clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
+clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
 end
 
 % get green fluor level
@@ -84,48 +85,33 @@ for id=1:nd
     pupil{id}=load(fullfile(dayPath,'pupil.mat'));
 end
 
-%% stimulus props
 
-nOn = inputStructure(1).nScansOn;
-nOff = inputStructure(1).nScansOff;
 
-%tells the contrast, direction and orientation for each trial each day
-tCon_match = cell(1,nd);
-tDir_match = cell(1,nd);
-tOri_match = cell(1,nd);
-tSize_match = cell(1,nd);
-
-%find the contrasts, directions and orientations for each day
-%in case of instances where the number of trails actually collected was not
-%consistent with the number mWorks thinks occured, only take 1:nTrials as
-%dictated above based on the number of frames recorded
-for id = 1:nd
-    nTrials(id) = size(cellTCs_match{id},1)/(nOn+nOff); %to account for times 
-%when there is a disruption before the full set of trials is collcted, I'm 
-%determining the number of trials each day by how many frames of data I 
-%have divided by the number of frames per trial
-    tCon_match{id} = celleqel2mat_padded(inputStructure(id).tGratingContrast(1:nTrials(id)));
-    tDir_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDirectionDeg(1:nTrials(id)));
-    tOri_match{id} = tDir_match{id};
-    tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
-    tSize_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDiameterDeg(1:nTrials(id)));
-end
-oris = unique(tOri_match{1});
-dirs = unique(tDir_match{1});
-cons = unique(tCon_match{1});
-sizes = unique(tSize_match{1});
-nOri = length(oris);
-nCon = length(cons);
-nDir = length(dirs);
-nSize = length(sizes);
 
 %% convert to trials
 
-prompt = 'How would you like to process trials: 0- using photoFrameFinder (PD method), 1- direct reshaping (size method)? ';
+%first, check the counterVals for errors and check whethere there is
+%photodiode information
+for id = 1:nd
+    counterValCheck(inputStructure(id))
+    mouse = expt(allDays(id)).mouse;
+    date = expt(allDays(id)).date;
+    imgFolder = expt(allDays(id)).contrastxori_runs{1};
+    imgMatFile = [imgFolder '_000_000.mat'];
+    dataPath = fullfile(rc.achData, mouse, date, imgFolder);
+    load(fullfile(dataPath,imgMatFile));
+    if isfield(info, 'frame')
+        fprintf('Field "frame" exists in info structure\n');
+    else
+        fprintf('Field "frame" does not exist in info structure\n');
+    end
+end
+%%
+prompt = 'How would you like to process trials: 0- using photoFrameFinder, 1- direct reshaping, 2- using counterValcorrect_noPhotodiode? ';
 x = input(prompt);
 switch x
     case 0
-        % PD METHOD
+        % photodiode 
         data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however many days there are (1X2 usually)
 
         fractTimeActive_match = cell(1,nd);
@@ -170,7 +156,7 @@ switch x
         cellTCs_match_OG = cellTCs_match;
         
     case 1
-        % SIZE METHOD
+        % direct reshaping 
         stimStart = (nOff/2)+1; %this indicates both the perdiod to trim off the start and the stim on period after trimming
         stimEnd = stimStart+nOn-1;
 
@@ -210,11 +196,12 @@ switch x
                 fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames;
             end
         end
+    case 2
+        for id = 
+        
 end
 clear x prompt data_f_match cellstd 
 
-% MUST USE NANMEAN INSTEAD OF MEAN MOVING FORWARD SINCE I SET THE PADDING
-% VALUES TO NAN
 
 %% looking at wheel speed
 wheel_speed = cell(1,nd);
@@ -248,7 +235,6 @@ for id = 1:nd
     fprintf('Fraction trials running: %s\n', num2str(mean(RIx{id})));
 end
 
-%% extract running onsets
 %% extract running onsets
 
 prompt = 'Do you want to extract running onsets? (0-no, 1-yes) ';
@@ -383,7 +369,40 @@ if x == 1
     
 end
 clear x
+%% stimulus props
 
+nOn = inputStructure(1).nScansOn;
+nOff = inputStructure(1).nScansOff;
+
+%tells the contrast, direction and orientation for each trial each day
+tCon_match = cell(1,nd);
+tDir_match = cell(1,nd);
+tOri_match = cell(1,nd);
+tSize_match = cell(1,nd);
+
+%find the contrasts, directions and orientations for each day
+%in case of instances where the number of trails actually collected was not
+%consistent with the number mWorks thinks occured, only take 1:nTrials as
+%dictated above based on the number of frames recorded
+for id = 1:nd
+    nTrials(id) = size(cellTCs_match{id},1)/(nOn+nOff); %to account for times 
+%when there is a disruption before the full set of trials is collcted, I'm 
+%determining the number of trials each day by how many frames of data I 
+%have divided by the number of frames per trial
+    tCon_match{id} = celleqel2mat_padded(inputStructure(id).tGratingContrast(1:nTrials(id)));
+    tDir_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDirectionDeg(1:nTrials(id)));
+    tOri_match{id} = tDir_match{id};
+    tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
+    tSize_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDiameterDeg(1:nTrials(id)));
+end
+oris = unique(tOri_match{1});
+dirs = unique(tDir_match{1});
+cons = unique(tCon_match{1});
+sizes = unique(tSize_match{1});
+nOri = length(oris);
+nCon = length(cons);
+nDir = length(dirs);
+nSize = length(sizes);
 
 
 %% get large/small pupil trials

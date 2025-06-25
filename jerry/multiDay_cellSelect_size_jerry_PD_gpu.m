@@ -10,7 +10,11 @@ doCorrImg = true;
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 
+<<<<<<< Updated upstream
 day_id = 6;
+=======
+day_id = 5;
+>>>>>>> Stashed changes
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -641,7 +645,7 @@ for itrial = 1:nTrials
     nOn_pd = stimOffs(itrial) - stimOns(itrial);
     thisTrialNFrames = nOn_pd+nOff_pd;
     trialFrames = nan(MAXnFrames,nCells);
-    trialFrames(1:nOn_pd+nOff_pd,:) = npSub_tc(startFrame:stimOffs(itrial)-1,:);
+     trialFrames(1:nOn_pd+nOff_pd,:) = npSub_tc(startFrame:stimOffs(itrial)-1,:);
     %if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
         data_tc(:,:,itrial) = trialFrames;
     %end
