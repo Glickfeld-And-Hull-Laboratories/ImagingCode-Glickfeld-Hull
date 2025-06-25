@@ -9,7 +9,7 @@ doGreenOnly = true;
 doCorrImg = true;  
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 7;
+day_id = 8;
 
 %% load data for day
 
