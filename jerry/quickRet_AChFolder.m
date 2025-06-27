@@ -1,17 +1,17 @@
 
 close all
 
-date = '250618';
-mouse = 'i2208';
+date = '250627';
+mouse = 'i2207';
 ImgFolder = '002';
-time = '0936';
+time = '1008';
 doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
 datemouse = [date '_' mouse]
 saveRet = 1;
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'SST_YM90K';
 
 isilon_home = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\';
 analysis_root = [isilon_home 'ACh\Analysis\2p_analysis'];

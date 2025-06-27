@@ -163,7 +163,7 @@ expt(8).contrastxori_time = {'1103'};
 expt(8).wheelColor = 'orange';
 expt(8).exptType = 'SST_YM90K';
 expt(8).data_loc = 'ACh';
-%% 8 i2207 control
+%% 9 i2207 control
 expt(9).mouse = 'i2207';
 expt(9).date = '250626';
 expt(9).img_loc  = {'V1';'L2/3'};
@@ -185,3 +185,25 @@ expt(9).contrastxori_time = {'1122'};
 expt(9).wheelColor = 'orange';
 expt(9).exptType = 'SST_YM90K';
 expt(9).data_loc = 'ACh';
+%% 10 i2207 DART
+expt(10).mouse = 'i2207';
+expt(10).date = '250627';
+expt(10).img_loc  = {'V1';'L2/3'};
+expt(10).z =212.5;
+expt(10).obj = '16x';
+expt(10).zoom = 1.7;
+expt(10).frame_rate = 15;
+expt(10).multiday_timesincedrug_hours = '0'
+expt(10).multiday_matchdays = [9];
+expt(10).indicator = {'GCaMP8f'};
+expt(10).drug = 'YM90K-DART';
+expt(10).greenredsimultaneous = 1;
+expt(10).greenChannelLabel = '';
+expt(10).redChannelLabel = '';
+expt(10).redChannelTag = {'tdTomato','NES-HTP'};
+expt(10).redChannelRun = '000';
+expt(10).contrastxori_runs = {'003'};
+expt(10).contrastxori_time = {'1024'};
+expt(10).wheelColor = 'orange';
+expt(10).exptType = 'SST_YM90K';
+expt(10).data_loc = 'ACh';
