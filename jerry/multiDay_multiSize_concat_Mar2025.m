@@ -11,7 +11,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [6];%enter all the sessions you want to concatenate4
+sess_list = [2 4 6];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -1661,18 +1661,6 @@ s2 = squeeze(mean(squeeze(stat_pre_green(:,:,:,2)),3));
 s3 = squeeze(mean(squeeze(stat_post_green(:,:,:,1)),3));
 s4 = squeeze(mean(squeeze(stat_post_green(:,:,:,2)),3));
 
-% [coeff1,score1,latent1] = pca(s1);
-% [coeff2,score2,latent2] = pca(s2);
-
-% [d, Z, transform] = procrustes(score1(:,1:3), score2(:,1:3));
-% plot3(score1(:,1), score1(:,2), score1(:,3), 'r-')
-% hold on
-% plot3(Z(:,1), Z(:,2), Z(:,3), 'b-')
-% xlabel('PC1')
-% ylabel('PC2')
-% zlabel('PC3')
-% hold off
-
 s_combined = [s1; s2];  % Concatenate observations
 [coeff, score_combined,~,~,explained_1] = pca(s_combined);
 
@@ -1684,21 +1672,11 @@ plot3(score1(:,1),score1(:,2),score1(:,3))
 xlabel('PC1')
 ylabel('PC2')
 zlabel('PC3')
-title('PCA Scores Plot Pre Green')
+title('PCA Scores Plot stat Pre Green')
 hold on
 plot3(score2(:,1),score2(:,2),score2(:,3))
 legend('20deg','fullfield')
 hold off
-
-% figure
-% [d, Z, transform] = procrustes(score1(:,1:3), score2(:,1:3));
-% plot3(score1(:,1), score1(:,2), score1(:,3), 'r-')
-% hold on
-% plot3(Z(:,1), Z(:,2), Z(:,3), 'b-')
-% xlabel('PC1')
-% ylabel('PC2')
-% zlabel('PC3')
-% hold off
 
 s_combined = [s3; s4];  % Concatenate observations
 [coeff, score_combined,~,~,explained_2] = pca(s_combined);
@@ -1709,7 +1687,7 @@ plot3(score1(:,1),score1(:,2),score1(:,3))
 xlabel('PC1')
 ylabel('PC2')
 zlabel('PC3')
-title('PCA Scores Plot Post Green')
+title('PCA Scores Plot stat Post Green')
 hold on
 plot3(score2(:,1),score2(:,2),score2(:,3))
 legend('20dPost','FFPost')
@@ -1726,10 +1704,189 @@ plot3(score1(:,1),score1(:,2),score1(:,3))
 xlabel('PC1')
 ylabel('PC2')
 zlabel('PC3')
-title('PCA Scores Plot Both Green')
+title('PCA Scores Plot stat Both Green')
 hold on
 plot3(score2(:,1),score1(:,2),score1(:,3))
 plot3(score3(:,1),score1(:,2),score1(:,3))
 plot3(score4(:,1),score1(:,2),score1(:,3))
 legend('20dPre','FFPre','20dPost','FFPost')
 hold off
+% same thing for red
+size(stat_pre_red)
+s1 = squeeze(mean(squeeze(stat_pre_red(:,:,:,1)),3));
+s2 = squeeze(mean(squeeze(stat_pre_red(:,:,:,2)),3));
+
+s3 = squeeze(mean(squeeze(stat_post_red(:,:,:,1)),3));
+s4 = squeeze(mean(squeeze(stat_post_red(:,:,:,2)),3));
+
+s_combined = [s1; s2];  % Concatenate observations
+[coeff, score_combined,~,~,explained_1] = pca(s_combined);
+
+% Split scores
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot stat Pre red')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20deg','fullfield')
+hold off
+
+s_combined = [s3; s4];  % Concatenate observations
+[coeff, score_combined,~,~,explained_2] = pca(s_combined);
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot stat Post red')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20dPost','FFPost')
+hold off
+
+s_combined = [s1;s2;s3;s4];
+[coeff, score_combined,~,~,explained_3] = pca(s_combined);
+score1 = score_combined(1:90,:);
+score2 = score_combined(91:180,:);
+score3 = score_combined(181:270,:);
+score4 = score_combined(271:360,:);
+figure;
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot stat Both red')
+hold on
+plot3(score2(:,1),score1(:,2),score1(:,3))
+plot3(score3(:,1),score1(:,2),score1(:,3))
+plot3(score4(:,1),score1(:,2),score1(:,3))
+legend('20dPre','FFPre','20dPost','FFPost')
+hold off
+
+
+
+%% for loc
+size(loc_pre_green)
+s1 = squeeze(mean(squeeze(loc_pre_green(:,:,:,1)),3));
+s2 = squeeze(mean(squeeze(loc_pre_green(:,:,:,2)),3));
+
+s3 = squeeze(mean(squeeze(loc_post_green(:,:,:,1)),3));
+s4 = squeeze(mean(squeeze(loc_post_green(:,:,:,2)),3));
+
+s_combined = [s1; s2];  % Concatenate observations
+[coeff, score_combined,~,~,explained_1] = pca(s_combined);
+
+% Split scores
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot loc Pre Green')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20deg','fullfield')
+hold off
+
+s_combined = [s3; s4];  % Concatenate observations
+[coeff, score_combined,~,~,explained_2] = pca(s_combined);
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot loc Post Green')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20dPost','FFPost')
+hold off
+
+s_combined = [s1;s2;s3;s4];
+[coeff, score_combined,~,~,explained_3] = pca(s_combined);
+score1 = score_combined(1:90,:);
+score2 = score_combined(91:180,:);
+score3 = score_combined(181:270,:);
+score4 = score_combined(271:360,:);
+figure;
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot loc Both Green')
+hold on
+plot3(score2(:,1),score1(:,2),score1(:,3))
+plot3(score3(:,1),score1(:,2),score1(:,3))
+plot3(score4(:,1),score1(:,2),score1(:,3))
+legend('20dPre','FFPre','20dPost','FFPost')
+hold off
+% same thing for red
+size(loc_pre_red)
+s1 = squeeze(mean(squeeze(loc_pre_red(:,:,:,1)),3));
+s2 = squeeze(mean(squeeze(loc_pre_red(:,:,:,2)),3));
+
+s3 = squeeze(mean(squeeze(loc_post_red(:,:,:,1)),3));
+s4 = squeeze(mean(squeeze(loc_post_red(:,:,:,2)),3));
+
+s_combined = [s1; s2];  % Concatenate observations
+[coeff, score_combined,~,~,explained_1] = pca(s_combined);
+
+% Split scores
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot loc Pre red')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20deg','fullfield')
+hold off
+
+s_combined = [s3; s4];  % Concatenate observations
+[coeff, score_combined,~,~,explained_2] = pca(s_combined);
+score1 = score_combined(1:size(s1,1), :);
+score2 = score_combined(size(s1,1)+1:end, :);
+figure
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot loc Post red')
+hold on
+plot3(score2(:,1),score2(:,2),score2(:,3))
+legend('20dPost','FFPost')
+hold off
+
+s_combined = [s1;s2;s3;s4];
+[coeff, score_combined,~,~,explained_3] = pca(s_combined);
+score1 = score_combined(1:90,:);
+score2 = score_combined(91:180,:);
+score3 = score_combined(181:270,:);
+score4 = score_combined(271:360,:);
+figure;
+plot3(score1(:,1),score1(:,2),score1(:,3))
+xlabel('PC1')
+ylabel('PC2')
+zlabel('PC3')
+title('PCA Scores Plot loc Both red')
+hold on
+plot3(score2(:,1),score1(:,2),score1(:,3))
+plot3(score3(:,1),score1(:,2),score1(:,3))
+plot3(score4(:,1),score1(:,2),score1(:,3))
+legend('20dPre','FFPre','20dPost','FFPost')
+hold off
+
+
