@@ -1,18 +1,14 @@
 clear all; clear global; 
 close all
 clc
-prompt = 'Which dataset do you want to use: 0- DART_expt_info, 1- DART_V1_YM90K_Celine? ';
-x = input(prompt);
-switch x
-    case 0
-        ds = 'DART_expt_info'; %dataset info
-    case 1
-        ds = 'DART_V1_YM90K_Celine'; %dataset info
-end
+prompt = 'Enter ds (e.g., DART_V1_YM90K_Celine): ';
+ds = input(prompt, 's');
+clear x prompt
 prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
 experimentFolder = input(prompt, 's');
 clear x prompt
-
+% ds='DART_V1_atropine_Celine';
+% experimentFolder='SST_atropine';
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -50,10 +46,11 @@ fn_multi = fullfile(rc.achAnalysis,experimentFolder,mouse,['multiday_' dart_str]
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
-%load(fullfile(fn_multi,'multiday_alignment.mat'))
+load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
 % Rename input to inputStructure to avoid conflict with MATLAB's input function
 inputStructure = input;
+
 clear input
 frame_rate = inputStructure.frameImagingRateMs;
 % %% finding red fluorescence level
@@ -68,25 +65,10 @@ cd(fn);
 load(fullfile(fn,'redImage.mat'));
 load(fullfile(fn,'mask_cell.mat'));
  
-%use stackGetTimeCourses to extract the red fluorescence within each mask
-red_fluor_mask = stackGetTimeCourses(redChImg, mask_cell);
-nCells=max(max(mask_cell));
-for i = 1:nCells
-red_fluor_np(i) = stackGetTimeCourses(redChImg, mask_np(:,:,i));
+
+clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
 end
 
-red_fluor_all = red_fluor_mask-red_fluor_np;
-    %load in the pupil data for each day
-    
-    
-
-% clear mask_cell mask_np nCells red_fluor_np red_fluor_mask
-end
-%using the reference day
-red_fluor_match=red_fluor_all(:,match_ind);
-z_red_fluor=zscore(red_fluor_match);
-load(fullfile(fn_multi,'multiday_alignment.mat'))
-clear red_fluor_all red_fluor_mask red_fluor_np
 % get green fluor level
 %using the reference day
 green_fluor_match=mean(cellTCs_match{1},1);   
@@ -103,48 +85,33 @@ for id=1:nd
     pupil{id}=load(fullfile(dayPath,'pupil.mat'));
 end
 
-%% stimulus props
 
-nOn = inputStructure(1).nScansOn;
-nOff = inputStructure(1).nScansOff;
 
-%tells the contrast, direction and orientation for each trial each day
-tCon_match = cell(1,nd);
-tDir_match = cell(1,nd);
-tOri_match = cell(1,nd);
-tSize_match = cell(1,nd);
-
-%find the contrasts, directions and orientations for each day
-%in case of instances where the number of trails actually collected was not
-%consistent with the number mWorks thinks occured, only take 1:nTrials as
-%dictated above based on the number of frames recorded
-for id = 1:nd
-    nTrials(id) = size(cellTCs_match{id},1)/(nOn+nOff); %to account for times 
-%when there is a disruption before the full set of trials is collcted, I'm 
-%determining the number of trials each day by how many frames of data I 
-%have divided by the number of frames per trial
-    tCon_match{id} = celleqel2mat_padded(inputStructure(id).tGratingContrast(1:nTrials(id)));
-    tDir_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDirectionDeg(1:nTrials(id)));
-    tOri_match{id} = tDir_match{id};
-    tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
-    tSize_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDiameterDeg(1:nTrials(id)));
-end
-oris = unique(tOri_match{1});
-dirs = unique(tDir_match{1});
-cons = unique(tCon_match{1});
-sizes = unique(tSize_match{1});
-nOri = length(oris);
-nCon = length(cons);
-nDir = length(dirs);
-nSize = length(sizes);
 
 %% convert to trials
 
-prompt = 'How would you like to process trials: 0- using photoFrameFinder (PD method), 1- direct reshaping (size method)? ';
+%first, check the counterVals for errors and check whethere there is
+%photodiode information
+for id = 1:nd
+    counterValCheck(inputStructure(id))
+    mouse = expt(allDays(id)).mouse;
+    date = expt(allDays(id)).date;
+    imgFolder = expt(allDays(id)).contrastxori_runs{1};
+    imgMatFile = [imgFolder '_000_000.mat'];
+    dataPath = fullfile(rc.achData, mouse, date, imgFolder);
+    load(fullfile(dataPath,imgMatFile));
+    if isfield(info, 'frame')
+        fprintf('Field "frame" exists in info structure\n');
+    else
+        fprintf('Field "frame" does not exist in info structure\n');
+    end
+end
+%%
+prompt = 'How would you like to process trials: 0- using photoFrameFinder, 1- direct reshaping, 2- using counterValcorrect_noPhotodiode? ';
 x = input(prompt);
 switch x
     case 0
-        % PD METHOD
+        % photodiode 
         data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however many days there are (1X2 usually)
 
         fractTimeActive_match = cell(1,nd);
@@ -189,7 +156,7 @@ switch x
         cellTCs_match_OG = cellTCs_match;
         
     case 1
-        % SIZE METHOD
+        % direct reshaping 
         stimStart = (nOff/2)+1; %this indicates both the perdiod to trim off the start and the stim on period after trimming
         stimEnd = stimStart+nOn-1;
 
@@ -229,11 +196,12 @@ switch x
                 fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames;
             end
         end
+    % case 2
+    %     for id = 
+        
 end
 clear x prompt data_f_match cellstd 
 
-% MUST USE NANMEAN INSTEAD OF MEAN MOVING FORWARD SINCE I SET THE PADDING
-% VALUES TO NAN
 
 %% looking at wheel speed
 wheel_speed = cell(1,nd);
@@ -264,7 +232,7 @@ for id = 1:nd
     wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
     wheel_trial_avg_raw{id} = mean(wheel_tc_raw{id}(nOff:nOn+nOff,:),1);
     RIx{id} = wheel_trial_avg{id}>2; %~5 is the noise level in the wheel movement
-    mean(RIx{id})
+    fprintf('Fraction trials running: %s\n', num2str(mean(RIx{id})));
 end
 
 %% extract running onsets
@@ -288,8 +256,8 @@ if x == 1
             fwdWheelClean(fwdWheelClean<0)=0;
             
             % find and refine the onset indices
-            stillFrames = logical(fwdWheelClean<2); %find the stationary frames
-            runFrames = logical(fwdWheelClean>2); %find the stationary frames
+            stillFrames = logical(fwdWheelClean<2); %find the stationary periods based on the sliding window
+            runFrames = logical(fwdWheelClean>2); %find the stationary periods based on the sliding window
 
             runOnsets=(find(diff(stillFrames) == -1)+1); %find the transitions from stationary to running
             runOffsets=(find(diff(stillFrames) == 1)+1); %find the transitions from running to stationary
@@ -302,17 +270,17 @@ if x == 1
                 if runOnsets_clean(iOnset) < frame_rate+1
                     toDrop=[toDrop,iOnset]; %drop onsets that are less than 1 second from the start of the session
                 elseif runOnsets_clean(iOnset) > frame_rate+1 && runOnsets_clean(iOnset)+frame_rate <= length(stillFrames)
-                    testWinStill=[runOnsets_clean(iOnset)-frame_rate:runOnsets_clean(iOnset)-1]; %define 1s before
-                    testWinRun=[runOnsets_clean(iOnset)+1:runOnsets_clean(iOnset)+frame_rate]; %define 1s after
+                    testWinStill=[runOnsets_clean(iOnset)-frame_rate:runOnsets_clean(iOnset)];
+                    testWinRun=[runOnsets_clean(iOnset):runOnsets_clean(iOnset)+frame_rate];
                     % Make sure indices are within bounds
                     testWinStill = testWinStill(testWinStill > 0 & testWinStill <= length(stillFrames));
                     testWinRun = testWinRun(testWinRun > 0 & testWinRun <= length(runFrames));
                     
-                    if sum(stillFrames(testWinStill))<(frame_rate*.75) || sum(runFrames(testWinRun))<(frame_rate*.5)
+                    if sum(stillFrames(testWinStill))<(frame_rate*.75) || sum(runFrames(testWinRun))<(frame_rate*.75)
                         toDrop=[toDrop,iOnset]; %gather a list of onsets that don't meet my criteria
                     end 
                 else
-                    toDrop=[toDrop,iOnset]; % catch onset indices that fail the elseif abovefor any other reason
+                    toDrop=[toDrop,iOnset]; % out of bounds indices
                 end
             end
             runOnsets_clean(toDrop)=[];
@@ -337,7 +305,7 @@ if x == 1
             validIndices = runOnsets_clean <= length(ITI);
             ITIOnsets = ITIOnsets(validIndices);
             if ~isempty(ITIOnsets)
-                ITIOnsets(ITI(ITIOnsets)==0)=[]; %check whether the ITI is happening (1) or the stim is happening (0). Drop onsets where the stim is happening
+                ITIOnsets(ITI(ITIOnsets)==0)=[];
             end
             
             if isempty(ITIOnsets)
@@ -357,7 +325,7 @@ if x == 1
             for iOnset = 1:length(ITIOnsets)
                 %find inds for a window around the onset
                 fullWindow = [(ITIOnsets(iOnset)-(onsetWin*frame_rate)):(ITIOnsets(iOnset)+(onsetWin*frame_rate)-1)];
-                bslnWindow = [(ITIOnsets(iOnset)-(frame_rate/2)):ITIOnsets(iOnset)];
+                bslnWindow = [(ITIOnsets(iOnset)-(frame_rate)):(ITIOnsets(iOnset)-(frame_rate/2))];
                 
                 % Make sure indices are within bounds
                 fullWindow = fullWindow(fullWindow > 0 & fullWindow <= nFrames);
@@ -368,8 +336,8 @@ if x == 1
                     tempBsln=mean(cellTCs_match{id}(bslnWindow,:));
                     %this is F, convert to dfof. 
                     tempDfof = bsxfun(@rdivide,bsxfun(@minus,tempFull,tempBsln),tempBsln);
-                    
-                    % Handle case when window size doesn't match expected size
+
+                    %Handle case when window size doesn't match expected size
                     if size(tempDfof,1) == onsetWin*2*frame_rate
                         data_dfof_runOnset(:,:,iOnset)=tempDfof;
                     else
@@ -378,7 +346,7 @@ if x == 1
                         tmp(1:min(size(tempDfof,1), onsetWin*2*frame_rate), :) = tempDfof(1:min(size(tempDfof,1), onsetWin*2*frame_rate), :);
                         data_dfof_runOnset(:,:,iOnset) = tmp;
                     end
-                    
+
                     % Handle wheelspeed data similarly
                     if length(fullWindow) == onsetWin*2*frame_rate && all(fullWindow <= length(fwdWheelClean))
                         runConfirmation(:,iOnset) = fwdWheelClean(fullWindow);
@@ -401,6 +369,41 @@ if x == 1
     
 end
 clear x
+%% stimulus props
+
+nOn = inputStructure(1).nScansOn;
+nOff = inputStructure(1).nScansOff;
+
+%tells the contrast, direction and orientation for each trial each day
+tCon_match = cell(1,nd);
+tDir_match = cell(1,nd);
+tOri_match = cell(1,nd);
+tSize_match = cell(1,nd);
+
+%find the contrasts, directions and orientations for each day
+%in case of instances where the number of trails actually collected was not
+%consistent with the number mWorks thinks occured, only take 1:nTrials as
+%dictated above based on the number of frames recorded
+for id = 1:nd
+    nTrials(id) = size(cellTCs_match{id},1)/(nOn+nOff); %to account for times 
+%when there is a disruption before the full set of trials is collcted, I'm 
+%determining the number of trials each day by how many frames of data I 
+%have divided by the number of frames per trial
+    tCon_match{id} = celleqel2mat_padded(inputStructure(id).tGratingContrast(1:nTrials(id)));
+    tDir_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDirectionDeg(1:nTrials(id)));
+    tOri_match{id} = tDir_match{id};
+    tOri_match{id}(find(tDir_match{id}>=180)) = tDir_match{id}(find(tDir_match{id}>=180))-180;
+    tSize_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDiameterDeg(1:nTrials(id)));
+end
+oris = unique(tOri_match{1});
+dirs = unique(tDir_match{1});
+cons = unique(tCon_match{1});
+sizes = unique(tSize_match{1});
+nOri = length(oris);
+nCon = length(cons);
+nDir = length(dirs);
+nSize = length(sizes);
+
 
 %% get large/small pupil trials
 statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
@@ -544,37 +547,31 @@ conBySize_resp_loc_match{id} =conBySize_resp_loc;
 end
 clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat data_sizeBycon_resp_loc data_resp p h_pass  resp pref_dir pref_con data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp  baseStd baseMean thresh pass
  
-%% get basic counts 
+%% identify HTP+ and HTP- cells and get basic counts 
 
 
-% Ask user if they want to use the findRedCells function or pre-loaded red_ind_match
-prompt = 'Do you want to: 0- use pre-loaded red cell indices, 1- calculate red cells based on percentile threshold? ';
+% Ask user if they want to use pre-loaded red_ind_match or designate all
+% cells as HTP+
+prompt = 'Do you want to: 0- use pre-loaded red cell indices, 1- call all cells red? ';
 x = input(prompt);
+allCellsRed=0;
 switch x
     case 0
-        % Use pre-loaded red_ind_match - nothing to do here as it's already loaded
+        % Use pre-loaded red_ind_match 
         fprintf('Using pre-loaded red cell indices.\n');
+        red_ind_match_list = find(red_ind_match==1);
+        % This is a list of indices of all the green cells
+        green_ind_match = ~(red_ind_match);
+        green_ind_match_list = find(green_ind_match);
     case 1
-        % Ask for percentile threshold
-        prompt = 'Enter the percentile threshold for red cell detection (e.g., 75): ';
-        percentile = input(prompt);
-        
-        % Use the existing findRedCells function to identify red cells
-        fprintf('Identifying red cells using the %dth percentile threshold...\n', percentile);
-        red_ind_match = findRedCells(redChImg, mask_cell, percentile);
-        % Convert the returned indices to the logical format expected by the script
-        temp_red_ind = zeros(1, length(match_ind));
-        temp_red_ind(ismember(match_ind, red_ind_match)) = 1;
-        red_ind_match = logical(temp_red_ind);
+        fprintf('All cells will be designated as red\n');
+        allCellsRed=1; %will use this logical to determin subsequent analyses
+        red_ind_match = ones(1,nCells);
+        red_ind_match_list = find(red_ind_match==1);
+        green_ind_match = zeros(1,nCells);%empty
+        green_ind_match_list = find(green_ind_match);
 end
 clear x prompt
-
-% Continue with creating lists of red and green cells
-red_ind_match_list = find(red_ind_match==1);
-
-% This is a list of indices of all the green cells
-green_ind_match = ~(red_ind_match);
-green_ind_match_list = find(green_ind_match);
 
 
 
@@ -582,10 +579,9 @@ green_ind_match_list = find(green_ind_match);
 green_match_respd1 = intersect(green_ind_match_list,find(resp_match{2}==1));
 green_match_respd2 = intersect(green_ind_match_list,find(resp_match{1}==1));
 
-red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));%this is for reverse matching
+red_match_respd1 = intersect(red_ind_match_list,find(resp_match{2}==1));
 red_match_respd2 = intersect(red_ind_match_list,find(resp_match{1}==1));
 
-%
 %find cells that were active on at least one day
 resp_green_either_temp = union(green_match_respd1,green_match_respd2); %these are the green cells I will include from now on
 resp_red_either_temp = union(red_match_respd1,red_match_respd2); %these are the red cells I will include from now on
@@ -638,7 +634,7 @@ countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1
 writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
 clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
-%% make a data structure subsets for only the keep cells
+% make a data structure subsets for only the keep cells
 
 conBySize_resp_stat_keep = cell(1,nd);
 conBySize_resp_loc_keep = cell(1,nd);
@@ -671,17 +667,17 @@ for id = 1:nd
     loc_resp_keep{id} = loc_resp_match{id}(keep_cells,:,:,:);
 end
 
-red_fluor_keep=red_fluor_match(keep_cells);
-green_fluor_keep=green_fluor_match(keep_cells);
+% red_fluor_keep=red_fluor_match(keep_cells);
+% green_fluor_keep=green_fluor_match(keep_cells);
+% 
+
+% 
+% conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'HT- cells'  'HT+ cells'})
+% writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
+% save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
 
 
-
-conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'HT- cells'  'HT+ cells'})
-writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
-save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
-
-
-%% narrow down to the stimuli preferred for each cell each day
+% narrow down to the stimuli preferred for each cell each day
 
 
 %
@@ -891,200 +887,8 @@ for id = 1:nd
 end
 
 save(fullfile(fn_multi,'locomotion.mat'),'RIx','wheel_tc','wheel_speed','wheel_corr')
-%% saving data 
 
-% Check if we have data_dfof_runOnset_keep (only from PD method)
-if exist('data_dfof_runOnset_keep', 'var')
-    save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
-    'pref_responses_stat_largePupil','pref_responses_stat_smallPupil','pref_responses_loc','resp_keep', ...
-    'tc_trial_avrg_keep_allCond','pref_responses_allCond', 'pref_con_keep', ...
-    'pref_dir_keep','tDir_match','tOri_match', 'tCon_match','data_trial_keep', ...
-    'nTrials','tc_trial_avrg_stat','tc_trial_avrg_stat_largePupil', ...
-    'tc_trial_avrg_stat_smallPupil','tc_trial_avrg_loc', 'green_keep_logical', ...
-    'red_keep_logical', 'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat', ...
-    'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
-    'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc','data_dfof_runOnset_keep')
-else
-    save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
-    'pref_responses_stat_largePupil','pref_responses_stat_smallPupil','pref_responses_loc','resp_keep', ...
-    'tc_trial_avrg_keep_allCond','pref_responses_allCond', 'pref_con_keep', ...
-    'pref_dir_keep','tDir_match','tOri_match', 'tCon_match','data_trial_keep', ...
-    'nTrials','tc_trial_avrg_stat','tc_trial_avrg_stat_largePupil', ...
-    'tc_trial_avrg_stat_smallPupil','tc_trial_avrg_loc', 'green_keep_logical', ...
-    'red_keep_logical', 'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat', ...
-    'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
-    'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc')
-end
-
-
-
-%% interneuron / pyr relationship
-% get mean-subtracted trial responses
-trialResp=cell(1,nd); %raw trial responses for each cell 
-subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
-conditionMeans=cell(1,nd); %mean for each condition
-
-for id = 1:nd
-
-    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1));
-    subTrialResp{id} = nan(size(trialResp{id}));
-
-    conditionMeans{id}=nan(nDir,nCon,nSize,nKeep);
-
-    tCon = tCon_match{id}(:,1:nTrials(id));
-    tDir = tDir_match{id}(:,1:nTrials(id));
-
-    for iDir = 1:nDir
-        ind_dir = find(tDir == dirs(iDir));
-        for iCon = 1:nCon
-            ind_con = find(tCon == cons(iCon));
-            inds1 = intersect(ind_dir,ind_con);
-            for iSize = 1:nSize
-                ind_size = find(tSize == sizes(iSize));
-                inds2 = intersect(inds1,ind_size);
-                inds=intersect(inds2,ind_stat);
-                tempData=trialResp{id}(inds,:);
-                tempCellMeans=mean(tempData,1);
-                tempSubData = tempData - tempCellMeans;
-                subTrialResp{id}(inds,:)=tempSubData;
-                conditionMeans{id}(iDir,iCon,iSize,:)=tempCellMeans;
-            end
-        end
-    end
-subTrialResp{id}=subTrialResp{id}(ind_stat,:);
-end
-
-
-
-
-%% get correlation structure for noise correlation
-% Prompt user for plotting preference (default is no plotting)
-plotChoice = input('Plot correlation figures as a sanity check? (y/n) [default: n]: ', 's');
-if isempty(plotChoice) || ~strcmpi(plotChoice, 'y')
-    doPlot = false;
-    disp('Plotting disabled.');
-else
-    doPlot = true;
-    % Select 15 random cells to plot (or all if less than 15)
-    numToPlot = min(15, nKeep);
-    cellsToPlot = randperm(nKeep, numToPlot);
-    disp(['Plotting enabled for ' num2str(numToPlot) ' randomly selected cells.']);
-end
-
-noiseCorr = cell(1,nd);
-for id=1:nd
-    noiseCorr{id}=nan(2,nKeep);
-    for iCell = 1:nKeep %change this to nKeep
-        thisCell=subTrialResp{id}(:,iCell);
-        %if this is a red cell, compare to all green cells
-        if ismember(iCell,red_ind_keep)
-            otherCells = green_ind_keep;
-        else
-            otherCells = setdiff(green_ind_keep,iCell);
-        end
-        otherCellsMean = mean(subTrialResp{id}(:,otherCells),2,"omitnan");
-        
-        % Optional plotting code in conditional block - only for selected cells
-        if doPlot && ismember(iCell, cellsToPlot)
-            figure
-            if id == pre
-                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-            else
-                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-            end
-            hold on
-            h = lsline;
-            title([' Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
-        end
-        
-        [R,p]=corrcoef(otherCellsMean,thisCell);
-        % Title is now included in the plotting block above
-        
-        noiseCorr{id}(1,iCell)=R(2);
-        noiseCorr{id}(2,iCell)=p(2);
-    end
-end
-
-sigCorr = cell(1,nd);
-for id=1:nd
-    sigCorr{id}=nan(2,nKeep);
-    tempconditionMeans=reshape(conditionMeans{id},(nCon*nDir*nSize),nKeep); %reshape this into a vector for each cell
-    for iCell = 1:nKeep %change this to nKeep
-        thisCell=tempconditionMeans(:,iCell);
-        %if this is a red cell, compare to all green cells
-        if ismember(iCell,red_ind_keep)
-            otherCells = green_ind_keep;
-        else
-            otherCells = setdiff(green_ind_keep,iCell);
-        end
-        otherCellsMean = mean(tempconditionMeans(:,otherCells),2,"omitnan");
-        
-        % Optional plotting code in conditional block - only for selected cells
-        if doPlot && ismember(iCell, cellsToPlot)
-            figure
-            if id == pre
-                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-            else
-                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
-            end
-            hold on
-            h = lsline;
-            title([' Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
-        end
-        
-        [R,p]=corrcoef(otherCellsMean,thisCell);
-        sigCorr{id}(1,iCell)=R(2);
-        sigCorr{id}(2,iCell)=p(2);
-    end
-end
-save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'conditionMeans','sigCorr','noiseCorr')
-
-
-%% make and save response matrix for keep cells
-
-data_resp_keep = cell(1,nd);
-resp_max_keep = cell(1,nd);
-
-for id = 1:nd
-  data_resp_keep{id}=data_resp_match{id}(keep_cells,:,:,:,:);
-  resp_max_keep{id} = squeeze(max(data_resp_keep{id}(:,:,:,:,1),[],2));
-
-end
-
-resp_max_keep_rect = resp_max_keep;
-for id = 1:nd
-    resp_max_keep_rect{id}(find(resp_max_keep_rect{id}<0))=0;
-
-end
-
-dfof_max_diff = (resp_max_keep_rect{1}-resp_max_keep_rect{2})./(resp_max_keep_rect{1}+resp_max_keep_rect{2}); % (post-pre)/(post+pre), nCell X nCon
-dfof_max_diff_raw = (resp_max_keep{1}-resp_max_keep{2});
-
-
-%% make a reordered matrix of direction, where pref direction is now 0
-order = [1:nDir]; %make a list of indices for the directions
-norm_dir_resp_stat = cell(1,nd);
-norm_dir_resp_loc = cell(1,nd);
-
-for id = 1:nd
-    statMatrix = nan(nKeep,nDir,nCon,nSize); %make an empty matrix to hold the data for this day
-    locMatrix = nan(nKeep,nDir,nCon,nSize);
-    for iCell = 1:nKeep
-        thisPref=pref_dir_keep{id}(iCell);
-        index=find(dirs==thisPref);
-        newOrder=circshift(order,((index-1)*-1));
-        statMatrix(iCell,:,:,:)=stat_resp_keep{id}(iCell,newOrder,:,:);
-        locMatrix(iCell,:,:,:)=loc_resp_keep{id}(iCell,newOrder,:,:);
-    end
-    norm_dir_resp_stat{id}=statMatrix;
-    norm_dir_resp_loc{id}=locMatrix;
-
-end
-
-save(fullfile(fn_multi,'resp_keep.mat'),'data_resp_keep','resp_max_keep','data_resp_keep','dfof_max_diff','dfof_max_diff_raw','norm_dir_resp_stat','norm_dir_resp_loc','conBySize_resp_stat_keep','conBySize_resp_loc_keep','h_keep')
-
-
-%% making mask maps for various measurements
+% making mask maps for various measurements
 %show masks
 %get masks of matched cells
 mask_match = cell(1,nd);
@@ -1163,6 +967,8 @@ colormap gray
 %caxis([10 100])
 title('matched red cells');
 hold on
+bound = cell2mat(bwboundaries(keep_masks));
+plot(bound(:,2),bound(:,1),'.','color','y','MarkerSize',2);
 bound = cell2mat(bwboundaries(keep_red_masks));
 plot(bound(:,2),bound(:,1),'.','color','r','MarkerSize',2);
 hold off
@@ -1170,4 +976,198 @@ hold off
 print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
+
+%% saving data 
+
+% Check if we have data_dfof_runOnset_keep (only from PD method)
+if exist('data_dfof_runOnset_keep', 'var')
+    save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
+    'pref_responses_stat_largePupil','pref_responses_stat_smallPupil','pref_responses_loc','resp_keep', ...
+    'tc_trial_avrg_keep_allCond','pref_responses_allCond', 'pref_con_keep', ...
+    'pref_dir_keep','tDir_match','tOri_match', 'tCon_match','data_trial_keep', ...
+    'nTrials','tc_trial_avrg_stat','tc_trial_avrg_stat_largePupil', ...
+    'tc_trial_avrg_stat_smallPupil','tc_trial_avrg_loc', 'green_keep_logical', ...
+    'red_keep_logical', 'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat', ...
+    'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
+    'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc','data_dfof_runOnset_keep')
+else
+    save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
+    'pref_responses_stat_largePupil','pref_responses_stat_smallPupil','pref_responses_loc','resp_keep', ...
+    'tc_trial_avrg_keep_allCond','pref_responses_allCond', 'pref_con_keep', ...
+    'pref_dir_keep','tDir_match','tOri_match', 'tCon_match','data_trial_keep', ...
+    'nTrials','tc_trial_avrg_stat','tc_trial_avrg_stat_largePupil', ...
+    'tc_trial_avrg_stat_smallPupil','tc_trial_avrg_loc', 'green_keep_logical', ...
+    'red_keep_logical', 'green_ind_keep', 'red_ind_keep','stimStart','pref_allTrials_stat', ...
+    'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
+    'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc')
+end
+
+
+
+%% interneuron / pyr relationship
+% get mean-subtracted trial responses
+trialResp=cell(1,nd); %raw trial responses for each cell 
+subTrialResp=cell(1,nd); %trial responses with mean for that condition subtracted
+conditionMeans=cell(1,nd); %mean for each condition
+
+for id = 1:nd
+
+    trialResp{id} = squeeze(mean(data_trial_keep{id}(stimStart:(stimStart+nOn-1),:,:),1,'omitmissing'));
+    subTrialResp{id} = nan(size(trialResp{id}));
+
+    conditionMeans{id}=nan(nDir,nCon,nSize,nKeep);
+
+    tCon = tCon_match{id}(:,1:nTrials(id));
+    tDir = tDir_match{id}(:,1:nTrials(id));
+
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        for iCon = 1:nCon
+            ind_con = find(tCon == cons(iCon));
+            inds1 = intersect(ind_dir,ind_con);
+            for iSize = 1:nSize
+                ind_size = find(tSize == sizes(iSize));
+                inds2 = intersect(inds1,ind_size);
+                inds=intersect(inds2,find(~RIx{id}));
+                tempData=trialResp{id}(inds,:);
+                tempCellMeans=mean(tempData,1,'omitmissing');
+                tempSubData = tempData - tempCellMeans;
+                subTrialResp{id}(inds,:)=tempSubData;
+                conditionMeans{id}(iDir,iCon,iSize,:)=tempCellMeans;
+            end
+        end
+    end
+
+end
+
+
+
+
+%% get correlation structure for noise correlation
+% MAKE AN UPDATED VERSION TO LOOK AT CORRELATIONS AMONG HTP+ CELLS FOR PYR
+% CELL EXPERIMENTS
+% Prompt user for plotting preference (default is no plotting)
+plotChoice = input('Plot correlation figures as a sanity check? (y/n) [default: n]: ', 's');
+if isempty(plotChoice) || ~strcmpi(plotChoice, 'y')
+    doPlot = false;
+    disp('Plotting disabled.');
+else
+    doPlot = true;
+    % Select 15 random cells to plot (or all if less than 15)
+    numToPlot = min(5, nKeep);
+    cellsToPlot = randperm(nKeep, numToPlot);
+    disp(['Plotting enabled for ' num2str(numToPlot) ' randomly selected cells.']);
+end
+
+noiseCorr = cell(1,nd);
+for id=1:nd
+    noiseCorr{id}=nan(2,nKeep);
+    for iCell = 1:nKeep %change this to nKeep
+        thisCell=subTrialResp{id}(:,iCell);
+        %if this is a red cell, compare to all green cells
+        if ismember(iCell,red_ind_keep)
+            otherCells = green_ind_keep;
+        else
+            otherCells = setdiff(green_ind_keep,iCell);
+        end
+        otherCellsMean = mean(subTrialResp{id}(:,otherCells),2,"omitnan");
+        [R,p]=corrcoef(otherCellsMean(~isnan(otherCellsMean),:),thisCell(~isnan(thisCell),:));
+        % Optional plotting code in conditional block - only for selected cells
+        if doPlot && ismember(iCell, cellsToPlot)
+            figure
+            if id == pre
+                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            else
+                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            end
+            hold on
+            h = lsline;
+            title(['NoiseCorr Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
+        end
+        
+        
+        
+        noiseCorr{id}(1,iCell)=R(2);
+        noiseCorr{id}(2,iCell)=p(2);
+    end
+end
+
+sigCorr = cell(1,nd);
+for id=1:nd
+    sigCorr{id}=nan(2,nKeep);
+    tempconditionMeans=reshape(conditionMeans{id},(nCon*nDir*nSize),nKeep); %reshape this into a vector for each cell
+    for iCell = 1:nKeep %change this to nKeep
+        thisCell=tempconditionMeans(:,iCell);
+        %if this is a red cell, compare to all green cells
+        if ismember(iCell,red_ind_keep)
+            otherCells = green_ind_keep;
+        else
+            otherCells = setdiff(green_ind_keep,iCell);
+        end
+        otherCellsMean = mean(tempconditionMeans(:,otherCells),2,"omitnan");
+        [R,p]=corrcoef(otherCellsMean(~isnan(otherCellsMean),:),thisCell(~isnan(thisCell),:));
+        % Optional plotting code in conditional block - only for selected cells
+        if doPlot && ismember(iCell, cellsToPlot)
+            figure
+            if id == pre
+                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','black','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            else
+                scatter(otherCellsMean,thisCell, 'MarkerFaceColor','blue','MarkerEdgeColor','none','MarkerFaceAlpha', 0.5)
+            end
+            hold on
+            h = lsline;
+            title(['SigCorr Cell ' num2str(iCell) ', R= ' num2str(R(2))]);
+        end
+        
+        sigCorr{id}(1,iCell)=R(2);
+        sigCorr{id}(2,iCell)=p(2);
+    end
+end
+save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'conditionMeans','sigCorr','noiseCorr')
+
+
+%% make and save response matrix for keep cells
+
+data_resp_keep = cell(1,nd);
+resp_max_keep = cell(1,nd);
+
+for id = 1:nd
+  data_resp_keep{id}=data_resp_match{id}(keep_cells,:,:,:,:);
+  resp_max_keep{id} = squeeze(max(data_resp_keep{id}(:,:,:,:,1),[],2));
+
+end
+
+resp_max_keep_rect = resp_max_keep;
+for id = 1:nd
+    resp_max_keep_rect{id}(find(resp_max_keep_rect{id}<0))=0;
+
+end
+
+dfof_max_diff = (resp_max_keep_rect{1}-resp_max_keep_rect{2})./(resp_max_keep_rect{1}+resp_max_keep_rect{2}); % (post-pre)/(post+pre), nCell X nCon
+dfof_max_diff_raw = (resp_max_keep{1}-resp_max_keep{2});
+
+
+%% make a reordered matrix of direction, where pref direction is now 0
+order = [1:nDir]; %make a list of indices for the directions
+norm_dir_resp_stat = cell(1,nd);
+norm_dir_resp_loc = cell(1,nd);
+
+for id = 1:nd
+    statMatrix = nan(nKeep,nDir,nCon,nSize); %make an empty matrix to hold the data for this day
+    locMatrix = nan(nKeep,nDir,nCon,nSize);
+    for iCell = 1:nKeep
+        thisPref=pref_dir_keep{id}(iCell);
+        index=find(dirs==thisPref);
+        newOrder=circshift(order,((index-1)*-1));
+        statMatrix(iCell,:,:,:)=stat_resp_keep{id}(iCell,newOrder,:,:);
+        locMatrix(iCell,:,:,:)=loc_resp_keep{id}(iCell,newOrder,:,:);
+    end
+    norm_dir_resp_stat{id}=statMatrix;
+    norm_dir_resp_loc{id}=locMatrix;
+
+end
+
+save(fullfile(fn_multi,'resp_keep.mat'),'data_resp_keep','resp_max_keep','data_resp_keep','dfof_max_diff','dfof_max_diff_raw','norm_dir_resp_stat','norm_dir_resp_loc','conBySize_resp_stat_keep','conBySize_resp_loc_keep','h_keep')
+
+
 

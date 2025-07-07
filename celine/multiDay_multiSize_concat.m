@@ -3,13 +3,13 @@ clear all; clear global; close all
 clc
 ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'SST_YM90K';
 
 rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [2];%enter all the sessions you want to concatenate4
+sess_list = [8];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -29,7 +29,7 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
             end
 clear x prompt
 
-targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
+targetCon = [.25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 
 frame_rate = 15;
 
@@ -282,7 +282,7 @@ respToLarge = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to fin
 
 responCriteria = cell(1,nd); %cell array that will have indices of cells that meet our response criteria on each day
 for id = 1:nd
-    responseCheck =sum(squeeze(sum(h_concat{id}(:,:,2:4,nSize),2)),2); %finding cells that responded large size size, within the top three contrasts
+    responseCheck =sum(squeeze(sum(h_concat{id}(:,:,:,nSize),2)),2); %finding cells that responded large size size, within the top three contrasts
     responCriteria{id}=find(logical(responseCheck));
 end
 
@@ -412,7 +412,7 @@ for iCon = 1:nCon
     
     
     
-    ylim([-.02 .1]);
+    ylim([-.02 .2]);
     hold on
     shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon,iSize),tc_green_se_stat{pre}(:,iCon,iSize),'--k');
     hold on
@@ -432,7 +432,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon,iSize),tc_red_se_stat{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon,iSize),tc_red_se_stat{post}(:,iCon,iSize),'b');
-   ylim([-.02 .1]);
+    ylim([-.02 .2]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -502,7 +502,7 @@ for iCon = 1:nCon
     
     
     
-    ylim([-.02 .1]);
+    ylim([-.02 .2]);
     hold on
     shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon,iSize),tc_green_se_stat{pre}(:,iCon,iSize),'--k');
     hold on
@@ -522,7 +522,7 @@ for iCon = 1:nCon
     shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon,iSize),tc_red_se_stat{pre}(:,iCon,iSize),'k');
     hold on
     shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon,iSize),tc_red_se_stat{post}(:,iCon,iSize),'b');
-    ylim([-.02 .1]);
+    ylim([-.02 .2]);
     hold on
     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
     hold on
@@ -795,15 +795,15 @@ sgtitle(['population size tuning' ])
 
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 %% contrast response
-ymin=-0.015;
-ymax=.05;
+ymin=-0.001;
+ymax=.15;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(nSize,nd); %same for red
 conResp_green_se_stat = cell(nSize,nd); %this will be the se across all green cells
 conResp_red_se_stat = cell(nSize,nd); %same for red
 
-consForPlotting = [12.5 25 50 100];
+consForPlotting = [25 50 100];
 for id = 1:nd
     for iSize = 1:nSize
         green_data=conBySize_resp_stat_concat{id}(green_ind_concat,:,iSize);%pulling the green cells at this size
@@ -823,41 +823,60 @@ end
 
 
 figure
-subplot(2,2,1) %for the first size, all contrasts
+subplot(3,2,1) %for the first size, all contrasts
 errorbar(consForPlotting,conResp_green_avrg_stat{pre}(1,:),conResp_green_se_stat{pre}(1,:),'--k');
 hold on
 errorbar(consForPlotting,conResp_green_avrg_stat{post}(1,:),conResp_green_se_stat{post}(1,:),'--b');
-title(['Pyr n = ' , num2str(length(runningGreen))])
-ylabel('dF/F, 20 deg') 
+title(['Pyr n = ' , num2str(length(green_ind_concat))])
+ylabel(['dF/F, ', num2str(sizes(1))]) 
 set(gca, 'TickDir', 'out')
 box off
-ylim([ymin ymax])
+ylim([ymin ymax-.12])
 xlim([0 110])
 
-subplot(2,2,3) %for the second size, all contrasts
-errorbar(consForPlotting,conResp_green_avrg_stat{pre}(2,:),conResp_green_se_stat{pre}(2,:),'--k');
-hold on
-errorbar(consForPlotting,conResp_green_avrg_stat{post}(2,:),conResp_green_se_stat{post}(2,:),'--b');
-ylabel('dF/F, Fullfield') 
-set(gca, 'TickDir', 'out')
-box off
-ylim([ymin ymax])
-xlim([0 110])
-
-subplot(2,2,2) %for the first day
+subplot(3,2,2) 
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(1,:),conResp_red_se_stat{pre}(1,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(1,:),conResp_red_se_stat{post}(1,:),'b');
-title(['SST n = ' , num2str(length(runningRed))])
+title(['SST n = ' , num2str(length(red_ind_concat))])
+set(gca, 'TickDir', 'out')
+box off
+ylim([ymin ymax-.12])
+xlim([0 110])
+
+subplot(3,2,3) %for the second size, all contrasts
+errorbar(consForPlotting,conResp_green_avrg_stat{pre}(2,:),conResp_green_se_stat{pre}(2,:),'--k');
+hold on
+errorbar(consForPlotting,conResp_green_avrg_stat{post}(2,:),conResp_green_se_stat{post}(2,:),'--b');
+ylabel(['dF/F, ', num2str(sizes(2))]) 
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
 xlim([0 110])
 
-subplot(2,2,4) %for the first day
+subplot(3,2,4) 
 errorbar(consForPlotting,conResp_red_avrg_stat{pre}(2,:),conResp_red_se_stat{pre}(2,:),'k');
 hold on
 errorbar(consForPlotting,conResp_red_avrg_stat{post}(2,:),conResp_red_se_stat{post}(2,:),'b');
+set(gca, 'TickDir', 'out')
+box off
+ylim([ymin ymax])
+xlim([0 110])
+
+subplot(3,2,5) %for the second size, all contrasts
+errorbar(consForPlotting,conResp_green_avrg_stat{pre}(3,:),conResp_green_se_stat{pre}(3,:),'--k');
+hold on
+errorbar(consForPlotting,conResp_green_avrg_stat{post}(3,:),conResp_green_se_stat{post}(3,:),'--b');
+ylabel(['dF/F, ', num2str(sizes(3))]) 
+set(gca, 'TickDir', 'out')
+box off
+ylim([ymin ymax])
+xlim([0 110])
+
+subplot(3,2,6) 
+errorbar(consForPlotting,conResp_red_avrg_stat{pre}(3,:),conResp_red_se_stat{pre}(3,:),'k');
+hold on
+errorbar(consForPlotting,conResp_red_avrg_stat{post}(3,:),conResp_red_se_stat{post}(3,:),'b');
 set(gca, 'TickDir', 'out')
 box off
 ylim([ymin ymax])
@@ -876,7 +895,7 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 sgtitle('Stationary')
 print(fullfile(fnout,['contrastTuning.pdf']),'-dpdf');
 
-%for running 
+%% for running 
 ymin=-0.015;
 ymax=.15;
 % contrast response running
@@ -1159,10 +1178,11 @@ N=length(red_ind_concat);
     
     figure;
     subplot(1,2,1)
-    b=bar([1,2,3,4],[supp_table_stat(:,1),supp_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
-    b(1).FaceColor="#70D0F6"
-    b(2).FaceColor="#0C8ABB"
-    xticklabels({'12.5','25','50','100'})
+    b=bar([1,2,3],[supp_table_stat(:,1),supp_table_stat(:,2),supp_table_stat(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor='k'
+    b(2).FaceColor='r'
+    b(3).FaceColor='b'
+    xticklabels({'25','50','100'})
     hold on
     title('Suppressed')
     ylim([0 .6])
@@ -1172,10 +1192,11 @@ N=length(red_ind_concat);
     box off
     
     subplot(1,2,2)
-    b=bar([1,2,3,4],[facil_table_stat(:,1),facil_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
-    b(1).FaceColor="#C983B1"
-    b(2).FaceColor="#883367"
-    xticklabels({'12.5','25','50','100'})
+    b=bar([1,2,3],[facil_table_stat(:,1),facil_table_stat(:,2),facil_table_stat(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor='k'
+    b(2).FaceColor='r'
+    b(3).FaceColor='b'
+    xticklabels({,'25','50','100'})
     hold on
     title('Facilitated')
     ylim([0 .6])
@@ -1327,11 +1348,11 @@ for iSize = 1:nSize
     subplot(1,2,1)
     boxchart(squeeze(norm_diff(1,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
     hold on
-    scatter([1, 2, 3, 4],squeeze(norm_diff(1,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
-    xticklabels({'12.5','25','50','100'})
+    scatter([1, 2, 3],squeeze(norm_diff(1,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+    xticklabels({'25','50','100'})
     xlabel('Contrast(%)')
     ylabel('Normalized difference')
-    ylim([-10 10])
+    ylim([-3 3])
     title('Stationary')
     hold off
     set(gca,'TickDir','out')
@@ -1346,11 +1367,11 @@ for iSize = 1:nSize
     subplot(1,2,2)
     boxchart(squeeze(norm_diff(2,:,iSize,red_ind_concat))',MarkerStyle ="none",BoxFaceColor=	[.75 .75 .75],BoxEdgeColor=[0 0 0]);
     hold on
-    scatter([1, 2, 3, 4],squeeze(norm_diff(2,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
-    xticklabels({'12.5','25','50','100'})
+    scatter([1, 2, 3],squeeze(norm_diff(2,:,iSize,red_ind_concat))',20,[.5 .15 .20], 'MarkerFaceAlpha',.1,'MarkerEdgeAlpha',.25,'jitter', 'on', 'jitterAmount',.1)
+    xticklabels({'25','50','100'})
     xlabel('Contrast(%)')
     %ylabel('Normalized difference')
-    ylim([-35 35])
+    %ylim([-1.25 1.25])
     title('Running')
     hold off
     set(gca,'TickDir','out')

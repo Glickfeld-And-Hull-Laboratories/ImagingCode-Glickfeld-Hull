@@ -9,8 +9,14 @@ doGreenOnly = true;
 doCorrImg = true;  
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
+day_id = 8;
+
+<<<<<<< Updated upstream
+=======
 
 day_id = 6;
+
+>>>>>>> Stashed changes
 %% load data for day
 
 mouse = expt(day_id).mouse;
@@ -403,7 +409,7 @@ npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 
 save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
-%clear data_g_reg data_reg_down
+clear data_g_reg data_reg_down
 
 %% deprecated code archive
 
@@ -609,7 +615,7 @@ AllTrialsNFrames = nan(nTrials,1);
 l1 = length(stimOns);
 l2 = length(stimOffs);
 if l1 > l2
-    stimOffs(end+1) = 86400;
+    stimOffs(end+1) = nFrames;
 end
 %MAXnFrames
 for itrial = 1:nTrials
@@ -675,7 +681,7 @@ print(fullfile(fnout,'TrialLengthDistribution.pdf'),'-dpdf','-bestfit');
 if doMWCmPD == true
     figure
     ptdcounter = stimOns;
-    mwcounter = [60:90:86400];
+    mwcounter = double([60:90:nFrames]);
     plot(ptdcounter-mwcounter);
     sgtitle('Counter Value Diff')
     xlabel('trial number')
