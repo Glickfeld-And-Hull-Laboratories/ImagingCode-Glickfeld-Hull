@@ -9,14 +9,8 @@ doGreenOnly = true;
 doCorrImg = true;  
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 8;
+day_id = 14;
 
-<<<<<<< Updated upstream
-=======
-
-day_id = 6;
-
->>>>>>> Stashed changes
 %% load data for day
 
 mouse = expt(day_id).mouse;

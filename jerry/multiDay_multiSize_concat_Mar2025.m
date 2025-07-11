@@ -11,7 +11,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [2 4 6];%enter all the sessions you want to concatenate4
+sess_list = [14];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -1333,7 +1333,7 @@ for iSize = 1:nSize
     xticklabels({'12.5','25','50','100'})
     xlabel('Contrast(%)')
     ylabel('Normalized difference')
-    ylim([-10 10])
+    ylim([-4 4])
     title('Stationary')
     hold off
     set(gca,'TickDir','out')
@@ -1352,7 +1352,7 @@ for iSize = 1:nSize
     xticklabels({'12.5','25','50','100'})
     xlabel('Contrast(%)')
     %ylabel('Normalized difference')
-    ylim([-35 35])
+    ylim([-10 10])
     title('Running')
     hold off
     set(gca,'TickDir','out')
