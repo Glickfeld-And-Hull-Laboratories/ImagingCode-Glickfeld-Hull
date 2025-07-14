@@ -61,7 +61,7 @@ for irun = 1:nrun
     
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
     data_temp = sbxread(imgMatFile(1,1:11),0,min(nframes));
-    if size(data_temp,1)== 2
+    if size(data_temp,1)== 2  %% why could data_temp be > 2
         data_temp = data_temp(1,:,:,:);
     end
     
@@ -124,7 +124,7 @@ rg(:,:,1) = first./max(first(:));
 i = nep; 
 last = mean(data_reg(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3);
 rg(:,:,2) = last./max(last(:));
-figure; image(rg)
+figure; image(rg)          % What is the point of making this figure?
 movegui('center')
 %% if red channel data
 if doRedChannel & (~doPhaseAfterDir & ~doDirAfterPass)

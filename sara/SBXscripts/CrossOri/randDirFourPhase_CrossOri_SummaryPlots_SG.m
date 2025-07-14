@@ -1457,3 +1457,35 @@ end
 sgtitle('L4 single cell comparison - local injection FLEX-6s (red), transgenic 8m (blue)')
 print(fullfile(outDir, [svName '_Layer4_InjectionTransgenicComparison.pdf']),'-dpdf', '-fillpage') 
 
+
+
+
+
+%%
+
+[hVL, pVL] = ttest2(V1amp,LMamp);
+[hVA, pVA] = ttest2(V1amp,ALamp);
+
+[hVL, pVL] = ttest2(V1base,LMbase);
+[hVA, pVA] = ttest2(V1base,ALbase);
+
+
+V1amp
+V1base
+LMamp
+LMbase
+ALamp
+ALbase
+
+
+data=[];
+data = [V1amp(:); LMamp(:); ALamp(:)];
+group = [repmat({'V1'}, length(V1amp), 1); repmat({'LM'}, length(LMamp), 1); repmat({'AL'}, length(ALamp), 1)];
+[p, tbl, stats] = anova1(data, group);
+
+data=[];
+data = [V1base(:); LMbase(:); ALbase(:)];
+group = [repmat({'V1'}, length(V1base), 1); repmat({'LM'}, length(LMbase), 1); repmat({'AL'}, length(ALbase), 1)];
+[p, tbl, stats] = anova1(data, group);
+
+
