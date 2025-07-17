@@ -1,12 +1,12 @@
 
-mouse = 'i2210';
-date = '250708';
+mouse = 'i2197';
+date = '250715';
 redFolder = '000'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
 greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='199.21';
-experimentType = 'SST_YM90K';
+depth='204.68';
+experimentType = 'VIP_YM90K';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
 % base = 
@@ -26,7 +26,7 @@ cd(data_path)
 mkdir(out_path);
 
 %load red run
-nframes=2000;
+nframes=1000;
 load([redFolder '_000_' redrun '.mat'])
 data = sbxread([redFolder '_000_' redrun],0, nframes);
 
@@ -48,13 +48,13 @@ data_r_reg_avg = mean(data_r_reg,3);
 cd(out_path);
 fig1=figure; imagesc(data_r_reg_avg); title([' ' depth ' red at 1040']); 
 colormap gray;
-caxis([50 800])
+caxis([50 1500])
 print(fullfile(out_path, [date '_' mouse  '_red_FOV.pdf']),'-dpdf','-bestfit')
 saveas(fig1, 'redFOV.png')
 
 
 %% green snapshot
-nframes = 400;
+nframes = 200;
 
 data_path = fullfile(base,mouse, date, greenFolder);
 cd(data_path)
@@ -70,7 +70,7 @@ regImg = mean(data_g_reg_920,3);
 
 fig2=figure; imagesc(regImg);
 colormap gray;
-caxis([100 3500])
+caxis([50 3000])
 cd(out_path);
 title([' ' depth ' green at 920']);
 print(fullfile(out_path, [date '_' mouse '_FOV.pdf']),'-dpdf','-bestfit')

@@ -11,7 +11,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [14];%enter all the sessions you want to concatenate4
+sess_list = [2 4 6];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -694,7 +694,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .2])
+ylim([-.025 .05])
 
 subplot(2,2,2) %for the second day
 errorbar(sizes,sizeResp_red_avrg_stat{pre},sizeResp_red_se_stat{pre},'k');
@@ -705,7 +705,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .2])
+ylim([-.025 .05])
 
 subplot(2,2,3) %for the first day
 errorbar(sizes,sizeResp_green_avrg_loc{pre},sizeResp_green_se_loc{pre},'k');
@@ -716,7 +716,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .3])
+ylim([0 .1])
 
 subplot(2,2,4) %for the second day
 errorbar(sizes,sizeResp_red_avrg_loc{pre},sizeResp_red_se_loc{pre},'k');
@@ -727,7 +727,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([-.05 .3])
+ylim([0 .1])
 
 x0=5;
 y0=5;
@@ -1638,7 +1638,6 @@ print(fullfile(fnout,'runOnset_timecourse.pdf'),'-dpdf');
 
 
 %% testing PCA
-close all
 
 loc_pre = tc_trial_avrg_loc_concat{pre};
 loc_post = tc_trial_avrg_loc_concat{post};
