@@ -9,7 +9,7 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [8];%enter all the sessions you want to concatenate4
+sess_list = [10];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -795,7 +795,7 @@ sgtitle(['population size tuning' ])
 
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 %% contrast response
-ymin=-0.001;
+ymin=-0.01;
 ymax=.15;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
@@ -1185,7 +1185,7 @@ N=length(red_ind_concat);
     xticklabels({'25','50','100'})
     hold on
     title('Suppressed')
-    ylim([0 .6])
+    ylim([0 .4])
     ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -1199,7 +1199,7 @@ N=length(red_ind_concat);
     xticklabels({,'25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .6])
+    ylim([0 .4])
     %ylabel(["Fraction SST cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -1217,17 +1217,18 @@ norm_diff_red = norm_diff(:,:,:,runningRed);
 facil_red=norm_diff_red(:,:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:,:)<=-1;
 
-N=length(red_ind_concat);
+N=length(runningRed);
 
  facil_table_loc = squeeze(sum(facil_red(2,:,:,:),4)/N);
  supp_table_loc = squeeze(sum(supp_red(2,:,:,:),4)/N);
     
     figure;
     subplot(1,2,1)
-    b=bar([1,2,3,4],[supp_table_loc(:,1),supp_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
-    b(1).FaceColor="#70D0F6"
-    b(2).FaceColor="#0C8ABB"
-    xticklabels({'12.5','25','50','100'})
+    b=bar([1,2,3],[supp_table_loc(:,1),supp_table_loc(:,2),supp_table_loc(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor='k'
+    b(2).FaceColor='r'
+    b(3).FaceColor='b'
+    xticklabels({'25','50','100'})
     hold on
     title('Suppressed')
     ylim([0 .6])
@@ -1237,10 +1238,11 @@ N=length(red_ind_concat);
     box off
     
     subplot(1,2,2)
-    b=bar([1,2,3,4],[facil_table_loc(:,1),facil_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
-    b(1).FaceColor="#C983B1"
-    b(2).FaceColor="#883367"
-    xticklabels({'12.5','25','50','100'})
+    b=bar([1,2,3],[facil_table_loc(:,1),facil_table_loc(:,2),facil_table_loc(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor='k'
+    b(2).FaceColor='r'
+    b(3).FaceColor='b'
+    xticklabels({'25','50','100'})
     hold on
     title('Facilitated')
     ylim([0 .6])
@@ -1283,7 +1285,7 @@ end
 
 figure;
 subplot(2,2,1)
-b=bar([1,2,3,4],[supp_table_stat(:,1),supp_table_loc(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+b=bar([1,2,3],[supp_table_stat(:,1),supp_table_loc(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
 b(1).FaceColor="#70D0F6"
 b(2).FaceColor="#0C8ABB"
 xticklabels({'12.5','25','50','100'})
@@ -1296,7 +1298,7 @@ set(gca,'TickDir','out')
 box off
 
 subplot(2,2,2)
-b=bar([1,2,3,4],[facil_table_stat(:,1),facil_table_loc(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+b=bar([1,2,3],[facil_table_stat(:,1),facil_table_loc(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
 b(1).FaceColor="#C983B1"
 b(2).FaceColor="#883367"
 xticklabels({'12.5','25','50','100'})
@@ -1352,7 +1354,7 @@ for iSize = 1:nSize
     xticklabels({'25','50','100'})
     xlabel('Contrast(%)')
     ylabel('Normalized difference')
-    ylim([-3 3])
+    ylim([-6 6])
     title('Stationary')
     hold off
     set(gca,'TickDir','out')
@@ -1371,7 +1373,7 @@ for iSize = 1:nSize
     xticklabels({'25','50','100'})
     xlabel('Contrast(%)')
     %ylabel('Normalized difference')
-    %ylim([-1.25 1.25])
+    ylim([-12 12])
     title('Running')
     hold off
     set(gca,'TickDir','out')

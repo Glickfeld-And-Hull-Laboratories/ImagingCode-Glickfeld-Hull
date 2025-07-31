@@ -9,9 +9,7 @@ switch x
     case 1
         ds = 'DART_V1_YM90K_Celine'; %dataset info
 end
-prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
-experimentFolder = input(prompt, 's');
-clear x prompt
+
 
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
@@ -24,6 +22,8 @@ pre_day = expt(day_id).multiday_matchdays;
 nd=2; %hardcoding the number of days for now
 
 mouse = expt(day_id).mouse;
+
+experimentFolder = expt(day_id).exptType;
 
 fnout = fullfile(rc.achAnalysis,mouse);
 if expt(day_id).multiday_timesincedrug_hours>0
@@ -270,10 +270,11 @@ end
 %% extract running onsets
 
 prompt = 'Do you want to extract running onsets? (0-no, 1-yes) ';
+nOnsets=[];
 x = input(prompt);
 if x == 1
     % First check if we have required variables
-   
+   nRunOnsets=[];
         for id = 1:nd
             mouse = expt(allDays(id)).mouse;
             date = expt(allDays(id)).date;
@@ -283,7 +284,7 @@ if x == 1
             load(fullfile(dataPath,imgMatFile));
             [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
             [nFrames, nCells] = size(cellTCs_match{id});
-            nRunOnsets=[];
+            
             fwdWheelClean = wheel_speed_clean{id};
             fwdWheelClean(fwdWheelClean<0)=0;
             
@@ -397,11 +398,11 @@ if x == 1
             nRunOnsets=[nRunOnsets length(ITIOnsets)];
         end
 
-        fprintf('Number of running onsets per day: %s\n', mat2str(nRunOnsets));
+        
     
 end
 clear x
-
+nRunOnsets
 %% get large/small pupil trials
 statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
 statPupilThreshold=prctile(statPupilBothDays,50);
@@ -1144,18 +1145,25 @@ for i = 1:length(keep_cells)
    
 end
 
+for i = 1:length(red_ind_keep)
+   ind = red_ind_keep(i);
+   temp_keep_red_masks = find(keep_masks==ind); %pulling from the masks of matched cells from the baseline day
+   keep_red_masks(temp_keep_red_masks)=ind;
+   
+end
+
 
 %I am converting these to be labelled by their position in the keep cell
 %index
 
-for i = 1:length(keep_cells)
-  temp_mask_inds = find(keep_masks==i);
-   if ismember(i,red_ind_keep)
-       keep_red_masks(temp_mask_inds)=i;
-   else
-       keep_green_masks(temp_mask_inds)=i;
-   end
-end
+% for i = 1:length(keep_cells)
+%   temp_mask_inds = find(keep_masks==i);
+%    if ismember(i,red_ind_keep)
+%        keep_red_masks(temp_mask_inds)=i;
+%    else
+%        keep_green_masks(temp_mask_inds)=i;
+%    end
+% end
 
 figure;
 imagesc(redChImg);
