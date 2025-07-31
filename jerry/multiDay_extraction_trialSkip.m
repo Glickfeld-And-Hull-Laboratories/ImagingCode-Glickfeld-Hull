@@ -13,6 +13,9 @@ pre_day = expt(day_id).multiday_matchdays;
 nd=2; %hardcoding the number of days for now
 experimentFolder = 'VIP_YM90K';
 
+skipTrials = 1; % designate 1 or 0
+trials2skip = [381,382,445,446,471,472,496,497]; 
+
 mouse = expt(day_id).mouse;
 
 fnout = fullfile(rc.achAnalysis,mouse);

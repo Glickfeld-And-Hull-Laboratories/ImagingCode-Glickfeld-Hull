@@ -13,7 +13,7 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 16; %enter the refrence day ID here 
+day_id(1) = 18; %enter the refrence day ID here 
 day_id(2) = expt(day_id(1)).multiday_matchdays;
 ExperimentFolder = expt(day_id(1)).exptType;
 
