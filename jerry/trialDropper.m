@@ -11,6 +11,7 @@ function [outStruct] = trialDropper(inputStruct,trials,action)
     %
     % Output:
     %   outStruct   - struct with all specified trials removed from all fields
+    %  - TH AUGUST 2025
 
 
 % load('G:\Behavior\Data\data-i2197-250715-1622.mat') %input
@@ -38,7 +39,6 @@ if nTrials ~= assignedNTrials % compare collected with assigned nTrials
 end
 
 if isfield(inputStruct,'modifiedStruct')
-    disp('Past modification of the struct detected.')
     if inputStruct.modifiedAction == 1
         warning('Current version had some original elements deleted. See "modifiedTrials".');
     elseif inputStruct.modifiedAction == 2
@@ -59,10 +59,16 @@ for i=1:length(fdnames)
             this_fd(trials) = [];
         elseif action == 2
             n = length(trials);
-            nanVector = repmat({NaN},1,n);
+            nNaNs = length(this_fd{1});
+            newclass = class(this_fd{1});
+            if newclass == "cell"
+                nanVector = repmat({repmat([NaN],1,nNaNs)},1,n);
+            else
+                nanVector = repmat({cast(repmat([NaN],1,nNaNs),newclass)},1,n);
+            end
             this_fd(trials) = nanVector;
         else
-            error('Unspecified action input. Read function documentation.')
+            error('Unspecified action input. 1- deletes trials 2-replaces with NaN.')
         end
         outStruct.(fdnames{i}) = this_fd;
     else

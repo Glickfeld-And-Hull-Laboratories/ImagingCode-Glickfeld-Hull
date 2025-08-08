@@ -13,8 +13,10 @@ pre_day = expt(day_id).multiday_matchdays;
 nd=2; %hardcoding the number of days for now
 experimentFolder = 'VIP_YM90K';
 
-skipTrials = 1; % designate 1 or 0
-trials2skip = [381,382,445,446,471,472,496,497]; 
+%trialsToSkip
+skipAction = 1; % 1- deletes trials % 2- replaces trials with NaN
+skip{1} = [381,382,445,446,471,472,496,497]; % day 1 is the reference session
+skip{2} = [];
 
 mouse = expt(day_id).mouse;
 
@@ -45,9 +47,25 @@ cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
 %load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
+
+[input.modifiedAction] = deal([]);
+[input.modifiedFields] = deal([]);
+[input.modifiedStruct] = deal([]);
+[input.modifiedTime] = deal([]);
+[input.modifiedTrials] = deal([]);
+
+if ~isempty(skip{1})
+    input(1) = trialDropper(input(1),skip{1},skipAction);
+end
+
+if ~isempty(skip{2})
+    input(2) = trialDropper(input(2),skip{2},skipAction);
+end
+
 frame_rate = input.frameImagingRateMs;
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
+
 
 for id = 1 %currently only doing this for the reference day, regardless of 
     % which direction the data was matched
@@ -100,7 +118,7 @@ tSize_match = cell(1,nd);
 %consistent with the number mWorks thinks occured, only take 1:nTrials as
 %dictated above based on the number of frames recorded
 for id = 1:nd
-    nTrials(id) = size(cellTCs_match{id},1)/(nOn+nOff); %to account for times 
+    nTrials(id) = length(input(id).tGratingContrast); %to account for times 
 %when there is a disruption before the full set of trials is collcted, I'm 
 %determining the number of trials each day by how many frames of data I 
 %have divided by the number of frames per trial
@@ -133,7 +151,7 @@ for id = 1:nd %cycle through days
     dataPath = fullfile(rc.achData, mouse, date, imgFolder);
     load(fullfile(dataPath,imgMatFile))
     [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
-    nTrials(id) = length(cStimOn);
+    cStimOn(skip{id}) = [];
     [nFrames nCells] = size(cellTCs_match{id});
     
     data_trial_match = nan(nOn+nOff,nTrials(id),nCells);
@@ -144,9 +162,7 @@ for id = 1:nd %cycle through days
       end
     end
 
-
     fractTimeActive_match{id} = zeros(1,nCells);
-   
 
     data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
     data_dfof_trial_match{id} = bsxfun(@rdivide,bsxfun(@minus,data_trial_match,data_f_match),data_f_match);
@@ -183,14 +199,16 @@ wheel_trial_avg_raw= cell(1,nd);
 RIx = cell(1,nd);
 
 for id = 1:nd
-    wheel_tc{id}=zeros(nOn+nOff, nTrials(id));
-    wheel_tc_raw{id}=zeros(nOn+nOff, nTrials(id));
+    wheel_tc{id}=nan(nOn+nOff, nTrials(id));
+    wheel_tc_raw{id}=nan(nOn+nOff, nTrials(id));
     for iTrial = 1:nTrials(id)
-        wheel_tc{id}(:,iTrial) = wheel_speed_clean{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff));
-        wheel_tc_raw{id}(:,iTrial) = abs(wheel_speed{id}(1+((iTrial-1).*(nOn+nOff)):iTrial.*(nOn+nOff)));
+        if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
+            wheel_tc{id}(:,iTrial) = wheel_speed_clean{id}(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2);
+            wheel_tc_raw{id}(:,iTrial) = abs(wheel_speed{id}(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2));
+        end
     end
-    wheel_trial_avg{id} = mean(wheel_tc{id}(nOff:nOn+nOff,:),1);
-    wheel_trial_avg_raw{id} = mean(wheel_tc_raw{id}(nOff:nOn+nOff,:),1);
+    wheel_trial_avg{id} = mean(wheel_tc{id}(nOff/2:nOn+nOff/2,:),1);
+    wheel_trial_avg_raw{id} = mean(wheel_tc_raw{id}(nOff/2:nOn+nOff/2,:),1);
     RIx{id} = wheel_trial_avg{id}>2; %~5 is the noise level in the wheel movement
     mean(RIx{id})
 end
@@ -267,6 +285,9 @@ nRunOnsets
 
 
 %% get large/small pupil trials
+for id = 1:nd
+    pupil{id}.rad.stim(skip{id}) = [];
+end
 statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
 statPupilThreshold=prctile(statPupilBothDays,50);
 %plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
@@ -765,7 +786,7 @@ for id = 1:nd
 
     tCon = tCon_match{id}(:,1:nTrials(id));
     tDir = tDir_match{id}(:,1:nTrials(id));
-
+    ind_stat = find(~RIx{id});
     for iDir = 1:nDir
         ind_dir = find(tDir == dirs(iDir));
         for iCon = 1:nCon
