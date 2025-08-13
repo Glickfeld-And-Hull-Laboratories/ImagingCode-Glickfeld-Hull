@@ -1,7 +1,7 @@
 clear all; clear global; 
 close all
 clc
-ds = 'DART_V1_atropine_Celine'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'SST_atropine';
+experimentFolder = 'SST_YM90K';
 
 mouse = expt(day_id).mouse;
 

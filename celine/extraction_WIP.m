@@ -7,8 +7,6 @@ clear x prompt
 prompt = 'Enter experiment folder name (e.g., VIP_YM90K, SST_atropine): ';
 experimentFolder = input(prompt, 's');
 clear x prompt
-% ds='DART_V1_atropine_Celine';
-% experimentFolder='SST_atropine';
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -50,13 +48,14 @@ load(fullfile(fn_multi,'multiday_alignment.mat'))
 load(fullfile(fn_multi,'input.mat'))
 % Rename input to inputStructure to avoid conflict with MATLAB's input function
 inputStructure = input;
-
 clear input
 frame_rate = inputStructure.frameImagingRateMs;
+
+
 % %% finding red fluorescence level
 allDays = [day_id,pre_day];
 
-for id = 1 %currently only doing this for the baseline day
+for id = 1 
 mouse = expt(allDays(id)).mouse;
 date = expt(allDays(id)).date;
 imgFolder = expt(allDays(id)).contrastxori_runs{1};
@@ -197,7 +196,10 @@ switch x
             end
         end
     % case 2
-    %     for id = 
+    
+        for id = 1:nd
+               correctedInputStructure(:,id)=counterValCorrect_noPhotodiode(inputStructure(:,id)) 
+        end
         
 end
 clear x prompt data_f_match cellstd 
