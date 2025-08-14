@@ -11,8 +11,13 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [16];%enter all the sessions you want to concatenate4
+sess_list = [2 4 6 16];%enter all the sessions you want to concatenate
+doEye = 1; %analyze pupil info?
 nSess=length(sess_list);
+targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
+nCon = length(targetCon)
+nSize =2;
+frame_rate = 15;
 
 nd=2;%hard coding for two days per experimental session
 
@@ -30,10 +35,6 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
                   "post-DART used as reference"
             end
 clear x prompt
-
-targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
-
-frame_rate = 15;
 
 sess_title = string(sess_list(1));
 for iSess = 2:nSess
@@ -55,9 +56,6 @@ mkdir(fnout);
 cd(fnout)
 clear d sess_title
 
-nCon = length(targetCon)
-nSize =5;
-
 mice=[];
 red_concat=[];
 green_concat=[];
@@ -70,16 +68,23 @@ conBySize_resp_loc_concat=cell(1,nd);
 h_concat=cell(1,nd);
 data_resp_concat=cell(1,nd);
 
-tc_trial_avrg_stat_largePupil_concat=cell(1,nd);
-tc_trial_avrg_stat_smallPupil_concat=cell(1,nd);
+if doEye == 1
+    tc_trial_avrg_stat_largePupil_concat=cell(1,nd);
+    tc_trial_avrg_stat_smallPupil_concat=cell(1,nd);
+    pref_responses_stat_largePupil_concat=cell(1,nd);
+    pref_responses_stat_smallPupil_concat=cell(1,nd);
+    pref_allTrials_largePupil_concat =cell(nCon,nSize,nd);
+    pref_allTrials_smallPupil_concat =cell(nCon,nSize,nd);
+    pupilMeans_concat=nan(nd,3,nSess);
+    motorByPupil_concat=nan(nd,2,nSess);
+    pupilCounts_concat=nan(nd,2,nSess);
+end
 resp_keep_concat=cell(1,nd);
 resp_max_keep_concat=cell(1,nd);
 pref_responses_loc_concat=cell(1,nd);
 pref_responses_stat_concat=cell(1,nd);
 pref_peak_stat_concat=cell(1,nd);
 pref_peak_loc_concat=cell(1,nd);
-pref_responses_stat_largePupil_concat=cell(1,nd);
-pref_responses_stat_smallPupil_concat=cell(1,nd);
 RIx_concat=cell(1,nd);
 dirs_concat=[];
 cons_concat=[];
@@ -97,13 +102,8 @@ noiseCorr_concat = cell(1,nd);
 sigCorr_concat = cell(1,nd);
 pref_allTrials_stat_concat =cell(nCon,nSize,nd);
 pref_allTrials_loc_concat =cell(nCon,nSize,nd);
-pref_allTrials_largePupil_concat =cell(nCon,nSize,nd);
-pref_allTrials_smallPupil_concat =cell(nCon,nSize,nd);
 dataTableConat=[];
 drug=cell(1,nSess);
-pupilMeans_concat=nan(nd,3,nSess);
-motorByPupil_concat=nan(nd,2,nSess);
-pupilCounts_concat=nan(nd,2,nSess);
 nonPref_trial_avrg_stat_concat=cell(1,nd);
 nonPref_trial_avrg_loc_concat=cell(1,nd);
 data_dfof_runOnset_concat=cell(1,nd);
@@ -130,14 +130,12 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'locomotion.mat'));
 %    load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
-    load(fullfile(fn_multi,'pupilMeans.mat'));
-
+    if doEye == 1
+        load(fullfile(fn_multi,'pupilMeans.mat'));
+        pupilMeans_concat(:,:,iSess)=pupilMeans;
+        motorByPupil_concat(:,:,iSess)=motorByPupil;
+    end
     nKeep = size(tc_trial_avrg_stat{post},2);
-
-   pupilMeans_concat(:,:,iSess)=pupilMeans;
-   motorByPupil_concat(:,:,iSess)=motorByPupil;
-%   pupilCounts_concat(:,:,iSess)=pupilCounts;
-
 
     %tells the contrast, direction and orientation for each trial each day
     tCon_match = cell(1,nd);
@@ -174,8 +172,13 @@ for iSess = 1:nSess
     for id = 1:nd
         
         tc_trial_avrg_stat_concat{id} =cat(2,tc_trial_avrg_stat_concat{id},tc_trial_avrg_stat{id}(:,:,:,:));
-        tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,:));
-        tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,:));
+        if doEye == 1
+            tc_trial_avrg_stat_largePupil_concat{id} = cat(2,tc_trial_avrg_stat_largePupil_concat{id},tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,:));
+            tc_trial_avrg_stat_smallPupil_concat{id} = cat(2,tc_trial_avrg_stat_smallPupil_concat{id},tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,:));
+            pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon,:));
+            pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,:));
+
+        end
         tc_trial_avrg_loc_concat{id} =cat(2,tc_trial_avrg_loc_concat{id},tc_trial_avrg_loc{id}(:,:,sharedCon,:));
         nonPref_trial_avrg_stat_concat{id} =cat(2,nonPref_trial_avrg_stat_concat{id},nonPref_trial_avrg_stat{id}(:,:,sharedCon,:));
         nonPref_trial_avrg_loc_concat{id} =cat(2,nonPref_trial_avrg_loc_concat{id},nonPref_trial_avrg_loc{id}(:,:,sharedCon,:));
@@ -185,8 +188,6 @@ for iSess = 1:nSess
         pref_responses_stat_concat{id}=cat(1,pref_responses_stat_concat{id},pref_responses_stat{id}(:,sharedCon,:));
         pref_peak_stat_concat{id}=cat(1,pref_peak_stat_concat{id},pref_peak_stat{id}(:,sharedCon,:));
         pref_peak_loc_concat{id}=cat(1,pref_peak_loc_concat{id},pref_peak_loc{id}(:,sharedCon,:));
-        pref_responses_stat_largePupil_concat{id}=cat(1,pref_responses_stat_largePupil_concat{id},pref_responses_stat_largePupil{id}(:,sharedCon,:));
-        pref_responses_stat_smallPupil_concat{id}=cat(1,pref_responses_stat_smallPupil_concat{id},pref_responses_stat_smallPupil{id}(:,sharedCon,:));
         RIx_concat{id}=cat(1,RIx_concat{id},sum(RIx{id}));
         wheel_corr_concat{id}=cat(2,wheel_corr_concat{id},wheel_corr{id});
         meanF=mean(fullTC_keep{id},1);
@@ -207,9 +208,10 @@ for iSess = 1:nSess
             for iSize = 1:length(sizes)
                 pref_allTrials_stat_concat{i,iSize,id}=[pref_allTrials_stat_concat{i,iSize,id},pref_allTrials_stat{iCon,iSize,id}];
                 pref_allTrials_loc_concat{i,iSize,id}=[pref_allTrials_loc_concat{i,iSize,id},pref_allTrials_loc{iCon,iSize,id}];
+            if doEye == 1 
                 pref_allTrials_largePupil_concat{i,iSize,id}=[pref_allTrials_largePupil_concat{i,iSize,id},pref_allTrials_largePupil{iCon,iSize,id}];
                 pref_allTrials_smallPupil_concat{i,iSize,id}=[pref_allTrials_smallPupil_concat{i,iSize,id},pref_allTrials_smallPupil{iCon,iSize,id}];
-
+            end
             end
         end
         clear meanF i
@@ -228,16 +230,16 @@ cons = targetCon;
 nSize = length(sizes)
 nKeep_total = sum(nKeep_concat);
 
-clear data_resp_keep data_trial_keep green_ind_keep red_ind_keep conBySize_resp_loc_keep 
-clear conBySize_resp_stat_keep tc_trial_avrg_stat tc_trial_avrg_loc conBySize_resp_loc_match 
-clear conBySize_resp_stat_match red_keep_logical green_keep_logical pref_responses_stat 
-clear pref_responses_loc resp_keep mouse pref_con_keep pref_dir_keep pref_size_keep 
-clear dfof_max_diff dfof_max_diff_raw green_fluor_match green_fluor_keep motorByPupil nKeep noiseCorr
-clear sigCorr nonPref_trial_avrg_loc nonPref_trial_avrg_stat norm_dir_resp_loc norm_dir_resp_stat 
-clear pref_allTrials_largePupil pref_allTrials_smallPupil pref_allTrials_loc pref_allTrials_stat
-clear pref_peak_loc pref_peak_stat pref_responses_stat_smallPupil pref_allTrials_largePupil
-clear pupilMeans red_fluor_match red_fluor_keep RIx tc_trial_avrg_keep_allCond tc_trial_avrg_stat_largePupil
-clear tc_trial_avrg_stat_smallPupil wheel_corr wheel_tc dart_Str expt fullTC_keep wheel_speed
+% clear data_resp_keep data_trial_keep green_ind_keep red_ind_keep conBySize_resp_loc_keep 
+% clear conBySize_resp_stat_keep tc_trial_avrg_stat tc_trial_avrg_loc conBySize_resp_loc_match 
+% clear conBySize_resp_stat_match red_keep_logical green_keep_logical pref_responses_stat 
+% clear pref_responses_loc resp_keep mouse pref_con_keep pref_dir_keep pref_size_keep 
+% clear dfof_max_diff dfof_max_diff_raw green_fluor_match green_fluor_keep motorByPupil nKeep noiseCorr
+% clear sigCorr nonPref_trial_avrg_loc nonPref_trial_avrg_stat norm_dir_resp_loc norm_dir_resp_stat 
+% clear pref_allTrials_largePupil pref_allTrials_smallPupil pref_allTrials_loc pref_allTrials_stat
+% clear pref_peak_loc pref_peak_stat pref_responses_stat_smallPupil pref_allTrials_largePupil
+% clear pupilMeans red_fluor_match red_fluor_keep RIx tc_trial_avrg_keep_allCond tc_trial_avrg_stat_largePupil
+% clear tc_trial_avrg_stat_smallPupil wheel_corr wheel_tc dart_Str expt fullTC_keep wheel_speed
 
 % cell selection
 % find cells that I have running and stationary data for on both days
@@ -290,7 +292,7 @@ end
 
 includeCells = intersect(responCriteria{pre},find(haveRunning_pre));
 
-clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
+% clear haveRunning_pre haveRunning_post haveRunning_both haveStat_both haveStat_pre haveStat_post
 
 
 % to find the OSI of each cell
@@ -487,7 +489,7 @@ for id = 1:nd
         
         clear green_std red_std
       end 
-    end
+   end
 end
 
 z=double(nOn)/double(frame_rate);
@@ -879,7 +881,7 @@ print(fullfile(fnout,'contrastTuning.pdf'),'-dpdf');
 
 %for running 
 ymin=-0.015;
-ymax=.1;
+ymax=.125;
 % contrast response running
 % errorbar for loc resp and loc resp vs size, where error is across mice
 conResp_green_avrg_loc = cell(nSize,nd); %this will be the average across all green cells - a single line

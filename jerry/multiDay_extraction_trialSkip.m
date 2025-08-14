@@ -15,8 +15,11 @@ experimentFolder = 'VIP_YM90K';
 
 %trialsToSkip
 skipAction = 1; % 1- deletes trials % 2- replaces trials with NaN
-skip{1} = [381,382,445,446,471,472,496,497]; % day 1 is the reference session
+skip{1} = []; % day 1 is the reference session
 skip{2} = [];
+
+%pupil?
+doEye = 1;
 
 mouse = expt(day_id).mouse;
 
@@ -96,12 +99,12 @@ for id = 1 %currently only doing this for the reference day, regardless of
 
 end
 
-
-pupil=cell(1,nd);
-for id=1:nd
-    pupil{id}=load(fullfile(fn,'pupil.mat'));
+if doEye == 1
+    pupil=cell(1,nd);
+    for id=1:nd
+        pupil{id}=load(fullfile(fn,'pupil.mat'));
+    end
 end
-
 %% stimulus props
 
 nOn = input(1).nScansOn;
@@ -202,15 +205,15 @@ for id = 1:nd
     wheel_tc{id}=nan(nOn+nOff, nTrials(id));
     wheel_tc_raw{id}=nan(nOn+nOff, nTrials(id));
     for iTrial = 1:nTrials(id)
-        if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
-            wheel_tc{id}(:,iTrial) = wheel_speed_clean{id}(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2);
-            wheel_tc_raw{id}(:,iTrial) = abs(wheel_speed{id}(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2));
+        if ~isnan(cStimOn(iTrial)) & (cStimOn(iTrial)+nOn+nOff/2)<nFrames
+            wheel_tc{id}(:,iTrial) = wheel_speed_clean{id}(cStimOn(iTrial)-nOff/2:cStimOn(iTrial)-1+nOn+nOff/2);
+            wheel_tc_raw{id}(:,iTrial) = abs(wheel_speed{id}(cStimOn(iTrial)-nOff/2:cStimOn(iTrial)-1+nOn+nOff/2));
         end
     end
     wheel_trial_avg{id} = mean(wheel_tc{id}(nOff/2:nOn+nOff/2,:),1);
     wheel_trial_avg_raw{id} = mean(wheel_tc_raw{id}(nOff/2:nOn+nOff/2,:),1);
     RIx{id} = wheel_trial_avg{id}>2; %~5 is the noise level in the wheel movement
-    mean(RIx{id})
+    sum(RIx{id})
 end
 
 %% extract running onsets
@@ -285,34 +288,35 @@ nRunOnsets
 
 
 %% get large/small pupil trials
-for id = 1:nd
-    pupil{id}.rad.stim(skip{id}) = [];
+if doEye == 1
+    for id = 1:nd
+        pupil{id}.rad.stim(skip{id}) = [];
+    end
+    statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
+    statPupilThreshold=prctile(statPupilBothDays,50);
+    %plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
+    %print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
+    
+    pupilMeans = nan(nd,3);
+    % for each day, the first column is the mean pupil size for stat trials
+    % below threshold, the second column is the mean pupil size for stat trials
+    % above threshold, and the third column is the mean pupil size for all
+    % running trials
+    PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for 
+    % stationary large pupil, second cell is inds for stationary small pupil
+    motorByPupil = nan(nd,2);
+    for id = 1:nd
+        PIx_temp=pupil{id}.rad.stim > statPupilThreshold;
+        PIx_stat{1,id}= logical(PIx_temp.*~RIx{id});
+        PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id});
+        pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
+        pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
+        pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
+        motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
+        motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
+    end
+    save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
 end
-statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
-statPupilThreshold=prctile(statPupilBothDays,50);
-%plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
-%print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
-
-pupilMeans = nan(nd,3);
-% for each day, the first column is the mean pupil size for stat trials
-% below threshold, the second column is the mean pupil size for stat trials
-% above threshold, and the third column is the mean pupil size for all
-% running trials
-PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for 
-% stationary large pupil, second cell is inds for stationary small pupil
-motorByPupil = nan(nd,2);
-for id = 1:nd
-    PIx_temp=pupil{id}.rad.stim > statPupilThreshold;
-    PIx_stat{1,id}= logical(PIx_temp.*~RIx{id});
-    PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id});
-    pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
-    pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
-    pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
-    motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
-    motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
-end
-save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
-
 %% find significant responses and preferred stimuli
 
 stimStart=nOff/2;
@@ -361,8 +365,10 @@ for id = 1:nd
                 ind=intersect(ind_temp,ind_size);
                 
                 ind_stat = intersect(ind, find(~RIx{id}));
+                if doEye == 1
                 ind_stat_largePupil = intersect(ind_stat, find(PIx_stat{1,id}));
                 ind_stat_smallPupil = intersect(ind_stat, find(PIx_stat{2,id}));
+                end
                 ind_loc = intersect(ind, find(RIx{id}));
                 
                 data_resp(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2));
@@ -370,10 +376,10 @@ for id = 1:nd
                 loc_resp(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_loc,:),1),2));
                 data_resp(:,iDir,iCon,iSize,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
                 [h(:,iDir,iCon,iSize), p(:,iDir,iCon,iSize)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nDir*nCon*nSize-1));
-
-                stat_resp_largePupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_largePupil,:),1),2));
-                stat_resp_smallPupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_smallPupil,:),1),2));
-
+                if doEye == 1
+                    stat_resp_largePupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_largePupil,:),1),2));
+                    stat_resp_smallPupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_smallPupil,:),1),2));
+                end
             end
         end
     end 
@@ -432,8 +438,10 @@ h_all_match{id}=h_pass;
 resp_match{id} = resp;
 stat_resp_match{id} = stat_resp;
 loc_resp_match{id} = loc_resp;
-stat_largePupil_match{id}=stat_resp_largePupil;
-stat_smallPupil_match{id}= stat_resp_smallPupil;
+if doEye == 1
+    stat_largePupil_match{id}=stat_resp_largePupil;
+    stat_smallPupil_match{id}= stat_resp_smallPupil;
+end
 pref_dir_match{id} = pref_dir;
 pref_con_match{id} = pref_con;
 pref_size_match{id} = pref_size;
@@ -441,7 +449,7 @@ conBySize_resp_stat_match{id} = conBySize_resp_stat;
 conBySize_resp_loc_match{id} =conBySize_resp_loc;
  
 end
-clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat data_sizeBycon_resp_loc data_resp p h_pass  resp pref_dir pref_con data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp  baseStd baseMean thresh pass
+% clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat data_sizeBycon_resp_loc data_resp p h_pass  resp pref_dir pref_con data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp  baseStd baseMean thresh pass
  
 %% get basic counts 
 red_ind_match_list = find(red_ind_match==1);
@@ -509,7 +517,7 @@ nRed_keep_respd2 = length(red_match_respd2);%how many of those responded on d2
 % make table of values
 countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1],[nGreen_keep_respd2;nRed_keep_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
 writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
-clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
+% clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
 %% make a data structure subsets for only the keep cells
 
@@ -635,12 +643,12 @@ for id = 1:nd
 
                 temp_tc_stat(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_trials_stat),2);
                 temp_tc_loc(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_trials_loc),2);
- 
-                ind_stat_largePupil = intersect(stat_inds, find(PIx_stat{1,id}));
-                ind_stat_smallPupil = intersect(stat_inds, find(PIx_stat{2,id}));
-                temp_trials_stat_largePupil = intersect(temp_trials2,ind_stat_largePupil);
-                temp_trials_stat_smallPupil = intersect(temp_trials2,ind_stat_smallPupil);
-
+                if doEye == 1
+                    ind_stat_largePupil = intersect(stat_inds, find(PIx_stat{1,id}));
+                    ind_stat_smallPupil = intersect(stat_inds, find(PIx_stat{2,id}));
+                    temp_trials_stat_largePupil = intersect(temp_trials2,ind_stat_largePupil);
+                    temp_trials_stat_smallPupil = intersect(temp_trials2,ind_stat_smallPupil);
+                end
                 
                 %finding the non-preferred directions
                 position=find(dirs==temp_dir);
@@ -658,13 +666,15 @@ for id = 1:nd
                 %response
                 temp_all_stat{i} = nanmean(temp_TCs(resp_win,temp_trials_stat),1);
                 temp_all_loc{i} = nanmean(temp_TCs(resp_win,temp_trials_loc),1);
-                temp_all_largePupil{i}= nanmean(temp_TCs(resp_win,temp_trials_stat_largePupil),1);
-                temp_all_smallPupil{i}= nanmean(temp_TCs(resp_win,temp_trials_stat_smallPupil),1);
-    
+                if doEye == 1
+                    temp_all_largePupil{i}= nanmean(temp_TCs(resp_win,temp_trials_stat_largePupil),1);
+                    temp_all_smallPupil{i}= nanmean(temp_TCs(resp_win,temp_trials_stat_smallPupil),1);
+                end
                 temp_pref_responses_stat(i,iCon,iSize)=nanmean(temp_all_stat{i},2);
-                temp_pref_responses_stat_largePupil(i,iCon,iSize)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_largePupil),1),2);
-                temp_pref_responses_stat_smallPupil(i,iCon,iSize)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_smallPupil),1),2);
-    
+                if doEye == 1
+                    temp_pref_responses_stat_largePupil(i,iCon,iSize)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_largePupil),1),2);
+                    temp_pref_responses_stat_smallPupil(i,iCon,iSize)=nanmean(nanmean(temp_TCs(resp_win,temp_trials_stat_smallPupil),1),2);
+                end
                 temp_pref_responses_loc(i,iCon,iSize)=nanmean(temp_all_loc{i},2);
                 temp_pref_responses_allCond(i,iCon,iSize)=nanmean(nanmean(temp_TCs(resp_win,temp_trials1),1),2);
     
@@ -672,12 +682,10 @@ for id = 1:nd
                 %find the mean of those max values across trials
                 temp_pref_peak_stat(i,iCon,iSize)=mean(max(temp_TCs(resp_win,temp_trials_stat)));
                 temp_pref_peak_loc(i,iCon,iSize)=mean(max(temp_TCs(resp_win,temp_trials_loc)));
-    
-                
-    
-                temp_tc_stat_largePupil(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_trials_stat_largePupil),2);
-                temp_tc_stat_smallPupil(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_trials_stat_smallPupil),2);
-    
+                if doEye == 1
+                    temp_tc_stat_largePupil(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_trials_stat_largePupil),2);
+                    temp_tc_stat_smallPupil(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_trials_stat_smallPupil),2);
+                end
                 temp_nonPref_stat(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_nonPref_trials_stat),2);
                 temp_nonPref_loc(:,i,iCon,iSize)=nanmean(temp_TCs(:,temp_nonPref_trials_loc),2);
     
@@ -690,24 +698,28 @@ for id = 1:nd
             end
         pref_allTrials_stat{iCon,iSize,id}=temp_all_stat;
         pref_allTrials_loc{iCon,iSize,id}=temp_all_loc;
-        pref_allTrials_largePupil{iCon,iSize,id}=temp_all_largePupil;
-        pref_allTrials_smallPupil{iCon,iSize,id}=temp_all_smallPupil;
+        if doEye == 1
+            pref_allTrials_largePupil{iCon,iSize,id}=temp_all_largePupil;
+            pref_allTrials_smallPupil{iCon,iSize,id}=temp_all_smallPupil;
+        end
         end
     end
 
 
     tc_trial_avrg_stat{id}=temp_tc_stat; %this is a cell array with one cell 
-    tc_trial_avrg_stat_largePupil{id}=temp_tc_stat_largePupil;
-    tc_trial_avrg_stat_smallPupil{id}=temp_tc_stat_smallPupil;
-    
+    if doEye == 1
+        tc_trial_avrg_stat_largePupil{id}=temp_tc_stat_largePupil;
+        tc_trial_avrg_stat_smallPupil{id}=temp_tc_stat_smallPupil;
+    end
     tc_trial_avrg_loc{id}=temp_tc_loc;
     
     nonPref_trial_avrg_stat{id} =temp_nonPref_stat;
     nonPref_trial_avrg_loc{id} = temp_nonPref_loc;
     pref_responses_stat{id} = temp_pref_responses_stat;
-    pref_responses_stat_largePupil{id}=temp_pref_responses_stat_largePupil;
-    pref_responses_stat_smallPupil{id}=temp_pref_responses_stat_smallPupil
-    
+    if doEye == 1
+        pref_responses_stat_largePupil{id}=temp_pref_responses_stat_largePupil;
+        pref_responses_stat_smallPupil{id}=temp_pref_responses_stat_smallPupil;
+    end
     pref_responses_loc{id} = temp_pref_responses_loc;
     pref_responses_allCond{id} = temp_pref_responses_allCond;
     pref_peak_stat{id}=temp_pref_peak_stat;
@@ -804,7 +816,7 @@ for id = 1:nd
             end
         end
     end
-subTrialResp{id}=subTrialResp{id}(ind_stat,:);
+    subTrialResp{id}=subTrialResp{id}(ind_stat,:);
 end
 
 
@@ -909,7 +921,6 @@ end
 resp_max_keep_rect = resp_max_keep;
 for id = 1:nd
     resp_max_keep_rect{id}(find(resp_max_keep_rect{id}<0))=0;
-
 end
 
 dfof_max_diff = (resp_max_keep_rect{1}-resp_max_keep_rect{2})./(resp_max_keep_rect{1}+resp_max_keep_rect{2}); % (post-pre)/(post+pre), nCell X nCon
