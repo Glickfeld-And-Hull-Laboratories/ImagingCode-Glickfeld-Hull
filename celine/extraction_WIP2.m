@@ -71,70 +71,10 @@ prompt = 'Include pupil data? Eye analysis must be done for this experiment. Y =
 
 
 %% BEGIN DATA EXTRACTION
-%% Convert data to trials
-prompt = 'How would you like to process trials: 0- using photoFrameFinder, 1- using counterValcorrect_noPhotodiode? ';
-x = input(prompt);
-switch x
-    case 0
-        % photodiode 
-
-        for id = 1:nd %cycle through days
-            mouse = expt(allDays(id)).mouse;
-            date = expt(allDays(id)).date;
-            imgFolder = expt(allDays(id)).contrastxori_runs{1};
-            imgMatFile = [imgFolder '_000_000.mat'];
-            dataPath = fullfile(rc.achData, mouse, date, imgFolder);
-            load(fullfile(dataPath,imgMatFile));
-            [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
-        end
-        
-    case 1
-        
-    correctedInputStructure=NaN(1,nd);
-        for id = 1:nd
-               correctedInputStructure(:,id)=counterValCorrect_noPhotodiode(inputStructure(:,id));
-        end
-        
-end
-clear x prompt data_f_match cellstd 
-
-        data_dfof_trial_mfatch = cell(1,nd); %make an empty array that is 1 by however many days there are (1X2 usually)
-
-        fractTimeActive_match = cell(1,nd);
-        cellstd_match = cell(1,nd);
-            nTrials(id) = length(cStimOn);
-            [nFrames nCells] = size(cellTCs_match{id});
-            
-            data_trial_match = nan(nOn+nOff,nTrials(id),nCells);
-            
-            for itrial = 1:nTrials(id)
-              if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
-                data_trial_match(:,itrial,:) = cellTCs_match{id}(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2,:);
-              end
-            end
-
-
-            fractTimeActive_match{id} = zeros(1,nCells);
-           
-
-            data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
-            data_dfof_trial_match{id} = bsxfun(@rdivide,bsxfun(@minus,data_trial_match,data_f_match),data_f_match);
-            meansub_match = cellTCs_match{id}-nanmean(cellTCs_match{id},1);
-            cellstd = nanstd(meansub_match,[],1);
-            cellstd_match{id}=cellstd;
-            for iCell = 1:nCells
-                fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames;
-            end
-        end
-        
-        stimStart = nOff/2;
-        stimEnd = stimStart+nOn;
-        
-        % Store original time courses in case needed later
-        cellTCs_match_OG = cellTCs_match;
 %% Get stimulus parameters
 nOn = inputStructure(1).nScansOn;
 nOff = inputStructure(1).nScansOff;
+
 
 %tells the contrast, direction and orientation for each trial each day
 tCon_match = cell(1,nd);
@@ -165,8 +105,83 @@ nOri = length(oris);
 nCon = length(cons);
 nDir = length(dirs);
 nSize = length(sizes);
-%% Find cells that were responsive on either day ("keep") and identify red cells within that subset
+%% Extract cStimOn with variable method
+% this will automatically use the photodiode info.frames if that field
+% exists, and use the corrected input structure if info.frames does not
+% exist. With either method, a cStimOn field for each day will
+% be generated and added to the input strucutre, then used for trial definition
 
+if isfield(info, 'frame')
+    fprintf('Field "frame" exists in info structure\n');
+
+    for id = 1:nd %cycle through days
+        mouse = expt(allDays(id)).mouse;
+        date = expt(allDays(id)).date;
+        imgFolder = expt(allDays(id)).contrastxori_runs{1};
+        imgMatFile = [imgFolder '_000_000.mat'];
+        dataPath = fullfile(rc.achData, mouse, date, imgFolder);
+        load(fullfile(dataPath,imgMatFile));
+        inputStructure
+        [cStimOnTemp stimOffsTemp] = photoFrameFinder_Sanworks(info.frame);
+        inputStructure(id).cStimOn = cStimOnTemp;
+        inputStructure(id).stimOffs=stimOffsTemp;
+        clear  cStimOnTemp stimOffsTemp
+    end
+    
+else
+    fprintf('Field "frame" does not exist in info structure\n');
+    
+correctedInputStructure=NaN(1,nd);
+    for id = 1:nd
+           correctedInputStructure(:,id)=counterValCorrect_noPhotodiode(inputStructure(:,id));
+    end
+    inputStructure=correctedInputStructure; %replace the input structure with the new version    
+end
+%% Use cStimOn to define trials
+data_dfof_trial_match = cell(1,nd); %make an empty array that is 1 by however many days there are (1X2 usually)
+fractTimeActive_match = cell(1,nd);
+cellstd_match = cell(1,nd);
+
+for id = 1:nd
+    cStimOnTemp=cell2mat(inputStructure(id).cStimOn);
+    nTrials(id) = length(cStimOnTemp);
+    [nFrames nCells] = size(cellTCs_match{id});
+    
+    data_trial_match = nan(nOn+nOff,nTrials(id),nCells);
+    
+    for itrial = 1:nTrials(id)
+      if ~isnan(cStimOnTemp(itrial)) & (cStimOnTemp(itrial)+nOn+nOff/2)<nFrames
+        data_trial_match(:,itrial,:) = cellTCs_match{id}(cStimOnTemp(itrial)-nOff/2:cStimOnTemp(itrial)-1+nOn+nOff/2,:);
+      end
+    end
+    
+    
+    fractTimeActive_match{id} = zeros(1,nCells);
+    
+    
+    data_f_match = mean(data_trial_match(1: (nOff/2),:,:),1);
+    data_dfof_trial_match{id} = bsxfun(@rdivide,bsxfun(@minus,data_trial_match,data_f_match),data_f_match);
+    meansub_match = cellTCs_match{id}-nanmean(cellTCs_match{id},1);
+    cellstd = nanstd(meansub_match,[],1);
+    cellstd_match{id}=cellstd;
+    for iCell = 1:nCells
+        fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames;
+    end
+    clear data_trial_match data_f_match cellstd
+end
+
+stimStart = nOff/2;
+stimEnd = stimStart+nOn;
+
+
+
+
+%% Narrow down cells and make response matrix
+% Find cells that were responsive on either day ("keep") and identify red
+%  cells within that subset
+
+% This is a function that finds the stimulus conditions for which each cell was
+% significantly responsive and makes a list of which cells are responsive
 [h_match, p_match, resp_match] = findResponsiveCells(data_dfof_trial_match, ...
     tCon_match, tDir_match, tSize_match, stimStart, stimEnd, nTrials, ...
     nCells, nDir, nCon, nSize, dirs, cons, sizes);
@@ -195,7 +210,7 @@ total_cells = length(red_ind_match);
 if remove_outliers
     outliers_all = [];
     for id = 1:nd
-        data_temp = data_resp_match{id}(keep_cells_temp,:,:,:,1);
+        data_temp = resp_match{id}(keep_cells_temp,:,:,:,1);
         resp_max_temp = max(squeeze(max(data_temp(:,:,:,1),[],3)),[],2);
         thresh = nanmean(resp_max_temp) + std_threshold*std(resp_max_temp);
         outliers_all = union(outliers_all, keep_cells_temp(resp_max_temp > thresh));
@@ -210,25 +225,21 @@ else
 end
 
 % Count final keep cells by type
-final_red_keep = sum(red_ind_match(keep_cells_final));
+final_red_keep = sum(red_ind_match(keep_cells));
 final_green_keep = sum(~red_ind_match(keep_cells));
 final_total_keep = length(keep_cells);
 
 % Within the keep cells, identify which ones are red
-red_cells_keep = red_ind_match(keep_cells_final);
+red_cells_keep = red_ind_match(keep_cells);
 
 % Create summary table
 cell_summary = table(...
     {'Total'; 'Red (HTP+)'; 'Green (HTP-)'}, ...
     [total_cells; total_red; total_green], ...
     [initial_total_resp; initial_red_resp; initial_green_resp], ...
-    [final_total_keep; final_red_keep; final_green_keep], ...
     [length(outliers_all); sum(red_ind_match(outliers_all)); sum(~red_ind_match(outliers_all))], ...
-    'VariableNames', {'CellType', 'Total_Cells', 'Responsive_Cells', 'Final_Kept', 'Outliers_Removed'});
-
-% Add percentage columns
-cell_summary.Responsive_Percent = round(100 * cell_summary.Responsive_Cells ./ cell_summary.Total_Cells, 1);
-cell_summary.Kept_Percent = round(100 * cell_summary.Final_Kept ./ cell_summary.Responsive_Cells, 1);
+    [final_total_keep; final_red_keep; final_green_keep], ...
+    'VariableNames', {'CellType', 'Total_Cells', 'Responsive_Cells', 'Outliers_Removed','Final_Kept'});
 
 % Display summary
 fprintf('\n--- Cell Filtering Summary ---\n');
@@ -244,6 +255,23 @@ fprintf('\nSummary saved to: cell_filtering_summary.mat and cell_filtering_summa
 clear initial_red_resp initial_green_resp initial_total_resp
 clear final_red_keep final_green_keep final_total_keep
 clear total_red total_green total_cells outliers_all
+%% Reduce the data to only the keep cells and make response matrices
+data_dfof_trial_keep=cell(1, nd);
+data_resp_keep=cell(1,nd);
+for id = 1:nd
+    %make a set of data for the keep cells only and use this moving forward
+    data_dfof_trial_keep{id}=data_dfof_trial_match{id}(:,:,keep_cells);
+    
+    % restrucutre this as a response matrix for all
+    % sizes/contrasts/orientations
+
+    %get mean timecourse for preferred direction trials at all sizes and
+    %contrasts
+
+    % get mean responses at the preferred direction for the other sizes and
+    % contrasts
+    
+end
 
 %% For keep cells only, find preferred direction
 %for the keep cells subset, find the preferred direction for each cell,
