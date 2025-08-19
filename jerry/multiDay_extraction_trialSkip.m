@@ -15,7 +15,7 @@ experimentFolder = 'VIP_YM90K';
 
 %trialsToSkip
 skipAction = 1; % 1- deletes trials % 2- replaces trials with NaN
-skip{1} = []; % day 1 is the reference session
+skip{1} = []; % day 1 should be the reference session (whatever was identified as pre_day)
 skip{2} = [];
 
 %pupil?
@@ -153,15 +153,15 @@ for id = 1:nd %cycle through days
     imgMatFile = [imgFolder '_000_000.mat']
     dataPath = fullfile(rc.achData, mouse, date, imgFolder);
     load(fullfile(dataPath,imgMatFile))
-    [cStimOn stimOffs] = photoFrameFinder_Sanworks(info.frame);
-    cStimOn(skip{id}) = [];
+    [cStimOn{id} stimOffs{id}] = photoFrameFinder_Sanworks(info.frame);
+    cStimOn{id}(skip{id}) = [];
     [nFrames nCells] = size(cellTCs_match{id});
     
     data_trial_match = nan(nOn+nOff,nTrials(id),nCells);
     
     for itrial = 1:nTrials(id)
-      if ~isnan(cStimOn(itrial)) & (cStimOn(itrial)+nOn+nOff/2)<nFrames
-        data_trial_match(:,itrial,:) = cellTCs_match{id}(cStimOn(itrial)-nOff/2:cStimOn(itrial)-1+nOn+nOff/2,:);
+      if ~isnan(cStimOn{id}(itrial)) & (cStimOn{id}(itrial)+nOn+nOff/2)<nFrames
+        data_trial_match(:,itrial,:) = cellTCs_match{id}(cStimOn{id}(itrial)-nOff/2:cStimOn{id}(itrial)-1+nOn+nOff/2,:);
       end
     end
 
@@ -194,7 +194,7 @@ for id = 1:nd
     wheel_speed_clean{id}=wheel_speed{id};
     wheel_speed_clean{id}(abs(wheel_speed_clean{id})<5.37)=0;
 end
-
+ 
 wheel_tc = cell(1,nd);
 wheel_trial_avg= cell(1,nd);
 wheel_tc_raw = cell(1,nd);
@@ -205,9 +205,9 @@ for id = 1:nd
     wheel_tc{id}=nan(nOn+nOff, nTrials(id));
     wheel_tc_raw{id}=nan(nOn+nOff, nTrials(id));
     for iTrial = 1:nTrials(id)
-        if ~isnan(cStimOn(iTrial)) & (cStimOn(iTrial)+nOn+nOff/2)<nFrames
-            wheel_tc{id}(:,iTrial) = wheel_speed_clean{id}(cStimOn(iTrial)-nOff/2:cStimOn(iTrial)-1+nOn+nOff/2);
-            wheel_tc_raw{id}(:,iTrial) = abs(wheel_speed{id}(cStimOn(iTrial)-nOff/2:cStimOn(iTrial)-1+nOn+nOff/2));
+        if ~isnan(cStimOn{id}(iTrial)) & (cStimOn{id}(iTrial)+nOn+nOff/2)<nFrames
+            wheel_tc{id}(:,iTrial) = wheel_speed_clean{id}(cStimOn{id}(iTrial)-nOff/2:cStimOn{id}(iTrial)-1+nOn+nOff/2);
+            wheel_tc_raw{id}(:,iTrial) = abs(wheel_speed{id}(cStimOn{id}(iTrial)-nOff/2:cStimOn{id}(iTrial)-1+nOn+nOff/2));
         end
     end
     wheel_trial_avg{id} = mean(wheel_tc{id}(nOff/2:nOn+nOff/2,:),1);
@@ -253,7 +253,7 @@ for id = 1:nd
     %make a vector that is 1 during the ITI and 0 when the stim is on
     ITI = ones(1,nFrames);
     for iTrial = 1:nTrials(id)
-        ITI(cStimOn(iTrial):cStimOn(iTrial)+nOn)=0;
+        ITI(cStimOn{id}(iTrial):cStimOn{id}(iTrial)+nOn)=0;
     end
     
     %subset the running onsets to only include those during the ITI
@@ -481,7 +481,6 @@ for id = 1:nd
   std_max=std(resp_max_keep_temp);
   thresh=mean_max+(3*std_max);
   outliers{id}=keep_cells_temp(find(resp_max_keep_temp>thresh));
-
 end
 outliers_either=union(outliers{1},outliers{2});
 fprintf(['removing ' num2str(length(outliers_either)) ' outlier cells'])
@@ -758,7 +757,6 @@ wheel_corr = cell(1,nd);
 
 
 for id = 1:nd
-    
     clean_wheel_speed{id}=wheel_speed{id}(1:size(fullTC_keep{id},1));
     clean_wheel_speed{id}(find(abs(clean_wheel_speed{id})<4.884))=0;
     clean_wheel_speed{id}=downsample(clean_wheel_speed{id},10);
@@ -1051,3 +1049,134 @@ set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fn_multi,'matchRedCells.pdf'),'-dpdf');
 
 save(fullfile(fn_multi,'mask_measuremens.mat'),'keep_masks','keep_red_masks','keep_masks_fract_change_red','keep_masks_raw_change_red','keep_masks_d1_red','keep_green_masks','keep_masks_fract_change_green','keep_masks_raw_change_green')
+
+
+%% surround suppression check 
+% can run after line 770
+% highest contrast, small unpaired t test
+% find surround suppressed cells across sessions, change of status pre-post DART
+tStimStart = nOff/2+3;
+tStimEnd = tStimStart + nOn;
+
+ind_stat = cell(1,2);
+rej_hypo = cell(1,2);
+supp_result = cell(1,2);
+pval_result = cell(1,2);
+
+for id = 1:nd %looping over day
+    ind_stat{id} = [find(~RIx{id})];
+    % find only the highest contrast trials
+    for itrial = 1:nTrials(id)
+        if ~isnan(cStimOn{id}(itrial)) & (cStimOn{id}(itrial)+nOn+nOff/2)<nFrames
+            keep_trial_tc(:,itrial,:) = fullTC_keep{id}(cStimOn{id}(itrial)-nOff/2:cStimOn{id}(itrial)-1+nOn+nOff/2,:);
+        end
+    end
+    % because photodiode stimOn info was used, nTrials after this might not
+    % be equivalent to original nTrials. Hence, indexing only using the
+    % size of the 2nd dimension of keep_trial_tc from now on. 
+    data_f_trial = nanmean(keep_trial_tc(1:nOff/2,:,:),1); %#ok<NANMEAN>
+    keep_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,keep_trial_tc, data_f_trial), data_f_trial);
+    keep_dfof_trial = permute(keep_dfof_trial,[1 3 2]); %nFrames x nTrials x nCells
+    % allKeep_trial_dfof{id} = keep_dfof_trial;
+    actualNTrials = size(keep_dfof_trial,3);
+    tCon_logi{id} = tCon_match{id}(1:actualNTrials) == 1;
+    tSize_sm{id} = tSize_match{id}(1:actualNTrials) == 20;
+    tSize_lg{id} = tSize_match{id}(1:actualNTrials) == 1000;
+    smTrials = tCon_logi{id} .* tSize_sm{id};
+    lgTrials = tCon_logi{id} .* tSize_lg{id};
+    % only look at stationary trials
+    ind_stat{id}(ind_stat{id}>actualNTrials) = [];
+    smTrials(setdiff(1:numel(smTrials), ind_stat{id})) = 0;
+    lgTrials(setdiff(1:numel(lgTrials), ind_stat{id})) = 0;
+
+    nCells = size(keep_dfof_trial,2);
+    supp_mat = nan(nCells,1);
+    rej_hypo_mat = nan(nCells,1);
+    pval_mat = nan(nCells,1);
+    for iCell = 1:nCells
+        resp_sm = squeeze(nanmean(keep_dfof_trial(tStimStart:tStimEnd,iCell,logical(smTrials)),1));
+        resp_lg = squeeze(nanmean(keep_dfof_trial(tStimStart:tStimEnd,iCell,logical(lgTrials)),1));
+        [h,p] = ttest2(resp_sm,resp_lg); % THIS IS TWO-TAILED, IF WANT ONE-TAILED VERSION [h,p] = ttest2(resp_sm,resp_lg,'Tail','right');
+        if h == 1 && nanmean(resp_sm) > nanmean(resp_lg)
+            h_result = 1;
+        else
+            h_result = 0;
+        end
+        rej_hypo_mat(iCell) = h;
+        supp_mat(iCell) = h_result;
+        pval_mat(iCell) = p;
+    end
+    rej_hypo{id} = rej_hypo_mat;
+    supp_result{id} = supp_mat;
+    pval_result{id} = pval_mat;
+end
+
+% check for surround suppression change
+supp_status = cell(nCells,1);
+
+for i = 1:nCells
+    if supp_result{pre}(i) == 1
+        if supp_result{post}(i) == 1
+            supp_status{i} = 'both';
+        elseif supp_result{post}(i) == 0
+            supp_status{i} = 'pre';
+        end
+    elseif supp_result{pre}(i) == 0
+        if supp_result{post}(i) == 1
+            supp_status{i} = 'post';
+        elseif supp_result{post}(i) == 0
+            supp_status{i} = 'none';
+        end
+    end
+end
+
+supp_statusArr = string(supp_status); % concert cell array to string array
+supp_both_idx = find(supp_statusArr == 'both');
+supp_pre_idx = find(supp_statusArr == 'pre');
+supp_post_idx = find(supp_statusArr == 'post');
+supp_none_idx = find(supp_statusArr == 'none');
+
+supp_conds = ["both";"pre";"post";"none"];
+nBothSupp = length(supp_both_idx);
+nPreSupp = length(supp_pre_idx);
+nPostSupp = length(supp_post_idx);
+nNoneSupp = length(supp_none_idx);
+counts = [nBothSupp;nPreSupp;nPostSupp;nNoneSupp];
+
+supp_tbl_all = table(supp_conds,counts);
+% [T,BG] = groupcounts(supp_status); OLD METHOD, NOT USING BECAUSE OF POTENTIAL EMPTY
+% CONDITIONS
+% Unfortunately need to bruteforce
+% cellfun(@(x) strcmp(x,'post'),supp_status);
+% counts = T;
+% suppressed = BG;
+% supp_cellArr(:,1) = BG;
+% supp_cellArr(:,2) = num2cell(T);
+% [nGreen,GrpNameGreen] = groupcounts(green_cts);
+% [nRed,GrpNameRed] = groupcounts(red_cts);
+
+% unfortunately this also needs to be bruteforced
+green_cts = supp_statusArr(green_ind_keep);
+supp_green_both_cts = length(intersect(green_ind_keep,supp_both_idx));
+supp_green_pre_cts = length(intersect(green_ind_keep,supp_pre_idx));
+supp_green_post_cts = length(intersect(green_ind_keep,supp_post_idx));
+supp_green_none_cts = length(intersect(green_ind_keep,supp_none_idx));
+nGreen = [supp_green_both_cts;supp_green_pre_cts;supp_green_post_cts;supp_green_none_cts];
+
+red_cts = supp_statusArr(red_ind_keep);
+supp_red_both_cts = length(intersect(red_ind_keep,supp_both_idx));
+supp_red_pre_cts = length(intersect(red_ind_keep,supp_pre_idx));
+supp_red_post_cts = length(intersect(red_ind_keep,supp_post_idx));
+supp_red_none_cts = length(intersect(red_ind_keep,supp_none_idx));
+nRed = [supp_red_both_cts;supp_red_pre_cts;supp_red_post_cts;supp_red_none_cts];
+
+supp_tbl = table(supp_conds,nGreen,nRed);
+
+ss_pre = pre;
+ss_post = post;
+
+save(fullfile(fn_multi,'surr_supp.mat'),'supp_conds','supp_tbl','counts','nGreen', ...
+    'nRed','supp_none_idx','supp_both_idx', ...
+    'supp_pre_idx','supp_post_idx','ss_pre','ss_post');
+
+supp_tbl

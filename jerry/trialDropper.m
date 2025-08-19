@@ -13,11 +13,6 @@ function [outStruct] = trialDropper(inputStruct,trials,action)
     %   outStruct   - struct with all specified trials removed from all fields
     %  - TH AUGUST 2025
 
-
-% load('G:\Behavior\Data\data-i2197-250715-1622.mat') %input
-% load('G:\home\ACh\Data\2p_data\i2197\250715\003\003_000_000.mat') %info
-% inputStruct = input(1);
-
 [sz1 sz2] = size(inputStruct);
 if sz1 ~= 1 | sz2 ~= 1
     error('Input struct has unexpected size.')
@@ -33,16 +28,16 @@ nTrials = length(inputStruct.tAnnulusGratingDiameterDeg);
 % error checking
 
 if nTrials ~= assignedNTrials % compare collected with assigned nTrials
-    warning('Stored nTrials is inconsistent with assigned nTrials. Check for abberant events and modification history.\n');
-    disp('CAUTION: Trial deletion indices should be relative to STORED, NOT ASSIGNED nTrials.\n')
-    fprintf('Stored %d trials, assigned %d trials.\n',nTrials,assignedNTrials);
+    warning('Collected nTrials is inconsistent with assigned nTrials. Check for abberant events and modification history.\n');
+    disp('CAUTION: Trial deletion indices should be relative to COLLECTED, NOT ASSIGNED nTrials.\n')
+    fprintf('Collected %d trials, assigned %d trials.\n',nTrials,assignedNTrials);
 end
 
 if isfield(inputStruct,'modifiedStruct')
     if inputStruct.modifiedAction == 1
-        warning('Current version had some original elements deleted. See "modifiedTrials".');
+        warning('Current version had some original elements deleted using this function. See "modifiedTrials".');
     elseif inputStruct.modifiedAction == 2
-        warning('Current version had some original elements replaced with NaN. See "modifiedTrials".');
+        warning('Current version had some original elements replaced with NaN using this function. See "modifiedTrials".');
     end
 end
 
