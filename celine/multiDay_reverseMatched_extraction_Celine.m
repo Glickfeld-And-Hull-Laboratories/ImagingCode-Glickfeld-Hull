@@ -6,7 +6,7 @@ ds = 'DART_V1_YM90K_Celine'; %name of data information sheet
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'SST_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -935,7 +935,7 @@ noiseCorr_OG = cell(1,nd);
 for id=1:nd
     noiseCorr_OG{1,id}=nan(2,nKeep);
 
-    for iCell = 1:nCell
+    for iCell = 1:nKeep
         thisCell=subTrialResp_OG{id}(stat_inds{id},iCell);
         %if this is a red cell, compare to all green cells. If its a green
         %cell, compare it to all other green cells

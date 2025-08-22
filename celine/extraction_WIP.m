@@ -890,7 +890,7 @@ end
 
 save(fullfile(fn_multi,'locomotion.mat'),'RIx','wheel_tc','wheel_speed','wheel_corr')
 
-% making mask maps for various measurements
+%% making mask maps for various measurements
 %show masks
 %get masks of matched cells
 mask_match = cell(1,nd);

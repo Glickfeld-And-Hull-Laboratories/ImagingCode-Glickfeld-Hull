@@ -121,7 +121,6 @@ if isfield(info, 'frame')
         imgMatFile = [imgFolder '_000_000.mat'];
         dataPath = fullfile(rc.achData, mouse, date, imgFolder);
         load(fullfile(dataPath,imgMatFile));
-        inputStructure
         [cStimOnTemp stimOffsTemp] = photoFrameFinder_Sanworks(info.frame);
         inputStructure(id).cStimOn = cStimOnTemp;
         inputStructure(id).stimOffs=stimOffsTemp;
@@ -152,6 +151,8 @@ for id = 1:nd
     for itrial = 1:nTrials(id)
       if ~isnan(cStimOnTemp(itrial)) & (cStimOnTemp(itrial)+nOn+nOff/2)<nFrames
         data_trial_match(:,itrial,:) = cellTCs_match{id}(cStimOnTemp(itrial)-nOff/2:cStimOnTemp(itrial)-1+nOn+nOff/2,:);
+        %cellTCs_match is the raw F timecourse for each cell for the entire
+        %session
       end
     end
     
@@ -165,7 +166,7 @@ for id = 1:nd
     cellstd = nanstd(meansub_match,[],1);
     cellstd_match{id}=cellstd;
     for iCell = 1:nCells
-        fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames;
+        fractTimeActive_match{id}(:,iCell) = length(find(meansub_match(:,iCell)>3.*cellstd(1,iCell)))./nFrames; %not currently saving this or doing anything with it - do we want to?
     end
     clear data_trial_match data_f_match cellstd
 end
@@ -232,6 +233,7 @@ nKeep = length(keep_cells);
 
 % Within the keep cells, identify which ones are red
 red_cells_keep = red_ind_match(keep_cells);
+green_cells_keep=~red_ind_match(keep_cells);
 
 % Create summary table
 cell_summary = table(...
@@ -254,15 +256,16 @@ fprintf('\nSummary saved to: cell_filtering_summary.mat and cell_filtering_summa
 
 % Clean up temporary variables
 clear initial_red_resp initial_green_resp initial_total_resp
-clear final_red_keep final_green_keep nKeep
+clear final_red_keep final_green_keep 
 clear total_red total_green total_cells outliers_all
 %% Reduce the data to only the keep cells and make response matrices
 data_dfof_trial_keep=cell(1, nd);
 data_resp_keep=cell(1,nd);
+fullTC_keep=cell(1,nd);
 for id = 1:nd
     %make a set of data for the keep cells only and use this moving forward
     data_dfof_trial_keep{id}=data_dfof_trial_match{id}(:,:,keep_cells);
-    
+    fullTC_keep{id}=cellTCs_match{id}(:,keep_cells);
     % restrucutre this as a response matrix for all
     % sizes/contrasts/orientations
     data_resp = zeros(nKeep, nDir, nCon,nSize,2);
@@ -333,7 +336,14 @@ end
 
 %% Find large vs small pupil trials - 
 % %this will only run if the user chose Y to including pupil data above
- if includePupil=='Y'
+%Make matrices of NaNs that will get populated if there is pupil data or
+%serve as dummies if there is not
+pupilMeans = nan(nd,3);
+PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for 
+% stationary large pupil, second cell is inds for stationary small pupil
+motorByPupil = nan(nd,2);
+
+if includePupil=='Y'
     statPupilBothDays =horzcat(pupil{pre}.rad.stim(~RIx{pre}),pupil{post}.rad.stim(~RIx{post})); %combine all the pupil values for the two days
     statPupilThreshold=prctile(statPupilBothDays,50);
     %plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
@@ -357,13 +367,24 @@ end
         motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
         motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
     end
-    save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
- end
-%% Create response matrices at preferred direction, based on behavioral state
+else 
+    for id = 1:nd
+        PIx_stat{2,id}= logical(~RIx{id}); %calling all stationary trials small pupil if there is no real pupil data
+    end
+end
+    save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil','PIx_stat');
+
+%% Create timecourse matrices and response matrices (averaged over time) at preferred direction, based on behavioral state
 % Initialize cell arrays to store data across all days
 % Each cell array will contain data for each experimental day
 h_keep = cell(1, nd);                           % Statistical test results (hypothesis test outcomes)
 p_keep = cell(1, nd);                           % P-values from statistical tests
+% Trial-averaged time courses
+tc_trial_avrg_stat = cell(1, nd);               % Trial-averaged timecourses at preferred direction, stationary
+tc_trial_avrg_stat_largePupil = cell(1, nd);    % Trial-averaged timecourses at preferred direction, stationary with large pupil
+tc_trial_avrg_stat_smallPupil = cell(1, nd);    % Trial-averaged timecourses at preferred direction, stationary with small pupil
+tc_trial_avrg_loc = cell(1, nd);                % Trial-averaged timecourses at preferred direction, running
+% Trial-averaged responses with no time dimension
 conBySize_resp_stat_keep = cell(1, nd);         % Contrast x Size responses during stationary periods
 conBySize_resp_loc_keep = cell(1, nd);          % Contrast x Size responses during locomotion
 stat_resp_keep = cell(1, nd);                   % Responses during stationary periods
@@ -375,6 +396,7 @@ loc_resp_keep = cell(1, nd);                    % Responses during locomotion
 for id = 1:nd
     % Initialize response matrices for current day
     % Dimensions: [nCells, nDir, nCon, nSize, ...]
+    tc_trial_avrg_stat_temp = NaN(nKeep, nDir, nCon, nSize);
     stat_resp = zeros(nKeep, nDir, nCon, nSize);           % Stationary responses
     loc_resp = zeros(nKeep, nDir, nCon, nSize);            % Locomotion responses
     h = zeros(nKeep, nDir, nCon, nSize);                   % Hypothesis test results
@@ -409,10 +431,14 @@ for id = 1:nd
                 ind_stat_smallPupil = intersect(ind_stat, find(PIx_stat{2,id})); % Stationary + small pupil
                 ind_loc = intersect(ind, find(RIx{id}));                        % Locomotion trials (running)
                 
-                % Calculate mean responses for each behavioral condition
+                for iKeep = 1:nKeep
+                    % Calculate mean responses for each behavioral condition
+                    % Averaged over trials, for each cell 
+                    tc_trial_avrg_stat_temp(:,, iDir, iCon, iSize) = squeeze(nanmean(data_dfof_trial(:, ind_stat, :), 2));%INITIATE ABOVE
+                end
                 % Average across response window and trials, for each cell
-                stat_resp(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat, :), 1), 2));
-                loc_resp(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_loc, :), 1), 2));
+                stat_resp(:, iDir, iCon, iSize) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat, :), 1), 2));
+                loc_resp(:, iDir, iCon, iSize) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_loc, :), 1), 2));
                 
                 % Statistical testing: response vs baseline
                 % Right-tailed t-test comparing response window to baseline window
@@ -424,8 +450,9 @@ for id = 1:nd
                     'alpha', 0.01./(nDir*nCon*nSize-1));                       % Bonferroni corrected alpha
                 
                 % Calculate pupil-state specific responses during stationary periods
-                stat_resp_largePupil(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat_largePupil, :), 1), 2));
+                stat_resp_largePupil(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat_largePupil, :), 1), 2)); %INITIATE ABOVE
                 stat_resp_smallPupil(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat_smallPupil, :), 1), 2));
+                
             end
         end
     end
@@ -490,15 +517,143 @@ clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat .
       data_sizeBycon_resp_loc data_resp p h_pass resp pref_dir pref_con ...
       data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp ...
       baseStd baseMean thresh pass h_largeVsPeak p_largeVsPeak conBySize_resp_stat...
-      conBySize_resp_locstat_resp_smallPupil
+      conBySize_resp_locstat_resp_smallPupil conBySize_resp_loc
+
+save(fullfile(fn_multi,'tc_keep.mat'), 'fullTC_keep','data_dfof_trial_keep', 'prefDir_keep',  'keep_cells', ...
+    'red_cells_keep', 'green_cells_keep');
+
+
+%% Normalized direction tuning
+order = [1:nDir]; %make a list of indices for the directions
+norm_dir_resp_stat = cell(1,nd);
+norm_dir_resp_loc = cell(1,nd);
+
+for id = 1:nd
+    statMatrix = nan(nKeep,nDir,nCon,nSize); %make an empty matrix to hold the data for this day
+    locMatrix = nan(nKeep,nDir,nCon,nSize);
+    for iCell = 1:nKeep
+        index=prefDir_keep{id}(iCell);
+        newOrder=circshift(order,((index-1)*-1));
+        statMatrix(iCell,:,:,:)=stat_resp_keep{id}(iCell,newOrder,:,:);
+        locMatrix(iCell,:,:,:)=loc_resp_keep{id}(iCell,newOrder,:,:);
+    end
+    norm_dir_resp_stat{id}=statMatrix;
+    norm_dir_resp_loc{id}=locMatrix;
+
+end
+
+save(fullfile(fn_multi,'resp_keep.mat'), 'data_resp_keep', 'stat_resp_keep', ...
+    'loc_resp_keep', 'stat_largePupil_keep', 'stat_smallPupil_keep', ...
+    'conBySize_resp_stat_keep', 'conBySize_resp_loc_keep', 'h_keep', 'p_keep', ...
+    'h_largeVsPeak_keep', 'p_largeVsPeak_keep', 'norm_dir_resp_stat', 'norm_dir_resp_loc','raw_F_keep');
+
+
+%% Interneuron/Pyramidal Cell Relationship Analysis
+% Initialize data structures
+trialResp = cell(1, nd);        % Raw trial responses for each cell 
+subTrialResp = cell(1, nd);     % Mean-subtracted trial responses (for noise correlation)
+conditionMeans = cell(1, nd);   % Mean response for each stimulus condition
+
+% Calculate trial responses and condition means
+for id = 1:nd
+    % Extract trial responses during stimulus period
+    trialResp{id} = squeeze(mean(data_dfof_trial_keep{id}(stimStart:(stimStart+nOn-1), :, :), 1, 'omitmissing'));
+    subTrialResp{id} = nan(size(trialResp{id}));
+    conditionMeans{id} = nan(nDir, nCon, nSize, nKeep);
+    
+    % Get trial parameters
+    tCon = tCon_match{id}(:, 1:nTrials(id));
+    tDir = tDir_match{id}(:, 1:nTrials(id));
+    
+    % Calculate condition means and subtract from trial responses
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        
+        for iCon = 1:nCon
+            ind_con = find(tCon == cons(iCon));
+            ind_dir_con = intersect(ind_dir, ind_con);
+            
+            for iSize = 1:nSize
+                ind_size = find(tSize == sizes(iSize));
+                ind_condition = intersect(intersect(ind_dir_con, ind_size), find(~RIx{id})); % Stationary trials only
+                
+                if ~isempty(ind_condition)
+                    % Calculate condition mean for each cell
+                    tempData = trialResp{id}(ind_condition, :);
+                    cellMeans = mean(tempData, 1, 'omitmissing');
+                    
+                    % Subtract condition mean from individual trials
+                    subTrialResp{id}(ind_condition, :) = tempData - cellMeans;
+                    conditionMeans{id}(iDir, iCon, iSize, :) = cellMeans;
+                end
+            end
+        end
+    end
+end
+
+% Setup plotting preferences
+doPlot = input('Plot correlation figures as a sanity check? 1/0 : ', 's');
+
+if plotChoice 
+    numToPlot = min(5, nKeep);
+    cellsToPlot = randperm(nKeep, numToPlot);
+    disp(['Plotting enabled for ' num2str(numToPlot) ' randomly selected cells.']);
+else
+    disp('Plotting disabled.');
+    cellsToPlot = [];
+end
+
+% Calculate correlations
+noiseCorr = cell(1, nd);    % Noise correlations (trial-to-trial variability)
+sigCorr = cell(1, nd);      % Signal correlations (stimulus tuning similarity)
+
+for id = 1:nd
+    noiseCorr{id} = nan(2, nKeep);  % [correlation; p-value]
+    sigCorr{id} = nan(2, nKeep);
+    
+    % Reshape condition means for signal correlation analysis
+    condMeansReshaped = reshape(conditionMeans{id}, nCon*nDir*nSize, nKeep);
+    
+    for iCell = 1:nKeep
+        % Determine comparison cells based on cell type
+        if ismember(iCell, red_cells_keep)
+            % Red cell: compare to all green cells
+            otherCells = green_cells_keep;
+        else
+            % Green cell: compare to other green cells (exclude self)
+            otherCells = setdiff(green_cells_keep, iCell);
+        end
+        
+        if ~isempty(otherCells)
+            % Noise correlation calculation
+            [R_noise, p_noise] = calculateCorrelation(subTrialResp{id}(:, iCell), ...
+                                                      subTrialResp{id}(:, otherCells));
+            noiseCorr{id}(:, iCell) = [R_noise; p_noise];
+            
+            % Optional plotting for noise correlation
+            if doPlot && ismember(iCell, cellsToPlot)
+                plotCorrelation(subTrialResp{id}(:, otherCells), subTrialResp{id}(:, iCell), ...
+                               R_noise, iCell, 'NoiseCorr', id,pre);
+            end
+            
+            % Signal correlation calculation
+            [R_signal, p_signal] = calculateCorrelation(condMeansReshaped(:, iCell), ...
+                                                        condMeansReshaped(:, otherCells));
+            sigCorr{id}(:, iCell) = [R_signal; p_signal];
+            
+            % Optional plotting for signal correlation
+            if doPlot && ismember(iCell, cellsToPlot)
+                plotCorrelation(condMeansReshaped(:, otherCells), condMeansReshaped(:, iCell), ...
+                               R_signal, iCell, 'SigCorr', id,pre);
+            end
+        end
+    end
+end
+
+% Save results
+save(fullfile(fn_multi, 'HT_pyr_relationship.mat'), 'conditionMeans', 'sigCorr', 'noiseCorr');
+
 
 %% Get running onsets
-%% Fluoresence level
-
-
-
-
-
-
 
 

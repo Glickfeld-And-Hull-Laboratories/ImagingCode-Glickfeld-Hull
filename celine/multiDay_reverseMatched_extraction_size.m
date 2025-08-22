@@ -1138,6 +1138,7 @@ keep_masks_raw_change_red = zeros(size(corrmap{1}));
 keep_masks_raw_change_green = zeros(size(corrmap{1}));
 keep_masks_d1_red = zeros(size(corrmap{1}));
 
+
 for i = 1:length(keep_cells)
    ind = keep_cells(i);
    temp_mask_inds = find(masks{2}==ind); %pulling from the masks of matched cells from the baseline day

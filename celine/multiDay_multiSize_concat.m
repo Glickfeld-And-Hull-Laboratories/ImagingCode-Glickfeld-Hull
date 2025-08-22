@@ -7,9 +7,8 @@ experimentFolder = 'SST_YM90K';
 
 rc =  behavConstsDART; %directories
 eval(ds);
-%285 295 300 308 324 334 DART YM90K 
-% 299 289 304 312 320 330
-sess_list = [8 10 14 20];%enter all the sessions you want to concatenate4
+
+sess_list = [8 10 20 22];%enter all the sessions you want to concatenate4
 nSess=length(sess_list);
 
 nd=2;%hard coding for two days per experimental session
@@ -54,7 +53,8 @@ cd(fnout)
 clear d sess_title
 
 nCon = length(targetCon)
-nSize =5;
+nSize=3;
+
 
 mice=[];
 red_concat=[];
@@ -372,87 +372,50 @@ end
 
 
 %% plot stationary timecourses for all cells
+plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
+    red_ind_concat, green_ind_concat, ...
+    'UseDashedLines', [false, true], ...
+    'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
+    'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
+    'Titles', {'SST', 'Pyr'}, ...
+    'StimStart', 31);
 
-% make figure with se shaded, one figure per contrast - stationary
+figs = findobj('Type', 'figure');
+for i = 1:length(figs)
+    figure(figs(i));
+    saveas(gcf, sprintf('neural_timecourse_size_%d.pdf', i));
+end
+%% Look at distribution of responsiveness to small and large sizes
+respToLarge_red = find(respToLarge.*red_concat');
+respToLarge_green = find(respToSmall.*green_concat');
 
-tc_green_avrg_stat = cell(1,nd); %this will be the average across all green cells - a single line
-tc_red_avrg_stat = cell(1,nd); %same for red
-tc_green_se_stat = cell(1,nd); %this will be the se across all green cells
-tc_red_se_stat = cell(1,nd); %same for red
+respToSmall_red = find(respToSmall.*red_concat');
+respToSmall_green = find(respToSmall.*green_concat');
 
+both_indices = find(respToLarge & respToSmall);
+respToBoth_red = intersect(both_indices, red_ind_concat);
+respToBoth_green = intersect(both_indices, green_ind_concat);
+%%
+analyzeResponsiveCells(respToLarge, respToSmall, respToLarge_red, respToLarge_green, ...
+                                red_concat, green_concat, red_ind_concat, green_ind_concat, ...
+                                mouseInds, mouseNames);
+%% plot stationary timecourses for cells that respond to a specific size
 
-for id = 1:nd
-  for iCon = 1:nCon
-      for iSize = 1:nSize
-        
-        tc_green_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon,iSize),2);
-        green_std=nanstd(tc_trial_avrg_stat_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
-        tc_green_se_stat{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
-        
-        tc_red_avrg_stat{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon,iSize),2);
-        red_std=nanstd(tc_trial_avrg_stat_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
-        tc_red_se_stat{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
-        
-        
-        clear green_std red_std
-      end 
-    end
+plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
+    respToSmall_red, respToSmall_green, ...
+    'UseDashedLines', [false, true], ...
+    'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
+    'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
+    'Titles', {'SST', 'Pyr'}, ...
+    'StimStart', 31);
+
+figs = findobj('Type', 'figure');
+for i = 1:length(figs)
+    figure(figs(i));
+    saveas(gcf, sprintf('SmallResp_neural_timecourse_size_%d.pdf', i));
 end
 
-z=double(nOn)/double(frame_rate);
 
-%create a time axis in seconds
-t=1:(size(tc_green_avrg_stat{1,1,1},1));
-t=(t-(double(stimStart)-1))/double(frame_rate);
-
-for iCon = 1:nCon
-    for iSize = 1:nSize
-    figure
-    subplot(1,2,1) %for the first day
-    
-    
-    
-    ylim([-.02 .2]);
-    hold on
-    shadedErrorBar(t,tc_green_avrg_stat{pre}(:,iCon,iSize),tc_green_se_stat{pre}(:,iCon,iSize),'--k');
-    hold on
-    shadedErrorBar(t,tc_green_avrg_stat{post}(:,iCon,iSize),tc_green_se_stat{post}(:,iCon,iSize),'--b','transparent');
-    hold on
-    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-    hold on
-    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-    title(['-HTP',' n = ', num2str(length(green_ind_concat))])
-    
-    ylabel('dF/F') 
-    xlabel('s') 
-    set(gca,'XColor', 'none','YColor','none')
-    
-    
-    subplot(1,2,2) %+HTP
-    shadedErrorBar(t,tc_red_avrg_stat{pre}(:,iCon,iSize),tc_red_se_stat{pre}(:,iCon,iSize),'k');
-    hold on
-    shadedErrorBar(t,tc_red_avrg_stat{post}(:,iCon,iSize),tc_red_se_stat{post}(:,iCon,iSize),'b');
-    ylim([-.02 .2]);
-    hold on
-    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-    hold on
-    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-    ylabel('dF/F') 
-    xlabel('s') 
-    title(['+HTP',' n = ', num2str(length(red_ind_concat))])
-    
-    x0=5;
-    y0=5;
-    width=4;
-    height=3;
-    set(gcf,'units','inches','position',[x0,y0,width,height])
-    set(gca,'XColor', 'none','YColor','none')
-    
-    sgtitle(['stationary, con ' num2str(cons(iCon)) ' size ' num2str(sizes(iSize))])
-    
-    print(fullfile(fnout,[num2str(cons(iCon)) '_' num2str(sizes(iSize)) '_stat_cellType_timecourses.pdf']),'-dpdf');
-    end
-end 
 
 %% plot stationary timecourses for cells matched across behavioral state within each stim condition
 
