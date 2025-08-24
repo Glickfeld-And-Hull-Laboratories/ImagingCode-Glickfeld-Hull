@@ -402,7 +402,7 @@ analyzeResponsiveCells(respToLarge, respToSmall, respToLarge_red, respToLarge_gr
 %% plot stationary timecourses for cells that respond to a specific size
 
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
-    respToSmall_red, respToSmall_green, ...
+    respToBoth_red, respToBoth_green, ...
     'UseDashedLines', [false, true], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
@@ -412,7 +412,7 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
 figs = findobj('Type', 'figure');
 for i = 1:length(figs)
     figure(figs(i));
-    saveas(gcf, sprintf('SmallResp_neural_timecourse_size_%d.pdf', i));
+    saveas(gcf, sprintf('BothResp_neural_timecourse_size_%d.pdf', i));
 end
 
 
