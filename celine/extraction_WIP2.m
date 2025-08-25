@@ -375,153 +375,175 @@ end
     save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil','PIx_stat');
 
 %% Create timecourse matrices and response matrices (averaged over time) at preferred direction, based on behavioral state
-% Initialize cell arrays to store data across all days
-% Each cell array will contain data for each experimental day
-h_keep = cell(1, nd);                           % Statistical test results (hypothesis test outcomes)
-p_keep = cell(1, nd);                           % P-values from statistical tests
-% Trial-averaged time courses
-tc_trial_avrg_stat = cell(1, nd);               % Trial-averaged timecourses at preferred direction, stationary
-tc_trial_avrg_stat_largePupil = cell(1, nd);    % Trial-averaged timecourses at preferred direction, stationary with large pupil
-tc_trial_avrg_stat_smallPupil = cell(1, nd);    % Trial-averaged timecourses at preferred direction, stationary with small pupil
-tc_trial_avrg_loc = cell(1, nd);                % Trial-averaged timecourses at preferred direction, running
-% Trial-averaged responses with no time dimension
-conBySize_resp_stat_keep = cell(1, nd);         % Contrast x Size responses during stationary periods
-conBySize_resp_loc_keep = cell(1, nd);          % Contrast x Size responses during locomotion
-stat_resp_keep = cell(1, nd);                   % Responses during stationary periods
-stat_largePupil_keep = cell(1, nd);             % Stationary responses with large pupil
-stat_smallPupil_keep = cell(1, nd);             % Stationary responses with small pupil
-loc_resp_keep = cell(1, nd);                    % Responses during locomotion
 
-% Main analysis loop - process each experimental day
+%% Combined analysis for keep cells only
+% Initialize cell arrays for keep data
+data_dfof_trial_keep = cell(1, nd);
+data_resp_keep = cell(1, nd);
+fullTC_keep = cell(1, nd);
+
+% Preferred responses
+pref_responses_stat = cell(1, nd);
+pref_responses_loc = cell(1, nd);
+pref_responses_stat_largePupil = cell(1, nd);
+pref_responses_stat_smallPupil = cell(1, nd);
+
+% ConBySize matrices (responses at pref direction for each contrast/size)
+conBySize_resp_stat_keep = cell(1, nd);
+conBySize_resp_loc_keep = cell(1, nd);
+
+% Significance testing
+h_keep = cell(1, nd);
+h_largeVsPeak_keep = cell(1, nd);
+p_largeVsPeak_keep = cell(1, nd);
+
+% Time courses
+tc_trial_avrg_stat = cell(1, nd);
+tc_trial_avrg_loc = cell(1, nd);
+tc_trial_avrg_stat_largePupil = cell(1, nd);
+tc_trial_avrg_stat_smallPupil = cell(1, nd);
+
+% Peak responses
+pref_peak_stat = cell(1, nd);
+pref_peak_loc = cell(1, nd);
+
+% All trials data for statistics
+pref_allTrials_stat = cell(nCon, nSize, nd);
+pref_allTrials_loc = cell(nCon, nSize, nd);
+pref_allTrials_largePupil = cell(nCon, nSize, nd);
+pref_allTrials_smallPupil = cell(nCon, nSize, nd);
+
+% Trial counts
+trialCounts = cell(2, nd);
+
 for id = 1:nd
-    % Initialize response matrices for current day
-    % Dimensions: [nCells, nDir, nCon, nSize, ...]
-    tc_trial_avrg_stat_temp = NaN(nKeep, nDir, nCon, nSize);
-    stat_resp = zeros(nKeep, nDir, nCon, nSize);           % Stationary responses
-    loc_resp = zeros(nKeep, nDir, nCon, nSize);            % Locomotion responses
-    h = zeros(nKeep, nDir, nCon, nSize);                   % Hypothesis test results
-    p = zeros(nKeep, nDir, nCon, nSize);                   % P-values
+    % Subset data to keep cells only
+    data_dfof_trial_keep{id} = data_dfof_trial_match{id}(:, :, keep_cells);
+    fullTC_keep{id} = cellTCs_match{id}(:, keep_cells);
     
-    % Extract trial parameters for current day
-    tCon = tCon_match{id}(:, 1:nTrials(id));                 % Contrast values per trial
-    tSize = tSize_match{id}(:, 1:nTrials(id));               % Size values per trial  
-    tDir = tDir_match{id}(:, 1:nTrials(id));                 % Direction values per trial
-    data_dfof_trial = data_dfof_trial_keep{id};             % Delta F/F data for current day
+    % Trial info for this day
+    tCon = tCon_match{id}(:, 1:nTrials(id));
+    tSize = tSize_match{id}(:, 1:nTrials(id));
+    tDir = tDir_match{id}(:, 1:nTrials(id));
     
-    % Nested loops to analyze each stimulus condition combination
+    % Condition indices
+    stat_inds = find(~RIx{id});
+    loc_inds = find(RIx{id});
+    ind_stat_largePupil = intersect(stat_inds, find(PIx_stat{1, id}));
+    ind_stat_smallPupil = intersect(stat_inds, find(PIx_stat{2, id}));
+    
+    % Initialize arrays for this day
+    data_resp = zeros(nKeep, nDir, nCon, nSize, 2);
+    temp_pref_responses_stat = zeros(nKeep, nCon, nSize);
+    temp_pref_responses_loc = zeros(nKeep, nCon, nSize);
+    temp_pref_responses_stat_largePupil = zeros(nKeep, nCon, nSize);
+    temp_pref_responses_stat_smallPupil = zeros(nKeep, nCon, nSize);
+    
+    temp_tc_stat = nan((nOn+nOff), nKeep, nCon, nSize);
+    temp_tc_loc = nan((nOn+nOff), nKeep, nCon, nSize);
+    temp_tc_stat_largePupil = nan((nOn+nOff), nKeep, nCon, nSize);
+    temp_tc_stat_smallPupil = nan((nOn+nOff), nKeep, nCon, nSize);
+    
+    % Initialize significance testing array
+    h = zeros(nKeep, nDir, nCon, nSize);
+    
+    trialCounts{1, id} = [];
+    trialCounts{2, id} = [];
+    
+    % Calculate significance testing for all conditions
     for iDir = 1:nDir
-        % Find trials with current direction
         ind_dir = find(tDir == dirs(iDir));
-        
         for iCon = 1:nCon
-            % Find trials with current contrast
             ind_con = find(tCon == cons(iCon));
-            
             for iSize = 1:nSize
-                % Find trials with current size
                 ind_size = find(tSize == sizes(iSize));
+                ind_temp = intersect(ind_dir, ind_con);
+                ind = intersect(ind_temp, ind_size);
                 
-                % Find trials matching all three stimulus parameters
-                ind_temp = intersect(ind_dir, ind_con);         % Direction & contrast match
-                ind = intersect(ind_temp, ind_size);            % Add size requirement
-                
-                % Separate trials by behavioral state
-                ind_stat = intersect(ind, find(~RIx{id}));                      % Stationary trials (not running)
-                ind_stat_largePupil = intersect(ind_stat, find(PIx_stat{1,id})); % Stationary + large pupil
-                ind_stat_smallPupil = intersect(ind_stat, find(PIx_stat{2,id})); % Stationary + small pupil
-                ind_loc = intersect(ind, find(RIx{id}));                        % Locomotion trials (running)
-                
-                for iKeep = 1:nKeep
-                    % Calculate mean responses for each behavioral condition
-                    % Averaged over trials, for each cell 
-                    tc_trial_avrg_stat_temp(:,, iDir, iCon, iSize) = squeeze(nanmean(data_dfof_trial(:, ind_stat, :), 2));%INITIATE ABOVE
-                end
-                % Average across response window and trials, for each cell
-                stat_resp(:, iDir, iCon, iSize) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat, :), 1), 2));
-                loc_resp(:, iDir, iCon, iSize) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_loc, :), 1), 2));
-                
-                % Statistical testing: response vs baseline
-                % Right-tailed t-test comparing response window to baseline window
-                % Bonferroni correction applied: alpha = 0.01/(nDir*nCon*nSize-1)
-                [h(:, iDir, iCon, iSize), p(:, iDir, iCon, iSize)] = ttest(...
-                    nanmean(data_dfof_trial(resp_win, ind, :), 1), ...         % Response period
-                    nanmean(data_dfof_trial(base_win, ind, :), 1), ...         % Baseline period
-                    'dim', 2, 'tail', 'right', ...                             % Right-tailed test
-                    'alpha', 0.01./(nDir*nCon*nSize-1));                       % Bonferroni corrected alpha
-                
-                % Calculate pupil-state specific responses during stationary periods
-                stat_resp_largePupil(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat_largePupil, :), 1), 2)); %INITIATE ABOVE
-                stat_resp_smallPupil(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat_smallPupil, :), 1), 2));
-                
+                % Significance test: response vs baseline
+                [h(:, iDir, iCon, iSize), ~] = ttest(nanmean(data_dfof_trial_keep{id}(resp_win, ind, :), 1), ...
+                                                     nanmean(data_dfof_trial_keep{id}(base_win, ind, :), 1), ...
+                                                     'dim', 2, 'tail', 'right', ...
+                                                     'alpha', 0.01./(nDir*nCon*nSize-1));
             end
         end
     end
     
-    
-    % Initialize matrices for responses at preferred orientation
-    conBySize_resp_stat = zeros(nCells, nCon, nSize);       % Stationary responses: all contrasts/sizes at pref direction
-    conBySize_resp_loc = zeros(nCells, nCon, nSize);        % Locomotion responses: all contrasts/sizes at pref direction
-    
-    % Extract contrast x size tuning at preferred direction for each cell
-    for iCell = 1:nKeep
-        % Extract responses across all contrasts and sizes at the cell's preferred direction
-        conBySize_resp_stat(iCell, :, :) = stat_resp(iCell, prefDir_keep{id}(iCell), :, :);    % Stationary condition
-        conBySize_resp_loc(iCell, :, :) = loc_resp(iCell, prefDir_keep{id}(iCell), :, :);      % Locomotion condition
-    end
-    % Test if largest size response > peak size response at preferred direction and highest contrast
-h_largeVsPeak = zeros(nCells, 1);
-p_largeVsPeak = zeros(nCells, 1);
-
-for iCell = 1:nKeep
-    % Find peak size at preferred direction and highest contrast
-    resp_by_size = squeeze(stat_resp(iCell, prefDir_keep{id}(iCell), end, :));
-    [~, peakSize] = max(resp_by_size);
-    
-    % If peak size = largest size, no significant difference
-    if peakSize == nSize
-        h_largeVsPeak(iCell) = 0;
-        p_largeVsPeak(iCell) = 1;
-    else
-        % Get trial indices for preferred direction and highest contrast
-        ind_dir = find(tDir == dirs(prefDir_keep{id}(iCell)));
-        ind_con = find(tCon == cons(end));
-        ind_temp = intersect(ind_dir, ind_con);
-        
-        % Get trial indices for largest size and peak size (stationary only)
-        ind_large = intersect(intersect(ind_temp, find(tSize == sizes(end))), find(~RIx{id}));
-        ind_peak = intersect(intersect(ind_temp, find(tSize == sizes(peakSize))), find(~RIx{id}));
-        
-        % Perform statistical test if we have sufficient trials
-        if length(ind_large) >= 3 && length(ind_peak) >= 3
-            resp_large = squeeze(nanmean(data_dfof_trial(resp_win, ind_large, iCell), 1));
-            resp_peak = squeeze(nanmean(data_dfof_trial(resp_win, ind_peak, iCell), 1));
-            [h_largeVsPeak(iCell), p_largeVsPeak(iCell)] = ttest2(resp_large, resp_peak, 'tail', 'right', 'alpha', 0.05);
+    % Calculate responses for all conditions
+    for iDir = 1:nDir
+        ind_dir = find(tDir == dirs(iDir));
+        for iCon = 1:nCon
+            ind_con = find(tCon == cons(iCon));
+            for iSize = 1:nSize
+                ind_size = find(tSize == sizes(iSize));
+                ind_temp = intersect(ind_dir, ind_con);
+                ind = intersect(ind_temp, ind_size);
+                
+                % Calculate mean response and SEM for all cells
+                data_resp(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, ind, :), 1), 2));
+                data_resp(:, iDir, iCon, iSize, 2) = squeeze(std(nanmean(data_dfof_trial_keep{id}(resp_win, ind, :), 1), [], 2) ./ sqrt(length(ind)));
+            end
         end
     end
+    
+    % Calculate preferred responses using existing preferred directions
+    for iCon = 1:nCon
+        for iSize = 1:nSize
+            for i = 1:nKeep
+                % Get preferred direction for this cell (already calculated)
+                temp_dir = prefDir_keep{id}(i);
+                
+                % Find trials matching preferred direction, contrast, and size
+                dir_inds = find(tDir == temp_dir);
+                con_inds = find(tCon == cons(iCon));
+                size_inds = find(tSize == sizes(iSize));
+                temp_trials = intersect(intersect(dir_inds, con_inds), size_inds);
+                
+                % Split by condition
+                temp_trials_stat = intersect(temp_trials, stat_inds);
+                temp_trials_loc = intersect(temp_trials, loc_inds);
+                temp_trials_stat_largePupil = intersect(temp_trials, ind_stat_largePupil);
+                temp_trials_stat_smallPupil = intersect(temp_trials, ind_stat_smallPupil);
+                
+                % Calculate time courses
+                temp_tc_stat(:, i, iCon, iSize) = nanmean(data_dfof_trial_keep{id}(:, temp_trials_stat, i), 2);
+                temp_tc_loc(:, i, iCon, iSize) = nanmean(data_dfof_trial_keep{id}(:, temp_trials_loc, i), 2);
+                temp_tc_stat_largePupil(:, i, iCon, iSize) = nanmean(data_dfof_trial_keep{id}(:, temp_trials_stat_largePupil, i), 2);
+                temp_tc_stat_smallPupil(:, i, iCon, iSize) = nanmean(data_dfof_trial_keep{id}(:, temp_trials_stat_smallPupil, i), 2);
+                
+                % Calculate preferred responses (mean of response window)
+                temp_pref_responses_stat(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat, i), 1));
+                temp_pref_responses_loc(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_loc, i), 1));
+                temp_pref_responses_stat_largePupil(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat_largePupil, i), 1));
+                temp_pref_responses_stat_smallPupil(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat_smallPupil, i), 1));
+                
+                % Track trial counts
+                trialCounts{1, id} = [trialCounts{1, id}, length(temp_trials_stat)];
+                trialCounts{2, id} = [trialCounts{2, id}, length(temp_trials_loc)];
+            end
+        end
+    end
+    
+    % Store results for this day
+    data_resp_keep{id} = data_resp;
+    pref_responses_stat{id} = temp_pref_responses_stat;
+    pref_responses_loc{id} = temp_pref_responses_loc;
+    pref_responses_stat_largePupil{id} = temp_pref_responses_stat_largePupil;
+    pref_responses_stat_smallPupil{id} = temp_pref_responses_stat_smallPupil;
+    
+    tc_trial_avrg_stat{id} = temp_tc_stat;
+    tc_trial_avrg_loc{id} = temp_tc_loc;
+    tc_trial_avrg_stat_largePupil{id} = temp_tc_stat_largePupil;
+    tc_trial_avrg_stat_smallPupil{id} = temp_tc_stat_smallPupil;
 end
-    %    % Store results for current day in cell arrays
-    h_keep{id} = h;                                         % Hypothesis test results
-    p_keep{id} = p;                                         % P-values
-    stat_resp_keep{id} = stat_resp;                         % Stationary responses
-    loc_resp_keep{id} = loc_resp;                           % Locomotion responses
-    stat_largePupil_keep{id} = stat_resp_largePupil;        % Large pupil responses
-    stat_smallPupil_keep{id} = stat_resp_smallPupil;        % Small pupil responses
-    conBySize_resp_stat_keep{id} = conBySize_resp_stat;     % Contrast x Size (stationary)
-    conBySize_resp_loc_keep{id} = conBySize_resp_loc;       % Contrast x Size (locomotion)
-    h_largeVsPeak_keep{id} = h_largeVsPeak;                 % Statistical test: large vs peak size
-    p_largeVsPeak_keep{id} = p_largeVsPeak;                 % P-values: large vs peak size
-end
 
-% Clean up temporary variables
-clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat ...
-      data_sizeBycon_resp_loc data_resp p h_pass resp pref_dir pref_con ...
-      data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp ...
-      baseStd baseMean thresh pass h_largeVsPeak p_largeVsPeak conBySize_resp_stat...
-      conBySize_resp_locstat_resp_smallPupil conBySize_resp_loc
+% Save timecourse data
+save('tc_keep.mat', 'tc_trial_avrg_stat', 'tc_trial_avrg_loc', ...
+     'tc_trial_avrg_stat_largePupil', 'tc_trial_avrg_stat_smallPupil');
 
-save(fullfile(fn_multi,'tc_keep.mat'), 'fullTC_keep','data_dfof_trial_keep', 'prefDir_keep',  'keep_cells', ...
-    'red_cells_keep', 'green_cells_keep');
 
+
+clear temp_* ind_* dir_inds con_inds size_inds temp_trials* temp_dir
 
 %% Normalized direction tuning
 order = [1:nDir]; %make a list of indices for the directions
@@ -547,6 +569,11 @@ save(fullfile(fn_multi,'resp_keep.mat'), 'data_resp_keep', 'stat_resp_keep', ...
     'conBySize_resp_stat_keep', 'conBySize_resp_loc_keep', 'h_keep', 'p_keep', ...
     'h_largeVsPeak_keep', 'p_largeVsPeak_keep', 'norm_dir_resp_stat', 'norm_dir_resp_loc','raw_F_keep');
 
+% Save response data
+save('resp_keep.mat', 'pref_responses_stat', 'pref_responses_loc', ...
+     'pref_responses_stat_largePupil', 'pref_responses_stat_smallPupil', 'trialCounts', ...
+     'conBySize_resp_stat_keep', 'conBySize_resp_loc_keep', 'h_keep', ...
+     'h_largeVsPeak_keep', 'p_largeVsPeak_keep');
 
 %% Interneuron/Pyramidal Cell Relationship Analysis
 % Initialize data structures
@@ -657,3 +684,145 @@ save(fullfile(fn_multi, 'HT_pyr_relationship.mat'), 'conditionMeans', 'sigCorr',
 %% Get running onsets
 
 
+%% scraps
+% Initialize cell arrays to store data across all days
+% Each cell array will contain data for each experimental day
+h_keep = cell(1, nd);                           % Statistical test results (hypothesis test outcomes)
+p_keep = cell(1, nd);                           % P-values from statistical tests
+% Trial-averaged time courses
+tc_trial_avrg_stat = cell(1, nd);               % Trial-averaged timecourses at preferred direction, stationary
+tc_trial_avrg_stat_largePupil = cell(1, nd);    % Trial-averaged timecourses at preferred direction, stationary with large pupil
+tc_trial_avrg_stat_smallPupil = cell(1, nd);    % Trial-averaged timecourses at preferred direction, stationary with small pupil
+tc_trial_avrg_loc = cell(1, nd);                % Trial-averaged timecourses at preferred direction, running
+% Trial-averaged responses with no time dimension
+conBySize_resp_stat_keep = cell(1, nd);         % Contrast x Size responses during stationary periods
+conBySize_resp_loc_keep = cell(1, nd);          % Contrast x Size responses during locomotion
+stat_resp_keep = cell(1, nd);                   % Responses during stationary periods
+stat_largePupil_keep = cell(1, nd);             % Stationary responses with large pupil
+stat_smallPupil_keep = cell(1, nd);             % Stationary responses with small pupil
+loc_resp_keep = cell(1, nd);                    % Responses during locomotion
+
+% Main analysis loop - process each experimental day
+for id = 1:nd
+    % Initialize response matrices for current day
+    % Dimensions: [nCells, nDir, nCon, nSize, ...]
+    tc_trial_avrg_stat_temp = NaN(nKeep, nDir, nCon, nSize);
+    stat_resp = zeros(nKeep, nDir, nCon, nSize);           % Stationary responses
+    loc_resp = zeros(nKeep, nDir, nCon, nSize);            % Locomotion responses
+    h = zeros(nKeep, nDir, nCon, nSize);                   % Hypothesis test results
+    p = zeros(nKeep, nDir, nCon, nSize);                   % P-values
+    
+    % Extract trial parameters for current day
+    tCon = tCon_match{id}(:, 1:nTrials(id));                 % Contrast values per trial
+    tSize = tSize_match{id}(:, 1:nTrials(id));               % Size values per trial  
+    tDir = tDir_match{id}(:, 1:nTrials(id));                 % Direction values per trial
+    data_dfof_trial = data_dfof_trial_keep{id};             % Delta F/F data for current day
+    
+    % Nested loops to analyze each stimulus condition combination
+    for iDir = 1:nDir
+        % Find trials with current direction
+        ind_dir = find(tDir == dirs(iDir));
+        
+        for iCon = 1:nCon
+            % Find trials with current contrast
+            ind_con = find(tCon == cons(iCon));
+            
+            for iSize = 1:nSize
+                % Find trials with current size
+                ind_size = find(tSize == sizes(iSize));
+                
+                % Find trials matching all three stimulus parameters
+                ind_temp = intersect(ind_dir, ind_con);         % Direction & contrast match
+                ind = intersect(ind_temp, ind_size);            % Add size requirement
+                
+                % Separate trials by behavioral state
+                ind_stat = intersect(ind, find(~RIx{id}));                      % Stationary trials (not running)
+                ind_stat_largePupil = intersect(ind_stat, find(PIx_stat{1,id})); % Stationary + large pupil
+                ind_stat_smallPupil = intersect(ind_stat, find(PIx_stat{2,id})); % Stationary + small pupil
+                ind_loc = intersect(ind, find(RIx{id}));                        % Locomotion trials (running)
+
+                % Average across response window and trials, for each cell
+                stat_resp(:, iDir, iCon, iSize) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat, :), 1), 2));
+                loc_resp(:, iDir, iCon, iSize) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_loc, :), 1), 2));
+                
+                % Statistical testing: response vs baseline
+                % Right-tailed t-test comparing response window to baseline window
+                % Bonferroni correction applied: alpha = 0.01/(nDir*nCon*nSize-1)
+                [h(:, iDir, iCon, iSize), p(:, iDir, iCon, iSize)] = ttest(...
+                    nanmean(data_dfof_trial(resp_win, ind, :), 1), ...         % Response period
+                    nanmean(data_dfof_trial(base_win, ind, :), 1), ...         % Baseline period
+                    'dim', 2, 'tail', 'right', ...                             % Right-tailed test
+                    'alpha', 0.01./(nDir*nCon*nSize-1));                       % Bonferroni corrected alpha
+                
+                % Calculate pupil-state specific responses during stationary periods
+                stat_resp_largePupil(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat_largePupil, :), 1), 2)); %INITIATE ABOVE
+                stat_resp_smallPupil(:, iDir, iCon, iSize, 1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win, ind_stat_smallPupil, :), 1), 2));
+                
+            end
+        end
+    end
+    
+    
+    % Initialize matrices for responses at preferred orientation
+    conBySize_resp_stat = zeros(nCells, nCon, nSize);       % Stationary responses: all contrasts/sizes at pref direction
+    conBySize_resp_loc = zeros(nCells, nCon, nSize);        % Locomotion responses: all contrasts/sizes at pref direction
+    
+    % Extract contrast x size tuning at preferred direction for each cell
+    for iCell = 1:nKeep
+        % Extract responses across all contrasts and sizes at the cell's preferred direction
+        conBySize_resp_stat(iCell, :, :) = stat_resp(iCell, prefDir_keep{id}(iCell), :, :);    % Stationary condition
+        conBySize_resp_loc(iCell, :, :) = loc_resp(iCell, prefDir_keep{id}(iCell), :, :);      % Locomotion condition
+    end
+    % Test if largest size response > peak size response at preferred direction and highest contrast
+h_largeVsPeak = zeros(nCells, 1);
+p_largeVsPeak = zeros(nCells, 1);
+
+for iCell = 1:nKeep
+    % Find peak size at preferred direction and highest contrast
+    resp_by_size = squeeze(stat_resp(iCell, prefDir_keep{id}(iCell), end, :));
+    [~, peakSize] = max(resp_by_size);
+    
+    % If peak size = largest size, no significant difference
+    if peakSize == nSize
+        h_largeVsPeak(iCell) = 0;
+        p_largeVsPeak(iCell) = 1;
+    else
+        % Get trial indices for preferred direction and highest contrast
+        ind_dir = find(tDir == dirs(prefDir_keep{id}(iCell)));
+        ind_con = find(tCon == cons(end));
+        ind_temp = intersect(ind_dir, ind_con);
+        
+        % Get trial indices for largest size and peak size (stationary only)
+        ind_large = intersect(intersect(ind_temp, find(tSize == sizes(end))), find(~RIx{id}));
+        ind_peak = intersect(intersect(ind_temp, find(tSize == sizes(peakSize))), find(~RIx{id}));
+        
+        % Perform statistical test if we have sufficient trials
+        if length(ind_large) >= 3 && length(ind_peak) >= 3
+            resp_large = squeeze(nanmean(data_dfof_trial(resp_win, ind_large, iCell), 1));
+            resp_peak = squeeze(nanmean(data_dfof_trial(resp_win, ind_peak, iCell), 1));
+            [h_largeVsPeak(iCell), p_largeVsPeak(iCell)] = ttest2(resp_large, resp_peak, 'tail', 'right', 'alpha', 0.05);
+        end
+    end
+end
+    %    % Store results for current day in cell arrays
+    h_keep{id} = h;                                         % Hypothesis test results
+    p_keep{id} = p;                                         % P-values
+    stat_resp_keep{id} = stat_resp;                         % Stationary responses
+    loc_resp_keep{id} = loc_resp;                           % Locomotion responses
+    stat_largePupil_keep{id} = stat_resp_largePupil;        % Large pupil responses
+    stat_smallPupil_keep{id} = stat_resp_smallPupil;        % Small pupil responses
+    conBySize_resp_stat_keep{id} = conBySize_resp_stat;     % Contrast x Size (stationary)
+    conBySize_resp_loc_keep{id} = conBySize_resp_loc;       % Contrast x Size (locomotion)
+    h_largeVsPeak_keep{id} = h_largeVsPeak;                 % Statistical test: large vs peak size
+    p_largeVsPeak_keep{id} = p_largeVsPeak;                 % P-values: large vs peak size
+end
+
+% Clean up temporary variables
+clear ind_temp ind ind_size ind_con ind_dir pref_size data_sizeBycon_resp_stat ...
+      data_sizeBycon_resp_loc data_resp p h_pass resp pref_dir pref_con ...
+      data_dir_resp data_con_resp data_dfof_trial tCon tOri tDir data_orth_resp ...
+      baseStd baseMean thresh pass h_largeVsPeak p_largeVsPeak conBySize_resp_stat...
+      conBySize_resp_locstat_resp_smallPupil conBySize_resp_loc
+
+save(fullfile(fn_multi,'tc_keep.mat'), 'fullTC_keep','data_dfof_trial_keep', 'prefDir_keep',  'keep_cells', ...
+    'red_cells_keep', 'green_cells_keep');

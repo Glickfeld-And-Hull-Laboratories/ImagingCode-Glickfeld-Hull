@@ -636,7 +636,7 @@ countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1
 writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
 clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
-% make a data structure subsets for only the keep cells
+%% make a data structure subsets for only the keep cells
 
 conBySize_resp_stat_keep = cell(1,nd);
 conBySize_resp_loc_keep = cell(1,nd);

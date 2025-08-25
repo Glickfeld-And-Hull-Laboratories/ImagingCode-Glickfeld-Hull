@@ -1317,7 +1317,7 @@ for iSize = 1:nSize
     xticklabels({'25','50','100'})
     xlabel('Contrast(%)')
     ylabel('Normalized difference')
-    ylim([-6 6])
+    ylim([-8 8])
     title('Stationary')
     hold off
     set(gca,'TickDir','out')
