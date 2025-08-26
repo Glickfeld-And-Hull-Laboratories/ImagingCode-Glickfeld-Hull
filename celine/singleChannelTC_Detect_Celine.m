@@ -1,7 +1,7 @@
 %% get path names
 close all;clear all;clc;
 ds = 'DART_behavior_ExptList';
-iexp = 12; 
+iexp = 15; 
 eval(ds);
 
 %%
@@ -85,13 +85,14 @@ clear data_temp
 clear temp
 toc
 
+
 %% Choose register interval
-step = 5000;
+step = 15000;
 nep = floor(size(data,3)./step);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*step):500+((i-1)*step)),3)); title([num2str(1+((i-1)*step)) '-' num2str(500+((i-1)*step))]); end
 
-data_avg = mean(data(:,:,35001:35500),3);
+data_avg = mean(data(:,:,30001:30500),3);
 %% Register data
 
 if exist(fullfile(out_base, mouse, date, run_str))
@@ -134,6 +135,9 @@ print(fullfile(out_base, mouse, date, run_str,[date '_' mouse '_' run_str '_red&
 cTarget = celleqel2mat_padded(input.cTargetOn);
 cStart = celleqel2mat_padded(input.cLeverDown);
 nTrials = length(cTarget);
+if isempty(tquit)
+    tquit = nTrials;
+end
 sz = size(data_reg);
 data_f_targ = zeros(sz(1),sz(2),nTrials);
 data_targ = nan(sz(1),sz(2),nTrials);
@@ -172,7 +176,7 @@ myfilter = fspecial('gaussian',[20 20], 0.5);
 data_dfof_max = max(imfilter(data_dfof,myfilter),[],3);
 figure;
 imagesc(data_dfof_max)
-data_dfof = cat(3, data_dfof, data_dfof_max);
+data_dfof = cat(3,red_avg,cat(3, data_dfof, data_dfof_max));
 
 down = 5;
 data_reg_down  = stackGroupProject(data_reg,down);
@@ -268,12 +272,12 @@ save(fullfile(out_base, mouse, date, run_str, [date '_' mouse '_' run_str '_stim
 %% Contrast analysis
 nblock = length(unique(b1));
 con_resp_mat = zeros(nCon,nCells,2);
-con_block_resp_mat = zeros(nCon,nCells,nblock,2);
+con_block_resp_mat = zeros(nCon,nCells,nblock,2,2); %ncon,ncells,nblock,hit/miss,mean/sem
 data_dfof_con = zeros(size(data_dfof_targ,1), nCells, nCon);
-data_dfof_con_block = zeros(size(data_dfof_targ,1), nCells, nCon, nblock);
+data_dfof_con_block = zeros(size(data_dfof_targ,1), nCells, nCon, nblock,2); % nframes,ncells,ncon,nblock,hit/miss
 h = zeros(nCon,nCells);
 p = zeros(nCon,nCells);
-trialn = zeros(nCon, nblock);
+trialn = zeros(nCon, nblock,2); %ncon,nblock,hit/miss
 
 for iCon = 1:nCon
     ind_con = find(tContrast == cons(iCon));
@@ -284,11 +288,16 @@ for iCon = 1:nCon
         [h(iCon,iCell), p(iCon,iCell)] = ttest(mean(permute(data_dfof_targ(resp_win,iCell,ind_con),[1 3 2]),1),mean(permute(data_dfof_targ(base_win,iCell,ind_con),[1 3 2]),1),'tail','right','alpha',0.05./(nCon));
     end
     for ib = 1:nblock
-        ind_b = intersect(find(MIx+SIx),intersect(1:tquit,intersect(ind_con,find(b1==ib-1))));
-        data_dfof_con_block(:,:,iCon,ib) = nanmean(data_dfof_targ(:,:,ind_b),3);
-        con_block_resp_mat(iCon,:,ib,1) = mean(nanmean(data_dfof_targ(resp_win,:,ind_b)-data_dfof_targ(base_win,:,ind_b),3),1);
-        con_block_resp_mat(iCon,:,ib,2) = nanstd(nanmean(data_dfof_targ(resp_win,:,ind_b)-data_dfof_targ(base_win,:,ind_b),1),[],3)./sqrt(length(ind_b));
-        trialn(iCon,ib) = length(ind_b);
+        ind_s = intersect(find(SIx),intersect(1:tquit,intersect(ind_con,find(b1==ib-1))));
+        ind_m = intersect(find(MIx),intersect(1:tquit,intersect(ind_con,find(b1==ib-1))));
+        data_dfof_con_block(:,:,iCon,ib,1) = nanmean(data_dfof_targ(:,:,ind_s),3);
+        con_block_resp_mat(iCon,:,ib,1,1) = mean(nanmean(data_dfof_targ(resp_win,:,ind_s)-data_dfof_targ(base_win,:,ind_s),3),1);
+        con_block_resp_mat(iCon,:,ib,1,2) = nanstd(nanmean(data_dfof_targ(resp_win,:,ind_s)-data_dfof_targ(base_win,:,ind_s),1),[],3)./sqrt(length(ind_s));
+        data_dfof_con_block(:,:,iCon,ib,2) = nanmean(data_dfof_targ(:,:,ind_m),3);
+        con_block_resp_mat(iCon,:,ib,2,1) = mean(nanmean(data_dfof_targ(resp_win,:,ind_m)-data_dfof_targ(base_win,:,ind_m),3),1);
+        con_block_resp_mat(iCon,:,ib,2,2) = nanstd(nanmean(data_dfof_targ(resp_win,:,ind_m)-data_dfof_targ(base_win,:,ind_m),1),[],3)./sqrt(length(ind_m));
+        trialn(iCon,ib,1) = length(ind_s);
+        trialn(iCon,ib,2) = length(ind_m);
     end
 end
 
@@ -312,7 +321,7 @@ figure;
 for iCon = 1:nCon
     for ib = 1:nblock
         subplot(n,n2,iCon)
-        plot(tt, mean(data_dfof_con_block(:,good_ind,iCon,ib),2))
+        plot(tt, mean(data_dfof_con_block(:,good_ind,iCon,ib,1),2))
         hold on
         ylabel('dF/F')
         xlabel('Time from target (ms)')
@@ -340,7 +349,7 @@ figure;
 for i = 1:length(good_ind)
     subplot(n,n2,i)
     for ib = 1:nblock
-        errorbar(cons, con_block_resp_mat(:,good_ind(i),ib,1), con_block_resp_mat(:,good_ind(i),ib,2))
+        errorbar(cons, con_block_resp_mat(:,good_ind(i),ib,1,1), con_block_resp_mat(:,good_ind(i),ib,1,2))
         hold on
     end
     xlabel('Contrast')
@@ -351,7 +360,7 @@ print(fullfile(out_base, mouse, date, run_str, [date '_' mouse '_' run_str '_con
 
 figure; 
 for ib = 1:nblock
-    errorbar(cons, mean(con_block_resp_mat(:,good_ind,ib,1),2), std(con_block_resp_mat(:,good_ind,ib,1),[],2)./sqrt(length(good_ind)))
+    errorbar(cons, mean(con_block_resp_mat(:,good_ind,ib,1,1),2), std(con_block_resp_mat(:,good_ind,ib,1,1),[],2)./sqrt(length(good_ind)))
     hold on
 end
 xlabel('Contrast')
@@ -361,15 +370,18 @@ print(fullfile(out_base, mouse, date, run_str, [date '_' mouse '_' run_str '_Avg
 
 save(fullfile(out_base, mouse, date, run_str,  [date '_' mouse '_' run_str '_cellResp.mat']),'trialn', 'data_dfof_con', 'data_dfof_con_block', 'con_block_resp_mat', 'con_resp_mat', 'good_ind', 'tt')
 
-good_ind_mask = zeros(size(mask_cell));
-for i = 1:length(good_ind)
-    good_ind_mask(find(mask_cell==good_ind(i))) = 1;
-end
-shadeimg = imShade(red_avg,good_ind_mask);
-figure; imagesc(shadeimg)
 %% Behavior
+FIx = strcmp(input.trialOutcomeCell,'failure');
+figure; plot(smooth(MIx,5))
+hold on; plot(smooth(SIx,5))
+vline([40:40:nTrials])
+title([date ' ' mouse '- hit and miss rate'])
+print(fullfile(out_base, mouse, date, run_str, [date '_' mouse '_' run_str '_HitAndMissRate.pdf']),'-dpdf', '-bestfit')
+
 hr = zeros(nCon,nblock);
-ci95 = zeros(2,nCon,nblock);
+fr = zeros(1,nblock);
+ci = zeros(2,nCon,nblock);
+ci_fr = zeros(2,nblock);
 for iCon = 1:nCon
     ind_con = find(tContrast==cons(iCon));
     for ib = 1:nblock
@@ -378,9 +390,14 @@ for iCon = 1:nCon
         ind_miss = intersect(1:tquit,intersect(find(MIx),intersect(ind_con,ind_b)));
         ntrials = length([ind_correct ind_miss]);
         [hr(iCon,ib) ci(:,iCon,ib)] = binofit(length(ind_correct),ntrials);
+        if iCon == 1
+            ind_fa = intersect(1:tquit,intersect(find(FIx),ind_b));
+            [fr(1,ib) ci_fr(:,ib)] = binofit(length(ind_fa),length(1:tquit)+length(ind_fa));
+        end
     end
 end
 ci_flip = permute(ci,[2 3 1]);
+ci_fr_flip = ci_fr';
 figure; 
 for ib = 1:nblock
     errorbar(cons, hr(:,ib),hr(:,ib)-ci_flip(:,ib,1),ci_flip(:,ib,2)-hr(:,ib))
@@ -388,7 +405,35 @@ for ib = 1:nblock
 end
 xlabel('Contrast')
 ylabel('Hit rate')
+ylim([0 1])
+xlim([0 1])
 
 title([date ' ' mouse '- hit rate by block'])
 print(fullfile(out_base, mouse, date, run_str, [date '_' mouse '_' run_str '_HitRateByBlock.pdf']),'-dpdf', '-bestfit')
 
+figure;
+errorbar([1 2],[hr(2,1) fr(1,1)],[hr(2,1)-ci_flip(2,1,1) fr(1,1)-ci_fr_flip(1,1)],[ci_flip(2,1,2)-hr(2,1) ci_fr_flip(1,2)-fr(1,1)])
+hold on
+errorbar([1 2],[hr(2,2) fr(1,2)],[hr(2,2)-ci_flip(2,2,1) fr(1,2)-ci_fr_flip(2,1)],[ci_flip(2,2,2)-hr(2,2) ci_fr_flip(2,2)-fr(1,2)])
+xlim([0 3])
+ylim([0 1])
+set(gca,'Xtick',0:1:3,'XtickLabels',{' ', 'HR', 'FR', ' '})
+title([date ' ' mouse '- hit rate by block'])
+print(fullfile(out_base, mouse, date, run_str, [date '_' mouse '_' run_str '_HR&FRByBlock.pdf']),'-dpdf', '-bestfit')
+
+%% trial start
+cTrialStart = celleqel2mat_padded(input.cTrialStart);
+data_start = nan(120,nCells,nTrials);
+for itrial = 2:nTrials
+    if ~isnan(cTrialStart(itrial))
+        if cTrialStart(itrial)+99 <= size(npSub_tc,1)
+            data_start(:,:,itrial) = npSub_tc(cTrialStart(itrial)-20:cTrialStart(itrial)+99,:);
+        end
+    end
+end
+data_f_start = nanmean(data_start(1:20,:,:),1);
+data_dfof_start = bsxfun(@rdivide,bsxfun(@minus,data_start,data_f_start),data_f_start);
+
+figure; 
+plot(tt,squeeze(nanmean(nanmean(data_dfof_start(:,good_ind,:),2),3)))
+ylim([-0.01 0.1])
