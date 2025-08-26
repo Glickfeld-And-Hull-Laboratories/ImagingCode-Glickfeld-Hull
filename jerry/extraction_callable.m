@@ -1,13 +1,11 @@
-clear all; clear global; 
-close all
-clc
+function [] = extraction_callable(day_id,ref)
+
 ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-%day_id = 169; %enter post-DART day
-day_id = input('Enter day id ');% alternative to run from command line.
+% day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -30,7 +28,7 @@ else
     dart_str = 'control';
 end
 prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
-            x = input(prompt);
+            x = ref;
             switch x
                 case 0
                     pre=1; %baeline session, used as reference, is in the 1st position
@@ -1184,3 +1182,5 @@ save(fullfile(fn_multi,'surr_supp.mat'),'supp_conds','supp_tbl','counts','nGreen
     'ss_pre','ss_post','supp_result','supp_statusArr','dfofTrial_keep_2days');
 
 supp_tbl
+
+end

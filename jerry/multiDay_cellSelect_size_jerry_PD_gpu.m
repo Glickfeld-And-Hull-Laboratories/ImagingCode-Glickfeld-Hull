@@ -1,12 +1,11 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_YM90K_Celine'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; % a struct where fields store experiment metadata 
+% for each mouse, enter manually: mouse, date, imaging session, drug condition etc. 
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
-doGreenOnly = true;
-doCorrImg = true;  
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
 day_id = 25;
