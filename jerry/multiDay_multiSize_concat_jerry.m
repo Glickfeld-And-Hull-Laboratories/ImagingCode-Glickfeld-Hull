@@ -385,6 +385,7 @@ SSIx_concat = [];
 runInclude_concat = nan(size(supp_status_concat,1),nd); % count how many cells can be included
 statSSIx_concat = [];
 locSSIx_concat = [];
+dartIx_concat = [];
 
 for sesh = 1:nSess
     if sesh == 1
@@ -394,6 +395,8 @@ for sesh = 1:nSess
     Mouse_SSIx = nan(nCells,nd);
     statSSIx_sesh = nan(nCells,nd);
     locSSIx_sesh = nan(nCells,nd);
+    include_sm = cell(1,2);
+    include_lg = cell(1,2);
     % STD_mat = nan(nCells,2);
     for id = 1:nd
         thisTdfof = trial_dfof_concat{sesh,id};
@@ -443,17 +446,38 @@ for sesh = 1:nSess
         cell_avg_dfof_sm = mean(thisTdfof(:,thisSizes_sm),2);
         cell_avg_dfof_lg = mean(thisTdfof(:,thisSizes_lg),2);
 
-        % surround suppression index
+        % surround suppression index on both days
         cell_avg_dfof_sm(cell_avg_dfof_sm<0) = 0;
         cell_avg_dfof_lg(cell_avg_dfof_lg<0) = 0;
         SSIx = (cell_avg_dfof_lg - cell_avg_dfof_sm)./(cell_avg_dfof_lg + cell_avg_dfof_sm);
         % SSIx(isnan(SSIx)) = 0;
         Mouse_SSIx(:,id) = SSIx;
+
+        include_sm{id} = stat_sm;
+        include_lg{id} = stat_lg;
     end
+
+    %calculate DART effects of small stim trials and large stim trials on
+    %the pre day
+    %this requires info from both days
+    pre_sm = nanmean(trial_dfof_concat{sesh,pre}(:,include_sm{pre}),2);
+    post_sm = nanmean(trial_dfof_concat{sesh,post}(:,include_sm{post}),2);
+    pre_lg = nanmean(trial_dfof_concat{sesh,pre}(:,include_lg{pre}),2);
+    post_lg = nanmean(trial_dfof_concat{sesh,post}(:,include_lg{post}),2);
+    pre_sm(pre_sm<0) = 0;
+    post_sm(post_sm<0) = 0;
+    dartIx_sm = (post_sm - pre_sm) ./ (post_sm + pre_sm);
+    pre_lg(pre_lg<0) = 0;
+    post_lg(post_lg<0) = 0;
+    dartIx_lg = (post_lg - pre_lg) ./ (post_lg + pre_lg);
+    dartIx = [dartIx_sm dartIx_lg]; % 1st column small, 2nd column large
+
+    dartIx_concat = [dartIx_concat;dartIx];
     SSIx_concat = [SSIx_concat;Mouse_SSIx];
     cellConcatCounter = cellConcatCounter + nCells;
     statSSIx_concat = [statSSIx_concat;statSSIx_sesh];
     locSSIx_concat = [locSSIx_concat;locSSIx_sesh];
+
 end
 
 %% plot pre vs post DART SSIx
@@ -582,6 +606,118 @@ eb(2) = errorbar(statSSIx_red_mean_post,locSSIx_red_mean_post,locSSIx_red_sem_po
 set(eb, 'color', 'k', 'LineWidth', 1.5)
 xlabel('stat')
 ylabel('loc')
+hold off
+
+%% DART effect idx vs suppression idx
+% DART effect of either large or small trials; highest contrast, only
+% stationary, again pre-dart SSIx
+
+% dartIx_concat 1st column small, 2nd column large
+dIx_sm_green = dartIx_concat(green_ind_concat,1);
+sm_green_avg = nanmean(dIx_sm_green);
+sm_green_sem = nanstd(dIx_sm_green)./sqrt(sum(~isnan(dIx_sm_green)));
+
+dIx_lg_green = dartIx_concat(green_ind_concat,2);
+lg_green_avg = nanmean(dIx_lg_green);
+lg_green_sem = nanstd(dIx_lg_green)./sqrt(sum(~isnan(dIx_lg_green)));
+
+dIx_sm_red = dartIx_concat(red_ind_concat,1);
+sm_red_avg = nanmean(dIx_sm_red);
+sm_red_sem = nanstd(dIx_sm_red)./sqrt(sum(~isnan(dIx_sm_red)));
+
+dIx_lg_red = dartIx_concat(red_ind_concat,2);
+lg_red_avg = nanmean(dIx_lg_red);
+lg_red_sem = nanstd(dIx_lg_red)./sqrt(sum(~isnan(dIx_lg_red)));
+
+% calculate SSIx of the pre day as done above
+SSIx_green = SSIx_concat(green_ind_concat,:);
+SSIx_green_mean_pre = nanmean(SSIx_green(:,pre),1);
+SSIx_green_sem_pre = nanstd(SSIx_green(:,pre))./sqrt(sum(~isnan(SSIx_green(:,pre))));
+
+SSIx_red = SSIx_concat(red_ind_concat,:);
+SSIx_red_mean_pre = nanmean(SSIx_red(:,pre),1);
+SSIx_red_sem_pre = nanstd(SSIx_red(:,pre))./sqrt(sum(~isnan(SSIx_red(:,pre))));
+
+% calculate actual nCells
+
+n_green_sm = sum(~isnan(SSIx_green(:,pre)) .* ~isnan(dIx_sm_green));
+n_green_lg = sum(~isnan(SSIx_green(:,pre)) .* ~isnan(dIx_lg_green));
+n_red_sm = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_sm_red));
+n_red_lg = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_lg_red));
+
+% regression model
+mask1 = ~isnan(SSIx_green(:,pre)) & ~isnan(dIx_sm_green);
+model1 = polyfit(SSIx_green(mask1,pre),dIx_sm_green(mask1),1);
+figure
+hand1 = plot(model1)
+
+model1 = fitlm(SSIx_green(:,pre),dIx_sm_green);
+figure
+hand1 = plot(model1)
+
+model2 = fitlm(SSIx_red(:,pre),dIx_sm_red);
+figure
+hand2 = plot(model2)
+
+model3 = fitlm(SSIx_green(:,pre),dIx_lg_green);
+figure
+hand3 = plot(model3)
+
+model4 = fitlm(SSIx_red(:,pre),dIx_lg_red);
+figure
+hand4 = plot(model4)
+
+% plots
+figure;
+hold on
+title(['Small Stim, HTP- n = ' num2str(n_green_sm)])
+scatter(SSIx_green(:,pre),dIx_sm_green)
+% line(-1:0.1:1,-1:0.1:1);
+% eb(1) = errorbar(SSIx_green_mean_pre,sm_green_avg,SSIx_green_sem_pre, 'horizontal', 'LineStyle', 'none');
+% eb(2) = errorbar(SSIx_green_mean_pre,sm_green_avg,sm_green_sem, 'vertical', 'LineStyle', 'none');
+% set(eb, 'color', 'k', 'LineWidth', 1.5)
+lsline
+xlabel('SSIx')
+ylabel('DART Index')
+hold off
+
+figure;
+hold on
+title(['Small Stim, HTP+ n = ' num2str(n_red_sm)])
+scatter(SSIx_red(:,pre),dIx_sm_red)
+% line(-1:0.1:1,-1:0.1:1);
+% eb(1) = errorbar(SSIx_red_mean_pre,sm_red_avg,SSIx_red_sem_pre, 'horizontal', 'LineStyle', 'none');
+% eb(2) = errorbar(SSIx_red_mean_pre,sm_red_avg,sm_red_sem, 'vertical', 'LineStyle', 'none');
+% set(eb, 'color', 'k', 'LineWidth', 1.5)
+lsline
+xlabel('SSIx')
+ylabel('DART Index')
+hold off
+
+figure;
+hold on
+title(['Large Stim, HTP- n = ' num2str(n_green_lg)])
+scatter(SSIx_green(:,pre),dIx_lg_green)
+% line(-1:0.1:1,-1:0.1:1);
+% eb(1) = errorbar(SSIx_green_mean_pre,lg_green_avg,SSIx_green_sem_pre, 'horizontal', 'LineStyle', 'none');
+% eb(2) = errorbar(SSIx_green_mean_pre,lg_green_avg,lg_green_sem, 'vertical', 'LineStyle', 'none');
+% set(eb, 'color', 'k', 'LineWidth', 1.5)
+lsline
+xlabel('SSIx')
+ylabel('DART Index')
+hold off
+
+figure;
+hold on
+title(['Large Stim, HTP+ n = ' num2str(n_red_lg)])
+scatter(SSIx_red(:,pre),dIx_lg_red)
+% line(-1:0.1:1,-1:0.1:1);
+% eb(1) = errorbar(SSIx_red_mean_pre,lg_red_avg,SSIx_red_sem_pre, 'horizontal', 'LineStyle', 'none');
+% eb(2) = errorbar(SSIx_red_mean_pre,lg_red_avg,lg_red_sem, 'vertical', 'LineStyle', 'none');
+% set(eb, 'color', 'k', 'LineWidth', 1.5)
+lsline
+xlabel('SSIx')
+ylabel('DART Index')
 hold off
 
 
