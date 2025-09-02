@@ -102,7 +102,7 @@ for id = 1:nd
     tCon_match{id} = celleqel2mat_padded(inputStructure(id).tGratingContrast(1:nTrials(id)));
     tDir_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDirectionDeg(1:nTrials(id)));
     tOri_match{id} = tDir_match{id};
-    % Convert directions to orientations (0-179°)
+    % Convert directions to orientations (0-179�)
     tOri_match{id}(tDir_match{id} >= 180) = tDir_match{id}(tDir_match{id} >= 180) - 180;
     tSize_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDiameterDeg(1:nTrials(id)));
 end
@@ -147,7 +147,7 @@ for id = 1:nd
 end
 clear mouse_temp date imgFolder imgMatFile dataPath info
 
-% Convert raw calcium timecourses to trial-structured ΔF/F data
+% Convert raw calcium timecourses to trial-structured F/F data
 data_dfof_trial_match = cell(1, nd);
 fractTimeActive_match = cell(1, nd);
 cellstd_match = cell(1, nd);
@@ -168,7 +168,7 @@ for id = 1:nd
     % Calculate activity statistics
     fractTimeActive_match{id} = zeros(1, nCells);
     
-    % Calculate ΔF/F using baseline period
+    % Calculate F/F using baseline period
     data_f_match = mean(data_trial_match(1:(nOff/2), :, :), 1);
     data_dfof_trial_match{id} = bsxfun(@rdivide, bsxfun(@minus, data_trial_match, data_f_match), data_f_match);
     
@@ -571,7 +571,9 @@ for id = 1:nd
             if length(ind_large) >= 3 && length(ind_peak) >= 3
                 resp_large = squeeze(nanmean(data_dfof_trial_keep{id}(resp_win, ind_large, iCell), 1));
                 resp_peak = squeeze(nanmean(data_dfof_trial_keep{id}(resp_win, ind_peak, iCell), 1));
-                [h_largeVsPeak(iCell), p_largeVsPeak(iCell)] = ttest2(resp_large, resp_peak, 'tail', 'right', 'alpha', 0.05);
+                [h_largeVsPeak(iCell), p_largeVsPeak(iCell)] = ttest2(resp_large, resp_peak, 'tail', 'left', 'alpha', 0.05);
+               
+
             end
         end
     end
@@ -600,9 +602,9 @@ fprintf('\nSurround suppression analysis: %d/%d cells pass large vs peak test (%
         total_pass, total_cells, 100*total_pass/total_cells);
 
 % Offer to plot surround suppression results
-response = input('Plot surround suppression boxplots? (y/n): ', 's');
+response = input('Plot surround suppression sanity check? (y/n): ', 's');
 if strcmpi(response, 'y')
-    plotPeakVsLargeBoxplot(1, h_largeVsPeak_keep, prefDir_keep, stat_resp_keep, ...
+    sanityCheckPeakVsLarge(1, h_largeVsPeak_keep, prefDir_keep, stat_resp_keep, ...
                           data_dfof_trial_keep, tCon_match, tSize_match, tDir_match, ...
                           RIx, nTrials, dirs, cons, sizes, resp_win);
 end
@@ -613,7 +615,7 @@ clear stat_inds loc_inds ind_stat_largePupil ind_stat_smallPupil
 clear tCon tSize tDir stat_resp h h_largeVsPeak p_largeVsPeak
 
 %% ===== NORMALIZED DIRECTION TUNING ANALYSIS =====
-% Normalize direction tuning so preferred direction = 0° for each cell
+% Normalize direction tuning so preferred direction = 0� for each cell
 % Uses stationary trials only to avoid locomotion effects on tuning
 
 fprintf('Calculating normalized direction tuning...\n');
@@ -755,11 +757,7 @@ for id = 1:nd
                                                         condMeansReshaped(:, otherCells));
             sigCorr{id}(:, iCell) = [R_signal; p_signal];
             
-            % Optional plotting for signal correlation
-            if doPlot && ismember(iCell, cellsToPlot)
-                plotCorrelation(condMeansReshaped(:, otherCells), condMeansReshaped(:, iCell), ...
-                               R_signal, iCell, 'SigCorr', id, pre);
-            end
+
         end
     end
     fprintf('\n');
@@ -777,9 +775,3 @@ clear R_noise p_noise R_signal p_signal otherCells tCon tDir tSize
 clear ind_dir ind_con ind_dir_con ind_size ind_condition
 
 fprintf('\n=== ANALYSIS COMPLETE ===\n');
-fprintf('Key output files:\n');
-fprintf('  - cell_analysis.mat: Cell identification and filtering results\n');
-fprintf('  - behavioral_state.mat: Running/stationary and pupil classifications\n'); 
-fprintf('  - tc_keep.mat: Time course data by behavioral state\n');
-fprintf('  - resp_keep.mat: Response matrices and statistical tests\n');
-fprintf('  - HT_pyr_relationship.mat: Correlation analysis results\n');

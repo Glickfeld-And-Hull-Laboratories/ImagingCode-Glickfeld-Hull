@@ -125,7 +125,7 @@ for iSess = 1:nSess
     load(fullfile(fn_multi,'tc_keep.mat'));
     load(fullfile(fn_multi,'resp_keep.mat'));
     load(fullfile(fn_multi,'input.mat'));
-    load(fullfile(fn_multi,'locomotion.mat'));
+    load(fullfile(fn_multi,'behavioral_state.mat'));
 %    load(fullfile(fn_multi,'fluor_intensity.mat'));
     load(fullfile(fn_multi,'HT_pyr_relationship.mat'));
     % load(fullfile(fn_multi,'pupilMeans.mat'));
