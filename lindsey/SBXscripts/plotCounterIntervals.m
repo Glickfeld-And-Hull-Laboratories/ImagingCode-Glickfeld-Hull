@@ -23,14 +23,21 @@ function [times vals] = plotCounterIntervals(input,info);
 
     [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
     if isfield(input, 'tGratingDirectionDeg')
-        nOff = input.nScansOff;
-        nOn = input.nScansOn;
-        nTrials = length(input.tGratingDirectionDeg);
-        stimOnMat = double(nOff+1:nOff+nOn:(nOff+nOn)*nTrials);
-        cStimOn = celleqel2mat_padded(input.cStimOn);
+        if isfield(input, 'nScansOn')
+            nOff = input.nScansOff;
+            nOn = input.nScansOn;
+            nTrials = length(input.tGratingDirectionDeg);
+            stimOnMat = double(nOff+1:nOff+nOn:(nOff+nOn)*nTrials);
+            cStimOn = celleqel2mat_padded(input.cStimOn);
+        elseif isfield(input, 'cTargetOn')
+            cStimOn = celleqel2mat_padded(input.cTargetOn);
+            stimOnMat = nan(size(cStimOn));
+        end
     elseif isfield(input,'tStimOneGratingDirectionDeg')
         cStimOn = celleqel2mat_padded(input.cStimOneOn);
         stimOnMat = nan(size(cStimOn));
+    else
+        error('Need to define correct experiment')
     end
     length(cStimOn)
     length(stimOns)

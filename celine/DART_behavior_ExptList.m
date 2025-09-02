@@ -267,7 +267,7 @@ expt(11).passive_task={'SurroundTest_fakeMouse_allCorr'};
 expt(11).data_loc = 'ACh';
 expt(11).wheelColor = 'orange';
 
-%% i2185 DART 2
+%% i2185 training
 expt(12).mouse = 'i2185';
 expt(12).date = '250704';
 expt(12).folder = '2P';
@@ -293,3 +293,84 @@ expt(12).passive_task={};
 expt(12).data_loc = 'ACh';
 expt(12).wheelColor = [];
 expt(12).trial_quit = 150;
+
+%% i2185 training
+expt(13).mouse = 'i2185';
+expt(13).date = '250708';
+expt(13).folder = '2P';
+expt(13).img_loc  = {'V1';'L2/3'};
+expt(13).z = 201;
+expt(13).obj = '16x';
+expt(13).zoom = 2;
+expt(13).frame_rate = 30;
+expt(13).multiday_timesincedrug_hours = [];
+expt(13).multiday_matchdays = [9];
+expt(13).motionThreshold = 0.05;
+expt(13).areaBorders = 0;
+expt(13).indicator = {'virus';'GCaMP8f'};
+expt(13).drug = '';
+expt(13).redChannelTag = {'NES-HTP'};
+expt(13).redChannelRun = '001';
+expt(13).behavior_runs = {'002'};
+expt(13).behavior_time = {'1041'};
+expt(13).behavior_task = 'HAD_blocks';
+expt(13).passive_runs={};
+expt(13).passive_time={};
+expt(13).passive_task={};
+expt(13).data_loc = 'ACh';
+expt(13).wheelColor = [];
+expt(13).trial_quit = [];
+
+%% i2185 training
+expt(14).mouse = 'i2185';
+expt(14).date = '250710';
+expt(14).folder = '2P';
+expt(14).img_loc  = {'V1';'L2/3'};
+expt(14).z = 150;
+expt(14).obj = '16x';
+expt(14).zoom = 2;
+expt(14).frame_rate = 30;
+expt(14).multiday_timesincedrug_hours = [];
+expt(14).multiday_matchdays = [9];
+expt(14).motionThreshold = 0.05;
+expt(14).areaBorders = 0;
+expt(14).indicator = {'virus';'GCaMP8f'};
+expt(14).drug = '';
+expt(14).redChannelTag = {'NES-HTP'};
+expt(14).redChannelRun = '001';
+expt(14).behavior_runs = {'002'};
+expt(14).behavior_time = {'1044'};
+expt(14).behavior_task = 'HAD_blocks';
+expt(14).passive_runs={};
+expt(14).passive_time={};
+expt(14).passive_task={};
+expt(14).data_loc = 'ACh';
+expt(14).wheelColor = [];
+expt(14).trial_quit = 175;
+
+%% i2185 training
+expt(15).mouse = 'i2185';
+expt(15).date = '250711';
+expt(15).folder = '2P';
+expt(15).img_loc  = {'V1';'L2/3'};
+expt(15).z = 150;
+expt(15).obj = '16x';
+expt(15).zoom = 2;
+expt(15).frame_rate = 30;
+expt(15).multiday_timesincedrug_hours = [];
+expt(15).multiday_matchdays = [9];
+expt(15).motionThreshold = 0.05;
+expt(15).areaBorders = 0;
+expt(15).indicator = {'virus';'GCaMP8f'};
+expt(15).drug = '';
+expt(15).redChannelTag = {'NES-HTP'};
+expt(15).redChannelRun = '001';
+expt(15).behavior_runs = {'002'};
+expt(15).behavior_time = {'1215'};
+expt(15).behavior_task = 'HAD_blocks';
+expt(15).passive_runs={};
+expt(15).passive_time={};
+expt(15).passive_task={};
+expt(15).data_loc = 'ACh';
+expt(15).wheelColor = [];
+expt(15).trial_quit = 250;
