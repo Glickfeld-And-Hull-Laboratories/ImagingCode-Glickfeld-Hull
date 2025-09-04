@@ -11,8 +11,8 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [2 4 6 16];%enter all the sessions you want to concatenate
-doEye = 1; %analyze pupil info?
+sess_list = [18 28];%enter all the sessions you want to concatenate
+doEye = 0; %analyze pupil info?
 nSess=length(sess_list);
 targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 nCon = length(targetCon)
@@ -52,7 +52,7 @@ if nSess == 1
 else
     fnout= fullfile(rc.achAnalysis,experimentFolder,strcat('concat', sess_title),d);
 end
-fnout = "G:\home\ACh\Analysis\2p_analysis\VIP_YM90K\concat2_4_6_16\SSandRespSmallOnly";
+% fnout = "G:\home\ACh\Analysis\2p_analysis\VIP_YM90K\concat2_4_6_16\SSandRespSmallOnly";
 mkdir(fnout);
 cd(fnout)
 clear d sess_title
@@ -238,11 +238,11 @@ sSupp_concat_mat = cell2mat(sSupp_concat);
 sSupp_pre_ind = find(sSupp_concat_mat(:,pre));
 NotSS_pre_ind = find(~sSupp_concat_mat(:,pre));
 
-red_ind_concat = find(red_concat);
-green_ind_concat = find(green_concat);
+% red_ind_concat = find(red_concat);
+% green_ind_concat = find(green_concat);
 
-% red_ind_concat = intersect(find(red_concat),sSupp_pre_ind);
-% green_ind_concat = intersect(find(green_concat),sSupp_pre_ind);
+red_ind_concat = intersect(find(red_concat),sSupp_pre_ind);
+green_ind_concat = intersect(find(green_concat),sSupp_pre_ind);
 cons = targetCon;
 nSize = length(sizes);
 nKeep_total = sum(nKeep_concat);
@@ -646,10 +646,8 @@ n_red_sm = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_sm_red));
 n_red_lg = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_lg_red));
 
 % regression model
-mask1 = ~isnan(SSIx_green(:,pre)) & ~isnan(dIx_sm_green);
-model1 = polyfit(SSIx_green(mask1,pre),dIx_sm_green(mask1),1);
-figure
-hand1 = plot(model1)
+% mask1 = ~isnan(SSIx_green(:,pre)) & ~isnan(dIx_sm_green);
+% model1 = polyfit(SSIx_green(mask1,pre),dIx_sm_green(mask1),1);
 
 model1 = fitlm(SSIx_green(:,pre),dIx_sm_green);
 figure
@@ -1143,7 +1141,7 @@ sgtitle(['population size tuning' ])
 
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 %% contrast response
-ymin= 0;
+ymin= -0.02;
 ymax=.06;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
