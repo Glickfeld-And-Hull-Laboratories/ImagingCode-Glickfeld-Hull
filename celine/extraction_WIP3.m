@@ -60,10 +60,9 @@ inputStructure = input;
 clear input
 
 % Load pupil data - optional because some experiments don't have this
-prompt = 'Include pupil data? Eye analysis must be done for this experiment. 1 = yes, 0 = no: ';
-includePupil = input(prompt);
-
-if includePupil == 1
+prompt = 'Include pupil data? Eye analysis must already be done for this experiment. y/n: ';
+includePupil = input(prompt, 's');
+if includePupil == 'y'
     pupil = cell(1, nd);
     for id = 1:nd
         % Get the appropriate folder path for each day
@@ -102,7 +101,7 @@ for id = 1:nd
     tCon_match{id} = celleqel2mat_padded(inputStructure(id).tGratingContrast(1:nTrials(id)));
     tDir_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDirectionDeg(1:nTrials(id)));
     tOri_match{id} = tDir_match{id};
-    % Convert directions to orientations (0-179�)
+    % Convert directions to orientations (0-179)
     tOri_match{id}(tDir_match{id} >= 180) = tDir_match{id}(tDir_match{id} >= 180) - 180;
     tSize_match{id} = celleqel2mat_padded(inputStructure(id).tGratingDiameterDeg(1:nTrials(id)));
 end
@@ -200,8 +199,8 @@ base_win = 1:(stimStart - 1);
     nCells, nDir, nCon, nSize, dirs, cons, sizes);
 
 % Cell filtering parameters
-remove_outliers = input('Remove outliers? (1=yes, 0=no): ');
-if remove_outliers
+remove_outliers = input('Remove outliers? (y/n): ', 's');
+if remove_outliers == 'y'
     std_threshold = input('Standard deviation threshold for outlier removal (e.g., 3): ');
 end
 
@@ -220,7 +219,7 @@ total_green = sum(~red_ind_match);
 total_cells = length(red_ind_match);
 
 % Optional outlier removal based on response magnitude
-if remove_outliers
+if remove_outliers == 'y'
     outliers_all = [];
     for id = 1:nd
         data_temp = data_dfof_trial_match{id};
@@ -245,8 +244,8 @@ final_green_keep = sum(~red_ind_match(keep_cells));
 nKeep = length(keep_cells);
 
 % Within the keep cells, identify which ones are red vs green
-red_cells_keep = find(red_ind_match(keep_cells));
-green_cells_keep = find(~red_ind_match(keep_cells));
+red_cells_keep = logical(red_ind_match(keep_cells));
+green_cells_keep = logical(~red_ind_match(keep_cells));
 
 % Create and display summary table
 cell_summary = table(...
@@ -373,7 +372,7 @@ pupilMeans = nan(nd, 3);
 PIx_stat = cell(2, nd); % pupil index: {1} = large pupil stationary, {2} = small pupil stationary
 motorByPupil = nan(nd, 2);
 
-if includePupil
+if includePupil == 'y'
     fprintf('Analyzing pupil size for arousal state classification...\n');
     
     % Combine pupil data from both days to set threshold
@@ -505,6 +504,9 @@ for id = 1:nd
             end
         end
     end
+
+        conBySize_resp_stat(iCell,:,:)=stat_resp(iCell,pref_dir(iCell),:,:); %this gives 1 value per cell per contrast per size at the preferred dir
+        conBySize_resp_loc(iCell,:,:)=loc_resp(iCell,pref_dir(iCell),:,:); %this gives 1 value per cell per contrast per size at the preferred dir
     
     % Calculate preferred direction responses using existing preferred directions
     for iCon = 1:nCon
@@ -614,8 +616,13 @@ clear temp_* ind_* dir_inds con_inds size_inds temp_trials* temp_dir
 clear stat_inds loc_inds ind_stat_largePupil ind_stat_smallPupil
 clear tCon tSize tDir stat_resp h h_largeVsPeak p_largeVsPeak
 
+%%
+% Calculate normalized differences
+[norm_diff, bsln_std] = calculateNormalizedDifference(pref_allTrials_stat_concat, ...
+    pref_allTrials_loc_concat, pre, post, nCon, nCells);
+
 %% ===== NORMALIZED DIRECTION TUNING ANALYSIS =====
-% Normalize direction tuning so preferred direction = 0� for each cell
+% Normalize direction tuning so preferred direction = 0 for each cell
 % Uses stationary trials only to avoid locomotion effects on tuning
 
 fprintf('Calculating normalized direction tuning...\n');
