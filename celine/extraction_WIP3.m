@@ -419,6 +419,12 @@ pref_responses_loc = cell(1, nd);
 pref_responses_stat_largePupil = cell(1, nd);
 pref_responses_stat_smallPupil = cell(1, nd);
 
+% Individual trial response arrays
+pref_allTrials_stat = cell(nCon, nSize, nd);
+pref_allTrials_loc = cell(nCon, nSize, nd);
+pref_allTrials_largePupil = cell(nCon, nSize, nd);
+pref_allTrials_smallPupil = cell(nCon, nSize, nd);
+
 % Significance testing arrays
 h_keep = cell(1, nd);
 h_largeVsPeak_keep = cell(1, nd);
@@ -504,13 +510,16 @@ for id = 1:nd
             end
         end
     end
-
-        conBySize_resp_stat(iCell,:,:)=stat_resp(iCell,pref_dir(iCell),:,:); %this gives 1 value per cell per contrast per size at the preferred dir
-        conBySize_resp_loc(iCell,:,:)=loc_resp(iCell,pref_dir(iCell),:,:); %this gives 1 value per cell per contrast per size at the preferred dir
     
     % Calculate preferred direction responses using existing preferred directions
     for iCon = 1:nCon
         for iSize = 1:nSize
+            % Initialize individual trial arrays for this contrast/size
+            temp_all_stat = cell(1, nKeep);
+            temp_all_loc = cell(1, nKeep);
+            temp_all_largePupil = cell(1, nKeep);
+            temp_all_smallPupil = cell(1, nKeep);
+            
             for i = 1:nKeep
                 % Get preferred direction for this cell
                 temp_dir = dirs(prefDir_keep{id}(i));
@@ -533,16 +542,28 @@ for id = 1:nd
                 temp_tc_stat_largePupil(:, i, iCon, iSize) = nanmean(data_dfof_trial_keep{id}(:, temp_trials_stat_largePupil, i), 2);
                 temp_tc_stat_smallPupil(:, i, iCon, iSize) = nanmean(data_dfof_trial_keep{id}(:, temp_trials_stat_smallPupil, i), 2);
                 
+                % Calculate individual trial responses (for pref_allTrials)
+                temp_all_stat{i} = nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat, i), 1);
+                temp_all_loc{i} = nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_loc, i), 1);
+                temp_all_largePupil{i} = nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat_largePupil, i), 1);
+                temp_all_smallPupil{i} = nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat_smallPupil, i), 1);
+                
                 % Calculate preferred responses (mean of response window)
-                temp_pref_responses_stat(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat, i), 1));
-                temp_pref_responses_loc(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_loc, i), 1));
-                temp_pref_responses_stat_largePupil(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat_largePupil, i), 1));
-                temp_pref_responses_stat_smallPupil(i, iCon, iSize) = nanmean(nanmean(data_dfof_trial_keep{id}(resp_win, temp_trials_stat_smallPupil, i), 1));
+                temp_pref_responses_stat(i, iCon, iSize) = nanmean(temp_all_stat{i}, 2);
+                temp_pref_responses_loc(i, iCon, iSize) = nanmean(temp_all_loc{i}, 2);
+                temp_pref_responses_stat_largePupil(i, iCon, iSize) = nanmean(temp_all_largePupil{i}, 2);
+                temp_pref_responses_stat_smallPupil(i, iCon, iSize) = nanmean(temp_all_smallPupil{i}, 2);
                 
                 % Track trial counts
                 trialCounts{1, id} = [trialCounts{1, id}, length(temp_trials_stat)];
                 trialCounts{2, id} = [trialCounts{2, id}, length(temp_trials_loc)];
             end
+            
+            % Store individual trial responses for this contrast/size
+            pref_allTrials_stat{iCon, iSize, id} = temp_all_stat;
+            pref_allTrials_loc{iCon, iSize, id} = temp_all_loc;
+            pref_allTrials_largePupil{iCon, iSize, id} = temp_all_largePupil;
+            pref_allTrials_smallPupil{iCon, iSize, id} = temp_all_smallPupil;
         end
     end
     
@@ -574,8 +595,6 @@ for id = 1:nd
                 resp_large = squeeze(nanmean(data_dfof_trial_keep{id}(resp_win, ind_large, iCell), 1));
                 resp_peak = squeeze(nanmean(data_dfof_trial_keep{id}(resp_win, ind_peak, iCell), 1));
                 [h_largeVsPeak(iCell), p_largeVsPeak(iCell)] = ttest2(resp_large, resp_peak, 'tail', 'left', 'alpha', 0.05);
-               
-
             end
         end
     end
@@ -616,10 +635,9 @@ clear temp_* ind_* dir_inds con_inds size_inds temp_trials* temp_dir
 clear stat_inds loc_inds ind_stat_largePupil ind_stat_smallPupil
 clear tCon tSize tDir stat_resp h h_largeVsPeak p_largeVsPeak
 
-%%
 % Calculate normalized differences
-[norm_diff, bsln_std] = calculateNormalizedDifference(pref_allTrials_stat_concat, ...
-    pref_allTrials_loc_concat, pre, post, nCon, nCells);
+[norm_diff, bsln_std] = calculateNormalizedDifference(pref_allTrials_stat, ...
+    pref_allTrials_loc, pre, post, nCon, nKeep,nSize);
 
 %% ===== NORMALIZED DIRECTION TUNING ANALYSIS =====
 % Normalize direction tuning so preferred direction = 0 for each cell
@@ -653,7 +671,7 @@ save('tc_keep.mat', 'tc_trial_avrg_stat', 'tc_trial_avrg_loc', ...
 save('resp_keep.mat', 'stat_resp_keep', 'pref_responses_stat', 'pref_responses_loc', ...
      'pref_responses_stat_largePupil', 'pref_responses_stat_smallPupil', 'trialCounts', ...
      'conBySize_resp_stat_keep', 'conBySize_resp_loc_keep', 'h_keep', ...
-     'h_largeVsPeak_keep', 'p_largeVsPeak_keep', 'norm_dir_resp', 'data_resp_keep');
+     'h_largeVsPeak_keep', 'p_largeVsPeak_keep', 'norm_dir_resp', 'data_resp_keep','norm_diff','bsln_std');
 
 fprintf('Response data saved to: tc_keep.mat and resp_keep.mat\n');
 

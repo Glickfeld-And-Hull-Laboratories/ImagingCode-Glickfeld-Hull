@@ -45,92 +45,90 @@ else
 end
 mkdir(fnout); cd(fnout)
 
+%% Concatenating data
 % Initialize concatenation variables
 mice = []; red_concat = []; green_concat = []; nKeep_concat = [];
-dirs_concat = []; cons_concat = [];
-
+dirs_concat = []; cons_concat = []; 
 % Initialize cell arrays for concatenation
 cell_vars = {'tc_trial_avrg_stat', 'tc_trial_avrg_loc', 'pref_responses_stat', 'pref_responses_loc', ...
-             'h', 'data_resp', 'RIx', 'norm_dir_resp', 'pref_dir', 'noiseCorr', 'sigCorr', ...
-             'nonPref_trial_avrg_stat', 'nonPref_trial_avrg_loc', 'data_dfof_runOnset'};
-
+'h', 'data_resp', 'RIx', 'norm_dir_resp', 'pref_dir', 'noiseCorr', 'sigCorr', ...
+'nonPref_trial_avrg_stat', 'nonPref_trial_avrg_loc', 'data_dfof_runOnset'};
 for i = 1:length(cell_vars)
-    eval([cell_vars{i} '_concat = cell(1,nd);']);
+ eval([cell_vars{i} '_concat = cell(1,nd);']);
 end
-
 pref_allTrials_stat_concat = cell(nCon, nSize, nd);
 pref_allTrials_loc_concat = cell(nCon, nSize, nd);
 drug = cell(1, nSess);
-
 % Main concatenation loop
 for iSess = 1:nSess
-    thisSess = sess_list(iSess);
-    mouse = expt(thisSess).mouse;
-    mice = [mice; mouse];
-    drug{iSess} = expt(thisSess).drug;
-    
+     thisSess = sess_list(iSess);
+     mouse = expt(thisSess).mouse;
+     mice = [mice; mouse];
+     drug{iSess} = expt(thisSess).drug;
     % Determine data path
     if expt(thisSess).multiday_timesincedrug_hours > 0
-        dart_str = [expt(thisSess).drug '_' num2str(expt(thisSess).multiday_timesincedrug_hours) 'Hr'];
+     dart_str = [expt(thisSess).drug '_' num2str(expt(thisSess).multiday_timesincedrug_hours) 'Hr'];
     else
-        dart_str = 'control';
+     dart_str = 'control';
     end
-    fn_multi = fullfile(rc.achAnalysis, experimentFolder, mouse, ['multiday_' dart_str]);
-
+     fn_multi = fullfile(rc.achAnalysis, experimentFolder, mouse, ['multiday_' dart_str]);
     % Load data
-    load(fullfile(fn_multi, 'tc_keep.mat'));
-    load(fullfile(fn_multi, 'resp_keep.mat'));
-    load(fullfile(fn_multi, 'input.mat'));
-    load(fullfile(fn_multi, 'behavioral_state.mat'));
-    load(fullfile(fn_multi, 'cell_analysis.mat'));
-    load(fullfile(fn_multi, 'HT_pyr_relationship.mat'));
-
-    nKeep = size(tc_trial_avrg_stat{post}, 2);
-
+     load(fullfile(fn_multi, 'tc_keep.mat'));
+     load(fullfile(fn_multi, 'resp_keep.mat'));
+     load(fullfile(fn_multi, 'input.mat'));
+     load(fullfile(fn_multi, 'behavioral_state.mat'));
+     load(fullfile(fn_multi, 'cell_analysis.mat'));
+     load(fullfile(fn_multi, 'HT_pyr_relationship.mat'));
+     nKeep = size(tc_trial_avrg_stat{post}, 2);
     % Process trial conditions
-    tCon_match = cell(1, nd);
-    nTrials = [];
+     tCon_match = cell(1, nd);
+     nTrials = [];
     for id = 1:nd
-        nTrials = [nTrials, length(input(id).tBaseGratingContrast)];
-        tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:nTrials(id)));
+     nTrials = [nTrials, length(input(id).tBaseGratingContrast)];
+     tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:nTrials(id)));
     end
-    
-    dirs = unique(celleqel2mat_padded(input(post).tGratingDirectionDeg(1:nTrials(post))));
-    cons = unique(tCon_match{post});
-    sharedCon = find(ismember(cons, targetCon));
-    sizes=unique(cell2mat(input(id).tGratingDiameterDeg));
-    
+     dirs = unique(celleqel2mat_padded(input(post).tGratingDirectionDeg(1:nTrials(post))));
+     cons = unique(tCon_match{post});
+     sharedCon = find(ismember(cons, targetCon));
+     sizes=unique(cell2mat(input(id).tGratingDiameterDeg));
     % Concatenate basic variables
-    dirs_concat = [dirs_concat, dirs]; 
-    cons_concat = [cons_concat, cons(sharedCon)];
-    red_concat = [red_concat, red_cells_keep];
-    green_concat = [green_concat, green_cells_keep];
-    nKeep_concat = [nKeep_concat, nKeep];
-    
+     dirs_concat = [dirs_concat, dirs];
+     cons_concat = [cons_concat, cons(sharedCon)];
+     red_concat = [red_concat, red_cells_keep];
+     green_concat = [green_concat, green_cells_keep];
+     nKeep_concat = [nKeep_concat, nKeep];
     % Concatenate day-specific data
     for id = 1:nd
-        tc_trial_avrg_stat_concat{id} = cat(2, tc_trial_avrg_stat_concat{id}, tc_trial_avrg_stat{id}(:,:,:,:));
-        tc_trial_avrg_loc_concat{id} = cat(2, tc_trial_avrg_loc_concat{id}, tc_trial_avrg_loc{id}(:,:,sharedCon,:));
-        pref_responses_loc_concat{id} = cat(1, pref_responses_loc_concat{id}, pref_responses_loc{id}(:,sharedCon,:));
-        pref_responses_stat_concat{id} = cat(1, pref_responses_stat_concat{id}, pref_responses_stat{id}(:,sharedCon,:));
-        RIx_concat{id} = cat(1, RIx_concat{id}, sum(RIx{id}));
-        norm_dir_resp_concat{id} = cat(1, norm_dir_resp_concat{id}, norm_dir_resp{id});
-        pref_dir_concat{id} = cat(2, pref_dir_concat{id}, prefDir_keep{id});
-        noiseCorr_concat{id} = cat(2, noiseCorr_concat{id}, noiseCorr{id});
-        sigCorr_concat{id} = cat(2, sigCorr_concat{id}, sigCorr{id});
-        h_concat{id} = cat(1, h_concat{id}, h_keep{id});
-        data_resp_concat{id} = cat(1, data_resp_concat{id}, data_resp_keep{id});
+     tc_trial_avrg_stat_concat{id} = cat(2, tc_trial_avrg_stat_concat{id}, tc_trial_avrg_stat{id}(:,:,:,:));
+     tc_trial_avrg_loc_concat{id} = cat(2, tc_trial_avrg_loc_concat{id}, tc_trial_avrg_loc{id}(:,:,sharedCon,:));
+     pref_responses_loc_concat{id} = cat(1, pref_responses_loc_concat{id}, pref_responses_loc{id}(:,sharedCon,:));
+     pref_responses_stat_concat{id} = cat(1, pref_responses_stat_concat{id}, pref_responses_stat{id}(:,sharedCon,:));
+     RIx_concat{id} = cat(1, RIx_concat{id}, sum(RIx{id}));
+     norm_dir_resp_concat{id} = cat(1, norm_dir_resp_concat{id}, norm_dir_resp{id});
+     pref_dir_concat{id} = cat(2, pref_dir_concat{id}, prefDir_keep{id});
+     noiseCorr_concat{id} = cat(2, noiseCorr_concat{id}, noiseCorr{id});
+     sigCorr_concat{id} = cat(2, sigCorr_concat{id}, sigCorr{id});
+     h_concat{id} = cat(1, h_concat{id}, h_keep{id});
+     data_resp_concat{id} = cat(1, data_resp_concat{id}, data_resp_keep{id});
     end
-    
-    fprintf('Session %d completed\n', iSess);
+    if iSess==1
+        norm_diff_concat=norm_diff;
+    else
+        norm_diff_concat=cat(4,norm_diff_concat, norm_diff);
+    end
+     fprintf('Session %d of %d completed\n', iSess, nSess);
 end
-
 % Final variables
 red_ind_concat = find(red_concat);
 green_ind_concat = find(green_concat);
 cons = targetCon;
 nKeep_total = sum(nKeep_concat);
 
+% Clear individual session data, keep only concatenated
+clear tc_trial_avrg_stat tc_trial_avrg_loc pref_responses_stat pref_responses_loc
+clear h data_resp RIx norm_dir_resp pref_dir noiseCorr sigCorr
+clear nonPref_trial_avrg_stat nonPref_trial_avrg_loc data_dfof_runOnset norm_diff
+clear red_cells_keep green_cells_keep prefDir_keep h_keep data_resp_keep
 %%  Cell selection - find cells with running and stationary data for both days
 haveRunning = cell(1,nd);
 haveStat = cell(1,nd);
@@ -494,62 +492,8 @@ sgtitle(['population size tuning' ])
 
 print(fullfile(fnout,['sizeTuning.pdf']),'-dpdf');
 
-%% plotting size tuning for running vs. stationary, seperated by drug condition
 
-figure
-subplot(2,2,1) %for the first day
-errorbar(sizes,sizeResp_green_avrg_stat{pre},sizeResp_green_se_stat{pre},'k');
-hold on
-errorbar(sizes,sizeResp_green_avrg_loc{pre},sizeResp_green_se_loc{pre},'m');
-title(['Pre-DART -HTP',' n = ', num2str(length(runningGreen))])
-ylabel('dF/F, pref dir') 
-xlabel('size (deg)') 
-set(gca, 'TickDir', 'out')
-box off
-
-subplot(2,2,2) %for the second day
-errorbar(sizes,sizeResp_red_avrg_stat{pre},sizeResp_red_se_stat{pre},'k');
-hold on
-errorbar(sizes,sizeResp_red_avrg_loc{pre},sizeResp_red_se_loc{pre},'m');
-title(['Pre-DART +HTP',' n = ', num2str(length(runningRed))])
-ylabel('dF/F, pref dir') 
-xlabel('size (deg)') 
-set(gca, 'TickDir', 'out')
-box off
-
-subplot(2,2,3) %for the first day
-
-errorbar(sizes,sizeResp_green_avrg_stat{post},sizeResp_green_se_stat{post},'k');
-hold on
-errorbar(sizes,sizeResp_green_avrg_loc{post},sizeResp_green_se_loc{post},'m');
-title(['Post-DART -HTP',' n = ', num2str(length(runningGreen))])
-ylabel('dF/F, pref dir') 
-xlabel('size (deg)') 
-set(gca, 'TickDir', 'out')
-box off
-
-subplot(2,2,4) %for the second day
-errorbar(sizes,sizeResp_red_avrg_stat{post},sizeResp_red_se_stat{post},'k');
-hold on
-errorbar(sizes,sizeResp_red_avrg_loc{post},sizeResp_red_se_loc{post},'m');
-title(['Post-DART +HTP',' n = ', num2str(length(runningRed))])
-ylabel('dF/F, pref dir') 
-xlabel('size (deg)') 
-set(gca, 'TickDir', 'out')
-box off
-
-x0=5;
-y0=5;
-width=4;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-
-
-
-sgtitle(['population size tuning' ])
-
-print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
-%% contrast response
+%% contrast response CONVERT TO MY FUNCTION
 ymin=-0.01;
 ymax=.15;
 % errorbar for stat resp and loc resp vs size, where error is across mice
@@ -756,7 +700,7 @@ sgtitle('Running')
 print(fullfile(fnout,['contrastTuningRunning.pdf']),'-dpdf');
 
 
-%% linear direction plot 
+%% Normalized direction tuning
 
 if length(dirs) ==8
     dirs_for_plotting=dirs-180;
@@ -838,39 +782,13 @@ polarhistogram(pref_dir_change(red_ind_concat))
 title('HTP+')
 print(fullfile(fnout,'prefDirChange.pdf'),'-dpdf','-bestfit')
 
-%% calculate norm_diff
-norm_diff = nan(2,nCon,nSize,nKeep_total);
-for i = 1:nKeep_total
-    for iCon = 1:nCon
-        for iSize = 1:nSize 
-            %for stationary trials
-            mean_pre_stat = mean(pref_allTrials_stat_concat{iCon,iSize,pre}{i});
-            mean_post_stat=mean(pref_allTrials_stat_concat{iCon,iSize,post}{i});
-            std_pre_stat = std(pref_allTrials_stat_concat{iCon,iSize,pre}{i});
-            norm_diff_stat = (mean_post_stat-mean_pre_stat) / std_pre_stat;
-    
-            %for running trials
-            mean_pre_loc = mean(pref_allTrials_loc_concat{iCon,iSize,pre}{i});
-            mean_post_loc=mean(pref_allTrials_loc_concat{iCon,iSize,post}{i});
-            std_pre_loc = std(pref_allTrials_loc_concat{iCon,iSize,pre}{i});
-            norm_diff_loc = (mean_post_loc-mean_pre_loc)/ std_pre_loc;
-    
-            %putting data into matrix
-            norm_diff(1,iCon,iSize,i)=norm_diff_stat; %first is stationary
-            norm_diff(2,iCon,iSize,i)=norm_diff_loc; %second is running
-%clear mean_pre_stat mean_post_stat std_pre_stat mean_pre_loc mean_post_loc std_pre_loc norn_diff_stat norm_diff_loc
-        end 
-    end
-end
-%remove any infiinty values resulting from divisions by zero, and turn
-%those into NANs instead
-norm_diff(find(norm_diff == -Inf))=NaN;
-norm_diff(find(norm_diff == Inf))=NaN;
+
+
 
 %% plot fraction suppressed and facilitated
 
 
-norm_diff_red = norm_diff(:,:,:,red_ind_concat);
+norm_diff_red = norm_diff_concat(:,:,:,red_ind_concat);
 facil_red=norm_diff_red(:,:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:,:)<=-1;
 
@@ -918,7 +836,7 @@ N=length(red_ind_concat);
     set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
 %% 
-norm_diff_red = norm_diff(:,:,:,runningRed);
+norm_diff_red = norm_diff_concat(:,:,:,runningRed);
 facil_red=norm_diff_red(:,:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:,:)<=-1;
 
@@ -1324,9 +1242,20 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     'Titles', {'lowCorr', 'highCorr'}, ...
     'StimStart', 31);
 %% 
-rawDiff = pref_responses_stat_concat{post}-pref_responses_stat_concat{pre};
+mean_pref_resp = mean(mean(pref_responses_stat_concat{pre},2),3);
+mean_norm_diff = squeeze(squeeze(mean(mean(norm_diff_concat(1,:,:,:),2),3)));
 
 
+figure;
+subplot(1,3,1);scatter(mean_pref_resp(red_ind_concat),noiseCorr_concat{pre}(1,red_ind_concat));xlabel('mean resp');ylabel('noise corr');xlim([-.1 .6]);ylim([-.2 1])
+subplot(1,3,2);scatter(mean_pref_resp(red_ind_concat),mean_norm_diff(red_ind_concat));xlabel('mean resp');ylabel('mean norm diff');xlim([-.1 .6]);ylim([-6 4])
+subplot(1,3,3);scatter(noiseCorr_concat{pre}(1,red_ind_concat),mean_norm_diff(red_ind_concat));xlabel('noise corr');ylabel('mean norm diff');xlim([-.2 1]);ylim([-6 4])
 
-
-
+x0=5;
+y0=0;
+width=10;
+height=3;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+sgtitle('LM')
+%% 
+histogram(mean_pref_resp(red_ind_concat))
