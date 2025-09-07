@@ -19,7 +19,7 @@ skip{1} = []; % day 1 should be the reference session (whatever was identified a
 skip{2} = [];
 
 %pupil?
-doEye = 1;
+doEye = 0;
 
 mouse = expt(day_id).mouse;
 
