@@ -638,7 +638,8 @@ clear tCon tSize tDir stat_resp h h_largeVsPeak p_largeVsPeak
 % Calculate normalized differences
 [norm_diff, bsln_std] = calculateNormalizedDifference(pref_allTrials_stat, ...
     pref_allTrials_loc, pre, post, nCon, nKeep,nSize);
-
+% in norm_diff, the first dimension is behavioral state. 1=stationary
+% 2=running.
 %% ===== NORMALIZED DIRECTION TUNING ANALYSIS =====
 % Normalize direction tuning so preferred direction = 0 for each cell
 % Uses stationary trials only to avoid locomotion effects on tuning
