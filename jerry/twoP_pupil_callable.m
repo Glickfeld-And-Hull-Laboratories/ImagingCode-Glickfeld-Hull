@@ -64,7 +64,7 @@ for day = 1:2
     
     % measure pupil position/diameter
     rad_range = [rad_min rad_max]; %adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
-    Eye_data = extractEyeData(data_crop,rad_range);
+    Eye_data = extractEyeData_jerry(data_crop,rad_range);
     %if pupil not found reliably, adjust the image cropping or the rad_range
     
     % align to stimulus presentation
