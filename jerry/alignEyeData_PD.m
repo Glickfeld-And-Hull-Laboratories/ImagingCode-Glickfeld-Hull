@@ -1,4 +1,4 @@
-function [rad centroid] = alignEyeData(Eye_data,input);
+function [rad centroid] = alignEyeData_PD(Eye_data,input,stimOns);
 % Eye_data is output of extractEyeData
 % input is from mworks
 
@@ -8,33 +8,50 @@ function [rad centroid] = alignEyeData(Eye_data,input);
 % median pupil position on each trial during the stim.
 
     calib = 1/26.6; %mm per pixel
-    if isfield(input,'nScansOn')
-        cStimOn = input.nScansOff+1:input.nScansOff+input.nScansOn:input.counterValues{end}(end);
-        prewin_frames = input.nScansOn;
-        postwin_frames = input.nScansOn;
-    elseif isfield(input,'cStimOn')
-        cStimOn = celleqel2mat_padded(input.cStimOn);
-        if isfield(input,'trialOutcomeCell')
-            prewin_frames = input.frameRateHz;
-            postwin_frames = input.frameRateHz.*3;
+    sesh_id = input.saveTime;
+    if nargin == 3 
+        cStimOn = stimOns;
+        pdStimOn = 1;
+        if isfield(input.nScansOn) % this is true normally for visstimret
+            prewin_frames = input.nScansOn;
+            postwin_frames = input.nScansOn;
         else
-            prewin_frames = input.nFramesOn;
-            postwin_frames = input.nFramesOn;
-        end
-    elseif isfield(input,'cStimOneOn')
-        cStimOn = celleqel2mat_padded(input.cStimOneOn);
-        if isfield(input,'nStimOneFramesOn')
-            prewin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
-            postwin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
-        else
-            if length(input.frameRateHz)>1
-                input.frameRateHz = unique(input.frameRateHz);
+            if isfield(input,'trialOutcomeCell') % need to double check for behavior
+                prewin_frames = input.frameRateHz;
+                postwin_frames = input.frameRateHz.*3;
+            else
+                prewin_frames = input.nFramesOn;
+                postwin_frames = input.nFramesOn;
             end
-            prewin_frames = input.frameRateHz-1;
-            postwin_frames = input.frameRateHz;
+        end
+    else
+        if isfield(input,'nScansOn')
+            cStimOn = input.nScansOff+1:input.nScansOff+input.nScansOn:input.counterValues{end}(end);
+            prewin_frames = input.nScansOn;
+            postwin_frames = input.nScansOn;
+        elseif isfield(input,'cStimOn')
+            cStimOn = celleqel2mat_padded(input.cStimOn);
+            if isfield(input,'trialOutcomeCell')
+                prewin_frames = input.frameRateHz;
+                postwin_frames = input.frameRateHz.*3;
+            else
+                prewin_frames = input.nFramesOn;
+                postwin_frames = input.nFramesOn;
+            end
+        elseif isfield(input,'cStimOneOn')
+            cStimOn = celleqel2mat_padded(input.cStimOneOn);
+            if isfield(input,'nStimOneFramesOn')
+                prewin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
+                postwin_frames = unique(celleqel2mat_padded(input.nStimOneFramesOn));
+            else
+                if length(input.frameRateHz)>1
+                    input.frameRateHz = unique(input.frameRateHz);
+                end
+                prewin_frames = input.frameRateHz-1;
+                postwin_frames = input.frameRateHz;
+            end
         end
     end
-    
     nTrials = size(cStimOn,2);
     Rad_temp = sqrt(Eye_data.Area./pi);
     Centroid_temp = Eye_data.Centroid;
@@ -105,3 +122,7 @@ function [rad centroid] = alignEyeData(Eye_data,input);
     xlabel('Centroid distance from median')
     %print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupilPosDist.pdf']),'-dpdf','-fillpage');
     movegui('center')
+
+    if pdStimOn == 1
+        fprintf(1,'Session %i used photodiode stimOns as cStimOn\n',sesh_id)
+    end

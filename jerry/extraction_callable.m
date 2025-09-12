@@ -5,7 +5,7 @@ dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-% day_id = input('Enter day id ');% alternative to run from command line.
+%day_id = 169; %enter post-DART day
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
@@ -776,12 +776,10 @@ save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
     'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
     'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc','data_dfof_runOnset_keep')
 
-
-
 %% interneuron / pyr relationship
 % get mean-subtracted trial responses
 trialResp=cell(1,nd); %raw trial responses for each cell 
-subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
+subTrialResp=cell(1,nd); %trial responses with mean for that condition subtracted
 conditionMeans=cell(1,nd); %mean for each condition
 
 for id = 1:nd
@@ -828,8 +826,8 @@ for id=1:nd
         thisCell=subTrialResp{id}(:,iCell);
 
         %if this is a red cell, compare to all green cells
-        if ismember(iCell,red_ind_keep);
-            otherCells = green_ind_keep;;
+        if ismember(iCell,red_ind_keep)
+            otherCells = green_ind_keep;
         else
             otherCells = setdiff(green_ind_keep,iCell);
         end
@@ -847,8 +845,6 @@ for id=1:nd
         %     hold on
         %     h = lsline;
         % end
-
-
 
         [R,p]=corrcoef(otherCellsMean,thisCell);
         title([' R= ' num2str(R(2))]);
