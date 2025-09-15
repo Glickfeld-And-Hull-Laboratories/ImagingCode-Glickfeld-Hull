@@ -14,9 +14,9 @@ for n = 1:size(data,3)
 end
 eye = struct('Centroid',A,'Area',B,'Val',C,'SNR',D);
 radii = [];
-
+nFramesLoop = size(data,3);
 parpool("Threads", 20)
-for n = 1:size(data,3)
+for n = 1:nFramesLoop
     [center,radii,metric] = imfindcircles(squeeze(data(:,:,n)),rad_range,'Sensitivity',0.95);
               % pick the circle with best score
     if(isempty(center))
