@@ -11,13 +11,23 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [18 28];%enter all the sessions you want to concatenate
-doEye = 0; %analyze pupil info?
+sess_list = [2 4 6 16];%enter all the sessions you want to concatenate
+doEye = 1; %analyze pupil info?
 nSess=length(sess_list);
 targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 nCon = length(targetCon)
 nSize =2;
 frame_rate = 15;
+
+onlySS = 0;
+onlyNOTSS = 0;
+onlySmall = 0;
+onlyLarge = 0;
+
+if onlySS * onlyNOTSS == 1 | onlySmall * onlyLarge == 1
+    error('ERROR: Indexing by mutually exclusive conditions.');
+end
+
 
 nd=2;%hard coding for two days per experimental session
 
@@ -238,11 +248,19 @@ sSupp_concat_mat = cell2mat(sSupp_concat);
 sSupp_pre_ind = find(sSupp_concat_mat(:,pre));
 NotSS_pre_ind = find(~sSupp_concat_mat(:,pre));
 
-% red_ind_concat = find(red_concat);
-% green_ind_concat = find(green_concat);
+if onlySS == 0 && onlyNOTSS == 0
+    red_ind_concat = find(red_concat);
+    green_ind_concat = find(green_concat);
+end
 
-red_ind_concat = intersect(find(red_concat),sSupp_pre_ind);
-green_ind_concat = intersect(find(green_concat),sSupp_pre_ind);
+if onlySS == 1
+    red_ind_concat = intersect(find(red_concat),sSupp_pre_ind);
+    green_ind_concat = intersect(find(green_concat),sSupp_pre_ind);
+elseif onlyNOTSS == 1
+    red_ind_concat = intersect(find(red_concat),~sSupp_pre_ind);
+    green_ind_concat = intersect(find(green_concat),~sSupp_pre_ind);
+end
+
 cons = targetCon;
 nSize = length(sizes);
 nKeep_total = sum(nKeep_concat);
@@ -282,8 +300,10 @@ for id = 1:nd
 end
 respToSmall = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
-red_ind_concat = intersect(red_ind_concat,find(respToSmall));
-green_ind_concat = intersect(green_ind_concat,find(respToSmall));
+if onlySmall == 1
+    red_ind_concat = intersect(red_ind_concat,find(respToSmall));
+    green_ind_concat = intersect(green_ind_concat,find(respToSmall));
+end
 
 mySize = nSize; %nSize is the largest size
 respToSizeBothDays = cell(1,nd);
@@ -291,6 +311,12 @@ for id = 1:nd
     respToSizeBothDays{id}=sum(squeeze(sum(h_concat{id}(:,:,:,mySize),2)),2); %finding cells that responded this size, at any contrast or direction
 end
 respToLarge = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
+
+if onlyLarge == 1
+    red_ind_concat = intersect(red_ind_concat,find(respToLarge));
+    green_ind_concat = intersect(green_ind_concat,find(respToLarge));
+end
+
 
 responCriteria = cell(1,nd); %cell array that will have indices of cells that meet our response criteria on each day
 for id = 1:nd

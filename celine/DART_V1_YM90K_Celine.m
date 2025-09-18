@@ -581,7 +581,7 @@ expt(27).contrastxori_time = {'1335'};
 expt(27).wheelColor = 'orange';
 expt(27).exptType = 'VIP_YM90K';
 expt(27).data_loc = 'ACh';
-%%  i3330 DART
+%%  i3330 PEG
 expt(28).mouse = 'i3330';
 expt(28).date = '250828';
 expt(28).img_loc  = {'V1';'L2/3'};
@@ -619,7 +619,7 @@ expt(29).greenredsimultaneous = 1;
 expt(29).greenChannelLabel = '';
 expt(29).redChannelLabel = '';
 expt(29).redChannelTag = {'tdTomato','NES-HTP'};
-expt(29).redChannelRun = '001';
+expt(29).redChannelRun = '002';
 expt(29).contrastxori_runs = {'004'};
 expt(29).contrastxori_time = {'1332'};
 expt(29).wheelColor = 'orange';

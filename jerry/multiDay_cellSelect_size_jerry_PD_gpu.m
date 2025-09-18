@@ -375,7 +375,6 @@ rgb = zeros(sz(1),sz(2),3);
 
 %% extract timecourses
 
-
 data_tc = stackGetTimeCourses(data_g_reg, mask_cell);
 nCells = size(data_tc,2);
 data_tc_down = stackGetTimeCourses(stackGroupProject(data_g_reg,5), mask_cell);
@@ -618,7 +617,7 @@ for itrial = 1:nTrials
         startFrame = stimOffs(itrial-1);
     end
     iOn_pd = stimOns(itrial);
-    nOff_pd = iOn_pd - startFrame; 
+    nOff_pd = iOn_pd - startFrame;
     nOn_pd = stimOffs(itrial) - stimOns(itrial);
     thisTrialNFrames = nOn_pd+nOff_pd;
     AllTrialsNFrames(itrial) = thisTrialNFrames;
