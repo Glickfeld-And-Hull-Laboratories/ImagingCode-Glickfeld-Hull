@@ -449,13 +449,18 @@ clear data_g_reg data_reg_down
 cd(CD);
 load([runFolder '_000_000.mat']);
 [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
-nTrials = length(stimOns);
+mWStruct.stimOns_photodiode = stimOns;
+mWStruct.stimOffs_photodiode = stimOffs;
 [nFrames nCells] = size(npSub_tc);
-nOn = input.nScansOn(1);
-nOff = input.nScansOff(1);
+nOn = mWStruct.nScansOn(1);
+nOff = mWStruct.nScansOff(1);
 data_tc = nan(nOn+nOff,nCells,nTrials);
 % stimOns = stimOns_correct;
 % stimOffs = stimOffs_correct;
+input = mWStruct;
+save('input.mat','input') %save a new copy of the input structure named mWStruct that includes the photodiode-identified trial start times
+nTrials = length(stimOns);
+
 for itrial = 1:nTrials
   if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
     data_tc(:,:,itrial) = npSub_tc(stimOns(itrial)-nOff/2:stimOns(itrial)-1+nOn+nOff/2,:);

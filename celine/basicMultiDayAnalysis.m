@@ -12,7 +12,7 @@ experimentFolder = 'SST_YM90K';
 rc = behavConstsDART;
 eval(ds);
 
-sess_list = [26]; % <-- ENTER MANUALLY
+sess_list = [32]; % <-- ENTER MANUALLY
 nSess = length(sess_list);
 nd = 2;
 targetCon = [.25 .5 1]; % <-- ENTER MANUALLY
@@ -410,7 +410,6 @@ norm_diff_red = norm_diff_concat(:,:,:,red_ind_concat);
 facil_red = norm_diff_red >= 1;
 supp_red = norm_diff_red <= -1;
 N = length(red_ind_concat);
-
 facil_table_stat = squeeze(sum(facil_red(1,:,:,:), 4) / N);
 supp_table_stat = squeeze(sum(supp_red(1,:,:,:), 4) / N);
 
@@ -418,54 +417,74 @@ supp_table_stat = squeeze(sum(supp_red(1,:,:,:), 4) / N);
 nCon = size(facil_table_stat, 1);
 nSizes = size(facil_table_stat, 2);
 
-% Define colors for different sizes
-colors = {'k', 'r', 'b', 'g', 'm', 'c', 'y'};
-if nSizes > length(colors)
-    colors = [colors, repmat({'k'}, 1, nSizes - length(colors))];
-end
-
 figure;
 
-% Suppressed
-subplot(1, 2, 1);
-b = bar(1:nCon, supp_table_stat, 'grouped', 'FaceColor', "#00AFEF", 'EdgeColor', [1 1 1]);
-for i = 1:nSizes
-    b(i).FaceColor = colors{i};
-end
-xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
-title('Suppressed');
-ylim([0 0.4]);
-ylabel('Fraction HTP+ cells');
-xlabel('Contrast');
-set(gca, 'TickDir', 'out');
-grid off;
-box off;
+% Define colors
+cyan_color = [0 1 1]; % Cyan for suppression
+cmyk_color = [0.8 0.2 1 0.2]; % C=20%, M=80%, Y=0%, K=20% converted to RGB
+% Convert CMYK to RGB: RGB = (1-C)*(1-K), (1-M)*(1-K), (1-Y)*(1-K)
+facilitation_color = [(1-0.2)*(1-0.2), (1-0.8)*(1-0.2), (1-0)*(1-0.2)]; % [0.64, 0.16, 0.8]
 
-% Facilitated
-subplot(1, 2, 2);
-b = bar(1:nCon, facil_table_stat, 'grouped', 'FaceColor', "#00AFEF", 'EdgeColor', [1 1 1]);
-for i = 1:nSizes
-    b(i).FaceColor = colors{i};
+% Plot 2 by nSize subplots (suppression column, facilitation column)
+for iSize = 1:nSizes
+    % Suppression subplot
+    subplot(nSizes, 2, (iSize-1)*2 + 1);
+    b = bar(1:nCon, supp_table_stat(:, iSize), 'FaceColor', cyan_color, 'EdgeColor', [1 1 1]);
+    
+    % Format suppression plot
+    xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
+    if iSize == 1
+        title('Suppressed');
+    end
+    ylim([0 0.4]);
+    
+    % Only add ylabel to left column
+    ylabel('Fraction HTP+ cells');
+    
+    % Only add xlabel to bottom row
+    if iSize == nSizes
+        xlabel('Contrast');
+    end
+    
+    % Add size label on the left
+    text(-0.15, 0.2, sprintf('Size %d', iSize), 'Units', 'normalized', ...
+         'HorizontalAlignment', 'center', 'VerticalAlignment', 'middle', ...
+         'Rotation', 90, 'FontWeight', 'bold');
+    
+    set(gca, 'TickDir', 'out');
+    grid off;
+    box off;
+    
+    % Facilitation subplot
+    subplot(nSizes, 2, (iSize-1)*2 + 2);
+    b = bar(1:nCon, facil_table_stat(:, iSize), 'FaceColor', facilitation_color, 'EdgeColor', [1 1 1]);
+    
+    % Format facilitation plot
+    xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
+    if iSize == 1
+        title('Facilitated');
+    end
+    ylim([0 0.4]);
+    
+    % Only add xlabel to bottom row
+    if iSize == nSizes
+        xlabel('Contrast');
+    end
+    
+    set(gca, 'TickDir', 'out');
+    grid off;
+    box off;
 end
-xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
-title('Facilitated');
-ylim([0 0.4]);
-xlabel('Contrast');
-set(gca, 'TickDir', 'out');
-grid off;
-box off;
 
 sgtitle('Stationary');
 
-% Set figure size
+% Set figure size - taller to accommodate multiple rows
 x0 = 5;
 y0 = 5;
-width = 3;
-height = 1.75;
+width = 4; % Fixed width for 2 columns
+height = 1.5 * nSizes; % Scale height with number of sizes
 set(gcf, 'units', 'inches', 'position', [x0, y0, width, height]);
-
 print(fullfile(fnout, 'Facil_supp_stat.pdf'), '-dpdf');
-print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
 %% Same as above for running trials, using only HTP+ cells that have running data
 norm_diff_red = norm_diff_concat(:,:,:,runningRed);
 facil_red=norm_diff_red(:,:,:,:)>=1;
@@ -547,7 +566,7 @@ lowNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)<=.3);
 
 
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
-    highNoiseCorr_red, highNoiseCorr_red, ...
+    highNoiseCorr_red, lowNoiseCorr_red, ...
     'UseDashedLines', [false, false], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots

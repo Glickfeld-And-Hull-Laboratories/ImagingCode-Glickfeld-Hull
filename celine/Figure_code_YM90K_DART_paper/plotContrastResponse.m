@@ -134,7 +134,7 @@ end
 
 % Add some padding to the y-axis limits (10% of the range)
 padding = 0.1 * (ymax - ymin);
-ymin = max(0, ymin - padding);
+ymin = max(-.2, ymin - padding);
 ymax = ymax + padding;
 
 % Create figure
@@ -155,10 +155,10 @@ for iSize = 1:nSizes
     
     % Plot with error bars
     errorbar(contrasts, conResp_data1_avrg{pre, iSize}, conResp_data1_se{pre, iSize}, ...
-        [line_style1_pre, 'o'], 'Color', colors1{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
+        [line_style1_pre], 'Color', colors1{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
     hold on;
     errorbar(contrasts, conResp_data1_avrg{post, iSize}, conResp_data1_se{post, iSize}, ...
-        [line_style1_post, 'o'], 'Color', colors1{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
+        [line_style1_post], 'Color', colors1{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
     
     % Set axis properties
     if iSize == 1
@@ -189,10 +189,10 @@ for iSize = 1:nSizes
     
     % Plot with error bars
     errorbar(contrasts, conResp_data2_avrg{pre, iSize}, conResp_data2_se{pre, iSize}, ...
-        [line_style2_pre, 'o'], 'Color', colors2{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
+        [line_style2_pre], 'Color', colors2{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
     hold on;
     errorbar(contrasts, conResp_data2_avrg{post, iSize}, conResp_data2_se{post, iSize}, ...
-        [line_style2_post, 'o'], 'Color', colors2{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
+        [line_style2_post], 'Color', colors2{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
     
     % Set axis properties
     xlim(xlim_range);

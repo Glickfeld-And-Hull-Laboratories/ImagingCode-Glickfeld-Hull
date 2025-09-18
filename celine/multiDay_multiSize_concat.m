@@ -1230,12 +1230,12 @@ figure;cdfplot(noiseCorr_concat{pre}(1,red_ind_concat))
 
 median(noiseCorr_concat{pre}(1,red_ind_concat))
 
-highNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)>.3);
-lowNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)<=.3);
+highNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)>.5);
+lowNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)<=.5);
 
 
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
-    highNoiseCorr_red, highNoiseCorr_red, ...
+    lowNoiseCorr_red, highNoiseCorr_red, ...
     'UseDashedLines', [false, false], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
@@ -1244,18 +1244,62 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
 %% 
 mean_pref_resp = mean(mean(pref_responses_stat_concat{pre},2),3);
 mean_norm_diff = squeeze(squeeze(mean(mean(norm_diff_concat(1,:,:,:),2),3)));
+norm_diff_lowConFF_LM=norm_diff_concat(1,1,3,:);
 
+mean_norm_diff_LM = mean_norm_diff;
+mean_pref_resp_LM = mean_pref_resp;
+noiseCorr_concat_LM = noiseCorr_concat{pre}(1,:);
+red_ind_LM=red_ind_concat;
 
+save("LM_noiseCorrCompare.mat",'mean_norm_diff_LM','mean_pref_resp_LM','noiseCorr_concat_LM','red_ind_LM','norm_diff_lowConFF_LM')
+%%
+% Calculate response differences (post - pre) for red cells
+pre = 2;
+post = 1;
+
+% Extract data for red cells only
+pre_data = pref_responses_stat_concat{pre}(red_ind_concat, :, :);  % nRedCells x nContrasts x nSizes
+post_data = pref_responses_stat_concat{post}(red_ind_concat, :, :); % nRedCells x nContrasts x nSizes
+
+% Calculate difference (post - pre)
+diff_data = post_data - pre_data; % nRedCells x nContrasts x nSizes
+
+% Get dimensions
+[nCells, nCon, nSizes] = size(diff_data);
+
+% Calculate mean and SEM across cells for each contrast and size
+mean_diff = squeeze(mean(diff_data, 1, 'omitnan')); % nContrasts x nSizes
+sem_diff = squeeze(std(diff_data, [], 1, 'omitnan') ./ sqrt(sum(~isnan(diff_data), 1))); % nContrasts x nSizes
+
+% Create size axis (assuming sizes 1, 2, 3, ...)
+size_axis = 1:nSizes;
+
+% Create figure
 figure;
-subplot(1,3,1);scatter(mean_pref_resp(red_ind_concat),noiseCorr_concat{pre}(1,red_ind_concat));xlabel('mean resp');ylabel('noise corr');xlim([-.1 .6]);ylim([-.2 1])
-subplot(1,3,2);scatter(mean_pref_resp(red_ind_concat),mean_norm_diff(red_ind_concat));xlabel('mean resp');ylabel('mean norm diff');xlim([-.1 .6]);ylim([-6 4])
-subplot(1,3,3);scatter(noiseCorr_concat{pre}(1,red_ind_concat),mean_norm_diff(red_ind_concat));xlabel('noise corr');ylabel('mean norm diff');xlim([-.2 1]);ylim([-6 4])
+hold on;
 
-x0=5;
-y0=0;
-width=10;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-sgtitle('LM')
-%% 
-histogram(mean_pref_resp(red_ind_concat))
+% Define colors for different contrasts
+colors = lines(nCon);
+
+% Plot each contrast as a separate line
+for iCon = 1:nCon
+    errorbar(size_axis, mean_diff(iCon, :), sem_diff(iCon, :), ...
+        'Color', colors(iCon, :), 'LineWidth', 1.5, 'Marker', 'o', ...
+        'MarkerSize', 4, 'MarkerFaceColor', colors(iCon, :));
+end
+
+% Format plot
+xlabel('Size');
+ylabel('Response Difference (Post - Pre)');
+title(sprintf('Response Changes in Red Cells (n=%d)', nCells));
+legend(arrayfun(@(x) sprintf('Contrast %d', x), 1:nCon, 'UniformOutput', false), ...
+       'Location', 'best');
+
+% Add reference line at zero
+line([0.5, nSizes+0.5], [0, 0], 'Color', 'k', 'LineStyle', '--');
+
+% Format axes
+set(gca, 'TickDir', 'out', 'XTick', 1:nSizes);
+xlim([0.5, nSizes+0.5]);
+grid off;
+box off;
