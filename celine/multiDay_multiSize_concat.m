@@ -7,7 +7,7 @@ experimentFolder = 'SST_YM90K';
 rc = behavConstsDART;
 eval(ds);
 
-sess_list = [8 10 20 22];
+sess_list = [33];
 nSess = length(sess_list);
 nd = 2;
 
