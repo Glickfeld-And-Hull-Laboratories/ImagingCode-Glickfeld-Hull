@@ -2,7 +2,7 @@ clear all; clear global; close all;
 %paths
 ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
-rc =  behavConstsDART; %directories178
+rc =  behavConstsDART; %directories
 eval(ds);
 
 experimentFolder = 'VIP_YM90K';

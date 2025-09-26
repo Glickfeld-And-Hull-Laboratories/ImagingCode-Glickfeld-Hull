@@ -12,7 +12,7 @@ experimentFolder = 'SST_YM90K';
 rc = behavConstsDART;
 eval(ds);
 
-sess_list = [32]; % <-- ENTER MANUALLY
+sess_list = [8 10 20 22]; % <-- ENTER MANUALLY
 nSess = length(sess_list);
 nd = 2;
 targetCon = [.25 .5 1]; % <-- ENTER MANUALLY
@@ -235,6 +235,10 @@ plotContrastResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
 sgtitle('Stationary')
 saveas(gcf, sprintf('stationary_contrast_response.pdf'));
 
+%%
+[anova_results, stats_table] = anovaContrastResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+    red_ind_concat, green_ind_concat, cons,sizes,'CellPopNames',{'SST','Pyr'})
+%% 
 % Plot stationary size response function for all cells
 plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
     red_ind_concat, green_ind_concat, cons,sizes, ...
