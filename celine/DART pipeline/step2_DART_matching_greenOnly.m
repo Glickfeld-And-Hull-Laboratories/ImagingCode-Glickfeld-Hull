@@ -1,8 +1,7 @@
 %% Introduction
 % This script matches two 2-photon datasets by registering one day to a reference day.
-% Designed for experiments with "red" (interneurons with red fluorescent protein) and 
-% "green" (all cells with GCaMP) cell populations. Assumes two runs per day:
-% 1) Stimulus/behavior run 2) Red snapshot run (to identify red cells)
+% This is modified from the original DART_matching script to accomodate
+% data without a red channel.
 
 % User input sections are marked with: -->
 
@@ -25,7 +24,7 @@ brightnessScaleFactor = 0.3;
 
 % Define days to match: day_id(1) = reference, day_id(2) = matched day
 % --> Edit this to your reference day experiment ID
-day_id(1) = 26; 
+day_id(1) = 32; 
 day_id(2) = expt(day_id(1)).multiday_matchdays; % automatically finds matched day
 
 % Extract experiment info from datasheet
@@ -127,13 +126,9 @@ for id = 1:nd
     fov_norm{id} = uint8((fov_avg{id}./max(fov_avg{id}(:))).*255);
     fov_norm{id}(fov_norm{id} > (brightnessScaleFactor*255)) = brightnessScaleFactor*255;
     
-    % Load red channel snapshot if available
-    if exist(fullfile(fnout,expDate,runFolder,'redImage.mat'))
-        load(fullfile(fnout,expDate,runFolder,'redImage.mat'))
-    	fov_red{id} = uint8((redChImg./max(redChImg(:))).*255);
-    else
-        fov_red{id} = zeros(size(data_avg));
-    end
+    % ov_red will be all zeros (dummy)
+    fov_red{id} = zeros(size(data_avg)); 
+    
     
     % Load previously computed masks and timecourses
     load(fullfile(fnout,expDate,runFolder,'mask_cell.mat'))
@@ -141,7 +136,7 @@ for id = 1:nd
     corrmap{id} = data_dfof(:,:,end);
     masks{id} = mask_cell;
     maskNP{id} = mask_np;
-    red_ind{id} = mask_label;
+    red_ind{id} = []; %empty list
     
     load(fullfile(fnout,expDate,runFolder,'TCs.mat'))
     cellTCs_all{id} = npSub_tc;
@@ -184,11 +179,11 @@ if exist(fullfile(fn_multi,'multiday_alignment.mat'))
     load(fullfile(fn_multi,'multiday_alignment.mat'))
 else
     % Perform new manual alignment
-    [input_points_1, base_points_1] = cpselect(fov_red{2},fov_red{1},'Wait', true);
-    [input_points_2, base_points_2] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
-    [input_points_3, base_points_3] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
-    input_points = [input_points_1; input_points_2; input_points_3];
-    base_points = [base_points_1; base_points_2; base_points_3];
+    %No red FOV for manual alignment
+    [input_points_1, base_points_1] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
+    [input_points_2, base_points_2] = cpselect(corrmap_norm{2},corrmap_norm{1},'Wait', true);
+    input_points = [input_points_1; input_points_2];
+    base_points = [base_points_1; base_points_2];
 end
 
 %% Apply manual alignment
@@ -200,8 +195,6 @@ fov_avg{3} = mean(data{3},3);
 fov_norm{3} = uint8((fov_avg{3}./max(fov_avg{3}(:))).*255);
 corrmap{3} = double(imwarp(corrmap{2},fitGeoTAf, 'OutputView', imref2d(size(corrmap{2}))));
 corrmap_norm{3} = uint8((corrmap{3}./max(corrmap{3}(:))).*255);
-red_trans = (imwarp(fov_red{2},fitGeoTAf, 'OutputView', imref2d(size(fov_red{2}))));
-fov_red{3} = uint8(red_trans);
 dfmax{3} = (imwarp(dfmax{2},fitGeoTAf, 'OutputView', imref2d(size(dfmax{2}))));
 
 % Display alignment results
@@ -231,23 +224,12 @@ imshow(cat(3,d1,d21,filler))
 title('Overlay')
 print(fullfile(fn_multi,'FOV correlation map manual alignment'),'-dpdf','-fillpage')
 
-figure;colormap gray
-movegui('center')
-subplot 221
-imshow(fov_red{1}); title('Day 1 Data Avg')
-subplot 222
-imshow(fov_red{3}); title('Transformed Day 2 Data Avg')
-subplot 223
-filler = zeros(size(fov_red{1}));
-imshow(cat(3,fov_red{1},fov_red{3},filler))
-title('Overlay')
-print(fullfile(fn_multi,'red channel manual alignment'),'-dpdf','-fillpage')
 
 %% Cell-by-cell matching
 
 % --> INTERACTIVE STEP: Individual cell matching with user input
 % For each "good cell" (not cut off by transformation), you'll see 6 images:
-% Left column: Reference day cell in 3 views (correlation, avg/red, max df/f)
+% Left column: Reference day cell in 3 views (correlation, avg, max df/f)
 % Right column: Corresponding matched day views with correlation values
 % 
 % The target cell is always in the center of each image patch.
@@ -307,23 +289,11 @@ for icell = 1:nc
         [reg_corr, shift_corr] = shift_opt(day2_cell_corr,day1_cell_corr,2);
         r_corr = corr(reg_corr(:),day1_cell_corr(:));
         
-        % Handle red channel for red cells
-        if red_ind{1}(icell)
-            day1_red_avg = fov_red{1}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-            day2_red_avg = fov_red{3}(...
-            yCenter(icell)-(h/2):yCenter(icell)+(h/2)-1,...
-            xCenter(icell)-(w/2):xCenter(icell)+(w/2)-1);
-            [red_reg_avg, shift_red] = shift_opt(double(day2_red_avg),double(day1_red_avg),2);
-            r_red = corr(red_reg_avg(:),double(day1_red_avg(:)));
-        else
-            day1_red_avg = nan; day2_red_avg = nan; red_reg_avg = nan; r_red = nan;
-        end
+        
         
         % Show images for manual matching if correlation is sufficient
-        [max_val max_ind] = max([r_avg r_max r_corr r_red]);
-        if max_val>0.1 & (r_corr>0.1 || r_red>0.1 || r_max>0.1)
+        [max_val max_ind] = max([r_avg r_max r_corr]);
+        if max_val>0.1 & (r_corr>0.1 || r_max>0.1)
             pass = true;
             figure;
             movegui('center')
@@ -334,18 +304,10 @@ for icell = 1:nc
             imagesc(day1_cell_corr); title('Corr')
             subplot(3,2,start+1)
             imagesc(reg_corr); title(num2str(r_corr))
-            subplot(3,2,start+2)
-            if red_ind{1}(icell)
-                imagesc(day1_red_avg); title('Red')
-            else
-                imagesc(day1_cell_avg); title('Avg')
-            end
+            subplot(3,2,start+2)          
+            imagesc(day1_cell_avg); title('Avg')
             subplot(3,2,start+3)
-            if red_ind{1}(icell)
-                imagesc(red_reg_avg); title(num2str(r_red))
-            else
-                imagesc(reg_avg); title(num2str(r_avg))
-            end
+            imagesc(reg_avg); title(num2str(r_avg))
             subplot(3,2,start+4)
             imagesc(day1_cell_max); title('Max')
             subplot(3,2,start+5)
@@ -361,11 +323,7 @@ for icell = 1:nc
                 case 1
                     img_select = corrmap{3}; shifts = shift_corr;
                 case 2
-                    if red_ind{1}(icell)
-                        img_select = fov_red{3}; shifts = shift_red;
-                    else
-                        img_select = fov_avg{3}; shifts = shift_avg;
-                    end
+                    img_select = fov_avg{3}; shifts = shift_avg;
                 case 3     
                     img_select = dfmax{3}; shifts = shift_max;
             end
@@ -401,15 +359,15 @@ for icell = 1:nc
         cellImageAlign(icell).center_yx = [yCenter(icell),xCenter(icell)];
         cellImageAlign(icell).d(1).avg_img = day1_cell_avg;
         cellImageAlign(icell).d(1).corr_img = day1_cell_corr;
-        cellImageAlign(icell).d(1).red_img = day1_red_avg;
+        cellImageAlign(icell).d(1).red_img = zeros(size(day1_cell_avg));
         cellImageAlign(icell).d(1).max_img = day1_cell_max;
         cellImageAlign(icell).d(2).avg_img = reg_avg;
         cellImageAlign(icell).d(2).corr_img = reg_corr;
-        cellImageAlign(icell).d(2).red_img = red_reg_avg;
+        cellImageAlign(icell).d(2).red_img = zeros(size(day1_cell_avg));;
         cellImageAlign(icell).d(2).max_img = reg_max;
         cellImageAlign(icell).r_avg = r_avg;
         cellImageAlign(icell).r_corr = r_corr;
-        cellImageAlign(icell).r_red = r_red;
+        cellImageAlign(icell).r_red = NaN;
         cellImageAlign(icell).shifts = shifts;
         cellImageAlign(icell).pass = pass;
     else
@@ -479,9 +437,9 @@ np_w = 0.01*ind;
 npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 cellTCs_match{2} = npSub_tc;
 
-% Track red cell indicators
-red_ind_match = ismember(match_ind,find(~isnan([cellImageAlign.r_red])));
-red_ind_all = red_ind;
+% Dummy objects for red cell indicators
+red_ind_match = zeros(size(match_ind));
+red_ind_all = zeros(size(nCells));
 
 % Save results
 save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_ind_all','red_ind_match','match_ind')

@@ -7,7 +7,7 @@ experimentFolder = 'SST_YM90K';
 rc = behavConstsDART;
 eval(ds);
 
-sess_list = [33];
+sess_list = [8 10 20 22];
 nSess = length(sess_list);
 nd = 2;
 
@@ -144,9 +144,13 @@ runningCells = intersect(haveStat_both, haveRunning_both);
 % Find cells responsive to small and large sizes
 respToSmall = logical(sum(squeeze(sum(h_concat{pre}(:,:,:,1),2)),2) + ...
                      sum(squeeze(sum(h_concat{post}(:,:,:,1),2)),2));
+respToMid = logical(sum(squeeze(sum(h_concat{pre}(:,:,:,2),2)),2) + ...
+                     sum(squeeze(sum(h_concat{post}(:,:,:,2),2)),2));
 respToLarge = logical(sum(squeeze(sum(h_concat{pre}(:,:,:,nSize),2)),2) + ...
                      sum(squeeze(sum(h_concat{post}(:,:,:,nSize),2)),2));
 
+midNotSmall = respToMid&~respToSmall;
+midOrSmall  = respToMid|respToSmall;
 
 % Cell type assignments
 runningGreen = intersect(runningCells, green_ind_concat);
@@ -193,7 +197,7 @@ end
 
 %% plot stationary timecourses for all cells
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
-    red_ind_concat, green_ind_concat, ...
+    intersect(find(midOrSmall),red_ind_concat), intersect(find(midOrSmall),green_ind_concat), ...
     'UseDashedLines', [false, true], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
@@ -203,7 +207,7 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
 figs = findobj('Type', 'figure');
 for i = 1:length(figs)
     figure(figs(i));
-    saveas(gcf, sprintf('neural_timecourse_size_%d.pdf', i));
+    saveas(gcf, sprintf('midOrSmall_tc_size_%d.pdf', i));
 end
 
 
@@ -1258,8 +1262,8 @@ pre = 2;
 post = 1;
 
 % Extract data for red cells only
-pre_data = pref_responses_stat_concat{pre}(red_ind_concat, :, :);  % nRedCells x nContrasts x nSizes
-post_data = pref_responses_stat_concat{post}(red_ind_concat, :, :); % nRedCells x nContrasts x nSizes
+pre_data = pref_responses_stat_concat{pre}(intersect(find(midNotSmall),red_ind_concat), :, :);  % nRedCells x nContrasts x nSizes
+post_data = pref_responses_stat_concat{post}(intersect(find(midNotSmall),red_ind_concat), :, :); % nRedCells x nContrasts x nSizes
 
 % Calculate difference (post - pre)
 diff_data = post_data - pre_data; % nRedCells x nContrasts x nSizes
@@ -1299,7 +1303,15 @@ legend(arrayfun(@(x) sprintf('Contrast %d', x), 1:nCon, 'UniformOutput', false),
 line([0.5, nSizes+0.5], [0, 0], 'Color', 'k', 'LineStyle', '--');
 
 % Format axes
-set(gca, 'TickDir', 'out', 'XTick', 1:nSizes);
+set(gca, 'TickDir', 'out', 'XTick', 1:nSizes, 'XTickLabel', sizes);
 xlim([0.5, nSizes+0.5]);
 grid off;
 box off;
+%%
+plotContrastResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+    intersect(find(midOrSmall),red_ind_concat), intersect(find(midOrSmall),green_ind_concat), cons,sizes, ...
+    'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
+    'Titles', {'HTP+', 'HTP-'}, ...
+    'YLabel', 'dF/F');
+sgtitle('Stationary')
+saveas(gcf, sprintf('conTuningMidOrSmall.pdf'));

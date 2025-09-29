@@ -12,7 +12,7 @@ experimentFolder = 'SST_YM90K';
 rc = behavConstsDART;
 eval(ds);
 
-sess_list = [26]; % <-- ENTER MANUALLY
+sess_list = [32]; % <-- ENTER MANUALLY
 nSess = length(sess_list);
 nd = 2;
 targetCon = [.25 .5 1]; % <-- ENTER MANUALLY
@@ -210,6 +210,7 @@ end
 
 
 %% Visualizations of stationary responses for all cells
+close all
 % Plot stationary timecourses for all cells
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     red_ind_concat, green_ind_concat, ...
@@ -291,6 +292,7 @@ for iSize = 1:nSize
     end
 end
 %% Visualizations of running responses for cells that have running data
+close all
 % Plot running timecourses for cells that have running data
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     runningRed, runningGreen    , ...
@@ -515,6 +517,7 @@ print(fullfile(fnout,'Facil_supp_loc.pdf'),'-dpdf');
 
 
 %% plot large and small pupil stationary timecourses
+close all
 plotNeuralTimecourse(tc_trial_avrg_stat_smallPupil_concat, tc_trial_avrg_stat_largePupil_concat, ...
     red_ind_concat, red_ind_concat, ...
     'UseDashedLines', [false, false], ...
