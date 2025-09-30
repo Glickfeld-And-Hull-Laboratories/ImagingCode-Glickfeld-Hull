@@ -191,6 +191,7 @@ nSize = length(sizes);
 % base_win = 1:(stimStart - 1);
 
 stimOns =cell(1,nd); %this is the set of trial start times that will be used throughout the rest of this script
+correctedInputStructure = cell(1, nd);
 
 for id = 1:nd
     mouse_temp = expt(allDays(id)).mouse;
@@ -199,27 +200,21 @@ for id = 1:nd
     imgMatFile = [imgFolder '_000_000.mat'];
     dataPath = fullfile(rc.achData, mouse_temp, date, imgFolder);
     load(fullfile(dataPath, imgMatFile));
-
+    
     if isfield(info, 'frame')
         fprintf('Will define trials from photo diode\n');
         [cStimOn_Temp, stimOffsTemp_temp] = photoFrameFinder_Sanworks(info.frame);
-        stimOns{id} = cStimOn_Temp;  
+        stimOns{id} = cStimOn_Temp;
         clear stimOffsTemp_temp cStimOn_Temp
     else
         fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
-        correctedInputStructure = NaN(1, nd);
-        correctedInputStructure(:, id) = counterValCorrect_noPhotodiode(inputStructure(:, id));
-        inputStructure = correctedInputStructure;
-        stimOns{id}=inputStructure{id}.cStimOn;
-        input=inputStructure;
-        save(fullfile(fn_multi,'input.mat'),'input')
-        clear input
-        clear correctedInputStructure
+        correctedInputStructure{id} = counterValCorrect_noPhotodiode(inputStructure(id));
+        stimOns{id} = correctedInputStructure{id}.cStimOn;
     end
 end
-%save the updated input structure with eihter cStimOn_PD of cStimOn from
-%counterValCorrect_noPhotodiode added
 
+save(fullfile(fn_multi,'correctedInputStructure.mat'),'correctedInputStructure')
+clear correctedInputStructure
 clear mouse_temp date imgFolder imgMatFile dataPath info
 
 % Convert raw calcium timecourses to trial-structured F/F data
@@ -228,7 +223,7 @@ fractTimeActive_match = cell(1, nd);
 cellstd_match = cell(1, nd);
 
 for id = 1:nd
-    cStimOnTemp = stimOns{id};
+    cStimOnTemp = cell2mat(stimOns{id});
     nTrials(id) = length(cStimOnTemp);
     [nFrames, nCells] = size(cellTCs_match{id});
     
@@ -246,7 +241,7 @@ for id = 1:nd
     % Calculate F/F using baseline period
     data_f_match = mean(data_trial_match(1:(nOff/2), :, :), 1);
     data_dfof_trial_match{id} = bsxfun(@rdivide, bsxfun(@minus, data_trial_match, data_f_match), data_f_match);
-    
+    figure;plot(squeeze(mean(data_dfof_trial_match{id}(:,:,:),2, 'omitmissing')))
     % Calculate cell standard deviations for activity thresholding
     meansub_match = cellTCs_match{id} - nanmean(cellTCs_match{id}, 1);
     cellstd = nanstd(meansub_match, [], 1);
