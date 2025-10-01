@@ -339,7 +339,7 @@ expt(16).contrastxori_time = {'1622'};
 expt(16).wheelColor = 'orange';
 expt(16).exptType = 'VIP_YM90K';
 expt(16).data_loc = 'ACh';
-%% 17 i2211 DART
+%% 17 i2211 Baseline
 expt(17).mouse = 'i2211';
 expt(17).date = '250728';
 expt(17).img_loc  = {'V1';'L2/3'};
@@ -361,7 +361,7 @@ expt(17).contrastxori_time = {'1442'};
 expt(17).wheelColor = 'orange';
 expt(17).exptType = 'VIP_YM90K';
 expt(17).data_loc = 'ACh';
-%% 18 i2211 DART
+%% 18 i2211 PEG
 expt(18).mouse = 'i2211';
 expt(18).date = '250729';
 expt(18).img_loc  = {'V1';'L2/3'};

@@ -8,7 +8,7 @@ rc = behavConstsDART; %directories
 eval(ds);
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 32;
+day_id = 28;
 
 %% load data for day
 

@@ -294,23 +294,27 @@ if doEye == 1
     %plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
     %print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
     
-    pupilMeans = nan(nd,3);
+    pupilMeans = nan(nd,5);
     % for each day, the first column is the mean pupil size for stat trials
-    % below threshold, the second column is the mean pupil size for stat trials
-    % above threshold, and the third column is the mean pupil size for all
+    % above threshold, the second column is the mean pupil size for stat trials
+    % below threshold, and the third column is the mean pupil size for all
     % running trials
-    PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for 
+    PIx_stat = cell(4,nd); %pupil index for each day, first cell is inds for 
     % stationary large pupil, second cell is inds for stationary small pupil
     motorByPupil = nan(nd,2);
     for id = 1:nd
         PIx_temp=pupil{id}.rad.stim > statPupilThreshold;
         PIx_stat{1,id}= logical(PIx_temp.*~RIx{id});
         PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id});
-        pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
-        pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
-        pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
-        motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
-        motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
+        PIx_stat{3,id}= logical(PIx_temp.*RIx{id});
+        PIx_stat{4,id}= logical(~PIx_temp.*RIx{id});
+        pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); % >50%, stat
+        pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); % <50%, stat
+        pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %mean of all running trials
+        pupilMeans(id,4)=mean(pupil{id}.rad.stim(PIx_stat{3,id}), 'omitmissing'); % >50%, loc
+        pupilMeans(id,5)=mean(pupil{id}.rad.stim(PIx_stat{4,id}), 'omitmissing'); % <50%, loc
+        motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing'); % mean whlspd of large pupil trials
+        motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing'); % mean whlspd of small pupil trials
     end
     save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
 end
