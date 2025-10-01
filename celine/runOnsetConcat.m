@@ -1,11 +1,11 @@
 %read in the run_onset_analsis .mat files
-ds = 'DART_V1_YM90K_Celine';
+ds = 'DART_V1_atropine_Celine';
 pre = 2; post = 1;
 rc = behavConstsDART;
 eval(ds);
 nd = 2;
 
-expList=[2,4,6];
+expList=[66,57,53,49,44];
 nExp =length(expList);
 stillTimeList=[5];
 nStillTime=length(stillTimeList)

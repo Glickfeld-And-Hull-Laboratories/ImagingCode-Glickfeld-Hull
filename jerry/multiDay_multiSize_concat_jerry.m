@@ -21,7 +21,7 @@ frame_rate = 15;
 
 onlySS = 0;
 onlyNOTSS = 0;
-onlySmall = 0;
+onlySmall = 1;
 onlyLarge = 0;
 
 if onlySS * onlyNOTSS == 1 | onlySmall * onlyLarge == 1
@@ -90,7 +90,7 @@ if doEye == 1
     pref_responses_stat_smallPupil_concat=cell(1,nd);
     pref_allTrials_largePupil_concat =cell(nCon,nSize,nd);
     pref_allTrials_smallPupil_concat =cell(nCon,nSize,nd);
-    pupilMeans_concat=nan(nd,3,nSess);
+    pupilMeans_concat=nan(nd,5,nSess);
     motorByPupil_concat=nan(nd,2,nSess);
     pupilCounts_concat=nan(nd,2,nSess);
 end
@@ -690,6 +690,8 @@ hand3 = plot(model3)
 model4 = fitlm(SSIx_red(:,pre),dIx_lg_red);
 figure
 hand4 = plot(model4)
+xmin = -1;
+xmax = 1;
 
 % plots
 figure;
@@ -703,11 +705,13 @@ scatter(SSIx_green(:,pre),dIx_sm_green)
 lsline
 xlabel('SSIx')
 ylabel('DART Index')
+xlim([xmin xmax])
 hold off
 
 figure;
 hold on
 title(['Small Stim, HTP+ n = ' num2str(n_red_sm)])
+xlim([xmin xmax])
 scatter(SSIx_red(:,pre),dIx_sm_red)
 % line(-1:0.1:1,-1:0.1:1);
 % eb(1) = errorbar(SSIx_red_mean_pre,sm_red_avg,SSIx_red_sem_pre, 'horizontal', 'LineStyle', 'none');
@@ -716,6 +720,7 @@ scatter(SSIx_red(:,pre),dIx_sm_red)
 lsline
 xlabel('SSIx')
 ylabel('DART Index')
+xlim([xmin xmax])
 hold off
 
 figure;
@@ -729,6 +734,7 @@ scatter(SSIx_green(:,pre),dIx_lg_green)
 lsline
 xlabel('SSIx')
 ylabel('DART Index')
+xlim([xmin xmax])
 hold off
 
 figure;
@@ -742,6 +748,7 @@ scatter(SSIx_red(:,pre),dIx_lg_red)
 lsline
 xlabel('SSIx')
 ylabel('DART Index')
+xlim([xmin xmax])
 hold off
 
 
@@ -1097,7 +1104,7 @@ ylabel('dF/F, pref dir')
 xlabel('size (deg)') 
 set(gca, 'TickDir', 'out')
 box off
-ylim([0 .1])
+ylim([0 .15])
 
 x0=5;
 y0=5;
@@ -1168,7 +1175,7 @@ sgtitle(['population size tuning' ])
 print(fullfile(fnout,['sizeTuningVsBehState.pdf']),'-dpdf');
 %% contrast response
 ymin= -0.02;
-ymax=.06;
+ymax=.05;
 % errorbar for stat resp and loc resp vs size, where error is across mice
 conResp_green_avrg_stat = cell(nSize,nd); %this will be the average across all green cells - a single line
 conResp_red_avrg_stat = cell(nSize,nd); %same for red
@@ -1249,8 +1256,8 @@ sgtitle('Stationary')
 print(fullfile(fnout,'contrastTuning.pdf'),'-dpdf');
 
 %for running 
-ymin= 0;
-ymax=.14;
+ymin= -0.01;
+ymax=.15;
 % contrast response running
 % errorbar for loc resp and loc resp vs size, where error is across mice
 conResp_green_avrg_loc = cell(nSize,nd); %this will be the average across all green cells - a single line
@@ -1541,7 +1548,10 @@ N=length(red_ind_concat);
     height=1.75;
     set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
-%% 
+
+
+
+%% now for locomotion
 norm_diff_red = norm_diff(:,:,:,runningRed);
 facil_red=norm_diff_red(:,:,:,:)>=1;
 supp_red=norm_diff_red(:,:,:,:)<=-1;
@@ -1559,7 +1569,7 @@ N=length(red_ind_concat);
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Suppressed')
-    ylim([0 .1])
+    ylim([0 .2])
     ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -1572,7 +1582,7 @@ N=length(red_ind_concat);
     xticklabels({'12.5','25','50','100'})
     hold on
     title('Facilitated')
-    ylim([0 .1])
+    ylim([0 .2])
     %ylabel(["Fraction VIP cells"]) 
     xlabel(["Contrast"])
     set(gca,'TickDir','out')
@@ -1584,8 +1594,102 @@ N=length(red_ind_concat);
     height=1.75;
     set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'Facil_supp_loc.pdf'),'-dpdf');
+%% plot fraction suppressed and facilitated for Pyr
 
-%%
+
+norm_diff_green = norm_diff(:,:,:,green_ind_concat);
+facil_green=norm_diff_green(:,:,:,:)>=1;
+supp_green=norm_diff_green(:,:,:,:)<=-1;
+
+N=length(green_ind_concat);
+
+
+
+    facil_table_stat = squeeze(sum(facil_green(1,:,:,:),4)/N);
+    supp_table_stat = squeeze(sum(supp_green(1,:,:,:),4)/N);
+    
+    figure;
+    subplot(1,2,1)
+    b=bar([1,2,3,4],[supp_table_stat(:,1),supp_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#70D0F6"
+    b(2).FaceColor="#0C8ABB"
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Suppressed')
+    ylim([0 .1])
+    ylabel(["Fraction HTP- cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    
+    subplot(1,2,2)
+    b=bar([1,2,3,4],[facil_table_stat(:,1),facil_table_stat(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#C983B1"
+    b(2).FaceColor="#883367"
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Facilitated')
+    ylim([0 .1])
+    %ylabel(["Fraction HTP- cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    sgtitle('Stationary')
+    
+    x0=5;
+    y0=5;
+    width=3;
+    height=1.75;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'Facil_supp_stat_green.pdf'),'-dpdf');
+
+
+
+%% now for locomotion, pyr
+norm_diff_green = norm_diff(:,:,:,runningGreen);
+facil_green=norm_diff_green(:,:,:,:)>=1;
+supp_green=norm_diff_green(:,:,:,:)<=-1;
+
+N=length(green_ind_concat);
+
+ facil_table_loc = squeeze(sum(facil_green(2,:,:,:),4)/N);
+ supp_table_loc = squeeze(sum(supp_green(2,:,:,:),4)/N);
+    
+    figure;
+    subplot(1,2,1)
+    b=bar([1,2,3,4],[supp_table_loc(:,1),supp_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#70D0F6"
+    b(2).FaceColor="#0C8ABB"
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Suppressed')
+    ylim([0 .2])
+    ylabel(["Fraction HTP- cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    
+    subplot(1,2,2)
+    b=bar([1,2,3,4],[facil_table_loc(:,1),facil_table_loc(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b(1).FaceColor="#C983B1"
+    b(2).FaceColor="#883367"
+    xticklabels({'12.5','25','50','100'})
+    hold on
+    title('Facilitated')
+    ylim([0 .2])
+    %ylabel(["Fraction HTP- cells"]) 
+    xlabel(["Contrast"])
+    set(gca,'TickDir','out')
+    box off
+    sgtitle('Running')
+    x0=5;
+    y0=5;
+    width=3;
+    height=1.75;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'Facil_supp_loc_green.pdf'),'-dpdf');
+
+%% 
 %make a table of suppresses and facilitated cells for the cells that have
 %both stationary and running within each condition
 facil=norm_diff(:,:,:,:)>=1;
@@ -1605,7 +1709,7 @@ for iCon = 1:nCon
         facil_table_stat(iCon,iSize)=sum(facil(1,iCon,iSize,theseRedCells),4)/nRed(iCon,iSize);
         facil_table_loc(iCon,iSize)=sum(facil(2,iCon,iSize,theseRedCells),4)/nRed(iCon,iSize);
 
-
+% (length(theseRedCells))
     end
 end
 
@@ -1670,6 +1774,90 @@ width=4;
 height=4;
 set(gcf,'units','inches','position',[x0,y0,width,height])
 print(fullfile(fnout,'matched_facil_supp_byState.pdf'),'-dpdf');
+%% 
+% stat & loc matched cells facil vs supp, HTP-
+facil=norm_diff(:,:,:,:)>=1;
+supp=norm_diff(:,:,:,:)<=-1;
+
+supp_table_stat_gr=nan(nCon,nSize);
+facil_table_stat_gr=nan(nCon,nSize);
+supp_table_loc_gr=nan(nCon,nSize);
+facil_table_loc_gr=nan(nCon,nSize);
+
+for iCon = 1:nCon
+    for iSize=1:nSize
+        theseGreenCells = intersect(green_ind_concat, find(runningByCondition(:,iCon,iSize)));
+        supp_table_stat_gr(iCon,iSize)=sum(supp(1,iCon,iSize,theseGreenCells),4)/nGreen(iCon,iSize);
+        supp_table_loc_gr(iCon,iSize)=sum(supp(2,iCon,iSize,theseGreenCells),4)/nGreen(iCon,iSize);
+
+        facil_table_stat_gr(iCon,iSize)=sum(facil(1,iCon,iSize,theseGreenCells),4)/nGreen(iCon,iSize);
+        facil_table_loc_gr(iCon,iSize)=sum(facil(2,iCon,iSize,theseGreenCells),4)/nGreen(iCon,iSize);
+
+
+    end
+end
+
+
+figure;
+subplot(2,2,1)
+b=bar([1,2,3,4],[supp_table_stat_gr(:,1),supp_table_loc_gr(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+b(1).FaceColor="#70D0F6"
+b(2).FaceColor="#0C8ABB"
+xticklabels({'12.5','25','50','100'})
+hold on
+title('Suppressed 20-deg')
+ylim([0 .6])
+ylabel(["Fraction HTP- cells"]) 
+xlabel(["Contrast"])
+set(gca,'TickDir','out')
+box off
+
+subplot(2,2,2)
+b=bar([1,2,3,4],[facil_table_stat_gr(:,1),facil_table_loc_gr(:,1)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+b(1).FaceColor="#C983B1"
+b(2).FaceColor="#883367"
+xticklabels({'12.5','25','50','100'})
+hold on
+title('Facilitated 20-deg')
+ylim([0 .6])
+%ylabel(["Fraction HTP- cells"]) 
+xlabel(["Contrast"])
+set(gca,'TickDir','out')
+box off
+
+
+
+subplot(2,2,3)
+b=bar([1,2,3,4],[supp_table_stat_gr(:,2),supp_table_loc_gr(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+b(1).FaceColor="#70D0F6"
+b(2).FaceColor="#0C8ABB"
+xticklabels({'12.5','25','50','100'})
+hold on
+title('Suppressed fullfield')
+ylim([0 .6])
+ylabel(["Fraction HTP- cells"]) 
+xlabel(["Contrast"])
+set(gca,'TickDir','out')
+box off
+
+subplot(2,2,4)
+b=bar([1,2,3,4],[facil_table_stat_gr(:,2),facil_table_loc_gr(:,2)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+b(1).FaceColor="#C983B1"
+b(2).FaceColor="#883367"
+xticklabels({'12.5','25','50','100'})
+hold on
+title('Facilitated fullfield')
+ylim([0 .6])
+%ylabel(["Fraction HTP- cells"]) 
+xlabel(["Contrast"])
+set(gca,'TickDir','out')
+box off
+x0=5;
+y0=5;
+width=4;
+height=4;
+set(gcf,'units','inches','position',[x0,y0,width,height])
+print(fullfile(fnout,'matched_facil_supp_byState_green.pdf'),'-dpdf');
 
 %% norm diff for stationary vs running
 for iSize = 1:nSize
@@ -1760,169 +1948,168 @@ end
 
 %% plot large and small pupil stationary timecourses
 % make figure with se shaded, one figure per contrast
-%
-% tc_green_avrg_small = cell(1,nd); %this will be the average across all green cells - a single line
-% tc_red_avrg_small = cell(1,nd); %same for red
-% tc_green_se_small = cell(1,nd); %this will be the se across all green cells
-% tc_red_se_small = cell(1,nd); %same for red
-% 
-% 
-% nGreen = nan(nCon,nSize);
-% nRed = nan(nCon,nSize);
-% 
-% for id = 1:nd
-%   for iCon = 1:nCon
-%       for iSize = 1:nSize
-%         tc_green_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
-%         green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
-%         tc_green_se_small{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
-% 
-%         tc_red_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
-%         red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
-%         tc_red_se_small{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
-% 
-% 
-%         clear green_std red_std
-%       end 
-%     end
-% end
-% 
-% z=double(nOn)/double(frame_rate);
-% 
-% %create a time axis in seconds
-% t=1:(size(tc_green_avrg_small{1,1,1},1));
-% t=(t-(double(stimStart)-1))/double(frame_rate);
-% 
-% for iCon = 1:nCon
-%     for iSize = 1:nSize
-%     figure
-%     subplot(1,2,1) %for the first day
-% 
-% 
-% 
-%     ylim([-.05 .25]);
-%     hold on
-%     shadedErrorBar(t,tc_green_avrg_small{pre}(:,iCon,iSize),tc_green_se_small{pre}(:,iCon,iSize),'--k');
-%     hold on
-%     shadedErrorBar(t,tc_green_avrg_small{post}(:,iCon,iSize),tc_green_se_small{post}(:,iCon,iSize),'--b','transparent');
-%     hold on
-%     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-%     hold on
-%     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-%     title(['-HTP',' n = ', num2str(nGreen(iCon,iSize))])
-% 
-%     ylabel('dF/F') 
-%     xlabel('s') 
-%     set(gca,'XColor', 'none','YColor','none')
-% 
-% 
-%     subplot(1,2,2) %+HTP
-%     shadedErrorBar(t,tc_red_avrg_small{pre}(:,iCon,iSize),tc_red_se_small{pre}(:,iCon,iSize),'k');
-%     hold on
-%     shadedErrorBar(t,tc_red_avrg_small{post}(:,iCon,iSize),tc_red_se_small{post}(:,iCon,iSize),'b');
-%     ylim([-.05 .25]);
-%     hold on
-%     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-%     hold on
-%     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-%     ylabel('dF/F') 
-%     xlabel('s') 
-%     title(['+HTP',' n = ', num2str(nRed(iCon,iSize))])
-% 
-%     x0=5;
-%     y0=5;
-%     width=4;
-%     height=3;
-%     set(gcf,'units','inches','position',[x0,y0,width,height])
-%     set(gca,'XColor', 'none','YColor','none')
-% 
-%     sgtitle(['small pupil, con ' num2str(cons(iCon)) ' size ' num2str(sizes(iSize))])
-% 
-%     print(fullfile(fnout,[num2str(cons(iCon)) '_' num2str(sizes(iSize)) 'matched_small_cellType_timecourses.pdf']),'-dpdf');
-%     end
-% end 
-% 
-% 
-% tc_green_avrg_large = cell(1,nd); %this will be the average across all green cells - a single line
-% tc_red_avrg_large = cell(1,nd); %same for red
-% tc_green_se_large = cell(1,nd); %this will be the se across all green cells
-% tc_red_se_large = cell(1,nd); %same for red
-% 
+
+tc_green_avrg_small = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_small = cell(1,nd); %same for red
+tc_green_se_small = cell(1,nd); %this will be the se across all green cells
+tc_red_se_small = cell(1,nd); %same for red
+
 % 
 % nGreen = nan(nCon,nSize);
 % nRed = nan(nCon,nSize);
-% 
-% for id = 1:nd
-%   for iCon = 1:nCon
-%       for iSize = 1:nSize
-%         tc_green_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
-%         green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
-%         tc_green_se_large{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
-% 
-%         tc_red_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
-%         red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
-%         tc_red_se_large{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
-% 
-% 
-%         clear green_std red_std
-%       end 
-%     end
-% end
-% 
-% z=double(nOn)/double(frame_rate);
-% 
-% %create a time axis in seconds
-% t=1:(size(tc_green_avrg_large{1,1,1},1));
-% t=(t-(double(stimStart)-1))/double(frame_rate);
-% 
-% for iCon = 1:nCon
-%     for iSize = 1:nSize
-%     figure
-%     subplot(1,2,1) %for the first day
-% 
-% 
-% 
-%     ylim([-.05 .25]);
-%     hold on
-%     shadedErrorBar(t,tc_green_avrg_large{pre}(:,iCon,iSize),tc_green_se_large{pre}(:,iCon,iSize),'--k');
-%     hold on
-%     shadedErrorBar(t,tc_green_avrg_large{post}(:,iCon,iSize),tc_green_se_large{post}(:,iCon,iSize),'--b','transparent');
-%     hold on
-%     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-%     hold on
-%     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-%     title(['-HTP',' n = ', num2str(nGreen(iCon,iSize))])
-% 
-%     ylabel('dF/F') 
-%     xlabel('s') 
-%     set(gca,'XColor', 'none','YColor','none')
-% 
-% 
-%     subplot(1,2,2) %+HTP
-%     shadedErrorBar(t,tc_red_avrg_large{pre}(:,iCon,iSize),tc_red_se_large{pre}(:,iCon,iSize),'k');
-%     hold on
-%     shadedErrorBar(t,tc_red_avrg_large{post}(:,iCon,iSize),tc_red_se_large{post}(:,iCon,iSize),'b');
-%     ylim([-.05 .25]);
-%     hold on
-%     line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
-%     hold on
-%     line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
-%     ylabel('dF/F') 
-%     xlabel('s') 
-%     title(['+HTP',' n = ', num2str(nRed(iCon,iSize))])
-% 
-%     x0=5;
-%     y0=5;
-%     width=4;
-%     height=3;
-%     set(gcf,'units','inches','position',[x0,y0,width,height])
-%     set(gca,'XColor', 'none','YColor','none')
-% 
-%     sgtitle(['large pupil, con ' num2str(cons(iCon)) ' size ' num2str(sizes(iSize))])
-% 
-%     print(fullfile(fnout,[num2str(cons(iCon)) '_' num2str(sizes(iSize)) 'matched_large_cellType_timecourses.pdf']),'-dpdf');
-%     end
-% end 
+
+for id = 1:nd
+  for iCon = 1:nCon
+      for iSize = 1:nSize
+        tc_green_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_small{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
+
+        tc_red_avrg_small{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_smallPupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_small{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
+
+        clear green_std red_std
+      end 
+    end
+end
+
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_green_avrg_small{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+    for iSize = 1:nSize
+    figure
+    subplot(1,2,1) %for the first day
+
+
+
+    ylim([-.05 .25]);
+    hold on
+    shadedErrorBar(t,tc_green_avrg_small{pre}(:,iCon,iSize),tc_green_se_small{pre}(:,iCon,iSize),'--k');
+    hold on
+    shadedErrorBar(t,tc_green_avrg_small{post}(:,iCon,iSize),tc_green_se_small{post}(:,iCon,iSize),'--b','transparent');
+    hold on
+    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    title(['-HTP',' n = ', num2str(nGreen(iCon,iSize))])
+
+    ylabel('dF/F') 
+    xlabel('s') 
+    set(gca,'XColor', 'none','YColor','none')
+
+
+    subplot(1,2,2) %+HTP
+    shadedErrorBar(t,tc_red_avrg_small{pre}(:,iCon,iSize),tc_red_se_small{pre}(:,iCon,iSize),'k');
+    hold on
+    shadedErrorBar(t,tc_red_avrg_small{post}(:,iCon,iSize),tc_red_se_small{post}(:,iCon,iSize),'b');
+    ylim([-.05 .25]);
+    hold on
+    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    ylabel('dF/F') 
+    xlabel('s') 
+    title(['+HTP',' n = ', num2str(nRed(iCon,iSize))])
+
+    x0=5;
+    y0=5;
+    width=4;
+    height=3;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    set(gca,'XColor', 'none','YColor','none')
+
+    sgtitle(['small pupil, con ' num2str(cons(iCon)) ' size ' num2str(sizes(iSize))])
+
+    print(fullfile(fnout,[num2str(cons(iCon)) '_' num2str(sizes(iSize)) 'matched_small_cellType_timecourses.pdf']),'-dpdf');
+    end
+end 
+
+
+tc_green_avrg_large = cell(1,nd); %this will be the average across all green cells - a single line
+tc_red_avrg_large = cell(1,nd); %same for red
+tc_green_se_large = cell(1,nd); %this will be the se across all green cells
+tc_red_se_large = cell(1,nd); %same for red
+
+
+nGreen = nan(nCon,nSize);
+nRed = nan(nCon,nSize);
+
+for id = 1:nd
+  for iCon = 1:nCon
+      for iSize = 1:nSize
+        tc_green_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),2);
+        green_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,green_ind_concat,iCon,iSize),[],2);
+        tc_green_se_large{id}(:,iCon,iSize)=green_std/sqrt(length(green_ind_concat));
+
+        tc_red_avrg_large{id}(:,iCon,iSize)=nanmean(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),2);
+        red_std=nanstd(tc_trial_avrg_stat_largePupil_concat{id}(:,red_ind_concat,iCon,iSize),[],2);
+        tc_red_se_large{id}(:,iCon,iSize)=red_std/sqrt(length(red_ind_concat));
+
+
+        clear green_std red_std
+      end 
+    end
+end
+
+z=double(nOn)/double(frame_rate);
+
+%create a time axis in seconds
+t=1:(size(tc_green_avrg_large{1,1,1},1));
+t=(t-(double(stimStart)-1))/double(frame_rate);
+
+for iCon = 1:nCon
+    for iSize = 1:nSize
+    figure
+    subplot(1,2,1) %for the first day
+
+
+
+    ylim([-.05 .25]);
+    hold on
+    shadedErrorBar(t,tc_green_avrg_large{pre}(:,iCon,iSize),tc_green_se_large{pre}(:,iCon,iSize),'--k');
+    hold on
+    shadedErrorBar(t,tc_green_avrg_large{post}(:,iCon,iSize),tc_green_se_large{post}(:,iCon,iSize),'--b','transparent');
+    hold on
+    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    title(['-HTP',' n = ', num2str(nGreen(iCon,iSize))])
+
+    ylabel('dF/F') 
+    xlabel('s') 
+    set(gca,'XColor', 'none','YColor','none')
+
+
+    subplot(1,2,2) %+HTP
+    shadedErrorBar(t,tc_red_avrg_large{pre}(:,iCon,iSize),tc_red_se_large{pre}(:,iCon,iSize),'k');
+    hold on
+    shadedErrorBar(t,tc_red_avrg_large{post}(:,iCon,iSize),tc_red_se_large{post}(:,iCon,iSize),'b');
+    ylim([-.05 .25]);
+    hold on
+    line([0,z],[-.01,-.01],'Color','black','LineWidth',2);
+    hold on
+    line([-1.8,-1.8],[0.01,.06],'Color','black','LineWidth',2);
+    ylabel('dF/F') 
+    xlabel('s') 
+    title(['+HTP',' n = ', num2str(nRed(iCon,iSize))])
+
+    x0=5;
+    y0=5;
+    width=4;
+    height=3;
+    set(gcf,'units','inches','position',[x0,y0,width,height])
+    set(gca,'XColor', 'none','YColor','none')
+
+    sgtitle(['large pupil, con ' num2str(cons(iCon)) ' size ' num2str(sizes(iSize))])
+
+    print(fullfile(fnout,[num2str(cons(iCon)) '_' num2str(sizes(iSize)) 'matched_large_cellType_timecourses.pdf']),'-dpdf');
+    end
+end 
 %%  plot shaded error bar for running onsets
 
 tc_green_avrg_runOnset = cell(1,nd); %this will be the average across all green cells - a single line
