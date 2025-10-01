@@ -158,7 +158,7 @@ for iSize = 1:nSizes
     figure('Units', 'inches', 'Position', [5 + (iSize-1)*0.5, 0, figure_size(1), figure_size(2)]);
     
     % Define subplot positions
-    positions = [1, 2; 3, 4; 5, 6];
+    positions = reshape(1:(nCon*2), 2, nCon)';
     
     % Plot each condition
     for iCon = 1:nCon
@@ -166,7 +166,7 @@ for iSize = 1:nSizes
         p2 = positions(iCon, 2);
         
         % Plot first dataset
-        subplot(3, 2, p1);
+        subplot(nCon, 2, p1);
         
         % Choose line style based on UseDashedLines parameter
         line_style1_pre = '';
@@ -197,7 +197,7 @@ for iSize = 1:nSizes
         grid off;
         
         % Plot second dataset
-        subplot(3, 2, p2);
+        subplot(nCon, 2, p2);
         
         % Choose line style based on UseDashedLines parameter
         line_style2_pre = '-';

@@ -6,19 +6,19 @@
 % clear the workspace and set up basic paths and variables
 clear all; close all; clc
 
-ds = 'DART_V1_YM90K_Celine';
+ds = 'DART_V1_atropine_Celine';
 dataStructLabels = {'contrastxori'};
-experimentFolder = 'SST_YM90K';
+experimentFolder = 'SST_atropine';
 rc = behavConstsDART;
 eval(ds);
 
-sess_list = [8 10 20 22]; % <-- ENTER MANUALLY
+sess_list = [57]; % <-- ENTER MANUALLY
 nSess = length(sess_list);
 nd = 2;
-targetCon = [.25 .5 1]; % <-- ENTER MANUALLY
+targetCon = [.125 .25 .5 1]; % <-- ENTER MANUALLY
 frame_rate = 15; 
 nCon = length(targetCon);
-nSize = 3; % <-- ENTER MANUALLY
+nSize = 2; % <-- ENTER MANUALLY
 
 % Session reference selection, will request command line input
 x = input('Which session was used as reference for matching: 0- baseline, 1- post-DART: ');
@@ -99,7 +99,15 @@ for iSess = 1:nSess
     dirs = unique(celleqel2mat_padded(input(post).tGratingDirectionDeg(1:nTrials(post))));
     cons = unique(tCon_match{post});
     sharedCon = find(ismember(cons, targetCon));
-    sizes = unique(cell2mat(input(id).tGratingDiameterDeg));
+    cellData = input(id).tGratingDiameterDeg;
+
+    % Convert all elements to double
+    cellDataDouble = cellfun(@double, cellData, 'UniformOutput', false);
+    
+    % Now cell2mat should work
+    result = cell2mat(cellDataDouble);
+    sizes = unique(result);
+    clear result
     
     % Concatenate basic variables
     dirs_concat = [dirs_concat, dirs];
@@ -211,6 +219,7 @@ end
 
 %% Visualizations of stationary responses for all cells
 % Plot stationary timecourses for all cells
+close all
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     red_ind_concat, green_ind_concat, ...
     'UseDashedLines', [false, true], ...
@@ -330,7 +339,7 @@ saveas(gcf, sprintf('running_size_response.pdf'));
 
 %% Normalized direction tuning at a specified size
 dirs_for_plotting = dirs - (length(dirs) == 8) * 180;
-iSize = 3;
+iSize = 2;
 
 % Pre-allocate arrays
 green_dir_avrg_stat = cell(1, nd);

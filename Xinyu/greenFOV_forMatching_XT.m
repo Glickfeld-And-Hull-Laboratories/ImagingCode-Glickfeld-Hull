@@ -1,7 +1,7 @@
 clear all
-date = '250929';%yymmdd
-mouse = 'i2776' %ixxxx
-greenFolder = '003'; %enter the first three digits
+date = '251001';%yymmdd
+mouse = 'i2777' %ixxxx
+greenFolder = '004'; %enter the first three digits
 
 
 base = 'Z:\All_Staff\home\Xinyu\Data\2P_images'

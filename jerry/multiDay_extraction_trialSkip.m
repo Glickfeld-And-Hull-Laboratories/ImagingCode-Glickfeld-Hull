@@ -183,21 +183,21 @@ clear  data_f_match cellstd
 % VALUES TO NAN
 
 %% looking at wheel speed
-wheel_speed = cell(1,nd);
+wheel_speed = cell(1,nd); %output from wheelSpeedCalc, has whlspd for each frame
 
 for id = 1:nd
     wheel_speed{id} = wheelSpeedCalc(input(id),32,expt(allDays(1)).wheelColor); 
     nanmean(wheel_speed{id})
 end
-wheel_speed_clean = cell(1,nd);
+wheel_speed_clean = cell(1,nd); %wheel_speed but jitter values are set to 0
 for id = 1:nd
     wheel_speed_clean{id}=wheel_speed{id};
     wheel_speed_clean{id}(abs(wheel_speed_clean{id})<5.37)=0;
 end
- 
-wheel_tc = cell(1,nd);
+
+wheel_tc = cell(1,nd); % trial tc from whlspd_clean. RIx is calculated from this.
 wheel_trial_avg= cell(1,nd);
-wheel_tc_raw = cell(1,nd);
+wheel_tc_raw = cell(1,nd); % trial tc from wheel_speed but calculating with absolute values
 wheel_trial_avg_raw= cell(1,nd);
 RIx = cell(1,nd);
 
@@ -215,6 +215,34 @@ for id = 1:nd
     RIx{id} = wheel_trial_avg{id}>2; %~5 is the noise level in the wheel movement
     sum(RIx{id})
 end
+
+%% how stationary is stationary?
+stat_wheelspd = cell(1,nd);
+stat_wheelspd_avg = nan(1,nd);
+stat_wheelspd_avg_noZero = nan(1,nd);
+
+for id = 1:nd
+    temp_whlspd = mean(wheel_tc_raw{id}(nOff/2:nOn+nOff/2,~RIx{id}),1);
+    temp_whlspd(isnan(temp_whlspd)) = 0;
+    stat_wheelspd{id} = temp_whlspd;
+    stat_wheelspd_avg(id) = mean(temp_whlspd);
+    stat_wheelspd_avg_noZero(id) = mean(temp_whlspd(temp_whlspd~=0));
+end
+
+% figure
+% title([mouse ' stat trial wheel speed'])
+% hold on
+% histogram(stat_wheelspd{pre},0:0.1:2)
+% histogram(stat_wheelspd{post},0:0.1:2)
+% hold off
+% xlim([0 2])
+% ylim([0 100])
+% pre_legend = ['pre n=' num2str(sum(~RIx{pre})) '; ' num2str(stat_wheelspd_avg(pre)) ';' num2str(stat_wheelspd_avg_noZero(pre))];
+% post_legend = ['post n=' num2str(sum(~RIx{post})) '; ' num2str(stat_wheelspd_avg(post)) ';' num2str(stat_wheelspd_avg_noZero(post))];
+% legend(pre_legend,post_legend)
+% print(fullfile(fn_multi,[mouse '_stat_wheelSpd.pdf']),'-dpdf')
+% print(fullfile('G:\home\jerry\reports\poster\2025\plots',[mouse '_stat_wheelSpd.pdf']),'-dpdf');
+% save(fullfile(fn_multi,'wheelSpds.mat'),'stat_wheelspd_avg','stat_wheelspd_avg_noZero','stat_wheelspd');
 %% extract running onsets
 data_dfof_runOnset_match = cell(1,nd);
 nRunOnsets=[];
@@ -277,7 +305,7 @@ for id = 1:nd
         runConfirmation(:,iOnset) = fwdWheelClean(fullWindow);
     end
     
-    figure; plot(nanmean(runConfirmation,2)) %to check whether running actually does increase around the time of these onsets.
+    % figure; plot(nanmean(runConfirmation,2)) %to check whether running actually does increase around the time of these onsets.
     
     data_dfof_runOnset_match{id} = mean(data_dfof_runOnset,3,'omitmissing'); %frames x cells (for all matched cells) averaged over all the onsets
     nRunOnsets=[nRunOnsets length(ITIOnsets)];
@@ -296,26 +324,40 @@ if doEye == 1
     %plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
     %print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
     
-    pupilMeans = nan(nd,3);
+    pupilMeans = nan(nd,5);
     % for each day, the first column is the mean pupil size for stat trials
-    % below threshold, the second column is the mean pupil size for stat trials
-    % above threshold, and the third column is the mean pupil size for all
+    % above threshold, the second column is the mean pupil size for stat trials
+    % below threshold, and the third column is the mean pupil size for all
     % running trials
-    PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for 
+    PIx_stat = cell(4,nd); %pupil index for each day, first cell is inds for 
     % stationary large pupil, second cell is inds for stationary small pupil
     motorByPupil = nan(nd,2);
+    statPupil = cell(3,nd);
+    % 1: above thresh
+    % 2: below thresh
+    % 3: every stationary
     for id = 1:nd
         PIx_temp=pupil{id}.rad.stim > statPupilThreshold;
-        PIx_stat{1,id}= logical(PIx_temp.*~RIx{id});
-        PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id});
-        pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
-        pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
-        pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
-        motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
-        motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
+        PIx_stat{1,id}= logical(PIx_temp.*~RIx{id}); % stat, above threshold
+        PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id}); % stat, below threshold
+        PIx_stat{3,id}= logical(PIx_temp.*RIx{id}); % running, above thresh
+        PIx_stat{4,id}= logical(~PIx_temp.*RIx{id}); % running, below thresh
+        pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); % >50%, stat
+        pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); % <50%, stat
+        pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %mean of all running trials
+        pupilMeans(id,4)=mean(pupil{id}.rad.stim(PIx_stat{3,id}), 'omitmissing'); % >50%, loc
+        pupilMeans(id,5)=mean(pupil{id}.rad.stim(PIx_stat{4,id}), 'omitmissing'); % <50%, loc
+        pupilMeans(isnan(pupilMeans)) = 0;
+        motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing'); % mean whlspd of large pupil trials
+        motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing'); % mean whlspd of small pupil trials
+        statPupil{1,id} = pupil{id}.rad.stim(PIx_stat{1,id});
+        statPupil{2,id} = pupil{id}.rad.stim(PIx_stat{2,id});
+        statPupil{3,id} = pupil{id}.rad.stim(~RIx{id});
     end
-    save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
+    save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil','statPupil');
 end
+
+
 %% find significant responses and preferred stimuli
 
 stimStart=nOff/2;
@@ -765,7 +807,7 @@ for id = 1:nd
     end
 end
 
-save(fullfile(fn_multi,'locomotion.mat'),'RIx','wheel_tc','wheel_speed','wheel_corr')
+save(fullfile(fn_multi,'locomotion.mat'),'RIx','wheel_tc','wheel_speed','wheel_corr','')
 %% saving data 
 
 save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
