@@ -275,8 +275,8 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
 
     
     save(fullfile(fnout,'redImage'),'redChImg')
-% elseif ~exist('redChImg')
-%     redChImg = zeros(size(regImg));
+elseif isempty(expt(day_id).redChannelRun) %if there is NOT a red channel run make a dummy that is all zeros
+    redChImg = zeros(size(regImg));
 end
 
 
