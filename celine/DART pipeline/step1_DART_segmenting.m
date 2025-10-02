@@ -1,14 +1,13 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_YM90K_Celine'; % a struct where fields store experiment metadata 
-% for each mouse, enter manually: mouse, date, imaging session, drug condition etc. 
-dataStructLabels = {'contrastxori'};
-rc = behavConstsDART; %directories
+ds = 'DART_V1_YM90K_Celine'; % <- enter the file name for your datasheet
+dataStructLabels = {'contrastxori'}; %enter the variable in your datasheet that indicates the folder for the run where you showed stimuli
+rc = behavConstsDART; %this sets directory pathes based on the user's netID
 eval(ds);
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 32;
+day_id = 32; % <- enter the expt number you want to segment
 
 %% load data for day
 
@@ -16,7 +15,7 @@ mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 ExperimentFolder = expt(day_id).exptType;
 
-fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
+fn = fullfile(rc.analysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
 
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
@@ -40,7 +39,7 @@ for irun = 1:nruns
         fName = [imgFolder '_000_000'];
     end
 
-    root = rc.achData;
+    root = rc.data;
     CD = fullfile(root, mouse, expDate, runFolder);
     dat = 'data-';
     cd(CD);
@@ -222,7 +221,7 @@ if exist(fullfile(fnout,'redImage.mat'))
 elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find and load it
     redRun = expt(day_id).redChannelRun;
     imgMatFile = [redRun '_000_000.mat'];
-        root = rc.achData;
+        root = rc.data;
         cd(fullfile(root, mouse, expDate, redRun));
 
     load(imgMatFile);
