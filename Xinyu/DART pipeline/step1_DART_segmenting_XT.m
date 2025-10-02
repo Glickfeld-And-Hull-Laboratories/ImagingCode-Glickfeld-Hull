@@ -8,7 +8,7 @@ rc = behavConstsDART; %directories
 eval(ds);
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 28;
+day_id = 32;
 
 %% load data for day
 
@@ -275,8 +275,8 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
 
     
     save(fullfile(fnout,'redImage'),'redChImg')
-% elseif ~exist('redChImg')
-%     redChImg = zeros(size(regImg));
+elseif isempty(expt(day_id).redChannelRun) %if there is NOT a red channel run make a dummy that is all zeros
+    redChImg = zeros(size(regImg));
 end
 
 
@@ -375,6 +375,7 @@ rgb = zeros(sz(1),sz(2),3);
 
 %% extract timecourses
 
+
 data_tc = stackGetTimeCourses(data_g_reg, mask_cell);
 nCells = size(data_tc,2);
 data_tc_down = stackGetTimeCourses(stackGroupProject(data_g_reg,5), mask_cell);
@@ -448,13 +449,18 @@ clear data_g_reg data_reg_down
 cd(CD);
 load([runFolder '_000_000.mat']);
 [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
-nTrials = length(stimOns);
+mWStruct.stimOns_photodiode = stimOns;
+mWStruct.stimOffs_photodiode = stimOffs;
 [nFrames nCells] = size(npSub_tc);
-nOn = input.nScansOn(1);
-nOff = input.nScansOff(1);
+nOn = mWStruct.nScansOn(1);
+nOff = mWStruct.nScansOff(1);
 data_tc = nan(nOn+nOff,nCells,nTrials);
 % stimOns = stimOns_correct;
 % stimOffs = stimOffs_correct;
+input = mWStruct;
+save('input.mat','input') %save a new copy of the input structure named mWStruct that includes the photodiode-identified trial start times
+nTrials = length(stimOns);
+
 for itrial = 1:nTrials
   if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
     data_tc(:,:,itrial) = npSub_tc(stimOns(itrial)-nOff/2:stimOns(itrial)-1+nOn+nOff/2,:);
@@ -617,7 +623,7 @@ for itrial = 1:nTrials
         startFrame = stimOffs(itrial-1);
     end
     iOn_pd = stimOns(itrial);
-    nOff_pd = iOn_pd - startFrame;
+    nOff_pd = iOn_pd - startFrame; 
     nOn_pd = stimOffs(itrial) - stimOns(itrial);
     thisTrialNFrames = nOn_pd+nOff_pd;
     AllTrialsNFrames(itrial) = thisTrialNFrames;
