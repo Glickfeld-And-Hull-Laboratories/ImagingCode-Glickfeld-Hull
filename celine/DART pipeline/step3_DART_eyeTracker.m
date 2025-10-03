@@ -22,8 +22,8 @@ for day = 1:2
     time = expt(iexp).contrastxori_time{1};
     
     % Set up paths
-    CD = fullfile(rc.achData, mouse, date, run);
-    data_out = fullfile(rc.achAnalysis, experimentFolder, mouse, date, run);
+    CD = fullfile(rc.data, mouse, date, run);
+    data_out = fullfile(rc.analysis, experimentFolder, mouse, date, run);
     cd(CD);
     fn = [run '_000_000_eye.mat'];
     
@@ -32,7 +32,7 @@ for day = 1:2
     data_temp = squeeze(data_temp.data);
     
     % Load behavioral data and determine frame timing
-    infofName = fullfile(rc.achData, expt(iexp).mouse, expt(iexp).date, run, [run '_000_000.mat']);
+    infofName = fullfile(rc.data, expt(iexp).mouse, expt(iexp).date, run, [run '_000_000.mat']);
     inputfName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time '.mat'];
     load(inputfName);
     

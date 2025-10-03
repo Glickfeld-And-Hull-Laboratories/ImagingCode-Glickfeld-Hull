@@ -24,7 +24,7 @@ allDays = [day_id, pre_day];
 nd = 2; % hardcoding the number of days for now
 mouse = expt(day_id).mouse;
 experimentFolder = expt(day_id).exptType;
-fnout = fullfile(rc.achAnalysis, mouse);
+fnout = fullfile(rc.analysis, mouse);
 
 % Set up file naming based on drug condition
 if expt(day_id).multiday_timesincedrug_hours > 0
@@ -32,7 +32,7 @@ if expt(day_id).multiday_timesincedrug_hours > 0
 else
     dart_str = 'control';
 end
-fn_multi = fullfile(rc.achAnalysis, experimentFolder, mouse, ['multiday_' dart_str]);
+fn_multi = fullfile(rc.analysis, experimentFolder, mouse, ['multiday_' dart_str]);
 
 % Determine which session was used as reference for cell matching
 prompt = 'Which session was used as reference for matching: 0- baseline, 1- post-DART';
@@ -69,7 +69,7 @@ if includePupil == 'y'
         mouse_temp = expt(allDays(id)).mouse;
         date = expt(allDays(id)).date;
         imgFolder = expt(allDays(id)).contrastxori_runs{1};
-        dayPath = fullfile(rc.achAnalysis, experimentFolder, mouse_temp, date, imgFolder);
+        dayPath = fullfile(rc.analysis, experimentFolder, mouse_temp, date, imgFolder);
         % Load pupil data from the correct day's folder
         pupil{id} = load(fullfile(dayPath, 'pupil.mat'));
     end
@@ -128,7 +128,7 @@ for id = 1:nd
     date = expt(allDays(id)).date;
     imgFolder = expt(allDays(id)).contrastxori_runs{1};
     imgMatFile = [imgFolder '_000_000.mat'];
-    dataPath = fullfile(rc.achData, mouse_temp, date, imgFolder);
+    dataPath = fullfile(rc.data, mouse_temp, date, imgFolder);
     load(fullfile(dataPath, imgMatFile));
     
     if isfield(info, 'frame')

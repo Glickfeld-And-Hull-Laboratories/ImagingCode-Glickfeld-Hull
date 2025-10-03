@@ -15,6 +15,8 @@ clc
 % --> Edit this to your datasheet name
 ds = 'DART_V1_YM90K_Celine'; 
 
+rc = behavConstsDART; %this sets directory pathes based on the user's netID
+
 % --> Edit if your stimulus run field has a different name
 dataStructLabels = {'contrastxori'}; % identifies stimulus runs in datasheet
 eval(ds)
@@ -33,28 +35,16 @@ ExperimentFolder = expt(day_id(1)).exptType;
 nd = length(day_id); % number of days (typically 2)
 mouse = expt(day_id(1)).mouse;
 
-% Set up paths (Hubel vs Nuke server detection)
-% --> Edit base path to point to your analysis folder
-if computer == 'GLNXA64'
-    isilonName =  '/home/cc735@dhe.duke.edu/GlickfeldLabShare';
-    database = fullfile('/All_Staff/home/ACh/Data/2p_data');
-    base = fullfile(['/All_Staff/home/ACh/Analysis/2p_analysis/' ExperimentFolder]);
-    beh_prefix = strcat(isilonName,'/All_Staff/Behavior/Data/data-');
-else
-    isilonName = 'duhs-user-nc1.dhe.duke.edu/';
-    base = fullfile(['/home/ACh/Analysis/2p_analysis/' ExperimentFolder]);
-    database = fullfile('/home/ACh/Data/2p_data');
-   beh_prefix = strcat('Z:\Behavior\Data\data-');
-end
 
 % Create output folder with drug condition naming
-fnout = fullfile(base,mouse);
+fnout = fullfile(rc.analysis, ExperimentFolder,mouse);
+
 if expt(day_id(2)).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(1)).multiday_timesincedrug_hours) 'Hr'];
 else
     dart_str = 'control';
 end
-fn_multi = fullfile(base,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.analysis,mouse,['multiday_' dart_str]);
 mkdir(fn_multi)
 
 % Initialize storage structures for both days
@@ -95,7 +85,7 @@ for id = 1:nd
     for irun = 1:nrun
         imgFolder = runs{irun};
         fName = [imgFolder '_000_000'];
-        cd(fullfile(database, mouse, expDate, imgFolder))
+        cd(fullfile(rd.data, mouse, expDate, imgFolder))
         
         load(fName)
         if nrun == 1

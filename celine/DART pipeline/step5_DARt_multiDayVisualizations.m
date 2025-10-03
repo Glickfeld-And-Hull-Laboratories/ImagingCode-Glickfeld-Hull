@@ -44,9 +44,9 @@ if nSess == 1
     else
         dart_str = 'control';
     end
-    fnout = fullfile(rc.achAnalysis, experimentFolder, expt(sess_list(1)).mouse, ['multiday_' dart_str], d);
+    fnout = fullfile(rc.analysis, experimentFolder, expt(sess_list(1)).mouse, ['multiday_' dart_str], d);
 else
-    fnout = fullfile(rc.achAnalysis, experimentFolder, ['concat' sess_title], d);
+    fnout = fullfile(rc.analysis, experimentFolder, ['concat' sess_title], d);
 end
 mkdir(fnout); cd(fnout)
 
@@ -78,7 +78,7 @@ for iSess = 1:nSess
     else
         dart_str = 'control';
     end
-    fn_multi = fullfile(rc.achAnalysis, experimentFolder, mouse, ['multiday_' dart_str]);
+    fn_multi = fullfile(rc.analysis, experimentFolder, mouse, ['multiday_' dart_str]);
     
     % Load data
     load(fullfile(fn_multi, 'tc_keep.mat'));
