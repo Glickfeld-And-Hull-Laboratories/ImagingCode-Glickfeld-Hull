@@ -46,7 +46,7 @@ switch tHostname
             rc.data = 'Z:\home\ACh\Data\2p_data';
         elseif tUsername(1:4) == 'xt71' %for Xinyu
             rc.name = ' xinyu';
-            rootDir = 'Z:\home\Xinyu';
+            rootDir = 'Z:\All_Staff\home\Xinyu';
             rc.analysis = fullfile(rootDir,'\Analysis\2P');
             rc.data = fullfile(rootDir,'\Data\2P_images');
         end
