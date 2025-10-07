@@ -1,26 +1,31 @@
 %% ===== EXPERIMENTAL SETUP AND DATA LOADING =====
 clear all; clear global; clc
-
-prompt = 'Enter ds (e.g., DART_V1_YM90K_Celine): ';
-ds = input(prompt, 's');
+prompt = 'Enter name of instructions file: ';
+instr = input(prompt, 's');
 clear prompt
+eval(instr);
+
+ds=instructions.ds;
+eval(ds);
 
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; % directories
-eval(ds);
 
 % Input validation
 if ~exist('expt', 'var')
     error('Dataset %s not found', ds);
 end
 
-day_id = input('Enter reference day id ');
+day_id = str2double(instructions.session);
+
 if length(expt) < day_id
     error('Day_id %d not valid for this dataset', day_id);
+else
+    pre_day = expt(day_id).multiday_matchdays;
+    allDays = [day_id, pre_day];
+    fprintf('Analyzing sessions: %s\n', num2str(allDays));
 end
 
-pre_day = expt(day_id).multiday_matchdays;
-allDays = [day_id, pre_day];
 nd = 2; % hardcoding the number of days for now
 mouse = expt(day_id).mouse;
 experimentFolder = expt(day_id).exptType;
@@ -35,19 +40,18 @@ end
 fn_multi = fullfile(rc.analysis, experimentFolder, mouse, ['multiday_' dart_str]);
 
 % Determine which session was used as reference for cell matching
-prompt = 'Which session was used as reference for matching: 0- baseline, 1- post-DART';
-x = input(prompt);
+x = instructions.refDay;
 switch x
-    case 0
+    case '1'
         pre = 1;  % baseline session, used as reference, is in the 1st position
         post = 2;
         fprintf('Baseline used as reference\n');
-    case 1
+    case '2'
         pre = 2;
         post = 1;  % post-DART session, used as reference, is in the 1st position
         fprintf('Post-DART used as reference\n');
 end
-clear x prompt
+clear x instr
 
 % Load the matched cell data
 cd(fn_multi)

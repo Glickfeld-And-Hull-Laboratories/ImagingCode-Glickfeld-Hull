@@ -1,13 +1,25 @@
 clear all; clear global;  close all
 clc
+prompt = 'Enter name of instructions file: ';
+instr = input(prompt, 's');
+clear prompt
+eval(instr);
 
-ds = 'DART_V1_YM90K_Celine'; % <- enter the file name for your datasheet
-dataStructLabels = {'contrastxori'}; %enter the variable in your datasheet that indicates the folder for the run where you showed stimuli
-rc = behavConstsDART; %this sets directory pathes based on the user's netID
+ds=instructions.ds;
 eval(ds);
+
+dataStructLabels = {'contrastxori'}; %enter the variable in your datasheet that indicates the folder for the run where you showed stimuli
+
+rc = behavConstsDART; %this sets directory pathes based on the user's netID
+
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 32; % <- enter the expt number you want to segment
+day_id = str2double(instructions.session);
+if length(expt) < day_id
+    error('Day_id %d not valid for this dataset', num2str(day_id));
+else
+    fprintf('Analyzing sessions: %s\n', num2str(day_id));
+end
 
 %% load data for day
 

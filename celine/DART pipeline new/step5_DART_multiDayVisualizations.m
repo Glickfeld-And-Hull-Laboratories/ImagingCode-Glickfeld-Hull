@@ -6,29 +6,41 @@
 % clear the workspace and set up basic paths and variables
 clear all; close all; clc
 
-ds = 'DART_V1_YM90K_Celine';
-dataStructLabels = {'contrastxori'};
-experimentFolder = 'SST_YM90K';
-rc = behavConstsDART;
+prompt = 'Enter name of instructions file: ';
+instr = input(prompt, 's');
+clear prompt
+eval(instr);
+
+ds = instructions.ds;
 eval(ds);
 
-sess_list = [32]; % <-- ENTER MANUALLY
+dataStructLabels = {'contrastxori'};
+experimentFolder = instructions.experimentFolder;
+rc = behavConstsDART;
+
+sess_list=instructions.sess_list;
 nSess = length(sess_list);
 nd = 2;
-targetCon = [.25 .5 1]; % <-- ENTER MANUALLY
-frame_rate = 15; 
+frame_rate = instructions.frame_rate; 
+targetCon = instructions.targetCon;
 nCon = length(targetCon);
-nSize = 3; % <-- ENTER MANUALLY
+targetSize=instructions.targetSize;
+nSize = length(targetSize); 
 
-% Session reference selection, will request command line input
-x = input('Which session was used as reference for matching: 0- baseline, 1- post-DART: ');
-if x == 0
-    pre = 1; post = 2;
-    disp('baseline used as reference')
-else
-    pre = 2; post = 1;
-    disp('post-DART used as reference')
+% Determine which session was used as reference for cell matching
+x = instructions.refDay;
+switch x
+    case '1'
+        pre = 1;  % baseline session, used as reference, is in the 1st position
+        post = 2;
+        fprintf('Baseline used as reference\n');
+    case '2'
+        pre = 2;
+        post = 1;  % post-DART session, used as reference, is in the 1st position
+        fprintf('Post-DART used as reference\n');
 end
+clear x instr
+
 
 
 % Create output directory
@@ -53,7 +65,7 @@ mkdir(fnout); cd(fnout)
 %% Concatenating data
 % Initialize concatenation variables
 mice = []; red_concat = []; green_concat = []; nKeep_concat = [];
-dirs_concat = []; cons_concat = []; 
+dirs_concat = []; cons_concat = []; sizes_concat=[];
 % Initialize cell arrays for concatenation
 cell_vars = {'tc_trial_avrg_stat', 'tc_trial_avrg_loc', 'tc_trial_avrg_stat_largePupil', 'tc_trial_avrg_stat_smallPupil', ...
     'pref_responses_stat', 'pref_responses_loc', 'h', 'data_resp', 'RIx', 'norm_dir_resp', 'pref_dir', ...
@@ -98,12 +110,14 @@ for iSess = 1:nSess
     end
     dirs = unique(celleqel2mat_padded(input(post).tGratingDirectionDeg(1:nTrials(post))));
     cons = unique(tCon_match{post});
-    sharedCon = find(ismember(cons, targetCon));
+    sharedCon = find(ismember(cons, targetCon)); %find the indices of the contrasts to include
     sizes = unique(cell2mat(input(id).tGratingDiameterDeg));
+    sharedSize=find(ismember(sizes, targetSize)); %find the indices of the sizes to include
     
     % Concatenate basic variables
     dirs_concat = [dirs_concat, dirs];
     cons_concat = [cons_concat, cons(sharedCon)];
+    sizes_concat = [sizes_concat, sizes(sharedSize)];
     red_concat = [red_concat, red_cells_keep];
     green_concat = [green_concat, green_cells_keep];
     nKeep_concat = [nKeep_concat, nKeep];
@@ -111,11 +125,11 @@ for iSess = 1:nSess
     % Concatenate day-specific data
     for id = 1:nd
         tc_trial_avrg_stat_concat{id} = cat(2, tc_trial_avrg_stat_concat{id}, tc_trial_avrg_stat{id}(:,:,:,:));
-        tc_trial_avrg_loc_concat{id} = cat(2, tc_trial_avrg_loc_concat{id}, tc_trial_avrg_loc{id}(:,:,sharedCon,:));
+        tc_trial_avrg_loc_concat{id} = cat(2, tc_trial_avrg_loc_concat{id}, tc_trial_avrg_loc{id}(:,:,sharedCon,sharedSize));
         tc_trial_avrg_stat_largePupil_concat{id} = cat(2, tc_trial_avrg_stat_largePupil_concat{id}, tc_trial_avrg_stat_largePupil{id}(:,:,:,:));
         tc_trial_avrg_stat_smallPupil_concat{id} = cat(2, tc_trial_avrg_stat_smallPupil_concat{id}, tc_trial_avrg_stat_smallPupil{id}(:,:,:,:));
-        pref_responses_loc_concat{id} = cat(1, pref_responses_loc_concat{id}, pref_responses_loc{id}(:,sharedCon,:));
-        pref_responses_stat_concat{id} = cat(1, pref_responses_stat_concat{id}, pref_responses_stat{id}(:,sharedCon,:));
+        pref_responses_loc_concat{id} = cat(1, pref_responses_loc_concat{id}, pref_responses_loc{id}(:,sharedCon,sharedSize));
+        pref_responses_stat_concat{id} = cat(1, pref_responses_stat_concat{id}, pref_responses_stat{id}(:,sharedCon,sharedSize));
         RIx_concat{id} = cat(1, RIx_concat{id}, sum(RIx{id}));
         norm_dir_resp_concat{id} = cat(1, norm_dir_resp_concat{id}, norm_dir_resp{id});
         pref_dir_concat{id} = cat(2, pref_dir_concat{id}, prefDir_keep{id});

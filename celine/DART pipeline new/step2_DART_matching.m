@@ -12,23 +12,32 @@
 clear all; clear global; close all
 clc
 
-% --> Edit this to your datasheet name
-ds = 'DART_V1_YM90K_Celine'; 
+prompt = 'Enter name of instructions file: ';
+instr = input(prompt, 's');
+clear prompt
+eval(instr);
+
+ds=instructions.ds;
+eval(ds);
 
 rc = behavConstsDART; %this sets directory pathes based on the user's netID
 
 % --> Edit if your stimulus run field has a different name
 dataStructLabels = {'contrastxori'}; % identifies stimulus runs in datasheet
-eval(ds)
+
 
 % Basic processing parameters
 doCorrImg = true; 
 brightnessScaleFactor = 0.3;
 
 % Define days to match: day_id(1) = reference, day_id(2) = matched day
-% --> Edit this to your reference day experiment ID
-day_id(1) = 26; 
-day_id(2) = expt(day_id(1)).multiday_matchdays; % automatically finds matched day
+day_id(1) = str2double(instructions.session);
+
+if length(expt) < day_id
+    error('Day_id %d not valid for this dataset', day_id(1));
+else
+    day_id(2) = expt(day_id).multiday_matchdays;% automatically finds matched day
+end
 
 % Extract experiment info from datasheet
 ExperimentFolder = expt(day_id(1)).exptType;

@@ -1,17 +1,29 @@
 clear all; clear global; close all;
 
 % Get dataset and experiment parameters
-prompt = 'Enter ds (e.g., DART_V1_YM90K_Celine): ';
-ds = input(prompt, 's');
+prompt = 'Enter name of instructions file: ';
+instr = input(prompt, 's');
 clear prompt
+eval(instr);
 rc = behavConstsDART; % directories
+
+ds=instructions.ds;
 eval(ds);
-day_id = input('Enter day id '); 
-pre_day = expt(day_id).multiday_matchdays;
+
+day_id = str2double(instructions.session);
+
+if length(expt) < day_id
+    error('Day_id %d not valid for this dataset', day_id);
+else
+    pre_day = expt(day_id).multiday_matchdays;
+    allDays = [day_id, pre_day];
+    fprintf('Analyzing sessions: %s\n', num2str(allDays));
+end
+
+
 nd = 2; % Number of days hardcoded to = 2
 mouse = expt(day_id).mouse;
 experimentFolder = expt(day_id).exptType;
-allDays = [day_id, pre_day];
 
 % Process eye tracking data for each day
 for day = 1:2
