@@ -1,14 +1,14 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_YM90K_Celine'; % a struct where fields store experiment metadata 
+ds = 'step0_DataSheet_XT'; % a struct where fields store experiment metadata 
 % for each mouse, enter manually: mouse, date, imaging session, drug condition etc. 
-dataStructLabels = {'contrastxori'};
+dataStructLabels = {'dir'};
 rc = behavConstsDART; %directories
 eval(ds);
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 32;
+day_id = 1;
 
 %% load data for day
 
@@ -16,7 +16,7 @@ mouse = expt(day_id).mouse;
 expDate = expt(day_id).date;
 ExperimentFolder = expt(day_id).exptType;
 
-fn = fullfile(rc.achAnalysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
+fn = fullfile(rc.analysis,ExperimentFolder,mouse,expDate); %can make this flexible if folder structure is different
 mkdir(fn)
 
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);

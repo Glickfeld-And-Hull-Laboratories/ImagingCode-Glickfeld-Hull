@@ -490,12 +490,16 @@ for sesh = 1:nSess
     post_sm = nanmean(trial_dfof_concat{sesh,post}(:,include_sm{post}),2);
     pre_lg = nanmean(trial_dfof_concat{sesh,pre}(:,include_lg{pre}),2);
     post_lg = nanmean(trial_dfof_concat{sesh,post}(:,include_lg{post}),2);
-    pre_sm(pre_sm<0) = 0;
-    post_sm(post_sm<0) = 0;
-    dartIx_sm = (post_sm - pre_sm) ./ (post_sm + pre_sm);
-    pre_lg(pre_lg<0) = 0;
-    post_lg(post_lg<0) = 0;
-    dartIx_lg = (post_lg - pre_lg) ./ (post_lg + pre_lg);
+    pre_sm_clean = pre_sm;
+    pre_sm_clean(pre_sm<0) = 0;
+    post_sm_clean = post_sm;
+    post_sm_clean(post_sm<0) = 0;
+    dartIx_sm = (post_sm - pre_sm) ./ (abs(pre_sm));
+    pre_lg_clean = pre_lg;
+    pre_lg_clean(pre_lg<0) = 0;
+    post_lg_clean = post_lg;
+    post_lg_clean(post_lg<0) = 0;
+    dartIx_lg = (post_lg - pre_lg) ./ (abs(pre_lg));
     dartIx = [dartIx_sm dartIx_lg]; % 1st column small, 2nd column large
 
     dartIx_concat = [dartIx_concat;dartIx];
@@ -637,8 +641,11 @@ hold off
 %% DART effect idx vs suppression idx
 % DART effect of either large or small trials; highest contrast, only
 % stationary, again pre-dart SSIx
-
+ymin = -8;
+ymax = 8;
 % dartIx_concat 1st column small, 2nd column large
+% dartIx_concat(dartIx_concat > 30 | dartIx_concat < -30) = NaN;
+
 dIx_sm_green = dartIx_concat(green_ind_concat,1);
 sm_green_avg = nanmean(dIx_sm_green);
 sm_green_sem = nanstd(dIx_sm_green)./sqrt(sum(~isnan(dIx_sm_green)));
@@ -671,6 +678,20 @@ n_green_lg = sum(~isnan(SSIx_green(:,pre)) .* ~isnan(dIx_lg_green));
 n_red_sm = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_sm_red));
 n_red_lg = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_lg_red));
 
+% std of DART Ix 
+SSIx_max = -0.8;
+SSIx_min = -1;
+green_SSIx_ind = SSIx_green(:,pre) <= SSIx_max & SSIx_green(:,pre) >= SSIx_min;
+red_SSIx_ind = SSIx_red(:,pre) <= SSIx_max & SSIx_red(:,pre) >= SSIx_min;
+std_dIx_sm_green = nanstd(dIx_sm_green(green_SSIx_ind));
+std_dIx_lg_green = nanstd(dIx_lg_green(green_SSIx_ind));
+std_dIx_sm_red = nanstd(dIx_sm_red(red_SSIx_ind));
+std_dIx_lg_red = nanstd(dIx_lg_red(red_SSIx_ind));
+avg_dIx_sm_green = nanmean(dIx_sm_green(green_SSIx_ind));
+avg_dIx_lg_green = nanmean(dIx_lg_green(green_SSIx_ind));
+avg_dIx_sm_red = nanmean(dIx_sm_red(red_SSIx_ind));
+avg_dIx_lg_red = nanmean(dIx_lg_red(red_SSIx_ind));
+
 % regression model
 % mask1 = ~isnan(SSIx_green(:,pre)) & ~isnan(dIx_sm_green);
 % model1 = polyfit(SSIx_green(mask1,pre),dIx_sm_green(mask1),1);
@@ -678,18 +699,33 @@ n_red_lg = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_lg_red));
 model1 = fitlm(SSIx_green(:,pre),dIx_sm_green);
 figure
 hand1 = plot(model1)
+dim = [.2 .5 .3 .3];
+str = ['Mean=' num2str(avg_dIx_sm_green) ' std=' num2str(std_dIx_sm_green)];
+annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
 model2 = fitlm(SSIx_red(:,pre),dIx_sm_red);
 figure
 hand2 = plot(model2)
+dim = [.2 .5 .3 .3];
+str = ['Mean=' num2str(avg_dIx_sm_red) ' std=' num2str(std_dIx_sm_red)];
+annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
 model3 = fitlm(SSIx_green(:,pre),dIx_lg_green);
 figure
 hand3 = plot(model3)
+dim = [.2 .5 .3 .3];
+str = ['Mean=' num2str(avg_dIx_lg_green) ' std=' num2str(std_dIx_lg_green)];
+annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
 model4 = fitlm(SSIx_red(:,pre),dIx_lg_red);
 figure
 hand4 = plot(model4)
+dim = [.2 .5 .3 .3];
+str = ['Mean=' num2str(avg_dIx_lg_red) ' std=' num2str(std_dIx_lg_red)];
+annotation('textbox',dim,'String',str,'FitBoxToText','on');
+
+
+
 xmin = -1;
 xmax = 1;
 
@@ -702,10 +738,11 @@ scatter(SSIx_green(:,pre),dIx_sm_green)
 % eb(1) = errorbar(SSIx_green_mean_pre,sm_green_avg,SSIx_green_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_green_mean_pre,sm_green_avg,sm_green_sem, 'vertical', 'LineStyle', 'none');
 % set(eb, 'color', 'k', 'LineWidth', 1.5)
-lsline
+% lsline
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
+ylim([ymin ymax])
 hold off
 
 figure;
@@ -717,10 +754,11 @@ scatter(SSIx_red(:,pre),dIx_sm_red)
 % eb(1) = errorbar(SSIx_red_mean_pre,sm_red_avg,SSIx_red_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_red_mean_pre,sm_red_avg,sm_red_sem, 'vertical', 'LineStyle', 'none');
 % set(eb, 'color', 'k', 'LineWidth', 1.5)
-lsline
+% lsline
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
+ylim([ymin ymax])
 hold off
 
 figure;
@@ -731,10 +769,11 @@ scatter(SSIx_green(:,pre),dIx_lg_green)
 % eb(1) = errorbar(SSIx_green_mean_pre,lg_green_avg,SSIx_green_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_green_mean_pre,lg_green_avg,lg_green_sem, 'vertical', 'LineStyle', 'none');
 % set(eb, 'color', 'k', 'LineWidth', 1.5)
-lsline
+% lsline
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
+ylim([ymin ymax])
 hold off
 
 figure;
@@ -745,11 +784,17 @@ scatter(SSIx_red(:,pre),dIx_lg_red)
 % eb(1) = errorbar(SSIx_red_mean_pre,lg_red_avg,SSIx_red_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_red_mean_pre,lg_red_avg,lg_red_sem, 'vertical', 'LineStyle', 'none');
 % set(eb, 'color', 'k', 'LineWidth', 1.5)
-lsline
+% lsline
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
+ylim([ymin ymax])
 hold off
+
+
+
+%% piecewise regression for dartIx vs SSIx
+
 
 
 %% plot stationary timecourses for all cells

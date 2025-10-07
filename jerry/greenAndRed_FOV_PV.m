@@ -1,11 +1,11 @@
 
-mouse = 'i2208';
-date = '250618';
-redFolder = '000'; %enter the first three digits
+mouse = 'i3332';
+date = '250926';
+redFolder = '002'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
-greenFolder = '001'; %enter the first three digits
+greenFolder = '003'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='221.09';
+depth='160';
 experimentType = 'VIP_YM90K';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'

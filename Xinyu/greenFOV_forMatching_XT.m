@@ -1,5 +1,5 @@
 clear all
-date = '251001';%yymmdd
+date = '251002';%yymmdd
 mouse = 'i2777' %ixxxx
 greenFolder = '004'; %enter the first three digits
 
