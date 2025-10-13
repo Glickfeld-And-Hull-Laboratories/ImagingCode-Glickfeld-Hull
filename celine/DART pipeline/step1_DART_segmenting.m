@@ -62,24 +62,15 @@ for irun = 1:nruns
     [s,tUsername] = dos('ECHO %USERNAME%');
     switch tHostname
         case {'nuke'}
-            if username == 'celine' 
-                fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-
-            else
-                fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-            end
+             fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
         case{'nb-hubel'}
-                if username == 'cc735'
-                    fName = ['Z:\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                else
-                    fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-                 end
+            fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];     
     end
     
     load(fName); %load the mworks behavioral file
 
     temp(irun) = input; %load the data from the mworks file into temp
-    %clear input
+    
     nframes = [temp(irun).counterValues{end}(end) info.config.frames];
 
     fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
@@ -112,8 +103,7 @@ for irun = 1:nruns
     end
 end
 
-mWStruct = input;
-clear input;
+
 % register data for each day
 %reg green data
 
@@ -139,9 +129,14 @@ else %if not, must register. Start by showing average for each of four 500-frame
         clim([100 3000]); 
     end
     drawnow;
-    
+
+    %temporarily change name of the input structure
+    inputTemp = input;
+    clear input;
+
     regImgStartFrame = input('Enter Registration Image Start Frame, ENTER INTO DS:');
-    
+    input = inputTemp; %change the name back
+
     regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
     [outs,data_g_reg] = stackRegGPU(data_g,regImg);
     data_avg = mean(data_g_reg,3);
@@ -153,17 +148,6 @@ else %if not, must register. Start by showing average for each of four 500-frame
     save(fullfile(fnout,'input.mat'),'input')
 end
 
-input = mWStruct;
-clear mWStruct;
-%
-%reg red data 
-% register the red data from the 920 nm run (same run used for green
-% above)to the output of the green registration
-% if info.config.pmt1_gain > 0.5
-%     [~,data_r_reg] = stackRegGPU(data_r,[],[],double(outs));
-%     redChImg = mean(data_r_reg,3);
-%     clear data_r clear data_r_reg
-% end
     
 %% find activated cells
 %find number of frames per trial and temporarily reshape data into trials
@@ -172,7 +156,7 @@ nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingDirectionDeg,2);
-%ntrials = 374;
+%ntrials = 374; 
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
@@ -326,7 +310,7 @@ figure; imagesc(redThresh);colormap gray;
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redThresh,redThresh,redThresh); %make a dataframe that repeats the red channel image twice
+redForSegmenting = cat(3, redThresh,redThresh,redThresh); %make a dataframe that repeats the red channel image multiple times
 mask_exp = zeros(sz(1),sz(2));
 mask_all = zeros(sz(1), sz(2));
 %find and label the red cells - this is the first segmentation figure that
@@ -415,61 +399,23 @@ save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
 clear data_g_reg data_reg_down
 
-%% deprecated code archive
 
-% DEPRECATED - FIND EXACT FRAMES IN A TRIAL (CREATES UNEVEN TRIALS)
-% [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
-% nTrials = length(stimOns);
-% [nFrames nCells] = size(npSub_tc);
-% % nOn = input.nScansOn;
-% % nOff = input.nScansOff;
-% MAXnFrames = max(max(diff(stimOns)),nFrames - stimOffs(end)); % find
-% % nFrames for the trial with the most frames
-% data_tc = nan(MAXnFrames,nCells,nTrials);
-% data_f_trial = nan(nCells,nTrials);
-% stimOffs(end+1) = nFrames;
-% for itrial = 1:nTrials
-%     if itrial == 1
-%         baseFrame = 1;
-%     else
-%         baseFrame = stimOffs(itrial-1); 
-%     end
-%     nOn = stimOffs(itrial) - stimOns (itrial);
-%     nOff = stimOns(itrial) - baseFrame;
-%     trialFrames = nan(MAXnFrames,nCells);
-%     trialFrames(1:nOn+nOff,:) = npSub_tc(baseFrame:stimOffs(itrial)-1,:);
-%     %if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
-%         data_tc(:,:,itrial) = trialFrames;
-%     %end
-% end
-%
-% data_tc is final organized data by frame/trial (empty frames filled with NaN) x nCell x nTrials
-%
-% % calculate f and dfof
-% for itrial = 1:nTrials
-% end
-% elements = zeros(960,1);
-% for m = 1:960
-%     elements(m,1) = sum(~isnan(data_tc(:,1,m)));
-% end
-% histogram(elements)
 
 %% find stim info from photodiode
-% LG code
 
 cd(CD);
 load([runFolder '_000_000.mat']);
 [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
-mWStruct.stimOns_photodiode = stimOns;
-mWStruct.stimOffs_photodiode = stimOffs;
+input.stimOns_photodiode = stimOns;
+input.stimOffs_photodiode = stimOffs;
 [nFrames nCells] = size(npSub_tc);
-nOn = mWStruct.nScansOn(1);
-nOff = mWStruct.nScansOff(1);
+nOn = input.nScansOn(1);
+nOff = input.nScansOff(1);
 data_tc = nan(nOn+nOff,nCells,nTrials);
 % stimOns = stimOns_correct;
 % stimOffs = stimOffs_correct;
-input = mWStruct;
-save('input.mat','input') %save a new copy of the input structure named mWStruct that includes the photodiode-identified trial start times
+
+save('input.mat','input') %resave the input structure named input that includes the photodiode-identified trial start times
 nTrials = length(stimOns);
 
 for itrial = 1:nTrials
@@ -491,15 +437,7 @@ data_dfof_trial = permute(data_dfof_trial,[1 3 2]); %nFrames x nTrials x nCells
 % end
 % tc_cellavg = mean(tavg,2);
 % plot(tc_cellavg);
-%% reshape by trials - DEPRECATED
-%getting df/f for each trial, using a baseline window
-%data_tc_trial = reshape(npSub_tc, [nOn+nOff,nTrials,nCells]);
-%data_f_trial = mean(data_tc_trial(nOff/2:nOff,:,:),1);
-%data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
-%split into baseline and response windows, run paired t-test to see if
-%cells have a significant response (elevation in df/f comapred to baseline)
-%for any sizes/directions
 
 %% calculate responsive cells
 resp_win = nOff/2:nOff/2+nOn;
@@ -515,7 +453,7 @@ for iSize = 1:nSize
         ind = intersect(ind_size,ind_dir); %for every size and then every direction, find trials with that dir/size combination
         data_resp(:,iSize,iDir,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
         data_resp(:,iSize,iDir,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-        [h(:,iSize,iDir), p(:,iSize,iDir)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nSize.*3-1));
+        [h(:,iSize,iDir), p(:,iSize,iDir)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nDir*nCon*nSize-1));
     end
 end
 %%

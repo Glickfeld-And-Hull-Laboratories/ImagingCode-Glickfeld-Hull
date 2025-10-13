@@ -136,13 +136,14 @@ for id = 1:nd
     load(fullfile(dataPath, imgMatFile));
     
     if isfield(info, 'frame')
+        fprintf('Getting stim on times from the photodiode\n');
         [cStimOn_Temp, stimOffsTemp] = photoFrameFinder_Sanworks(info.frame);
         stimOns{id} = cStimOn_Temp;
         clear stimOffsTemp cStimOn_Temp
     else
         fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
         correctedInputStructure{id} = counterValCorrect_noPhotodiode(inputStructure(id));
-        stimOns{id} = correctedInputStructure{id}.cStimOn;
+        stimOns{id} = cell2mat(correctedInputStructure{id}.cStimOn);
     end
 end
 
@@ -156,7 +157,7 @@ fractTimeActive_match = cell(1, nd);
 cellstd_match = cell(1, nd);
 
 for id = 1:nd
-    cStimOnTemp = cell2mat(stimOns{id});
+    cStimOnTemp = stimOns{id};
     nTrials(id) = length(cStimOnTemp);
     [nFrames, nCells] = size(cellTCs_match{id});
     
@@ -349,7 +350,7 @@ wheel_trial_avg_raw = cell(1, nd);
 RIx = cell(1, nd); % Running index (logical)
 
 for id = 1:nd
-    cStimOnTemp = cell2mat(stimOns{id});
+    cStimOnTemp = stimOns{id};
     wheel_tc{id} = nan(nOn + nOff, nTrials(id));
     wheel_tc_raw{id} = nan(nOn + nOff, nTrials(id));
     
@@ -493,7 +494,7 @@ for id = 1:nd
                 [h(:, iDir, iCon, iSize), ~] = ttest(nanmean(data_dfof_trial_keep{id}(resp_win, ind, :), 1), ...
                                                      nanmean(data_dfof_trial_keep{id}(base_win, ind, :), 1), ...
                                                      'dim', 2, 'tail', 'right', ...
-                                                     'alpha', 0.01./(nDir*nCon*nSize-1));
+                                                     'alpha', 0.05./(nDir*nCon*nSize-1));
             end
         end
     end

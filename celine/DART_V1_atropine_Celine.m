@@ -229,7 +229,7 @@ expt(8).contrastxori_runs = {'002'};
 expt(8).contrastxori_time = {'1651'};
 expt(8).data_loc = 'ACh';
 expt(8).wheelColor = 'orange';
-%
+expt(8).exptType = 'SST_atropine';
 %% i2078 
 expt(9).SubNum = 'i2078';
 expt(9).mouse = 'i2078';
@@ -287,7 +287,7 @@ expt(10).contrastxori_runs = {'004'};
 expt(10).contrastxori_time = {'1343'};
 expt(10).data_loc = 'ACh';
 expt(10).wheelColor = 'orange';
-%
+expt(10).exptType = 'SST_atropine';
 %% i2080 
 expt(11).SubNum = 'i2080';
 expt(11).mouse = 'i2080';
@@ -1251,7 +1251,7 @@ expt(44).contrastxori_runs = {'004'};
 expt(44).contrastxori_time = {'1010'};
 expt(44).data_loc = 'ACh';
 expt(44).wheelColor = 'orange';
-expt(4).exptType = 'SST_atropine';
+expt(44).exptType = 'SST_atropine';
 %% i2150 baseline
 expt(45).mouse = 'i2150' ;
 expt(45).date = '240603';
@@ -1967,7 +1967,7 @@ expt(76).mouse = 'i2178';
 expt(76).date = '241217';
 expt(76).folder = '2P';
 expt(76).img_loc  = {'V1';'L2/3'};
-expt(76).z = 208
+expt(76).z = 208;
 expt(76).obj = '16x';
 expt(76).zoom = 2;
 expt(76).frame_rate = 15;
