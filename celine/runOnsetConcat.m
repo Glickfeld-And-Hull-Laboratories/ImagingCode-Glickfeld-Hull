@@ -93,21 +93,21 @@ clear data_dfof_runOnset_match mean_resp_runOnset_match red_ind_match
 figure;
 subplot(2, 1, 1);
 histogram(mean_resp_data{pre, 1}(~red_ind_concat));
-xlim([-.2 .2]);
+xlim([-.1 .25]);
 set(gca, 'TickDir', 'out');
 grid off;
 box off;
 title([num2str(sum(~red_ind_concat)), ' -HTP cells']);
-xline(0.036);
+xline(mean(mean_resp_data{pre, 1}(~red_ind_concat)));
 
 subplot(2, 1, 2);
 histogram(mean_resp_data{pre, 1}(red_ind_concat));
-xlim([-.2 .2]);
+xlim([-.1 .25]);
 set(gca, 'TickDir', 'out');
 grid off;
 box off;
 title([num2str(sum(red_ind_concat)), ' +HTP cells']);
-xline(0.036);
+xline(mean(mean_resp_data{pre, 1}(red_ind_concat)));
 
 sgtitle(sprintf('%d mice with %s onsets', ...
     nExp, strjoin(arrayfun(@num2str, nOnsets(pre, :), 'UniformOutput', false), ', ')));
@@ -117,54 +117,53 @@ greenMeans = cell(1, 2);
 redMeans = cell(1, 2);
 greenSEM = cell(1, 2);
 redSEM = cell(1, 2);
-
 for id = 1:2
     for iStillTime = 1:nStillTime
         greenData = mean_resp_data{id, iStillTime}(~red_ind_concat);
         greenMeans{id}(iStillTime) = mean(greenData);
         greenSEM{id}(iStillTime) = std(greenData) / sqrt(length(greenData));
-        
         redData = mean_resp_data{id, iStillTime}(red_ind_concat);
         redMeans{id}(iStillTime) = mean(redData);
         redSEM{id}(iStillTime) = std(redData) / sqrt(length(redData));
     end
 end
 
-green_means = greenMeans{pre};
-red_means = redMeans{pre};
-green_sem = greenSEM{pre};
-red_sem = redSEM{pre};
-
-all_means = [green_means, red_means];
-all_stds = [green_sem, red_sem];
-
-x_positions = [1:length(green_means), (length(green_means)+2):(2*length(green_means)+1)];
-
 figure;
-h = bar(x_positions, all_means, 'grouped');
-h.FaceColor = 'flat';
-h.CData(1:length(green_means), :) = repmat([215, 217, 177]/255, length(green_means), 1);
-h.CData(length(green_means)+1:end, :) = repmat([163, 0, 0]/255, length(red_means), 1);
+green_data = [greenMeans{1}; greenMeans{2}]';
+red_data = [redMeans{1}; redMeans{2}]';
+all_data = [green_data; red_data];
 
+h = bar(all_data);
+h(1).FaceColor = [0.3, 0.3, 0.3];
+h(2).FaceColor = [0, 114, 178]/255;
 hold on;
-errorbar(x_positions, all_means, all_stds, 'k', 'LineStyle', 'none', 'LineWidth', 1);
+
+green_sem_data = [greenSEM{1}; greenSEM{2}]';
+red_sem_data = [redSEM{1}; redSEM{2}]';
+all_sem = [green_sem_data; red_sem_data];
+
+nGroups = size(all_data, 1);
+nBars = size(all_data, 2);
+x = nan(nBars, nGroups);
+for i = 1:nBars
+    x(i,:) = h(i).XEndPoints;
+end
+errorbar(x', all_data, all_sem, 'k', 'LineStyle', 'none', 'LineWidth', 1);
+
+ylim_vals = [0 max(all_data(:) + all_sem(:)) * 1.15];
+ylim(ylim_vals);
 
 xlabel('Seconds of stillness required');
-ylabel('Run onset response (first 2 seconds), pre-DART');
-
-xticks(x_positions);
+ylabel('Run onset response (first 2 seconds)');
+xticks(1:nGroups);
 xticklabels([string(stillTimeList), string(stillTimeList)]);
-
-text(mean(1:length(green_means)), max(all_means + all_stds) + 0.1*range(all_means), '-HTP', ...
-     'HorizontalAlignment', 'center', 'FontWeight', 'bold');
-text(mean((length(green_means)+2):(2*length(green_means)+1)), max(all_means + all_stds) + 0.1*range(all_means), '+HTP', ...
-     'HorizontalAlignment', 'center', 'FontWeight', 'bold');
-
+text(mean(1:nStillTime), ylim_vals(2)*0.95, '-HTP', 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+text(mean((nStillTime+1):nGroups), ylim_vals(2)*0.95, '+HTP', 'HorizontalAlignment', 'center', 'FontWeight', 'bold');
+legend({'pre-DART', 'post-DART'}, 'Location', 'best');
 set(gca, 'TickDir', 'out');
 grid off;
 box off;
 hold off;
-
 %% find cells that are facilitated or suppressed by running onset
 cellData_nonRed = mean_resp_data{pre, 1}(~red_ind_concat);
 stdResp_nonRed = std(cellData_nonRed, 'omitnan');

@@ -411,13 +411,13 @@ input.stimOffs_photodiode = stimOffs;
 [nFrames nCells] = size(npSub_tc);
 nOn = input.nScansOn(1);
 nOff = input.nScansOff(1);
-data_tc = nan(nOn+nOff,nCells,nTrials);
+
 % stimOns = stimOns_correct;
 % stimOffs = stimOffs_correct;
 
 save('input.mat','input') %resave the input structure named input that includes the photodiode-identified trial start times
 nTrials = length(stimOns);
-
+data_tc = nan(nOn+nOff,nCells,nTrials);
 for itrial = 1:nTrials
   if ~isnan(stimOns(itrial)) & (stimOns(itrial)+nOn+nOff/2)<nFrames
     data_tc(:,:,itrial) = npSub_tc(stimOns(itrial)-nOff/2:stimOns(itrial)-1+nOn+nOff/2,:);
@@ -440,6 +440,10 @@ data_dfof_trial = permute(data_dfof_trial,[1 3 2]); %nFrames x nTrials x nCells
 
 
 %% calculate responsive cells
+
+tCon = cell2mat(input.tGratingContrast);
+contrasts = unique(tCon);
+nCon = length(contrasts);
 resp_win = nOff/2:nOff/2+nOn;
 base_win = 1:nOff/2;
 
