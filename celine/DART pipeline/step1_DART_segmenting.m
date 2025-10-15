@@ -1,12 +1,12 @@
 clear all; clear global;  close all
 clc
-prompt = 'Enter name of instructions file: ';
+prompt = 'Enter name of instructions file: '; % enter instr filename without .m
 instr = input(prompt, 's');
 clear prompt
-eval(instr);
+run(instr);
 
 ds=instructions.ds;
-eval(ds);
+run(ds)
 
 dataStructLabels = {'contrastxori'}; %enter the variable in your datasheet that indicates the folder for the run where you showed stimuli
 
