@@ -498,7 +498,7 @@ for iSize = 1:nSize
         ind = intersect(ind_size,ind_dir); %for every size and then every direction, find trials with that dir/size combination
         data_resp(:,iSize,iDir,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
         data_resp(:,iSize,iDir,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-        [h(:,iSize,iDir), p(:,iSize,iDir)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nSize.*3-1));
+        [h(:,iSize,iDir), p(:,iSize,iDir)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nDir*nCon*nSize-1));
     end
 end
 %%

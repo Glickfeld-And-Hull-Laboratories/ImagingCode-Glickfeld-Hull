@@ -11,8 +11,8 @@ rc =  behavConstsDART; %directories
 eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
-sess_list = [2 4 6 16];%enter all the sessions you want to concatenate
-doEye = 1; %analyze pupil info?
+sess_list = [18 28];%enter all the sessions you want to concatenate
+doEye = 0; %analyze pupil info?
 nSess=length(sess_list);
 targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 nCon = length(targetCon)
@@ -77,6 +77,7 @@ tc_trial_avrg_loc_concat=cell(1,nd);
 conBySize_resp_stat_concat=cell(1,nd);
 conBySize_resp_loc_concat=cell(1,nd);
 h_concat=cell(1,nd);
+h2_concat=cell(1,nd);
 data_resp_concat=cell(1,nd);
 trial_dfof_concat=cell(nSess,nd);
 tSize_concat = cell(nSess,nd);
@@ -160,9 +161,10 @@ for iSess = 1:nSess
     tDir_match = cell(1,nd);
     tOri_match = cell(1,nd);
     tSize_match = cell(1,nd);
-
+    nTrials = nan(1,2);
     %find the contrasts, directions and orientations for each day
     for id = 1:nd
+        nTrials(id) = length(input(id).tStimOnTimeUs);
         tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:nTrials(id)));
         tDir_match{id} = celleqel2mat_padded(input(id).tGratingDirectionDeg(1:nTrials(id)));
         tOri_match{id} = tDir_match{id};
@@ -219,6 +221,7 @@ for iSess = 1:nSess
         noiseCorr_concat{id}=cat(2,noiseCorr_concat{id},noiseCorr{id});
         sigCorr_concat{id}=cat(2,sigCorr_concat{id},sigCorr{id});
         h_concat{id}=cat(1,h_concat{id},h_keep{id});
+        h2_concat{id}=cat(1,h2_concat{id},h2_keep{id});
         conBySize_resp_stat_concat{id}=cat(1,conBySize_resp_stat_concat{id},conBySize_resp_stat_keep{id});
         conBySize_resp_loc_concat{id}=cat(1,conBySize_resp_loc_concat{id},conBySize_resp_loc_keep{id});
         data_resp_concat{id} = cat(1,data_resp_concat{id},data_resp_keep{id});
@@ -290,32 +293,45 @@ haveStat_both= find(haveStat_pre.* haveStat_post); %find cells that meet this cr
 
 runningCells = intersect(haveStat_both, haveRunning_both);
 
-
 %% further preprocessing
 %find cells responsive to a given size
+
 mySize = 1; %1 is the smallest size
 respToSizeBothDays = cell(1,nd);
 for id = 1:nd
-    respToSizeBothDays{id}=sum(squeeze(sum(h_concat{id}(:,:,:,mySize),2)),2); %finding cells that responded this size, at any contrast or direction
+    respToSizeBothDays{id}=sum(squeeze(sum(h_concat{id}(:,:,4,mySize),2)),2); %finding cells that responded this size, at highest contrast
 end
 respToSmall = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
 
+% well-centered cells
 if onlySmall == 1
-    red_ind_concat = intersect(red_ind_concat,find(respToSmall));
-    green_ind_concat = intersect(green_ind_concat,find(respToSmall));
+    red_ind_concat_os = intersect(red_ind_concat,find(respToSmall));
+    green_ind_concat_os = intersect(green_ind_concat,find(respToSmall));
 end
+
+% cells that are significantly responsive to small stimulus on either day
+r_ind_small = red_ind_concat_os;
+g_ind_small = green_ind_concat_os;
+
 
 mySize = nSize; %nSize is the largest size
 respToSizeBothDays = cell(1,nd);
+respToSizeBothDays2 = cell(1,nd);
 for id = 1:nd
-    respToSizeBothDays{id}=sum(squeeze(sum(h_concat{id}(:,:,:,mySize),2)),2); %finding cells that responded this size, at any contrast or direction
+    respToSizeBothDays{id}=sum(squeeze(sum(h_concat{id}(:,:,4,mySize),2)),2); %finding cells that responded this size, at highest contrast
 end
-respToLarge = logical(respToSizeBothDays{pre}+respToSizeBothDays{post}); %to find cells that were responsive to this size on either day
+for id = 1:nd
+    respToSizeBothDays2{id}=sum(squeeze(sum(h2_concat{id}(:,:,4,mySize),2)),2); %finding cells that responded this size, at any contrast or direction
+end
+respToLarge = logical(respToSizeBothDays2{pre}+respToSizeBothDays2{post}); %to find cells that were responsive to this size BIDIRECTIONALLY on either day
 
-if onlyLarge == 1
-    red_ind_concat = intersect(red_ind_concat,find(respToLarge));
-    green_ind_concat = intersect(green_ind_concat,find(respToLarge));
-end
+r_ind_large = intersect(red_ind_concat_os,find(respToLarge));
+g_ind_large = intersect(green_ind_concat_os,find(respToLarge));
+
+% if onlyLarge == 1
+%     red_ind_concat_ol = intersect(red_ind_concat,find(respToLarge));
+%     green_ind_concat_ol = intersect(green_ind_concat,find(respToLarge));
+% end
 
 
 responCriteria = cell(1,nd); %cell array that will have indices of cells that meet our response criteria on each day
@@ -495,11 +511,15 @@ for sesh = 1:nSess
     post_sm_clean = post_sm;
     post_sm_clean(post_sm<0) = 0;
     dartIx_sm = (post_sm - pre_sm) ./ (abs(pre_sm));
+    dartIx_sm(dartIx_sm>10) = 10;
+    dartIx_sm(dartIx_sm<-10) = -10;
     pre_lg_clean = pre_lg;
     pre_lg_clean(pre_lg<0) = 0;
     post_lg_clean = post_lg;
     post_lg_clean(post_lg<0) = 0;
     dartIx_lg = (post_lg - pre_lg) ./ (abs(pre_lg));
+    dartIx_lg(dartIx_lg>10) = 10;
+    dartIx_lg(dartIx_lg<-10) = -10;
     dartIx = [dartIx_sm dartIx_lg]; % 1st column small, 2nd column large
 
     dartIx_concat = [dartIx_concat;dartIx];
@@ -641,90 +661,168 @@ hold off
 %% DART effect idx vs suppression idx
 % DART effect of either large or small trials; highest contrast, only
 % stationary, again pre-dart SSIx
-ymin = -8;
-ymax = 8;
+ymin = -12;
+ymax = 12;
 % dartIx_concat 1st column small, 2nd column large
 % dartIx_concat(dartIx_concat > 30 | dartIx_concat < -30) = NaN;
 
-dIx_sm_green = dartIx_concat(green_ind_concat,1);
+dIx_sm_green = dartIx_concat(g_ind_small,1);
 sm_green_avg = nanmean(dIx_sm_green);
 sm_green_sem = nanstd(dIx_sm_green)./sqrt(sum(~isnan(dIx_sm_green)));
 
-dIx_lg_green = dartIx_concat(green_ind_concat,2);
+dIx_lg_green = dartIx_concat(g_ind_large,2);
 lg_green_avg = nanmean(dIx_lg_green);
 lg_green_sem = nanstd(dIx_lg_green)./sqrt(sum(~isnan(dIx_lg_green)));
 
-dIx_sm_red = dartIx_concat(red_ind_concat,1);
+dIx_sm_red = dartIx_concat(r_ind_small,1);
 sm_red_avg = nanmean(dIx_sm_red);
 sm_red_sem = nanstd(dIx_sm_red)./sqrt(sum(~isnan(dIx_sm_red)));
 
-dIx_lg_red = dartIx_concat(red_ind_concat,2);
+dIx_lg_red = dartIx_concat(r_ind_large,2);
 lg_red_avg = nanmean(dIx_lg_red);
 lg_red_sem = nanstd(dIx_lg_red)./sqrt(sum(~isnan(dIx_lg_red)));
 
 % calculate SSIx of the pre day as done above
-SSIx_green = SSIx_concat(green_ind_concat,:);
-SSIx_green_mean_pre = nanmean(SSIx_green(:,pre),1);
-SSIx_green_sem_pre = nanstd(SSIx_green(:,pre))./sqrt(sum(~isnan(SSIx_green(:,pre))));
+SSIx_green_sm = SSIx_concat(g_ind_small,:);
+SSIx_green_lg = SSIx_concat(g_ind_large,:);
 
-SSIx_red = SSIx_concat(red_ind_concat,:);
-SSIx_red_mean_pre = nanmean(SSIx_red(:,pre),1);
-SSIx_red_sem_pre = nanstd(SSIx_red(:,pre))./sqrt(sum(~isnan(SSIx_red(:,pre))));
+% SSIx_green_mean_pre = nanmean(SSIx_green(:,pre),1);
+% SSIx_green_sem_pre = nanstd(SSIx_green(:,pre))./sqrt(sum(~isnan(SSIx_green(:,pre))));
+
+SSIx_red_sm = SSIx_concat(r_ind_small,:);
+SSIx_red_lg = SSIx_concat(r_ind_large,:);
+% SSIx_red_mean_pre = nanmean(SSIx_red(:,pre),1);
+% SSIx_red_sem_pre = nanstd(SSIx_red(:,pre))./sqrt(sum(~isnan(SSIx_red(:,pre))));
 
 % calculate actual nCells
 
-n_green_sm = sum(~isnan(SSIx_green(:,pre)) .* ~isnan(dIx_sm_green));
-n_green_lg = sum(~isnan(SSIx_green(:,pre)) .* ~isnan(dIx_lg_green));
-n_red_sm = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_sm_red));
-n_red_lg = sum(~isnan(SSIx_red(:,pre)) .* ~isnan(dIx_lg_red));
+n_green_sm = sum(~isnan(SSIx_green_sm(:,pre)) .* ~isnan(dIx_sm_green));
+n_green_lg = sum(~isnan(SSIx_green_lg(:,pre)) .* ~isnan(dIx_lg_green));
+n_red_sm = sum(~isnan(SSIx_red_sm(:,pre)) .* ~isnan(dIx_sm_red));
+n_red_lg = sum(~isnan(SSIx_red_lg(:,pre)) .* ~isnan(dIx_lg_red));
 
 % std of DART Ix 
-SSIx_max = -0.8;
-SSIx_min = -1;
-green_SSIx_ind = SSIx_green(:,pre) <= SSIx_max & SSIx_green(:,pre) >= SSIx_min;
-red_SSIx_ind = SSIx_red(:,pre) <= SSIx_max & SSIx_red(:,pre) >= SSIx_min;
-std_dIx_sm_green = nanstd(dIx_sm_green(green_SSIx_ind));
-std_dIx_lg_green = nanstd(dIx_lg_green(green_SSIx_ind));
-std_dIx_sm_red = nanstd(dIx_sm_red(red_SSIx_ind));
-std_dIx_lg_red = nanstd(dIx_lg_red(red_SSIx_ind));
-avg_dIx_sm_green = nanmean(dIx_sm_green(green_SSIx_ind));
-avg_dIx_lg_green = nanmean(dIx_lg_green(green_SSIx_ind));
-avg_dIx_sm_red = nanmean(dIx_sm_red(red_SSIx_ind));
-avg_dIx_lg_red = nanmean(dIx_lg_red(red_SSIx_ind));
+% SSIx_max = -0.8;
+% SSIx_min = -1;
+% green_SSIx_ind = SSIx_green(:,pre) <= SSIx_max & SSIx_green(:,pre) >= SSIx_min;
+% red_SSIx_ind = SSIx_red(:,pre) <= SSIx_max & SSIx_red(:,pre) >= SSIx_min;
+% std_dIx_sm_green = nanstd(dIx_sm_green(green_SSIx_ind));
+% std_dIx_lg_green = nanstd(dIx_lg_green(green_SSIx_ind));
+% std_dIx_sm_red = nanstd(dIx_sm_red(red_SSIx_ind));
+% std_dIx_lg_red = nanstd(dIx_lg_red(red_SSIx_ind));
+% avg_dIx_sm_green = nanmean(dIx_sm_green(green_SSIx_ind));
+% avg_dIx_lg_green = nanmean(dIx_lg_green(green_SSIx_ind));
+% avg_dIx_sm_red = nanmean(dIx_sm_red(red_SSIx_ind));
+% avg_dIx_lg_red = nanmean(dIx_lg_red(red_SSIx_ind));
 
-% regression model
-% mask1 = ~isnan(SSIx_green(:,pre)) & ~isnan(dIx_sm_green);
-% model1 = polyfit(SSIx_green(mask1,pre),dIx_sm_green(mask1),1);
+%% regression model
 
-model1 = fitlm(SSIx_green(:,pre),dIx_sm_green);
+model1 = fitlm(SSIx_green_sm(:,pre),dIx_sm_green);
 figure
 hand1 = plot(model1)
-dim = [.2 .5 .3 .3];
-str = ['Mean=' num2str(avg_dIx_sm_green) ' std=' num2str(std_dIx_sm_green)];
-annotation('textbox',dim,'String',str,'FitBoxToText','on');
+% dim = [.2 .5 .3 .3];
+% str = ['Mean=' num2str(avg_dIx_sm_green) ' std=' num2str(std_dIx_sm_green)];
+% annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
-model2 = fitlm(SSIx_red(:,pre),dIx_sm_red);
+model2 = fitlm(SSIx_red_sm(:,pre),dIx_sm_red);
 figure
 hand2 = plot(model2)
-dim = [.2 .5 .3 .3];
-str = ['Mean=' num2str(avg_dIx_sm_red) ' std=' num2str(std_dIx_sm_red)];
-annotation('textbox',dim,'String',str,'FitBoxToText','on');
+% dim = [.2 .5 .3 .3];
+% str = ['Mean=' num2str(avg_dIx_sm_red) ' std=' num2str(std_dIx_sm_red)];
+% annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
-model3 = fitlm(SSIx_green(:,pre),dIx_lg_green);
+model3 = fitlm(SSIx_green_lg(:,pre),dIx_lg_green);
 figure
 hand3 = plot(model3)
-dim = [.2 .5 .3 .3];
-str = ['Mean=' num2str(avg_dIx_lg_green) ' std=' num2str(std_dIx_lg_green)];
-annotation('textbox',dim,'String',str,'FitBoxToText','on');
+% dim = [.2 .5 .3 .3];
+% str = ['Mean=' num2str(avg_dIx_lg_green) ' std=' num2str(std_dIx_lg_green)];
+% annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
-model4 = fitlm(SSIx_red(:,pre),dIx_lg_red);
+model4 = fitlm(SSIx_red_lg(:,pre),dIx_lg_red);
 figure
 hand4 = plot(model4)
-dim = [.2 .5 .3 .3];
-str = ['Mean=' num2str(avg_dIx_lg_red) ' std=' num2str(std_dIx_lg_red)];
-annotation('textbox',dim,'String',str,'FitBoxToText','on');
+% dim = [.2 .5 .3 .3];
+% str = ['Mean=' num2str(avg_dIx_lg_red) ' std=' num2str(std_dIx_lg_red)];
+% annotation('textbox',dim,'String',str,'FitBoxToText','on');
 
 
+% piecewise regression with breakpoint at x (SSIx = 0);
+
+x0 = 0;
+
+mdl1_x = SSIx_green_sm(:,pre);
+mdl1_y = dIx_sm_green;
+mdl1_x1 = min(mdl1_x,x0);
+mdl1_x2 = max(0,mdl1_x-x0);
+tbl1 = table(mdl1_x1,mdl1_x2,mdl1_y);
+mdl1 = fitlm(tbl1, 'mdl1_y ~ mdl1_x1 + mdl1_x2');
+
+mdl2_x = SSIx_red_sm(:,pre);
+mdl2_y = dIx_sm_red;
+mdl2_x1 = min(mdl2_x,x0);
+mdl2_x2 = max(0,mdl2_x-x0);
+tbl2 = table(mdl2_x1,mdl2_x2,mdl2_y);
+mdl2 = fitlm(tbl2, 'mdl2_y ~ mdl2_x1 + mdl2_x2');
+
+mdl3_x = SSIx_green_lg(:,pre);
+mdl3_y = dIx_lg_green;
+mdl3_x1 = min(mdl3_x,x0);
+mdl3_x2 = max(0,mdl3_x-x0);
+tbl3 = table(mdl3_x1,mdl3_x2,mdl3_y);
+mdl3 = fitlm(tbl3, 'mdl3_y ~ mdl3_x1 + mdl3_x2');
+
+mdl4_x = SSIx_red_lg(:,pre);
+mdl4_y = dIx_lg_red;
+mdl4_x1 = min(mdl4_x,x0);
+mdl4_x2 = max(0,mdl4_x-x0);
+tbl4 = table(mdl4_x1,mdl4_x2,mdl4_y);
+mdl4 = fitlm(tbl4, 'mdl4_y ~ mdl4_x1 + mdl4_x2');
+
+%% piecewise regression but with separate models
+% data prep
+mdl1a_x = SSIx_green_sm(SSIx_green_sm(:,pre)<x0,pre);
+mdl1a_y = dIx_sm_green(SSIx_green_sm(:,pre)<x0);
+mdl1a = fitlm(mdl1a_x,mdl1a_y);
+mdl1a.Coefficients
+
+mdl1b_x = SSIx_green_sm(SSIx_green_sm(:,pre)>x0,pre);
+mdl1b_y = dIx_sm_green(SSIx_green_sm(:,pre)>x0);
+mdl1b = fitlm(mdl1b_x,mdl1b_y);
+mdl1b.Coefficients
+
+mdl2a_x = SSIx_red_sm(SSIx_red_sm(:,pre)<x0,pre);
+mdl2a_y = dIx_sm_red(SSIx_red_sm(:,pre)<x0);
+mdl2a = fitlm(mdl2a_x,mdl2a_y);
+mdl2a.Coefficients
+
+mdl2b_x = SSIx_red_sm(SSIx_red_sm(:,pre)>x0,pre);
+mdl2b_y = dIx_sm_red(SSIx_red_sm(:,pre)>x0);
+mdl2b = fitlm(mdl2b_x,mdl2b_y);
+mdl2b.Coefficients
+
+mdl3a_x = SSIx_green_lg(SSIx_green_lg(:,pre)<x0,pre);
+mdl3a_y = dIx_lg_green(SSIx_green_lg(:,pre)<x0);
+mdl3a = fitlm(mdl3a_x,mdl3a_y);
+mdl3a.Coefficients
+
+mdl3b_x = SSIx_green_lg(SSIx_green_lg(:,pre)>x0,pre);
+mdl3b_y = dIx_lg_green(SSIx_green_lg(:,pre)>x0);
+mdl3b = fitlm(mdl3b_x,mdl3b_y);
+mdl3b.Coefficients
+
+mdl4a_x = SSIx_red_lg(SSIx_red_lg(:,pre)<x0,pre);
+mdl4a_y = dIx_lg_red(SSIx_red_lg(:,pre)<x0);
+mdl4a = fitlm(mdl4a_x,mdl4a_y);
+mdl4a.Coefficients
+
+mdl4b_x = SSIx_red_lg(SSIx_red_lg(:,pre)>x0,pre);
+mdl4b_y = dIx_lg_red(SSIx_red_lg(:,pre)>x0);
+mdl4b = fitlm(mdl4b_x,mdl4b_y);
+mdl4b.Coefficients
+%% plot scatter 
+set_y_rg = 0;
+ymin = -20;
+ymax = 20;
 
 xmin = -1;
 xmax = 1;
@@ -733,7 +831,7 @@ xmax = 1;
 figure;
 hold on
 title(['Small Stim, HTP- n = ' num2str(n_green_sm)])
-scatter(SSIx_green(:,pre),dIx_sm_green)
+scatter(SSIx_green_sm(:,pre),dIx_sm_green)
 % line(-1:0.1:1,-1:0.1:1);
 % eb(1) = errorbar(SSIx_green_mean_pre,sm_green_avg,SSIx_green_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_green_mean_pre,sm_green_avg,sm_green_sem, 'vertical', 'LineStyle', 'none');
@@ -742,14 +840,16 @@ scatter(SSIx_green(:,pre),dIx_sm_green)
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
-ylim([ymin ymax])
+if set_y_rg == 1
+    ylim([ymin ymax])
+end
 hold off
 
 figure;
 hold on
 title(['Small Stim, HTP+ n = ' num2str(n_red_sm)])
 xlim([xmin xmax])
-scatter(SSIx_red(:,pre),dIx_sm_red)
+scatter(SSIx_red_sm(:,pre),dIx_sm_red)
 % line(-1:0.1:1,-1:0.1:1);
 % eb(1) = errorbar(SSIx_red_mean_pre,sm_red_avg,SSIx_red_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_red_mean_pre,sm_red_avg,sm_red_sem, 'vertical', 'LineStyle', 'none');
@@ -758,13 +858,15 @@ scatter(SSIx_red(:,pre),dIx_sm_red)
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
-ylim([ymin ymax])
+if set_y_rg == 1
+    ylim([ymin ymax])
+end
 hold off
 
 figure;
 hold on
 title(['Large Stim, HTP- n = ' num2str(n_green_lg)])
-scatter(SSIx_green(:,pre),dIx_lg_green)
+scatter(SSIx_green_lg(:,pre),dIx_lg_green)
 % line(-1:0.1:1,-1:0.1:1);
 % eb(1) = errorbar(SSIx_green_mean_pre,lg_green_avg,SSIx_green_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_green_mean_pre,lg_green_avg,lg_green_sem, 'vertical', 'LineStyle', 'none');
@@ -773,13 +875,15 @@ scatter(SSIx_green(:,pre),dIx_lg_green)
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
-ylim([ymin ymax])
+if set_y_rg == 1
+    ylim([ymin ymax])
+end
 hold off
 
 figure;
 hold on
 title(['Large Stim, HTP+ n = ' num2str(n_red_lg)])
-scatter(SSIx_red(:,pre),dIx_lg_red)
+scatter(SSIx_red_lg(:,pre),dIx_lg_red)
 % line(-1:0.1:1,-1:0.1:1);
 % eb(1) = errorbar(SSIx_red_mean_pre,lg_red_avg,SSIx_red_sem_pre, 'horizontal', 'LineStyle', 'none');
 % eb(2) = errorbar(SSIx_red_mean_pre,lg_red_avg,lg_red_sem, 'vertical', 'LineStyle', 'none');
@@ -788,14 +892,83 @@ scatter(SSIx_red(:,pre),dIx_lg_red)
 xlabel('SSIx')
 ylabel('DART Index')
 xlim([xmin xmax])
-ylim([ymin ymax])
+if set_y_rg == 1
+    ylim([ymin ymax])
+end
 hold off
 
 
+%% plot tc of some outlier cells
 
-%% piecewise regression for dartIx vs SSIx
+% each condition is a 1x2 cell array
+% first column is index, second column is value
+% this is indexing OUT OF THE SAME COLOR. To find index of CELLS out of ALL
+% CELLS, use this in-color index from green_ind_concat and red_ind_concat
+ol_sm_green = {find(abs(dIx_sm_green) > 50),dIx_sm_green(abs(dIx_sm_green) > 50)};
+idxOL_sm_green = g_ind_small(ol_sm_green{1,1});
+ol_lg_green = {find(abs(dIx_lg_green) > 50),dIx_lg_green(abs(dIx_lg_green) > 50)};
+idxOL_lg_green = g_ind_large(ol_lg_green{1,1});
+ol_sm_red = {find(abs(dIx_sm_red) > 50),dIx_sm_red(abs(dIx_sm_red) > 50)};
+idxOL_sm_red = r_ind_small(ol_sm_red{1,1});
+ol_lg_red = {find(abs(dIx_lg_red) > 50),dIx_lg_red(abs(dIx_lg_red) > 50)};
+idxOL_lg_red = r_ind_large(ol_lg_red{1,1});
 
+% plot tc for extreme value dartIx cells 
 
+ymin = -.03;
+ymax = .12;
+
+nc_ol = length(idxOL_sm_green);
+figure
+sgtitle('Small Green')
+for i = 1:nc_ol
+    subplot(1,nc_ol,i)
+    title(num2str(ol_sm_green{1,2}(i)))
+    ylim([ymin ymax])
+    hold on
+    plot(tc_trial_avrg_stat_concat{pre}(:,idxOL_sm_green(i),4,1),'-k');
+    plot(tc_trial_avrg_stat_concat{post}(:,idxOL_sm_green(i),4,1),'-b');
+    hold off
+end
+
+nc_ol = length(idxOL_lg_green);
+figure
+sgtitle('Large Green')
+for i = 1:nc_ol
+    subplot(2,2,i)
+    title(num2str(ol_lg_green{1,2}(i)))
+    ylim([ymin ymax])
+    hold on
+    plot(tc_trial_avrg_stat_concat{pre}(:,idxOL_lg_green(i),4,2),'-k');
+    plot(tc_trial_avrg_stat_concat{post}(:,idxOL_lg_green(i),4,2),'-b');
+    hold off
+end
+
+nc_ol = length(idxOL_sm_red);
+figure
+sgtitle('Small Red')
+for i = 1:nc_ol
+    subplot(1,nc_ol,i)
+    title(num2str(ol_sm_red{1,2}(i)))
+    ylim([ymin ymax])
+    hold on
+    plot(tc_trial_avrg_stat_concat{pre}(:,idxOL_sm_red(i),4,1),'-k');
+    plot(tc_trial_avrg_stat_concat{post}(:,idxOL_sm_red(i),4,1),'-b');
+    hold off
+end
+
+nc_ol = length(idxOL_lg_red);
+figure
+sgtitle('Large Red')
+for i = 1:nc_ol
+    subplot(1,nc_ol,i)
+    title(num2str(ol_lg_red{1,2}(i)))
+    ylim([ymin ymax])
+    hold on
+    plot(tc_trial_avrg_stat_concat{pre}(:,idxOL_lg_red(i),4,2),'-k');
+    plot(tc_trial_avrg_stat_concat{post}(:,idxOL_lg_red(i),4,2),'-b');
+    hold off
+end
 
 %% plot stationary timecourses for all cells
 
