@@ -1,25 +1,24 @@
-clear all; clear global; 
-close all
-clc
+function [] = extraction_callable(day_id,skipAction,skip1,skip2,doEye)
+
+
 ds = 'DART_V1_YM90K_Celine'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
 %day_id = 169; %enter post-DART day
-day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
 experimentFolder = 'VIP_YM90K';
 
 %trialsToSkip
-skipAction = 1; % 1- deletes trials % 2- replaces trials with NaN
-skip{1} = []; % day 1 should be the reference session (whatever was identified as pre_day)
-skip{2} = [];
+% skipAction = 1; % 1- deletes trials % 2- replaces trials with NaN
+skip{1} = skip1; % day 1 should be the reference session (whatever was identified as pre_day)
+skip{2} = skip2;
 
 %pupil?
-doEye = 1;
+% doEye = 1;
 
 mouse = expt(day_id).mouse;
 
@@ -30,7 +29,7 @@ else
     dart_str = 'control';
 end
 prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-DART';
-            x = input(prompt);
+            x = 1;
             switch x
                 case 0
                     pre=1; %baeline session, used as reference, is in the 1st position
@@ -391,7 +390,7 @@ for id = 1:nd
     loc_resp = zeros(nCells, nDir, nCon,nSize);
     h = zeros(nCells, nDir, nCon,nSize);
     p = zeros(nCells, nDir, nCon,nSize);
-    h2 = nan(nCells, nDir, nCon,nSize);
+    h2 = zeros(nCells, nDir, nCon,nSize);
     p2 = zeros(nCells, nDir, nCon,nSize);
     passThresh=zeros(nCells, nDir, nCon,nSize);
     tCon = tCon_match{id}(:,1:nTrials(id));
@@ -427,7 +426,7 @@ for id = 1:nd
                 %     elseif iSize == 2
                 %         h2(:,iDir,iCon,iSize)= abs(squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2))) > 0.01;
                 %     end
-                % end                
+                % end
                 if doEye == 1
                     stat_resp_largePupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_largePupil,:),1),2));
                     stat_resp_smallPupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_smallPupil,:),1),2));
@@ -438,7 +437,7 @@ for id = 1:nd
     
     resp_sig = data_resp(:,:,:,:,1).*h; %make sure the call to data_resp here has the correct number of dimensions
     h_pass = sum(sum(sum(h(:,:,:,:),2),3),4);
-    h2_pass = sum(sum(sum(h2(:,:,:,:),2),3),4);
+    % h2_pass = sum(sum(sum(h(:,:,:,:),2),3),4);
     %h_pass = sum(h(:,:,:,1),2); %selects cells that are responsive to the smallest size stimulus
     
     resp=logical(h_pass);
@@ -1237,3 +1236,6 @@ save(fullfile(fn_multi,'surr_supp.mat'),'supp_conds','supp_tbl','counts','nGreen
     'ss_pre','ss_post','supp_result','supp_statusArr','dfofTrial_keep_2days');
 
 supp_tbl
+
+
+end
