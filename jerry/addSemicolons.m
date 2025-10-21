@@ -1,9 +1,9 @@
 function addSemicolons(inputFile, outputFile)
-% addSemicolonsToFile(inputFile, outputFile)
+% addSemicolons(inputFile, outputFile)
 % Adds semicolons to the end of lines in a MATLAB file if missing.
 %
 % Example:
-%   addSemicolonsToFile('myscript.m', 'myscript_semicolon.m')
+%   addSemicolons('myscript.m', 'myscript_semicolon.m')
 
     % Read file
     fid = fopen(inputFile, 'r');
@@ -44,5 +44,5 @@ function addSemicolons(inputFile, outputFile)
     end
     fclose(fid);
 
-    fprintf('✅ Semicolons added and saved to "%s"\n', outputFile);
+    fprintf('Semicolons added and saved to "%s"\n', outputFile);
 end
