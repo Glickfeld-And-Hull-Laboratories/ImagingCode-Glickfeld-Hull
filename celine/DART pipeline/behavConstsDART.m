@@ -41,9 +41,9 @@ switch tHostname
             
         elseif tUsername(1:5) == 'th352' %for Jerry
             rc.name = 'jerry';
-            rootDir = 'Z:\home\ACh';
+            rootDir = 'G:\home\ACh';
             rc.analysis = fullfile(rootDir,'Analysis\2p_analysis');
-            rc.data = 'Z:\home\ACh\Data\2p_data';
+            rc.data = 'G:\home\ACh\Data\2p_data';
         elseif tUsername(1:4) == 'xt71' %for Xinyu
             rc.name = ' xinyu';
             rootDir = 'Z:\All_Staff\home\Xinyu';

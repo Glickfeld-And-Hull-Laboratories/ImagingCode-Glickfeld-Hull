@@ -6,11 +6,11 @@ clear prompt
 run(instr);
 
 ds=instructions.ds;
-run(ds)
+run(ds); 
 
 dataStructLabels = {'contrastxori'}; %enter the variable in your datasheet that indicates the folder for the run where you showed stimuli
 
-rc = behavConstsDART; %this sets directory pathes based on the user's netID
+rc = behavConstsDART; %this sets directory pathes based on the user's netID and login server
 
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
@@ -32,88 +32,90 @@ mkdir(fn)
 
 runs = eval(['expt(day_id).' cell2mat(dataStructLabels) '_runs']);
 times = eval(['expt(day_id).' cell2mat(dataStructLabels) '_time']);
-nruns = length(runs);
+% nruns = length(runs);
 runFolder = [];
-for irun = 1:nruns
-    imgFolder = runs{irun};
-    if nruns == 1
-        runFolder = imgFolder;
-        fnout = fullfile(fn,runFolder);
-        mkdir(fullfile(fn,runFolder))
-        fName = [imgFolder '_000_000'];
-    elseif irun < nruns
-        runFolder = [runFolder '_' imgFolder];
-        fName = [imgFolder '_000_000'];
-    else
-        runFolder = [runFolder '_' imgFolder];
-        fnout = fullfile(fn,runFolder);
-        mkdir(fullfile(fn,runFolder))
-        fName = [imgFolder '_000_000'];
-    end
+% for irun = 1:nruns % this is only needed to concat runs
+imgFolder = runs{1};
+% if nruns == 1
+    runFolder = imgFolder;
+    fnout = fullfile(fn,runFolder);
+    mkdir(fullfile(fn,runFolder))
+    fName = [imgFolder '_000_000'];
+% elseif irun < nruns
+%     runFolder = [runFolder '_' imgFolder];
+%     fName = [imgFolder '_000_000'];
+% else
+%     runFolder = [runFolder '_' imgFolder];
+%     fnout = fullfile(fn,runFolder);
+%     mkdir(fullfile(fn,runFolder))
+%     fName = [imgFolder '_000_000'];
+% end
 
-    root = rc.data;
-    CD = fullfile(root, mouse, expDate, runFolder);
-    dat = 'data-';
-    cd(CD);
+root = rc.data;
+CD = fullfile(root, mouse, expDate, runFolder);
+dat = 'data-';
+cd(CD);
 
-    imgMatFile = [imgFolder '_000_000.mat'];
-    load(imgMatFile);
-    tHostname = lower(hostname);
-    [s,tUsername] = dos('ECHO %USERNAME%');
-    switch tHostname
-        case {'nuke'}
-             fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];
-        case{'nb-hubel'}
-            fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{irun} '.mat'];     
-    end
-    
-    load(fName); %load the mworks behavioral file
-
-    temp(irun) = input; %load the data from the mworks file into temp
-    
-    nframes = [temp(irun).counterValues{end}(end) info.config.frames];
-
-    fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
-
-    % if info.config.pmt1_gain > 0.5
-    %     data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
-    %     data_temp_r = squeeze(data_temp_g(2,:,:,:));
-    %     data_temp_g = squeeze(data_temp_g(1,:,:,:));
-    % else
-        data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
-        data_temp_g = squeeze(data_temp_g(1,:,:,:));
-    % end
-
-    fprintf(['Loaded ' num2str(min(nframes)) ' frames \r\n'])
-
-    if nruns == 1 || irun == 1
-        data_g = data_temp_g;
-        clear data_temp_g
-        % if info.config.pmt1_gain > 0.5
-        %     data_r = data_temp_r;
-        %     clear data_temp_r
-        % end
-    else
-        data_g = cat(3, data_g, data_temp_g);
-        clear data_temp_g
-        % if info.config.pmt1_gain > 0.5
-        %     data_r = cat(3, data_r, data_temp_r);
-        %     clear data_temp_r
-        % end
-    end
+imgMatFile = [imgFolder '_000_000.mat'];
+load(imgMatFile);
+tHostname = lower(hostname);
+[s,tUsername] = dos('ECHO %USERNAME%');
+switch tHostname
+    case {'nuke'}
+         fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{1} '.mat'];
+    case{'nb-hubel'}
+        fName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\' dat mouse '-' expDate '-' times{1} '.mat'];     
 end
+
+load(fName); %load the mworks behavioral file
+
+% temp(irun) = input; %load the data from the mworks file into temp
+
+nframes = [input.counterValues{end}(end) info.config.frames];
+
+% fprintf(['Reading run ' num2str(irun) '- ' num2str(min(nframes)) ' frames \r\n'])
+fprintf(['Reading ' num2str(min(nframes)) ' frames \r\n'])
+
+% if info.config.pmt1_gain > 0.5
+%     data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
+%     data_temp_r = squeeze(data_temp_g(2,:,:,:));
+%     data_temp_g = squeeze(data_temp_g(1,:,:,:));
+% else
+    data_temp_g = sbxread(imgMatFile(1,1:11),0,min(nframes));
+    data_temp_g = squeeze(data_temp_g(1,:,:,:));
+% end
+
+fprintf(['Loaded ' num2str(min(nframes)) ' frames \r\n'])
+
+% if nruns == 1 || irun == 1
+    data_g = data_temp_g;
+    clear data_temp_g
+    % if info.config.pmt1_gain > 0.5
+    %     data_r = data_temp_r;
+    %     clear data_temp_r
+    % end
+% else
+%     data_g = cat(3, data_g, data_temp_g);
+%     clear data_temp_g
+    % if info.config.pmt1_gain > 0.5
+    %     data_r = cat(3, data_r, data_temp_r);
+    %     clear data_temp_r
+    % end
+% end
+% end
 
 
 % register data for each day
 %reg green data
 
 if exist(fullfile(fnout,'regOuts&Img.mat')) %check if there is already registration info for this data
+    msgbox("Frame shift info already exists for this session, registration is being done with saved info. Double check this is correct.","Caution","warn")
     load(fullfile(fnout,'regOuts&Img.mat'))
     [~,data_g_reg] = stackRegGPU(data_g,[],[],double(outs));
     data_avg = mean(data_g_reg,3);
     figure;imagesc(data_avg);colormap gray
     save(fullfile(fnout,'regOuts&Img.mat'),'outs','regImg','data_avg')
-    input = concatenateStructuresLG(temp);    
+    % input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
     clear data_g
 else %if not, must register. Start by showing average for each of four 500-frame bins so user can choose one
@@ -124,7 +126,7 @@ else %if not, must register. Start by showing average for each of four 500-frame
     for i = 1:nep 
         subplot(n,n2,i); 
         imagesc(mean(data_g(:,:,1+((i-1)*3000):500+((i-1)*3000)),3)); 
-        title([num2str(1+((i-1)*3000)) '-' num2str(500+((i-1)*30000))]); 
+        title([num2str(1+((i-1)*3000)) '-' num2str(500+((i-1)*3000))]); 
         colormap gray; 
         clim([100 3000]); 
     end
@@ -136,15 +138,17 @@ else %if not, must register. Start by showing average for each of four 500-frame
 
     regImgStartFrame = input('Enter Registration Image Start Frame, ENTER INTO DS:');
     input = inputTemp; %change the name back
+    clear inputTemp
 
     regImg = mean(data_g(:,:,regImgStartFrame:(regImgStartFrame+499)),3);
     [outs,data_g_reg] = stackRegGPU(data_g,regImg);
     data_avg = mean(data_g_reg,3);
     figure;imagesc(data_avg);colormap gray; truesize; clim([100 3000]);
+    title('Average FOV of Registered Stack')
     print(fullfile(fnout,'avgFOV.pdf'),'-dpdf','-bestfit')
     clear data_g
     save(fullfile(fnout,'regOuts&Img.mat'),'outs','regImg','data_avg')
-    input = concatenateStructuresLG(temp);    
+    % input = concatenateStructuresLG(temp);    
     save(fullfile(fnout,'input.mat'),'input')
 end
 
@@ -156,7 +160,8 @@ nOn = input.nScansOn;
 nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingDirectionDeg,2);
-%ntrials = 374; 
+
+% find coarse dfof to calculate active cells
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
 data_g_on = squeeze(mean(data_g_trial(:,:,nOff+2:nOff+nOn,:),3));
@@ -178,24 +183,24 @@ data_temp = zeros(sz(1),sz(2), nSize, nDir);
 [n n2] = subplotn(nSize);
 figure; movegui('center');
 
-    for iSize = 1:nSize %for every size
-        data_g_dir = zeros(sz(1),sz(2), nDir); %make a data frame is the size of one imaging frame X the number of directions
-        for iDir = 1:nDir %for every direction
-            ind_dir = find(tDir == dirs(iDir)); %find the indices of trials with that direction
-            ind_size = intersect(ind_dir, find(tSize == sizes(iSize)));%find ind of intersection between that direction and the size we're looking at
-            data_g_dir(:,:,iDir) = mean(data_g_dfof(:,:,ind_size),3); %pull out all those trials and average over the trials
-            data_temp(:,:,iSize,iDir,nDir) = mean(data_g_dfof(:,:,ind_size),3);
-        end
-    
-        data_g_size(:,:,iSize) = max(data_g_dir,[],3); %find the direction with the max response for that size
-        subplot(n,n2,iSize)
-        imagesc(data_g_size(:,:,iSize))
-        title(num2str(sizes(iSize)))
+for iSize = 1:nSize %for every size
+    data_g_dir = zeros(sz(1),sz(2), nDir); %make a data frame is the size of one imaging frame X the number of directions
+    for iDir = 1:nDir %for every direction
+        ind_dir = find(tDir == dirs(iDir)); %find the indices of trials with that direction
+        ind_size = intersect(ind_dir, find(tSize == sizes(iSize)));%find ind of intersection between that direction and the size we're looking at
+        data_g_dir(:,:,iDir) = mean(data_g_dfof(:,:,ind_size),3); %pull out all those trials and average over the trials
+        data_temp(:,:,iSize,iDir,nDir) = mean(data_g_dfof(:,:,ind_size),3);
     end
+
+    data_g_size(:,:,iSize) = max(data_g_dir,[],3); %find the direction with the max response for that size (max projection across dirs)
+    subplot(n,n2,iSize)
+    imagesc(data_g_size(:,:,iSize))
+    title(num2str(sizes(iSize)))
+end
 
 %print image
 
-data_size_max = max(data_g_size,[],3);
+data_size_max = max(data_g_size,[],3); % find the max projection across sizes of the max projection across dirs
 data_dfof = cat(3, data_size_max,data_size_max,data_size_max,data_g_size);
 figure; imagesc(data_size_max); movegui('center');title('data size max');
 clear data_g_dfof
@@ -222,7 +227,8 @@ elseif ~isempty(expt(day_id).redChannelRun) %if there IS a red channel run, find
 
     load(imgMatFile);
 
-    fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
+    % fprintf(['Reading run ' num2str(irun) '- ' num2str(info.config.frames) ' frames \r\n'])
+    fprintf(['Reading ' num2str(info.config.frames) ' frames \r\n'])
     data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);
     if size(data_temp,1) == 2
         data_rg = squeeze(data_temp(1,:,:,:));
