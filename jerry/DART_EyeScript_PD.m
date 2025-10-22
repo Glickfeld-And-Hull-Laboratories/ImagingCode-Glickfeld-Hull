@@ -1,11 +1,11 @@
 clear all; clear global; close all;
 %paths
-ds = 'DART_V1_YM90K_Celine'; %dataset info
+ds = 'DART_expt_info_jerry'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
 
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'PV_YM90K';
 
 day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
@@ -23,8 +23,8 @@ for day = 1:2
     run = expt(iexp).contrastxori_runs{1};
     time = expt(iexp).contrastxori_time{1};
         
-    CD = fullfile(rc.achData, mouse, date, run);
-    data_out = fullfile(rc.achAnalysis,experimentFolder, mouse, date,run);
+    CD = fullfile(rc.data, mouse, date, run);
+    data_out = fullfile(rc.analysis,experimentFolder, mouse, date,run);
     cd(CD);
     fn = [run '_000_000_eye.mat'];
     %load data

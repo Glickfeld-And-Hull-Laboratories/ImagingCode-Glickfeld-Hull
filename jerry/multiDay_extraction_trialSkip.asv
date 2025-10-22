@@ -46,7 +46,6 @@ clear x prompt
 
 fn_multi = fullfile(rc.analysis,experimentFolder,mouse,['multiday_' dart_str]);
 fn_multi_out = fullfile(rc.analysis,experimentFolder,mouse,'multiday_2025revisit');
-mkdir(fn_multi_out);
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
@@ -571,7 +570,7 @@ nRed_keep_respd2 = length(red_match_respd2);%how many of those responded on d2
 
 % make table of values
 countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1],[nGreen_keep_respd2;nRed_keep_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
-writetable(countsTable,fullfile(fn_multi_out,'match_counts.csv'),'WriteRowNames',true)
+writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
 % clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
 %% make a data structure subsets for only the keep cells

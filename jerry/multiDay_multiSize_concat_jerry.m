@@ -12,7 +12,7 @@ eval(ds);
 %285 295 300 308 324 334 DART YM90K 
 % 299 289 304 312 320 330
 sess_list = [18 28];%enter all the sessions you want to concatenate
-doEye = 0; %analyze pupil info?
+doEye = 1; %analyze pupil info?
 nSess=length(sess_list);
 targetCon = [.125 .25 .5 1]%what contrast to extract for all data - must be one that all datasets had
 nCon = length(targetCon)
