@@ -7,7 +7,7 @@ eval(ds);
 
 experimentFolder = 'PV_YM90K';
 
-day_id = input('Enter day id ');% alternative to run from command line.
+day_id = input('Enter day day ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 nd=2; %hardcoding the number of days for now
 
@@ -15,8 +15,8 @@ mouse = expt(day_id).mouse;
 
 allDays = [day_id,pre_day];
 %%
-
-for day = 1:2
+nd = 2;
+for day = 1:nd
     iexp = allDays(day);
     mouse = expt(iexp).mouse;
     date = expt(iexp).date;
@@ -32,21 +32,32 @@ for day = 1:2
     data_temp = squeeze(data_temp.data);
     
     %crop frames to match mworks data
-    infofName = fullfile(rc.achData,expt(iexp).mouse,expt(iexp).date,run,[run '_000_000.mat']);
+    infofName = fullfile(rc.data,expt(iexp).mouse,expt(iexp).date,run,[run '_000_000.mat']);
     inputfName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time '.mat'];
     load(inputfName);
     if isfile(infofName)
         load(infofName);
-        [stimOns,stimOffs] = photoFrameFinder_Sanworks(info.frame);
+        if isfield(info,'frame')
+            [stimOns{day}, stimOffs{day}] = photoFrameFinder_Sanworks(info.frame);
+        else
+            warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
+            msgbox(warningMessage);
+            % fprintf('Info struct does not exist, running counterValCorrect_noPhotodiode\n');
+            correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
+            stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
+        end
     else
-        warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
-        uiwait(msgbox(warningMessage));
+        warningMessage = sprintf('Warning: info struct does not exist:\n%s\n Using mWks StimOn', infofName);
+        msgbox(warningMessage);
+        % fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
+        correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
+        stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
     end
     
     %load('G:\home\ACh\Analysis\2p_analysis\i3321\241125\i3321_241125_runs-004_correctedTiming.mat');
     nFrames = input.counterValues{end}(end);
     %nFrames = 86400;
-    nTrials = length(stimOns);
+    nTrials = length(stimOns{day});
     %nTrials = 960;
     data = data_temp(:,:,1:nFrames);      % the raw images...
     
@@ -64,7 +75,7 @@ for day = 1:2
     %if pupil not found reliably, adjust the image cropping or the rad_range
     
     % align to stimulus presentation
-    [rad centroid] = alignEyeData_PD(Eye_data,input,stimOns);
+    [rad centroid] = alignEyeData_PD(Eye_data,input,stimOns{day});
     
     % wheel data
     wheel_data = wheelSpeedCalc(input,32,'orange');

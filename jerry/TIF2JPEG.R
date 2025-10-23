@@ -20,9 +20,8 @@ if (length(converted)>0) {
       converted[n] <- gsub('archive/','',converted[n])
     } else {next}
   }
-else{
+} else {
   stop('No new images to be converted')
-}
 }
 
 #change the path here to the folder where you want to save you jpegs

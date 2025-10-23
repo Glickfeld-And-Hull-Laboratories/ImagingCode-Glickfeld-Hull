@@ -47,19 +47,30 @@ for day = 1:2
     infofName = fullfile(rc.data, expt(iexp).mouse, expt(iexp).date, run, [run '_000_000.mat']);
     inputfName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time '.mat'];
     load(inputfName);
-    
+
+    nFrames = input.counterValues{end}(end);
     % Get stimulus timing information
     if isfile(infofName)
         load(infofName);
-        [stimOns, stimOffs] = photoFrameFinder_Sanworks(info.frame);
+        if isfield(info,'frame')
+            [stimOns{day}, stimOffs{day}] = photoFrameFinder_Sanworks(info.frame);
+        else
+            % warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
+            % msgbox(warningMessage);
+            fprintf('Info struct does not exist, running counterValCorrect_noPhotodiode\n');
+            correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
+            stimOns{day} = cell2mat(correctedInputStructure{id}.cStimOn);
+        end
     else
-        warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
-        uiwait(msgbox(warningMessage));
+        % warningMessage = sprintf('Warning: info struct does not exist:\n%s\n Using mWks StimOn', infofName);
+        % msgbox(warningMessage);
+        fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
+        correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
+        stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
     end
     
     % Crop data to match behavioral recording length
-    nFrames = input.counterValues{end}(end);
-    nTrials = length(stimOns);
+    nTrials = length(stimOns{day});
     data = data_temp(:, :, 1:nFrames); % the raw images
     
     % Crop image to isolate pupil (bright spots can be mistaken for pupil)
@@ -75,7 +86,7 @@ for day = 1:2
     % if pupil not found reliably, adjust the image cropping or the rad_range
     
     % Align eye data to stimulus presentation
-    [rad, centroid] = alignEyeData_PD(Eye_data, input, stimOns);
+    [rad, centroid] = alignEyeData_PD(Eye_data, input, stimOns{day});
     
     % Process wheel data
     wheel_data = wheelSpeedCalc(input, 32, 'orange');
