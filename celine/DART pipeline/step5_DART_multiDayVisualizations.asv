@@ -111,14 +111,9 @@ for iSess = 1:nSess
     dirs = unique(celleqel2mat_padded(input(post).tGratingDirectionDeg(1:nTrials(post))));
     cons = unique(tCon_match{post});
     sharedCon = find(ismember(cons, targetCon)); %find the indices of the contrasts to include
-
-    if length(unique(cellfun(@class,input(1).tGratingDiameterDeg,'UniformOutput',false))) > 1 % check if all cells have the same data class
-        sizes = unique(cellfun(@double,input(1).tGratingDiameterDeg));
-    else
-        sizes = unique(cell2mat(input(1).tGratingDiameterDeg));% hardcoded to 1 because the same sizes are used across days
-    end
+    sizes = unique(cell2mat(input(1).tGratingDiameterDeg)); % hardcoded to 1 because the same sizes are used across sessions both days
     sharedSize=find(ismember(sizes, targetSize)); %find the indices of the sizes to include
-     
+    
     % Concatenate basic variables
     dirs_concat = [dirs_concat, dirs];
     cons_concat = [cons_concat, cons(sharedCon)];

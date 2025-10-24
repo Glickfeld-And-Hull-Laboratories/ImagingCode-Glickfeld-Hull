@@ -3,10 +3,10 @@ clear all; clear global; clc
 prompt = 'Enter name of instructions file: ';
 instr = input(prompt, 's');
 clear prompt
-eval(instr);
+run(instr);
 
 ds=instructions.ds;
-eval(ds);
+run(ds); 
 
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; % directories
