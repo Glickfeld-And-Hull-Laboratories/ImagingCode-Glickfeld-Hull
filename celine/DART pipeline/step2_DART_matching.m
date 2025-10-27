@@ -94,7 +94,7 @@ for id = 1:nd
     for irun = 1:nrun
         imgFolder = runs{irun};
         fName = [imgFolder '_000_000'];
-        cd(fullfile(rd.data, mouse, expDate, imgFolder))
+        cd(fullfile(rc.data, mouse, expDate, imgFolder))
         
         load(fName)
         if nrun == 1
