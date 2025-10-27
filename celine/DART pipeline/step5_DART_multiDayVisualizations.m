@@ -9,7 +9,7 @@ clear all; close all; clc
 prompt = 'Enter name of instructions file: ';
 instr = input(prompt, 's');
 clear prompt
-run(instr);
+run(instr)
 
 ds = instructions.ds;
 run(ds);
@@ -313,7 +313,7 @@ end
 %% Visualizations of running responses for cells that have running data
 close all
 % Plot running timecourses for cells that have running data
-plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
+plotNeuralTimecourse(tc_trial_avrg_loc_concat, tc_trial_avrg_loc_concat, ...
     runningRed, runningGreen    , ...
     'UseDashedLines', [false, true], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
@@ -328,7 +328,7 @@ for i = 1:length(figs)
 end
 
 % Plot running contrast response function for cells that have running data
-plotContrastResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+plotContrastResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
     runningRed, runningGreen, cons,sizes, ...
     'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
     'Titles', {'HTP+', 'HTP-'}, ...
@@ -337,7 +337,7 @@ sgtitle('Running')
 saveas(gcf, sprintf('running_contrast_response.pdf'));
 
 % Plot running size response function for for cells that have running data
-plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+plotSizeResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
     runningRed, runningGreen, cons,sizes, ...
     'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
     'Titles', {'HTP+', 'HTP-'}, ...
@@ -347,7 +347,7 @@ saveas(gcf, sprintf('running_size_response.pdf'));
 
 %% Normalized direction tuning at a specified size
 dirs_for_plotting = dirs - (length(dirs) == 8) * 180;
-iSize = 3;
+iSize = 1;
 
 % Pre-allocate arrays
 green_dir_avrg_stat = cell(1, nd);
@@ -499,10 +499,11 @@ N=length(runningRed);
     
     figure;
     subplot(1,2,1)
-    b=bar([1,2,3],[supp_table_loc(:,1),supp_table_loc(:,2),supp_table_loc(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    % b=bar([1,2,3],[supp_table_loc(:,1),supp_table_loc(:,2),supp_table_loc(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b = bar(1:nCon, supp_table_loc, 'grouped', 'FaceColor', "#00AFEF", 'EdgeColor', [1 1 1]);
     b(1).FaceColor='k'
     b(2).FaceColor='r'
-    b(3).FaceColor='b'
+    % b(3).FaceColor='b'
     xticklabels({'25','50','100'})
     hold on
     title('Suppressed')
@@ -513,10 +514,11 @@ N=length(runningRed);
     box off
     
     subplot(1,2,2)
-    b=bar([1,2,3],[facil_table_loc(:,1),facil_table_loc(:,2),facil_table_loc(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    % b=bar([1,2,3],[facil_table_loc(:,1),facil_table_loc(:,2),facil_table_loc(:,3)],'grouped','FaceColor',"#00AFEF",'EdgeColor', [1 1 1])
+    b = bar(1:nCon, facil_table_loc, 'grouped', 'FaceColor', "#00AFEF", 'EdgeColor', [1 1 1]);
     b(1).FaceColor='k'
     b(2).FaceColor='r'
-    b(3).FaceColor='b'
+    % b(3).FaceColor='b'
     xticklabels({'25','50','100'})
     hold on
     title('Facilitated')
