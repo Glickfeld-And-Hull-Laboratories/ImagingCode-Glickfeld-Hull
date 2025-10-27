@@ -342,12 +342,12 @@ plotSizeResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
     'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
     'Titles', {'HTP+', 'HTP-'}, ...
     'YLabel', 'dF/F');
-sgtitle('Stationary')
+sgtitle('Locomotion')
 saveas(gcf, sprintf('running_size_response.pdf'));
 
 %% Normalized direction tuning at a specified size
 dirs_for_plotting = dirs - (length(dirs) == 8) * 180;
-iSize = 1;
+iSize = 2;
 
 % Pre-allocate arrays
 green_dir_avrg_stat = cell(1, nd);
