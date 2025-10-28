@@ -68,8 +68,11 @@ if isempty(stimStart)
     stimStart = round(size(data1{pre}, 1) / 3);
 end
 
-for iSize=1:nSizes
+% Find global min and max for y-axis scaling across ALL sizes and conditions
+ymin_global = Inf;
+ymax_global = -Inf;
 
+for iSize = 1:nSizes
     % Initialize arrays for average and standard error
     tc_data1_avrg = cell(1, nd);
     tc_data2_avrg = cell(1, nd);
@@ -91,6 +94,59 @@ for iSize=1:nSizes
         end
     end
     
+    % Update global min/max for this size
+    for id = 1:nd
+        for iCon = 1:nCon
+            % Check dataset 1
+            temp_min = min(tc_data1_avrg{id}(:, iCon) - tc_data1_se{id}(:, iCon));
+            if ~isnan(temp_min) && temp_min < ymin_global
+                ymin_global = temp_min;
+            end
+            temp_max = max(tc_data1_avrg{id}(:, iCon) + tc_data1_se{id}(:, iCon));
+            if ~isnan(temp_max) && temp_max > ymax_global
+                ymax_global = temp_max;
+            end
+            
+            % Check dataset 2
+            temp_min = min(tc_data2_avrg{id}(:, iCon) - tc_data2_se{id}(:, iCon));
+            if ~isnan(temp_min) && temp_min < ymin_global
+                ymin_global = temp_min;
+            end
+            temp_max = max(tc_data2_avrg{id}(:, iCon) + tc_data2_se{id}(:, iCon));
+            if ~isnan(temp_max) && temp_max > ymax_global
+                ymax_global = temp_max;
+            end
+        end
+    end
+end
+
+% Add padding to the global y-axis limits (10% of the range)
+padding = 0.1 * (ymax_global - ymin_global);
+ymin_final = ymin_global - padding;
+ymax_final = ymax_global + padding;
+
+% Now plot each size with the same y-axis limits
+for iSize = 1:nSizes
+    % Recalculate data for this size (since we need it for plotting)
+    tc_data1_avrg = cell(1, nd);
+    tc_data2_avrg = cell(1, nd);
+    tc_data1_se = cell(1, nd);
+    tc_data2_se = cell(1, nd);
+    
+    for id = 1:nd
+        for iCon = 1:nCon
+            % First dataset
+            tc_data1_avrg{id}(:, iCon) = nanmean(data1{id}(:, cell_indices1, iCon, iSize), 2);
+            data1_std = nanstd(data1{id}(:, cell_indices1, iCon, iSize), [], 2);
+            tc_data1_se{id}(:, iCon) = data1_std / sqrt(length(cell_indices1));
+            
+            % Second dataset
+            tc_data2_avrg{id}(:, iCon) = nanmean(data2{id}(:, cell_indices2, iCon, iSize), 2);
+            data2_std = nanstd(data2{id}(:, cell_indices2, iCon, iSize), [], 2);
+            tc_data2_se{id}(:, iCon) = data2_std / sqrt(length(cell_indices2));
+        end
+    end
+    
     % Create time axis in seconds
     t = 1:(size(tc_data1_avrg{1}, 1));
     t = (t - (double(stimStart) - 1)) / double(frame_rate);
@@ -98,54 +154,11 @@ for iSize=1:nSizes
     % Create a stimulus marker
     z = stim_duration;
     
-    % Find global min and max for y-axis scaling
-    ymin = Inf;
-    ymax = -Inf;
-    
-    % Check dataset 1
-    for id = 1:nd
-        for iCon = 1:nCon
-            % Calculate min considering error bars
-            temp_min = min(tc_data1_avrg{id}(:, iCon) - tc_data1_se{id}(:, iCon));
-            if ~isnan(temp_min) && temp_min < ymin
-                ymin = temp_min;
-            end
-            
-            % Calculate max considering error bars
-            temp_max = max(tc_data1_avrg{id}(:, iCon) + tc_data1_se{id}(:, iCon));
-            if ~isnan(temp_max) && temp_max > ymax
-                ymax = temp_max;
-            end
-        end
-    end
-    
-    % Check dataset 2
-    for id = 1:nd
-        for iCon = 1:nCon
-            % Calculate min considering error bars
-            temp_min = min(tc_data2_avrg{id}(:, iCon) - tc_data2_se{id}(:, iCon));
-            if ~isnan(temp_min) && temp_min < ymin
-                ymin = temp_min;
-            end
-            
-            % Calculate max considering error bars
-            temp_max = max(tc_data2_avrg{id}(:, iCon) + tc_data2_se{id}(:, iCon));
-            if ~isnan(temp_max) && temp_max > ymax
-                ymax = temp_max;
-            end
-        end
-    end
-    
-    % Add some padding to the y-axis limits (10% of the range)
-    padding = 0.1 * (ymax - ymin);
-    ymin = ymin - padding;
-    ymax = ymax + padding;
-    
     % Create figure
     figure('Units', 'inches', 'Position', [5 + (iSize-1)*0.5, 0, figure_size(1), figure_size(2)]);
     
     % Define subplot positions
-    positions = [1, 2; 3, 4; 5, 6];
+    positions = reshape(1:(nCon*2), 2, nCon)';
     
     % Plot each condition
     for iCon = 1:nCon
@@ -153,7 +166,7 @@ for iSize=1:nSizes
         p2 = positions(iCon, 2);
         
         % Plot first dataset
-        subplot(3, 2, p1);
+        subplot(nCon, 2, p1);
         
         % Choose line style based on UseDashedLines parameter
         line_style1_pre = '';
@@ -168,23 +181,23 @@ for iSize=1:nSizes
         hold on;
         shadedErrorBar(t, tc_data1_avrg{post}(:, iCon), tc_data1_se{post}(:, iCon), [line_style1_post, colors1{2}]);
         
-        % Apply common y-axis limits
-        ylim([ymin, ymax]);
+        % Apply global y-axis limits to all plots
+        ylim([ymin_final, ymax_final]);
         hold on;
-        line([0, z], [ymin + 0.1*padding, ymin + 0.1*padding], 'Color', 'black', 'LineWidth', 2);
+        line([0, z], [ymin_final + 0.1*padding, ymin_final + 0.1*padding], 'Color', 'black', 'LineWidth', 2);
         
         if iCon == 1
             title([titles{1}, ' Size ', num2str(iSize), ' n = ', num2str(length(cell_indices1))]);
             % Vertical calibration bar: 5% df/f
             y_bar_height = 0.05;
-            y_bar_start = ymin + 2*padding;
+            y_bar_start = ymin_final + 2*padding;
             line([-1.8, -1.8], [y_bar_start, y_bar_start + y_bar_height], 'Color', 'black', 'LineWidth', 2);
         end
         set(gca, 'TickDir', 'out', 'XColor', 'none', 'YColor', 'none', 'box', 'off');
         grid off;
         
         % Plot second dataset
-        subplot(3, 2, p2);
+        subplot(nCon, 2, p2);
         
         % Choose line style based on UseDashedLines parameter
         line_style2_pre = '-';
@@ -199,21 +212,20 @@ for iSize=1:nSizes
         hold on;
         shadedErrorBar(t, tc_data2_avrg{post}(:, iCon), tc_data2_se{post}(:, iCon), [line_style2_post,colors2{2}]);
         
-        % Apply common y-axis limits
-        ylim([ymin, ymax]);
+        % Apply global y-axis limits to all plots
+        ylim([ymin_final, ymax_final]);
         hold on;
-        line([0, z], [ymin + 0.1*padding, ymin + 0.1*padding], 'Color', 'black', 'LineWidth', 2);
+        line([0, z], [ymin_final + 0.1*padding, ymin_final + 0.1*padding], 'Color', 'black', 'LineWidth', 2);
         
         if iCon == 1
             title([titles{2}, ' Size ', num2str(iSize), ' n = ', num2str(length(cell_indices2))]);
             % Vertical calibration bar: 5% df/f
             y_bar_height = 0.05;
-            y_bar_start = ymin + 2*padding;
+            y_bar_start = ymin_final + 2*padding;
             line([-1.8, -1.8], [y_bar_start, y_bar_start + y_bar_height], 'Color', 'black', 'LineWidth', 2);
         end
         set(gca, 'TickDir', 'out', 'XColor', 'none', 'YColor', 'none', 'box', 'off');
         grid off;
     end
-
 end
 end

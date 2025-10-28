@@ -4,7 +4,7 @@ expt(1).mouse = 'i2072';
 expt(1).date = '221011';
 expt(1).folder = '2P';
 expt(1).img_loc  = {'V1';'L2/3'};
-expt(1).z = 175
+expt(1).z = 175;
 expt(1).obj = '16x';
 expt(1).zoom = 2;
 expt(1).frame_rate = 15;
@@ -33,7 +33,7 @@ expt(2).mouse = 'i2072';
 expt(2).date = '221012';
 expt(2).folder = '2P';
 expt(2).img_loc  = {'V1';'L2/3'};
-expt(2).z = 213
+expt(2).z = 213;
 expt(2).obj = '16x';
 expt(2).zoom = 2;
 expt(2).frame_rate = 15;
@@ -62,7 +62,7 @@ expt(3).mouse = 'i2072';
 expt(3).date = '221013';
 expt(3).folder = '2P';
 expt(3).img_loc  = {'V1';'L2/3'};
-expt(3).z = 175
+expt(3).z = 175;
 expt(3).obj = '16x';
 expt(3).zoom = 2;
 expt(3).frame_rate = 15;
@@ -91,7 +91,7 @@ expt(4).mouse = 'i2072';
 expt(4).date = '221014';
 expt(4).folder = '2P';
 expt(4).img_loc  = {'V1';'L2/3'};
-expt(4).z = 180
+expt(4).z = 180;
 expt(4).obj = '16x';
 expt(4).zoom = 2;
 expt(4).frame_rate = 15;
@@ -229,7 +229,7 @@ expt(8).contrastxori_runs = {'002'};
 expt(8).contrastxori_time = {'1651'};
 expt(8).data_loc = 'ACh';
 expt(8).wheelColor = 'orange';
-%
+expt(8).exptType = 'SST_atropine';
 %% i2078 
 expt(9).SubNum = 'i2078';
 expt(9).mouse = 'i2078';
@@ -287,7 +287,7 @@ expt(10).contrastxori_runs = {'004'};
 expt(10).contrastxori_time = {'1343'};
 expt(10).data_loc = 'ACh';
 expt(10).wheelColor = 'orange';
-%
+expt(10).exptType = 'SST_atropine';
 %% i2080 
 expt(11).SubNum = 'i2080';
 expt(11).mouse = 'i2080';
@@ -531,7 +531,7 @@ expt(19).obj = '16x';
 expt(19).zoom = 2;
 expt(19).frame_rate = 15;
 expt(19).multiday_timesincedrug_hours = '18Hours'
-expt(19).multiday_matchdays = [219];
+expt(19).multiday_matchdays = [16];
 expt(19).regImgStartFrame = '';
 expt(19).motionThreshold = 0.05;
 expt(19).areaBorders = 0;
@@ -1228,6 +1228,7 @@ expt(43).contrastxori_runs = {'004'};
 expt(43).contrastxori_time = {'1140'};
 expt(43).data_loc = 'ACh';
 expt(43).wheelColor = 'orange';
+expt(43).exptType = 'SST_atropine';
 %% i2151 DART
 expt(44).mouse = 'i2151' ;
 expt(44).date = '240524';
@@ -1250,6 +1251,7 @@ expt(44).contrastxori_runs = {'004'};
 expt(44).contrastxori_time = {'1010'};
 expt(44).data_loc = 'ACh';
 expt(44).wheelColor = 'orange';
+expt(44).exptType = 'SST_atropine';
 %% i2150 baseline
 expt(45).mouse = 'i2150' ;
 expt(45).date = '240603';
@@ -1339,7 +1341,7 @@ expt(48).contrastxori_runs = {'007'};
 expt(48).contrastxori_time = {'1459'};
 expt(48).data_loc = 'ACh';
 expt(48).wheelColor = 'orange';
-
+expt(48).exptType = 'SST_atropine';
 %% i2155 DART
 expt(49).mouse = 'i2155' ;
 expt(49).date = '240622';
@@ -1362,6 +1364,7 @@ expt(49).contrastxori_runs = {'003'};
 expt(49).contrastxori_time = {'1307'};
 expt(49).data_loc = 'ACh';
 expt(49).wheelColor = 'orange';
+expt(49).exptType = 'SST_atropine';
 %% i2156 control
 expt(50).mouse = 'i2156' ;
 expt(50).date = '240703';
@@ -1450,6 +1453,7 @@ expt(53).contrastxori_runs = {'003'};
 expt(53).contrastxori_time = {'1352'};
 expt(53).data_loc = 'ACh';
 expt(53).wheelColor = 'orange';
+expt(53).exptType = 'SST_atropine';
 %% i2165 control
 expt(54).mouse = 'i2165' ;
 expt(54).date = '240910';
@@ -1472,6 +1476,7 @@ expt(54).contrastxori_runs = {'005'};
 expt(54).contrastxori_time = {'1207'};
 expt(54).data_loc = 'ACh';
 expt(54).wheelColor = 'orange';
+expt(54).exptType = 'SST_atropine';
 %% i2165 DART
 expt(55).mouse = 'i2165' ;
 expt(55).date = '240911';
@@ -1494,6 +1499,8 @@ expt(55).contrastxori_runs = {'004'};
 expt(55).contrastxori_time = {'1238'};
 expt(55).data_loc = 'ACh';
 expt(55).wheelColor = 'orange';
+expt(55).exptType = 'SST_atropine';
+
 %% i2168 control
 expt(56).mouse = 'i2168' ;
 expt(56).date = '240916';
@@ -1516,6 +1523,7 @@ expt(56).contrastxori_runs = {'004'};
 expt(56).contrastxori_time = {'1106'};
 expt(56).data_loc = 'ACh';
 expt(56).wheelColor = 'orange';
+expt(56).exptType = 'SST_atropine';
 %% i2168 DART
 expt(57).mouse = 'i2168' ;
 expt(57).date = '240918';
@@ -1538,6 +1546,7 @@ expt(57).contrastxori_runs = {'004'};
 expt(57).contrastxori_time = {'1143'};
 expt(57).data_loc = 'ACh';
 expt(57).wheelColor = 'orange';
+expt(57).exptType = 'SST_atropine';
 %% i2171 control
 expt(58).mouse = 'i2171' ;
 expt(58).date = '240930';
@@ -1560,6 +1569,8 @@ expt(58).contrastxori_runs = {'004'};
 expt(58).contrastxori_time = {'1012'};
 expt(58).data_loc = 'ACh';
 expt(58).wheelColor = 'orange';
+expt(58).exptType = 'SST_atropine';
+
 %% i2171 PEG
 expt(59).mouse = 'i2171' ;
 expt(59).date = '241001';
@@ -1582,6 +1593,7 @@ expt(59).contrastxori_runs = {'003'};
 expt(59).contrastxori_time = {'1309'};
 expt(59).data_loc = 'ACh';
 expt(59).wheelColor = 'orange';
+expt(59).exptType = 'SST_atropine';
 %% i2172 control
 expt(60).mouse = 'i2172' ;
 expt(60).date = '241010';
@@ -1604,6 +1616,7 @@ expt(60).contrastxori_runs = {'004'};
 expt(60).contrastxori_time = {'1156'};
 expt(60).data_loc = 'ACh';
 expt(60).wheelColor = 'orange';
+expt(60).exptType = 'SST_atropine';
 %% i2172 control
 expt(61).mouse = 'i2172' ;
 expt(61).date = '241011';
@@ -1626,6 +1639,7 @@ expt(61).contrastxori_runs = {'004'};
 expt(61).contrastxori_time = {'1251'};
 expt(61).data_loc = 'ACh';
 expt(61).wheelColor = 'orange';
+expt(61).exptType = 'SST_atropine';
 %% i2172 DART
 expt(62).mouse = 'i2172' ;
 expt(62).date = '241012';
@@ -1648,6 +1662,7 @@ expt(62).contrastxori_runs = {'003'};
 expt(62).contrastxori_time = {'1222'};
 expt(62).data_loc = 'ACh';
 expt(62).wheelColor = 'orange';
+expt(62).exptType = 'SST_atropine';
 %% i2173 control
 expt(63).mouse = 'i2173' ;
 expt(63).date = '241023';
@@ -1670,6 +1685,7 @@ expt(63).contrastxori_runs = {'006'};
 expt(63).contrastxori_time = {'1412'};
 expt(63).data_loc = 'ACh';
 expt(63).wheelColor = 'orange';
+expt(63).exptType = 'SST_atropine';
 %% i2173 DART
 expt(64).mouse = 'i2173' ;
 expt(64).date = '241024';
@@ -1692,6 +1708,7 @@ expt(64).contrastxori_runs = {'004'};
 expt(64).contrastxori_time = {'1327'};
 expt(64).data_loc = 'ACh';
 expt(64).wheelColor = 'orange';
+expt(64).exptType = 'SST_atropine';
 %% i2175 control
 expt(65).mouse = 'i2175';
 expt(65).date = '241106';
@@ -1714,6 +1731,7 @@ expt(65).contrastxori_runs = {'007'};
 expt(65).contrastxori_time = {'1205'};
 expt(65).data_loc = 'ACh';
 expt(65).wheelColor = 'orange';
+expt(65).exptType = 'SST_atropine';
 %% i2175 DART
 expt(66).mouse = 'i2175';
 expt(66).date = '241107';
@@ -1736,6 +1754,7 @@ expt(66).contrastxori_runs = {'005'};
 expt(66).contrastxori_time = {'1048'};
 expt(66).data_loc = 'ACh';
 expt(66).wheelColor = 'orange';
+expt(66).exptType = 'SST_atropine';
 %% i2177 control
 expt(67).mouse = 'i2177';
 expt(67).date = '241107';
@@ -1758,6 +1777,7 @@ expt(67).contrastxori_runs = {'005'};
 expt(67).contrastxori_time = {'1414'};
 expt(67).data_loc = 'ACh';
 expt(67).wheelColor = 'orange';
+expt(67).exptType = 'SST_atropine';
 %% i2177 DART
 expt(68).mouse = 'i2177';
 expt(68).date = '241108';
@@ -1780,6 +1800,7 @@ expt(68).contrastxori_runs = {'003'};
 expt(68).contrastxori_time = {'1103'};
 expt(68).data_loc = 'ACh';
 expt(68).wheelColor = 'orange';
+expt(68).exptType = 'SST_atropine';
 %% i2176 control
 expt(69).mouse = 'i2176';
 expt(69).date = '241112';
@@ -1802,6 +1823,7 @@ expt(69).contrastxori_runs = {'005'};
 expt(69).contrastxori_time = {'1251'};
 expt(69).data_loc = 'ACh';
 expt(69).wheelColor = 'orange';
+expt(69).exptType = 'SST_atropine';
 %% i2176 DART
 expt(70).mouse = 'i2176';
 expt(70).date = '241113';
@@ -1824,6 +1846,7 @@ expt(70).contrastxori_runs = {'004'};
 expt(70).contrastxori_time = {'1422'};
 expt(70).data_loc = 'ACh';
 expt(70).wheelColor = 'orange';
+expt(70).exptType = 'VIP_atropine';
 %% i2180 control
 expt(71).mouse = 'i2180';
 expt(71).date = '241125';
@@ -1846,6 +1869,7 @@ expt(71).contrastxori_runs = {'004'};
 expt(71).contrastxori_time = {'1446'};
 expt(71).data_loc = 'ACh';
 expt(71).wheelColor = 'orange';
+expt(71).exptType = 'SST_atropine';
 %% i2180 DART
 expt(72).mouse = 'i2180';
 expt(72).date = '241126';
@@ -1868,6 +1892,7 @@ expt(72).contrastxori_runs = {'003'};
 expt(72).contrastxori_time = {'1528'};
 expt(72).data_loc = 'ACh';
 expt(72).wheelColor = 'orange';
+expt(72).exptType = 'SST_atropine';
 %% i2181 Control
 expt(73).mouse = 'i2181';
 expt(73).date = '241127';
@@ -1890,6 +1915,7 @@ expt(73).contrastxori_runs = {'004'};
 expt(73).contrastxori_time = {'1226'};
 expt(73).data_loc = 'ACh';
 expt(73).wheelColor = 'orange';
+expt(73).exptType = 'SST_atropine';
 %% i2181 DART
 expt(74).mouse = 'i2181';
 expt(74).date = '241128';
@@ -1912,6 +1938,7 @@ expt(74).contrastxori_runs = {'003'};
 expt(74).contrastxori_time = {'1156'};
 expt(74).data_loc = 'ACh';
 expt(74).wheelColor = 'orange';
+expt(74).exptType = 'SST_atropine';
 %% i2184 control
 expt(75).mouse = 'i2184';
 expt(75).date = '241217';
@@ -1934,12 +1961,13 @@ expt(75).contrastxori_runs = {'006'};
 expt(75).contrastxori_time = {'1205'};
 expt(75).data_loc = 'ACh';
 expt(75).wheelColor = 'orange';
+expt(75).exptType = 'SST_atropine';
 %% i2178 control
 expt(76).mouse = 'i2178';
 expt(76).date = '241217';
 expt(76).folder = '2P';
 expt(76).img_loc  = {'V1';'L2/3'};
-expt(76).z = 208
+expt(76).z = 208;
 expt(76).obj = '16x';
 expt(76).zoom = 2;
 expt(76).frame_rate = 15;
@@ -1956,6 +1984,7 @@ expt(76).contrastxori_runs = {'004'};
 expt(76).contrastxori_time = {'1415'};
 expt(76).data_loc = 'ACh';
 expt(76).wheelColor = 'orange';
+expt(76).exptType = 'SST_atropine';
 %% i2184 DART
 expt(77).mouse = 'i2184';
 expt(77).date = '241218';
@@ -1978,6 +2007,7 @@ expt(77).contrastxori_runs = {'003'};
 expt(77).contrastxori_time = {'1010'};
 expt(77).data_loc = 'ACh';
 expt(77).wheelColor = 'orange';
+expt(77).exptType = 'SST_atropine';
 %% i2178 DART
 expt(78).mouse = 'i2178';
 expt(78).date = '241218';
@@ -2000,6 +2030,7 @@ expt(78).contrastxori_runs = {'003'};
 expt(78).contrastxori_time = {'1219'};
 expt(78).data_loc = 'ACh';
 expt(78).wheelColor = 'orange';
+expt(78).exptType = 'SST_atropine';
 %% i2200 baseline
 expt(79).mouse = 'i2200';
 expt(79).date = '250403';
@@ -2022,6 +2053,7 @@ expt(79).contrastxori_runs = {'004'};
 expt(79).contrastxori_time = {'1304'};
 expt(79).data_loc = 'ACh';
 expt(79).wheelColor = 'orange';
+expt(79).exptType = 'SST_atropine';
 %% i2200 DART
 expt(80).mouse = 'i2200';
 expt(80).date = '250404';
@@ -2044,6 +2076,7 @@ expt(80).contrastxori_runs = {'003'};
 expt(80).contrastxori_time = {'1208'};
 expt(80).data_loc = 'ACh';
 expt(80).wheelColor = 'orange';
+expt(80).exptType = 'SST_atropine';
 %% i3329 control
 expt(81).mouse = 'i3329';
 expt(81).date = '250604';

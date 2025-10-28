@@ -1,7 +1,7 @@
 clear all; clear global; 
 close all
 clc
-ds = 'DART_V1_YM90K_Celine'; %dataset info
+ds = 'DART_expt_info_jerry'; %dataset info
 dataStructLabels = {'contrastxori'};
 rc =  behavConstsDART; %directories
 eval(ds);
@@ -11,7 +11,7 @@ day_id = input('Enter day id ');% alternative to run from command line.
 pre_day = expt(day_id).multiday_matchdays;
 
 nd=2; %hardcoding the number of days for now
-experimentFolder = 'VIP_YM90K';
+experimentFolder = 'PV_YM90K';
 
 %trialsToSkip
 skipAction = 1; % 1- deletes trials % 2- replaces trials with NaN
@@ -19,11 +19,11 @@ skip{1} = []; % day 1 should be the reference session (whatever was identified a
 skip{2} = [];
 
 %pupil?
-doEye = 0;
+doEye = 1;
 
 mouse = expt(day_id).mouse;
 
-fnout = fullfile(rc.achAnalysis,mouse);
+fnout = fullfile(rc.analysis,mouse);
 if expt(day_id).multiday_timesincedrug_hours>0
     dart_str = [expt(day_id).drug '_' num2str(expt(day_id).multiday_timesincedrug_hours) 'Hr'];
 else
@@ -44,7 +44,9 @@ prompt = 'Which sesson was used as reference for matching: 0- baseline, 1- post-
 clear x prompt
 
 
-fn_multi = fullfile(rc.achAnalysis,experimentFolder,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.analysis,experimentFolder,mouse,['multiday_' dart_str]);
+fn_multi_out = fullfile(rc.analysis,experimentFolder,mouse,'multiday_2025revisit');
+mkdir(fn_multi_out);
 
 cd(fn_multi)
 load(fullfile(fn_multi,'timecourses.mat'))
@@ -75,7 +77,7 @@ for id = 1 %currently only doing this for the reference day, regardless of
     mouse = expt(allDays(id)).mouse;
     date = expt(allDays(id)).date;
     imgFolder = expt(allDays(id)).contrastxori_runs{1};
-    fn = fullfile(rc.achAnalysis,experimentFolder, mouse,date,imgFolder);
+    fn = fullfile(rc.analysis,experimentFolder, mouse,date,imgFolder);
     cd(fn);
     load(fullfile(fn,'redImage.mat'));
     load(fullfile(fn,'mask_cell.mat'));
@@ -151,7 +153,7 @@ for id = 1:nd %cycle through days
     date = expt(allDays(id)).date;
     imgFolder = expt(allDays(id)).contrastxori_runs{1};
     imgMatFile = [imgFolder '_000_000.mat']
-    dataPath = fullfile(rc.achData, mouse, date, imgFolder);
+    dataPath = fullfile(rc.data, mouse, date, imgFolder);
     load(fullfile(dataPath,imgMatFile))
     [cStimOn{id} stimOffs{id}] = photoFrameFinder_Sanworks(info.frame);
     cStimOn{id}(skip{id}) = [];
@@ -183,21 +185,21 @@ clear  data_f_match cellstd
 % VALUES TO NAN
 
 %% looking at wheel speed
-wheel_speed = cell(1,nd);
+wheel_speed = cell(1,nd); %output from wheelSpeedCalc, has whlspd for each frame
 
 for id = 1:nd
     wheel_speed{id} = wheelSpeedCalc(input(id),32,expt(allDays(1)).wheelColor); 
     nanmean(wheel_speed{id})
 end
-wheel_speed_clean = cell(1,nd);
+wheel_speed_clean = cell(1,nd); %wheel_speed but jitter values are set to 0
 for id = 1:nd
     wheel_speed_clean{id}=wheel_speed{id};
     wheel_speed_clean{id}(abs(wheel_speed_clean{id})<5.37)=0;
 end
- 
-wheel_tc = cell(1,nd);
+
+wheel_tc = cell(1,nd); % trial tc from whlspd_clean. RIx is calculated from this.
 wheel_trial_avg= cell(1,nd);
-wheel_tc_raw = cell(1,nd);
+wheel_tc_raw = cell(1,nd); % trial tc from wheel_speed but calculating with absolute values
 wheel_trial_avg_raw= cell(1,nd);
 RIx = cell(1,nd);
 
@@ -215,6 +217,34 @@ for id = 1:nd
     RIx{id} = wheel_trial_avg{id}>2; %~5 is the noise level in the wheel movement
     sum(RIx{id})
 end
+
+%% how stationary is stationary?
+stat_wheelspd = cell(1,nd);
+stat_wheelspd_avg = nan(1,nd);
+stat_wheelspd_avg_noZero = nan(1,nd);
+
+for id = 1:nd
+    temp_whlspd = mean(wheel_tc_raw{id}(nOff/2:nOn+nOff/2,~RIx{id}),1);
+    temp_whlspd(isnan(temp_whlspd)) = 0;
+    stat_wheelspd{id} = temp_whlspd;
+    stat_wheelspd_avg(id) = mean(temp_whlspd);
+    stat_wheelspd_avg_noZero(id) = mean(temp_whlspd(temp_whlspd~=0));
+end
+
+% figure
+% title([mouse ' stat trial wheel speed'])
+% hold on
+% histogram(stat_wheelspd{pre},0:0.1:2)
+% histogram(stat_wheelspd{post},0:0.1:2)
+% hold off
+% xlim([0 2])
+% ylim([0 100])
+% pre_legend = ['pre n=' num2str(sum(~RIx{pre})) '; ' num2str(stat_wheelspd_avg(pre)) ';' num2str(stat_wheelspd_avg_noZero(pre))];
+% post_legend = ['post n=' num2str(sum(~RIx{post})) '; ' num2str(stat_wheelspd_avg(post)) ';' num2str(stat_wheelspd_avg_noZero(post))];
+% legend(pre_legend,post_legend)
+% print(fullfile(fn_multi,[mouse '_stat_wheelSpd.pdf']),'-dpdf')
+% print(fullfile('G:\home\jerry\reports\poster\2025\plots',[mouse '_stat_wheelSpd.pdf']),'-dpdf');
+% save(fullfile(fn_multi,'wheelSpds.mat'),'stat_wheelspd_avg','stat_wheelspd_avg_noZero','stat_wheelspd');
 %% extract running onsets
 data_dfof_runOnset_match = cell(1,nd);
 nRunOnsets=[];
@@ -277,7 +307,7 @@ for id = 1:nd
         runConfirmation(:,iOnset) = fwdWheelClean(fullWindow);
     end
     
-    figure; plot(nanmean(runConfirmation,2)) %to check whether running actually does increase around the time of these onsets.
+    % figure; plot(nanmean(runConfirmation,2)) %to check whether running actually does increase around the time of these onsets.
     
     data_dfof_runOnset_match{id} = mean(data_dfof_runOnset,3,'omitmissing'); %frames x cells (for all matched cells) averaged over all the onsets
     nRunOnsets=[nRunOnsets length(ITIOnsets)];
@@ -296,26 +326,40 @@ if doEye == 1
     %plot(statPupilBothDays); hline(statPupilThreshold); xlabel('trials, both days');ylabel('pupil diam'); hold off
     %print(fullfile(fn_multi,'pupilTraceWThreshold.pdf'),'-dpdf');
     
-    pupilMeans = nan(nd,3);
+    pupilMeans = nan(nd,5);
     % for each day, the first column is the mean pupil size for stat trials
-    % below threshold, the second column is the mean pupil size for stat trials
-    % above threshold, and the third column is the mean pupil size for all
+    % above threshold, the second column is the mean pupil size for stat trials
+    % below threshold, and the third column is the mean pupil size for all
     % running trials
-    PIx_stat = cell(2,nd); %pupil index for each day, first cell is inds for 
+    PIx_stat = cell(4,nd); %pupil index for each day, first cell is inds for 
     % stationary large pupil, second cell is inds for stationary small pupil
     motorByPupil = nan(nd,2);
+    statPupil = cell(3,nd);
+    % 1: above thresh
+    % 2: below thresh
+    % 3: every stationary
     for id = 1:nd
         PIx_temp=pupil{id}.rad.stim > statPupilThreshold;
-        PIx_stat{1,id}= logical(PIx_temp.*~RIx{id});
-        PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id});
-        pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); %passes pupil threshold but isn't running
-        pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); %doesn't pass pupil threshold AND isn't running
-        pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %is running, regardless of pupil size
-        motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing');
-        motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing');
+        PIx_stat{1,id}= logical(PIx_temp.*~RIx{id}); % stat, above threshold
+        PIx_stat{2,id}= logical(~PIx_temp.*~RIx{id}); % stat, below threshold
+        PIx_stat{3,id}= logical(PIx_temp.*RIx{id}); % running, above thresh
+        PIx_stat{4,id}= logical(~PIx_temp.*RIx{id}); % running, below thresh
+        pupilMeans(id,1)=mean(pupil{id}.rad.stim(PIx_stat{1,id}), 'omitmissing'); % >50%, stat
+        pupilMeans(id,2)=mean(pupil{id}.rad.stim(PIx_stat{2,id}), 'omitmissing'); % <50%, stat
+        pupilMeans(id,3)=mean(pupil{id}.rad.stim(RIx{id}), 'omitmissing'); %mean of all running trials
+        pupilMeans(id,4)=mean(pupil{id}.rad.stim(PIx_stat{3,id}), 'omitmissing'); % >50%, loc
+        pupilMeans(id,5)=mean(pupil{id}.rad.stim(PIx_stat{4,id}), 'omitmissing'); % <50%, loc
+        pupilMeans(isnan(pupilMeans)) = 0;
+        motorByPupil(id,1)=mean(wheel_trial_avg_raw{id}(PIx_stat{1,id}),'omitmissing'); % mean whlspd of large pupil trials
+        motorByPupil(id,2)=mean(wheel_trial_avg_raw{id}(PIx_stat{2,id}),'omitmissing'); % mean whlspd of small pupil trials
+        statPupil{1,id} = pupil{id}.rad.stim(PIx_stat{1,id});
+        statPupil{2,id} = pupil{id}.rad.stim(PIx_stat{2,id});
+        statPupil{3,id} = pupil{id}.rad.stim(~RIx{id});
     end
-    save(fullfile(fn_multi,'pupilMeans.mat'),'pupilMeans','motorByPupil');
+    save(fullfile(fn_multi_out,'pupilMeans.mat'),'pupilMeans','motorByPupil','statPupil');
 end
+
+
 %% find significant responses and preferred stimuli
 
 stimStart=nOff/2;
@@ -326,6 +370,7 @@ base_win = 1: stimStart-1;
 %make cell arrays to keep everything in
 data_resp_match = cell(1,nd);
 h_match = cell(1,nd);
+h2_match = cell(1,nd);
 p_match = cell(1,nd);
 h_all_match = cell(1,nd);
 resp_match = cell(1,nd);
@@ -348,6 +393,8 @@ for id = 1:nd
     loc_resp = zeros(nCells, nDir, nCon,nSize);
     h = zeros(nCells, nDir, nCon,nSize);
     p = zeros(nCells, nDir, nCon,nSize);
+    h2 = nan(nCells, nDir, nCon,nSize);
+    p2 = zeros(nCells, nDir, nCon,nSize);
     passThresh=zeros(nCells, nDir, nCon,nSize);
     tCon = tCon_match{id}(:,1:nTrials(id));
     tSize = tSize_match{id}(:,1:nTrials(id));  
@@ -375,6 +422,14 @@ for id = 1:nd
                 loc_resp(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_loc,:),1),2));
                 data_resp(:,iDir,iCon,iSize,2) = squeeze(std(nanmean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
                 [h(:,iDir,iCon,iSize), p(:,iDir,iCon,iSize)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nDir*nCon*nSize-1));
+                [h2(:,iDir,iCon,iSize), p2(:,iDir,iCon,iSize)] = ttest(nanmean(data_dfof_trial(resp_win,ind,:),1), nanmean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','both','alpha',0.01./(nDir*nCon*nSize-1));
+                % if iCon == 4
+                %     if iSize == 1
+                %         h2(:,iDir,iCon,iSize)= squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2)) > 0.01;
+                %     elseif iSize == 2
+                %         h2(:,iDir,iCon,iSize)= abs(squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind,:),1),2))) > 0.01;
+                %     end
+                % end                
                 if doEye == 1
                     stat_resp_largePupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_largePupil,:),1),2));
                     stat_resp_smallPupil(:,iDir,iCon,iSize,1) = squeeze(nanmean(nanmean(data_dfof_trial(resp_win,ind_stat_smallPupil,:),1),2));
@@ -385,6 +440,7 @@ for id = 1:nd
     
     resp_sig = data_resp(:,:,:,:,1).*h; %make sure the call to data_resp here has the correct number of dimensions
     h_pass = sum(sum(sum(h(:,:,:,:),2),3),4);
+    h2_pass = sum(sum(sum(h2(:,:,:,:),2),3),4);
     %h_pass = sum(h(:,:,:,1),2); %selects cells that are responsive to the smallest size stimulus
     
     resp=logical(h_pass);
@@ -432,6 +488,7 @@ for id = 1:nd
 data_resp_match{id} = data_resp;
 
 h_match{id} = h;
+h2_match{id} = h2;
 p_match{id} = p;
 h_all_match{id}=h_pass;
 resp_match{id} = resp;
@@ -514,7 +571,7 @@ nRed_keep_respd2 = length(red_match_respd2);%how many of those responded on d2
 
 % make table of values
 countsTable = table([nGreen_keep;nRed_keep],[nGreen_keep_respd1;nRed_keep_respd1],[nGreen_keep_respd2;nRed_keep_respd2],'VariableNames',{'Keep' 'Responsive pre' 'Responsive post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
-writetable(countsTable,fullfile(fn_multi,'match_counts.csv'),'WriteRowNames',true)
+writetable(countsTable,fullfile(fn_multi_out,'match_counts.csv'),'WriteRowNames',true)
 % clear  nGreen_match_respd1 nGreen_match_respd2  nRed_match_respd1 nRed_match_respd2
 
 %% make a data structure subsets for only the keep cells
@@ -523,6 +580,7 @@ conBySize_resp_stat_keep = cell(1,nd);
 conBySize_resp_loc_keep = cell(1,nd);
 pref_size_keep = cell(1,nd);
 h_keep=cell(1,nd);
+h2_keep=cell(1,nd);
 data_resp_keep=cell(1,nd);
 data_trial_keep=cell(1,nd);
 pref_dir_keep=cell(1,nd);
@@ -545,6 +603,7 @@ for id = 1:nd
     conBySize_resp_loc_keep{id}=conBySize_resp_loc_match{id}(keep_cells,:,:);
     data_resp_keep{id} = data_resp_match{id}(keep_cells,:,:,:,:);
     h_keep{id}=h_match{id}(keep_cells,:,:,:);
+    h2_keep{id}=h2_match{id}(keep_cells,:,:,:);
 
     stat_resp_keep{id} = stat_resp_match{id}(keep_cells,:,:,:);
     loc_resp_keep{id} = loc_resp_match{id}(keep_cells,:,:,:);
@@ -556,8 +615,8 @@ green_fluor_keep=green_fluor_match(keep_cells);
 
 
 conTable = table([mean(pref_con_keep{2}(green_ind_keep));mean(pref_con_keep{2}(red_ind_keep))],[mean(pref_con_keep{1}(green_ind_keep));mean(pref_con_keep{1}(red_ind_keep))],'VariableNames',{'mean pref con pre' 'mean pref con post'}, 'RowNames',{'Pyramidal cells'  'HT+ cells'})
-writetable(conTable,fullfile(fn_multi,'conPref.csv'),'WriteRowNames',true)
-save(fullfile(fn_multi,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
+writetable(conTable,fullfile(fn_multi_out,'conPref.csv'),'WriteRowNames',true)
+save(fullfile(fn_multi_out,'fluor_intensity.mat'),'red_fluor_match','green_fluor_match','green_fluor_match','red_fluor_keep','green_fluor_keep')
 
 
 %% narrow down to the stimuli preferred for each cell each day
@@ -765,10 +824,10 @@ for id = 1:nd
     end
 end
 
-save(fullfile(fn_multi,'locomotion.mat'),'RIx','wheel_tc','wheel_speed','wheel_corr')
+save(fullfile(fn_multi_out,'locomotion.mat'),'RIx','wheel_tc','wheel_speed','wheel_corr','')
 %% saving data 
 
-save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
+save(fullfile(fn_multi_out,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
     'pref_responses_stat_largePupil','pref_responses_stat_smallPupil','pref_responses_loc','resp_keep', ...
     'tc_trial_avrg_keep_allCond','pref_responses_allCond', 'pref_con_keep', ...
     'pref_dir_keep','tDir_match','tOri_match', 'tCon_match','data_trial_keep', ...
@@ -778,12 +837,10 @@ save(fullfile(fn_multi,'tc_keep.mat'),'fullTC_keep','pref_responses_stat', ...
     'pref_allTrials_loc','pref_allTrials_largePupil','pref_allTrials_smallPupil', ...
     'pref_peak_stat','pref_peak_loc','nonPref_trial_avrg_stat','nonPref_trial_avrg_loc','data_dfof_runOnset_keep')
 
-
-
 %% interneuron / pyr relationship
 % get mean-subtracted trial responses
 trialResp=cell(1,nd); %raw trial responses for each cell 
-subTrialResp=cell(1,nd); %trial responses with mean for that condicion subtracted
+subTrialResp=cell(1,nd); %trial responses with mean for that condition subtracted
 conditionMeans=cell(1,nd); %mean for each condition
 
 for id = 1:nd
@@ -830,8 +887,8 @@ for id=1:nd
         thisCell=subTrialResp{id}(:,iCell);
 
         %if this is a red cell, compare to all green cells
-        if ismember(iCell,red_ind_keep);
-            otherCells = green_ind_keep;;
+        if ismember(iCell,red_ind_keep)
+            otherCells = green_ind_keep;
         else
             otherCells = setdiff(green_ind_keep,iCell);
         end
@@ -849,8 +906,6 @@ for id=1:nd
         %     hold on
         %     h = lsline;
         % end
-
-
 
         [R,p]=corrcoef(otherCellsMean,thisCell);
         title([' R= ' num2str(R(2))]);
@@ -901,7 +956,7 @@ for id=1:nd
     end
 end
 
-save(fullfile(fn_multi,'HT_pyr_relationship.mat'),'conditionMeans','sigCorr','noiseCorr')
+save(fullfile(fn_multi_out,'HT_pyr_relationship.mat'),'conditionMeans','sigCorr','noiseCorr')
 
 
 %% make and save response matrix for keep cells
@@ -944,7 +999,7 @@ for id = 1:nd
 
 end
 
-save(fullfile(fn_multi,'resp_keep.mat'),'data_resp_keep','resp_max_keep','data_resp_keep','dfof_max_diff','dfof_max_diff_raw','norm_dir_resp_stat','norm_dir_resp_loc','conBySize_resp_stat_keep','conBySize_resp_loc_keep','h_keep')
+save(fullfile(fn_multi_out,'resp_keep.mat'),'data_resp_keep','resp_max_keep','data_resp_keep','dfof_max_diff','dfof_max_diff_raw','norm_dir_resp_stat','norm_dir_resp_loc','conBySize_resp_stat_keep','conBySize_resp_loc_keep','h_keep','h2_keep')
 
 
 %% making mask maps for various measurements
@@ -1179,7 +1234,7 @@ supp_tbl = table(supp_conds,nGreen,nRed);
 ss_pre = pre;
 ss_post = post;
 
-save(fullfile(fn_multi,'surr_supp.mat'),'supp_conds','supp_tbl','counts','nGreen', ...
+save(fullfile(fn_multi_out,'surr_supp.mat'),'supp_conds','supp_tbl','counts','nGreen', ...
     'nRed','supp_none_idx','supp_both_idx','supp_pre_idx','supp_post_idx', ...
     'ss_pre','ss_post','supp_result','supp_statusArr','dfofTrial_keep_2days');
 

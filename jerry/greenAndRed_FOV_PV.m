@@ -1,9 +1,9 @@
 
-mouse = 'i3331';
-date = '250904';
-redFolder = '000'; %enter the first three digits
+mouse = 'i3332';
+date = '251008';
+redFolder = '003'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
-greenFolder = '001'; %enter the first three digits
+greenFolder = '004'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
 depth='192.96';
 experimentType = 'VIP_YM90K';
@@ -70,7 +70,7 @@ regImg = mean(data_g_reg_920,3);
 
 fig2=figure; imagesc(regImg);
 colormap gray;
-caxis([50 3000])
+caxis([50 2500])
 cd(out_path);
 title([' ' depth ' green at 920']);
 print(fullfile(out_path, [date '_' mouse '_FOV.pdf']),'-dpdf','-bestfit')

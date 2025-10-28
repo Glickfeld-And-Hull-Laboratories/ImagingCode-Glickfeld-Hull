@@ -1,5 +1,12 @@
 function [R, p] = calculateCorrelation(thisCell, otherCells)
-    % Calculate correlation between one cell and mean of other cells
+    % Check if otherCells is empty or has no valid data
+    if isempty(otherCells) || size(otherCells, 2) == 0
+        R = NaN;
+        p = NaN;
+        return;
+    end
+    
+    % Calculate mean of other cells
     otherCellsMean = mean(otherCells, 2, "omitnan");
     
     % Remove NaN values for correlation calculation
@@ -14,4 +21,3 @@ function [R, p] = calculateCorrelation(thisCell, otherCells)
         p = NaN;
     end
 end
-

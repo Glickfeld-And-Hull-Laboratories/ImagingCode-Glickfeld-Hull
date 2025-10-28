@@ -117,8 +117,80 @@ nDir = length(dirs);
 nSize = length(sizes);
 
 %% ===== TRIAL DEFINITION USING STIMULUS ONSET =====
-% Extract cStimOn with variable method - automatically uses photodiode info if available,
-% otherwise uses corrected input structure timing
+% % Extract cStimOn with variable method - automatically uses photodiode info if available,
+% % otherwise uses corrected input structure timing
+% 
+% for id = 1:nd
+%     mouse_temp = expt(allDays(id)).mouse;
+%     date = expt(allDays(id)).date;
+%     imgFolder = expt(allDays(id)).contrastxori_runs{1};
+%     imgMatFile = [imgFolder '_000_000.mat'];
+%     dataPath = fullfile(rc.achData, mouse_temp, date, imgFolder);
+%     load(fullfile(dataPath, imgMatFile));
+% 
+%     if isfield(inputStructure, 'cStimOn_PD')
+%         fprintf('cStimOn already exists in the input structure\n');
+%     elseif isfield(info, 'frame')
+%         fprintf('No cStimOnPD, but field "frame" exists in info structure and will be used\n');
+%         [cStimOn_PD_Temp, stimOffsTemp_PD_temp] = photoFrameFinder_Sanworks(info.frame);
+%         inputStructure(id).cStimOn_PD = cStimOn_PD_Temp;
+%         inputStructure(id).stimOffs_PD = stimOffsTemp_PD_temp;
+%         clear stimOffsTemp_PD_temp cStimOn_PD_Temp
+%     else
+%         fprintf('No cStimOn and field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
+%         correctedInputStructure = NaN(1, nd);
+%         correctedInputStructure(:, id) = counterValCorrect_noPhotodiode(inputStructure(:, id));
+%         inputStructure = correctedInputStructure;
+%         clear correctedInputStructure
+%     end
+% end
+% clear mouse_temp date imgFolder imgMatFile dataPath info
+% 
+% % Convert raw calcium timecourses to trial-structured F/F data
+% data_dfof_trial_match = cell(1, nd);
+% fractTimeActive_match = cell(1, nd);
+% cellstd_match = cell(1, nd);
+% 
+% for id = 1:nd
+%     cStimOnTemp = cell2mat(inputStructure(id).cStimOn);
+%     nTrials(id) = length(cStimOnTemp);
+%     [nFrames, nCells] = size(cellTCs_match{id});
+% 
+%     data_trial_match = nan(nOn + nOff, nTrials(id), nCells);
+% 
+%     for iTrial = 1:nTrials(id)
+%         if ~isnan(cStimOnTemp(iTrial)) && (cStimOnTemp(iTrial) + nOn + nOff/2) <= nFrames && (cStimOnTemp(iTrial) - nOff/2) >= 1
+%             data_trial_match(:, iTrial, :) = cellTCs_match{id}(cStimOnTemp(iTrial) - nOff/2:cStimOnTemp(iTrial) - 1 + nOn + nOff/2, :);
+%         end
+%     end
+% 
+%     % Calculate activity statistics
+%     fractTimeActive_match{id} = zeros(1, nCells);
+% 
+%     % Calculate F/F using baseline period
+%     data_f_match = mean(data_trial_match(1:(nOff/2), :, :), 1);
+%     data_dfof_trial_match{id} = bsxfun(@rdivide, bsxfun(@minus, data_trial_match, data_f_match), data_f_match);
+% 
+%     % Calculate cell standard deviations for activity thresholding
+%     meansub_match = cellTCs_match{id} - nanmean(cellTCs_match{id}, 1);
+%     cellstd = nanstd(meansub_match, [], 1);
+%     cellstd_match{id} = cellstd;
+% 
+%     for iCell = 1:nCells
+%         fractTimeActive_match{id}(:, iCell) = length(find(meansub_match(:, iCell) > 3.*cellstd(1, iCell))) ./ nFrames;
+%     end
+% 
+%     clear data_trial_match data_f_match cellstd cStimOnTemp
+% end
+% clear meansub_match
+% 
+% % Define analysis windows
+% stimStart = nOff/2;
+% stimEnd = stimStart + nOn;
+% resp_win = (stimStart + 3):(stimEnd + 3); % at 15 Hz, 3 frames = ~200 ms
+% base_win = 1:(stimStart - 1);
+
+stimOns =cell(1,nd); %this is the set of trial start times that will be used throughout the rest of this script
 
 for id = 1:nd
     mouse_temp = expt(allDays(id)).mouse;
@@ -127,23 +199,27 @@ for id = 1:nd
     imgMatFile = [imgFolder '_000_000.mat'];
     dataPath = fullfile(rc.achData, mouse_temp, date, imgFolder);
     load(fullfile(dataPath, imgMatFile));
-    
-    if isfield(inputStructure, 'cStimOn')
-        fprintf('cStimOn already exists in the input structure\n');
-    elseif isfield(info, 'frame')
-        fprintf('No cStimOn, but field "frame" exists in info structure and will be used\n');
-        [cStimOnTemp, stimOffsTemp] = photoFrameFinder_Sanworks(info.frame);
-        inputStructure(id).cStimOn = cStimOnTemp;
-        inputStructure(id).stimOffs = stimOffsTemp;
-        clear cStimOnTemp stimOffsTemp
+
+    if isfield(info, 'frame')
+        fprintf('Will define trials from photo diode\n');
+        [cStimOn_Temp, stimOffsTemp_temp] = photoFrameFinder_Sanworks(info.frame);
+        stimOns{id} = cStimOn_Temp;  
+        clear stimOffsTemp_temp cStimOn_Temp
     else
-        fprintf('No cStimOn and field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
+        fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
         correctedInputStructure = NaN(1, nd);
         correctedInputStructure(:, id) = counterValCorrect_noPhotodiode(inputStructure(:, id));
         inputStructure = correctedInputStructure;
+        stimOns{id}=inputStructure{id}.cStimOn;
+        input=inputStructure;
+        save(fullfile(fn_multi,'input.mat'),'input')
+        clear input
         clear correctedInputStructure
     end
 end
+%save the updated input structure with eihter cStimOn_PD of cStimOn from
+%counterValCorrect_noPhotodiode added
+
 clear mouse_temp date imgFolder imgMatFile dataPath info
 
 % Convert raw calcium timecourses to trial-structured F/F data
@@ -152,7 +228,7 @@ fractTimeActive_match = cell(1, nd);
 cellstd_match = cell(1, nd);
 
 for id = 1:nd
-    cStimOnTemp = cell2mat(inputStructure(id).cStimOn);
+    cStimOnTemp = stimOns{id};
     nTrials(id) = length(cStimOnTemp);
     [nFrames, nCells] = size(cellTCs_match{id});
     
@@ -345,7 +421,7 @@ wheel_trial_avg_raw = cell(1, nd);
 RIx = cell(1, nd); % Running index (logical)
 
 for id = 1:nd
-    cStimOnTemp = cell2mat(inputStructure(id).cStimOn);
+    cStimOnTemp = stimOns{id};
     wheel_tc{id} = nan(nOn + nOff, nTrials(id));
     wheel_tc_raw{id} = nan(nOn + nOff, nTrials(id));
     
@@ -407,7 +483,7 @@ end
 save('behavioral_state.mat', 'RIx', 'wheel_tc', 'wheel_trial_avg', 'PIx_stat', 'pupilMeans', 'motorByPupil');
 clear wheel_speed wheel_speed_clean
 
-%% ===== RESPONSE ANALYSIS BY BEHAVIORAL STATE =====
+%% ===== RESPONSE ANALYSIS =====
 % Calculate responses at preferred direction for different behavioral states
 % Test for surround suppression effects (large vs peak size responses)
 
@@ -760,16 +836,16 @@ for id = 1:nd
         % Determine comparison cells based on cell type
         if ismember(iCell, red_cells_keep)
             % Red cell (interneuron): compare to all green cells (pyramidal)
-            otherCells = green_cells_keep;
+            otherCells = find(green_cells_keep);
         else
             % Green cell (pyramidal): compare to other green cells (exclude self)
-            otherCells = setdiff(green_cells_keep, iCell);
+            otherCells = setdiff(find(green_cells_keep), iCell);
         end
         
         if ~isempty(otherCells)
             % Noise correlation: correlation of trial-to-trial fluctuations
-            [R_noise, p_noise] = calculateCorrelation(subTrialResp{id}(:, iCell), ...
-                                                      subTrialResp{id}(:, otherCells));
+            [R_noise, p_noise] = calculateCorrelation(subTrialResp{id}(find(~RIx{id}), iCell), ...
+                                                      subTrialResp{id}(find(~RIx{id}), otherCells));
             noiseCorr{id}(:, iCell) = [R_noise; p_noise];
             
             % Optional plotting for noise correlation

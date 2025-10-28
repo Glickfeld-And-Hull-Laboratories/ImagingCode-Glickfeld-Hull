@@ -4059,15 +4059,12 @@ end
 %%
 mean_pref_resp = mean(mean(pref_responses_stat_concat{pre},2),3);
 mean_norm_diff = squeeze(mean(norm_diff(1,:,:),2));
+norm_diff_lowConFF=norm_diff(1,1,:);
 
-figure;
-subplot(1,3,1);scatter(mean_pref_resp(red_ind_concat),noiseCorr_concat{pre}(1,red_ind_concat));xlabel('mean resp');ylabel('noise corr');xlim([-.1 .6]);ylim([-.2 1])
-subplot(1,3,2);scatter(mean_pref_resp(red_ind_concat),mean_norm_diff(red_ind_concat));xlabel('mean resp');ylabel('mean norm diff');xlim([-.1 .6]);ylim([-6 4])
-subplot(1,3,3);scatter(noiseCorr_concat{pre}(1,red_ind_concat),mean_norm_diff(red_ind_concat));xlabel('noise corr');ylabel('mean norm diff');xlim([-.2 1]);ylim([-6 4])
 
-x0=5;
-y0=0;
-width=10;
-height=3;
-set(gcf,'units','inches','position',[x0,y0,width,height])
-sgtitle('V1')
+mean_norm_diff_V1 = mean_norm_diff;
+mean_pref_resp_V1 = mean_pref_resp;
+noiseCorr_concat_V1 = noiseCorr_OG_concat{pre}(1,:);
+norm_diff_lowConFF_V1=norm_diff_lowConFF;
+red_ind_V1=red_ind_concat;
+save("V1_noiseCorrCompare.mat",'mean_norm_diff_V1','mean_pref_resp_V1','noiseCorr_concat_V1','red_ind_V1','norm_diff_lowConFF')

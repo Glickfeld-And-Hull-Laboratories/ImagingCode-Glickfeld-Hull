@@ -13,10 +13,15 @@ files <- list.files(path='/Volumes/All_staff/home/jerry/data/slice_imaging/',pat
 
 #change the path here to the folder where you want to save you jpegs
 converted <- list.files(path='/Volumes/All_staff/home/jerry/data/slice_imaging/jpegs/',pattern='.jpg',recursive = TRUE, full.names = FALSE)
-for (n in 1:length(converted)) {
-  if (grepl('archive/',converted[n],fixed=TRUE) == TRUE){
-    converted[n] <- gsub('archive/','',converted[n])
-  } else {next}
+
+if (length(converted)>0) {
+  for (n in 1:length(converted)) {
+    if (grepl('archive/',converted[n],fixed=TRUE) == TRUE){
+      converted[n] <- gsub('archive/','',converted[n])
+    } else {next}
+  }
+} else {
+  stop('No new images to be converted')
 }
 
 #change the path here to the folder where you want to save you jpegs
@@ -35,3 +40,4 @@ for (file in files) {
 }
 
 
+  
