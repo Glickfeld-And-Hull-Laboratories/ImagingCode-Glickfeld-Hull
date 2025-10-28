@@ -2,10 +2,10 @@ clear all
 clear all global
 close all
 
-date = '250314';
-mouse = 'i1415';
-ImgFolder = '001';
-time = ['1443'];
+date = '251019';
+mouse = 'i1423';
+ImgFolder = '002';
+time = ['1411'];
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -26,6 +26,13 @@ for irun = 1:nrun
     load(imgMatFile);
     if isfield(info,'frame')
         fprintf('Photodiode data collected \n')
+        [stimOnFr stimOffFr] = photoFrameFinder_Sanworks(info.frame);
+        if length(stimOnFr)>0
+            fprintf([num2str(length(stimOnFr)) ' stim presented \n'])
+        else
+            fprintf('WARNING- NO STIM PRESENTED!!!! \n')
+        end
+
     else
         fprintf('WARNING- NO PHOTODIODE DATA!!!!! \n')
     end
