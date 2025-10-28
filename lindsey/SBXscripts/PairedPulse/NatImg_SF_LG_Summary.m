@@ -2,17 +2,19 @@ close all
 clear all
 clc
 
-mouse = strvcat('i1412','i2585','i1406');
+% mouse = strvcat('i1412','i2585','i1406');
+% area = 'V1';
+% date = strvcat('241129', '241202', '241202');
+% ImgFolder = strvcat({'003'},{'002'},{'003'});
+
+mouse = strvcat('i1414','i1423');
 area = 'V1';
-date = strvcat('241129', '241202', '241202');
-ImgFolder = strvcat({'003'},{'002'},{'003'});
+date = strvcat('251009', '251009');
+ImgFolder = [{'003'},{'002'}];
+
 nrun = size(ImgFolder,2);
 
-sf_stim = [1:5]; %new test based on image pres error.
-nsf = length(sf_stim);
-nat_stim = [6:13];
-nnat = length(nat_stim);
-stim_set = 'Grat6_Img8';
+stim_set = 'Grat5_Img5_300ms';
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey';
 fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Adaptation\SFSummary\NatImg_LG', stim_set);
