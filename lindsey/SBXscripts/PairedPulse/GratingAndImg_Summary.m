@@ -1,31 +1,38 @@
-data_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Lan';
-mouse = strvcat('i1380','i1381','i1386','i1374','i1387','i1375');
-area = 'V1';
-date = strvcat('230330','230404','230406','230411','230418','230425');
+close all
+clear all
+clc
 
-sf_stim = [1:6]; %new test based on image pres error.
-nsf = length(sf_stim);
-nat_stim = [7:14];
-nnat = length(nat_stim);
-stim_set = 'Grat6_Img8';
+% mouse = strvcat('i1412','i2585','i1406');
+% area = 'V1';
+% date = strvcat('241129', '241202', '241202');
+% ImgFolder = strvcat({'003'},{'002'},{'003'});
+% 300 ms stim
+mouse = strvcat('i1414','i1423','i1425');
+area = 'V1';
+date = strvcat('251017', '251017', '251018');
+ImgFolder = [{'002'},{'002'},{'002'}];
+stim_set = 'Grat1_Img6_300ms';
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey';
-fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Adaptation\SFSummary\NatImg', stim_set);
+fn_out = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Adaptation\SFSummary\NatImg_LG', stim_set);
 if ~exist(fn_out)
     mkdir(fn_out)
 end 
-nexp = length(mouse);
+nexp = size(mouse,1);
 
 
 
 min_resp = 0.02;
-doEyeDist = 1;
+doEyeDist = 0;
 min_dist = 3;
 
 R1_avg_resp_all = [];
 R2_avg_resp_all = [];
 R1_snr_resp_all = [];
 Adapt_avg_resp_all = [];
+R1_avg_eye_resp_all = [];
+R2_avg_eye_resp_all = [];
+Adapt_avg_eye_resp_all = [];
 pref_sf_all = [];
 pref_nat_all = [];
 max_val_sf_all = [];
@@ -33,70 +40,97 @@ max_val_nat_all = [];
 max_snr_sf_all = [];
 max_snr_nat_all = [];
 h_stim_all = [];
-ntrialperstim = zeros(nexp,14);
 
 for iexp = 1:nexp
     fprintf([mouse(iexp,:) ' ' date(iexp,:) '\n'])
-    load(fullfile(data_pn,[area '_' mouse(iexp,:) '_' date(iexp,:) '_cellpose'],'trace_trial_stim.mat'))
-    load(fullfile(data_pn,'pupil',[date(iexp,:) '_' mouse(iexp,:) '_pupil.mat']))
-   
-    if doEyeDist
-        ind_dist = find(centroid.dist<=min_dist);
-    else
-        ind_dist = 1:length(stim_seq);
-    end
-
-    stims = unique(stim_seq);
-    nStim = length(stims);
-    [nCells nTrials] = size(R1_cell_trial);
+    run_str = catRunName(ImgFolder{iexp}, 1);
+    load(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)], [date(iexp,:) '_' mouse(iexp,:) '_' run_str], [date(iexp,:) '_' mouse(iexp,:) '_' run_str '_respData.mat']))
+    load(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)], [date(iexp,:) '_' mouse(iexp,:) '_' run_str], [date(iexp,:) '_' mouse(iexp,:) '_' run_str '_TCs.mat']))
+    load(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)], [date(iexp,:) '_' mouse(iexp,:) '_' run_str], [date(iexp,:) '_' mouse(iexp,:) '_' run_str '_input.mat']))
+    load(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)], [date(iexp,:) '_' mouse(iexp,:) '_' run_str], [date(iexp,:) '_' mouse(iexp,:) '_' run_str '_eyeAndWheel.mat']))
     
+    cStimTwo = cell2mat(input.cStimTwoOn);
+    [nFrames, nCells] = size(data_tc);
+    nTrials = length(cStimOne);
+    tc_one = nan(50,nCells,nTrials);
+    tc_two = nan(50,nCells,nTrials);
+    for itrial = 1:nTrials
+        if ~isnan(cStimOne(itrial)) & (cStimOne(itrial)+29)<nFrames
+            tc_one(:,:,itrial) = npSub_tc(cStimOne(itrial)-20:cStimOne(itrial)+29,:);
+        end
+        if ~isnan(cStimTwo(itrial)) & (cStimTwo(itrial)+29)<nFrames
+            tc_two(:,:,itrial) = npSub_tc(cStimTwo(itrial)-20:cStimTwo(itrial)+29,:);
+        end
+    end
+    tc_one_f = mean(tc_one(1:20,:,:));
+    tc_one_dfof = (tc_one-tc_one_f)./tc_one_f;
+    tc_two_dfof = (tc_two-tc_one_f)./tc_one_f;
+
+    dfof_resp_one = squeeze(mean(tc_one_dfof(resp_win,:,:),1));
+    dfof_base_one = squeeze(mean(tc_one_dfof(base_win,:,:),1));
+    dfof_resp_two = squeeze(mean(tc_two_dfof(resp_win,:,:),1));
+    dfof_base_two = squeeze(mean(tc_two_dfof(base_win,:,:),1));
+    
+    nStim = nImage + nGrating;
+
     h_stim = zeros(nStim,nCells);
     p_stim = zeros(nStim,nCells);
     R1_avg = zeros(nStim,nCells);
-    R2_avg = zeros(nStim,nCells);
     R1_snr = zeros(nStim,nCells);
-    for istim = 1:nStim
-        ind = intersect(ind_dist,find(stim_seq == stims(istim)));
-        ntrialperstim(iexp,istim) = length(ind);
-        if length(ind)>40
-            R1_avg(istim,:) = mean(R1_cell_trial(:,ind),2,'omitnan');
-            R2_avg(istim,:) = mean(R2_cell_trial(:,ind),2,'omitnan');
-            R1_snr(istim,:) =  R1_avg(istim,:)./std(R1_cell_trial(:,ind),[],2,'omitnan')';
-            [h_stim(istim,:) p_stim(istim,:)] = ttest(R1_cell_trial(:,ind),0,'tail','right','alpha',0.05/(nStim-1),'Dim',2);
-        else
-            R1_avg(istim,:) = nan(1,nCells);
-            R2_avg(istim,:) = nan(1,nCells);
-            R1_snr(istim,:) = nan(1,nCells);
-            h_stim(istim,:) = nan(1,nCells);
-            p_stim(istim,:) = nan(1,nCells);
-        end
+    R2_avg = zeros(nStim,nCells);
+    R1_avg_eye = zeros(nStim,nCells);
+    R2_avg_eye = zeros(nStim,nCells);
+
+    nat_stim = [];
+    start = 1;
+    for i = 1:nImage
+        ind = intersect(find(tGrating==0), find(tStimOne == stimOne(i)));
+        R1_avg(start,:) = (mean(dfof_resp_one(:,ind)-dfof_base_one(:,ind),2,'omitnan'))';
+        R1_snr(start,:) = (mean(dfof_resp_one(:,ind)-dfof_base_one(:,ind),2,'omitnan')./std(dfof_resp_one(:,ind)-dfof_base_one(:,ind),[],2,'omitnan'))';
+        R2_avg(start,:) = (mean(dfof_resp_two(:,ind)-dfof_base_two(:,ind),2,'omitnan'))';
+        [h_stim(start,:) p_stim(start,:)] = ttest(dfof_resp_one(:,ind),dfof_base_one(:,ind),'tail','right','alpha',0.05/(nStim-1),'Dim',2);
+        nat_stim = [nat_stim start];
+        ind_eye = intersect(find(centroid.dist<min_dist),ind);
+        R1_avg_eye(start,:) = (mean(dfof_resp_one(:,ind_eye)-dfof_base_one(:,ind_eye),2,'omitnan'))';
+        R2_avg_eye(start,:) = (mean(dfof_resp_two(:,ind_eye)-dfof_base_two(:,ind_eye),2,'omitnan'))';
+        start = start+1;
     end
-%     [h1 p1] = ttest(R1_cell_trial,0,'tail','right','alpha',0.05,'Dim',2);
-%     good_ind = unique([find(h1)' find(sum(h_stim,1))]);
-%     resp_mat = zeros(nCells,nTrials,2);
-%     resp_mat(:,:,1) = R1_cell_trial;
-%     resp_mat(:,:,2) = R2_cell_trial;
-% 
-%     if ~exist(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)]))
-%         mkdir(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)]))
-%     end
-%     save(fullfile(LG_base, 'Analysis\2P', [date(iexp,:) '_' mouse(iexp,:)], [date(iexp,:) '_' mouse(iexp,:) '_respData.mat']),'resp_mat','good_ind','h1','h_stim','stim_seq')
-% end
+   
+    sf_stim = [];
+    for i = 1:nGrating
+        ind = intersect(find(tGrating==1), find(tGratingSF == gratingSFs(i)));
+        R1_avg(start,:) = (mean(dfof_resp_one(:,ind)-dfof_base_one(:,ind),2,'omitnan'))';
+        R1_snr(start,:) = (mean(dfof_resp_one(:,ind)-dfof_base_one(:,ind),2,'omitnan')./std(dfof_resp_one(:,ind)-dfof_base_one(:,ind),[],2,'omitnan'))';
+        R2_avg(start,:) = (mean(dfof_resp_two(:,ind)-dfof_base_two(:,ind),2,'omitnan'))';
+        [h_stim(start,:) p_stim(start,:)] = ttest(dfof_resp_one(:,ind),dfof_base_one(:,ind),'tail','right','alpha',0.05/(nStim-1),'Dim',2);
+        ind_eye = intersect(find(centroid.dist<min_dist),ind);
+        R1_avg_eye(start,:) = (mean(dfof_resp_one(:,ind_eye)-dfof_base_one(:,ind_eye),2,'omitnan'))';
+        R2_avg_eye(start,:) = (mean(dfof_resp_two(:,ind_eye)-dfof_base_two(:,ind_eye),2,'omitnan'))';
+        sf_stim = [sf_stim start];
+        start = start+1;
+    end
 
     h_stim(find(R1_avg<min_resp)) = 0; %minimum response amp
     nonsigind = find(h_stim==0);
     R1_avg_resp = R1_avg;
+    R1_snr_resp = R1_snr;
     R2_avg_resp = R2_avg;
     R1_avg_resp(nonsigind) = nan;
+    R1_snr_resp(nonsigind) = nan;
     R2_avg_resp(nonsigind) = nan;
     R1_avg_resp = reshape(R1_avg_resp,size(R1_avg));
-    R2_avg_resp = reshape(R2_avg_resp,size(R2_avg));
-    R1_snr_resp = R1_snr;
-    R1_snr_resp(nonsigind) = nan;
     R1_snr_resp = reshape(R1_snr_resp,size(R1_snr));
+    R2_avg_resp = reshape(R2_avg_resp,size(R2_avg));
+    R1_avg_eye_resp = R1_avg_eye;
+    R2_avg_eye_resp = R2_avg_eye;
+    R1_avg_eye_resp(nonsigind) = nan;
+    R2_avg_eye_resp(nonsigind) = nan;
+    R1_avg_eye_resp = reshape(R1_avg_eye_resp,size(R1_avg_eye));
+    R2_avg_eye_resp = reshape(R2_avg_eye_resp,size(R2_avg_eye));
 
-    Adapt_avg_resp = (R2_avg_resp-R1_avg_resp)./R1_avg_resp;
-    
+    Adapt_avg_resp = R2_avg_resp./R1_avg_resp;
+    Adapt_avg_eye_resp = R2_avg_eye_resp./R1_avg_eye_resp;
+
     [max_val_sf pref_sf] = max(R1_avg_resp(sf_stim,:),[],1);
     [max_val_nat pref_nat] = max(R1_avg_resp(nat_stim,:),[],1);
     max_snr_sf = indOnly(R1_snr_resp(sf_stim,:)',pref_sf')';
@@ -106,6 +140,9 @@ for iexp = 1:nexp
     R2_avg_resp_all = [R2_avg_resp_all R2_avg_resp];
     R1_snr_resp_all = [R1_snr_resp_all R1_snr_resp];
     Adapt_avg_resp_all = [Adapt_avg_resp_all Adapt_avg_resp];
+    R1_avg_eye_resp_all = [R1_avg_eye_resp_all R1_avg_eye_resp];
+    R2_avg_eye_resp_all = [R2_avg_eye_resp_all R2_avg_eye_resp];
+    Adapt_avg_eye_resp_all = [Adapt_avg_eye_resp_all Adapt_avg_eye_resp];
     pref_sf_all = [pref_sf_all pref_sf];
     pref_nat_all = [pref_nat_all pref_nat];
     max_val_sf_all = [max_val_sf_all max_val_sf];
@@ -115,10 +152,90 @@ for iexp = 1:nexp
     h_stim_all = [h_stim_all h_stim];
 end
 
-%% 241123 analysis
-%outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2024';
-%251014 analysis- added eye tracking threshold
-outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2025';
+
+%% Grat vs Nat img - preferred
+nCells = size(h_stim_all,2);
+
+ind_sf = find(sum(h_stim_all(sf_stim,:),1));
+ind_nat = find(sum(h_stim_all(nat_stim,:),1));
+ind_both = intersect(ind_sf,ind_nat);
+
+Adapt_resp_pref_sf = zeros(1,nCells);
+Adapt_eye_resp_pref_sf = zeros(1,nCells);
+Adapt_resp_pref_nat = zeros(1,nCells);
+Adapt_eye_resp_pref_nat = zeros(1,nCells);
+for iCell = 1:nCells
+    Adapt_resp_pref_sf(iCell) = Adapt_avg_resp_all(nImage+pref_sf_all(iCell),iCell);
+    Adapt_eye_resp_pref_sf(iCell) = Adapt_avg_eye_resp_all(nImage+pref_sf_all(iCell),iCell);
+    Adapt_resp_pref_nat(iCell) = Adapt_avg_resp_all(pref_nat_all(iCell),iCell);
+    Adapt_eye_resp_pref_nat(iCell) =  Adapt_avg_eye_resp_all(pref_nat_all(iCell),iCell);
+end
+
+figure; 
+subplot(2,2,1)
+errorbar([1 2],[mean(Adapt_resp_pref_sf(ind_sf)) mean(Adapt_resp_pref_nat(ind_nat))],[std(Adapt_resp_pref_sf(ind_sf))./sqrt(length(ind_sf)) std(Adapt_resp_pref_nat(ind_nat))./sqrt(length(ind_nat))])
+[h p] = ttest2(Adapt_resp_pref_sf(ind_sf), Adapt_resp_pref_nat(ind_nat));
+title(['Pref - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+subplot(2,2,2)
+errorbar([1 2],[mean(Adapt_resp_pref_sf(ind_both)) mean(Adapt_resp_pref_nat(ind_both))],[std(Adapt_resp_pref_sf(ind_both))./sqrt(length(ind_both)) std(Adapt_resp_pref_nat(ind_both))./sqrt(length(ind_both))])
+[h p] = ttest(Adapt_resp_pref_sf(ind_both), Adapt_resp_pref_nat(ind_both));
+title(['Match - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+subplot(2,2,3)
+errorbar([1 2],[mean(Adapt_eye_resp_pref_sf(ind_sf)) mean(Adapt_eye_resp_pref_nat(ind_nat))],[std(Adapt_eye_resp_pref_sf(ind_sf))./sqrt(length(ind_sf)) std(Adapt_eye_resp_pref_nat(ind_nat))./sqrt(length(ind_nat))])
+[h p] = ttest2(Adapt_eye_resp_pref_sf(ind_sf), Adapt_eye_resp_pref_nat(ind_nat));
+title(['Eye < ' num2str(min_dist) ' deg; Pref - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+subplot(2,2,4)
+errorbar([1 2],[mean(Adapt_eye_resp_pref_sf(ind_both)) mean(Adapt_eye_resp_pref_nat(ind_both))],[std(Adapt_eye_resp_pref_sf(ind_both))./sqrt(length(ind_both)) std(Adapt_eye_resp_pref_nat(ind_both))./sqrt(length(ind_both))])
+[h p] = ttest(Adapt_eye_resp_pref_sf(ind_both), Adapt_eye_resp_pref_nat(ind_both));
+title(['Eye < ' num2str(min_dist) ' deg; Match - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+
+%% Grat vs Nat img - preferred Img vs mid-SF
+nSF = length(sf_stim);
+Adapt_pref_sf = zeros(nSF,2);
+for iSF = 1:nSF
+    ind = intersect(find(h_stim_all(nImage+iSF,:)),find(pref_sf_all==iSF));
+    n_pref(iSF) = length(ind);
+    Adapt_pref_sf(iSF,:) = [nanmean(Adapt_avg_resp_all(nImage+iSF,ind),2) nanstd(Adapt_avg_resp_all(nImage+iSF,ind),[],2)./sqrt(length(ind))];
+end
+
+figure; 
+subplot(2,2,1)
+errorbar(unique(tGratingSF),Adapt_pref_sf(:,1),Adapt_pref_sf(:,2))
+xlim([0 0.4])
+ylim([0 1])
+
+[h p] = ttest2(Adapt_resp_pref_sf(ind_sf), Adapt_resp_pref_nat(ind_nat));
+title(['Pref - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+subplot(2,2,2)
+errorbar([1 2],[mean(Adapt_resp_pref_sf(ind_both)) mean(Adapt_resp_pref_nat(ind_both))],[std(Adapt_resp_pref_sf(ind_both))./sqrt(length(ind_both)) std(Adapt_resp_pref_nat(ind_both))./sqrt(length(ind_both))])
+[h p] = ttest(Adapt_resp_pref_sf(ind_both), Adapt_resp_pref_nat(ind_both));
+title(['Match - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+subplot(2,2,3)
+errorbar([1 2],[mean(Adapt_eye_resp_pref_sf(ind_sf)) mean(Adapt_eye_resp_pref_nat(ind_nat))],[std(Adapt_eye_resp_pref_sf(ind_sf))./sqrt(length(ind_sf)) std(Adapt_eye_resp_pref_nat(ind_nat))./sqrt(length(ind_nat))])
+[h p] = ttest2(Adapt_eye_resp_pref_sf(ind_sf), Adapt_eye_resp_pref_nat(ind_nat));
+title(['Eye < ' num2str(min_dist) ' deg; Pref - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+subplot(2,2,4)
+errorbar([1 2],[mean(Adapt_eye_resp_pref_sf(ind_both)) mean(Adapt_eye_resp_pref_nat(ind_both))],[std(Adapt_eye_resp_pref_sf(ind_both))./sqrt(length(ind_both)) std(Adapt_eye_resp_pref_nat(ind_both))./sqrt(length(ind_both))])
+[h p] = ttest(Adapt_eye_resp_pref_sf(ind_both), Adapt_eye_resp_pref_nat(ind_both));
+title(['Eye < ' num2str(min_dist) ' deg; Match - p = ' num2str(chop(p,3))])
+xlim([0 3])
+ylim([0 1])
+
+%%
 nCells = size(R1_avg_resp_all,2);
 R1_avg_resp_all_nan = R1_avg_resp_all;
 R1_avg_resp_all_nan(find(h_stim_all==0)) = nan;
@@ -171,7 +288,7 @@ ylabel('R1 dF/F')
 [h p] = ttest2(R1_resp_sf(ind_sub_sf),R1_resp_nat(ind_sub_nat));
 title(['p = ' num2str(p)])
 sgtitle('All cells resp to 0.16 OR any nat image')
-print(fullfile(outpn,'NatImgVGratingAdapt_RespEither_eye.pdf'),'-dpdf')
+print(fullfile(fn_out,'NatImgVGratingAdapt_RespEither.pdf'),'-dpdf')
 
 figure;
 subplot(2,2,1)
@@ -208,7 +325,7 @@ ylabel('R1 dF/F')
 title(['p = ' num2str(p)])
 sgtitle('All cells resp to 0.16 AND any nat image')
 
-print(fullfile(outpn,'NatImgVGratingAdapt_RespBoth_eye.pdf'),'-dpdf')
+print(fullfile(fn_out,'NatImgVGratingAdapt_RespBoth.pdf'),'-dpdf')
 %% 
 Adapt_avg_resp_grating_mean = cell(1,nsf+1);
 Adapt_avg_resp_natimg_mean = cell(1,nsf+1);
