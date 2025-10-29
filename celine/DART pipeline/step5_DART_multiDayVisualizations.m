@@ -3,13 +3,15 @@
 % as from DART experiments. It focusses on visualization, rather than
 % statistical analyis.
 
-% clear the workspace and set up basic paths and variables
+% clear the workspace and set up basic paths and variable
+% s
 clear all; close all; clc
 
 prompt = 'Enter name of instructions file: ';
 instr = input(prompt, 's');
 clear prompt
 run(instr)
+
 
 ds = instructions.ds;
 run(ds);
@@ -578,3 +580,75 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     'Titles', {'lowCorr', 'highCorr'}, ...
     'StimStart', 31);
 
+%% Split cells by noise correlation on the control day and examine DART effects
+
+%within each cell of noiseCorr_concat is a 2 X nNeurons matrix, where on the
+%first dimension 1=R and 2=p values.
+figure;histogram(noiseCorr_concat{pre}(1,red_ind_concat));xlim([-.1 1])
+figure;histogram(noiseCorr_concat{pre}(1,green_ind_concat));xlim([-.2 1.2])
+figure;cdfplot(noiseCorr_concat{pre}(1,red_ind_concat))
+
+median(noiseCorr_concat{pre}(1,red_ind_concat))
+
+highNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)>.3);
+lowNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)<=.3);
+
+
+plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
+    highNoiseCorr_red, highNoiseCorr_red, ...
+    'UseDashedLines', [false, false], ...
+    'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
+    'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
+    'Titles', {'lowCorr', 'highCorr'}, ...
+    'StimStart', 31);
+
+%% Contrast response plots for each cell type per mouse
+for iMouse = 1:nSess
+    figure;
+    mouseInds_this = mouseInds{iMouse};
+    
+    red_this = intersect(red_ind_concat, mouseInds_this);
+    green_this = intersect(green_ind_concat, mouseInds_this);
+    
+    subplot(1, 2, 1);
+    if ~isempty(green_this)
+        green_resp_pre = squeeze(mean(pref_responses_stat_concat{pre}(green_this, :, 2), 1, 'omitnan'));
+        green_resp_post = squeeze(mean(pref_responses_stat_concat{post}(green_this, :, 2), 1, 'omitnan'));
+        green_se_pre = squeeze(std(pref_responses_stat_concat{pre}(green_this, :, 2), 0, 1, 'omitnan')) / sqrt(length(green_this));
+        green_se_post = squeeze(std(pref_responses_stat_concat{post}(green_this, :, 2), 0, 1, 'omitnan')) / sqrt(length(green_this));
+        
+        errorbar(cons, green_resp_pre, green_se_pre, '--k', 'LineWidth', 1.5);
+        hold on;
+        errorbar(cons, green_resp_post, green_se_post, '--b', 'LineWidth', 1.5);
+        title(['HTP- (n=' num2str(length(green_this)) ')']);
+    else
+        title('HTP- (n=0)');
+    end
+    ylabel('dF/F');
+    xlabel('Contrast (%)');
+    set(gca, 'TickDir', 'out');
+    grid off;
+    box off;
+    
+    subplot(1, 2, 2);
+    if ~isempty(red_this)
+        red_resp_pre = squeeze(mean(pref_responses_stat_concat{pre}(red_this, :, 2), 1, 'omitnan'));
+        red_resp_post = squeeze(mean(pref_responses_stat_concat{post}(red_this, :, 2), 1, 'omitnan'));
+        red_se_pre = squeeze(std(pref_responses_stat_concat{pre}(red_this, :, 2), 0, 1, 'omitnan')) / sqrt(length(red_this));
+        red_se_post = squeeze(std(pref_responses_stat_concat{post}(red_this, :, 2), 0, 1, 'omitnan')) / sqrt(length(red_this));
+        
+        errorbar(cons, red_resp_pre, red_se_pre, 'k', 'LineWidth', 1.5);
+        hold on;
+        errorbar(cons, red_resp_post, red_se_post, 'b', 'LineWidth', 1.5);
+        title(['HTP+ (n=' num2str(length(red_this)) ')']);
+    else
+        title('HTP+ (n=0)');
+    end
+    xlabel('Contrast (%)');
+    set(gca, 'TickDir', 'out');
+    grid off;
+    box off;
+    
+    sgtitle(['Contrast Response - ' mouseNames{iMouse}]);
+    print(fullfile(fnout, [char(mouseNames{iMouse}) '_contrastResponse.pdf']), '-dpdf', '-bestfit');
+end

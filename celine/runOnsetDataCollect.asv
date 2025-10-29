@@ -14,14 +14,14 @@ eval(ds);
 rc = behavConstsDART;
 
 day_id = str2double(instructions.session);
-allDays = [day_id, pre_day];
+
 if length(expt) < day_id
     error('Day_id %d not valid for this dataset', day_id);
 else
     pre_day = expt(day_id).multiday_matchdays;
     fprintf('Analyzing sessions: %s\n', num2str([day_id, pre_day]));
 end
-
+allDays = [day_id, pre_day];
 nd = 2;
 mouse = expt(day_id).mouse;
 experimentFolder = expt(day_id).exptType;
@@ -76,7 +76,7 @@ else
         if isfield(info, 'frame')
             OG_input_temp = OG_inputStructure(id);
             [OG_input_temp.cStimOn, OG_input_temp.stimOffs] = photoFrameFinder_Sanworks(info.frame);
-            correctedInputStructure_temp = counterValCorrect(OG_input_temp,OG_input_temp.cStimOn);
+            correctedInputStructure_temp = counterValCorrect(OG_input_temp,cell2mat(OG_input_temp.cStimOn));
             cStimOn = cell2mat(correctedInputStructure_temp.cStimOn);
             fprintf('Creating corrected input structure with photodiode\n');
         else

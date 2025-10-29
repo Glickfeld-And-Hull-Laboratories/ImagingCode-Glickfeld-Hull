@@ -21,7 +21,7 @@ else
     pre_day = expt(day_id).multiday_matchdays;
     fprintf('Analyzing sessions: %s\n', num2str([day_id, pre_day]));
 end
-
+allDays = [day_id, pre_day];
 nd = 2;
 mouse = expt(day_id).mouse;
 experimentFolder = expt(day_id).exptType;
@@ -55,15 +55,47 @@ cd(fn_multi)
 load(fullfile(fn_multi, 'timecourses.mat'), 'cellTCs_match','red_ind_match');
 load(fullfile(fn_multi, 'input.mat'));
 
-inputStructure = input;
+OG_inputStructure = input;
 clear input
+%make this loop through the days
+if exist(fullfile(fn_multi, 'correctedInputStructure.mat'), 'file')
+    load("correctedInputStructure.mat");
+    cStimOn = cell2mat(correctedInputStructure{id}.cStimOn);
+    fprintf('Using existing corrected input structure\n');
+else
+    %make a corrected input structure for both days
+    for id = 1:nd
+        %load the data for that day
+        mouse_temp = expt(allDays(id)).mouse;
+        date = expt(allDays(id)).date;
+        imgFolder = expt(allDays(id)).contrastxori_runs{1};
+        imgMatFile = [imgFolder '_000_000.mat'];
+        dataPath = fullfile(rc.data, mouse_temp, date, imgFolder);
+        load(fullfile(dataPath,imgMatFile));
+        %load data for that day
+        if isfield(info, 'frame')
+            OG_input_temp = OG_inputStructure(id);
+            %check whether there is a input.cStimOn field - if not, create
+            %on using nOn and nOff and add this to OG_input_temp
+   
+            [cStimOn, stimOffs] = photoFrameFinder_Sanworks(info.frame);
+            correctedInputStructure_temp = counterValCorrect(OG_input_temp,cStimOn);
+            cStimOn = cell2mat(correctedInputStructure_temp.cStimOn);
+            fprintf('Creating corrected input structure with photodiode\n');
+        else
+            correctedInputStructure_temp = counterValCorrect_noPhotodiode(OG_inputStructure(id));
+            cStimOn = cell2mat(correctedInputStructure_temp.cStimOn);
+            fprintf('Creating corrected input structure without photodiode\n');
+        end
+    end
+end
 
 frame_rate = inputStructure(1).frameImagingRateMs;
 
 %% Load wheel speed data for all days
-allDays = [day_id, pre_day];
-wheel_speed = cell(1, nd);
 
+wheel_speed = cell(1, nd);
+%change this to use the corrected inputStrucutre
 for id = 1:nd
     wheel_speed{id} = wheelSpeedCalc(inputStructure(id), 32, expt(allDays(1)).wheelColor);
 end
@@ -120,6 +152,7 @@ end
 
 %% Extract running onsets
 speed_threshold = 5.37;
+onsetWin = 5;
 
 nRunOnsets = [];
 meanSpeedAfterOnset = [];
@@ -132,19 +165,20 @@ for id = 1:nd
     imgMatFile = [imgFolder '_000_000.mat'];
     dataPath = fullfile(rc.data, mouse_temp, date, imgFolder);
     load(fullfile(dataPath,imgMatFile));
-    
-    if isfield(info, 'frame')
-        [cStimOn, stimOffs] = photoFrameFinder_Sanworks(info.frame);
-        fprintf('Getting cStimOn from photo diode\n');
-    elseif exist(fullfile(fn_multi, 'correctedInputStructure.mat'), 'file')
-        load("correctedInputStructure.mat");
-        cStimOn = cell2mat(correctedInputStructure{id}.cStimOn);
-        fprintf('Getting cStimOn from existing corrected input structure\n');
-    else
-        correctedInputStructure_temp = counterValCorrect_noPhotodiode(inputStructure(id));
-        cStimOn = cell2mat(correctedInputStructure_temp.cStimOn);
-        fprintf('Creating corrected input structure to get cStimOn\n');
-    end
+    %change this to use the cStimOn from the corrected input structure,
+    %which will be defined above
+    % if isfield(info, 'frame')
+    %     [cStimOn, stimOffs] = photoFrameFinder_Sanworks(info.frame);
+    %     fprintf('Getting cStimOn from photo diode\n');
+    % elseif exist(fullfile(fn_multi, 'correctedInputStructure.mat'), 'file')
+    %     load("correctedInputStructure.mat");
+    %     cStimOn = cell2mat(correctedInputStructure{id}.cStimOn);
+    %     fprintf('Getting cStimOn from existing corrected input structure\n');
+    % else
+    %     correctedInputStructure_temp = counterValCorrect_noPhotodiode(inputStructure(id));
+    %     cStimOn = cell2mat(correctedInputStructure_temp.cStimOn);
+    %     fprintf('Creating corrected input structure to get cStimOn\n');
+    % end
     [nFrames, nCells] = size(cellTCs_match{id});
     
     fwdWheelClean = wheel_speed_clean{id};
@@ -184,8 +218,8 @@ for id = 1:nd
     
     if isempty(runOnsets_clean)
         disp(['No valid running onsets found for day ' num2str(id)]);
-        data_dfof_runOnset_match{id} = [];
-        mean_resp_runOnset_match{id} = [];
+        data_dfof_runOnset_match{id} = nan(onsetWin*2*frame_rate, nCells);
+        mean_resp_runOnset_match{id} = nan(1, nCells);
         nRunOnsets = [nRunOnsets 0];
         meanSpeedAfterOnset{id} = [];
         onsetITIStatus{id} = [];
@@ -221,8 +255,8 @@ for id = 1:nd
     
     if isempty(finalOnsets)
         disp(['No valid running onsets found for day ' num2str(id)]);
-        data_dfof_runOnset_match{id} = [];
-        mean_resp_runOnset_match{id} = [];
+        data_dfof_runOnset_match{id} = nan(onsetWin*2*frame_rate, nCells);
+        mean_resp_runOnset_match{id} = nan(1, nCells);
         nRunOnsets = [nRunOnsets 0];
         meanSpeedAfterOnset{id} = [];
         continue;
@@ -242,8 +276,6 @@ for id = 1:nd
     
     meanSpeedAfterOnset{id} = speedAfterOnset;
     
-    onsetWin = 5;
-    
     data_dfof_runOnset = nan(onsetWin*2*frame_rate, nCells, length(finalOnsets));
     runConfirmation = nan(onsetWin*2*frame_rate, length(finalOnsets));
     
@@ -251,7 +283,7 @@ for id = 1:nd
         onsetFrame = finalOnsets(iOnset);
         
         fullWindow = (onsetFrame - onsetWin*frame_rate):(onsetFrame + onsetWin*frame_rate - 1);
-        bslnWindow = (onsetFrame - (4*frame_rate)):(onsetFrame - frame_rate/2); %use a 1/2 second window, from t-1 to t-.5 seconds
+        bslnWindow = (onsetFrame - (4*frame_rate)):(onsetFrame - frame_rate/2);
         
         fullWindow = fullWindow(fullWindow > 0 & fullWindow <= nFrames);
         bslnWindow = bslnWindow(bslnWindow > 0 & bslnWindow <= nFrames);
@@ -288,7 +320,7 @@ for id = 1:nd
     mean_resp_runOnset_match{id} = mean(data_dfof_runOnset_match{id}((onsetWin*frame_rate)+1:end, :), 1, 'omitmissing');
     
     fprintf('Day %d: Found %d valid running onsets\n', id, length(finalOnsets));
-    fprintf('Mean speed after onset: %.2f � %.2f cm/s\n', ...
+    fprintf('Mean speed after onset: %.2f  %.2f cm/s\n', ...
         mean(speedAfterOnset, 'omitmissing'), std(speedAfterOnset, 'omitmissing'));
     
     itiCount = sum(strcmp(itiStatusArray, 'ITI'));

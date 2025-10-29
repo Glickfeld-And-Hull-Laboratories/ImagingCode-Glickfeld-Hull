@@ -3771,6 +3771,7 @@ expt(137).rettuning = {};
 expt(137).contrastxori_runs = {'008'};
 expt(137).contrastxori_time = {'1853'};
 expt(137).data_loc = 'ACh';
+expt(137).exptType = 'SST_YM90K';
 %segmented 2/3/22. 121 cells found, of which 13 red. Matched 2/4/22, 72
 %cells matched.
 %% i2052	220203
@@ -3801,6 +3802,7 @@ expt(138).contrastxori_runs = {'004'};
 expt(138).contrastxori_time = {'1035'};
 expt(138).data_loc = 'ACh';
 expt(138).wheelColor = 'purple';
+expt(138).exptType = 'SST_YM90K';
 %segmented on 2/3/22. Found 101 cells, of which 13 red. Matched 2/5/22, 57
 %cells
 %% i2053	220208
