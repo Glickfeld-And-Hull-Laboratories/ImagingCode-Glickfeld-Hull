@@ -60,7 +60,7 @@ clear input
 %make this loop through the days
 if exist(fullfile(fn_multi, 'correctedInputStructure.mat'), 'file')
     load("correctedInputStructure.mat");
-    cStimOn = cell2mat(correctedInputStructure{id}.cStimOn);
+    cStimOn = cell2mat(correctedInputStructure{id}.cStimOn); %NEED TO UPDATE THIS TO ADDRESS THE DAYS CORRECTLY
     fprintf('Using existing corrected input structure\n');
 else
     %make a corrected input structure for both days
@@ -77,9 +77,12 @@ else
             OG_input_temp = OG_inputStructure(id);
             %check whether there is a input.cStimOn field - if not, create
             %on using nOn and nOff and add this to OG_input_temp
-   
-            [cStimOn, stimOffs] = photoFrameFinder_Sanworks(info.frame);
-            correctedInputStructure_temp = counterValCorrect(OG_input_temp,cStimOn);
+            [stimOns, stimOffs] = photoFrameFinder_Sanworks(info.frame);
+            if ~isfield(OG_input_temp,'cStimOn')
+                nTrials = length(OG_input_temp.tGratingContrast);
+                OG_input_temp.cStimOn = (0:nTrials-1) * double(OG_input_temp.nScansOff + OG_input_temp.nScansOn) + double(OG_input_temp.nScansOff) + 1;
+            end
+            correctedInputStructure_temp = counterValCorrect_noCellArray(OG_input_temp,stimOns);
             cStimOn = cell2mat(correctedInputStructure_temp.cStimOn);
             fprintf('Creating corrected input structure with photodiode\n');
         else
