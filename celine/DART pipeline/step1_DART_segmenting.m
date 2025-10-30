@@ -412,6 +412,11 @@ clear data_g_reg data_reg_down
 cd(CD);
 load([runFolder '_000_000.mat']);
 [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+tCon = cell2mat(input.tGratingContrast);
+if length(stimOns) > length(tCon)
+    stimOns = stimOns(1:length(tCon));
+    stimOffs = stimOffs(1:length(tCon));
+end
 input.stimOns_photodiode = stimOns;
 input.stimOffs_photodiode = stimOffs;
 [nFrames nCells] = size(npSub_tc);
