@@ -344,7 +344,7 @@ plotSizeResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
     'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
     'Titles', {'HTP+', 'HTP-'}, ...
     'YLabel', 'dF/F');
-sgtitle('Locomotion')
+sgtitle('Running')
 saveas(gcf, sprintf('running_size_response.pdf'));
 
 %% Normalized direction tuning at a specified size
@@ -388,7 +388,7 @@ for iCon = 1:nCon
     figure;
     
     % Green cells (HTP-)
-    subplot(1, 2, 1);
+    subplot(1, 2, 2);
     errorbar(dirs_for_plotting, green_dir_avrg_stat{pre}, green_dir_se_stat{pre}, '--k');
     hold on;
     errorbar(dirs_for_plotting, green_dir_avrg_stat{post}, green_dir_se_stat{post}, '--b');
@@ -396,7 +396,7 @@ for iCon = 1:nCon
     ylabel('dF/F');
     
     % Red cells (HTP+)
-    subplot(1, 2, 2);
+    subplot(1, 2, 1);
     errorbar(dirs_for_plotting, red_dir_avrg_stat{pre}, red_dir_se_stat{pre}, 'k');
     hold on;
     errorbar(dirs_for_plotting, red_dir_avrg_stat{post}, red_dir_se_stat{post}, 'b');
@@ -573,7 +573,7 @@ lowNoiseCorr_red=find(noiseCorr_concat{pre}(1,red_ind_concat)<=.3);
 
 
 plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
-    highNoiseCorr_red, highNoiseCorr_red, ...
+    lowNoiseCorr_red, highNoiseCorr_red, ...
     'UseDashedLines', [false, false], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots

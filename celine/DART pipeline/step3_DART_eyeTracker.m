@@ -49,25 +49,25 @@ for day = 1:2
     load(inputfName);
 
     nFrames = input.counterValues{end}(end);
-    % Get stimulus timing information
-    if isfile(infofName)
-        load(infofName);
-        if isfield(info,'frame')
-            [stimOns{day}, stimOffs{day}] = photoFrameFinder_Sanworks(info.frame);
-        else
-            % warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
-            % msgbox(warningMessage);
+    % % Get stimulus timing information
+    % if isfile(infofName)
+    %     load(infofName);
+    %     if isfield(info,'frame')
+    %         [stimOns{day}, stimOffs{day}] = photoFrameFinder_Sanworks(info.frame);
+    %     else
+    %         % warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
+    %         % msgbox(warningMessage);
             fprintf('Info struct does not exist, running counterValCorrect_noPhotodiode\n');
             correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
-            stimOns{day} = cell2mat(correctedInputStructure{id}.cStimOn);
-        end
-    else
+            stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
+    %     end
+    % else
         % warningMessage = sprintf('Warning: info struct does not exist:\n%s\n Using mWks StimOn', infofName);
         % msgbox(warningMessage);
-        fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
-        correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
-        stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
-    end
+    %     fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
+    %     correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
+    %     stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
+    % end
     
     % Crop data to match behavioral recording length
     nTrials = length(stimOns{day});
