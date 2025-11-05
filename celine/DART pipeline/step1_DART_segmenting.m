@@ -161,6 +161,7 @@ nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = size(input.tGratingDirectionDeg,2);
 
+
 % find coarse dfof to calculate active cells
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
