@@ -823,8 +823,28 @@ expt(38).contrastxori_time = {'1020'};
 expt(38).wheelColor = 'orange';
 expt(38).exptType = 'VIP_YM90K';
 expt(38).data_loc = 'ACh';
-%% i3333 DART ??
-
+%% i3333  20 hrs post DART
+expt(39).mouse = 'i3333';
+expt(39).date = '251030';
+expt(39).img_loc  = {'V1';'L2/3'};
+expt(39).z =215.62;
+expt(39).obj = '16x';
+expt(39).zoom = 2;
+expt(39).frame_rate = 15;
+expt(39).multiday_timesincedrug_hours = '20';
+expt(39).multiday_matchdays = [38];
+expt(39).indicator = {'GCaMP8f'};
+expt(39).drug = 'YM90K';
+expt(39).greenredsimultaneous = 1;
+expt(39).greenChannelLabel = '';
+expt(39).redChannelLabel = '';
+expt(39).redChannelTag = {'tdTomato','NES-HTP'};
+expt(39).redChannelRun = '000';
+expt(39).contrastxori_runs = {'004'};
+expt(39).contrastxori_time = {'1118'};
+expt(39).wheelColor = 'orange';
+expt(39).exptType = 'VIP_YM90K';
+expt(39).data_loc = 'ACh';
 %% i2221  Baseline
 expt(40).mouse = 'i2221';
 expt(40).date = '251103';
