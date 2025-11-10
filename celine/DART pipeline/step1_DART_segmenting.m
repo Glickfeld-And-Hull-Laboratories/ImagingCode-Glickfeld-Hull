@@ -410,16 +410,30 @@ clear data_g_reg data_reg_down
 
 %% find stim info from photodiode
 
-cd(CD);
-load([runFolder '_000_000.mat']);
-[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
-tCon = cell2mat(input.tGratingContrast);
-if length(stimOns) > length(tCon)
-    stimOns = stimOns(1:length(tCon));
-    stimOffs = stimOffs(1:length(tCon));
+switch instructions.tIdxSource
+    case 'PD'
+        cd(CD);
+        load([runFolder '_000_000.mat']);
+        [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+        % tCon = cell2mat(input.tGratingContrast);
+        input.stimOns_photodiode = stimOns;
+        input.stimOffs_photodiode = stimOffs;
+        input.stimOns_mwCounter = [];
+        input.stimTimingSource = 'PD';
+    case 'MW'
+        input_correct = counterValCorrect_noPhotodiode(input);
+        input.stimOns_mwCounter = input_correct.cStimOn;
+        input.counterValues = input_correct.counterValues;
+        input.counterTimesUs = input_correct.counterTimesUs;
+        input.stimOns_photodiode = [];
+        input.stimOffs_photodiode = [];
+        input.stimTimingSource = 'MW';
+        stimOns = input.stimOns_mwCounter;
+        clear input_correct
+    otherwise
+        warning('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
 end
-input.stimOns_photodiode = stimOns;
-input.stimOffs_photodiode = stimOffs;
+
 [nFrames nCells] = size(npSub_tc);
 nOn = input.nScansOn(1);
 nOff = input.nScansOff(1);

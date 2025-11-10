@@ -161,6 +161,7 @@ nOff = input.nScansOff;
 sz = size(data_g_reg);
 ntrials = input.stopAfterNTrials;
 
+
 % find coarse dfof to calculate active cells
 data_g_trial = reshape(data_g_reg, [sz(1) sz(2) nOn+nOff ntrials]);
 data_g_f = squeeze(mean(data_g_trial(:,:,nOff/2:nOff,:),3));
@@ -408,6 +409,30 @@ clear data_g_reg data_reg_down
 
 
 %% find stim info from photodiode
+
+switch instructions.tIdxSource
+    case 'PD'
+        cd(CD);
+        load([runFolder '_000_000.mat']);
+        [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+        tCon = cell2mat(input.tGratingContrast);
+        if length(stimOns) > length(tCon)
+            stimOns = stimOns(1:length(tCon));
+            stimOffs = stimOffs(1:length(tCon));
+        end
+        input.stimOns_photodiode = stimOns;
+        input.stimOffs_photodiode = stimOffs;
+        input.stimOns_mwCounter = [];
+    case 'MW'
+        input_correct = counterValCorrect_noPhotodiode(input);
+        input.stimOns_mwCounter = input_correct.cStimOn;
+        input.counterValues = input_correct.counterValues;
+        input.counterTimesUs = input_correct.counterTimesUs;
+                input.stimOns_photodiode = stimOns;
+        input.stimOffs_photodiode = stimOffs;
+    otherwise
+        warning('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
+end
 
 cd(CD);
 load([runFolder '_000_000.mat']);
