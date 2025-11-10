@@ -20,10 +20,10 @@ function [stimOnFrames stimOffFrames] = photoFrameFinder_Sanworks(events);
     msg = [num2str(length(shortEvents)) ' short frame on/off events detected and corrected.'];
     if ~isempty(shortEvents)
         msgbox(msg,'photoFrameFinder Message','warn');
-    end
-    for f = 1:length(shortEvents)
-        replaceFrames = [shortEvents(f) shortEvents(f)+1];
-        frameTrig(replaceFrames) = 0;
+        for f = 1:length(shortEvents)
+            replaceFrames = [shortEvents(f) shortEvents(f)+1];
+            frameTrig(replaceFrames) = 0;
+        end
     end
     stimOnFrames = find(frameTrig == 1) + 1; % +1 accounts for derivative
     stimOffFrames = find(frameTrig == -1) + 1;
