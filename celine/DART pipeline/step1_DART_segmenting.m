@@ -431,7 +431,7 @@ switch instructions.tIdxSource
         stimOns = input.stimOns_mwCounter;
         clear input_correct
     otherwise
-        warning('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
+        error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
 end
 
 [nFrames nCells] = size(npSub_tc);
