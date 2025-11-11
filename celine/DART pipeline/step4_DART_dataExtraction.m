@@ -38,7 +38,7 @@ else
     dart_str = 'control';
 end
 fn_multi = fullfile(rc.analysis, experimentFolder, mouse, ['multiday_' dart_str]);
-
+mkdir(fn_multi)
 % Determine which session was used as reference for cell matching
 x = instructions.refDay;
 switch x
@@ -125,7 +125,7 @@ nSize = length(sizes);
 % otherwise uses corrected input structure timing
 
 stimOns =cell(1,nd); %this is the set of trial start times that will be used throughout the rest of this script
-correctedInputStructure = cell(1, nd);
+% correctedInputStructure = cell(1, nd);
 
 for id = 1:nd
     mouse_temp = expt(allDays(id)).mouse;
@@ -135,16 +135,16 @@ for id = 1:nd
     dataPath = fullfile(rc.data, mouse_temp, date, imgFolder);
     load(fullfile(dataPath, imgMatFile));
     
-    if isfield(info, 'frame')
-        fprintf('Getting stim on times from the photodiode\n');
-        [cStimOn_Temp, stimOffsTemp] = photoFrameFinder_Sanworks(info.frame);
-        stimOns{id} = cStimOn_Temp;
-        clear stimOffsTemp cStimOn_Temp
-    else
-        fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
-        correctedInputStructure{id} = counterValCorrect_noPhotodiode(inputStructure(id));
-        stimOns{id} = cell2mat(correctedInputStructure{id}.cStimOn);
-    end
+    % if isfield(info, 'frame')
+    %     fprintf('Getting stim on times from the photodiode\n');
+    %     [cStimOn_Temp, stimOffsTemp] = photoFrameFinder_Sanworks(info.frame);
+    %     stimOns{id} = cStimOn_Temp;
+    %     clear stimOffsTemp cStimOn_Temp
+    % else
+    %     fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
+    %     correctedInputStructure{id} = counterValCorrect_noPhotodiode(inputStructure(id));
+    %     stimOns{id} = cell2mat(correctedInputStructure{id}.cStimOn);
+    % end
 end
 
 save(fullfile(fn_multi,'correctedInputStructure.mat'),'correctedInputStructure')

@@ -4,11 +4,11 @@ clear all; clear global; close all;
 prompt = 'Enter name of instructions file: ';
 instr = input(prompt, 's');
 clear prompt
-eval(instr);
+run(instr);
 rc = behavConstsDART; % directories
 
 ds=instructions.ds;
-eval(ds);
+run(ds);
 
 day_id = str2double(instructions.session);
 
@@ -45,7 +45,7 @@ for day = 1:2
     
     % Load behavioral data and determine frame timing
     infofName = fullfile(rc.data, expt(iexp).mouse, expt(iexp).date, run, [run '_000_000.mat']);
-    inputfName = ['\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\Behavior\Data\data-' mouse '-' date '-' time '.mat'];
+    inputfName = fullfile(data_out,'input.mat');
     load(inputfName);
 
     nFrames = input.counterValues{end}(end);
@@ -57,9 +57,14 @@ for day = 1:2
     %     else
     %         % warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
     %         % msgbox(warningMessage);
-            fprintf('Info struct does not exist, running counterValCorrect_noPhotodiode\n');
-            correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
-            stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
+            % fprintf('Info struct does not exist, running counterValCorrect_noPhotodiode\n');
+            % correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
+            switch input.stimTimingSource
+                case 'PD'
+                    stimOns{day} = cell2mat(input.stimOns_photodiode);
+                case 'MW'
+                    stimOns{day} = cell2mat(input.stimOns_mwCounter);
+            end
     %     end
     % else
         % warningMessage = sprintf('Warning: info struct does not exist:\n%s\n Using mWks StimOn', infofName);
@@ -81,7 +86,7 @@ for day = 1:2
     end
     
     % Extract pupil position and diameter
-    rad_range = [3 15]; % adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
+    rad_range = [3 50]; % adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
     Eye_data = extractEyeData(data_crop, rad_range);
     % if pupil not found reliably, adjust the image cropping or the rad_range
     

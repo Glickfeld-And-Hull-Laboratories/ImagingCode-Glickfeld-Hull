@@ -440,7 +440,7 @@ nOff = input.nScansOff(1);
 
 % stimOns = stimOns_correct;
 % stimOffs = stimOffs_correct;
-
+cd(fnout);
 save('input.mat','input') %resave the input structure named input that includes the photodiode-identified trial start times
 nTrials = length(stimOns);
 data_tc = nan(nOn+nOff,nCells,nTrials);
