@@ -428,7 +428,7 @@ switch instructions.tIdxSource
         input.stimOns_photodiode = [];
         input.stimOffs_photodiode = [];
         input.stimTimingSource = 'MW';
-        stimOns = input.stimOns_mwCounter;
+        stimOns = cell2mat(input.stimOns_mwCounter);
         clear input_correct
     otherwise
         error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
@@ -477,9 +477,9 @@ data_resp = zeros(nCells, nSize, nDir,2);
 h = zeros(nCells, nSize, nDir);
 p = zeros(nCells, nSize, nDir);
 for iSize = 1:nSize
-    ind_size = find(tSize == sizes(iSize));
+    ind_size = find(tSize(1:nTrials) == sizes(iSize));
     for iDir = 1:nDir
-        ind_dir = find(tDir == dirs(iDir));
+        ind_dir = find(tDir(1:nTrials) == dirs(iDir));
         ind = intersect(ind_size,ind_dir); %for every size and then every direction, find trials with that dir/size combination
         data_resp(:,iSize,iDir,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
         data_resp(:,iSize,iDir,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
