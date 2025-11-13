@@ -135,32 +135,14 @@ for id = 1:nd
     dataPath = fullfile(rc.data, mouse_temp, date, imgFolder);
     load(fullfile(dataPath, imgMatFile));
     if isfield(inputStructure(id),'stimTimingSource')
-        if ~isempty(inputStructure(id).stimTimingSource)
-            fprintf('Found previously corrected stim on timings for day %i.\n',id);
-            switch inputStructure(id).stimTimingSource
-                case 'MW'
-                    stimOns{id} = cell2mat(inputStructure(id).stimOns_mwCounter);
-                    disp('Using mWorks counter.');
-                case 'PD'
-                    stimOns{id} = inputStructure(id).stimOns_photodiode;
-                    disp('Using photodiode onsets.');
-            end
-        else
-            fprintf('No assigned stim on timing source for day %i,\n',id);
-            sourceSel = input('Make selection here (PD/MW): ','s');
-            switch inputStructure(id).stimTimingSource
-                case 'MW'
-                    input_correct = counterValCorrect_noPhotodiode(inputStructure(id));
-                    stimOns{id} = cell2mat(input_correct.cStimOn);
-                    disp('Using newly calculated mWorks counter.');
-                case 'PD'
-                    if isfield(info,'frame')
-                        [stimOns{id},~] = photoFrameFinder_Sanworks(info.frame);
-                        disp('Using newly calculated photodiode onsets.');
-                    else
-                        error('No photodiode data for selected day.')
-                    end
-            end
+        fprintf('Found previously corrected stim on timings for day %i.\n',id);
+        switch inputStructure(id).stimTimingSource
+            case 'MW'
+                stimOns{id} = cell2mat(inputStructure(id).stimOns_mwCounter);
+                disp('Using mWorks counter.\n');
+            case 'PD'
+                stimOns{id} = inputStructure(id).stimOns_photodiode;
+                disp('Using photodiode onsets.\n');
         end
     else
         fprintf('Input struct was not previously corrected for day %i.\n',id);

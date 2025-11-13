@@ -3,8 +3,7 @@
 % as from DART experiments. It focusses on visualization, rather than
 % statistical analyis.
 
-% clear the workspace and set up basic paths and variable
-% s
+% clear the workspace and set up basic paths and variables
 clear all; close all; clc
 
 prompt = 'Enter name of instructions file: ';
