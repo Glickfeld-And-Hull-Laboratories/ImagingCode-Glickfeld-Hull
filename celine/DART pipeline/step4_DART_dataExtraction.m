@@ -148,7 +148,7 @@ for id = 1:nd
         else
             fprintf('No assigned stim on timing source for day %i,\n',id);
             sourceSel = input('Make selection here (PD/MW): ','s');
-            switch inputStructure(id).stimTimingSource
+            switch sourceSel
                 case 'MW'
                     input_correct = counterValCorrect_noPhotodiode(inputStructure(id));
                     stimOns{id} = cell2mat(input_correct.cStimOn);
@@ -175,8 +175,8 @@ for id = 1:nd
     end
 end
 
-save(fullfile(fn_multi,'correctedInputStructure.mat'),'correctedInputStructure')
-clear correctedInputStructure
+% save(fullfile(fn_multi,'correctedInputStructure.mat'),'correctedInputStructure')
+% clear correctedInputStructure
 clear mouse_temp date imgFolder imgMatFile dataPath info
 
 % Convert raw calcium timecourses to trial-structured dF/F data
