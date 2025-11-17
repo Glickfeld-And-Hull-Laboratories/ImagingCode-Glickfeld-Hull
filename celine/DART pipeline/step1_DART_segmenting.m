@@ -430,6 +430,8 @@ switch instructions.tIdxSource
         input.stimTimingSource = 'MW';
         stimOns = input.stimOns_mwCounter;
         clear input_correct
+    case 'cS'
+        input.stimTimingSource = 'cS';
     otherwise
         error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
 end

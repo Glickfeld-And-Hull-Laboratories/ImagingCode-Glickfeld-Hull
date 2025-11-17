@@ -140,14 +140,17 @@ for id = 1:nd
             switch inputStructure(id).stimTimingSource
                 case 'MW'
                     stimOns{id} = cell2mat(inputStructure(id).stimOns_mwCounter);
-                    disp('Using mWorks counter.');
+                    disp('Using corrected mWorks counter.');
                 case 'PD'
                     stimOns{id} = inputStructure(id).stimOns_photodiode;
                     disp('Using photodiode onsets.');
+                case 'cS'
+                    stimOns{id} = inputStructure(id).cell2mat(cStimOn);
+                    disp('Using native cStimOn.');
             end
         else
             fprintf('No assigned stim on timing source for day %i,\n',id);
-            sourceSel = input('Make selection here (PD/MW): ','s');
+            sourceSel = input('Make selection here (PD/MW/cS): ','s');
             switch sourceSel
                 case 'MW'
                     input_correct = counterValCorrect_noPhotodiode(inputStructure(id));
@@ -160,6 +163,9 @@ for id = 1:nd
                     else
                         error('No photodiode data for selected day.')
                     end
+                case 'cS'
+                    stimOns{id} = cell2mat(input_correct.cStimOn);
+                    disp('Using native cStimOn.');
             end
         end
     else
@@ -196,6 +202,8 @@ if instructions.tDropBool == true
                 stimOns{id} = input(id).stimOns_photodiode;
             case 'MW'
                 stimOns{id} = cell2mat(input(id).stimOns_mwCounter);
+            case 'cS'
+                stimOns{id} = cell2mat(input(id).cStimOn);
         end
     end
 end
