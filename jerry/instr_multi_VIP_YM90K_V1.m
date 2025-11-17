@@ -1,5 +1,5 @@
 %% Instruction sheet
-instructions.sess_list= [18 28]; %the sessions to concatenate and analyze
+instructions.sess_list= [18 28 39]; %the sessions to concatenate and analyze
 instructions.ds='DART_V1_YM90K_Celine';
 instructions.experimentFolder = 'VIP_YM90K';
 instructions.refDay='2';

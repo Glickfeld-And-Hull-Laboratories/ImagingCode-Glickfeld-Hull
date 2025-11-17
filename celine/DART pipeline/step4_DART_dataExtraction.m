@@ -179,6 +179,28 @@ end
 % clear correctedInputStructure
 clear mouse_temp date imgFolder imgMatFile dataPath info
 
+% drop trials
+if instructions.tDropBool == true
+    oldinput = input; % save input struct before modification
+    for id = 1:nd
+        if id == 1
+            dropTrials = instructions.tDropRefDay;
+        elseif id == 2
+            dropTrials = instructions.tDropMatchDay;
+        end
+        newinput = trialDropper(input(id),dropTrials,instructions.tDropAction);
+    end
+    input(id) = newinput;
+    clear newinput
+    switch input(id).stimTimingSource
+        case 'PD'
+            stimOns{id} = input(id).stimOns_photodiode;
+        case 'MW'
+            stimOns{id} = cell2mat(input(id).stimOns_mwCounter);
+    end
+end
+
+
 % Convert raw calcium timecourses to trial-structured dF/F data
 data_dfof_trial_match = cell(1, nd);
 fractTimeActive_match = cell(1, nd);

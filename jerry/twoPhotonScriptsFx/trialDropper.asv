@@ -46,13 +46,12 @@ if isfield(inputStruct,'stimTimingSource')
         if inputStruct.stimTimingSource == "PD"
             stimOnsLength = inputStruct.stimOns_photodiode;
         elseif inputStruct.stimTimingSource == "MW"
-            stimOnsLength = length(inputStruct.stimOns_mwCounter);
+            stimOnsLength = length(inputStruct.stimOns_mwCounte);
         end
         if stimOnsLength ~= nTrials
-            warning('Length of stimOns event vector inconsistent with other mWorks metadata.')
+            
         end
     end
-else
     warning('No defined stim on timing source detected');
 end
 
@@ -79,7 +78,7 @@ for i=1:length(fdnames)
             end
             this_fd(trials) = nanVector;
         else
-            error('Unspecified or incorrect action input. DEL- deletes trials REP-replaces with NaN.')
+            error('Unspecified action input. DEL- deletes trials REP-replaces with NaN.')
         end
         outStruct.(fdnames{i}) = this_fd;
     else
@@ -88,16 +87,10 @@ for i=1:length(fdnames)
 end
 
 % add modification history
-if ~isempty(trials)
-    changedFields = changedFields(~cellfun("isempty",changedFields));
-    outStruct.modifiedStruct = 1;
-else
-    changedFields = [];
-    outStruct.modifiedStruct = 0;
-end
-
+changedFields = changedFields(~cellfun("isempty",changedFields));
 outStruct.modifiedAction = action;
 outStruct.modifiedFields = changedFields;
+outStruct.modifiedStruct = 1;
 outStruct.modifiedTime = char(datetime('now'));
 outStruct.modifiedTrials = trials;
 

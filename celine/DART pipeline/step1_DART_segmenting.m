@@ -422,13 +422,13 @@ switch instructions.tIdxSource
         input.stimTimingSource = 'PD';
     case 'MW'
         input_correct = counterValCorrect_noPhotodiode(input);
-        input.stimOns_mwCounter = input_correct.cStimOn;
+        input.stimOns_mwCounter = cell2mat(input_correct.cStimOn);
         input.counterValues = input_correct.counterValues;
         input.counterTimesUs = input_correct.counterTimesUs;
         input.stimOns_photodiode = [];
         input.stimOffs_photodiode = [];
         input.stimTimingSource = 'MW';
-        stimOns = cell2mat(input.stimOns_mwCounter);
+        stimOns = input.stimOns_mwCounter;
         clear input_correct
     otherwise
         error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
