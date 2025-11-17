@@ -189,14 +189,14 @@ if instructions.tDropBool == true
             dropTrials = instructions.tDropMatchDay;
         end
         newinput = trialDropper(input(id),dropTrials,instructions.tDropAction);
-    end
-    input(id) = newinput;
-    clear newinput
-    switch input(id).stimTimingSource
-        case 'PD'
-            stimOns{id} = input(id).stimOns_photodiode;
-        case 'MW'
-            stimOns{id} = cell2mat(input(id).stimOns_mwCounter);
+        input(id) = newinput;
+        clear newinput
+        switch input(id).stimTimingSource
+            case 'PD'
+                stimOns{id} = input(id).stimOns_photodiode;
+            case 'MW'
+                stimOns{id} = cell2mat(input(id).stimOns_mwCounter);
+        end
     end
 end
 
