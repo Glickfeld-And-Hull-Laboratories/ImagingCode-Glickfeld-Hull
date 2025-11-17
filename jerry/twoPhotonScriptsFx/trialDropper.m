@@ -43,10 +43,13 @@ end
 
 if isfield(inputStruct,'stimTimingSource')
     if ~isempty(inputStruct.stimTimingSource)
-        if inputStruct.stimTimingSource == "PD"
-            stimOnsLength = inputStruct.stimOns_photodiode;
-        elseif inputStruct.stimTimingSource == "MW"
-            stimOnsLength = length(inputStruct.stimOns_mwCounter);
+        switch inputStruct.stimTimingSource
+            case 'PD'
+                stimOnsLength = inputStruct.stimOns_photodiode;
+            case 'MW'
+                stimOnsLength = length(inputStruct.stimOns_mwCounter);
+            case 'cS'
+                stimOnsLength = length(inputStruct.cStimOn);
         end
         if stimOnsLength ~= nTrials
             warning('Length of stimOns event vector inconsistent with other mWorks metadata.')
