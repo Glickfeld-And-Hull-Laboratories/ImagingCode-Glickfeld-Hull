@@ -53,7 +53,7 @@ if expt(day_id(2)).multiday_timesincedrug_hours>0
 else
     dart_str = 'control';
 end
-fn_multi = fullfile(rc.analysis,ExperimentFolde,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(rc.analysis,ExperimentFolder,mouse,['multiday_' dart_str]);
 mkdir(fn_multi)
 
 % Initialize storage structures for both days
