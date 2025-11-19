@@ -11,7 +11,6 @@ instr = input(prompt, 's');
 clear prompt
 run(instr)
 
-
 ds = instructions.ds;
 run(ds);
 
