@@ -25,6 +25,8 @@ nd = 2; % Number of days hardcoded to = 2
 mouse = expt(day_id).mouse;
 experimentFolder = expt(day_id).exptType;
 
+
+
 % Process eye tracking data for each day
 for day = 1:2
     iexp = allDays(day);
@@ -49,33 +51,22 @@ for day = 1:2
     load(inputfName);
 
     nFrames = input.counterValues{end}(end);
-    % % Get stimulus timing information
-    % if isfile(infofName)
-    %     load(infofName);
-    %     if isfield(info,'frame')
-    %         [stimOns{day}, stimOffs{day}] = photoFrameFinder_Sanworks(info.frame);
-    %     else
-    %         % warningMessage = sprintf('Warning: info.frame does not exist:\n%s\n Using mWks StimOn', infofName);
-    %         % msgbox(warningMessage);
-            % fprintf('Info struct does not exist, running counterValCorrect_noPhotodiode\n');
-            % correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
-            switch input.stimTimingSource
-                case 'PD'
-                    stimOns{day} = cell2mat(input.stimOns_photodiode);
-                case 'MW'
-                    stimOns{day} = cell2mat(input.stimOns_mwCounter);
-            end
-    %     end
-    % else
-        % warningMessage = sprintf('Warning: info struct does not exist:\n%s\n Using mWks StimOn', infofName);
-        % msgbox(warningMessage);
-    %     fprintf('Field "frame" does not exist, running counterValCorrect_noPhotodiode\n');
-    %     correctedInputStructure{day} = counterValCorrect_noPhotodiode(input);
-    %     stimOns{day} = cell2mat(correctedInputStructure{day}.cStimOn);
-    % end
+switch instructions.tIdxSource
+    case 'PD'
+        stimOns=cell2mat(input.stimOns_photodiode);
+    case 'MW'
+        stimOns=cell2mat(input.stimOns_mwCounter);
+        clear input_correct
+    case 'cS'
+        stimOns = cell2mat(input.cStimOn);
+    otherwise
+        error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
+end
+    
+
     
     % Crop data to match behavioral recording length
-    nTrials = length(stimOns{day});
+    nTrials = length(stimOns);
     data = data_temp(:, :, 1:nFrames); % the raw images
     
     % Crop image to isolate pupil (bright spots can be mistaken for pupil)
@@ -91,7 +82,7 @@ for day = 1:2
     % if pupil not found reliably, adjust the image cropping or the rad_range
     
     % Align eye data to stimulus presentation
-    [rad, centroid] = alignEyeData_PD(Eye_data, input, stimOns{day});
+    [rad, centroid] = alignEyeData_PD(Eye_data, input, stimOns);
     
     % Process wheel data
     wheel_data = wheelSpeedCalc(input, 32, 'orange');

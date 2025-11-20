@@ -432,6 +432,7 @@ switch instructions.tIdxSource
         clear input_correct
     case 'cS'
         input.stimTimingSource = 'cS';
+        stimOns = cell2mat(input.cStimOn);
     otherwise
         error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
 end

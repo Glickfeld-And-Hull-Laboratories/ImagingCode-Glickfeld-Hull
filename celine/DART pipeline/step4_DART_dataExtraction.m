@@ -145,7 +145,7 @@ for id = 1:nd
                     stimOns{id} = inputStructure(id).stimOns_photodiode;
                     disp('Using photodiode onsets.');
                 case 'cS'
-                    stimOns{id} = inputStructure(id).cell2mat(cStimOn);
+                    stimOns{id} = cell2mat(inputStructure(id).cStimOn);
                     disp('Using native cStimOn.');
             end
         else
