@@ -911,7 +911,6 @@ expt(42).contrastxori_time = {'0950'};
 expt(42).wheelColor = 'orange';
 expt(42).exptType = 'SST_YM90K';
 expt(42).data_loc = 'ACh';
-<<<<<<< HEAD
 %% i2223 control
 expt(43).mouse = 'i2223';
 expt(43).date = '251119';
@@ -921,17 +920,6 @@ expt(43).obj = '16x';
 expt(43).zoom = 2;
 expt(43).frame_rate = 15;
 expt(43).multiday_timesincedrug_hours = '';
-=======
-%% i3334  Baseline - bad experiment, epilepsy :(
-expt(43).mouse = 'i3334';
-expt(43).date = '251118';
-expt(43).img_loc  = {'V1';'L2/3'};
-expt(43).z =200.78;
-expt(43).obj = '16x';
-expt(43).zoom = 2;
-expt(43).frame_rate = 15;
-expt(43).multiday_timesincedrug_hours = '0';
->>>>>>> origin/master
 expt(43).multiday_matchdays = [];
 expt(43).indicator = {'GCaMP8f'};
 expt(43).drug = 'YM90K';
@@ -939,17 +927,54 @@ expt(43).greenredsimultaneous = 1;
 expt(43).greenChannelLabel = '';
 expt(43).redChannelLabel = '';
 expt(43).redChannelTag = {'tdTomato','NES-HTP'};
-<<<<<<< HEAD
 expt(43).redChannelRun = '003';
 expt(43).contrastxori_runs = {'005'};
 expt(43).contrastxori_time = {'1238'};
 expt(43).wheelColor = 'orange';
 expt(43).exptType = 'SST_YM90K';
-=======
-expt(43).redChannelRun = '006';
-expt(43).contrastxori_runs = {'008'};
-expt(43).contrastxori_time = {'1131'};
-expt(43).wheelColor = 'orange';
-expt(43).exptType = 'VIP_YM90K';
->>>>>>> origin/master
 expt(43).data_loc = 'ACh';
+
+%% i2223 PEG
+expt(44).mouse = 'i2223';
+expt(44).date = '251120';
+expt(44).img_loc  = {'LM';'L2/3'};
+expt(44).z =256;
+expt(44).obj = '16x';
+expt(44).zoom = 2;
+expt(44).frame_rate = 15;
+expt(44).multiday_timesincedrug_hours = '';
+expt(44).multiday_matchdays = [43];
+expt(44).indicator = {'GCaMP8f'};
+expt(44).drug = 'YM90K-PEG';
+expt(44).greenredsimultaneous = 1;
+expt(44).greenChannelLabel = '';
+expt(44).redChannelLabel = '';
+expt(44).redChannelTag = {'tdTomato','NES-HTP'};
+expt(44).redChannelRun = '001';
+expt(44).contrastxori_runs = {'003'};
+expt(44).contrastxori_time = {'1033'};
+expt(44).wheelColor = 'orange';
+expt(44).exptType = 'SST_YM90K';
+expt(44).data_loc = 'ACh';
+%% i3334  Baseline - bad experiment, epilepsy :(
+expt(45).mouse = 'i3334';
+expt(45).date = '251118';
+expt(45).img_loc  = {'V1';'L2/3'};
+expt(45).z =200.78;
+expt(45).obj = '16x';
+expt(45).zoom = 2;
+expt(45).frame_rate = 15;
+expt(45).multiday_timesincedrug_hours = '0';
+expt(45).multiday_matchdays = [];
+expt(45).indicator = {'GCaMP8f'};
+expt(45).drug = '';
+expt(45).greenredsimultaneous = 1;
+expt(45).greenChannelLabel = '';
+expt(45).redChannelLabel = '';
+expt(45).redChannelTag = {'tdTomato','NES-HTP'};
+expt(45).redChannelRun = '006';
+expt(45).contrastxori_runs = {'008'};
+expt(45).contrastxori_time = {'1131'};
+expt(45).wheelColor = 'orange';
+expt(45).exptType = 'VIP_YM90K';
+expt(45).data_loc = 'ACh';
