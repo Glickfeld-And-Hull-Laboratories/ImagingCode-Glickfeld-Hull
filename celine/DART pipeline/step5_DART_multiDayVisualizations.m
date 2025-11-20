@@ -9,7 +9,7 @@ clear all; close all; clc
 prompt = 'Enter name of instructions file: ';
 instr = input(prompt, 's');
 clear prompt
-run(instr)
+run(instr);
 
 ds = instructions.ds;
 run(ds);

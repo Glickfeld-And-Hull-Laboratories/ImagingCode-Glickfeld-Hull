@@ -1,13 +1,13 @@
 function [outStruct] = trialDropper(inputStruct,trials,action)
-    % trialDropper: modify specified trials in an experiment info struct
+    % trialDropper: modify specified trials in an mWorks experiment "input" struct
     % 
     % Inputs:
     %   inputStruct - mWorks .mat file
     %   trials      - trials to be removed from the struct. e.g. [20 40 91 92]
     %   action      - provided as an integer:
-    %                 1: deletes the trials (changes total length)
-    %                 2: fills trials with NaN (preserves total length)
-    %                 DEFAULT is 1 if there is no given value.
+    %                 DEL: deletes the trials (changes total length)
+    %                 REP: fills trials with NaN (preserves total length)
+    %                 DEFAULT is DEL if there is no given value.
     %
     % Output:
     %   outStruct   - struct with all specified trials removed from all fields
