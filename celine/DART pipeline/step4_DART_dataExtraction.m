@@ -255,6 +255,7 @@ base_win = 1:(stimStart - 1);
 
 %% ===== CELL RESPONSIVENESS ANALYSIS =====
 % Identify cells that respond significantly to visual stimuli
+
 % Statistical testing with multiple comparison correction
 
 [h_match, p_match, responsiveCellsMatch] = findResponsiveCells(data_dfof_trial_match, ...
