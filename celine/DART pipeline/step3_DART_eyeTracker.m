@@ -53,7 +53,7 @@ for day = 1:2
     nFrames = input.counterValues{end}(end);
 switch instructions.tIdxSource
     case 'PD'
-        stimOns=cell2mat(input.stimOns_photodiode);
+        stimOns=input.stimOns_photodiode;
     case 'MW'
         stimOns=cell2mat(input.stimOns_mwCounter);
         clear input_correct
