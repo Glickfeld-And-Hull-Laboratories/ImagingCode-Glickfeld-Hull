@@ -586,10 +586,13 @@ print(fullfile(fnout,'rawTCs.pdf'),'-dpdf','-bestfit');
 
 %% add diagnostic plots
 
-cd(CD);
-load([runFolder '_000_000.mat']);
+if instructions.tIdxSource == "MW"
+    cd(CD);
+    load([runFolder '_000_000.mat']);
+    [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+end
 
-[stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
+
 nTrials = length(stimOns);
 nCells = size(data_dfof_trial,3);
 trialLength = nOn+nOff;
