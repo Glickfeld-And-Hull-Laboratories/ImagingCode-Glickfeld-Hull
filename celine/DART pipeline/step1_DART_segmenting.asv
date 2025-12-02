@@ -586,8 +586,7 @@ print(fullfile(fnout,'rawTCs.pdf'),'-dpdf','-bestfit');
 
 %% add diagnostic plots
 
-cd(CD);
-load([runFolder '_000_000.mat']);
+cd(CD)
 
 [stimOns stimOffs] = photoFrameFinder_Sanworks(info.frame);
 nTrials = length(stimOns);
