@@ -565,8 +565,8 @@ green_tcs = npSub_tc(:,green_inds);
 % data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus,data_tc_trial, data_f_trial), data_f_trial);
 
 %looking at data with np subtracted
-tc_cell_avrg = nanmean(data_dfof_trial(:,1:400,resp),3);%average pver cells, one row per trial
-tc_trial_avrg = squeeze(nanmean(data_dfof_trial(:,1:400,resp),2));%average over trials, one row per cell
+tc_cell_avrg = nanmean(data_dfof_trial(:,:,resp),3);%average pver cells, one row per trial
+tc_trial_avrg = squeeze(nanmean(data_dfof_trial(:,:,resp),2));%average over trials, one row per cell
 tc_cell_trial_avrg = nanmean(tc_cell_avrg,2);%average over trials and cells
 
 figure;

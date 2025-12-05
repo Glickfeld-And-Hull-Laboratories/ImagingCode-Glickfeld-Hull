@@ -129,14 +129,14 @@ for iSess = 1:nSess
     
     % Concatenate day-specific data
     for id = 1:nd
-        tc_trial_avrg_stat_concat{id} = cat(2, tc_trial_avrg_stat_concat{id}, tc_trial_avrg_stat{id}(:,:,:,:));
+        tc_trial_avrg_stat_concat{id} = cat(2, tc_trial_avrg_stat_concat{id}, tc_trial_avrg_stat{id}(:,:,sharedCon,sharedSize));
         tc_trial_avrg_loc_concat{id} = cat(2, tc_trial_avrg_loc_concat{id}, tc_trial_avrg_loc{id}(:,:,sharedCon,sharedSize));
-        tc_trial_avrg_stat_largePupil_concat{id} = cat(2, tc_trial_avrg_stat_largePupil_concat{id}, tc_trial_avrg_stat_largePupil{id}(:,:,:,:));
-        tc_trial_avrg_stat_smallPupil_concat{id} = cat(2, tc_trial_avrg_stat_smallPupil_concat{id}, tc_trial_avrg_stat_smallPupil{id}(:,:,:,:));
+        tc_trial_avrg_stat_largePupil_concat{id} = cat(2, tc_trial_avrg_stat_largePupil_concat{id}, tc_trial_avrg_stat_largePupil{id}(:,:,sharedCon,sharedSize));
+        tc_trial_avrg_stat_smallPupil_concat{id} = cat(2, tc_trial_avrg_stat_smallPupil_concat{id}, tc_trial_avrg_stat_smallPupil{id}(:,:,sharedCon,sharedSize));
         pref_responses_loc_concat{id} = cat(1, pref_responses_loc_concat{id}, pref_responses_loc{id}(:,sharedCon,sharedSize));
         pref_responses_stat_concat{id} = cat(1, pref_responses_stat_concat{id}, pref_responses_stat{id}(:,sharedCon,sharedSize));
         RIx_concat{id} = cat(1, RIx_concat{id}, sum(RIx{id}));
-        norm_dir_resp_concat{id} = cat(1, norm_dir_resp_concat{id}, norm_dir_resp{id});
+       norm_dir_resp_concat{id} = cat(1, norm_dir_resp_concat{id}, norm_dir_resp{id}(:,:,sharedCon,sharedSize));
         pref_dir_concat{id} = cat(2, pref_dir_concat{id}, prefDir_keep{id});
         noiseCorr_concat{id} = cat(2, noiseCorr_concat{id}, noiseCorr{id});
         sigCorr_concat{id} = cat(2, sigCorr_concat{id}, sigCorr{id});
@@ -147,7 +147,7 @@ for iSess = 1:nSess
     if iSess == 1
         norm_diff_concat = norm_diff;
     else
-        norm_diff_concat = cat(4, norm_diff_concat, norm_diff);
+        norm_diff_concat = cat(4, norm_diff_concat, norm_diff(:,sharedCon,sharedSize,:));
     end
     
     fprintf('Session %d of %d completed\n', iSess, nSess);
@@ -248,7 +248,7 @@ end
 
 % Plot stationary contrast response function for all cells
 plotContrastResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
-    red_ind_concat, green_ind_concat, cons,sizes, ...
+    red_ind_concat, green_ind_concat, targetCon,targetSize, ...
     'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
     'Titles', {'HTP+', 'HTP-'}, ...
     'YLabel', 'dF/F');
@@ -257,7 +257,7 @@ saveas(gcf, sprintf('stationary_contrast_response.pdf'));
 
 % Plot stationary size response function for all cells
 plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
-    red_ind_concat, green_ind_concat, cons,sizes, ...
+    red_ind_concat, green_ind_concat, targetCon,targetSize, ...
     'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
     'Titles', {'HTP+', 'HTP-'}, ...
     'YLabel', 'dF/F');
@@ -314,7 +314,7 @@ end
 close all
 % Plot running timecourses for cells that have running data
 plotNeuralTimecourse(tc_trial_avrg_loc_concat, tc_trial_avrg_loc_concat, ...
-    red_ind_concat, green_ind_concat    , ...
+    runningRed, runningGreen    , ...
     'UseDashedLines', [false, true], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
@@ -329,7 +329,7 @@ end
 
 % Plot running contrast response function for cells that have running data
 plotContrastResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
-    red_ind_concat, green_ind_concat, cons,sizes, ...
+    runningRed, runningGreen, cons,sizes, ...
     'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
     'Titles', {'HTP+', 'HTP-'}, ...
     'YLabel', 'dF/F');
@@ -486,7 +486,68 @@ height = 1.75;
 set(gcf, 'units', 'inches', 'position', [x0, y0, width, height]);
 
 print(fullfile(fnout, 'Facil_supp_stat.pdf'), '-dpdf');
-print(fullfile(fnout,'Facil_supp_stat.pdf'),'-dpdf');
+
+%% Plot fraction HTP- cells suppressed and facilitated 
+% As a function of size and contrast, for stationary data
+norm_diff_green = norm_diff_concat(:,:,:,green_ind_concat);
+facil_green = norm_diff_green >= 1;
+supp_green = norm_diff_green <= -1;
+N = length(green_ind_concat);
+
+facil_table_stat = squeeze(sum(facil_green(1,:,:,:), 4) / N);
+supp_table_stat = squeeze(sum(supp_green(1,:,:,:), 4) / N);
+
+% Get dimensions
+nCon = size(facil_table_stat, 1);
+nSizes = size(facil_table_stat, 2);
+
+% Define colors for different sizes
+colors = {'k', 'r', 'b', 'g', 'm', 'c', 'y'};
+if nSizes > length(colors)
+    colors = [colors, repmat({'k'}, 1, nSizes - length(colors))];
+end
+
+figure;
+
+% Suppressed
+subplot(1, 2, 1);
+b = bar(1:nCon, supp_table_stat, 'grouped', 'FaceColor', "#00AFEF", 'EdgeColor', [1 1 1]);
+for i = 1:nSizes
+    b(i).FaceColor = colors{i};
+end
+xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
+title('Suppressed');
+ylim([0 0.4]);
+ylabel('Fraction HTP- cells');
+xlabel('Contrast');
+set(gca, 'TickDir', 'out');
+grid off;
+box off;
+
+% Facilitated
+subplot(1, 2, 2);
+b = bar(1:nCon, facil_table_stat, 'grouped', 'FaceColor', "#00AFEF", 'EdgeColor', [1 1 1]);
+for i = 1:nSizes
+    b(i).FaceColor = colors{i};
+end
+xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
+title('Facilitated');
+ylim([0 0.4]);
+xlabel('Contrast');
+set(gca, 'TickDir', 'out');
+grid off;
+box off;
+
+sgtitle('Stationary');
+
+% Set figure size
+x0 = 5;
+y0 = 5;
+width = 3;
+height = 1.75;
+set(gcf, 'units', 'inches', 'position', [x0, y0, width, height]);
+
+print(fullfile(fnout, 'Facil_supp_stat_green.pdf'), '-dpdf');
 %% Same as above for running trials, using only HTP+ cells that have running data
 norm_diff_red = norm_diff_concat(:,:,:,runningRed);
 facil_red=norm_diff_red(:,:,:,:)>=1;
