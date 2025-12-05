@@ -1022,7 +1022,6 @@ expt(47).contrastxori_time = {'1208'};
 expt(47).wheelColor = 'orange';
 expt(47).exptType = 'SST_YM90K';
 expt(47).data_loc = 'ACh';
-
 %% i3335 test
 expt(48).mouse = 'i3335';
 expt(48).date = '251201';
@@ -1057,24 +1056,6 @@ expt(49).multiday_timesincedrug_hours = '0';
 expt(49).multiday_matchdays = [50];
 expt(49).indicator = {'GCaMP8f'};
 expt(49).drug = 'YM90K';
-expt(48).redChannelRun = '002';
-expt(48).contrastxori_runs = {'004'};
-expt(48).contrastxori_time = {'1241'};
-expt(48).wheelColor = 'orange';
-expt(48).exptType = 'SST_YM90K';
-expt(48).data_loc = 'ACh';
-%% i2225 alz-COOH
-expt(49).mouse = 'i2225';
-expt(49).date = '251204';
-expt(49).img_loc  = {'LM';'L2/3'};
-expt(49).z =194;
-expt(49).obj = '16x';
-expt(49).zoom = 1.7;
-expt(49).frame_rate = 15;
-expt(49).multiday_timesincedrug_hours = '19';
-expt(49).multiday_matchdays = [48];
-expt(49).indicator = {'GCaMP8f'};
-expt(49).drug = 'YM90K-PEG';
 expt(49).greenredsimultaneous = 1;
 expt(49).greenChannelLabel = '';
 expt(49).redChannelLabel = '';
