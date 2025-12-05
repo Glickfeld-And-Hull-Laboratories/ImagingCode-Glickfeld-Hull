@@ -3,8 +3,8 @@ close all
 
 date = '251205';
 mouse = 'i2225';
-ImgFolder = '002';
-time = '1038';
+ImgFolder = '006';
+time = '1523';
 doReg = 0;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
