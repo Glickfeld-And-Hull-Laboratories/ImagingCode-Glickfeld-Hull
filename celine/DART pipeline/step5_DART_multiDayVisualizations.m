@@ -711,3 +711,6 @@ for iMouse = 1:nSess
     sgtitle(['Contrast Response - ' mouseNames{iMouse}]);
     print(fullfile(fnout, [char(mouseNames{iMouse}) '_contrastResponse.pdf']), '-dpdf', '-bestfit');
 end
+
+%% single cell scatter SSIx and DartIx
+
