@@ -455,7 +455,7 @@ for i = 1:nSizes
 end
 xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
 title('Suppressed');
-ylim([0 0.4]);
+ylim([0 0.6]);
 ylabel('Fraction HTP+ cells');
 xlabel('Contrast');
 set(gca, 'TickDir', 'out');
@@ -470,7 +470,7 @@ for i = 1:nSizes
 end
 xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
 title('Facilitated');
-ylim([0 0.4]);
+ylim([0 0.6]);
 xlabel('Contrast');
 set(gca, 'TickDir', 'out');
 grid off;
@@ -517,7 +517,7 @@ for i = 1:nSizes
 end
 xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
 title('Suppressed');
-ylim([0 0.4]);
+ylim([0 0.6]);
 ylabel('Fraction HTP- cells');
 xlabel('Contrast');
 set(gca, 'TickDir', 'out');
@@ -532,7 +532,7 @@ for i = 1:nSizes
 end
 xticklabels(arrayfun(@num2str, cons, 'UniformOutput', false));
 title('Facilitated');
-ylim([0 0.4]);
+ylim([0 0.6]);
 xlabel('Contrast');
 set(gca, 'TickDir', 'out');
 grid off;
