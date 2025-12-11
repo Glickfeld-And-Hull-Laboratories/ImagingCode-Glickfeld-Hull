@@ -30,22 +30,29 @@ dataStructLabels = {'contrastxori'}; % identifies stimulus runs in datasheet
 doCorrImg = true; 
 brightnessScaleFactor = 0.3;
 
+% Define days to match: day_id(1) = reference, day_id(2) = matched day
 prompt = 'Match forward (f) or reverse (r)? ';
-matchDrxn = input(prompt, 's');
+matchDrxn = input(prompt);
 if matchDrxn == 'r'
+    
     day_id(1) = str2double(instructions.session);
-    if day_id(1) > length(expt)
+    
+    if length(expt) < day_id
         error('Day_id %d not valid for this dataset', day_id(1));
+    else
+        day_id(2) = expt(day_id).multiday_matchdays;% automatically finds matched day
     end
-    day_id(2) = expt(day_id(1)).multiday_matchdays;
-elseif matchDrxn == 'f'
-    day_id(2) = str2double(instructions.session);
-    if day_id(2) > length(expt)
-        error('Day_id %d not valid for this dataset', day_id(2));
+elseif matchDrxn=='f'
+        day_id(2) = str2double(instructions.session);
+    
+    if length(expt) < day_id
+        error('Day_id %d not valid for this dataset', day_id(1));
+    else
+        day_id(1) = expt(day_id).multiday_matchdays;% automatically finds matched day
     end
-    day_id(1) = expt(day_id(2)).multiday_matchdays;
+
 else
-    fprintf('Please try again and enter f or r\n')
+    print('Please try again and enter f or r')
 end
 
 % Extract experiment info from datasheet
