@@ -2,23 +2,19 @@ close all
 clear all
 clc
 
-% mouse = strvcat('i1412','i2585','i1406');
-% area = 'V1';
-% date = strvcat('241129', '241202', '241202');
-% ImgFolder = strvcat({'003'},{'002'},{'003'});
 % 300 ms stim
-% mouse = strvcat('i1414','i1423','i1425');
-% area = 'V1';
-% date = strvcat('251017', '251017', '251018');
-% ImgFolder = [{'002'},{'002'},{'002'}];
-% stim_set = 'Grat1_Img6_300ms';
-
-
-mouse = strvcat('i1426','i1414','i1423');
+mouse = strvcat('i1414','i1423','i1425');
 area = 'V1';
-date = strvcat('251018', '251019', '251019');
+date = strvcat('251017', '251017', '251018');
 ImgFolder = [{'002'},{'002'},{'002'}];
-stim_set = 'Grat1_Img6_1000ms';
+stim_set = 'Grat1_Img6_300ms';
+
+% % 1000 ms stim
+% mouse = strvcat('i1426','i1414','i1423');
+% area = 'V1';
+% date = strvcat('251018', '251019', '251019');
+% ImgFolder = [{'002'},{'002'},{'002'}];
+% stim_set = 'Grat1_Img6_1000ms';
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey';
 outpn = fullfile('\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Adaptation\SFSummary\NatImg_LG', stim_set);
@@ -47,6 +43,7 @@ max_val_nat_all = [];
 max_snr_sf_all = [];
 max_snr_nat_all = [];
 h_stim_all = [];
+mouse_ind_all = [];
 
 for iexp = 1:nexp
     fprintf([mouse(iexp,:) ' ' date(iexp,:) '\n'])
@@ -157,6 +154,7 @@ for iexp = 1:nexp
     max_snr_sf_all = [max_snr_sf_all max_snr_sf];
     max_snr_nat_all = [max_snr_nat_all max_snr_nat];
     h_stim_all = [h_stim_all h_stim];
+    mouse_ind_all = [mouse_ind_all iexp*ones(size(pref_sf))];
 end
 
 
@@ -204,3 +202,15 @@ title(['Eye < ' num2str(min_dist) ' deg; Match - p = ' num2str(chop(p,3))])
 xlim([0 3])
 ylim([0 1])
 print(fullfile(outpn,'NatImgVGratingAdapt_RespBoth_eye.pdf'),'-dpdf')
+
+%%
+figure;
+for iexp = 1:nexp
+    subplot(1,3,iexp)
+    ind_sf1 = intersect(ind_sf,find(mouse_ind_all==iexp));
+    ind_nat1 = intersect(ind_nat,find(mouse_ind_all==iexp));
+    errorbar([1 2],[mean(Adapt_resp_pref_sf(ind_sf1)) mean(Adapt_resp_pref_nat(ind_nat1))],[std(Adapt_resp_pref_sf(ind_sf1))./sqrt(length(ind_sf1)) std(Adapt_resp_pref_nat(ind_nat1))./sqrt(length(ind_nat1))])
+    ylim([0 1])
+    xlim([0 3])
+    ylabel('Norm dF/F')
+end
