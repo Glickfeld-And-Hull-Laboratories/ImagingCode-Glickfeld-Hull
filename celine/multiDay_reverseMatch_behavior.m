@@ -9,8 +9,8 @@ doCorrImg = true;
 
 %to use the post-DART timepoint as the template
 
-day_id(1) = 6; %enter the refrence day ID here
-day_id(2) = expt(day_id(1)).multiday_matchdays;
+day_id(1) = 19; %enter the refrence day ID here
+day_id(2) = 17;%expt(day_id(1)).multiday_matchdays;
 
 experimentFolder = 'SST_behavior';
 
@@ -30,11 +30,11 @@ elseif string(hostname) == 'NB-NUKE'
     base = fullfile(isilonName,'/home/ACh/Analysis/2p_analysis',experimentFolder);
     database = fullfile(isilonName,'/home/ACh/Data/2p_data');
 else
-    isilonName = 'duhs-user-nc1.dhe.duke.edu/';
-    base = fullfile('/home/ACh/Analysis/2p_analysis',experimentFolder);
-    database = fullfile('/home/ACh/Data/2p_data');
+    isilonName = 'duhs-user-nc1.dhe.duke.edu/dusom_glickfeldlab';
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis',experimentFolder);
+    database = fullfile('/All_Staff/home/ACh/Data/2p_data/');
    
-   beh_prefix = strcat('Z:\Behavior\Data\data-');
+   beh_prefix = strcat('/All_Staff/Behavior/Data/data-');
 end
 
 fnout = fullfile(base,mouse);
@@ -45,7 +45,7 @@ else
     dart_str = 'control';
 end
 
-fn_multi = fullfile(base,mouse,['multiday_' dart_str]);
+fn_multi = fullfile(base,mouse,['multiday_' dart_str '_vsD2']);
 mkdir(fn_multi)
 data = cell(1,nd);
 fov_avg = cell(1,nd);
@@ -55,6 +55,7 @@ align_fov = cell(1,nd);
 corrmap = cell(1,nd);
 dfmax = cell(1,nd);
 masks = cell(1,nd);
+red_masks = cell(1,nd);
 maskNP = cell(1,nd);
 red_ind = cell(1,nd);
 cellTCs_all = cell(1,nd);
@@ -107,30 +108,40 @@ for id = 1:nd
         fov_red{id} = zeros(size(data_avg));
     end
     load(fullfile(fnout,expDate,runFolder,'mask_cell.mat'))
-    dfmax{id} = data_dfof(:,:,1);
-    corrmap{id} = data_dfof(:,:,end);
+    dfmax{id} = data_dfof(:,:,end);
+    corrmap{id} = data_dfof(:,:,4);
     masks{id} = mask_cell;
+    red_masks{id} = mask_cell_red;
     maskNP{id} = mask_np;
     red_ind{id} = mask_label;
     load(fullfile(fnout,expDate,runFolder,'TCs.mat'))
     cellTCs_all{id} = npSub_tc;
     load(fullfile(fnout,expDate,runFolder,'input.mat'))
     input_temp(id) = input;
-    
-    
+    load(fullfile(fnout,expDate,runFolder,'stimuli.mat'))
+    stimData{id}.cons = tContrast;
+    stimData{id}.block = b1;
+    stimData{id}.SIx = SIx;
+    stimData{id}.MIx = MIx;
+    stimData{id}.FIx = FIx;
+    stimData{id}.cTarget = cTarget;
+    stimData{id}.tquit = tquit;
+    load(fullfile(fnout,expDate,runFolder, 'stimData.mat'))
+    stimData{id}.base_win = base_win;
+    stimData{id}.resp_win = resp_win;    
 end
 input = input_temp;
 save(fullfile(fn_multi,'input.mat'),'input')
+save(fullfile(fn_multi,'stimData.mat'),'stimData')
 clear input
 %% manual align
-
 corrmap_norm{1} = uint8((corrmap{1}./max(corrmap{1}(:))).*255);
 corrmap_norm{2} = uint8((corrmap{2}./max(corrmap{2}(:))).*255);
 fov_norm{1} = uint8((fov_avg{1}./max(fov_avg{1}(:))).*255);
 fov_norm{2} = uint8((fov_avg{2}./max(fov_avg{2}(:))).*255);
 
 if exist(fullfile(fn_multi,'multiday_alignment.mat'))
-    load(fullfile(fn_multi,'multiday_alignment.mat'))
+    load(fullfile(fn_multi,'multiday_alignment.mat'),'fitGeoTAf','input_points','base_points')
 else
     [input_points_1, base_points_1] = cpselect(fov_red{2},fov_red{1},'Wait', true);
     [input_points_2, base_points_2] = cpselect(fov_norm{2},fov_norm{1},'Wait', true);
@@ -138,7 +149,7 @@ else
     input_points = [input_points_1; input_points_2; input_points_3];
     base_points = [base_points_1; base_points_2; base_points_3];
 end
-%%
+
 fitGeoTAf = fitgeotrans(input_points(:,:), base_points(:,:),'affine'); 
 data{3} = imwarp(data{2},fitGeoTAf, 'OutputView', imref2d(size(data{2}))); 
 fov_avg{3} = mean(data{3},3);
@@ -439,3 +450,277 @@ save(fullfile(fn_multi,'timecourses.mat'),'cellTCs_match', 'cellTCs_all', 'red_i
 save(fullfile(fn_multi,'multiday_alignment.mat'),'cellImageAlign','fitGeoTAf', 'input_points','base_points', 'fov_avg', 'fov_norm','fov_red','dfmax','corrmap','masks','mask_np');
 
 clear data_reg_down data
+
+%% target analysis
+nCells= length(match_ind);
+figure;
+for id = 1:nd
+    cTarget = stimData{id}.cTarget;
+    nTrials = length(cTarget);
+    data_targ = nan(50,nCells,nTrials);
+    for itrial = 1:nTrials
+        if ~isnan(cTarget(itrial))
+            if cTarget(itrial)+50 <= size(cellTCs_match{id},1)
+                data_targ(:,:,itrial) = cellTCs_match{id}(cTarget(itrial)-20:cTarget(itrial)+29,:);
+            end
+        end
+    end
+    data_f_targ = nanmean(data_targ(1:20,:,:),1);
+    data_dfof_targ{id} = bsxfun(@rdivide,bsxfun(@minus,data_targ,data_f_targ),data_f_targ);
+
+    frameRateHz = 30;
+
+    tt = [-20:29].*(1000/frameRateHz);
+    subplot(2,1,id)
+    plot(tt,squeeze(nanmean(mean(data_dfof_targ{id},2),3)));
+    vline((stimData{id}.base_win-20).*(1000/frameRateHz))
+    vline((stimData{id}.resp_win-20).*(1000/frameRateHz))
+end
+print(fullfile(fn_multi, 'avgTC.pdf'),'-dpdf','-bestfit')
+
+%% Contrast response
+h = cell(1,nd);
+p = cell(1,nd);
+data_dfof_con = cell(1,nd);
+con_resp_mat = cell(1,nd);
+data_dfof_con_block = cell(1,nd);
+con_block_resp_mat = cell(1,nd);
+trialn = cell(1,nd);
+base_win = stimData{1}.base_win;
+for id = 1:nd
+    b1 = stimData{id}.block;
+    tContrast = stimData{id}.cons;
+    cons = unique(tContrast);
+    nCon = length(cons);
+    SIx = stimData{id}.SIx;
+    MIx = stimData{id}.MIx;
+    tquit = stimData{id}.tquit;
+    nblock = length(unique(b1));
+    con_resp_mat{id} = zeros(nCon,nCells,2);
+    con_block_resp_mat{id} = zeros(nCon,nCells,nblock,2,2); %ncon,ncells,nblock,hit/miss,mean/sem
+    data_dfof_con{id} = zeros(size(data_dfof_targ{id},1), nCells, nCon);
+    data_dfof_con_block{id} = zeros(size(data_dfof_targ{id},1), nCells, nCon, nblock,2); % nframes,ncells,ncon,nblock,hit/miss
+    h{id} = zeros(nCon,nCells);
+    p{id} = zeros(nCon,nCells);
+    trialn{id} = zeros(nCon, nblock,2); %ncon,nblock,hit/miss
+    [max_val max_ind] = max(mean(nanmean(data_dfof_targ{id},3),2),[],1);
+    resp_win = max_ind-1:max_ind+1;
+    for iCon = 1:nCon
+        ind_con = find(tContrast == cons(iCon));
+        data_dfof_con{id}(:,:,iCon) = nanmean(data_dfof_targ{id}(:,:,ind_con),3);
+        con_resp_mat{id}(iCon,:,1) = mean(nanmean(data_dfof_targ{id}(resp_win,:,ind_con)-data_dfof_targ{id}(base_win,:,ind_con),3),1);
+        con_resp_mat{id}(iCon,:,2) = nanstd(nanmean(data_dfof_targ{id}(resp_win,:,ind_con)-data_dfof_targ{id}(base_win,:,ind_con),1),[],3)./sqrt(length(ind_con));
+        for iCell = 1:nCells
+            [h{id}(iCon,iCell), p{id}(iCon,iCell)] = ttest(mean(permute(data_dfof_targ{id}(resp_win,iCell,ind_con),[1 3 2]),1),mean(permute(data_dfof_targ{id}(base_win,iCell,ind_con),[1 3 2]),1),'tail','right','alpha',0.05./(nCon));
+        end
+        for ib = 1:nblock
+            ind_s = intersect(find(SIx),intersect(1:tquit,intersect(ind_con,find(b1==ib-1))));
+            ind_m = intersect(find(MIx),intersect(1:tquit,intersect(ind_con,find(b1==ib-1))));
+            data_dfof_con_block{id}(:,:,iCon,ib,1) = nanmean(data_dfof_targ{id}(:,:,ind_s),3);
+            con_block_resp_mat{id}(iCon,:,ib,1,1) = mean(nanmean(data_dfof_targ{id}(resp_win,:,ind_s)-data_dfof_targ{id}(base_win,:,ind_s),3),1);
+            con_block_resp_mat{id}(iCon,:,ib,1,2) = nanstd(nanmean(data_dfof_targ{id}(resp_win,:,ind_s)-data_dfof_targ{id}(base_win,:,ind_s),1),[],3)./sqrt(length(ind_s));
+            data_dfof_con_block{id}(:,:,iCon,ib,2) = nanmean(data_dfof_targ{id}(:,:,ind_m),3);
+            con_block_resp_mat{id}(iCon,:,ib,2,1) = mean(nanmean(data_dfof_targ{id}(resp_win,:,ind_m)-data_dfof_targ{id}(base_win,:,ind_m),3),1);
+            con_block_resp_mat{id}(iCon,:,ib,2,2) = nanstd(nanmean(data_dfof_targ{id}(resp_win,:,ind_m)-data_dfof_targ{id}(base_win,:,ind_m),1),[],3)./sqrt(length(ind_m));
+            trialn{id}(iCon,ib,1) = length(ind_s);
+            trialn{id}(iCon,ib,2) = length(ind_m);
+        end
+    end
+end
+
+good_ind = unique([find(sum(h{1},1)) find(sum(h{2},1))]);
+good_ind_red = intersect(good_ind,find(red_ind_match));
+good_ind_green = intersect(good_ind,find(~red_ind_match));
+%compare all trials all blocks
+figure;
+colors = {'b','k'};
+line_style1 = '';
+for id = 1:nd
+    start = 1;
+    for iCon = 1:nCon
+        subplot(nCon,2,start)
+        shadedErrorBar(tt, mean(data_dfof_con{id}(:,good_ind_green,iCon),2),std(data_dfof_con{id}(:,good_ind_green,iCon),[],2)./sqrt(length(good_ind_green)),[line_style1, colors{id}])
+        ylim([-0.02 .15])
+        ylabel('dF/F')
+        xlabel('Time from target (ms)')
+        hold on
+        subplot(nCon,2,start+1)
+        shadedErrorBar(tt, mean(data_dfof_con{id}(:,good_ind_red,iCon),2),std(data_dfof_con{id}(:,good_ind_red,iCon),[],2)./sqrt(length(good_ind_red)),[line_style1, colors{id}])
+        hold on
+        ylabel('dF/F')
+        xlabel('Time from target (ms)')
+        %title(num2str(cons(iCon)))
+        ylim([-0.02 .15])
+        start = start+2;
+    end
+end
+suptitle(['All trials: D1- black; DN- blue; Pyr- n = ' num2str(length(good_ind_green)) ' left; SST- n = ' num2str(length(good_ind_red)) ' right'])
+print(fullfile(fn_multi, 'contrastRespTC_allTrials.pdf'),'-dpdf', '-bestfit')
+
+%compare success only within block across session
+
+for ib = 1:2
+    figure;
+    for id = 1:nd
+        start = 1;
+        for iCon = 1:nCon
+            subplot(nCon,2,start)
+            shadedErrorBar(tt, mean(data_dfof_con_block{id}(:,good_ind_green,iCon,ib,1),2),std(data_dfof_con_block{id}(:,good_ind_green,iCon,ib,1),[],2)./sqrt(length(good_ind_green)),[line_style1, colors{id}])
+            ylim([-0.02 .15])
+            xlim([-800 800])
+            ylabel('dF/F')
+            xlabel('Time from target (ms)')
+            hold on
+            subplot(nCon,2,start+1)
+            shadedErrorBar(tt, mean(data_dfof_con_block{id}(:,good_ind_red,iCon,ib,1),2),std(data_dfof_con_block{id}(:,good_ind_red,iCon,ib,1),[],2)./sqrt(length(good_ind_red)),[line_style1, colors{id}])
+            hold on
+            ylabel('dF/F')
+            xlabel('Time from target (ms)')
+            %title(num2str(cons(iCon)))
+            ylim([-0.02 .15])
+            xlim([-800 800])
+            start = start+2;
+        end
+    end
+    suptitle(['Block ' num2str(ib-1) ': D1- black; DN- blue; Pyr- n = ' num2str(length(good_ind_green)) ' left; SST- n = ' num2str(length(good_ind_red)) ' right'])
+    print(fullfile(fn_multi, ['contrastRespTC_Block' num2str(ib-1) '.pdf']),'-dpdf', '-bestfit')
+end
+
+colors = {'k','r'};
+days = {'N','1'};
+for id = 1:2
+    figure;
+    for ib = 1:2
+        start = 1;
+        for iCon = 1:nCon
+            subplot(nCon,2,start)
+            shadedErrorBar(tt, mean(data_dfof_con_block{id}(:,good_ind_green,iCon,ib,1),2),std(data_dfof_con_block{id}(:,good_ind_green,iCon,ib,1),[],2)./sqrt(length(good_ind_green)),[line_style1, colors{ib}])
+            ylim([-0.02 .15])
+            xlim([-800 800])
+            ylabel('dF/F')
+            xlabel('Time from target (ms)')
+            hold on
+            subplot(nCon,2,start+1)
+            shadedErrorBar(tt, mean(data_dfof_con_block{id}(:,good_ind_red,iCon,ib,1),2),std(data_dfof_con_block{id}(:,good_ind_red,iCon,ib,1),[],2)./sqrt(length(good_ind_red)),[line_style1, colors{ib}])
+            hold on
+            ylabel('dF/F')
+            xlabel('Time from target (ms)')
+            %title(num2str(cons(iCon)))
+            ylim([-0.02 .15])
+            xlim([-800 800])
+            start = start+2;
+        end
+    end
+    suptitle(['Day ' days{id} ': B0- black; B1- red; Pyr- n = ' num2str(length(good_ind_green)) ' left; SST- n = ' num2str(length(good_ind_red)) ' right'])
+    print(fullfile(fn_multi, ['contrastRespTC_Day' days{id} '.pdf']),'-dpdf', '-bestfit')
+end
+
+colors = {'k','r'};
+figure; 
+for id = 1:nd
+    for ib = 1:nblock
+        subplot(2,2,id)
+        errorbar(cons, mean(con_block_resp_mat{id}(:,good_ind_green,ib,1,1),2), std(con_block_resp_mat{id}(:,good_ind_green,ib,1,1),[],2)./sqrt(length(good_ind_green)),colors{ib})
+        title(['D' days{id} ' HTP-'])
+        xlabel('Contrast')
+        ylim([-0.02 0.15])
+        hold on
+        subplot(2,2,2+id)
+        errorbar(cons, mean(con_block_resp_mat{id}(:,good_ind_red,ib,1,1),2), std(con_block_resp_mat{id}(:,good_ind_red,ib,1,1),[],2)./sqrt(length(good_ind_red)),colors{ib})
+        title(['D' days{id} ' HTP+'])
+        ylim([-0.02 0.15])
+        xlabel('Contrast')
+        hold on
+    end
+end
+suptitle(['B0- black; B1- red; Pyr- n = ' num2str(length(good_ind_green)) ' top; SST- n = ' num2str(length(good_ind_red)) ' bottom'])
+print(fullfile(fn_multi, ['contrastResp_byBlock.pdf']),'-dpdf', '-bestfit')
+
+figure; 
+colors = {'b','k'};
+for ib = 1:nblock
+    for id = 1:nd
+        subplot(2,2,ib)
+        errorbar(cons, mean(con_block_resp_mat{id}(:,good_ind_green,ib,1,1),2), std(con_block_resp_mat{id}(:,good_ind_green,ib,1,1),[],2)./sqrt(length(good_ind_green)),colors{id})
+        title(['B' num2str(ib-1) ' HTP-'])
+        xlabel('Contrast')
+        ylim([-0.02 0.15])
+        hold on
+        subplot(2,2,2+ib)
+        errorbar(cons, mean(con_block_resp_mat{id}(:,good_ind_red,ib,1,1),2), std(con_block_resp_mat{id}(:,good_ind_red,ib,1,1),[],2)./sqrt(length(good_ind_red)),colors{id})
+        title(['B' num2str(ib-1) ' HTP+'])
+        ylim([-0.02 0.15])
+        xlabel('Contrast')
+        hold on
+    end
+end
+suptitle(['D1- black; DN- blue; Pyr- n = ' num2str(length(good_ind_green)) ' top; SST- n = ' num2str(length(good_ind_red)) ' bottom'])
+print(fullfile(fn_multi, ['contrastResp_byDay.pdf']),'-dpdf', '-bestfit')
+
+
+figure;
+for id = 1:2
+    subplot(2,2,id)
+    scatter(mean(con_block_resp_mat{id}(:,good_ind_green,1,1,1),1),mean(con_block_resp_mat{id}(:,good_ind_green,2,1,1),1))
+    hold on
+    y_sem = std(mean(con_block_resp_mat{id}(:,good_ind_green,2,1,1),1),[],2)./sqrt(length(good_ind_green));
+    x_sem = std(mean(con_block_resp_mat{id}(:,good_ind_green,1,1,1),1),[],2)./sqrt(length(good_ind_green));
+    errorbar(mean(mean(con_block_resp_mat{id}(:,good_ind_green,1,1,1),1),2),mean(mean(con_block_resp_mat{id}(:,good_ind_green,2,1,1),1),2),x_sem,x_sem,y_sem,y_sem,'ok');
+    [h_green p_green] = ttest(mean(con_block_resp_mat{id}(:,good_ind_green,1,1,1),1),mean(con_block_resp_mat{id}(:,good_ind_green,2,1,1),1));
+    xlabel('Mean resp B0')
+    ylabel('Mean resp B1')
+    xlim([-0.05 0.3])
+    ylim([-0.05 0.3])
+    axis square
+    refline(1)
+    title(['D' days{id} ' HTP-; p = ' num2str(chop(p_green,2))])
+    subplot(2,2,2+id)
+    scatter(mean(con_block_resp_mat{id}(:,good_ind_red,1,1,1),1),mean(con_block_resp_mat{id}(:,good_ind_red,2,1,1),1))
+    hold on
+    y_sem = std(mean(con_block_resp_mat{id}(:,good_ind_red,2,1,1),1),[],2)./sqrt(length(good_ind_red));
+    x_sem = std(mean(con_block_resp_mat{id}(:,good_ind_red,1,1,1),1),[],2)./sqrt(length(good_ind_red));
+    errorbar(mean(mean(con_block_resp_mat{id}(:,good_ind_red,1,1,1),1),2),mean(mean(con_block_resp_mat{id}(:,good_ind_red,2,1,1),1),2),x_sem,x_sem,y_sem,y_sem,'ok')
+    [h_red p_red] = ttest(mean(con_block_resp_mat{id}(:,good_ind_red,1,1,1),1),mean(con_block_resp_mat{id}(:,good_ind_red,2,1,1),1));
+    xlabel('Mean resp B0')
+    ylabel('Mean resp B1')
+    xlim([-0.02 0.15])
+    ylim([-0.02 0.15])
+    axis square
+    refline(1)
+    title(['D' days{id} ' HTP+; p = ' num2str(chop(p_red,2))])
+end
+print(fullfile(fn_multi, ['contrastResp_byBlock_scatter.pdf']),'-dpdf', '-bestfit')
+
+figure;
+for ib = 1:2
+    subplot(2,2,ib)
+    scatter(mean(con_block_resp_mat{2}(:,good_ind_green,ib,1,1),1),mean(con_block_resp_mat{1}(:,good_ind_green,ib,1,1),1))
+    hold on
+    y_sem = std(mean(con_block_resp_mat{1}(:,good_ind_green,ib,1,1),1),[],2)./sqrt(length(good_ind_green));
+    x_sem = std(mean(con_block_resp_mat{2}(:,good_ind_green,ib,1,1),1),[],2)./sqrt(length(good_ind_green));
+    errorbar(mean(mean(con_block_resp_mat{2}(:,good_ind_green,ib,1,1),1),2),mean(mean(con_block_resp_mat{1}(:,good_ind_green,ib,1,1),1),2),x_sem,x_sem,y_sem,y_sem,'ok');
+    [h_green p_green] = ttest(mean(con_block_resp_mat{2}(:,good_ind_green,ib,1,1),1),mean(con_block_resp_mat{1}(:,good_ind_green,ib,1,1),1));
+    xlabel('Mean resp D1')
+    ylabel('Mean resp DN')
+    xlim([-0.05 0.3])
+    ylim([-0.05 0.3])
+    axis square
+    refline(1)
+    title(['B' num2str(ib-1) ' HTP-; p = ' num2str(chop(p_green,2))])
+    subplot(2,2,2+ib)
+    scatter(mean(con_block_resp_mat{2}(:,good_ind_red,ib,1,1),1),mean(con_block_resp_mat{1}(:,good_ind_red,ib,1,1),1))
+    hold on
+    y_sem = std(mean(con_block_resp_mat{2}(:,good_ind_red,ib,1,1),1),[],2)./sqrt(length(good_ind_red));
+    x_sem = std(mean(con_block_resp_mat{2}(:,good_ind_red,ib,1,1),1),[],2)./sqrt(length(good_ind_red));
+    errorbar(mean(mean(con_block_resp_mat{2}(:,good_ind_red,ib,1,1),1),2),mean(mean(con_block_resp_mat{1}(:,good_ind_red,ib,1,1),1),2),x_sem,x_sem,y_sem,y_sem,'ok')
+    [h_red p_red] = ttest(mean(con_block_resp_mat{2}(:,good_ind_red,ib,1,1),1),mean(con_block_resp_mat{1}(:,good_ind_red,ib,1,1),1));
+    xlabel('Mean resp D1')
+    ylabel('Mean resp DN')
+    xlim([-0.02 0.15])
+    ylim([-0.02 0.15])
+    axis square
+    refline(1)
+    title(['B' num2str(ib-1) ' HTP+; p = ' num2str(chop(p_red,2))])
+end
+print(fullfile(fn_multi, ['contrastResp_byDay_scatter.pdf']),'-dpdf', '-bestfit')
+save(fullfile(fn_multi, 'contrastResp.mat'),'h','p','data_dfof_con','con_resp_mat','data_dfof_con_block','con_block_resp_mat','trialn','good_ind','good_ind_red','good_ind_green','cons','tt','stimData')
