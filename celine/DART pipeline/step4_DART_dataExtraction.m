@@ -38,7 +38,7 @@ else
     dart_str = 'control';
 end
 fn_multi = fullfile(rc.analysis, experimentFolder, mouse, ['multiday_' dart_str]);
-mkdir(fn_multi)
+
 % Determine which session was used as reference for cell matching
 x = instructions.refDay;
 switch x

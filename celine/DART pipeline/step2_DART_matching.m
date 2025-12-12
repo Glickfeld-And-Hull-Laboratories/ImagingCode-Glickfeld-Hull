@@ -57,10 +57,18 @@ mouse = expt(day_id(1)).mouse;
 % Create output folder with drug condition naming
 fnout = fullfile(rc.analysis, ExperimentFolder,mouse);
 
-if expt(day_id(2)).multiday_timesincedrug_hours>0
-    dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(1)).multiday_timesincedrug_hours) 'Hr'];
-else
-    dart_str = 'control';
+if matchDrxn == 'r'
+    if expt(day_id(1)).multiday_timesincedrug_hours>0
+        dart_str = [expt(day_id(1)).drug '_' num2str(expt(day_id(1)).multiday_timesincedrug_hours) 'Hr'];
+    else
+        dart_str = 'control';
+    end
+elseif matchDrxn=='f'
+    if expt(day_id(2)).multiday_timesincedrug_hours>0
+        dart_str = [expt(day_id(2)).drug '_' num2str(expt(day_id(2)).multiday_timesincedrug_hours) 'Hr'];
+    else
+        dart_str = 'control';
+    end
 end
 fn_multi = fullfile(rc.analysis,ExperimentFolder,mouse,['multiday_' dart_str]);
 mkdir(fn_multi)
@@ -285,7 +293,7 @@ mask_all = zeros(size(fov_avg{1}));
 
 % Loop through each good cell for matching
 start = 1;
-for icell = 1:nc
+for icell = 187:nc
     if goodCells(icell)
         % Extract cell patches and find optimal alignment for each view
         day1_cell_avg = fov_avg{1}(...
