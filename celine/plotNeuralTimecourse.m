@@ -43,6 +43,7 @@ addParameter(p, 'StimDuration', 2, @isnumeric);
 addParameter(p, 'FrameRate', 15, @isnumeric);
 addParameter(p, 'StimStart', [], @isnumeric);
 addParameter(p, 'FigureSize', [4, 9], @(x) isnumeric(x) && length(x)==2);
+addParameter(p, 'DayOrder', 'r', @(x) ischar(x) && (strcmp(x,'f') || strcmp(x,'r')));
 
 parse(p, data1, data2, cell_indices1, cell_indices2, varargin{:});
 
@@ -58,8 +59,16 @@ figure_size = p.Results.FigureSize;
 
 % Get parameters from the data
 nd = size(data1, 2);  % Number of days
-pre = 2;              % Index for pre-treatment day
-post = 1;             % Index for post-treatment day
+
+% Set pre and post indices based on DayOrder
+if strcmp(p.Results.DayOrder, 'f')
+    pre = 1;
+    post = 2;
+else
+    pre = 2;
+    post = 1;
+end
+
 nCon = size(data1{pre}, 3);  % Number of contrasts
 nSizes = size(data1{pre}, 4);  % Number of sizes
 

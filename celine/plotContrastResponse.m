@@ -1,9 +1,9 @@
-function plotSizeResponse(data1, data2, cell_indices1, cell_indices2, contrasts, sizes, varargin)
-% PLOTSIZERESPONSE Plot size response curves for different cell populations across contrasts
+function plotContrastResponse(data1, data2, cell_indices1, cell_indices2, contrasts, sizes, varargin)
+% PLOTCONTRASTRESPONSE Plot contrast response curves for different cell populations across sizes
 % 
 % Usage:
-%   plotSizeResponse(data1, data2, cell_indices1, cell_indices2, contrasts, sizes) 
-%   plotSizeResponse(data1, data2, cell_indices1, cell_indices2, contrasts, sizes, 'Name', Value, ...)
+%   plotContrastResponse(data1, data2, cell_indices1, cell_indices2, contrasts, sizes) 
+%   plotContrastResponse(data1, data2, cell_indices1, cell_indices2, contrasts, sizes, 'Name', Value, ...)
 %
 % Inputs:
 %   data1 - First dataset (e.g., pref_responses_stat_concat)
@@ -28,7 +28,7 @@ function plotSizeResponse(data1, data2, cell_indices1, cell_indices2, contrasts,
 %   'UseDashedLines' - Logical [dash1, dash2] indicating whether to use dashed lines
 %                     Default: [false, false]
 %   'XLim' - X axis limits [min, max]
-%            Default: [min(sizes)*0.8, max(sizes)*1.2]
+%            Default: [0, 1.2]
 %   'Titles' - Cell array with titles for each dataset {'title1', 'title2'}
 %              Default: {'Dataset 1', 'Dataset 2'}
 %   'YLabel' - Label for y-axis
@@ -36,7 +36,7 @@ function plotSizeResponse(data1, data2, cell_indices1, cell_indices2, contrasts,
 %   'XLabel' - Label for x-axis (optional)
 %              Default: '' (no x-label)
 %   'FigureSize' - Size of the figure [width, height] in inches
-%                 Default: [8, 3*nContrasts]
+%                 Default: [8, 3*nSizes]
 
 % Parse inputs
 p = inputParser;
@@ -50,7 +50,7 @@ addParameter(p, 'Colors', {}, @(x) validateColors(x));
 addParameter(p, 'UseDashedLines', [false, false], @(x) islogical(x) && length(x)==2);
 addParameter(p, 'Colors1', {'k', 'b'}, @(x) iscell(x) && length(x)==2);
 addParameter(p, 'Colors2', {'k', 'b'}, @(x) iscell(x) && length(x)==2);
-addParameter(p, 'XLim', [], @(x) isnumeric(x) && length(x)==2);
+addParameter(p, 'XLim', [0, 1.2], @(x) isnumeric(x) && length(x)==2);
 addParameter(p, 'Titles', {'Dataset 1', 'Dataset 2'}, @(x) iscell(x) && length(x)==2);
 addParameter(p, 'YLabel', 'dF/F', @ischar);
 addParameter(p, 'XLabel', '', @ischar);
@@ -70,15 +70,10 @@ y_label = p.Results.YLabel;
 x_label = p.Results.XLabel;
 figure_size = p.Results.FigureSize;
 
-% Set default x-axis limits if not provided
-if isempty(xlim_range)
-    xlim_range = [min(sizes)*0.8, max(sizes)*1.2];
-end
-
 % Set default figure size if not provided
-nContrasts = length(contrasts);
+nSizes = length(sizes);
 if isempty(figure_size)
-    figure_size = [8, 3*nContrasts];
+    figure_size = [8, 3*nSizes];
 end
 
 % Process color inputs
@@ -97,50 +92,48 @@ else
 end
 
 % Initialize arrays for average and standard error
-sizeResp_data1_avrg = cell(nd, nContrasts);
-sizeResp_data2_avrg = cell(nd, nContrasts);
-sizeResp_data1_se = cell(nd, nContrasts);
-sizeResp_data2_se = cell(nd, nContrasts);
+conResp_data1_avrg = cell(nd, nSizes);
+conResp_data2_avrg = cell(nd, nSizes);
+conResp_data1_se = cell(nd, nSizes);
+conResp_data2_se = cell(nd, nSizes);
 
-% Calculate average and standard error for each day and contrast
+% Calculate average and standard error for each day and size
 for id = 1:nd
-    for iContrast = 1:nContrasts
-        % First dataset - extract data across all sizes for this contrast
-        data1_this_contrast = squeeze(data1{id}(cell_indices1, iContrast, :));
-        sizeResp_data1_avrg{id, iContrast} = mean(data1_this_contrast, 1, 'omitnan');
-        data1_std = std(data1_this_contrast, 1, 'omitnan');
-        sizeResp_data1_se{id, iContrast} = data1_std / sqrt(length(cell_indices1));
+    for iSize = 1:nSizes
+        % First dataset
+        conResp_data1_avrg{id, iSize} = mean(data1{id}(cell_indices1, :, iSize), 1, 'omitnan');
+        data1_std = std(data1{id}(cell_indices1, :, iSize), 1, 'omitnan');
+        conResp_data1_se{id, iSize} = data1_std / sqrt(length(cell_indices1));
         
-        % Second dataset - extract data across all sizes for this contrast
-        data2_this_contrast = squeeze(data2{id}(cell_indices2, iContrast, :));
-        sizeResp_data2_avrg{id, iContrast} = mean(data2_this_contrast, 1, 'omitnan');
-        data2_std = std(data2_this_contrast, 1, 'omitnan');
-        sizeResp_data2_se{id, iContrast} = data2_std / sqrt(length(cell_indices2));
+        % Second dataset
+        conResp_data2_avrg{id, iSize} = mean(data2{id}(cell_indices2, :, iSize), 1, 'omitnan');
+        data2_std = std(data2{id}(cell_indices2, :, iSize), 1, 'omitnan');
+        conResp_data2_se{id, iSize} = data2_std / sqrt(length(cell_indices2));
     end
 end
 
-% Find global min and max for y-axis scaling across all contrasts
+% Find global min and max for y-axis scaling across all sizes
 ymin = Inf;
 ymax = -Inf;
 
 for id = 1:nd
-    for iContrast = 1:nContrasts
+    for iSize = 1:nSizes
         % Check dataset 1
-        temp_min = min(sizeResp_data1_avrg{id, iContrast} - sizeResp_data1_se{id, iContrast});
+        temp_min = min(conResp_data1_avrg{id, iSize} - conResp_data1_se{id, iSize});
         if ~isnan(temp_min) && temp_min < ymin
             ymin = temp_min;
         end
-        temp_max = max(sizeResp_data1_avrg{id, iContrast} + sizeResp_data1_se{id, iContrast});
+        temp_max = max(conResp_data1_avrg{id, iSize} + conResp_data1_se{id, iSize});
         if ~isnan(temp_max) && temp_max > ymax
             ymax = temp_max;
         end
         
         % Check dataset 2
-        temp_min = min(sizeResp_data2_avrg{id, iContrast} - sizeResp_data2_se{id, iContrast});
+        temp_min = min(conResp_data2_avrg{id, iSize} - conResp_data2_se{id, iSize});
         if ~isnan(temp_min) && temp_min < ymin
             ymin = temp_min;
         end
-        temp_max = max(sizeResp_data2_avrg{id, iContrast} + sizeResp_data2_se{id, iContrast});
+        temp_max = max(conResp_data2_avrg{id, iSize} + conResp_data2_se{id, iSize});
         if ~isnan(temp_max) && temp_max > ymax
             ymax = temp_max;
         end
@@ -149,16 +142,16 @@ end
 
 % Add some padding to the y-axis limits (10% of the range)
 padding = 0.1 * (ymax - ymin);
-ymin = ymin - padding;
+ymin = max(-.2, ymin - padding);
 ymax = ymax + padding;
 
 % Create figure
 figure('Units', 'inches', 'Position', [5, 5, figure_size(1), figure_size(2)]);
 
-% Plot for each contrast
-for iContrast = 1:nContrasts
+% Plot for each size
+for iSize = 1:nSizes
     % Plot first dataset
-    subplot(nContrasts, 2, (iContrast-1)*2 + 1);
+    subplot(nSizes, 2, (iSize-1)*2 + 1);
     
     % Choose line style based on UseDashedLines parameter
     line_style1_pre = '-';
@@ -169,30 +162,30 @@ for iContrast = 1:nContrasts
     end
     
     % Plot with error bars
-    errorbar(sizes, sizeResp_data1_avrg{pre, iContrast}, sizeResp_data1_se{pre, iContrast}, ...
-        [line_style1_pre, 'o'], 'Color', colors1{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
+    errorbar(contrasts, conResp_data1_avrg{pre, iSize}, conResp_data1_se{pre, iSize}, ...
+        [line_style1_pre], 'Color', colors1{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
     hold on;
-    errorbar(sizes, sizeResp_data1_avrg{post, iContrast}, sizeResp_data1_se{post, iContrast}, ...
-        [line_style1_post, 'o'], 'Color', colors1{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
+    errorbar(contrasts, conResp_data1_avrg{post, iSize}, conResp_data1_se{post, iSize}, ...
+        [line_style1_post], 'Color', colors1{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
     
     % Set axis properties
-    if iContrast == 1
+    if iSize == 1
         ylabel(y_label);
     end
     xlim(xlim_range);
     ylim([ymin, ymax]);
-    xticks(sizes);
+    xticks(contrasts);
     set(gca, 'TickDir', 'out', 'box', 'off');
     grid off;
-    if iContrast == nContrasts && ~isempty(x_label)
+    if iSize == nSizes && ~isempty(x_label)
         xlabel(x_label);
     end
     
-    % Add title with contrast information
-    title([titles{1}, ' (Contrast: ', num2str(contrasts(iContrast)), ') n = ', num2str(length(cell_indices1))], 'FontWeight', 'normal');
+    % Add title with size information
+    title([titles{1}, ' (Size: ', num2str(sizes(iSize)), ') n = ', num2str(length(cell_indices1))], 'FontWeight', 'normal');
     
     % Plot second dataset
-    subplot(nContrasts, 2, (iContrast-1)*2 + 2);
+    subplot(nSizes, 2, (iSize-1)*2 + 2);
     
     % Choose line style based on UseDashedLines parameter
     line_style2_pre = '-';
@@ -203,24 +196,24 @@ for iContrast = 1:nContrasts
     end
     
     % Plot with error bars
-    errorbar(sizes, sizeResp_data2_avrg{pre, iContrast}, sizeResp_data2_se{pre, iContrast}, ...
-        [line_style2_pre, 'o'], 'Color', colors2{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
+    errorbar(contrasts, conResp_data2_avrg{pre, iSize}, conResp_data2_se{pre, iSize}, ...
+        [line_style2_pre], 'Color', colors2{1}, 'LineWidth', 1.5, 'MarkerSize', 6);
     hold on;
-    errorbar(sizes, sizeResp_data2_avrg{post, iContrast}, sizeResp_data2_se{post, iContrast}, ...
-        [line_style2_post, 'o'], 'Color', colors2{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
+    errorbar(contrasts, conResp_data2_avrg{post, iSize}, conResp_data2_se{post, iSize}, ...
+        [line_style2_post], 'Color', colors2{2}, 'LineWidth', 1.5, 'MarkerSize', 6);
     
     % Set axis properties
     xlim(xlim_range);
     ylim([ymin, ymax]);
-    xticks(sizes);
+    xticks(contrasts);
     set(gca, 'TickDir', 'out', 'box', 'off');
     grid off;
-    if iContrast == nContrasts && ~isempty(x_label)
+    if iSize == nSizes && ~isempty(x_label)
         xlabel(x_label);
     end
     
-    % Add title with contrast information
-    title([titles{2}, ' (Contrast: ', num2str(contrasts(iContrast)), ') n = ', num2str(length(cell_indices2))], 'FontWeight', 'normal');
+    % Add title with size information
+    title([titles{2}, ' (Size: ', num2str(sizes(iSize)), ') n = ', num2str(length(cell_indices2))], 'FontWeight', 'normal');
 end
 
 end
