@@ -46,7 +46,7 @@ switch x
         pre = 1;  % baseline session, used as reference, is in the 1st position
         post = 2;
         fprintf('Baseline used as reference\n');
-         allDays = [match_day,day_id];
+         allDays = [match_day];
         fprintf('Analyzing sessions: %s\n', num2str(allDays));
     case '2'
         pre = 2;
