@@ -1221,25 +1221,3 @@ expt(56).wheelColor = 'orange';
 expt(56).exptType = 'SST_YM90K';
 expt(56).data_loc = 'ACh';
 
-%% i2227 control
-expt(57).mouse = 'i2227';
-expt(57).date = '251215';
-expt(57).img_loc  = {'V1';'L2/3'};
-expt(57).z =160;
-expt(57).obj = '16x';
-expt(57).zoom = 2;
-expt(57).frame_rate = 15;
-expt(57).multiday_timesincedrug_hours = '';
-expt(57).multiday_matchdays = [];
-expt(57).indicator = {'GCaMP8f'};
-expt(57).drug = 'YM90K-PEG';
-expt(57).greenredsimultaneous = 1;
-expt(57).greenChannelLabel = '';
-expt(57).redChannelLabel = '';
-expt(57).redChannelTag = {'tdTomato','NES-HTP'};
-expt(57).redChannelRun = '001';
-expt(57).contrastxori_runs = {'004'};
-expt(57).contrastxori_time = {'1109'};
-expt(57).wheelColor = 'orange';
-expt(57).exptType = 'SST_YM90K';
-expt(57).data_loc = 'ACh';
