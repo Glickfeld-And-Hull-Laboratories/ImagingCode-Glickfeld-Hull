@@ -26,7 +26,10 @@ close all
 %%
 realfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_greenVred'; %folder to load files from
 realfnoutGL = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_greenVred_GLmice'; %folder to load files from
-compfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_enhancer_promoter_comps'; %folder to save to
+compfnout = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\tj\Analysis\Analysis\2P\new_pooled_Arc_enhancer_promoter_comps\D1D3comp'; %folder to save to
+if ~exist(compfnout)
+    mkdir(compfnout)
+end
 dataset = 'exp_list_arc_tjw'; %experiment list to pick files from
 eval(dataset); %load dataset
 
@@ -57,32 +60,7 @@ grace_reliability_split_pref = load(fullfile(realfnoutGL, ['_grace_reliabilitysp
 %arc_prom is for arc promoter while arc_enh is for arc enhancer. note that tj and grace have
 %separate lacz cohorts that will be compared.
 
-arc_prom_red_pref_d_all = tj_pref.arc_red_all_pref_d;
-tj_lacz_red_pref_d_all = tj_pref.lacz_red_all_pref_d;
-arc_enh_red_pref_d_all = grace_pref.arc_red_all_pref_d;
-grace_lacz_red_pref_d_all = grace_pref.lacz_red_all_pref_d;
-
-arc_prom_red_bot_pref_d_all = tj_medsplit_pref.arc_red_bot_pref_d_all;
-tj_lacz_red_bot_pref_d_all = tj_medsplit_pref.lacz_red_bot_pref_d_all;
-arc_enh_red_bot_pref_d_all = grace_medsplit_pref.arc_red_bot_pref_d_all;
-grace_lacz_red_bot_pref_d_all = grace_medsplit_pref.lacz_red_bot_pref_d_all;
-
-arc_prom_red_top_pref_d_all = tj_medsplit_pref.arc_red_top_pref_d_all;
-tj_lacz_red_top_pref_d_all = tj_medsplit_pref.lacz_red_top_pref_d_all;
-arc_enh_red_top_pref_d_all = grace_medsplit_pref.arc_red_top_pref_d_all;
-grace_lacz_red_top_pref_d_all = grace_medsplit_pref.lacz_red_top_pref_d_all;
-
-arc_prom_red_wide_pref_d_all = tj_k_medsplit_pref.arc_red_wide_pref_d_all;
-tj_lacz_red_wide_pref_d_all = tj_k_medsplit_pref.lacz_red_wide_pref_d_all;
-arc_enh_red_wide_pref_d_all = grace_k_medsplit_pref.arc_red_wide_pref_d_all;
-grace_lacz_red_wide_pref_d_all = grace_k_medsplit_pref.lacz_red_wide_pref_d_all;
-
-arc_prom_red_sharp_pref_d_all = tj_k_medsplit_pref.arc_red_sharp_pref_d_all;
-tj_lacz_red_sharp_pref_d_all = tj_k_medsplit_pref.lacz_red_sharp_pref_d_all;
-arc_enh_red_sharp_pref_d_all = grace_k_medsplit_pref.arc_red_sharp_pref_d_all;
-grace_lacz_red_sharp_pref_d_all = grace_k_medsplit_pref.lacz_red_sharp_pref_d_all;
-
-
+%d1 and all d comparisons
 arc_prom_red_k_all = tj_kmax.arc_red_k_all;
 arc_prom_red_max_all = tj_kmax.arc_red_max_all;
 tj_lacz_red_k_all = tj_kmax.lacz_red_k_all;
@@ -103,23 +81,173 @@ arc_enh_red_d1_max_all = grace_d1_kmax.arc_red_d1_max_all;
 grace_lacz_red_d1_k_all = grace_d1_kmax.lacz_red_d1_k_all;
 grace_lacz_red_d1_max_all = grace_d1_kmax.lacz_red_d1_max_all;
 
-arc_prom_red_d_k_all = tj_kmax.arc_red_d_k_all;
-arc_prom_red_d_max_all = tj_kmax.arc_red_d_max_all;
-tj_lacz_red_d_k_all = tj_kmax.lacz_red_d_k_all;
-tj_lacz_red_d_max_all = tj_kmax.lacz_red_d_max_all;
+% %d1 vs d2 and d3 combined
+% arc_prom_red_pref_d_all = tj_pref.arc_red_all_pref_d;
+% tj_lacz_red_pref_d_all = tj_pref.lacz_red_all_pref_d;
+% arc_enh_red_pref_d_all = grace_pref.arc_red_all_pref_d;
+% grace_lacz_red_pref_d_all = grace_pref.lacz_red_all_pref_d;
+% 
+% arc_prom_red_bot_pref_d_all = tj_medsplit_pref.arc_red_bot_pref_d_all;
+% tj_lacz_red_bot_pref_d_all = tj_medsplit_pref.lacz_red_bot_pref_d_all;
+% arc_enh_red_bot_pref_d_all = grace_medsplit_pref.arc_red_bot_pref_d_all;
+% grace_lacz_red_bot_pref_d_all = grace_medsplit_pref.lacz_red_bot_pref_d_all;
+% 
+% arc_prom_red_top_pref_d_all = tj_medsplit_pref.arc_red_top_pref_d_all;
+% tj_lacz_red_top_pref_d_all = tj_medsplit_pref.lacz_red_top_pref_d_all;
+% arc_enh_red_top_pref_d_all = grace_medsplit_pref.arc_red_top_pref_d_all;
+% grace_lacz_red_top_pref_d_all = grace_medsplit_pref.lacz_red_top_pref_d_all;
+% 
+% arc_prom_red_wide_pref_d_all = tj_k_medsplit_pref.arc_red_wide_pref_d_all;
+% tj_lacz_red_wide_pref_d_all = tj_k_medsplit_pref.lacz_red_wide_pref_d_all;
+% arc_enh_red_wide_pref_d_all = grace_k_medsplit_pref.arc_red_wide_pref_d_all;
+% grace_lacz_red_wide_pref_d_all = grace_k_medsplit_pref.lacz_red_wide_pref_d_all;
+% 
+% arc_prom_red_sharp_pref_d_all = tj_k_medsplit_pref.arc_red_sharp_pref_d_all;
+% tj_lacz_red_sharp_pref_d_all = tj_k_medsplit_pref.lacz_red_sharp_pref_d_all;
+% arc_enh_red_sharp_pref_d_all = grace_k_medsplit_pref.arc_red_sharp_pref_d_all;
+% grace_lacz_red_sharp_pref_d_all = grace_k_medsplit_pref.lacz_red_sharp_pref_d_all;
+% 
+% arc_prom_red_d_k_all = tj_kmax.arc_red_d_k_all;
+% arc_prom_red_d_max_all = tj_kmax.arc_red_d_max_all;
+% tj_lacz_red_d_k_all = tj_kmax.lacz_red_d_k_all;
+% tj_lacz_red_d_max_all = tj_kmax.lacz_red_d_max_all;
+% 
+% arc_enh_red_d_k_all = grace_kmax.arc_red_d_k_all;
+% arc_enh_red_d_max_all = grace_kmax.arc_red_d_max_all;
+% grace_lacz_red_d_k_all = grace_kmax.lacz_red_d_k_all;
+% grace_lacz_red_d_max_all = grace_kmax.lacz_red_d_max_all;
+% 
+% %reliability binned pref ori mean changes
+% arc_prom_red_pref_bin1 = tj_reliability_split_pref.arc_red_pref_bin1_reliability_all;
+% arc_prom_red_pref_bin2 = tj_reliability_split_pref.arc_red_pref_bin2_reliability_all;
+% arc_prom_red_pref_bin3 = tj_reliability_split_pref.arc_red_pref_bin3_reliability_all;
+% 
+% tj_lacz_red_pref_bin1 = tj_reliability_split_pref.lacz_red_pref_bin1_reliability_all;
+% tj_lacz_red_pref_bin2 = tj_reliability_split_pref.lacz_red_pref_bin2_reliability_all;
+% tj_lacz_red_pref_bin3 = tj_reliability_split_pref.lacz_red_pref_bin3_reliability_all;
+% 
+% arc_enh_red_pref_bin1 = grace_reliability_split_pref.arc_red_pref_bin1_reliability_all;
+% arc_enh_red_pref_bin2 = grace_reliability_split_pref.arc_red_pref_bin2_reliability_all;
+% arc_enh_red_pref_bin3 = grace_reliability_split_pref.arc_red_pref_bin3_reliability_all;
+% 
+% grace_lacz_red_pref_bin1 = grace_reliability_split_pref.lacz_red_pref_bin1_reliability_all;
+% grace_lacz_red_pref_bin2 = grace_reliability_split_pref.lacz_red_pref_bin2_reliability_all;
+% grace_lacz_red_pref_bin3 = grace_reliability_split_pref.lacz_red_pref_bin3_reliability_all;
 
-arc_enh_red_d_k_all = grace_kmax.arc_red_d_k_all;
-arc_enh_red_d_max_all = grace_kmax.arc_red_d_max_all;
-grace_lacz_red_d_k_all = grace_kmax.lacz_red_d_k_all;
-grace_lacz_red_d_max_all = grace_kmax.lacz_red_d_max_all;
+
+%d1 vs d2 only
+arc_prom_red_pref_d_all = tj_pref.arc_red_d1_d2_pref_d_all;
+tj_lacz_red_pref_d_all = tj_pref.lacz_red_d1_d2_pref_d_all;
+arc_enh_red_pref_d_all = grace_pref.arc_red_d1_d2_pref_d_all;
+grace_lacz_red_pref_d_all = grace_pref.lacz_red_d1_d2_pref_d_all;
+
+arc_prom_red_bot_pref_d_all = tj_medsplit_pref.arc_red_bot_d1_d2_pref_d_all;
+tj_lacz_red_bot_pref_d_all = tj_medsplit_pref.lacz_red_bot_d1_d2_pref_d_all;
+arc_enh_red_bot_pref_d_all = grace_medsplit_pref.arc_red_bot_d1_d2_pref_d_all;
+grace_lacz_red_bot_pref_d_all = grace_medsplit_pref.lacz_red_bot_d1_d2_pref_d_all;
+
+arc_prom_red_top_pref_d_all = tj_medsplit_pref.arc_red_top_d1_d2_pref_d_all;
+tj_lacz_red_top_pref_d_all = tj_medsplit_pref.lacz_red_top_d1_d2_pref_d_all;
+arc_enh_red_top_pref_d_all = grace_medsplit_pref.arc_red_top_d1_d2_pref_d_all;
+grace_lacz_red_top_pref_d_all = grace_medsplit_pref.lacz_red_top_d1_d2_pref_d_all;
+
+arc_prom_red_wide_pref_d_all = tj_k_medsplit_pref.arc_red_wide_d1_d2_pref_d_all;
+tj_lacz_red_wide_pref_d_all = tj_k_medsplit_pref.lacz_red_wide_d1_d2_pref_d_all;
+arc_enh_red_wide_pref_d_all = grace_k_medsplit_pref.arc_red_wide_d1_d2_pref_d_all;
+grace_lacz_red_wide_pref_d_all = grace_k_medsplit_pref.lacz_red_wide_d1_d2_pref_d_all;
+
+arc_prom_red_sharp_pref_d_all = tj_k_medsplit_pref.arc_red_sharp_d1_d2_pref_d_all;
+tj_lacz_red_sharp_pref_d_all = tj_k_medsplit_pref.lacz_red_sharp_d1_d2_pref_d_all;
+arc_enh_red_sharp_pref_d_all = grace_k_medsplit_pref.arc_red_sharp_d1_d2_pref_d_all;
+grace_lacz_red_sharp_pref_d_all = grace_k_medsplit_pref.lacz_red_sharp_d1_d2_pref_d_all;
+
+arc_prom_red_d_k_all = tj_kmax.arc_red_d1_d2_k_all;
+arc_prom_red_d_max_all = tj_kmax.arc_red_d1_d2_max_all;
+tj_lacz_red_d_k_all = tj_kmax.lacz_red_d1_d2_k_all;
+tj_lacz_red_d_max_all = tj_kmax.lacz_red_d1_d2_max_all;
+
+arc_enh_red_d_k_all = grace_kmax.arc_red_d1_d2_k_all;
+arc_enh_red_d_max_all = grace_kmax.arc_red_d1_d2_max_all;
+grace_lacz_red_d_k_all = grace_kmax.lacz_red_d1_d2_k_all;
+grace_lacz_red_d_max_all = grace_kmax.lacz_red_d1_d2_max_all;
+
+%reliability binned pref ori mean changes
+arc_prom_red_pref_bin1 = tj_reliability_split_pref.arc_red_d1_d2_pref_bin1_reliability;
+arc_prom_red_pref_bin2 = tj_reliability_split_pref.arc_red_d1_d2_pref_bin2_reliability;
+arc_prom_red_pref_bin3 = tj_reliability_split_pref.arc_red_d1_d2_pref_bin3_reliability;
+
+tj_lacz_red_pref_bin1 = tj_reliability_split_pref.lacz_red_d1_d2_pref_bin1_reliability;
+tj_lacz_red_pref_bin2 = tj_reliability_split_pref.lacz_red_d1_d2_pref_bin2_reliability;
+tj_lacz_red_pref_bin3 = tj_reliability_split_pref.lacz_red_d1_d2_pref_bin3_reliability;
+
+arc_enh_red_pref_bin1 = grace_reliability_split_pref.arc_red_d1_d2_pref_bin1_reliability;
+arc_enh_red_pref_bin2 = grace_reliability_split_pref.arc_red_d1_d2_pref_bin2_reliability;
+arc_enh_red_pref_bin3 = grace_reliability_split_pref.arc_red_d1_d2_pref_bin3_reliability;
+
+grace_lacz_red_pref_bin1 = grace_reliability_split_pref.lacz_red_d1_d2_pref_bin1_reliability;
+grace_lacz_red_pref_bin2 = grace_reliability_split_pref.lacz_red_d1_d2_pref_bin2_reliability;
+grace_lacz_red_pref_bin3 = grace_reliability_split_pref.lacz_red_d1_d2_pref_bin3_reliability;
 
 
+% %d1 vs d3 only
+% arc_prom_red_pref_d_all = tj_pref.arc_red_d1_d3_pref_d_all;
+% tj_lacz_red_pref_d_all = tj_pref.lacz_red_d1_d3_pref_d_all;
+% arc_enh_red_pref_d_all = grace_pref.arc_red_d1_d3_pref_d_all;
+% grace_lacz_red_pref_d_all = grace_pref.lacz_red_d1_d3_pref_d_all;
+% 
+% arc_prom_red_bot_pref_d_all = tj_medsplit_pref.arc_red_bot_d1_d3_pref_d_all;
+% tj_lacz_red_bot_pref_d_all = tj_medsplit_pref.lacz_red_bot_d1_d3_pref_d_all;
+% arc_enh_red_bot_pref_d_all = grace_medsplit_pref.arc_red_bot_d1_d3_pref_d_all;
+% grace_lacz_red_bot_pref_d_all = grace_medsplit_pref.lacz_red_bot_d1_d3_pref_d_all;
+% 
+% arc_prom_red_top_pref_d_all = tj_medsplit_pref.arc_red_top_d1_d3_pref_d_all;
+% tj_lacz_red_top_pref_d_all = tj_medsplit_pref.lacz_red_top_d1_d3_pref_d_all;
+% arc_enh_red_top_pref_d_all = grace_medsplit_pref.arc_red_top_d1_d3_pref_d_all;
+% grace_lacz_red_top_pref_d_all = grace_medsplit_pref.lacz_red_top_d1_d3_pref_d_all;
+% 
+% arc_prom_red_wide_pref_d_all = tj_k_medsplit_pref.arc_red_wide_d1_d3_pref_d_all;
+% tj_lacz_red_wide_pref_d_all = tj_k_medsplit_pref.lacz_red_wide_d1_d3_pref_d_all;
+% arc_enh_red_wide_pref_d_all = grace_k_medsplit_pref.arc_red_wide_d1_d3_pref_d_all;
+% grace_lacz_red_wide_pref_d_all = grace_k_medsplit_pref.lacz_red_wide_d1_d3_pref_d_all;
+% 
+% arc_prom_red_sharp_pref_d_all = tj_k_medsplit_pref.arc_red_sharp_d1_d3_pref_d_all;
+% tj_lacz_red_sharp_pref_d_all = tj_k_medsplit_pref.lacz_red_sharp_d1_d3_pref_d_all;
+% arc_enh_red_sharp_pref_d_all = grace_k_medsplit_pref.arc_red_sharp_d1_d3_pref_d_all;
+% grace_lacz_red_sharp_pref_d_all = grace_k_medsplit_pref.lacz_red_sharp_d1_d3_pref_d_all;
+% 
+% arc_prom_red_d_k_all = tj_kmax.arc_red_d1_d3_k_all;
+% arc_prom_red_d_max_all = tj_kmax.arc_red_d1_d3_max_all;
+% tj_lacz_red_d_k_all = tj_kmax.lacz_red_d1_d3_k_all;
+% tj_lacz_red_d_max_all = tj_kmax.lacz_red_d1_d3_max_all;
+% 
+% arc_enh_red_d_k_all = grace_kmax.arc_red_d1_d3_k_all;
+% arc_enh_red_d_max_all = grace_kmax.arc_red_d1_d3_max_all;
+% grace_lacz_red_d_k_all = grace_kmax.lacz_red_d1_d3_k_all;
+% grace_lacz_red_d_max_all = grace_kmax.lacz_red_d1_d3_max_all;
+% 
+% %reliability binned pref ori mean changes
+% arc_prom_red_pref_bin1 = tj_reliability_split_pref.arc_red_d1_d3_pref_bin1_reliability;
+% arc_prom_red_pref_bin2 = tj_reliability_split_pref.arc_red_d1_d3_pref_bin2_reliability;
+% arc_prom_red_pref_bin3 = tj_reliability_split_pref.arc_red_d1_d3_pref_bin3_reliability;
+% 
+% tj_lacz_red_pref_bin1 = tj_reliability_split_pref.lacz_red_d1_d3_pref_bin1_reliability;
+% tj_lacz_red_pref_bin2 = tj_reliability_split_pref.lacz_red_d1_d3_pref_bin2_reliability;
+% tj_lacz_red_pref_bin3 = tj_reliability_split_pref.lacz_red_d1_d3_pref_bin3_reliability;
+% 
+% arc_enh_red_pref_bin1 = grace_reliability_split_pref.arc_red_d1_d3_pref_bin1_reliability;
+% arc_enh_red_pref_bin2 = grace_reliability_split_pref.arc_red_d1_d3_pref_bin2_reliability;
+% arc_enh_red_pref_bin3 = grace_reliability_split_pref.arc_red_d1_d3_pref_bin3_reliability;
+% 
+% grace_lacz_red_pref_bin1 = grace_reliability_split_pref.lacz_red_d1_d3_pref_bin1_reliability;
+% grace_lacz_red_pref_bin2 = grace_reliability_split_pref.lacz_red_d1_d3_pref_bin2_reliability;
+% grace_lacz_red_pref_bin3 = grace_reliability_split_pref.lacz_red_d1_d3_pref_bin3_reliability;
 
 %%
 %here we plot a comparison of how the same cells change their pref ori across both sessions1 and 2 as well
 %as between 1 and 3. the comparison between groups is done on KRAB-expressing (red) cells only
 
 fig = figure;
+subplot(2,2,1)
 h=cdfplot(arc_prom_red_pref_d_all);
 set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
 hold on
@@ -133,62 +261,68 @@ legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['L
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
 ylabel(['% of cells'])
-title([])
+[h_prom p_prom] = ttest2(arc_prom_red_pref_d_all,tj_lacz_red_pref_d_all);
+[h_enh p_enh] = ttest2(arc_enh_red_pref_d_all,grace_lacz_red_pref_d_all);
+title(['Promoter- p = ' num2str(chop(p_prom,2)) '; Enhancer- p = ' num2str(chop(p_enh,2))])
 hold off
 
-print(fullfile(compfnout, ['allmice_changepref_red.pdf']), '-dpdf', '-bestfit')
+%print(fullfile(compfnout, ['allmice_changepref_red.pdf']), '-dpdf', '-bestfit')
 
 
 %%
-%another plot to compare what the tuning width (k) looks like across all sessions
-
-fig = figure;
-h=cdfplot(arc_prom_red_k_all);
-set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
-hold on
-j=cdfplot(tj_lacz_red_k_all);
-set(j, 'LineStyle', '-', 'Color', 'k', 'LineWidth',2);
-l=cdfplot(arc_enh_red_k_all);
-set(l, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
-m=cdfplot(grace_lacz_red_k_all);
-set(m, 'LineStyle', '--', 'Color', 'k', 'LineWidth',2);
-legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['LacZ (KRAB-Grace)'], 'Location', 'southeast')
-xlim([0 30])
-xlabel(['k Value'])
-ylabel(['% of cells'])
-title([])
-hold off
-
-print(fullfile(compfnout, ['allmice_allk_red.pdf']), '-dpdf', '-bestfit')
-
-
-%%
-%same as above but for max df/f
-
-fig = figure;
-h=cdfplot(arc_prom_red_max_all);
-set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
-hold on
-j=cdfplot(tj_lacz_red_max_all);
-set(j, 'LineStyle', '-', 'Color', 'k', 'LineWidth',2);
-l=cdfplot(arc_enh_red_max_all);
-set(l, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
-m=cdfplot(grace_lacz_red_max_all);
-set(m, 'LineStyle', '--', 'Color', 'k', 'LineWidth',2);
-legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['LacZ (KRAB-Grace)'], 'Location', 'southeast')
-xlim([0 1])
-xlabel(['Max dF/F Value'])
-ylabel(['% of cells'])
-title([])
-hold off
-
-print(fullfile(compfnout, ['allmice_allmax_red.pdf']), '-dpdf', '-bestfit')
+% %another plot to compare what the tuning width (k) looks like across all sessions
+% 
+% fig = figure;
+% h=cdfplot(arc_prom_red_k_all);
+% set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% hold on
+% j=cdfplot(tj_lacz_red_k_all);
+% set(j, 'LineStyle', '-', 'Color', 'k', 'LineWidth',2);
+% l=cdfplot(arc_enh_red_k_all);
+% set(l, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% m=cdfplot(grace_lacz_red_k_all);
+% set(m, 'LineStyle', '--', 'Color', 'k', 'LineWidth',2);
+% legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['LacZ (KRAB-Grace)'], 'Location', 'southeast')
+% xlim([0 30])
+% xlabel(['k Value'])
+% ylabel(['% of cells'])
+% [h_prom p_prom] = ttest2(arc_prom_red_k_all,tj_lacz_red_k_all);
+% [h_enh p_enh] = ttest2(arc_enh_red_k_all,grace_lacz_red_k_all);
+% title(['Promoter- p = ' num2str(chop(p_prom,2)) '; Enhancer- p = ' num2str(chop(p_enh,2))])
+% hold off
+% 
+% print(fullfile(compfnout, ['allmice_allk_red.pdf']), '-dpdf', '-bestfit')
+% 
+% 
+% %%
+% %same as above but for max df/f
+% 
+% fig = figure;
+% h=cdfplot(arc_prom_red_max_all);
+% set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
+% hold on
+% j=cdfplot(tj_lacz_red_max_all);
+% set(j, 'LineStyle', '-', 'Color', 'k', 'LineWidth',2);
+% l=cdfplot(arc_enh_red_max_all);
+% set(l, 'LineStyle', '--', 'Color', 'r', 'LineWidth',2);
+% m=cdfplot(grace_lacz_red_max_all);
+% set(m, 'LineStyle', '--', 'Color', 'k', 'LineWidth',2);
+% legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['LacZ (KRAB-Grace)'], 'Location', 'southeast')
+% xlim([0 1])
+% xlabel(['Max dF/F Value'])
+% ylabel(['% of cells'])
+% [h_prom p_prom] = ttest2(arc_prom_red_max_all,tj_lacz_red_max_all);
+% [h_enh p_enh] = ttest2(arc_enh_red_max_all,grace_lacz_red_max_all);
+% title(['Promoter- p = ' num2str(chop(p_prom,2)) '; Enhancer- p = ' num2str(chop(p_enh,2))])
+% hold off
+% 
+% print(fullfile(compfnout, ['allmice_allmax_red.pdf']), '-dpdf', '-bestfit')
 
 
 %%
 %this plot shows how much the value of k changed across all sessions
 
-fig = figure;
+subplot(2,2,2)
 h=cdfplot(arc_prom_red_d_k_all);
 set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
 hold on
@@ -202,16 +336,18 @@ legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['L
 xlim([0 30])
 xlabel(['Change in k Value'])
 ylabel(['% of cells'])
-title([])
+[h_prom p_prom] = ttest2(arc_prom_red_d_k_all,tj_lacz_red_d_k_all);
+[h_enh p_enh] = ttest2(arc_enh_red_d_k_all,grace_lacz_red_d_k_all);
+title(['Promoter- p = ' num2str(chop(p_prom,2)) '; Enhancer- p = ' num2str(chop(p_enh,2))])
 hold off
 
-print(fullfile(compfnout, ['allmice_changekall_red.pdf']), '-dpdf', '-bestfit')
+%print(fullfile(compfnout, ['allmice_changekall_red.pdf']), '-dpdf', '-bestfit')
 
 
 %%
 %same as above but for change in max values
 
-fig = figure;
+subplot(2,2,3)
 h=cdfplot(arc_prom_red_d_max_all);
 set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
 hold on
@@ -225,16 +361,20 @@ legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['L
 xlim([0 1])
 xlabel(['Change in Max dF/F Value'])
 ylabel(['% of cells'])
-title([])
+[h_prom p_prom] = ttest2(arc_prom_red_d_max_all,tj_lacz_red_d_max_all);
+[h_enh p_enh] = ttest2(arc_enh_red_d_max_all,grace_lacz_red_d_max_all);
+title(['Promoter- p = ' num2str(chop(p_prom,2)) '; Enhancer- p = ' num2str(chop(p_enh,2))])
 hold off
 
-print(fullfile(compfnout, ['allmice_changemaxall_red.pdf']), '-dpdf', '-bestfit')
-
+%print(fullfile(compfnout, ['allmice_changemaxall_red.pdf']), '-dpdf', '-bestfit')
+sgtitle('D1 vs DN Change')
+exportgraphics(gcf,fullfile(compfnout, ['allmice_change_red.pdf']))
 
 %%
 %same as the other k value plot, but only for the distribution of values on day 1 (d1)
 
 fig = figure;
+subplot(2,2,1)
 h=cdfplot(arc_prom_red_d1_k_all);
 set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
 hold on
@@ -248,16 +388,18 @@ legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['L
 xlim([0 30])
 xlabel(['Day 1 k Value'])
 ylabel(['% of cells'])
-title([])
+[h_prom p_prom] = ttest2(arc_prom_red_d1_k_all,tj_lacz_red_d1_k_all);
+[h_enh p_enh] = ttest2(arc_enh_red_d1_k_all,grace_lacz_red_d1_k_all);
+title(['Promoter- p = ' num2str(chop(p_prom,2)) '; Enhancer- p = ' num2str(chop(p_enh,2))]);
 hold off
 
-print(fullfile(compfnout, ['allmice_day1k_red.pdf']), '-dpdf', '-bestfit')
+%print(fullfile(compfnout, ['allmice_day1k_red.pdf']), '-dpdf', '-bestfit')
 
 
 %%
 %same as the other max value plot, but only for the distribution of values on day 1 (d1)
 
-fig = figure;
+subplot(2,2,2)
 h=cdfplot(arc_prom_red_d1_max_all);
 set(h, 'LineStyle', '-', 'Color', 'r', 'LineWidth',2);
 hold on
@@ -271,11 +413,14 @@ legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['L
 xlim([0 1])
 xlabel(['Day 1 Max dF/F Value'])
 ylabel(['% of cells'])
-title([])
+[h_prom p_prom] = ttest2(arc_prom_red_d1_max_all,tj_lacz_red_d1_max_all);
+[h_enh p_enh] = ttest2(arc_enh_red_d1_max_all,grace_lacz_red_d1_max_all);
+title(['Promoter- p = ' num2str(chop(p_prom,2)) '; Enhancer- p = ' num2str(chop(p_enh,2))]);
 hold off
 
-print(fullfile(compfnout, ['allmice_day1max_red.pdf']), '-dpdf', '-bestfit')
-
+%print(fullfile(compfnout, ['allmice_day1max_red.pdf']), '-dpdf', '-bestfit')
+sgtitle('D1 props')
+exportgraphics(gcf,fullfile(compfnout, ['allmice_day1_red.pdf']))
 
 %%
 %same as the change in pref ori graph from above but only for cells in the bottom 50% of
@@ -295,7 +440,7 @@ legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['L
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
 ylabel(['% of cells'])
-title(['Bottom 50%'])
+title(['Bottom 50% Responsivity'])
 hold off
 
 print(fullfile(compfnout, ['allmice_bot50_changepref_red.pdf']), '-dpdf', '-bestfit')
@@ -321,7 +466,7 @@ legend(['Arc Promoter (KRAB)'], ['LacZ (KRAB-TJ)'], ['Arc Enhancer (KRAB)'], ['L
 xlim([0 90])
 xlabel(['Change in Pref Ori'])
 ylabel(['% of cells'])
-title(['Top 50%'])
+title(['Top 50% Responsivity'])
 hold off
 
 print(fullfile(compfnout, ['allmice_top50_changepref_red.pdf']), '-dpdf', '-bestfit')
@@ -439,24 +584,16 @@ a.CData(4,:) = [.25 .25 .25];
 print(fullfile(compfnout, ['allmice_sharpweak_overlap_red.pdf']), '-dpdf', '-bestfit')
 
 %%
-%reliability binned pref ori mean changes
-arc_prom_red_pref_bin1 = tj_reliability_split_pref.arc_red_pref_bin1_reliability_all;
-arc_prom_red_pref_bin2 = tj_reliability_split_pref.arc_red_pref_bin2_reliability_all;
-arc_prom_red_pref_bin3 = tj_reliability_split_pref.arc_red_pref_bin3_reliability_all;
+bin1_prom = [arc_prom_red_pref_bin1' ones(size(arc_prom_red_pref_bin1')) ones(size(arc_prom_red_pref_bin1'))];
+bin2_prom = [arc_prom_red_pref_bin2' 2.*ones(size(arc_prom_red_pref_bin2')) ones(size(arc_prom_red_pref_bin2'))];
+bin3_prom = [arc_prom_red_pref_bin3' 3.*ones(size(arc_prom_red_pref_bin3')) ones(size(arc_prom_red_pref_bin3'))];
 
-tj_lacz_red_pref_bin1 = tj_reliability_split_pref.lacz_red_pref_bin1_reliability_all;
-tj_lacz_red_pref_bin2 = tj_reliability_split_pref.lacz_red_pref_bin2_reliability_all;
-tj_lacz_red_pref_bin3 = tj_reliability_split_pref.lacz_red_pref_bin3_reliability_all;
+bin1_lacz = [tj_lacz_red_pref_bin1' ones(size(tj_lacz_red_pref_bin1')) 2.*ones(size(tj_lacz_red_pref_bin1'))];
+bin2_lacz = [tj_lacz_red_pref_bin2' 2.*ones(size(tj_lacz_red_pref_bin2')) 2.*ones(size(tj_lacz_red_pref_bin2'))];
+bin3_lacz = [tj_lacz_red_pref_bin3' 3.*ones(size(tj_lacz_red_pref_bin3')) 2.*ones(size(tj_lacz_red_pref_bin3'))];
 
-arc_enh_red_pref_bin1 = grace_reliability_split_pref.arc_red_pref_bin1_reliability_all;
-arc_enh_red_pref_bin2 = grace_reliability_split_pref.arc_red_pref_bin2_reliability_all;
-arc_enh_red_pref_bin3 = grace_reliability_split_pref.arc_red_pref_bin3_reliability_all;
-
-grace_lacz_red_pref_bin1 = grace_reliability_split_pref.lacz_red_pref_bin1_reliability_all;
-grace_lacz_red_pref_bin2 = grace_reliability_split_pref.lacz_red_pref_bin2_reliability_all;
-grace_lacz_red_pref_bin3 = grace_reliability_split_pref.lacz_red_pref_bin3_reliability_all;
-
-%%
+promVlacz = [bin1_prom;bin2_prom;bin3_prom;bin1_lacz;bin2_lacz;bin3_lacz];
+[p,tbl,stats] = anovan(promVlacz(:,1),promVlacz(:,2:3),'model','interaction');
 
 figure;
 a = errorbar([mean(arc_prom_red_pref_bin1), mean(arc_prom_red_pref_bin2), mean(arc_prom_red_pref_bin3)], ...
@@ -491,10 +628,22 @@ xticklabels({'','0-30', '', '31-60', '', '61-90'})
 xlabel('Fit Reliability (degrees)')
 ylabel('Mean Pref Ori Change (+- s.e.m.)')
 legend(['Arc Prom (KRAB)'], ['TJ-LacZ (KRAB)'])
+title(['Reliability- p = ' num2str(chop(p(1),2)) '; Promoter- p = ' num2str(chop(p(2),2)) '; Interaction- p =' num2str(chop(p(3),2))])
 
 print(fullfile(compfnout, ['tjmice_reliabilitysplit_prefori_change_red.pdf']), '-dpdf', '-bestfit')
 
 %%
+
+bin1_enh = [arc_enh_red_pref_bin1' ones(size(arc_enh_red_pref_bin1')) ones(size(arc_enh_red_pref_bin1'))];
+bin2_enh = [arc_enh_red_pref_bin2' 2.*ones(size(arc_enh_red_pref_bin2')) ones(size(arc_enh_red_pref_bin2'))];
+bin3_enh = [arc_enh_red_pref_bin3' 3.*ones(size(arc_enh_red_pref_bin3')) ones(size(arc_enh_red_pref_bin3'))];
+
+bin1_lacz = [grace_lacz_red_pref_bin1' ones(size(grace_lacz_red_pref_bin1')) 2.*ones(size(grace_lacz_red_pref_bin1'))];
+bin2_lacz = [grace_lacz_red_pref_bin2' 2.*ones(size(grace_lacz_red_pref_bin2')) 2.*ones(size(grace_lacz_red_pref_bin2'))];
+bin3_lacz = [grace_lacz_red_pref_bin3' 3.*ones(size(grace_lacz_red_pref_bin3')) 2.*ones(size(grace_lacz_red_pref_bin3'))];
+
+enhVlacz = [bin1_enh;bin2_enh;bin3_enh;bin1_lacz;bin2_lacz;bin3_lacz];
+[p,tbl,stats] = anovan(enhVlacz(:,1),enhVlacz(:,2:3),'model','interaction');
 
 figure;
 c = errorbar([mean(arc_enh_red_pref_bin1), mean(arc_enh_red_pref_bin2), mean(arc_enh_red_pref_bin3)], ...
@@ -530,6 +679,7 @@ xlabel('Fit Reliability (degrees)')
 ylabel('Mean Pref Ori Change (+- s.e.m.)')
 legend(['Arc Enh (KRAB)'], ['Grace-LacZ (KRAB)'])
 
+title(['Reliability- p = ' num2str(chop(p(1),2)) '; Promoter- p = ' num2str(chop(p(2),2)) '; Interaction- p =' num2str(chop(p(3),2))])
 print(fullfile(compfnout, ['gracemice_reliabilitysplit_prefori_change_red.pdf']), '-dpdf', '-bestfit')
 
 %%
@@ -726,11 +876,13 @@ a.Marker = 'o';
 a.MarkerFaceColor = [1 0 0];
 a.Color = [1 0 0];
 a.LineStyle = 'none';
+a.MarkerSize = 5;
 
-b.Marker = 'square';
-b.MarkerFaceColor = [.75 0 0];
-b.Color = [.75 0 0];
+b.Marker = '^';
+b.MarkerFaceColor = [0 0 0];
+b.Color = [0 0 0];
 b.LineStyle = 'none';
+b.MarkerSize = 5;
 
 xlim([0.5 3.5])
 ylim([0 45])
@@ -740,7 +892,7 @@ ylabel('Mean Pref Ori Change (+- s.e.m.)')
 legend(['Arc Prom (KRAB)'], ['LacZ-TJ (KRAB)'])
 title('Bottom 50% Responsivity')
 
-print(fullfile(compfnout, ['tjmice_reliabilitysplit_prefori_change_red.pdf']), '-dpdf', '-bestfit')
+print(fullfile(compfnout, ['tjmice_bot_50_reliabilitysplit_prefori_change_red.pdf']), '-dpdf', '-bestfit')
 
 
 %%
@@ -758,23 +910,28 @@ b = errorbar([mean(grace_lacz_red_bot_50_ALLDAYS_pref_bin1_reliability), mean(gr
     std(grace_lacz_red_bot_50_ALLDAYS_pref_bin2_reliability)/sqrt(length(grace_lacz_red_bot_50_ALLDAYS_pref_bin2_reliability)), ... 
     std(grace_lacz_red_bot_50_ALLDAYS_pref_bin3_reliability)/sqrt(length(grace_lacz_red_bot_50_ALLDAYS_pref_bin3_reliability))]);
 
-a.Marker = 'o';
-a.MarkerFaceColor = [1 0 0];
-a.Color = [1 0 0];
+a.Marker = 'square';
+a.MarkerFaceColor = [.75 0 0];
+a.Color = [.75 0 0];
 a.LineStyle = 'none';
+a.MarkerSize = 5;
 
-b.Marker = 'square';
-b.MarkerFaceColor = [.75 0 0];
-b.Color = [.75 0 0];
+b.Marker = '*';
+b.MarkerFaceColor = [.25 .25 .25];
+b.Color = [.25 .25 .25];
 b.LineStyle = 'none';
+b.MarkerSize = 5;
 
 xlim([0.5 3.5])
 ylim([0 45])
 xticklabels({'','0-30', '', '31-60', '', '61-90'})
 xlabel('Fit Reliability (degrees)')
 ylabel('Mean Pref Ori Change (+- s.e.m.)')
-legend(['Arc Prom (KRAB)'], ['LacZ-GRACE (KRAB)'])
+legend(['Arc Enh (KRAB)'], ['LacZ-GRACE (KRAB)'])
 title('Bottom 50% Responsivity')
+
+print(fullfile(compfnout, ['gracemice_bot_50_reliabilitysplit_prefori_change_red.pdf']), '-dpdf', '-bestfit')
+
 
 %%
 
@@ -795,11 +952,13 @@ a.Marker = 'o';
 a.MarkerFaceColor = [1 0 0];
 a.Color = [1 0 0];
 a.LineStyle = 'none';
+a.MarkerSize = 5;
 
-b.Marker = 'square';
-b.MarkerFaceColor = [.75 0 0];
-b.Color = [.75 0 0];
+b.Marker = '^';
+b.MarkerFaceColor = [0 0 0];
+b.Color = [0 0 0];
 b.LineStyle = 'none';
+b.MarkerSize = 5;
 
 xlim([0.5 3.5])
 ylim([0 45])
@@ -808,6 +967,8 @@ xlabel('Fit Reliability (degrees)')
 ylabel('Mean Pref Ori Change (+- s.e.m.)')
 legend(['Arc Prom (KRAB)'], ['LacZ-TJ (KRAB)'])
 title('Sharpest Tuning')
+
+print(fullfile(compfnout, ['tjmice_sharp_reliabilitysplit_prefori_change_red.pdf']), '-dpdf', '-bestfit')
 
 
 %%
@@ -825,23 +986,37 @@ b = errorbar([mean(grace_lacz_red_sharp_ALLDAYS_pref_bin1_reliability), mean(gra
     std(grace_lacz_red_sharp_ALLDAYS_pref_bin2_reliability)/sqrt(length(grace_lacz_red_sharp_ALLDAYS_pref_bin2_reliability)), ... 
     std(grace_lacz_red_sharp_ALLDAYS_pref_bin3_reliability)/sqrt(length(grace_lacz_red_sharp_ALLDAYS_pref_bin3_reliability))]);
 
-a.Marker = 'o';
-a.MarkerFaceColor = [1 0 0];
-a.Color = [1 0 0];
+a.Marker = 'square';
+a.MarkerFaceColor = [.75 0 0];
+a.Color = [.75 0 0];
 a.LineStyle = 'none';
+a.MarkerSize = 5;
 
-b.Marker = 'square';
-b.MarkerFaceColor = [.75 0 0];
-b.Color = [.75 0 0];
+b.Marker = '*';
+b.MarkerFaceColor = [.25 .25 .25];
+b.Color = [.25 .25 .25];
 b.LineStyle = 'none';
+b.MarkerSize = 5;
 
 xlim([0.5 3.5])
 ylim([0 45])
 xticklabels({'','0-30', '', '31-60', '', '61-90'})
 xlabel('Fit Reliability (degrees)')
 ylabel('Mean Pref Ori Change (+- s.e.m.)')
-legend(['Arc Prom (KRAB)'], ['LacZ-GRACE (KRAB)'])
+legend(['Arc Enh (KRAB)'], ['LacZ-GRACE (KRAB)'])
 title('Sharpest Tuning')
 
+print(fullfile(compfnout, ['gracemice_sharp_reliabilitysplit_prefori_change_red.pdf']), '-dpdf', '-bestfit')
 
+%%
+
+figure;
+subplot(2,2,1);
+scatter(arc_prom_red_bot_50_grand_reliability, arc_prom_red_bot_d1_d2_pref_d_all)
+subplot(2,2,2);
+scatter(arc_prom_red_bot_50_grand_reliability, arc_prom_red_bot_d1_d3_pref_d_all)
+subplot(2,2,3);
+scatter(tj_lacz_red_bot_50_grand_reliability, tj_lacz_red_bot_d1_d2_pref_d_all)
+subplot(2,2,4);
+scatter(tj_lacz_red_bot_50_grand_reliability, tj_lacz_red_bot_d1_d3_pref_d_all)
 

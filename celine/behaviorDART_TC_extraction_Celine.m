@@ -3,7 +3,7 @@
 close all;clear all;clc;
 ds = 'DART_behavior_ExptList';
 experimentFolder = 'SST_behavior';
-iexp = 11; 
+iexp = 16; 
 eval(ds)
 
 %%
@@ -25,11 +25,11 @@ elseif string(hostname) == 'NB-NUKE'
     base = fullfile(isilonName,'/home/ACh/Analysis/2p_analysis',experimentFolder);
     database = fullfile(isilonName,'/home/ACh/Data/2p_data/');
 else
-    isilonName = 'duhs-user-nc1.dhe.duke.edu/';
-    base = fullfile('/home/ACh/Analysis/2p_analysis',experimentFolder);
-    database = fullfile('/home/ACh/Data/2p_data/');
+    isilonName = 'duhs-user-nc1.dhe.duke.edu/dusom_glickfeldlab';
+    base = fullfile('/All_Staff/home/ACh/Analysis/2p_analysis',experimentFolder);
+    database = fullfile('/All_Staff/home/ACh/Data/2p_data/');
    
-   beh_prefix = strcat('Z:\Behavior\Data\data-');
+   beh_prefix = strcat('/All_Staff/Behavior/Data/data-');
 end
 
 fprintf(['2P imaging DART behavior analysis\nSelected data:\nMouse: ' mouse '\nDate: ' date '\nExperiments:\n'])
@@ -100,7 +100,7 @@ nep = floor(size(data,3)./step);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*step):500+((i-1)*step)),3)); title([num2str(1+((i-1)*step)) '-' num2str(500+((i-1)*step))]); end
 
-data_avg = mean(data(:,:,55000:55500),3);
+data_avg = mean(data(:,:,30000:30500),3);
 %% Register data
 [database mouse '\' date '\' ImgFolder{irun}]
 if exist(fullfile(fnout,'\regOuts&Img.mat'))

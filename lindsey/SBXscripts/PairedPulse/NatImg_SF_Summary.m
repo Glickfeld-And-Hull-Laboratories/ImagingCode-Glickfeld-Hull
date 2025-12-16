@@ -33,6 +33,7 @@ max_val_nat_all = [];
 max_snr_sf_all = [];
 max_snr_nat_all = [];
 h_stim_all = [];
+mouse_ind_all = [];
 ntrialperstim = zeros(nexp,14);
 
 for iexp = 1:nexp
@@ -113,6 +114,7 @@ for iexp = 1:nexp
     max_snr_sf_all = [max_snr_sf_all max_snr_sf];
     max_snr_nat_all = [max_snr_nat_all max_snr_nat];
     h_stim_all = [h_stim_all h_stim];
+    mouse_ind_all = [mouse_ind_all iexp*ones(size(pref_sf))];
 end
 
 %% 241123 analysis
@@ -209,6 +211,44 @@ title(['p = ' num2str(p)])
 sgtitle('All cells resp to 0.16 AND any nat image')
 
 print(fullfile(outpn,'NatImgVGratingAdapt_RespBoth_eye.pdf'),'-dpdf')
+
+%% 
+A = [ones(size(norm_resp_sf)) 2*ones(size(norm_resp_sf))];
+B = [1:size(norm_resp_sf,2) 1:size(norm_resp_sf,2)];
+C = [mouse_ind_all mouse_ind_all];
+Y = [norm_resp_sf norm_resp_nat];
+%nesting = [0 0 0; 1 0 1; 1 0 0];
+nesting = [0 0; 1 0];
+[p, table, stats] = anovan(Y, {A,B,C},...
+    'model', 2,...
+    'random',3,...
+    'nested',nesting,...
+    'varnames',{'Image','Cell','Subj'});
+
+nesting = [0 0; 1 0];
+[p, table, stats] = anovan(Y, {A,C},...
+    'nested',nesting,...
+    'varnames',{'Image','Subj'});
+
+A = [ones(size(norm_resp_sf(ind_match))) 2*ones(size(norm_resp_sf(ind_match)))];
+C = [mouse_ind_all(ind_match) mouse_ind_all(ind_match)];
+Y = [norm_resp_sf(ind_match) norm_resp_nat(ind_match)];
+nesting = [0 0; 1 0];
+[p, table, stats] = anovan(Y, {A,C},...
+    'nested',nesting,...
+    'varnames',{'Image','Subj'});
+
+figure;
+for iexp = 1:nexp
+    subplot(2,3,iexp)
+    ind_match = intersect(find(mouse_ind_all==iexp),intersect(ind_sf,ind_nat));
+    ind_match_n = length(ind_match)
+    errorbar([1 2], [mean(norm_resp_sf(ind_match),2,'omitnan') mean(norm_resp_nat(ind_match),2,'omitnan')],[std(norm_resp_sf(ind_match),[],2,'omitnan')./sqrt(ind_match_n) std(norm_resp_nat(ind_match),[],2,'omitnan')./sqrt(ind_match_n)])
+    ylim([0 1])
+    xlim([0 3])
+    ylabel('Norm dF/F')
+end
+
 %% 
 Adapt_avg_resp_grating_mean = cell(1,nsf+1);
 Adapt_avg_resp_natimg_mean = cell(1,nsf+1);
