@@ -243,10 +243,12 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     'Titles', {'HTP+', 'HTP-'}, ...
     'StimStart', 31);
 % Saves all the figures
+
 figs = findobj('Type', 'figure');
+sizeTitles = length(figs):-1:1;
 for i = 1:length(figs)
     figure(figs(i));
-    saveas(gcf, sprintf('stationary_neural_timecourse_size_%d.pdf', i));
+    saveas(gcf, sprintf('stationary_neural_timecourse_size_%d.pdf', sizeTitles(i)));
 end
 %%
 

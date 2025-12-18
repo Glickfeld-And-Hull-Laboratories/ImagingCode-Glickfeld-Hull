@@ -131,6 +131,7 @@ nSize = length(sizes);
 stimOns =cell(1,nd); %this is the set of trial start times that will be used throughout the rest of this script
 % correctedInputStructure = cell(1, nd);
 
+
 for id = 1:nd
     mouse_temp = expt(allDays(id)).mouse;
     date = expt(allDays(id)).date;
@@ -192,13 +193,16 @@ clear mouse_temp date imgFolder imgMatFile dataPath info
 % drop trials
 if instructions.tDropBool == true
     oldinput = inputStructure; % save input struct before modification
+    clear inputStructure
+
+    
     for id = 1:nd
         if id == 1
             dropTrials = instructions.tDropRefDay;
         elseif id == 2
             dropTrials = instructions.tDropMatchDay;
         end
-        newinput = trialDropper(inputStructure(id),dropTrials,instructions.tDropAction);
+        newinput = trialDropper(oldinput(id),dropTrials,instructions.tDropAction);
         inputStructure(id) = newinput;
         clear newinput
         switch inputStructure(id).stimTimingSource
