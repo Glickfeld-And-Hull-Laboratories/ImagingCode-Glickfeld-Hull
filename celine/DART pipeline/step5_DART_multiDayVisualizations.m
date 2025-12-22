@@ -328,9 +328,10 @@ plotNeuralTimecourse(tc_trial_avrg_loc_concat, tc_trial_avrg_loc_concat, ...
     'StimStart', 31);
 
 figs = findobj('Type', 'figure');
+sizeTitles = length(figs):-1:1;
 for i = 1:length(figs)
     figure(figs(i));
-    saveas(gcf, sprintf('running_neural_timecourse_size_%d.pdf', i));
+    saveas(gcf, sprintf('running_neural_timecourse_size_%d.pdf', sizeTitles(i)));
 end
 
 % Plot running contrast response function for cells that have running data
