@@ -144,7 +144,8 @@ for id = 1:nd
             fprintf('Found previously corrected stim on timings for day %i.\n',id);
             switch inputStructure(id).stimTimingSource
                 case 'MW'
-                    stimOns{id} = cell2mat(inputStructure(id).stimOns_mwCounter);
+                    % stimOns{id} = cell2mat(inputStructure(id).stimOns_mwCounter);
+                    stimOns{id} = inputStructure(id).stimOns_mwCounter;
                     disp('Using corrected mWorks counter.');
                 case 'PD'
                     stimOns{id} = inputStructure(id).stimOns_photodiode;

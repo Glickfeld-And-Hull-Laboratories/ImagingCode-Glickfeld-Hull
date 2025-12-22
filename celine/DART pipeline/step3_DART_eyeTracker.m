@@ -51,17 +51,33 @@ for day = 1:2
     load(inputfName);
 
     nFrames = input.counterValues{end}(end);
-switch instructions.tIdxSource
-    case 'PD'
-        stimOns=input.stimOns_photodiode;
-    case 'MW'
-        stimOns=cell2mat(input.stimOns_mwCounter);
-        clear input_correct
-    case 'cS'
-        stimOns = cell2mat(input.cStimOn);
-    otherwise
-        error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
-end
+    if isscalar(instructions.tIdxSource)
+        switch instructions.tIdxSource
+            case 'PD'
+                stimOns=input.stimOns_photodiode;
+            case 'MW'
+                stimOns=cell2mat(input.stimOns_mwCounter);
+                clear input_correct
+            case 'cS'
+                stimOns = cell2mat(input.cStimOn);
+            otherwise
+                error('No valid trial indexing source specificed in instr file. Use "PD" or "MW".');
+        end
+    elseif length(instructions.tIdxSource) == 2
+        temp_tIdxSource = instructions.tIdxSource(day);
+        switch temp_tIdxSource
+            case 'PD'
+                stimOns=input.stimOns_photodiode;
+            case 'MW'
+                % stimOns=cell2mat(input.stimOns_mwCounter);
+                stimOns=input.stimOns_mwCounter;
+                clear input_correct
+            case 'cS'
+                stimOns = cell2mat(input.cStimOn);
+            otherwise
+                error('No valid trial indexing source specificed in instr file. Use "PD" or "MW" or "cS".');
+        end
+    end
     
 
     
