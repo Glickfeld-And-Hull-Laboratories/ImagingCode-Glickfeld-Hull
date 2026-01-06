@@ -285,7 +285,7 @@ end
 %create red image where any pixel value above a certain percentile of the max is set to 90%
 %of the max - removing the highest 10% of pixel values to create a lower
 %direction image for segmenting
-threshPercentile = 99;
+threshPercentile = 99.9;
 
 highValues = find(redChImg>prctile(redChImg,threshPercentile,'all'));
 redThresh = redChImg;

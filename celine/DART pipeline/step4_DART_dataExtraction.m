@@ -868,6 +868,21 @@ save(fullfile(fn_multi, 'HT_pyr_relationship.mat'), 'conditionMeans', 'sigCorr',
 
 fprintf('Correlation analysis complete. Results saved to: HT_pyr_relationship.mat\n');
 
+%% optional retinotopy alignment
+response = input('Complete retinotopy alignement? (y/n): ', 's');
+doRetino = strcmpi(response, 'y') || strcmpi(response, 'yes');
+
+if doRetino
+    [ret_npSub_tc_matched, ret_distance,resp_by_stim_matched,ret_dfof_trial_matched] = retinitopy_for_matched_data(nd, ...
+        allDays, expt, mouse, fov_avg, masks, fitGeoTAf, ...
+        instructions, inputStructure);
+    save(fullfile(fn_multi, 'retino_algined.mat'), 'ret_npSub_tc_matched', ...
+        'ret_distance','resp_by_stim_matched','ret_dfof_trial_matched');
+else
+    fprint('Not including retinotopy aligment')
+end
+
+%%
 % Clean up correlation analysis variables
 clear condMeansReshaped tempData cellMeans numToPlot cellsToPlot
 clear R_noise p_noise R_signal p_signal otherCells tCon tDir tSize
