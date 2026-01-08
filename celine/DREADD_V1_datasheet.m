@@ -1,0 +1,25 @@
+%% 1 i2230 Gi DREADD SST with Saline
+expt(1).mouse = 'i2230';
+expt(1).date = '260108';
+expt(1).img_loc  = {'V1';'L2/3'};
+expt(1).z =213.28;
+expt(1).obj = '16x';
+expt(1).zoom = 2;
+expt(1).frame_rate = 15;
+expt(1).multiday_matchdays = [60];
+expt(1).indicator = {'GCaMP8f'};
+expt(1).drug = 'SAL';
+expt(1).drugDoseUgPerKg = '3';
+expt(1).drugAdministerTime = {'1134'};
+expt(1).greenredsimultaneous = 1;
+expt(1).greenChannelLabel = '';
+expt(1).redChannelLabel = '';
+expt(1).redChannelTag = {'mCherry','DRDDGi-mCherry'};
+expt(1).redChannelRun = '001';
+expt(1).contrastxori_runs = {'006'};
+expt(1).contrastxori_time = {'1235'};
+expt(1).wheelColor = 'orange';
+expt(1).exptType = 'SST_DRDDGi';
+expt(1).data_loc = 'ACh';
+expt(1).ret_run = '005';
+expt(1).ret_time = '1222';
