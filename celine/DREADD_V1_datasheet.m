@@ -11,6 +11,7 @@ expt(1).indicator = {'GCaMP8f'};
 expt(1).drug = 'SAL';
 expt(1).drugDoseUgPerKg = '3';
 expt(1).drugAdministerTime = {'1134'};
+expt(1).DRDD_type = 'Gi';
 expt(1).greenredsimultaneous = 1;
 expt(1).greenChannelLabel = '';
 expt(1).redChannelLabel = '';
