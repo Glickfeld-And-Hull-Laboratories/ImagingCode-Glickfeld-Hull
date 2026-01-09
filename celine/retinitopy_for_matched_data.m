@@ -1,4 +1,4 @@
-function [ret_npSub_tc_matched, ret_distance,resp_by_stim_matched,ret_dfof_trial_matched] = retinitopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, instructions, inputStructure)
+function [ret_npSub_tc_matched, ret_distance,resp_by_stim_matched,ret_dfof_trial_matched] = retinitopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, instructions, inputStructure, validation_choice)
 
 ret_npSub_tc_matched = cell(1,nd);
 ret_distance = cell(1,nd);
@@ -123,6 +123,46 @@ for id = 1:nd
     resp_reshaped = reshape(resp_by_stim, [], nCells);
     [~, maxIdx] = max(resp_reshaped, [], 1);
     [maxElev, maxAzim] = ind2sub([nElev, nAzim], maxIdx);
+    
+    if validation_choice && nCells >= 5
+        rng('shuffle');
+        selected_cells = randperm(nCells, min(5, nCells));
+        
+        for i_cell = 1:length(selected_cells)
+            this_cell = selected_cells(i_cell);
+            
+            figure('Name', sprintf('Day %d - Cell %d', id, this_cell));
+            for i_el = 1:length(els)
+                for i_az = 1:length(azs)
+                    subplot(length(els), length(azs), (i_el-1)*length(azs) + i_az);
+                    
+                    this_el_trials = find(trialEl == els(i_el));
+                    this_az_trials = find(trialAz == azs(i_az));
+                    these_trials = intersect(this_el_trials, this_az_trials);
+                    
+                    if ~isempty(these_trials)
+                        mean_trace = squeeze(nanmean(ret_dfof_trial(:, this_cell, these_trials), 3));
+                        plot(mean_trace, 'k', 'LineWidth', 1);
+                        hold on;
+                        xline(nOff/2, 'r--');
+                        xline(nOff/2 + nOn, 'r--');
+                    end
+                    
+                    title(sprintf('Az:%d El:%d', azs(i_az), els(i_el)));
+                    set(gca, 'TickDir', 'out');
+                    grid off;
+                    box off;
+                    
+                    if i_el == length(els)
+                        xlabel('Frame');
+                    end
+                    if i_az == 1
+                        ylabel('dF/F');
+                    end
+                end
+            end
+        end
+    end
     
     finalAzim = double(inputStructure(id).gratingAzimuthDeg);
     finalElev = double(inputStructure(id).gratingElevationDeg);
