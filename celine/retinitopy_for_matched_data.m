@@ -20,10 +20,12 @@ for id = 1:nd
     fprintf(['Loaded ' num2str(nframes) ' frames \r\n'])
 
     fName = ['Z:\Behavior\Data\data-' subnum '-' date '-' time '.mat'];
-    load(fName);
-    ret_inputStructure = input;
+    loadedData = load(fName);
+    ret_inputStructure = loadedData.input;
     clear input
-
+    
+    %get the FOV for the matched data on this day and register the retino
+    %data to it
     referenceFOV = fov_avg{id};
     retAvrg = mean(ret_data_temp,3);
     [~, retAvrg_registered] = stackRegGPU(retAvrg,referenceFOV);
@@ -32,10 +34,17 @@ for id = 1:nd
     if id == 2
         ret_data_registered = imwarp(ret_data_registered,fitGeoTAf, 'OutputView', imref2d(size(ret_data_registered)));
     end
-    
+    ret_data_registered_FOV = mean(ret_data_registered,3);
+    %get the masks from the matched data for this day, plot them on the
+    %registered retino data
     referenceMasks = masks{id};
-    ret_data_tc = stackGetTimeCourses(ret_data_registered, referenceMasks);
+    figure; imagesc(ret_data_registered_FOV), colormap gray; caxis([200 4000]);
+    hold on
+    bound = cell2mat(bwboundaries(referenceMasks(:,:,1)));
+    plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',.1); hold on;
+    drawnow
 
+    ret_data_tc = stackGetTimeCourses(ret_data_registered, referenceMasks);
     mask_np = imCellNeuropil(referenceMasks, 3, 5);
     
     nCells = size(ret_data_tc,2);
@@ -124,45 +133,72 @@ for id = 1:nd
     [~, maxIdx] = max(resp_reshaped, [], 1);
     [maxElev, maxAzim] = ind2sub([nElev, nAzim], maxIdx);
     
-    if validation_choice && nCells >= 5
-        rng('shuffle');
-        selected_cells = randperm(nCells, min(5, nCells));
+if validation_choice && nCells >= 5
+    rng('shuffle');
+    selected_cells = randperm(nCells, min(5, nCells));
+    
+    for i_cell = 1:length(selected_cells)
+        this_cell = selected_cells(i_cell);
         
-        for i_cell = 1:length(selected_cells)
-            this_cell = selected_cells(i_cell);
-            
-            figure('Name', sprintf('Day %d - Cell %d', id, this_cell));
-            for i_el = 1:length(els)
-                for i_az = 1:length(azs)
-                    subplot(length(els), length(azs), (i_el-1)*length(azs) + i_az);
-                    
-                    this_el_trials = find(trialEl == els(i_el));
-                    this_az_trials = find(trialAz == azs(i_az));
-                    these_trials = intersect(this_el_trials, this_az_trials);
-                    
-                    if ~isempty(these_trials)
-                        mean_trace = squeeze(nanmean(ret_dfof_trial(:, this_cell, these_trials), 3));
-                        plot(mean_trace, 'k', 'LineWidth', 1);
-                        hold on;
-                        xline(nOff/2, 'r--');
-                        xline(nOff/2 + nOn, 'r--');
-                    end
-                    
-                    title(sprintf('Az:%d El:%d', azs(i_az), els(i_el)));
-                    set(gca, 'TickDir', 'out');
-                    grid off;
-                    box off;
-                    
-                    if i_el == length(els)
-                        xlabel('Frame');
-                    end
-                    if i_az == 1
-                        ylabel('dF/F');
-                    end
+        all_traces = [];
+        for i_el = 1:length(els)
+            for i_az = 1:length(azs)
+                this_el_trials = find(trialEl == els(i_el));
+                this_az_trials = find(trialAz == azs(i_az));
+                these_trials = intersect(this_el_trials, this_az_trials);
+                if ~isempty(these_trials)
+                    mean_trace = squeeze(nanmean(ret_dfof_trial(:, this_cell, these_trials), 3));
+                    all_traces = [all_traces; mean_trace(:)];
                 end
             end
         end
+        y_limits = [min(all_traces) max(all_traces)];
+        
+        figure('Name', sprintf('Day %d - Cell %d', id, this_cell));
+        for i_el = 1:length(els)
+            for i_az = 1:length(azs)
+                subplot(length(els), length(azs), (i_el-1)*length(azs) + i_az);
+                
+                this_el_trials = find(trialEl == els(i_el));
+                this_az_trials = find(trialAz == azs(i_az));
+                these_trials = intersect(this_el_trials, this_az_trials);
+                
+                is_max = (i_el == maxElev(this_cell)) && (i_az == maxAzim(this_cell));
+                
+                if ~isempty(these_trials)
+                    mean_trace = squeeze(nanmean(ret_dfof_trial(:, this_cell, these_trials), 3));
+                    if is_max
+                        plot(mean_trace, 'r', 'LineWidth', 2);
+                    else
+                        plot(mean_trace, 'k', 'LineWidth', 1);
+                    end
+                    hold on;
+                    xline(nOff/2, 'r--');
+                    xline(nOff/2 + nOn, 'r--');
+                end
+                
+                ylim(y_limits);
+                
+                if is_max
+                    title(sprintf('Az:%d El:%d *MAX*', azs(i_az), els(i_el)), 'Color', 'r', 'FontWeight', 'bold');
+                else
+                    title(sprintf('Az:%d El:%d', azs(i_az), els(i_el)));
+                end
+                set(gca, 'TickDir', 'out');
+                grid off;
+                box off;
+                
+                if i_el == length(els)
+                    xlabel('Frame');
+                end
+                if i_az == 1
+                    ylabel('dF/F');
+                end
+            end
+        end
+        drawnow
     end
+end
     
     finalAzim = double(inputStructure(id).gratingAzimuthDeg);
     finalElev = double(inputStructure(id).gratingElevationDeg);
