@@ -1,11 +1,11 @@
 
 mouse = 'i2230';
-date = '260108';
-redFolder = '001'; %enter the first three digits
+date = '260109';
+redFolder = '000'; %enter the first three digits
 redrun = '000'; %enter the last three digits for the red run
-greenFolder = '002'; %enter the first three digits
+greenFolder = '001'; %enter the first three digits
 greenrun = '000'; %enter the LAST three digits for the green run
-depth='213.28';
+depth='216.40';
 experimentType = 'SST_DRDDGi';
 
 %base= 'Z:/All_Staff/home/ACh/Aging/data/2p'
