@@ -79,7 +79,7 @@ grace_lacz_red_d1_k_all = grace_d1_kmax.lacz_red_d1_k_all;
 grace_lacz_red_d1_k_tuned_all = grace_d1_kmax.lacz_red_d1_k_tuned_all;
 grace_lacz_red_d1_max_all = grace_d1_kmax.lacz_red_d1_max_all;
 grace_lacz_red_d1_max_tuned_all = grace_d1_kmax.lacz_red_d1_max_tuned_all;
-grace_lacz_red_d1_reliability_all = tj_d1_kmax.lacz_red_d1_reliability_all;
+grace_lacz_red_d1_reliability_all = grace_d1_kmax.lacz_red_d1_reliability_all;
 
 arc_enh_red_d1_respEaOri_all = grace_d1_kmax.arc_red_d1_respEaOri_all;
 arc_enh_red_d1_respEaOri_tuned_all = grace_d1_kmax.arc_red_d1_respEaOri_tuned_all;
@@ -434,6 +434,21 @@ hold off
 sgtitle('Change in pref ori- D1D2 v D1D3')
 
 print(fullfile(compfnout, ['allmice_changepref_d2vd3.pdf']), '-dpdf', '-bestfit')
+
+%same as above but scatter
+figure;
+violinplot(1, [tj_lacz_red_d1_d2_pref_d_tuned_all grace_lacz_red_d1_d2_pref_d_tuned_all])
+hold on
+violinplot(2, [tj_lacz_red_d1_d3_pref_d_tuned_all grace_lacz_red_d1_d3_pref_d_tuned_all])
+violinplot(3, arc_prom_red_d1_d2_pref_d_tuned_all)
+violinplot(4, arc_prom_red_d1_d3_pref_d_tuned_all)
+violinplot(5, arc_enh_red_d1_d2_pref_d_tuned_all)
+violinplot(6, arc_enh_red_d1_d3_pref_d_tuned_all)
+
+figure;
+l1 = [tj_lacz_red_d1_d2_pref_d_tuned_all grace_lacz_red_d1_d2_pref_d_tuned_all];
+l2 = [tj_lacz_red_d1_d3_pref_d_tuned_all grace_lacz_red_d1_d3_pref_d_tuned_all];
+boxplot([l1;l2])
 %%
 %this plot shows how much the value of k and max changed across all sessions
 
@@ -517,11 +532,39 @@ hold off
 sgtitle('D1 vs DN Change')
 exportgraphics(gcf,fullfile(compfnout, ['allmice_change_red.pdf']))
 
-all_prefori_diff = [tj_lacz_red_d1_d2_pref_d_tuned_all grace_lacz_red_d1_d2_pref_d_tuned_all tj_lacz_red_d1_d3_pref_d_tuned_all grace_lacz_red_d1_d3_pref_d_tuned_all arc_prom_red_d1_d2_pref_d_tuned_all arc_enh_red_d1_d2_pref_d_tuned_all arc_prom_red_d1_d3_pref_d_tuned_all arc_enh_red_d1_d3_pref_d_tuned_all];
-all_prefori_diff_grna = [ones(size(tj_lacz_red_d1_d2_pref_d_tuned_all)) ones(size(grace_lacz_red_d1_d2_pref_d_tuned_all)) ones(size(tj_lacz_red_d1_d3_pref_d_tuned_all)) ones(size(grace_lacz_red_d1_d3_pref_d_tuned_all)) 2*ones(size(arc_prom_red_d1_d2_pref_d_tuned_all)) 3*ones(size(arc_enh_red_d1_d2_pref_d_tuned_all)) 2*ones(size(arc_prom_red_d1_d3_pref_d_tuned_all)) 3*ones(size(arc_enh_red_d1_d3_pref_d_tuned_all))];
-all_prefori_diff_day = [ones(size(tj_lacz_red_d1_d2_pref_d_tuned_all)) ones(size(grace_lacz_red_d1_d2_pref_d_tuned_all)) 2*ones(size(tj_lacz_red_d1_d3_pref_d_tuned_all)) 2*ones(size(grace_lacz_red_d1_d3_pref_d_tuned_all)) ones(size(arc_prom_red_d1_d2_pref_d_tuned_all)) ones(size(arc_enh_red_d1_d2_pref_d_tuned_all)) 2*ones(size(arc_prom_red_d1_d3_pref_d_tuned_all)) 2*ones(size(arc_enh_red_d1_d3_pref_d_tuned_all))];
-[a b c] = anovan(all_prefori_diff',[all_prefori_diff_grna;all_prefori_diff_day]');
-[results, ~,~,gnames] = multcompare(c,"Dimension",[1 2]);
+all_prefori_diff = [tj_lacz_red_d1_d2_pref_d_tuned_all grace_lacz_red_d1_d2_pref_d_tuned_all tj_lacz_red_d1_d3_pref_d_tuned_all grace_lacz_red_d1_d3_pref_d_tuned_all arc_prom_red_d1_d2_pref_d_tuned_all arc_prom_red_d1_d3_pref_d_tuned_all arc_enh_red_d1_d2_pref_d_tuned_all arc_enh_red_d1_d3_pref_d_tuned_all];
+all_prefori_diff_grna = [ones(size(tj_lacz_red_d1_d2_pref_d_tuned_all)) ones(size(grace_lacz_red_d1_d2_pref_d_tuned_all)) ones(size(tj_lacz_red_d1_d3_pref_d_tuned_all)) ones(size(grace_lacz_red_d1_d3_pref_d_tuned_all)) 2*ones(size(arc_prom_red_d1_d2_pref_d_tuned_all))  2*ones(size(arc_prom_red_d1_d3_pref_d_tuned_all)) 3*ones(size(arc_enh_red_d1_d2_pref_d_tuned_all)) 3*ones(size(arc_enh_red_d1_d3_pref_d_tuned_all))];
+all_prefori_diff_day = [ones(size(tj_lacz_red_d1_d2_pref_d_tuned_all)) ones(size(grace_lacz_red_d1_d2_pref_d_tuned_all)) 2*ones(size(tj_lacz_red_d1_d3_pref_d_tuned_all)) 2*ones(size(grace_lacz_red_d1_d3_pref_d_tuned_all)) ones(size(arc_prom_red_d1_d2_pref_d_tuned_all)) 2*ones(size(arc_prom_red_d1_d3_pref_d_tuned_all)) ones(size(arc_enh_red_d1_d2_pref_d_tuned_all)) 2*ones(size(arc_enh_red_d1_d3_pref_d_tuned_all))];
+[p_prefori tab_prefori stats_prefori] = anovan(all_prefori_diff',[all_prefori_diff_grna;all_prefori_diff_day]');
+[results, ~,~,gnames] = multcompare(stats_prefori,"Dimension",[1 2]);
+
+x1 = [tj_lacz_red_d1_d2_pref_d_tuned_all'; grace_lacz_red_d1_d2_pref_d_tuned_all'];
+x2 = [tj_lacz_red_d1_d3_pref_d_tuned_all'; grace_lacz_red_d1_d3_pref_d_tuned_all'];
+x3 = arc_prom_red_d1_d2_pref_d_tuned_all';
+x4 = arc_prom_red_d1_d3_pref_d_tuned_all';
+x5 = arc_enh_red_d1_d2_pref_d_tuned_all';
+x6 = arc_enh_red_d1_d3_pref_d_tuned_all';
+% g1 = repmat({'LacZ D1vD3'},size(x1));
+% g2 = repmat({'LacZ D1vD7'},size(x2));
+% g3 = repmat({'Prom D1vD3'},size(x3));
+% g4 = repmat({'Prom D1vD7'},size(x4));
+% g5 = repmat({'Enh D1vD3'},size(x5));
+% g6 = repmat({'Enh D1vD7'},size(x6));
+g1 = repmat(1,size(x1));
+g2 = repmat(2,size(x2));
+g3 = repmat(3,size(x3));
+g4 = repmat(4,size(x4));
+g5 = repmat(5,size(x5));
+g6 = repmat(6,size(x6));
+
+x = [x1;x2;x3;x4;x5;x6];
+g = [g1;g2;g3;g4;g5;g6];
+
+[a b c] = anovan(x,g);
+figure;
+boxplot(x,g)
+groups = find(results(:,end)<0.05);
+sigstar(mat2cell(results(groups,1:2),[1 1 1 1 1]),results(groups,end))
 
 %%
 %same as the other k value plot, but only for the distribution of values on day 1 (d1)
@@ -890,6 +933,11 @@ ylabel(['% of cells'])
 title([{'Red- D1 v D2'} {[' Prom- p = ' num2str(chop(p_prom,2)) '; Enh- p = ' num2str(chop(p_enh,2))]}])
 hold off
 
+anovatab = zeros(2,length([grace_lacz_red_d1_d2_pref_d_tuned_all tj_lacz_red_d1_d2_pref_d_tuned_all arc_prom_red_d1_d2_pref_d_tuned_all arc_enh_red_d1_d2_pref_d_tuned_all]));
+anovatab(1,:) = [grace_lacz_red_d1_d2_pref_d_tuned_all tj_lacz_red_d1_d2_pref_d_tuned_all arc_prom_red_d1_d2_pref_d_tuned_all arc_enh_red_d1_d2_pref_d_tuned_all]';
+rel = anovatab(1,:)<22.5;
+rel_pct = sum(rel./length(rel));
+
 subplot(2,2,2)
 j=cdfplot([tj_lacz_red_d1_d3_pref_d_tuned_all grace_lacz_red_d1_d3_pref_d_tuned_all]);
 set(j, 'LineStyle', '-', 'Color', 'k', 'LineWidth',2);
@@ -909,6 +957,11 @@ legend(['LacZ- n = ' num2str(length([tj_lacz_red_d1_d3_pref_d_tuned_all grace_la
 [h_enh p_enh] = ttest2(arc_enh_red_d1_d3_pref_d_tuned_all,[grace_lacz_red_d1_d3_pref_d_tuned_all tj_lacz_red_d1_d3_pref_d_tuned_all]);
 title([{'Red- D1 v D3'} {[' Prom- p = ' num2str(chop(p_prom,2)) '; Enh- p = ' num2str(chop(p_enh,2))]}])
 hold off
+
+anovatab = zeros(2,length([grace_lacz_red_d1_d3_pref_d_tuned_all tj_lacz_red_d1_d3_pref_d_tuned_all arc_prom_red_d1_d3_pref_d_tuned_all arc_enh_red_d1_d3_pref_d_tuned_all]));
+anovatab(1,:) = [grace_lacz_red_d1_d3_pref_d_tuned_all tj_lacz_red_d1_d3_pref_d_tuned_all arc_prom_red_d1_d3_pref_d_tuned_all arc_enh_red_d1_d3_pref_d_tuned_all]';
+rel = anovatab(1,:)<22.5;
+rel_pct = sum(rel./length(rel));
 
 print(fullfile(compfnout, ['allmice_changepref_combLacZ.pdf']), '-dpdf', '-bestfit')
 
@@ -1004,6 +1057,11 @@ xlabel(['Day 1 k Value'])
 ylabel(['% of cells'])
 [h_prom p_prom] = ttest2(arc_prom_red_d1_k_all,[grace_lacz_red_d1_k_all tj_lacz_red_d1_k_all]);
 [h_enh p_enh] = ttest2(arc_enh_red_d1_k_all,[tj_lacz_red_d1_k_all grace_lacz_red_d1_k_all]);
+anovatab = zeros(2,length([grace_lacz_red_d1_k_all tj_lacz_red_d1_k_all arc_prom_red_d1_k_all arc_enh_red_d1_k_all]));
+anovatab(1,:) = [grace_lacz_red_d1_k_all tj_lacz_red_d1_k_all arc_prom_red_d1_k_all arc_enh_red_d1_k_all]';
+anovatab(2,:) = [ones(size([grace_lacz_red_d1_k_all tj_lacz_red_d1_k_all])) 2*ones(size(arc_prom_red_d1_k_all)) 3*ones(size(arc_enh_red_d1_k_all))]';
+[p_k tbl stats_k] = anovan(anovatab(1,:),{anovatab(2,:)});
+c_k = multcompare(stats_k);
 title([{'Red Responsive'},{['Prom- p = ' num2str(chop(p_prom,2)) '; Enh- p = ' num2str(chop(p_enh,2))]}]);
 hold off
 
@@ -1021,6 +1079,11 @@ xlabel(['Day 1 max Value'])
 ylabel(['% of cells'])
 [h_prom p_prom] = ttest2(arc_prom_red_d1_max_all,[grace_lacz_red_d1_max_all tj_lacz_red_d1_max_all]);
 [h_enh p_enh] = ttest2(arc_enh_red_d1_max_all,[tj_lacz_red_d1_max_all grace_lacz_red_d1_max_all]);
+anovatab = zeros(2,length([grace_lacz_red_d1_max_all tj_lacz_red_d1_max_all arc_prom_red_d1_max_all arc_enh_red_d1_max_all]));
+anovatab(1,:) = [grace_lacz_red_d1_max_all tj_lacz_red_d1_max_all arc_prom_red_d1_max_all arc_enh_red_d1_max_all]';
+anovatab(2,:) = [ones(size([grace_lacz_red_d1_max_all tj_lacz_red_d1_max_all])) 2*ones(size(arc_prom_red_d1_max_all)) 3*ones(size(arc_enh_red_d1_max_all))]';
+[p_max tbl stats_max] = anovan(anovatab(1,:),{anovatab(2,:)});
+c_max = multcompare(stats_max);
 title([{'Red Responsive'},{['Prom- p = ' num2str(chop(p_prom,2)) '; Enh- p = ' num2str(chop(p_enh,2))]}]);
 hold off
 
@@ -1038,8 +1101,16 @@ xlabel(['Day 1 reliability Value'])
 ylabel(['% of cells'])
 [h_prom p_prom] = ttest2(arc_prom_red_d1_reliability_all,[grace_lacz_red_d1_reliability_all tj_lacz_red_d1_reliability_all]);
 [h_enh p_enh] = ttest2(arc_enh_red_d1_reliability_all,[tj_lacz_red_d1_reliability_all grace_lacz_red_d1_reliability_all]);
+anovatab = zeros(2,length([grace_lacz_red_d1_reliability_all tj_lacz_red_d1_reliability_all arc_prom_red_d1_reliability_all arc_enh_red_d1_reliability_all]));
+anovatab(1,:) = [grace_lacz_red_d1_reliability_all tj_lacz_red_d1_reliability_all arc_prom_red_d1_reliability_all arc_enh_red_d1_reliability_all]';
+anovatab(2,:) = [ones(size([grace_lacz_red_d1_reliability_all tj_lacz_red_d1_reliability_all])) 2*ones(size(arc_prom_red_d1_reliability_all)) 3*ones(size(arc_enh_red_d1_reliability_all))]';
+[p_rel tbl stats_rel] = anovan(anovatab(1,:),{anovatab(2,:)});
+c_rel = multcompare(stats_rel);
 title([{'Red Responsive'},{['Prom- p = ' num2str(chop(p_prom,2)) '; Enh- p = ' num2str(chop(p_enh,2))]}]);
 hold off
+
+rel = anovatab(1,:)<10;
+rel_pct = sum(rel./length(rel));
 
 exportgraphics(gcf,fullfile(compfnout, ['allmice_day1_combLacZ.pdf']))
 
