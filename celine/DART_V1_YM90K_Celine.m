@@ -361,6 +361,8 @@ expt(17).contrastxori_time = {'1442'};
 expt(17).wheelColor = 'orange';
 expt(17).exptType = 'VIP_YM90K';
 expt(17).data_loc = 'ACh';
+expt(17).ret_run = '006';
+expt(17).ret_time = '1434';
 %% 18 i2211 PEG
 expt(18).mouse = 'i2211';
 expt(18).date = '250729';
@@ -383,6 +385,8 @@ expt(18).contrastxori_time = {'1434'};
 expt(18).wheelColor = 'orange';
 expt(18).exptType = 'VIP_YM90K';
 expt(18).data_loc = 'ACh';
+expt(18).ret_run = '002';
+expt(18).ret_time = '1424';
 %%  i2206 control
 expt(19).mouse = 'i2206';
 expt(19).date = '250730';
@@ -581,6 +585,8 @@ expt(27).contrastxori_time = {'1335'};
 expt(27).wheelColor = 'orange';
 expt(27).exptType = 'VIP_YM90K';
 expt(27).data_loc = 'ACh';
+expt(27).ret_run = '003';
+expt(27).ret_time = '1326';
 %%  i3330 PEG
 expt(28).mouse = 'i3330';
 expt(28).date = '250828';
@@ -603,6 +609,8 @@ expt(28).contrastxori_time = {'1354'};
 expt(28).wheelColor = 'orange';
 expt(28).exptType = 'VIP_YM90K';
 expt(28).data_loc = 'ACh';
+expt(28).ret_run = '002';
+expt(28).ret_time = '1342';
 %%  i3331 baseline
 expt(29).mouse = 'i3331';
 expt(29).date = '250903';
@@ -625,7 +633,7 @@ expt(29).contrastxori_time = {'1332'};
 expt(29).wheelColor = 'orange';
 expt(29).exptType = 'VIP_YM90K';
 expt(29).data_loc = 'ACh';
-%%  i3331 DART
+%%  i3331 PEG
 expt(30).mouse = 'i3331';
 expt(30).date = '250904';
 expt(30).img_loc  = {'V1';'L2/3'};
@@ -827,7 +835,7 @@ expt(38).contrastxori_time = {'1020'};
 expt(38).wheelColor = 'orange';
 expt(38).exptType = 'VIP_YM90K';
 expt(38).data_loc = 'ACh';
-%% i3333  20 hrs post DART
+%% i3333  20 hrs post PEG
 expt(39).mouse = 'i3333';
 expt(39).date = '251030';
 expt(39).img_loc  = {'V1';'L2/3'};
@@ -838,7 +846,7 @@ expt(39).frame_rate = 15;
 expt(39).multiday_timesincedrug_hours = '20';
 expt(39).multiday_matchdays = [38];
 expt(39).indicator = {'GCaMP8f'};
-expt(39).drug = 'YM90K';
+expt(39).drug = 'YM90K-PEG';
 expt(39).greenredsimultaneous = 1;
 expt(39).greenChannelLabel = '';
 expt(39).redChannelLabel = '';
