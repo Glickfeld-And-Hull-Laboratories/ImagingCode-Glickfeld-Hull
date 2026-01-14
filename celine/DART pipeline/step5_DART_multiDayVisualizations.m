@@ -1,9 +1,7 @@
-%% Overview
 % This script has the basic steps to investigate matched 2-photon data such
 % as from DART experiments. It focusses on visualization, rather than
 % statistical analyis.
 
-% clear the workspace and set up basic paths and variables
 clear all; close all; clc
 
 prompt = 'Enter name of instructions file: ';
@@ -31,19 +29,17 @@ nSize = length(targetSize);
 x = instructions.refDay;
 switch x
     case '1'
-        pre = 1;  % baseline session, used as reference, is in the 1st position
+        pre = 1;
         post = 2;
         fprintf('Baseline used as reference\n');
         matchDrx='f';
     case '2'
         pre = 2;
-        post = 1;  % post-DART session, used as reference, is in the 1st position
+        post = 1;
         fprintf('Post-DART used as reference\n');
         matchDrx='r';
 end
 clear x instr
-
-
 
 % Create output directory
 sess_title = num2str(sess_list(1));
@@ -64,10 +60,10 @@ else
 end
 mkdir(fnout); cd(fnout)
 
-%% Concatenating data
 % Initialize concatenation variables
 mice = []; red_concat = []; green_concat = []; nKeep_concat = [];
 dirs_concat = []; cons_concat = []; sizes_concat=[];
+
 % Initialize cell arrays for concatenation
 cell_vars = {'tc_trial_avrg_stat', 'tc_trial_avrg_loc', 'tc_trial_avrg_stat_largePupil', 'tc_trial_avrg_stat_smallPupil', ...
     'pref_responses_stat', 'pref_responses_loc', 'pref_responses_stat_smallPupil', 'pref_responses_stat_largePupil','h', 'data_resp', 'RIx', 'norm_dir_resp', 'pref_dir', ...
@@ -77,6 +73,15 @@ for i = 1:length(cell_vars)
 end
 pref_allTrials_stat_concat = cell(nCon, nSize, nd);
 pref_allTrials_loc_concat = cell(nCon, nSize, nd);
+
+% Initialize retinotopy concatenation variables if needed
+if isfield(instructions, 'load_retino') && instructions.load_retino
+    ret_npSub_tc_keep_concat = cell(1, nd);
+    ret_distance_keep_concat = cell(1, nd);
+    resp_by_stim_keep_concat = cell(1, nd);
+    ret_dfof_trial_keep_concat = cell(1, nd);
+end
+
 drug = cell(1, nSess);
 
 % Main concatenation loop
@@ -103,6 +108,18 @@ for iSess = 1:nSess
     load(fullfile(fn_multi, 'HT_pyr_relationship.mat'));
     nKeep = size(tc_trial_avrg_stat{post}, 2);
     
+    % Load retinotopy data if requested
+    if isfield(instructions, 'load_retino') && instructions.load_retino
+        retino_file = fullfile(fn_multi, 'retino_aligned.mat');
+        if exist(retino_file, 'file')
+            load(fullfile(fn_multi, 'retino_aligned.mat'));
+            fprintf('Loaded retinotopy data for session %d\n', iSess);
+            fprintf('  ret_distance_keep structure check:\n');
+        else
+            warning('Retinotopy file not found for session %d: %s', iSess, retino_file);
+        end
+    end
+    
     % Process trial conditions
     tCon_match = cell(1, nd);
     nTrials = [];
@@ -112,14 +129,14 @@ for iSess = 1:nSess
     end
     dirs = unique(celleqel2mat_padded(input(post).tGratingDirectionDeg(1:nTrials(post))));
     cons = unique(tCon_match{post});
-    sharedCon = find(ismember(cons, targetCon)); %find the indices of the contrasts to include
+    sharedCon = find(ismember(cons, targetCon));
 
-    if length(unique(cellfun(@class,input(1).tGratingDiameterDeg,'UniformOutput',false))) > 1 % check if all cells have the same data class
+    if length(unique(cellfun(@class,input(1).tGratingDiameterDeg,'UniformOutput',false))) > 1
         sizes = unique(cellfun(@double,input(1).tGratingDiameterDeg));
     else
-        sizes = unique(cell2mat(input(1).tGratingDiameterDeg));% hardcoded to 1 because the same sizes are used across days
+        sizes = unique(cell2mat(input(1).tGratingDiameterDeg));
     end
-    sharedSize=find(ismember(sizes, targetSize)); %find the indices of the sizes to include
+    sharedSize=find(ismember(sizes, targetSize));
      
     % Concatenate basic variables
     dirs_concat = [dirs_concat, dirs];
@@ -148,6 +165,22 @@ for iSess = 1:nSess
         data_resp_concat{id} = cat(1, data_resp_concat{id}, data_resp_keep{id});
     end
     
+    % Concatenate retinotopy data if loaded
+    if isfield(instructions, 'load_retino') && instructions.load_retino && exist('ret_npSub_tc_matched', 'var')
+        fprintf('  Concatenating retinotopy data for session %d\n', iSess);
+        for id = 1:nd
+            ret_npSub_tc_keep_concat{id} = cat(2, ret_npSub_tc_keep_concat{id}, ret_npSub_tc_keep{id});
+            
+            fprintf('    Day %d ret_distance_keep: before concat size = [%s], adding size = [%s]\n', ...
+                id, num2str(size(ret_distance_keep_concat{id})), num2str(size(ret_distance_keep{id})));
+            ret_distance_keep_concat{id} = cat(2, ret_distance_keep_concat{id}, ret_distance_keep{id});
+            fprintf('    Day %d ret_distance_keep: after concat size = [%s]\n', id, num2str(size(ret_distance_keep_concat{id})));
+            
+            resp_by_stim_keep_concat{id} = cat(3, resp_by_stim_keep_concat{id}, resp_by_stim_keep{id});
+            ret_dfof_trial_keep_concat{id} = cat(2, ret_dfof_trial_keep_concat{id}, ret_dfof_trial_keep{id});
+        end
+    end
+    
     if iSess == 1
         norm_diff_concat = norm_diff;
     else
@@ -163,11 +196,31 @@ green_ind_concat = find(green_concat);
 cons = targetCon;
 nKeep_total = sum(nKeep_concat);
 
+% Summary of concatenated retinotopy data
+if isfield(instructions, 'load_retino') && instructions.load_retino
+    fprintf('\nFinal concatenated retinotopy data:\n');
+    for id = 1:nd
+        fprintf('  Day %d:\n', id);
+        if iscell(ret_distance_keep_concat) && length(ret_distance_keep_concat) >= id
+            fprintf('    ret_distance_keep_concat: size = [%s], numel = %d\n', ...
+                num2str(size(ret_distance_keep_concat{id})), numel(ret_distance_keep_concat{id}));
+        end
+        if iscell(ret_npSub_tc_keep_concat) && length(ret_npSub_tc_keep_concat) >= id
+            fprintf('    ret_npSub_tc_matched_concat: size = [%s]\n', num2str(size(ret_npSub_tc_keep_concat{id})));
+        end
+    end
+end
+
 % Clear individual session data, keep only concatenated
 clear tc_trial_avrg_stat tc_trial_avrg_loc tc_trial_avrg_stat_largePupil tc_trial_avrg_stat_smallPupil
 clear pref_responses_stat pref_responses_loc h data_resp RIx norm_dir_resp pref_dir noiseCorr sigCorr
 clear nonPref_trial_avrg_stat nonPref_trial_avrg_loc data_dfof_runOnset norm_diff
 clear red_cells_keep green_cells_keep prefDir_keep h_keep data_resp_keep pref_responses_stat_largePupil  pref_responses_stat_smallPupil
+if exist('ret_npSub_tc_matched', 'var')
+    clear ret_npSub_tc_matched ret_distance_keep resp_by_stim_matched ret_dfof_trial_matched
+end
+
+
 %%  Cell selection - find cells with running and stationary data for both days
 haveRunning = cell(1,nd);
 haveStat = cell(1,nd);

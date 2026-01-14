@@ -404,7 +404,7 @@ npSub_tc = data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 
 save(fullfile(fnout, 'TCs.mat'), 'data_tc','np_tc','npSub_tc')
 
-clear data_g_reg data_reg_down
+clear data_reg_down
 
 
 

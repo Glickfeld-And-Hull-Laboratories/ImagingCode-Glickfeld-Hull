@@ -24,6 +24,7 @@ expt(1).exptType = 'SST_DRDDGi';
 expt(1).data_loc = 'ACh';
 expt(1).ret_run = '005';
 expt(1).ret_time = '1222';
+expt(1).multiday_timesincedrug_hours=[]
 %% 2 i2230 Gi DREADD SST with DCZ
 expt(2).mouse = 'i2230';
 expt(2).date = '260109';
@@ -50,3 +51,4 @@ expt(2).exptType = 'SST_DRDDGi';
 expt(2).data_loc = 'ACh';
 expt(2).ret_run = '002';
 expt(2).ret_time = '1220';
+expt(2).multiday_timesincedrug_hours=[24]

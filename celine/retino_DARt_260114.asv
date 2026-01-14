@@ -1,0 +1,20 @@
+%retino_DARt_260114
+figure;
+data = [ret_distance_keep_concat{1}; ret_distance_keep_concat{2}];
+group = [ones(length(ret_distance_keep_concat{1}), 1); 2*ones(length(ret_distance_keep_concat{2}), 1)];
+
+boxplot(data, group, 'Labels', {'Pre', 'Post'});
+hold on;
+scatter(ones(size(ret_distance_keep_concat{1})), ret_distance_keep_concat{1}, 20, 'k', 'filled', 'jitter', 'on', 'jitterAmount', 0.1);
+scatter(2*ones(size(ret_distance_keep_concat{2})), ret_distance_keep_concat{2}, 20, 'k', 'filled', 'jitter', 'on', 'jitterAmount', 0.1);
+
+set(gca, 'TickDir', 'out');
+grid off;
+box off;
+ylabel('Distance');
+
+%% 
+%designating close cells as those with distance <8 on both days
+closeCellsPre = find(ret_distance_keep_concat{pre}<6);
+closeCellsPost = find(ret_distance_keep_concat{post}<8);
+closeCellsBothDays = intersect(closeCellsPre,closeCellsPost);

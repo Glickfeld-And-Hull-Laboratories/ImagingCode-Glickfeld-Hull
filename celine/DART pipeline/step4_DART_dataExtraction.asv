@@ -887,10 +887,9 @@ if doRetino
     ret_dfof_trial_keep=cell(1,nd);
 
     for id = 1:nd
-        ret_npSub_tc_keep{id}=ret_npSub_tc_matched{id}(:,keep_cells);
+        ret_npSub_tc_keep{id}=ret_npSub_tc_match{id}(:,keep_cells);
         ret_distance_keep{id}=ret_distance_matched{id}(:,keep_cells);
-        resp_by_stim_keep{id}=resp_by_stim_matched{id}(:,:,keep_cells);
-        ret_dfof_trial_keep{id}=ret_dfof_trial_matched{id}(:,keep_cells,:);
+        resp_by_stim_keep{id}=
     end
 
     save(fullfile(fn_multi, 'retino_aligned.mat'), 'ret_npSub_tc_matched', ...

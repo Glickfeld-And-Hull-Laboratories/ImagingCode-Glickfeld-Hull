@@ -1,7 +1,7 @@
-function [ret_npSub_tc_matched, ret_distance,resp_by_stim_matched,ret_dfof_trial_matched] = retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, instructions, inputStructure, validation_choice)
+function [ret_npSub_tc_matched, ret_distance_matched,resp_by_stim_matched,ret_dfof_trial_matched] = retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, instructions, inputStructure, match_ind, validation_choice)
 
 ret_npSub_tc_matched = cell(1,nd);
-ret_distance = cell(1,nd);
+ret_distance_matched = cell(1,nd);
 resp_by_stim_matched=cell(1,nd);
 ret_dfof_trial_matched=cell(1,nd);
 
@@ -38,6 +38,7 @@ for id = 1:nd
     %get the masks from the matched data for this day, plot them on the
     %registered retino data
     referenceMasks = masks{id};
+
     figure; imagesc(ret_data_registered_FOV), colormap gray; caxis([200 4000]);
     hold on
     bound = cell2mat(bwboundaries(referenceMasks(:,:,1)));
@@ -70,6 +71,11 @@ for id = 1:nd
 
     ret_npSub_tc = ret_data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 
+    if id==1 %trim down to only the matched cells
+        ret_npSub_tc=ret_npSub_tc(:,match_ind);
+    end
+    nMatch = length(match_ind);
+
     nOn = ret_inputStructure(1).nScansOn;
     nOff = ret_inputStructure(1).nScansOff;
     
@@ -97,8 +103,9 @@ for id = 1:nd
             error('No valid trial indexing source specificed in instr file.');
     end
     
+
     nTrials = length(ret_stimOns_temp);
-    ret_data_trial = nan(nOn+nOff,nCells,nTrials);
+    ret_data_trial = nan(nOn+nOff,nMatch,nTrials);
     for itrial = 1:nTrials
         if ~isnan(ret_stimOns_temp(itrial)) & (ret_stimOns_temp(itrial)+nOn+nOff/2)<size(ret_npSub_tc,1)
             ret_data_trial(:,:,itrial) = ret_npSub_tc((ret_stimOns_temp(itrial)-nOff/2:ret_stimOns_temp(itrial)-1+nOn+nOff/2),:);
@@ -118,7 +125,7 @@ for id = 1:nd
     trialEl = celleqel2mat_padded(ret_inputStructure.tGratingElevationDeg);
     els = unique(trialEl);
     
-    resp_by_stim = nan(length(els),length(azs),nCells);
+    resp_by_stim = nan(length(els),length(azs),nMatch);
     for i_el = 1:length(els)
         this_el_trials = find(trialEl == els(i_el));
         for i_az = 1:length(azs)
@@ -128,14 +135,14 @@ for id = 1:nd
         end
     end
 
-    [nElev, nAzim, nCells] = size(resp_by_stim);
-    resp_reshaped = reshape(resp_by_stim, [], nCells);
+    [nElev, nAzim, nMatch] = size(resp_by_stim);
+    resp_reshaped = reshape(resp_by_stim, [], nMatch);
     [~, maxIdx] = max(resp_reshaped, [], 1);
     [maxElev, maxAzim] = ind2sub([nElev, nAzim], maxIdx);
     
-if validation_choice && nCells >= 5
+if validation_choice && nMatch >= 5
     rng('shuffle');
-    selected_cells = randperm(nCells, min(5, nCells));
+    selected_cells = randperm(nMatch, min(5, nMatch));
     
     for i_cell = 1:length(selected_cells)
         this_cell = selected_cells(i_cell);
@@ -206,10 +213,12 @@ end
     maxAzimDeg = azs(maxAzim);
     maxElevDeg = els(maxElev);
     
-    ret_distance{id} = sqrt((maxAzimDeg - finalAzim).^2 + (maxElevDeg - finalElev).^2);
+    ret_distance_matched{id} = sqrt((maxAzimDeg - finalAzim).^2 + (maxElevDeg - finalElev).^2);
     ret_npSub_tc_matched{id} = ret_npSub_tc;
     resp_by_stim_matched{id}=resp_by_stim;
     ret_dfof_trial_matched{id}=ret_dfof_trial;
+
+    %make "keep" versions of all these
 end
 
 end
