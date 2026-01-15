@@ -108,6 +108,8 @@ for iSess = 1:nSess
     load(fullfile(fn_multi, 'HT_pyr_relationship.mat'));
     nKeep = size(tc_trial_avrg_stat{post}, 2);
     
+    inputStructure = input;
+    clear input
     % Load retinotopy data if requested
     if isfield(instructions, 'load_retino') && instructions.load_retino
         retino_file = fullfile(fn_multi, 'retino_aligned.mat');
@@ -124,17 +126,17 @@ for iSess = 1:nSess
     tCon_match = cell(1, nd);
     nTrials = [];
     for id = 1:nd
-        nTrials = [nTrials, length(input(id).tBaseGratingContrast)];
-        tCon_match{id} = celleqel2mat_padded(input(id).tGratingContrast(1:nTrials(id)));
+        nTrials = [nTrials, length(inputStructure(id).tBaseGratingContrast)];
+        tCon_match{id} = celleqel2mat_padded(inputStructure(id).tGratingContrast(1:nTrials(id)));
     end
-    dirs = unique(celleqel2mat_padded(input(post).tGratingDirectionDeg(1:nTrials(post))));
+    dirs = unique(celleqel2mat_padded(inputStructure(post).tGratingDirectionDeg(1:nTrials(post))));
     cons = unique(tCon_match{post});
     sharedCon = find(ismember(cons, targetCon));
 
-    if length(unique(cellfun(@class,input(1).tGratingDiameterDeg,'UniformOutput',false))) > 1
-        sizes = unique(cellfun(@double,input(1).tGratingDiameterDeg));
+    if length(unique(cellfun(@class,inputStructure(1).tGratingDiameterDeg,'UniformOutput',false))) > 1
+        sizes = unique(cellfun(@double,inputStructure(1).tGratingDiameterDeg));
     else
-        sizes = unique(cell2mat(input(1).tGratingDiameterDeg));
+        sizes = unique(cell2mat(inputStructure(1).tGratingDiameterDeg));
     end
     sharedSize=find(ismember(sizes, targetSize));
      

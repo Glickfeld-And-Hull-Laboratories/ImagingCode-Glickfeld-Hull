@@ -191,7 +191,7 @@ end
 % clear correctedInputStructure
 clear mouse_temp date imgFolder imgMatFile dataPath info
 
-% drop trials
+%% drop trials
 if instructions.tDropBool == true
     oldinput = inputStructure; % save input struct before modification
     clear inputStructure
@@ -203,7 +203,7 @@ if instructions.tDropBool == true
             fprintf('dropped %s\n trials from ref day', num2str(length(instructions.tDropRefDay)))
         elseif id == 2
             dropTrials = instructions.tDropMatchDay;
-            fprintf('dropped %s\n trials from matched day', length(instructions.tDropMatchDay))
+            fprintf('dropped %s\n trials from matched day', num2str(length(instructions.tDropMatchDay)))
         end
         newinput = trialDropper(oldinput(id),dropTrials,instructions.tDropAction);
         
@@ -219,7 +219,9 @@ if instructions.tDropBool == true
         end
     end
 end
-
+input=inputStructure;
+save(fullfile(fn_multi,'input.mat'),'input')
+clear input
 
 % Convert raw calcium timecourses to trial-structured dF/F data
 data_dfof_trial_match = cell(1, nd);
@@ -878,7 +880,7 @@ doRetino = strcmpi(response, 'y') || strcmpi(response, 'yes');
 if doRetino
     [ret_npSub_tc_matched, ret_distance_matched,resp_by_stim_matched,ret_dfof_trial_matched] = retinotopy_for_matched_data(nd, ...
         allDays, expt, mouse, fov_avg, masks, fitGeoTAf, ...
-        instructions, inputStructure,match_ind,true);
+        instructions, inputStructure,match_ind,false);
 
    %make "keep" subsets for the matched retino data 
     ret_npSub_tc_keep = cell(1,nd);
