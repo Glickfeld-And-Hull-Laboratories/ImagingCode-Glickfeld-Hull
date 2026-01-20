@@ -1,5 +1,5 @@
 %% Instruction sheet
-instructions.session='2';
+instructions.session='3';
 instructions.ds='DREADD_V1_datasheet';
 instructions.tIdxSource = ["PD"]; % PD or MW or cS; ref day then match day
 instructions.refDay='2'; % 1st day or 2nd day used as reference
