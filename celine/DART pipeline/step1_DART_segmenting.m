@@ -103,7 +103,7 @@ fprintf(['Loaded ' num2str(min(nframes)) ' frames \r\n'])
     % end
 % end
 % end
-
+%%
 
 % register data for each day
 %reg green data

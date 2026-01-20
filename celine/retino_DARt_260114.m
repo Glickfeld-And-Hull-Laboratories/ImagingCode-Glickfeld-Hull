@@ -42,3 +42,34 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
     'Titles', {'HTP+ ret <= 7.1', 'HTP- ret <= 7.1'}, ...
     'StimStart', 31);
+%% look at delta distance
+
+delta_ret_distance = ret_distance_keep_concat{post}-ret_distance_keep_concat{pre};
+data = squeeze(norm_diff_concat(1,3,:,:));
+num_sizes = size(data,1);
+
+% Remove neurons with any value > 5
+keep = all(data <= 5, 1);
+data = data(:, keep);
+delta_ret_distance_clean = delta_ret_distance(keep);
+
+y_lim = [min(data(:)), max(data(:))];
+%y_lim=[]
+x_lim=[-20, 20]
+figure;
+for i = 1:num_sizes
+    subplot(1,num_sizes,i)
+    scatter(delta_ret_distance_clean, data(i,:))
+    xlabel('Delta Ret Distance')
+    ylabel('Norm Diff')
+    title(['Size ' num2str(i)])
+    ylim(y_lim)
+    xlim(x_lim)
+    set(gca, 'TickDir', 'out')
+    grid off
+    box off
+end
+
+set(gcf, 'PaperOrientation', 'landscape')
+set(gcf, 'PaperPosition', [0.25 2 10.5 4])
+print('normDiff_vsRet', '-dpdf')

@@ -249,11 +249,11 @@ statGreen = green_ind_concat;
 statRed = red_ind_concat;
 
 % Mouse indices
-mouseInds = cell(1,nSess);
+sessInds = cell(1,nSess);
 start = 1;
-for iMouse = 1:nSess
-    mouseInds{iMouse} = start:(start-1)+nKeep_concat(iMouse);
-    start = start + nKeep_concat(iMouse);
+for iSess = 1:nSess
+    sessInds{iSess} = start:(start-1)+nKeep_concat(iSess);
+    start = start + nKeep_concat(iSess);
 end
 
 % Cell counts for each mouse
@@ -262,10 +262,10 @@ cellCountsGreen = nan(nSess,2);
 mouseNames = [];
 
 for iMouse = 1:nSess
-    cellCounts(iMouse,1) = length(intersect(runningRed', mouseInds{iMouse}));
-    cellCounts(iMouse,2) = length(intersect(statRed', mouseInds{iMouse}));
-    cellCountsGreen(iMouse,1) = length(intersect(runningGreen', mouseInds{iMouse}));
-    cellCountsGreen(iMouse,2) = length(intersect(statGreen', mouseInds{iMouse}));
+    cellCounts(iMouse,1) = length(intersect(runningRed', sessInds{iMouse}));
+    cellCounts(iMouse,2) = length(intersect(statRed', sessInds{iMouse}));
+    cellCountsGreen(iMouse,1) = length(intersect(runningGreen', sessInds{iMouse}));
+    cellCountsGreen(iMouse,2) = length(intersect(statGreen', sessInds{iMouse}));
     mouseNames = [mouseNames, string(mice(iMouse,:))];
 end
 
@@ -726,7 +726,7 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
 %% Contrast response plots for each cell type per mouse
 for iMouse = 1:nSess
     figure;
-    mouseInds_this = mouseInds{iMouse};
+    mouseInds_this = sessInds{iMouse};
     
     red_this = intersect(red_ind_concat, mouseInds_this);
     green_this = intersect(green_ind_concat, mouseInds_this);
