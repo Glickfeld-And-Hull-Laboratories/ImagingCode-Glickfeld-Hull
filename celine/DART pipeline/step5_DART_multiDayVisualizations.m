@@ -168,7 +168,7 @@ for iSess = 1:nSess
     end
     
     % Concatenate retinotopy data if loaded
-    if isfield(instructions, 'load_retino') && instructions.load_retino && exist('ret_npSub_tc_matched', 'var')
+    if isfield(instructions, 'load_retino') && instructions.load_retino && exist('ret_npSub_tc_keep', 'var')
         fprintf('  Concatenating retinotopy data for session %d\n', iSess);
         for id = 1:nd
             ret_npSub_tc_keep_concat{id} = cat(2, ret_npSub_tc_keep_concat{id}, ret_npSub_tc_keep{id});
@@ -208,7 +208,7 @@ if isfield(instructions, 'load_retino') && instructions.load_retino
                 num2str(size(ret_distance_keep_concat{id})), numel(ret_distance_keep_concat{id}));
         end
         if iscell(ret_npSub_tc_keep_concat) && length(ret_npSub_tc_keep_concat) >= id
-            fprintf('    ret_npSub_tc_matched_concat: size = [%s]\n', num2str(size(ret_npSub_tc_keep_concat{id})));
+            fprintf('    ret_npSub_tc_keep_concat: size = [%s]\n', num2str(size(ret_npSub_tc_keep_concat{id})));
         end
     end
 end

@@ -7,14 +7,7 @@ function [rad centroid] = alignEyeData_PD(Eye_data,input,stimOns);
 % centroid also has a field (dists) that measures the distance from the 
 % median pupil position on each trial during the stim.
 
-recordingDate = datetime(input.startDateVec);
-refDate = datetime(2026,1,23); % the date when we switched the eye tracker camera
-
-if recordingDate < refDate
-    calib = 1/26.6; %mm per pixel
-else
-    calib = 1/100; %mm per pixel
-end
+calib = 1/26.6; %mm per pixel
 sesh_id = input.saveTime;
 msg1 = ['Session ' sesh_id 'used photodiode stimOns as cStimOn'];
 msgbox(msg1);

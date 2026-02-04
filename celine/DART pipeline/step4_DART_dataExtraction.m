@@ -139,10 +139,10 @@ for id = 1:nd
     imgMatFile = [imgFolder '_000_000.mat'];
     dataPath = fullfile(rc.data, mouse_temp, date, imgFolder);
     load(fullfile(dataPath, imgMatFile));
-    if isfield(inputStructure(id),'stimTimingSource')
-        if ~isempty(inputStructure(id).stimTimingSource)
+    if isfield(inputStructure(id),'tIdxSource')
+        if ~isempty(inputStructure(id).tIdxSource)
             fprintf('Found previously corrected stim on timings for day %i.\n',id);
-            switch inputStructure(id).stimTimingSource
+            switch inputStructure(id).tIdxSource
                 case 'MW'
                     % stimOns{id} = cell2mat(inputStructure(id).stimOns_mwCounter);
                     stimOns{id} = inputStructure(id).stimOns_mwCounter;
@@ -209,7 +209,7 @@ if instructions.tDropBool == true
         
         inputStructure(id) = newinput;
         clear newinput
-        switch inputStructure(id).stimTimingSource
+        switch inputStructure(id).tIdxSource
             case 'PD'
                 stimOns{id} = inputStructure(id).stimOns_photodiode;
             case 'MW'

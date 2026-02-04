@@ -1,5 +1,5 @@
 %% Instruction sheet
-instructions.sess_list=[2]; %the sessions to concatenate and analyze
+instructions.sess_list=[5]; %the sessions to concatenate and analyze
 instructions.runOnset_sess_list = []; %skipping sessions that didn't have any running onsets
 instructions.ds='DREADD_V1_datasheet';
 instructions.experimentFolder = 'SST_DRDDGi';
