@@ -13,7 +13,7 @@ refDate = datetime(2026,1,23); % the date when we switched the eye tracker camer
 if recordingDate < refDate
     calib = 1/26.6; %mm per pixel
 else
-    calib = 1/100; %mm per pixel
+    calib = 1/10; %mm per pixel
 end
 sesh_id = input.saveTime;
 msg1 = ['Session ' sesh_id 'used photodiode stimOns as cStimOn'];
