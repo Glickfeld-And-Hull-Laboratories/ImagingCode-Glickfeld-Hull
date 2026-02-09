@@ -219,7 +219,12 @@ clear pref_responses_stat pref_responses_loc h data_resp RIx norm_dir_resp pref_
 clear nonPref_trial_avrg_stat nonPref_trial_avrg_loc data_dfof_runOnset norm_diff
 clear red_cells_keep green_cells_keep prefDir_keep h_keep data_resp_keep pref_responses_stat_largePupil  pref_responses_stat_smallPupil
 if exist('ret_npSub_tc_matched', 'var')
-    clear ret_npSub_tc_matched ret_distance_keep resp_by_stim_matched ret_dfof_trial_matched
+    clear ret_npSub_tc_matched  resp_by_stim_matched ret_dfof_trial_matched
+end
+
+exp_idx = [];
+for iSess = 1:nSess
+    exp_idx = [exp_idx, iSess * ones(1, nKeep_concat(iSess))];
 end
 
 
@@ -236,8 +241,8 @@ haveStat_both = find(haveStat{pre} .* haveStat{post});
 runningCells = intersect(haveStat_both, haveRunning_both);
 
 % Find cells responsive to small and large sizes
-respToSmall = logical(sum(squeeze(sum(h_concat{pre}(:,:,:,1),2)),2) + ...
-                     sum(squeeze(sum(h_concat{post}(:,:,:,1),2)),2));
+respToSmall = logical(sum(squeeze(sum(h_concat{pre}(:,:,:,1:2),2)),2) + ...
+                     sum(squeeze(sum(h_concat{post}(:,:,:,1:2),2)),2));
 respToLarge = logical(sum(squeeze(sum(h_concat{pre}(:,:,:,nSize),2)),2) + ...
                      sum(squeeze(sum(h_concat{post}(:,:,:,nSize),2)),2));
 
@@ -277,6 +282,8 @@ writetable(cellCountTableRed, fullfile(fnout,'cellCounts.csv'), 'WriteRowNames',
 % Running by condition matrix    - this indicates which cells are matched
 % for behavioral state within a single stimulus condition, rather than the
 % more strict cirterion of being matched across all stimulus conditions
+
+
 runningByCondition = nan(nKeep_total, nCon, nSize);
 for iCon = 1:nCon
     for iSize = 1:nSize
@@ -285,6 +292,8 @@ for iCon = 1:nCon
         runningByCondition(:,iCon,iSize) = runningPre .* runningPost;
     end
 end
+
+
 
 
 %% Visualizations of stationary responses for all cells
@@ -357,8 +366,8 @@ for iSize = 1:nSize
             grid off;
             box off;
             axis square;
-            xlim(axis_lim);
-            ylim(axis_lim);
+           % xlim(axis_lim);
+            %ylim(axis_lim);
             refline(1);
             title([cell_names{iCellType}, ' con ', num2str(cons(iCon)), ' size ', num2str(sizes(iSize))]);
             
@@ -407,31 +416,26 @@ plotSizeResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
 sgtitle('Running')
 saveas(gcf, sprintf('running_size_response.pdf'));
 
-%% Normalized direction tuning at a specified size
+%% Normalized direction tuning 
 dirs_for_plotting = dirs - (length(dirs) == 8) * 180;
-iSize = 2;
 
-% Pre-allocate arrays
 green_dir_avrg_stat = cell(1, nd);
 red_dir_avrg_stat = cell(1, nd);
 green_dir_se_stat = cell(1, nd);
 red_dir_se_stat = cell(1, nd);
 
-for iCon = 1:nCon
-    % Process both cell types
+figure('Position', [100, 100, 900, 300*nSize]);
+for iSize = 1:nSize
     for id = 1:nd
-        % Green cells
-        green_data = nanmean(norm_dir_resp_concat{id}(statGreen, :, iCon, iSize), 4);
+        green_data = nanmean(norm_dir_resp_concat{id}(statGreen, :, :, iSize), [3, 4]);
         green_dir_avrg_stat{id} = circshift(nanmean(green_data, 1), 4);
         green_dir_se_stat{id} = circshift(nanstd(green_data, [], 1) / sqrt(length(statGreen)), 4);
         
-        % Red cells
-        red_data = nanmean(norm_dir_resp_concat{id}(statRed, :, iCon, iSize), 4);
+        red_data = nanmean(norm_dir_resp_concat{id}(statRed, :, :, iSize), [3, 4]);
         red_dir_avrg_stat{id} = circshift(nanmean(red_data, 1), 4);
         red_dir_se_stat{id} = circshift(nanstd(red_data, [], 1) / sqrt(length(statRed)), 4);
     end
     
-    % Calculate y-limits based on actual data
     all_data = [];
     all_errors = [];
     for id = 1:nd
@@ -444,27 +448,23 @@ for iCon = 1:nCon
     yMin = yMin - padding;
     yMax = yMax + padding;
     
-    % Plot
-    figure;
-    
-    % Green cells (HTP-)
-    subplot(1, 2, 2);
-    errorbar(dirs_for_plotting, green_dir_avrg_stat{pre}, green_dir_se_stat{pre}, '--k');
-    hold on;
-    errorbar(dirs_for_plotting, green_dir_avrg_stat{post}, green_dir_se_stat{post}, '--b');
-    title('Stationary, HTP-');
-    ylabel('dF/F');
-    
-    % Red cells (HTP+)
-    subplot(1, 2, 1);
+    subplot(nSize, 2, (iSize-1)*2 + 1);
     errorbar(dirs_for_plotting, red_dir_avrg_stat{pre}, red_dir_se_stat{pre}, 'k');
     hold on;
     errorbar(dirs_for_plotting, red_dir_avrg_stat{post}, red_dir_se_stat{post}, 'b');
-    title('Stationary, HTP+');
+    title(['Stationary, HTP+, size ', num2str(sizes(iSize))]);
+    if iSize == nSize
+        ylabel('dF/F');
+    end
     
-    % Common formatting for both subplots
+    subplot(nSize, 2, (iSize-1)*2 + 2);
+    errorbar(dirs_for_plotting, green_dir_avrg_stat{pre}, green_dir_se_stat{pre}, '--k');
+    hold on;
+    errorbar(dirs_for_plotting, green_dir_avrg_stat{post}, green_dir_se_stat{post}, '--b');
+    title(['Stationary, HTP-, size ', num2str(sizes(iSize))]);
+    
     for i = 1:2
-        subplot(1, 2, i);
+        subplot(nSize, 2, (iSize-1)*2 + i);
         set(gca, 'TickDir', 'out');
         grid off;
         box off;
@@ -473,10 +473,11 @@ for iCon = 1:nCon
         ylim([yMin yMax]);
         xlim([-10 140]);
     end
-    
-    sgtitle(['Normalized direction tuning ', num2str(cons(iCon))]);
-    print(fullfile(fnout, [num2str(cons(iCon)), 'dirTuning.pdf']), '-dpdf', '-bestfit');
 end
+sgtitle('Normalized direction tuning (averaged over contrast)');
+print(fullfile(fnout, 'dirTuning_allSizes.pdf'), '-dpdf', '-bestfit');
+
+
 %% Plot change in pref direction between the two days
 pref_dir_change=abs(pref_dir_concat{pre}-pref_dir_concat{post});
 figure;subplot(1,2,1)

@@ -1,4 +1,4 @@
-function [ret_npSub_tc_matched, ret_distance_matched,resp_by_stim_matched,ret_dfof_trial_matched] = retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, instructions, inputStructure, match_ind, validation_choice)
+function [ret_npSub_tc_matched, ret_distance_matched,resp_by_stim_matched,ret_dfof_trial_matched,trialIndSourceUsed] = retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, instructions, inputStructure, match_ind, validation_choice)
 
 ret_npSub_tc_matched = cell(1,nd);
 ret_distance_matched = cell(1,nd);
@@ -86,6 +86,7 @@ for id = 1:nd
             ret_inputStructure.stimOffs_photodiode = ret_stimOffs;
             ret_inputStructure.stimOns_mwCounter = [];
             ret_inputStructure.stimTimingSource = 'PD';
+            trialIndSourceUsed = 'PD';
         case 'MW'
             input_correct = counterValCorrect_noPhotodiode(input);
             ret_inputStructure.stimOns_mwCounter = cell2mat(input_correct.cStimOn);
@@ -95,10 +96,12 @@ for id = 1:nd
             ret_inputStructure.stimOffs_photodiode = [];
             ret_inputStructure.stimTimingSource = 'MW';
             ret_stimOns_temp = ret_inputStructure.stimOns_mwCounter;
+            trialIndSourceUsed = 'MW';
             clear input_correct
         case 'cS'
             ret_inputStructure.stimTimingSource = 'cS';
             ret_stimOns_temp = cell2mat(ret_inputStructure.cStimOn);
+            trialIndSourceUsed = 'cS';
         otherwise
             error('No valid trial indexing source specificed in instr file.');
     end

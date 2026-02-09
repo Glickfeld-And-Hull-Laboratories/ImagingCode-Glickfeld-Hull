@@ -61,49 +61,58 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     'Titles', {'HTP+ ret <= 7.1', 'HTP- ret <= 7.1'}, ...
     'StimStart', 31);
 %% look at delta distance
+% Create experiment index for each cell
+exp_idx = [];
+for iSess = 1:nSess
+    exp_idx = [exp_idx, iSess * ones(1, nKeep_concat(iSess))];
+end
+
+% Define colors for experiments
+colors = lines(nSess);
 
 delta_ret_distance = ret_distance_keep_concat{post}-ret_distance_keep_concat{pre};
 data = squeeze(norm_diff_concat(1,3,:,:));
 num_sizes = size(data,1);
-
 keep = all(data <= 5, 1);
 data = data(:, keep);
 delta_ret_distance_clean = delta_ret_distance(keep);
-
+exp_idx_clean = exp_idx(keep);
 y_lim = [min(data(:)), max(data(:))];
-x_lim = [-10, 10];
+x_lim = [-15, 15];
 
 figure;
 for i = 1:num_sizes
     subplot(1,num_sizes,i)
-    scatter(delta_ret_distance_clean, data(i,:))
     hold on
+    
+    % Plot points color coded by experiment
+    for iSess = 1:nSess
+        sess_mask = exp_idx_clean == iSess;
+        scatter(delta_ret_distance_clean(sess_mask), data(i,sess_mask), 50, colors(iSess,:), 'filled', 'MarkerFaceAlpha', 0.6)
+    end
     
     mdl = fitlm(delta_ret_distance_clean, data(i,:));
     r_squared = mdl.Rsquared.Ordinary;
     p_value = mdl.Coefficients.pValue(2);
-    
     x_fit = linspace(min(delta_ret_distance_clean), max(delta_ret_distance_clean), 100)';
     [y_fit, y_ci] = predict(mdl, x_fit);
-    
     fill([x_fit; flipud(x_fit)], [y_ci(:,1); flipud(y_ci(:,2))], 'k', 'FaceAlpha', 0.2, 'EdgeColor', 'none')
     plot(x_fit, y_fit, 'k-', 'LineWidth', 1.5)
-    
     xlabel('Delta Ret Distance')
     ylabel('Norm Diff')
     title(sprintf('Size %d, R² = %.2f, p = %.2f', i, r_squared, p_value))
     ylim(y_lim)
+    xlim(x_lim)
     set(gca, 'TickDir', 'out')
     grid off
     box off
     hold off
 end
-
 set(gcf, 'PaperOrientation', 'landscape')
 set(gcf, 'PaperPosition', [0.25 2 10.5 4])
 print('normDiff_vsRet', '-dpdf')
 %% plot responses for cells with little change in ret distance
-stableRet = find(delta_ret_distance<2.5);
+stableRet = find(abs(delta_ret_distance)<5);
 
 stableRed = intersect(stableRet,red_ind_concat);
 stableGreen = intersect(stableRet,green_ind_concat);
@@ -113,7 +122,7 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     'UseDashedLines', [false, true], ...
     'Colors1', {'k', 'b'}, ...  % Black for pre, blue for post on left plots
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
-    'Titles', {'HTP+ ret <= 7.1', 'HTP- ret <= 5'}, ...
+    'Titles', {'HTP+ stable ret', 'HTP- stable ret '}, ...
     'StimStart', 31);
 
 plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...

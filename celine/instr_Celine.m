@@ -1,5 +1,5 @@
 %% Instruction sheet
-instructions.sess_list=[66]; %the sessions to concatenate and analyze
+instructions.sess_list=[66 68]; %the sessions to concatenate and analyze
 instructions.runOnset_sess_list = []; %skipping sessions that didn't have any running onsets
 instructions.ds='DART_V1_YM90K_Celine';
 instructions.experimentFolder = 'SST_YM90K';
@@ -14,3 +14,4 @@ instructions.frame_rate = 15;
 % alx-DART = 47 44
 % sess 53 = DART for i2225, forward matched
 %56 = DART session for i2226
+% 66

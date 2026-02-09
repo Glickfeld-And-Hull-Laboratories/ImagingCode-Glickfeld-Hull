@@ -46,7 +46,7 @@ switch x
         pre = 1;  % baseline session, used as reference, is in the 1st position
         post = 2;
         fprintf('Baseline used as reference\n');
-         allDays = [match_day,day_id];
+        allDays = [match_day,day_id];
         fprintf('Analyzing sessions: %s\n', num2str(allDays));
     case '2'
         pre = 2;
@@ -223,7 +223,7 @@ input=inputStructure;
 save(fullfile(fn_multi,'input.mat'),'input')
 clear input
 
-% Convert raw calcium timecourses to trial-structured dF/F data
+%% Convert raw calcium timecourses to trial-structured dF/F data
 data_dfof_trial_match = cell(1, nd);
 fractTimeActive_match = cell(1, nd);
 cellstd_match = cell(1, nd);
@@ -269,18 +269,9 @@ base_win = 1:(stimStart - 1);
 
 %% ===== CELL RESPONSIVENESS ANALYSIS =====
 % Identify cells that respond significantly to visual stimuli
-
-% Statistical testing with multiple comparison correction
-
 [h_match, p_match, responsiveCellsMatch] = findResponsiveCells(data_dfof_trial_match, ...
     tCon_match, tDir_match, tSize_match, stimStart, stimEnd, nTrials, ...
     nCells, nDir, nCon, nSize, dirs, cons, sizes);
-
-% Cell filtering parameters
-remove_outliers = input('Remove outliers? (y/n): ', 's');
-if remove_outliers == 'y'
-    std_threshold = input('Standard deviation threshold for outlier removal (e.g., 3): ');
-end
 
 % Find all cells responsive on at least one day
 resp_either_day = responsiveCellsMatch{1} | responsiveCellsMatch{2};
@@ -291,29 +282,38 @@ initial_red_resp = sum(red_ind_match(keep_cells_temp));
 initial_green_resp = sum(~red_ind_match(keep_cells_temp));
 initial_total_resp = length(keep_cells_temp);
 
-% Total cells by type (for reference)
+% Total cells by type
 total_red = sum(red_ind_match);
 total_green = sum(~red_ind_match);
 total_cells = length(red_ind_match);
 
-% Optional outlier removal based on response magnitude
-if remove_outliers == 'y'
-    outliers_all = [];
+% Choose outlier removal method
+outlier_method = input('Choose outlier removal: (1) Manual, (2) STD threshold, (3) None: ');
+
+outliers_all = [];
+if outlier_method == 1
+    % Manual outlier entry
+    outliers_all = input('Enter outlier cell numbers (e.g., [1 5 10]): ');
+    fprintf('Removing %d manually specified outlier cells\n', length(outliers_all));
+    keep_cells = setdiff(keep_cells_temp, outliers_all);
+    
+elseif outlier_method == 2
+    % STD threshold method
+    std_threshold = input('Standard deviation threshold for outlier removal (e.g., 3): ');
     for id = 1:nd
         data_temp = data_dfof_trial_match{id};
-        % Calculate max response for each cell
         resp_max_temp = squeeze(max(nanmean(data_temp(resp_win, :, keep_cells_temp), 1), [], 2));
         thresh = nanmean(resp_max_temp) + std_threshold * std(resp_max_temp);
         outliers_day = keep_cells_temp(resp_max_temp > thresh);
         outliers_all = union(outliers_all, outliers_day);
     end
-    
     fprintf('Removing %d outlier cells (>%.1f SD from mean)\n', length(outliers_all), std_threshold);
     keep_cells = setdiff(keep_cells_temp, outliers_all);
+    
 else
+    % No outlier removal
     fprintf('Skipping outlier removal\n');
     keep_cells = keep_cells_temp;
-    outliers_all = [];
 end
 
 % Count final keep cells by type
@@ -333,20 +333,17 @@ cell_summary = table(...
     [length(outliers_all); sum(red_ind_match(outliers_all)); sum(~red_ind_match(outliers_all))], ...
     [nKeep; final_red_keep; final_green_keep], ...
     'VariableNames', {'CellType', 'Total_Cells', 'Responsive_Cells', 'Outliers_Removed', 'Final_Kept'});
-
 fprintf('\n--- Cell Filtering Summary ---\n');
 disp(cell_summary);
 
 % Save cell analysis results
 save('cell_analysis.mat', 'keep_cells', 'red_cells_keep', 'green_cells_keep', ...
-     'h_match', 'p_match', 'responsiveCellsMatch', 'cell_summary');
+    'h_match', 'p_match', 'responsiveCellsMatch', 'cell_summary');
 save('cell_filtering_summary.mat', 'cell_summary');
 writetable(cell_summary, 'cell_filtering_summary.csv');
-
 fprintf('\nCell analysis saved to: cell_analysis.mat\n');
 fprintf('Summary saved to: cell_filtering_summary.mat and cell_filtering_summary.csv\n');
 
-% Clean up temporary variables
 clear initial_red_resp initial_green_resp initial_total_resp
 clear final_red_keep final_green_keep total_red total_green total_cells
 clear outliers_all keep_cells_temp resp_either_day data_temp resp_max_temp thresh outliers_day
@@ -878,7 +875,7 @@ response = input('Complete retinotopy alignement? (y/n): ', 's');
 doRetino = strcmpi(response, 'y') || strcmpi(response, 'yes');
 
 if doRetino
-    [ret_npSub_tc_matched, ret_distance_matched,resp_by_stim_matched,ret_dfof_trial_matched] = retinotopy_for_matched_data(nd, ...
+    [ret_npSub_tc_matched, ret_distance_matched,resp_by_stim_matched,ret_dfof_trial_matched,trialIndSourceUsed] = retinotopy_for_matched_data(nd, ...
         allDays, expt, mouse, fov_avg, masks, fitGeoTAf, ...
         instructions, inputStructure,match_ind,false);
 
@@ -895,9 +892,10 @@ if doRetino
         ret_dfof_trial_keep{id}=ret_dfof_trial_matched{id}(:,keep_cells,:);
     end
 
-    save(fullfile(fn_multi, 'retino_aligned.mat'), 'ret_npSub_tc_matched', ...
-        'ret_distance_matched','resp_by_stim_matched','ret_dfof_trial_matched',...
-        'ret_npSub_tc_keep','ret_distance_keep','resp_by_stim_keep','ret_dfof_trial_keep');
+save(fullfile(fn_multi, 'retino_aligned.mat'), 'ret_npSub_tc_matched', ...
+    'ret_distance_matched','resp_by_stim_matched','ret_dfof_trial_matched',...
+    'ret_npSub_tc_keep','ret_distance_keep','resp_by_stim_keep','ret_dfof_trial_keep','trialIndSourceUsed');
+
 else
     fprint('Not including retinotopy aligment')
 end

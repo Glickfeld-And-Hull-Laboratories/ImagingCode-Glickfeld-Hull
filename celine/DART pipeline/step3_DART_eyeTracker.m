@@ -93,7 +93,7 @@ for day = 1:2
     end
     
     % Extract pupil position and diameter
-    rad_range = [3 50]; % adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
+    rad_range = [3 20]; % adjust to expected range of pupil size (if low end is too small then may find noisy bright stuff)
     Eye_data = extractEyeData(data_crop, rad_range);
     % if pupil not found reliably, adjust the image cropping or the rad_range
     
@@ -108,4 +108,4 @@ for day = 1:2
     save(fullfile(data_out, 'pupil.mat'), 'rect', 'rad_range', 'Eye_data', 'rad', 'centroid', 'wheel_trial')
 end
 
-clear all;
+%clear all;
