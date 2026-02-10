@@ -149,7 +149,7 @@ save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_varsforGLM.mat']), 'resp_cell','stimDir_all','trialInd','ind_diralone','ind_dirplaid','ind_dpplaid');
 
 if nMaskPhas == 1
-    stop
+    return
 end
 %%
 
