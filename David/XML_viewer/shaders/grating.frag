@@ -1,30 +1,47 @@
 #version 410 core
 
-in float v_grating_coord;
-in vec2 v_mask_coord;
+in vec2 v_ndc;
 
-uniform float u_contrast;    // grating contrast (0..1)
-uniform float u_std_dev;     // Gaussian mask std_dev (default 0.3)
-uniform float u_mean;        // Gaussian mask mean (default 0.1)
-uniform float u_dev_sign;    // +1.0 for bright pass, -1.0 for dark pass
-uniform float u_weight;      // 1.0/N where N = number of active gratings
+const int MAX_GRATINGS = 4;
+
+uniform int   u_num_gratings;
+uniform vec2  u_position[MAX_GRATINGS];   // NDC center
+uniform vec2  u_size[MAX_GRATINGS];       // NDC half-extents
+uniform float u_gc_bl[MAX_GRATINGS];      // grating coord corners
+uniform float u_gc_br[MAX_GRATINGS];
+uniform float u_gc_tl[MAX_GRATINGS];
+uniform float u_gc_tr[MAX_GRATINGS];
+uniform float u_contrast[MAX_GRATINGS];
+uniform float u_std_dev[MAX_GRATINGS];
+uniform float u_mean[MAX_GRATINGS];
 
 out vec4 frag_color;
 
 void main() {
-    // Sinusoidal grating: 0.5 * (1 + cos(2*pi*coord))
-    float grating = 0.5 * (1.0 + cos(6.283185307 * v_grating_coord));
+    float result = 0.5;
 
-    // Gaussian mask
-    float dist = length(v_mask_coord);
-    float mask_val = exp(-0.5 * pow((dist - u_mean) / u_std_dev, 2.0));
+    for (int i = 0; i < u_num_gratings; i++) {
+        // Map NDC back to this grating's local (-1..1) space
+        vec2 local = (v_ndc - u_position[i]) / u_size[i];
 
-    // Deviation from mid-gray, scaled by contrast, weight, and pass sign
-    // Weight = 1/N prevents clipping when multiple gratings overlap
-    // Bright pass (u_dev_sign=+1): outputs max(deviation, 0) — added to framebuffer
-    // Dark pass  (u_dev_sign=-1): outputs max(-deviation, 0) — subtracted from framebuffer
-    float deviation = (grating - 0.5) * u_contrast * u_weight * u_dev_sign;
-    float val = max(deviation, 0.0);
+        // Convert to (0..1) UV for bilinear grating-coord interpolation
+        vec2 uv = (local + 1.0) * 0.5;
 
-    frag_color = vec4(val, val, val, mask_val);
+        // Skip fragments outside this grating's quad
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) continue;
+
+        // Bilinear interpolation of grating coordinate from 4 corners
+        float bottom = mix(u_gc_bl[i], u_gc_br[i], uv.x);
+        float top    = mix(u_gc_tl[i], u_gc_tr[i], uv.x);
+        float grating = 0.5 * (1.0 + cos(6.283185307 * mix(bottom, top, uv.y)));
+
+        // Gaussian mask in local space
+        float dist = length(local);
+        float mask = exp(-0.5 * pow((dist - u_mean[i]) / u_std_dev[i], 2.0));
+
+        // Additive: accumulate signed deviation (no 1/N weight)
+        result += (grating - 0.5) * u_contrast[i] * mask;
+    }
+
+    frag_color = vec4(vec3(clamp(result, 0.0, 1.0)), 1.0);
 }

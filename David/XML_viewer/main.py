@@ -134,9 +134,7 @@ class App:
         self.ctx.viewport = (0, 0, vp_w, vp_h)
         self.ctx.clear(0.5, 0.5, 0.5, 1.0)
 
-        self.ctx.enable(moderngl.BLEND)
-
-        # Count active gratings for weight normalization (prevents clipping)
+        # Collect active gratings
         active = []
         if self.stim_one.contrast > 0:
             active.append(self.stim_one)
@@ -147,13 +145,9 @@ class App:
         if self.panel.show_mask_two and self.mask_two.contrast > 0:
             active.append(self.mask_two)
 
-        # Render order: stimOne → maskOne → stimTwo → maskTwo
-        # Each grating uses two-pass additive deviation blending (handled by renderer)
-        num = len(active)
-        for g in active:
-            self.renderer.render_grating(g, vp_w, vp_h, num_gratings=num)
-
-        self.ctx.disable(moderngl.BLEND)
+        # Single-pass additive compositing — no blending needed
+        if active:
+            self.renderer.render_gratings(active, vp_w, vp_h)
 
     def render_gui(self):
         """show_gui callback: imgui parameter panel."""

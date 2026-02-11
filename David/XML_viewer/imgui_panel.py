@@ -4,12 +4,12 @@ import math
 from imgui_bundle import imgui
 
 # Vector diagram constants
-_VD_SIZE = 200       # diagram height/width in pixels
+_VD_SIZE = 250       # diagram height/width in pixels
 _VD_RADIUS = 80      # max arrow length (pixels)
-_VD_MAX_SPEED = 60   # speed (deg/s) that maps to full radius
+_VD_MAX_SPEED = 100  # speed (deg/s) that maps to full radius
 _VD_COLORS = {
     "S1":  (66, 165, 245, 255),
-    "M1":  (100, 200, 255, 255),
+    "M1":  (30, 100, 200, 255),
     "S2":  (255, 112, 67, 255),
     "M2":  (255, 167, 130, 255),
     "VA1": (76, 175, 80, 255),
@@ -51,9 +51,7 @@ class ImguiPanel:
 
         expanded, _ = imgui.begin("Parameters", True, flags)
         if expanded:
-            bottom_h = 55.0
-            avail = imgui.get_content_region_avail()
-            imgui.begin_child("##scroll", imgui.ImVec2(0, avail.y - bottom_h))
+            imgui.begin_child("##scroll", imgui.ImVec2(0, 0))
             self._render_top_bar()
             imgui.separator()
             self._render_grating_params()
@@ -62,8 +60,6 @@ class ImguiPanel:
             imgui.separator()
             self._render_all_variables()
             imgui.end_child()
-            imgui.separator()
-            self._render_overlay_controls()
         imgui.end()
 
         # Keyboard shortcut: Ctrl+S to save
@@ -129,7 +125,7 @@ class ImguiPanel:
         self._slider_float(tag_contrast, "Contrast", 0.0, 1.0)
         self._slider_float(tag_direction, "Direction (deg)", 0.0, 360.0)
         self._slider_float(tag_sf, "Spatial Freq (CPD)", 0.001, 1.0)
-        self._slider_float(tag_tf, "Temporal Freq (CPS)", 0.0, 3.0)
+        self._slider_float(tag_tf, "Temporal Freq (CPS)", 0.0, 5.0)
         self._slider_float(tag_phase, "Phase (deg)", 0.0, 360.0)
         self._drag_float(tag_diameter, "Diameter (deg)", 1.0, 400.0)
         self._slider_float(tag_azimuth, "Azimuth (deg)", -100.0, 100.0)
@@ -154,7 +150,7 @@ class ImguiPanel:
         self._slider_float(tag_contrast, "Contrast", 0.0, 1.0)
         self._slider_float(tag_direction, "Direction (deg)", 0.0, 360.0)
         self._slider_float(tag_sf, "Spatial Freq (CPD)", 0.001, 1.0)
-        self._slider_float(tag_tf, "Temporal Freq (CPS)", 0.0, 3.0)
+        self._slider_float(tag_tf, "Temporal Freq (CPS)", 0.0, 5.0)
         self._slider_float(tag_phase, "Phase (deg)", 0.0, 360.0)
         self._drag_float(tag_diameter, "Diameter (deg)", 1.0, 400.0)
         self._slider_float(tag_azimuth, "Azimuth (deg)", -100.0, 100.0)
@@ -174,10 +170,14 @@ class ImguiPanel:
 
         val = float(mv.current_value)
 
-        # Slider (takes ~60% width)
-        avail = imgui.get_content_region_avail().x
-        imgui.set_next_item_width(avail * 0.58)
-        changed1, new_val1 = imgui.slider_float(f"{label}##{tag}", val, v_min, v_max)
+        # Label text first, then measure remaining width for slider+input
+        imgui.text(label)
+        imgui.same_line()
+        remaining = imgui.get_content_region_avail().x
+
+        # Slider (hidden label via ## prefix)
+        imgui.set_next_item_width(remaining * 0.65)
+        changed1, new_val1 = imgui.slider_float(f"##{tag}", val, v_min, v_max)
         if changed1:
             self.model.set(tag, new_val1)
             val = new_val1
@@ -188,7 +188,7 @@ class ImguiPanel:
 
         # Input box next to slider
         imgui.same_line()
-        imgui.set_next_item_width(avail * 0.38)
+        imgui.set_next_item_width(remaining * 0.35)
         changed2, new_val2 = imgui.input_float(f"##input_{tag}", val, 0.0, 0.0, "%.4f")
         if changed2:
             self.model.set(tag, new_val2)
@@ -208,9 +208,13 @@ class ImguiPanel:
 
         val = float(mv.current_value)
 
-        avail = imgui.get_content_region_avail().x
-        imgui.set_next_item_width(avail * 0.58)
-        changed1, new_val1 = imgui.drag_float(f"{label}##{tag}", val, 1.0, v_min, v_max)
+        # Label text first, then measure remaining width for drag+input
+        imgui.text(label)
+        imgui.same_line()
+        remaining = imgui.get_content_region_avail().x
+
+        imgui.set_next_item_width(remaining * 0.65)
+        changed1, new_val1 = imgui.drag_float(f"##{tag}", val, 1.0, v_min, v_max)
         if changed1:
             self.model.set(tag, new_val1)
             val = new_val1
@@ -219,7 +223,7 @@ class ImguiPanel:
             self.model.reset(tag)
 
         imgui.same_line()
-        imgui.set_next_item_width(avail * 0.38)
+        imgui.set_next_item_width(remaining * 0.35)
         changed2, new_val2 = imgui.input_float(f"##input_{tag}", val, 0.0, 0.0, "%.1f")
         if changed2:
             self.model.set(tag, new_val2)
@@ -252,7 +256,8 @@ class ImguiPanel:
     def _draw_arrow(self, dl, cx: float, cy: float,
                     direction_deg: float, speed: float,
                     color_tuple: tuple, label: str,
-                    radius: float = _VD_RADIUS, max_speed: float = _VD_MAX_SPEED):
+                    radius: float = _VD_RADIUS, max_speed: float = _VD_MAX_SPEED,
+                    clamp: bool = True):
         """Draw a single direction/speed arrow from centre."""
         col = imgui.IM_COL32(*color_tuple)
 
@@ -263,7 +268,8 @@ class ImguiPanel:
 
         length = (speed / max_speed) * radius
         length = max(length, 8 * radius / _VD_RADIUS)   # minimum visible length
-        length = min(length, radius)
+        if clamp:
+            length = min(length, radius)
 
         # Angle: 0 deg = right, 90 deg = up.  Negate for screen Y-down.
         angle = math.radians(-direction_deg)
@@ -303,8 +309,6 @@ class ImguiPanel:
         col = imgui.IM_COL32(*color_tuple)
 
         length = (speed / max_speed) * radius
-        length = max(length, 8 * radius / _VD_RADIUS)
-        length = min(length, radius)
 
         angle = math.radians(-direction_deg)
         # Arrow tip
@@ -318,6 +322,14 @@ class ImguiPanel:
         ext = radius + 15 * radius / _VD_RADIUS
         dl.add_line(imgui.ImVec2(tx - px * ext, ty - py * ext),
                     imgui.ImVec2(tx + px * ext, ty + py * ext), col, 1.0)
+
+    @staticmethod
+    def _signed_angle_diff(from_deg: float, to_deg: float) -> float:
+        """Smallest signed angle from from_deg to to_deg, in [-180, 180]."""
+        d = (to_deg - from_deg) % 360
+        if d > 180:
+            d -= 360
+        return d
 
     @staticmethod
     def _compute_va(dir1: float, speed1: float,
@@ -385,8 +397,12 @@ class ImguiPanel:
 
     def _draw_vector_diagram_core(self, dl, cx: float, cy: float,
                                    radius: float, max_speed: float,
-                                   alpha_mult: float = 1.0, draw_legend: bool = True):
-        """Draw the full vector diagram into an arbitrary draw list at (cx, cy)."""
+                                   alpha_mult: float = 1.0, draw_legend: bool = True,
+                                   clip_rect: tuple = None):
+        """Draw the full vector diagram into an arbitrary draw list at (cx, cy).
+
+        clip_rect: optional (x1, y1, x2, y2) to clip arrows/lines but not labels.
+        """
         scale = radius / _VD_RADIUS
 
         def _a(color):
@@ -413,6 +429,11 @@ class ImguiPanel:
         dl.add_text(imgui.ImVec2(cx - 8, cy - off - 12), label_col, "90")
         dl.add_text(imgui.ImVec2(cx - off - 20, cy - 6), label_col, "180")
         dl.add_text(imgui.ImVec2(cx - 10, cy + off), label_col, "270")
+
+        # Clip arrows/constraint lines so they don't escape the diagram
+        if clip_rect:
+            dl.push_clip_rect(imgui.ImVec2(clip_rect[0], clip_rect[1]),
+                              imgui.ImVec2(clip_rect[2], clip_rect[3]), True)
 
         # Determine which arrows to draw
         entries: list[tuple[str, str, tuple]] = []
@@ -451,7 +472,7 @@ class ImguiPanel:
                 ioc = self._compute_ioc(d1, sp1, d2, sp2)
                 if ioc:
                     self._draw_arrow(dl, cx, cy, ioc[0], ioc[1], _a(_VD_COLORS["IOC1"]), "IOC1",
-                                     radius=radius, max_speed=max_speed)
+                                     radius=radius, max_speed=max_speed, clamp=False)
                     va_ioc_legend.append(("IOC1", _VD_COLORS["IOC1"]))
 
         # VA/IOC for Pair 2 (S2 + M2)
@@ -470,12 +491,16 @@ class ImguiPanel:
                     ioc = self._compute_ioc(d1, sp1, d2, sp2)
                     if ioc:
                         self._draw_arrow(dl, cx, cy, ioc[0], ioc[1], _a(_VD_COLORS["IOC2"]), "IOC2",
-                                         radius=radius, max_speed=max_speed)
+                                         radius=radius, max_speed=max_speed, clamp=False)
                         va_ioc_legend.append(("IOC2", _VD_COLORS["IOC2"]))
+
+        # Pop arrow clip before drawing legend text
+        if clip_rect:
+            dl.pop_clip_rect()
 
         # Legend
         if draw_legend:
-            legend_y = cy + radius + 4 * scale
+            legend_y = cy + radius + 28 * scale
             lx = cx - radius
             sq = 10 * scale
             for label, _, color in entries:
@@ -486,7 +511,7 @@ class ImguiPanel:
                 lx += 50 * scale
 
             dl.add_text(imgui.ImVec2(lx + 10 * scale, legend_y - 2), label_col,
-                        f"Ring = {_VD_MAX_SPEED} deg/s")
+                        f"Ring = {_VD_MAX_SPEED:.0f} deg/s")
 
             if va_ioc_legend:
                 legend_y2 = legend_y + 16 * scale
@@ -507,17 +532,36 @@ class ImguiPanel:
         avail_w = imgui.get_content_region_avail().x
         cursor = imgui.get_cursor_screen_pos()
         cx = cursor.x + avail_w * 0.5
-        cy = cursor.y + _VD_SIZE * 0.5
+        cy = cursor.y + _VD_SIZE * 0.4
         imgui.dummy(imgui.ImVec2(avail_w, _VD_SIZE))
         dl = imgui.get_window_draw_list()
 
-        self._draw_vector_diagram_core(dl, cx, cy, _VD_RADIUS, _VD_MAX_SPEED, 1.0, True)
+        clip = (cursor.x, cursor.y, cursor.x + avail_w, cursor.y + _VD_SIZE)
+        self._draw_vector_diagram_core(dl, cx, cy, _VD_RADIUS, _VD_MAX_SPEED, 1.0, True,
+                                       clip_rect=clip)
 
-        imgui.dummy(imgui.ImVec2(avail_w, 36))
+        # Angle readouts (M1 → VA, M1 → IOC)
+        s1_data = self._get_grating_vector_data("stimOne")
+        m1_data = self._get_grating_vector_data("maskOne")
+        if s1_data and m1_data:
+            d1, tf1, sf1 = s1_data
+            d2, tf2, sf2 = m1_data
+            sp1 = tf1 / sf1 if sf1 > 1e-6 else 0.0
+            sp2 = tf2 / sf2 if sf2 > 1e-6 else 0.0
+            if sp1 > 0 and sp2 > 0:
+                va = self._compute_va(d1, sp1, d2, sp2)
+                ioc = self._compute_ioc(d1, sp1, d2, sp2)
+                if va:
+                    angle_va = self._signed_angle_diff(d2, va[0])
+                    imgui.text(f"M1 -> VA:  {angle_va:+.1f} deg")
+                if ioc:
+                    angle_ioc = self._signed_angle_diff(d2, ioc[0])
+                    imgui.text(f"M1 -> IOC: {angle_ioc:+.1f} deg")
 
-    def _render_overlay_controls(self):
-        """Pinned controls at the bottom of the panel for the viewport overlay."""
-        imgui.text("Visual Overlay")
+        imgui.dummy(imgui.ImVec2(avail_w, 4))
+
+        # Visual overlay controls
+        imgui.text("Viewport Overlay")
         imgui.same_line()
         _, self.overlay_enabled = imgui.checkbox("Enable##overlay", self.overlay_enabled)
         if self.overlay_enabled:
