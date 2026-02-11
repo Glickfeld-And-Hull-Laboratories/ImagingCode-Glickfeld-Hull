@@ -19,6 +19,19 @@ _VD_COLORS = {
     "CL":  (255, 255, 255, 50),
 }
 
+_GROUP_PARAMS = [
+    # (suffix, label, drag_speed, format)
+    ("GratingContrast",          "Contrast",           0.01,  "%.3f"),
+    ("GratingDirectionDeg",      "Direction (deg)",     1.0,   "%.1f"),
+    ("GratingSpatialFreqCPD",    "Spatial Freq (CPD)",  0.001, "%.4f"),
+    ("GratingTemporalFreqCPS",   "Temporal Freq (CPS)", 0.1,   "%.2f"),
+    ("GratingPhaseDeg",          "Phase (deg)",         1.0,   "%.1f"),
+    ("GratingDiameterDeg",       "Diameter (deg)",      1.0,   "%.1f"),
+    ("GratingAzimuthDeg",        "Azimuth (deg)",       1.0,   "%.1f"),
+    ("GratingElevationDeg",      "Elevation (deg)",     1.0,   "%.1f"),
+]
+_GROUP_PREFIXES = ["stimOne", "maskOne", "stimTwo", "maskTwo"]
+
 
 class ImguiPanel:
     """Renders the parameter editor sidebar."""
@@ -33,6 +46,11 @@ class ImguiPanel:
         self.show_mask_two = False
         self.overlay_enabled = False
         self.overlay_opacity = 0.5
+
+        # Group Controls state
+        self._group_linked = {"stimOne": True, "maskOne": True, "stimTwo": False, "maskTwo": False}
+        self._group_deltas = {suffix: 0.0 for suffix, *_ in _GROUP_PARAMS}
+        self._group_param_enabled = {suffix: True for suffix, *_ in _GROUP_PARAMS}
 
     def render(self, dt: float):
         """Render the full imgui panel. Called each frame."""
@@ -55,6 +73,8 @@ class ImguiPanel:
             self._render_top_bar()
             imgui.separator()
             self._render_grating_params()
+            imgui.separator()
+            self._render_group_controls()
             imgui.separator()
             self._render_vector_diagram()
             imgui.separator()
@@ -230,6 +250,75 @@ class ImguiPanel:
 
         if was_modified:
             imgui.pop_style_color()
+
+    def _apply_group_delta(self, suffix: str, diff: float):
+        """Apply an incremental delta to all linked gratings for the given parameter suffix."""
+        for prefix in _GROUP_PREFIXES:
+            if not self._group_linked.get(prefix, False):
+                continue
+            tag = f"{prefix}{suffix}"
+            if tag not in self.model.variables:
+                continue
+            cur = float(self.model.get(tag))
+            self.model.set(tag, cur + diff)
+
+    def _render_group_controls(self):
+        """Collapsible section for adjusting multiple gratings simultaneously."""
+        if not imgui.collapsing_header("Group Controls"):
+            return
+
+        # Linkage checkboxes
+        imgui.text("Linked:")
+        imgui.same_line()
+        for prefix, label in [("stimOne", "Stim 1"), ("maskOne", "Mask 1"),
+                               ("stimTwo", "Stim 2"), ("maskTwo", "Mask 2")]:
+            _, self._group_linked[prefix] = imgui.checkbox(
+                f"{label}##grp_link", self._group_linked[prefix])
+            imgui.same_line()
+        imgui.new_line()
+
+        # Zero All button — reverses accumulated deltas
+        if imgui.button("Zero All Deltas"):
+            for suffix, *_ in _GROUP_PARAMS:
+                old = self._group_deltas[suffix]
+                if old != 0.0:
+                    self._apply_group_delta(suffix, -old)
+                    self._group_deltas[suffix] = 0.0
+
+        imgui.separator()
+
+        # Parameter rows
+        for suffix, label, speed, fmt in _GROUP_PARAMS:
+            enabled = self._group_param_enabled[suffix]
+            _, self._group_param_enabled[suffix] = imgui.checkbox(
+                f"##{suffix}_enabled", enabled)
+            imgui.same_line()
+
+            if not enabled:
+                imgui.begin_disabled()
+
+            imgui.text(label)
+            imgui.same_line()
+            remaining = imgui.get_content_region_avail().x - 50  # reserve space for Zero btn
+
+            imgui.set_next_item_width(max(remaining, 60))
+            old_delta = self._group_deltas[suffix]
+            changed, new_delta = imgui.drag_float(
+                f"##grp_{suffix}", old_delta, speed, 0.0, 0.0, fmt)
+            if changed and enabled:
+                diff = new_delta - old_delta
+                self._apply_group_delta(suffix, diff)
+                self._group_deltas[suffix] = new_delta
+
+            if not enabled:
+                imgui.end_disabled()
+
+            imgui.same_line()
+            if imgui.small_button(f"Zero##{suffix}"):
+                old = self._group_deltas[suffix]
+                if old != 0.0:
+                    self._apply_group_delta(suffix, -old)
+                    self._group_deltas[suffix] = 0.0
 
     # ------------------------------------------------------------------
     #  Vector diagram
@@ -578,6 +667,15 @@ class ImguiPanel:
         overlay_radius = shorter * 0.22
         cx = viewport_w * 0.5
         cy = viewport_h * 0.5
+
+        # Offset overlay to track stimOne azimuth/elevation (deg -> pixels)
+        az_tag = "stimOneGratingAzimuthDeg"
+        el_tag = "stimOneGratingElevationDeg"
+        if az_tag in self.model.variables:
+            cx += (float(self.model.get(az_tag)) / 100.0) * (viewport_w * 0.5)
+        if el_tag in self.model.variables:
+            cy -= (float(self.model.get(el_tag)) / 100.0) * (viewport_h * 0.5)
+
         dl = imgui.get_foreground_draw_list()
         dl.push_clip_rect(imgui.ImVec2(0, 0),
                           imgui.ImVec2(viewport_w, viewport_h), True)
