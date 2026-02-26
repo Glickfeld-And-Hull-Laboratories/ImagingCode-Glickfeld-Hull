@@ -1,10 +1,10 @@
 
 close all
 
-date = '260210';
-mouse = 'i2232';
-ImgFolder = '005';
-time = '1152';
+date = '260226';
+mouse = 'i2234';
+ImgFolder = '002';
+time = '0948';
 doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -132,15 +132,15 @@ expt_input = concatenateDataBlocks(temp);
         %data_dfof_avg_all = squeeze(mean(imfilter(data_dfof_avg(:,:,nOff:75,:),myfilter),3));
          data_dfof_avg_all = imgaussfilt(squeeze(mean(data_dfof_avg(:,:,nOff:nOff+nOn,:),3)),1.5);
         
-%         img_avg_resp = zeros(1,nStim);
+         img_avg_resp = zeros(1,nStim);
         figure; 
         for i = 1:nStim
             subplot(length(Els),length(Azs),i); 
             imagesc(data_dfof_avg_all(:,:,i)); 
             colormap(gray)
             title(num2str(Stims(i,:)))
-%             img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
-            %clim([0 max(data_dfof_avg_all(:))./2])
+            img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
+            clim([0 max(data_dfof_avg_all(:))./2])
         end
         fnout = fullfile('Z:\home\ACh\Analysis\2p_analysis',mouse,date,ImgFolder(irun,:));
         mkdir(fnout);

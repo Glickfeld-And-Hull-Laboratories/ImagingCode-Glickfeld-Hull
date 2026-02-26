@@ -8,14 +8,18 @@ function [rad centroid] = alignEyeData_PD(Eye_data,input,stimOns);
 % median pupil position on each trial during the stim.
 
 recordingDate = datetime(input.startDateVec);
-refDate = datetime(2026,1,23); % the date when we switched the eye tracker camera
+refDate1 = datetime(2026,1,23);
+refDate2 = datetime(2026,2,17);
 
-if recordingDate < refDate
-    calib = 1/26.6; %mm per pixel
-    fprintf('Old eye tracker camera used') 
-else
-    calib = 1/10; %mm per pixel
+if recordingDate < refDate1
+    calib = 1/26.6;
+    fprintf('Old eye tracker camera used')
+elseif recordingDate <= refDate2
+    calib = 1/10;
     fprintf('New eye tracker camera used')
+else
+    calib = 1/21; % add third calibration value
+    fprintf('Third eye tracker camera used')
 end
 sesh_id = input.saveTime;
 msg1 = ['Session ' sesh_id 'used photodiode stimOns as cStimOn'];
