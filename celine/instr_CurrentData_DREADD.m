@@ -1,5 +1,5 @@
 %% Instruction sheet
-instructions.session='6' 
+instructions.session='7' 
 instructions.ds='DREADD_V1_datasheet' %DREADD_V1_datasheet
 instructions.refDay='2'
 instructions.tIdxSource = "PD"; % PD, MW_pd, MW or cS

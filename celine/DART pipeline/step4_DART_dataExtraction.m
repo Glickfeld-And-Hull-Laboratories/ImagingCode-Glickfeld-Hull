@@ -264,7 +264,7 @@ clear meansub_match
 % Define analysis windows
 stimStart = nOff/2;
 stimEnd = stimStart + nOn;
-resp_win = (stimStart + 3):(stimEnd + 3); % at 15 Hz, 3 frames = ~200 ms
+resp_win = (stimStart + 1):(stimEnd + 1); %changed from 3 frames to 1 frame on 3/3/26
 base_win = 1:(stimStart - 1);
 
 %% ===== CELL RESPONSIVENESS ANALYSIS =====

@@ -24,6 +24,8 @@ for id = 1:nd
     ret_inputStructure = loadedData.input;
     clear input
     
+    %get the FOV for the matched data on this day and register the retino
+    %data to it
     referenceFOV = fov_avg{id};
     retAvrg = mean(ret_data_temp,3);
     [~, retAvrg_registered] = stackRegGPU(retAvrg,referenceFOV);
@@ -33,6 +35,8 @@ for id = 1:nd
         ret_data_registered = imwarp(ret_data_registered,fitGeoTAf, 'OutputView', imref2d(size(ret_data_registered)));
     end
     ret_data_registered_FOV = mean(ret_data_registered,3);
+    %get the masks from the matched data for this day, plot them on the
+    %registered retino data
     referenceMasks = masks{id};
 
     figure; imagesc(ret_data_registered_FOV), colormap gray; caxis([200 4000]);
@@ -67,7 +71,7 @@ for id = 1:nd
 
     ret_npSub_tc = ret_data_tc-bsxfun(@times,tcRemoveDC(np_tc),np_w);
 
-    if id==1
+    if id==1 %trim down to only the matched cells
         ret_npSub_tc=ret_npSub_tc(:,match_ind);
     end
     nMatch = length(match_ind);
@@ -102,6 +106,7 @@ for id = 1:nd
             error('No valid trial indexing source specificed in instr file.');
     end
     
+
     nTrials = length(ret_stimOns_temp);
     ret_data_trial = nan(nOn+nOff,nMatch,nTrials);
     for itrial = 1:nTrials
@@ -134,27 +139,10 @@ for id = 1:nd
     end
 
     [nElev, nAzim, nMatch] = size(resp_by_stim);
-
-    % Keep max for validation plot highlighting
     resp_reshaped = reshape(resp_by_stim, [], nMatch);
     [~, maxIdx] = max(resp_reshaped, [], 1);
     [maxElev, maxAzim] = ind2sub([nElev, nAzim], maxIdx);
-
-    % Weighted average RF position: weights = positive responses only
-    [azGrid, elGrid] = meshgrid(azs, els);
-    prefAzimDeg = nan(1, nMatch);
-    prefElevDeg = nan(1, nMatch);
-    for iCell = 1:nMatch
-        w = max(resp_by_stim(:,:,iCell), 0);
-        total_w = sum(w(:));
-        if total_w > 0
-            prefAzimDeg(iCell) = sum(w(:) .* azGrid(:)) / total_w;
-            prefElevDeg(iCell) = sum(w(:) .* elGrid(:)) / total_w;
-        end
-    end
-    nNaN = sum(isnan(prefAzimDeg));
-    fprintf('Day %d: %d/%d cells have NaN preferred position (all responses <= 0)\n', id, nNaN, nMatch);
-
+    
 if validation_choice && nMatch >= 5
     rng('shuffle');
     selected_cells = randperm(nMatch, min(5, nMatch));
@@ -225,10 +213,15 @@ end
     finalAzim = double(inputStructure(id).gratingAzimuthDeg);
     finalElev = double(inputStructure(id).gratingElevationDeg);
     
-    ret_distance_matched{id} = sqrt((prefAzimDeg - finalAzim).^2 + (prefElevDeg - finalElev).^2);
+    maxAzimDeg = azs(maxAzim);
+    maxElevDeg = els(maxElev);
+    
+    ret_distance_matched{id} = sqrt((maxAzimDeg - finalAzim).^2 + (maxElevDeg - finalElev).^2);
     ret_npSub_tc_matched{id} = ret_npSub_tc;
     resp_by_stim_matched{id}=resp_by_stim;
     ret_dfof_trial_matched{id}=ret_dfof_trial;
+
+    %make "keep" versions of all these
 end
 
 end

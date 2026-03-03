@@ -40,6 +40,8 @@ fnout = fullfile(rc.analysis, ExperimentFolder, mouse, expDate, runFolder);
 load(fullfile(fnout, 'TCs.mat'))
 load(fullfile(fnout, 'mask_cell.mat'))
 load(fullfile(fnout, 'input.mat'))
+load(fullfile(fnout, 'regOuts&Img.mat'))
+
 
 % Rename to avoid conflict with MATLAB's built-in input()
 inputStructure = input;
@@ -141,7 +143,7 @@ clear data_trial data_f
 stimStart = nOff/2;
 stimEnd   = stimStart + nOn;
 
-resp_win = (stimStart + 3):(stimEnd + 3);
+resp_win = (stimStart + 1):(stimEnd + 1);%changed this from a 3-frame shifts to a 1-frame shifts on 3/3/26
 base_win = 1:(stimStart - 1);
 
 %% Behavioral state classification: running vs stationary
@@ -324,3 +326,38 @@ save(fullfile(fnout, 'singleday_extraction.mat'), ...
     'nOn', 'nOff', 'resp_win', 'base_win', 'tCon', 'tDir', 'tOri', 'tSize');
 
 fprintf('Saved to %s\n', fullfile(fnout, 'singleday_extraction.mat'));
+%% Optional retinotopy alignment
+
+if isfield(expt(day_id), 'ret_run') && ~isempty(expt(day_id).ret_run)
+    if ~exist('doRetino', 'var')
+        response = input('Complete retinotopy alignment? (y/n): ', 's');
+        doRetino = strcmpi(response, 'y') || strcmpi(response, 'yes');
+    end
+else
+    doRetino = false;
+    fprintf('No ret_run defined for this session - skipping retinotopy alignment\n');
+end
+
+if doRetino
+    referenceFOV = data_avg;
+
+    if ~exist('validation_choice', 'var')
+        validation_choice = strcmpi(input('Plot validation traces for random cells? (y/n): ', 's'), 'y');
+    end
+
+    [ret_npSub_tc, ret_distance, resp_by_stim, ret_dfof_trial, trialIndSourceUsed] = ...
+        retinotopy_for_singleday(day_id, expt, mouse, inputStructure, ...
+            referenceFOV, mask_cell, timingSource, rc, validation_choice);
+
+    ret_npSub_tc_keep   = ret_npSub_tc(:, keep_cells);
+    ret_distance_keep   = ret_distance(keep_cells);
+    resp_by_stim_keep   = resp_by_stim(:, :, keep_cells);
+    ret_dfof_trial_keep = ret_dfof_trial(:, keep_cells, :);
+
+    save(fullfile(fnout, 'retino_aligned.mat'), ...
+        'ret_npSub_tc', 'ret_distance', 'resp_by_stim', 'ret_dfof_trial', ...
+        'ret_npSub_tc_keep', 'ret_distance_keep', 'resp_by_stim_keep', 'ret_dfof_trial_keep', ...
+        'trialIndSourceUsed');
+
+    fprintf('Retinotopy alignment saved to %s\n', fullfile(fnout, 'retino_aligned.mat'));
+end

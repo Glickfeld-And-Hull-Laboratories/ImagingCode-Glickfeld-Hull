@@ -105,6 +105,7 @@ conBySize_lp_concat   = [];
 conBySize_sp_concat   = [];
 red_concat   = [];
 nKeep_concat = [];
+ret_distance_concat = [];
 
 fprintf('\nSecond pass: concatenating data...\n');
 for iSess = 1:nSess
@@ -148,6 +149,16 @@ for iSess = 1:nSess
 
     nKeep   = sum(sizeMask);
     nFrames = size(d.tc_trial_avrg_stat, 1);
+
+    fnin_i   = fullfile(rc.analysis, expt(day_id).exptType, expt(day_id).mouse, expt(day_id).date, expt(day_id).contrastxori_runs{1});
+    ret_file = fullfile(fnin_i, 'retino_aligned.mat');
+    if exist(ret_file, 'file')
+        r = load(ret_file, 'ret_distance_keep');
+        ret_distance_concat = [ret_distance_concat, r.ret_distance_keep(sizeMask')];
+    else
+        warning('Session %d: retino_aligned.mat not found - filling ret_distance with NaN', day_id);
+        ret_distance_concat = [ret_distance_concat; nan(nKeep, 1)];
+    end
 
     fprintf('Debug: sizeMask size = [%d %d], red_cells size = [%d %d]\n', ...
     size(sizeMask,1), size(sizeMask,2), size(d.red_cells,1), size(d.red_cells,2));
@@ -207,8 +218,14 @@ for iSess = 1:nSess
         day_id, nKeep, length(d.keep_cells), sum(d.red_cells(sizeMask)), sum(~d.red_cells(sizeMask)));
 end
 
+
 red_ind   = find(red_concat);
 green_ind = find(~red_concat);
+
+% nearRet = find(ret_distance_concat<6);
+% red_ind = intersect(red_ind, nearRet);
+% green_ind = intersect(green_ind, nearRet);
+
 nKeep_total = sum(nKeep_concat);
 cons  = targetCons;
 sizes = targetSizes;
@@ -302,45 +319,45 @@ for iCon = 1:nCon
     end
 end
 
-%% 1. Size tuning curves - stationary (all cells)
-fprintf('\nGenerating Plot 1: Size tuning - stationary (all cells)\n');
-plotSizeResponse_singleDay(conBySize_stat_concat, red_ind, green_ind, cons, sizes, ...
-    'Colors', {'r', 'g'}, 'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...
-    'YLabel', 'dF/F', 'XLabel', 'Size (deg)');
-sgtitle('Size tuning - stationary (all cells)');
-saveas(gcf, fullfile(fnout, 'sizeResponse_stat.pdf'));
-
-%% 2. Neural timecourses - stationary (all cells)
-fprintf('Generating Plot 2: Neural timecourses - stationary (all cells)\n');
-plotNeuralTimecourse_singleDay(tc_stat_concat, red_ind, green_ind, ...
-    'Colors', {'r', 'g'}, 'Titles', {'HTP+', 'HTP-'}, ...
-    'FrameRate', frame_rate, 'StimStart', stimStart);
-figs = findobj('Type', 'figure');
-for i = 1:length(figs)
-    saveas(figs(i), fullfile(fnout, sprintf('timecourse_stat_size%d.pdf', i)));
-end
-
-%% 3. Size tuning curves - stationary vs running (condition-matched cells)
-fprintf('Generating Plot 3: Size tuning - stationary vs running (condition-matched cells)\n');
-plotSizeResponse_byCondition_singleDay(conBySize_stat_concat, conBySize_loc_concat, ...
-    red_ind, green_ind, cons, sizes, runningByCondition, ...
-    'Colors1', {'k', 'r'}, 'Colors2', {'k', 'r'}, ...
-    'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...
-    'YLabel', 'dF/F', 'XLabel', 'Size (deg)');
-sgtitle('Size tuning - stationary vs running (condition-matched cells)');
-saveas(gcf, fullfile(fnout, 'sizeResponse_byCondition.pdf'));
-
-%% 4. Neural timecourses - stationary vs running (condition-matched cells)
-fprintf('Generating Plot 4: Neural timecourses - stationary vs running (condition-matched cells)\n');
-plotNeuralTimecourse_byCondition_singleDay(tc_stat_concat, tc_loc_concat, ...
-    red_ind, green_ind, runningByCondition, ...
-    'Colors1', {'k', 'r'}, 'Colors2', {'k', 'r'}, ...
-    'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...
-    'FrameRate', frame_rate, 'StimStart', stimStart);
-figs = findobj('Type', 'figure');
-for i = 1:length(figs)
-    saveas(figs(i), fullfile(fnout, sprintf('timecourse_byCondition_size%d.pdf', i)));
-end
+% %% 1. Size tuning curves - stationary (all cells)
+% fprintf('\nGenerating Plot 1: Size tuning - stationary (all cells)\n');
+% plotSizeResponse_singleDay(conBySize_stat_concat, red_ind, green_ind, cons, sizes, ...
+%     'Colors', {'r', 'g'}, 'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...
+%     'YLabel', 'dF/F', 'XLabel', 'Size (deg)');
+% sgtitle('Size tuning - stationary (all cells)');
+% saveas(gcf, fullfile(fnout, 'sizeResponse_stat.pdf'));
+% 
+% %% 2. Neural timecourses - stationary (all cells)
+% fprintf('Generating Plot 2: Neural timecourses - stationary (all cells)\n');
+% plotNeuralTimecourse_singleDay(tc_stat_concat, red_ind, green_ind, ...
+%     'Colors', {'r', 'g'}, 'Titles', {'HTP+', 'HTP-'}, ...
+%     'FrameRate', frame_rate, 'StimStart', stimStart);
+% figs = findobj('Type', 'figure');
+% for i = 1:length(figs)
+%     saveas(figs(i), fullfile(fnout, sprintf('timecourse_stat_size%d.pdf', i)));
+% end
+% 
+% %% 3. Size tuning curves - stationary vs running (condition-matched cells)
+% fprintf('Generating Plot 3: Size tuning - stationary vs running (condition-matched cells)\n');
+% plotSizeResponse_byCondition_singleDay(conBySize_stat_concat, conBySize_loc_concat, ...
+%     red_ind, green_ind, cons, sizes, runningByCondition, ...
+%     'Colors1', {'k', 'r'}, 'Colors2', {'k', 'r'}, ...
+%     'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...
+%     'YLabel', 'dF/F', 'XLabel', 'Size (deg)');
+% sgtitle('Size tuning - stationary vs running (condition-matched cells)');
+% saveas(gcf, fullfile(fnout, 'sizeResponse_byCondition.pdf'));
+% 
+% %% 4. Neural timecourses - stationary vs running (condition-matched cells)
+% fprintf('Generating Plot 4: Neural timecourses - stationary vs running (condition-matched cells)\n');
+% plotNeuralTimecourse_byCondition_singleDay(tc_stat_concat, tc_loc_concat, ...
+%     red_ind, green_ind, runningByCondition, ...
+%     'Colors1', {'k', 'r'}, 'Colors2', {'k', 'r'}, ...
+%     'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...
+%     'FrameRate', frame_rate, 'StimStart', stimStart);
+% figs = findobj('Type', 'figure');
+% for i = 1:length(figs)
+%     saveas(figs(i), fullfile(fnout, sprintf('timecourse_byCondition_size%d.pdf', i)));
+% end
 
 %% 5. Size tuning - stationary with all contrasts overlaid (all cells)
 fprintf('Generating Bonus Plot 5: Size tuning - stationary contrast overlay (all cells)\n');
