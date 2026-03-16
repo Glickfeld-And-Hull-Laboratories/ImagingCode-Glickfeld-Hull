@@ -127,7 +127,7 @@ def get_codec_events_subject(file) -> dict:
 
 ####################
 #Path of.mwk2
-mwk2_path = "G:\\Behavior\\Data\\hullglick-VisStimRet-20240801-091221.mwk2"
+mwk2_path = "G:\\Behavior\\Data\\hullglick-VisStimRet-20250828-135401.mwk2"
 
 #Extract data
 res = get_codec_events_subject(mwk2_path)
