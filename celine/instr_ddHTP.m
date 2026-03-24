@@ -10,8 +10,4 @@ instructions.targetCon = [.25 .5 1]; %the contrasts to analyze, in case not all 
 instructions.targetSize = [7.5 15.0 30.0000 60.0 120.000]; %the sizes to analyze, in case not all datasets have the same set of sizes
 instructions.frame_rate = 15;
 %% Notes
-%cooh=52 
-% alx-DART = 47 44
-% sess 53 = DART for i2225, forward matched
-%56 = DART session for i2226
-% 66
+%V1 ddHTP SOM sessions from January-March 2026

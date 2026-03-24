@@ -1,7 +1,7 @@
 % Single-day trial extraction and response analysis.
 % Loads step1 outputs (neuropil-subtracted timecourses, masks, input struct),
 % segments data into trials, identifies visually responsive cells, and computes
-% trial-averaged timecourses at each cell's preferred direction for every
+% trial-averaged Median abs devation timecourses at each cell's preferred direction for every
 % contrast x size combination.
 
 
@@ -270,15 +270,15 @@ loc_inds  = find(RIx);
 ind_large = find(PIx_large);
 ind_small = find(PIx_small);
 
-tc_trial_avrg_stat       = nan(nOn + nOff, nKeep, nCon, nSize);
-tc_trial_avrg_loc        = nan(nOn + nOff, nKeep, nCon, nSize);
-tc_trial_avrg_largePupil = nan(nOn + nOff, nKeep, nCon, nSize);
-tc_trial_avrg_smallPupil = nan(nOn + nOff, nKeep, nCon, nSize);
+tc_trial_MAD_stat       = nan(nOn + nOff, nKeep, nCon, nSize);
+tc_trial_MAD_loc        = nan(nOn + nOff, nKeep, nCon, nSize);
+tc_trial_MAD_largePupil = nan(nOn + nOff, nKeep, nCon, nSize);
+tc_trial_MAD_smallPupil = nan(nOn + nOff, nKeep, nCon, nSize);
 
-conBySize_resp_stat       = zeros(nKeep, nCon, nSize);
-conBySize_resp_loc        = zeros(nKeep, nCon, nSize);
-conBySize_resp_largePupil = zeros(nKeep, nCon, nSize);
-conBySize_resp_smallPupil = zeros(nKeep, nCon, nSize);
+conBySize_MAD_stat       = zeros(nKeep, nCon, nSize);
+conBySize_MAD_loc        = zeros(nKeep, nCon, nSize);
+conBySize_MAD_largePupil = zeros(nKeep, nCon, nSize);
+conBySize_MAD_smallPupil = zeros(nKeep, nCon, nSize);
 
 for iCell = 1:nKeep
     pref_dir_val = dirs(prefDir_idx(iCell));
@@ -295,32 +295,32 @@ for iCell = 1:nKeep
             ind_sp = intersect(ind_stim, ind_small);
 
             if ~isempty(ind_s)
-                tc_trial_avrg_stat(:, iCell, iCon, iSize)       = nanmean(data_dfof_trial_keep(:, ind_s, iCell), 2);
-                conBySize_resp_stat(iCell, iCon, iSize)          = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_s, iCell), 1), 2);
+                tc_trial_MAD_stat(:, iCell, iCon, iSize)       = nanmean(data_dfof_trial_keep(:, ind_s, iCell), 2);
+                conBySize_MAD_stat(iCell, iCon, iSize)          = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_s, iCell), 1), 2);
             end
             if ~isempty(ind_l)
-                tc_trial_avrg_loc(:, iCell, iCon, iSize)         = nanmean(data_dfof_trial_keep(:, ind_l, iCell), 2);
-                conBySize_resp_loc(iCell, iCon, iSize)           = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_l, iCell), 1), 2);
+                tc_trial_MAD_loc(:, iCell, iCon, iSize)         = nanmean(data_dfof_trial_keep(:, ind_l, iCell), 2);
+                conBySize_MAD_loc(iCell, iCon, iSize)           = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_l, iCell), 1), 2);
             end
             if ~isempty(ind_lp)
-                tc_trial_avrg_largePupil(:, iCell, iCon, iSize)  = nanmean(data_dfof_trial_keep(:, ind_lp, iCell), 2);
-                conBySize_resp_largePupil(iCell, iCon, iSize)     = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_lp, iCell), 1), 2);
+                tc_trial_MAD_largePupil(:, iCell, iCon, iSize)  = nanmean(data_dfof_trial_keep(:, ind_lp, iCell), 2);
+                conBySize_MAD_largePupil(iCell, iCon, iSize)     = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_lp, iCell), 1), 2);
             end
             if ~isempty(ind_sp)
-                tc_trial_avrg_smallPupil(:, iCell, iCon, iSize)  = nanmean(data_dfof_trial_keep(:, ind_sp, iCell), 2);
-                conBySize_resp_smallPupil(iCell, iCon, iSize)     = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_sp, iCell), 1), 2);
+                tc_trial_MAD_smallPupil(:, iCell, iCon, iSize)  = nanmean(data_dfof_trial_keep(:, ind_sp, iCell), 2);
+                conBySize_MAD_smallPupil(iCell, iCon, iSize)     = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_sp, iCell), 1), 2);
             end
         end
     end
 end
-figure;plot(mean(tc_trial_avrg_stat(:,:,3,3),2));title('grand mean across cells, con 3 size 3, keepSingle')
+figure;plot(mean(tc_trial_MAD_stat(:,:,3,3),2));title('grand mean across cells, con 3 size 3, keepSingle')
 %% Save
 
 save(fullfile(fnout, 'singleday_extraction.mat'), ...
-    'tc_trial_avrg_stat', 'tc_trial_avrg_loc', ...
-    'tc_trial_avrg_largePupil', 'tc_trial_avrg_smallPupil', ...
-    'conBySize_resp_stat', 'conBySize_resp_loc', ...
-    'conBySize_resp_largePupil', 'conBySize_resp_smallPupil', ...
+    'tc_trial_MAD_stat', 'tc_trial_MAD_loc', ...
+    'tc_trial_MAD_largePupil', 'tc_trial_MAD_smallPupil', ...
+    'conBySize_MAD_stat', 'conBySize_MAD_loc', ...
+    'conBySize_MAD_largePupil', 'conBySize_MAD_smallPupil', ...
     'data_dfof_trial_keep', 'keep_single', 'red_cells', 'prefDir_idx', ...
     'RIx', 'PIx_large', 'PIx_small', 'wheel_tc', 'wheel_trial_avg', ...
     'h_keep', 'resp_by_size', ...

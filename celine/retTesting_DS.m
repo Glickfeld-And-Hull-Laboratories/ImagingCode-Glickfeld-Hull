@@ -1,0 +1,19 @@
+%% i1428 
+expt(1).mouse = 'i1428';
+expt(1).date = '260320';
+expt(1).img_loc  = {'V1';'L2/3'};
+expt(1).obj = '16x';
+expt(1).zoom = 2;
+expt(1).frame_rate = 15;
+expt(1).multiday_timesincedrug_hours = '0';
+expt(1).multiday_matchdays = [];
+expt(1).indicator = {'GCaMP8S'};
+expt(1).drug = 'none';
+expt(1).greenChannelLabel = 'any';
+expt(1).redChannelLabel = 'none';
+expt(1).redChannelTag = {};
+expt(1).redChannelRun = '';
+expt(1).contrastxori_runs = {'003'};
+expt(1).contrastxori_time = {'1518'};
+expt(1).wheelColor = 'orange';
+expt(1).exptType = 'retTesting';

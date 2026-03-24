@@ -458,13 +458,13 @@ print(fullfile(fn_multi,'masksAfterTransform.pdf'),'-dpdf','-fillpage')
 %% Extract timecourses from matched cells
 
 % Extract fluorescence timecourses from successfully matched cells
-% Day 1: use existing timecourses from previous analysis
-% Day 2: extract new timecourses from newly segmented masks with neuropil subtraction
+% reference day: use existing timecourses from previous analysis
+% matched day: extract new timecourses from newly segmented masks with neuropil subtraction
 
 match_ind = find([cellImageAlign.pass]);
 cellTCs_match{1} = cellTCs_all{1}(:,match_ind);
 
-% Extract new timecourses from transformed Day 2 data
+% Extract new timecourses from transformed matched day data
 data_tc = stackGetTimeCourses(data{3}, mask_cell);
 [nFrames nCells] = size(data_tc);
 

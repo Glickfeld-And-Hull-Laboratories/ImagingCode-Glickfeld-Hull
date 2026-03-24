@@ -7,17 +7,23 @@
 %% get path names
 clear all;clc;close all;
 
-netSupp_expt
+%netSupp_expt
  
 expt_num = 25;
-doRed=1;
+doRed=0;
 
-mouse = expt(expt_num).mouse
-date = expt(expt_num).date;
-time = expt(expt_num).retTime;
-RetImgFolder = expt(expt_num).retRun;
-frame_rate = expt(expt_num).frame_rate; 
-RedImgFolder = expt(expt_num).redChannelRun;
+% mouse = expt(expt_num).mouse
+% date = expt(expt_num).date;
+% time = expt(expt_num).retTime;
+% RetImgFolder = expt(expt_num).retRun;
+% frame_rate = expt(expt_num).frame_rate; 
+% RedImgFolder = expt(expt_num).redChannelRun;
+
+mouse = 'i1428'
+date = '260319'
+time = '1307'
+RetImgFolder = '002' 
+frame_rate = 15
 
 
 doFromRef = 0;
@@ -110,7 +116,7 @@ clear data_temp
 clear temp
 
 %% Choose register interval
-regIntv = 3500;
+regIntv = 500;
 nep = floor(size(data,3)./regIntv);
 fprintf(['/nSplitting into ' num2str(nep) ' epochs of length ' num2str(regIntv) ' frames./n'])
 
@@ -1065,7 +1071,7 @@ for count_shuf = 0:Nshuf
             if count_shuf == 0
                 PLOTIT_FIT = 1;
                 SAVEALLDATA = 1;
-                Fit_2Dellipse_ret_CC % modified due to error from file saving in script, saves to kevin analysis folder
+                Fit_2Dellipse_ret_lbub % modified due to error from file saving in script, saves to kevin analysis folder
                 eval(['Fit_struct(iCell).True.s_',' = s;']);
             else
                 SAVEALLDATA = 0;

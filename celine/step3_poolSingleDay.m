@@ -124,11 +124,12 @@ for iSess = 1:nSess
         if ~isempty(filterRedSize)
             [~, redSizeIdx] = min(abs(d.sizes - filterRedSize));
             if abs(d.sizes(redSizeIdx) - filterRedSize) > 0.1
-                warning('Session %d: requested red filter size %g not found (closest: %g) - skipping red filter', ...
+                warning('Session %d: requested red filter size %g not found (closest: %g) - excluding all red cells', ...
                     day_id, filterRedSize, d.sizes(redSizeIdx));
+                sizeMask(d.red_cells) = false;  % size never tested: exclude all red cells
             else
                 redMask = logical(d.resp_by_size(:, redSizeIdx));
-                sizeMask(d.red_cells & ~redMask) = false;  % exclude red cells that don't respond at target size
+                sizeMask(d.red_cells & ~redMask) = false;
             end
         end
         
@@ -136,11 +137,12 @@ for iSess = 1:nSess
         if ~isempty(filterGreenSize)
             [~, greenSizeIdx] = min(abs(d.sizes - filterGreenSize));
             if abs(d.sizes(greenSizeIdx) - filterGreenSize) > 0.1
-                warning('Session %d: requested green filter size %g not found (closest: %g) - skipping green filter', ...
+                warning('Session %d: requested green filter size %g not found (closest: %g) - excluding all green cells', ...
                     day_id, filterGreenSize, d.sizes(greenSizeIdx));
+                sizeMask(~d.red_cells) = false;  % size never tested: exclude all green cells
             else
                 greenMask = logical(d.resp_by_size(:, greenSizeIdx));
-                sizeMask(~d.red_cells & ~greenMask) = false;  % exclude green cells that don't respond at target size
+                sizeMask(~d.red_cells & ~greenMask) = false;
             end
         end
     else
@@ -360,7 +362,7 @@ end
 % end
 
 %% 5. Size tuning - stationary with all contrasts overlaid (all cells)
-fprintf('Generating Bonus Plot 5: Size tuning - stationary contrast overlay (all cells)\n');
+fprintf('Generating Plot: Size tuning - stationary contrast overlay (all cells)\n');
 plotSizeResponse_contrastOverlay_singleDay(conBySize_stat_concat, red_ind, green_ind, cons, sizes, ...
     'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...
     'YLabel', 'dF/F', 'XLabel', 'Size (deg)');
@@ -368,7 +370,7 @@ sgtitle('Size tuning - stationary (all contrasts overlaid)');
 saveas(gcf, fullfile(fnout, 'sizeResponse_stat_contrastOverlay.pdf'));
 
 %% 6. Size tuning - stationary vs running overlay (condition-matched cells)
-fprintf('Generating Bonus Plot 6: Size tuning - stationary vs running contrast overlay (condition-matched)\n');
+fprintf('Generating Plot: Size tuning - stationary vs running contrast overlay (condition-matched)\n');
 plotSizeResponse_contrastOverlay_byCondition_singleDay(conBySize_stat_concat, conBySize_loc_concat, ...
     red_ind, green_ind, cons, sizes, runningByCondition, ...
     'Titles', {'HTP+ (red)', 'HTP- (green)'}, ...

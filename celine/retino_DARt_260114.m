@@ -60,6 +60,13 @@ plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
     'Colors2', {'k', 'b'}, ...  % Black for pre, blue for post on right plots
     'Titles', {'HTP+ ret <= 7.1', 'HTP- ret <= 7.1'}, ...
     'StimStart', 31);
+
+plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+    far_red, far_green, targetCon,targetSize,'DayOrder',matchDrx, ...
+    'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
+    'Titles', {'HTP+', 'HTP-'}, ...
+    'YLabel', 'dF/F');
+sgtitle('Stationary')
 %% look at delta distance
 % Create experiment index for each cell
 exp_idx = [];
@@ -100,7 +107,7 @@ for i = 1:num_sizes
     plot(x_fit, y_fit, 'k-', 'LineWidth', 1.5)
     xlabel('Delta Ret Distance')
     ylabel('Norm Diff')
-    title(sprintf('Size %d, R² = %.2f, p = %.2f', i, r_squared, p_value))
+    title(sprintf('Size %d, R = %.2f, p = %.2f', i, r_squared, p_value))
     ylim(y_lim)
     xlim(x_lim)
     set(gca, 'TickDir', 'out')
@@ -112,7 +119,7 @@ set(gcf, 'PaperOrientation', 'landscape')
 set(gcf, 'PaperPosition', [0.25 2 10.5 4])
 print('normDiff_vsRet', '-dpdf')
 %% plot responses for cells with little change in ret distance
-stableRet = find(abs(delta_ret_distance)<5);
+stableRet = find(abs(delta_ret_distance)<2);
 
 stableRed = intersect(stableRet,red_ind_concat);
 stableGreen = intersect(stableRet,green_ind_concat);
@@ -132,3 +139,14 @@ plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
     'YLabel', 'dF/F');
 sgtitle('Stationary')
 saveas(gcf, sprintf('stableCell_stationary_size_response.pdf'));
+%%
+stableCloseGreen = intersect(stableGreen, close_green);
+stableCloseRed = intersect(stableRed, close_red);
+
+plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+    stableCloseRed, stableCloseGreen, targetCon,targetSize,'DayOrder',matchDrx, ...
+    'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
+    'Titles', {'HTP+', 'HTP-'}, ...
+    'YLabel', 'dF/F');
+sgtitle('Stationary')
+saveas(gcf, sprintf('stableCloseCell_stationary_size_response.pdf'));

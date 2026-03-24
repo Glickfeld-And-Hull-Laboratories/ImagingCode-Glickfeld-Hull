@@ -497,7 +497,7 @@ red=mask_label';
 resp_red=logical(resp.*red);
 sum(resp)
 sum(resp_red)
-
+save(fullfile(fnout, 'resp_inds.mat'), 'resp')
 if length(find(n))<36
     [n n2] = subplotn(length(find(h_all)));
     tot = n.*n2;

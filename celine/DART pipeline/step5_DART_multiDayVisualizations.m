@@ -160,7 +160,7 @@ for iSess = 1:nSess
         pref_responses_stat_largePupil_concat{id} = cat(1, pref_responses_stat_largePupil_concat{id}, pref_responses_stat_largePupil{id}(:,sharedCon,sharedSize));
         RIx_concat{id} = cat(1, RIx_concat{id}, sum(RIx{id}));
         norm_dir_resp_concat{id} = cat(1, norm_dir_resp_concat{id}, norm_dir_resp{id}(:,:,sharedCon,sharedSize));
-        pref_dir_concat{id} = cat(2, pref_dir_concat{id}, prefDir_keep{id});
+        pref_dir_concat{id} = cat(1, pref_dir_concat{id}, prefDir_keep{id});
         noiseCorr_concat{id} = cat(2, noiseCorr_concat{id}, noiseCorr{id});
         sigCorr_concat{id} = cat(2, sigCorr_concat{id}, sigCorr{id});
         h_concat{id} = cat(1, h_concat{id}, h_keep{id});
@@ -333,7 +333,11 @@ plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
     'YLabel', 'dF/F');
 sgtitle('Stationary')
 saveas(gcf, sprintf('stationary_size_response.pdf'));
-
+%% size plot for each experiment seprately 
+plotSizeResponseByExperiment(pref_responses_stat_concat, pref_responses_stat_concat, red_ind_concat, green_ind_concat, targetCon, targetSize, exp_idx, nKeep_concat, 'DayOrder',matchDrx, ...
+'UseDashedLines', [false, true], ...  % Dashed lines for the right plot
+'Titles', {'HTP+', 'HTP-'}, ...
+'YLabel', 'dF/F')
 %% Scatterplot and ttest for stationary trials
 
 cell_indices = {red_ind_concat, green_ind_concat};
@@ -416,6 +420,7 @@ plotSizeResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
 sgtitle('Running')
 saveas(gcf, sprintf('running_size_response.pdf'));
 
+plotSizeResponse_byCondition(pref_responses_loc_concat, pref_responses_loc_concat, red_ind_concat, green_ind_concat, cons, sizes, runningByCondition)
 %% Normalized direction tuning 
 dirs_for_plotting = dirs - (length(dirs) == 8) * 180;
 
