@@ -5,15 +5,15 @@
 
 clear all; clc; close all;
 
-%% Parameters � ret run
+%% Parameters  ret run
 mouse        = 'i1428';
-date         = '260320';
-time         = '1506';
-RetImgFolder = '002';
+date         = '260325';
+time         = '1057';
+RetImgFolder = '001';
 frame_rate   = 15;
 
 % Reference run (provides FOV, masks, and responsive cell list)
-refRun  = '003';
+refRun  = '002';
 refDate = date;   % change if reference is from a different date
 
 if computer == 'GLNXA64'
@@ -82,7 +82,7 @@ bounds = bwboundaries(mask_cell > 0);
 for i = 1:length(bounds)
     plot(bounds{i}(:,2), bounds{i}(:,1), 'r', 'LineWidth', 0.5)
 end
-title(sprintf('Registered FOV � %d imported masks', nCells))
+title(sprintf('Registered FOV  %d imported masks', nCells))
 set(gca, 'TickDir', 'out', 'XTick', [], 'YTick', []); box off
 
 %% Extract timecourses with neuropil subtraction
@@ -187,7 +187,7 @@ for iStim = 1:nStim
     Ind_struct(iStim).all_trials = intersect(indE, indA);
 end
 
-%% Fit retinotopy � 2D ellipse fits with shuffling
+%% Fit retinotopy  2D ellipse fits with shuffling
 fprintf('Begin fitting retinotopy data...\n')
 
 resp_dFoverF = squeeze(mean(tc_dfof(stimFrames, :, :), 1));  % nCells x ntrials
@@ -392,7 +392,7 @@ for i = 1:n_ex
         fit_surf_i = A_i .* exp(-(az_rot_i.^2 ./ (2*sig_az_i^2) + el_rot_i.^2 ./ (2*sig_el_i^2)));
         contour(Az_vec00, El_vec00, fit_surf_i, 3, 'w')
         plot(Az0_i, El0_i, 'w+', 'MarkerSize', 10, 'LineWidth', 2)
-        r2_str = sprintf(' R�=%.2f', r2_vec(ex_cells(i)));
+        r2_str = sprintf(' R=%.2f', r2_vec(ex_cells(i)));
     else
         r2_str = ' no fit';
     end
@@ -417,7 +417,7 @@ xlabel('Distance between fit center and weighted average (deg)')
 ylabel('# cells')
 title(sprintf('RF center method comparison (n=%d goodfit cells)', length(goodfit_ind)))
 set(gca, 'TickDir', 'out'); box off; grid off
-xline(median(rf_dist, 'omitnan'), 'k--', sprintf('median=%.1f�', median(rf_dist, 'omitnan')), ...
+xline(median(rf_dist, 'omitnan'), 'k--', sprintf('median=%.1f', median(rf_dist, 'omitnan')), ...
     'LineWidth', 1.5, 'LabelVerticalAlignment', 'bottom')
 
 
@@ -458,7 +458,7 @@ fprintf('lbub only: %d | R2 only: %d | both: %d | neither: %d\n', ...
 figure;
 pie([n_lbub_only, n_r2_only, n_both, n_neither], ...
     {sprintf('lbub only (n=%d)', n_lbub_only), ...
-     sprintf('R� only (n=%d)',   n_r2_only), ...
+     sprintf('R only (n=%d)',   n_r2_only), ...
      sprintf('both (n=%d)',      n_both), ...
      sprintf('neither (n=%d)',   n_neither)})
 colormap([0.2 0.5 0.8; 0.9 0.4 0.3; 0.5 0.3 0.7; 0.8 0.8 0.8])
@@ -486,3 +486,16 @@ title('Cell counts by criterion')
 
 %% Compare RF centers from fits to selected stim location
 plotRFdistanceMap(lbub_fits(:,:,4), goodfit_ind, mask_cell, double(ref_input.gratingAzimuthDeg), double(ref_input.gratingElevationDeg));
+%% Save all figures
+figHandles = findall(0, 'Type', 'figure');
+for i = 1:length(figHandles)
+    fig = figHandles(i);
+    figName = get(fig, 'Name');
+    if isempty(figName)
+        figName = sprintf('fig%d', fig.Number);
+    else
+        figName = sprintf('fig%d_%s', fig.Number, strrep(figName, ' ', '_'));
+    end
+    print(fig, fullfile(fnOut, [date '_' mouse '_' run_str '_' figName '.pdf']), '-dpdf', '-bestfit')
+end
+fprintf('Saved %d figures\n', length(figHandles))

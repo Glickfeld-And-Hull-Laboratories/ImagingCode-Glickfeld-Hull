@@ -314,66 +314,59 @@ figure; imagesc(redThresh);colormap gray;
 %  % close the writer object
 %  close(writerObj);
 
+
+
 %% segment cells
 close all
 
-redForSegmenting = cat(3, redChImg,redChImg,redChImg); %make a dataframe that repeats the red channel image multiple times
-mask_exp = zeros(sz(1),sz(2));
-mask_all = zeros(sz(1), sz(2));
-%find and label the red cells - this is the first segmentation figure that
-%comes up
-if ~isempty(expt(day_id).redChannelRun)
-    for iStim=1:size(redForSegmenting,3)
-        mask_data_temp=redForSegmenting(:,:,iStim);
+if exist(fullfile(fnout,'mask_cell.mat'))
+    load(fullfile(fnout,'mask_cell.mat'))
+    nCells = max(mask_cell(:));
+    fprintf('Loaded existing masks: %d cells\n', nCells)
+else
+    redForSegmenting = cat(3, redChImg,redChImg,redChImg);
+    mask_exp = zeros(sz(1),sz(2));
+    mask_all = zeros(sz(1), sz(2));
+    if ~isempty(expt(day_id).redChannelRun)
+        for iStim=1:size(redForSegmenting,3)
+            mask_data_temp=redForSegmenting(:,:,iStim);
+            mask_data_temp(find(mask_exp >= 1)) = 0;
+            bwout = imCellEditInteractiveLG(mask_data_temp);
+            mask_all = mask_all+bwout;
+            mask_exp = imCellBuffer(mask_all,3)+mask_all;
+            close all
+        end
+    end
+
+    mask_cell_red = bwlabel(mask_all);
+    mask_data = data_dfof;
+    for iStim = 1:size(data_dfof,3)
+        mask_data_temp = mask_data(:,:,iStim);
         mask_data_temp(find(mask_exp >= 1)) = 0;
         bwout = imCellEditInteractiveLG(mask_data_temp);
         mask_all = mask_all+bwout;
         mask_exp = imCellBuffer(mask_all,3)+mask_all;
         close all
     end
-end
+    mask_cell = bwlabel(mask_all);
+    figure; imagesc(mask_cell)
 
-%this version does not pad the red cells
-
-
-mask_cell_red = bwlabel(mask_all);
-mask_data = data_dfof; %this is the registered data from the 920 run
-%after making masks for all the red cells, go through different stimuli and
-%identify cells that are visible for each
-
-for iStim = 1:size(data_dfof,3)
-    mask_data_temp = mask_data(:,:,iStim);
-    mask_data_temp(find(mask_exp >= 1)) = 0;
-    bwout = imCellEditInteractiveLG(mask_data_temp);
-    mask_all = mask_all+bwout;
-    mask_exp = imCellBuffer(mask_all,3)+mask_all;
-    close all
-end
-mask_cell = bwlabel(mask_all);
-figure; imagesc(mask_cell) 
-
-nCells = max(mask_cell(:));
-%mask_label = ones(1,nCells); %this is for the EMX and similar lines only
-mask_label = zeros(1,nCells);
-for i = 1:nCells
-    if mask_cell_red(find(mask_cell == i, 1))
-        mask_label(1,i) = 1;
+    nCells = max(mask_cell(:));
+    mask_label = zeros(1,nCells);
+    for i = 1:nCells
+        if mask_cell_red(find(mask_cell == i, 1))
+            mask_label(1,i) = 1;
+        end
     end
-end
 
-mask_np = imCellNeuropil(mask_cell, 3, 5);
-save(fullfile(fnout, 'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
+    mask_np = imCellNeuropil(mask_cell, 3, 5);
+    save(fullfile(fnout, 'mask_cell.mat'), 'data_dfof', 'mask_cell', 'mask_cell_red', 'mask_np','mask_label')
 
-
-rgb = zeros(sz(1),sz(2),3);
+    rgb = zeros(sz(1),sz(2),3);
     rgb(:,:,1) = redChImg./(max(redChImg(:))*.5);
     rgb(:,:,2) = regImg./max(regImg(:));
-    figure; image(rgb);  movegui('center')
-
-% hold on
-% bound = cell2mat(bwboundaries(mask_cell_red));
-% plot(bound(:,2),bound(:,1),'.','color','b','MarkerSize',2);
-% hold off
+    figure; image(rgb); movegui('center')
+end
 
 %% extract timecourses
 
@@ -474,6 +467,7 @@ tCon = cell2mat(input.tGratingContrast);
 contrasts = unique(tCon);
 nCon = length(contrasts);
 resp_win = nOff/2:nOff/2+nOn;
+
 base_win = 1:nOff/2;
 
 data_resp = zeros(nCells, nSize, nDir,2);

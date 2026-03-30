@@ -4,7 +4,8 @@
 % trial-averaged Median abs devation timecourses at each cell's preferred direction for every
 % contrast x size combination.
 
-
+clear all
+close all
 % ds and day_id can be injected by the batch runner, or entered interactively.
 if ~exist('ds', 'var')
     ds = input('Enter name of datasheet file: ', 's');
@@ -136,14 +137,14 @@ end
 
 data_f          = mean(data_trial(1:(nOff/2), :, :), 1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus, data_trial, data_f), data_f);
-clear data_trial data_f
+%clear data_trial data_f
 
 %% Analysis windows
 
 stimStart = nOff/2;
 stimEnd   = stimStart + nOn;
 
-resp_win = (stimStart + 1):(stimEnd + 1);%changed this from a 3-frame shifts to a 1-frame shifts on 3/3/26
+resp_win = (stimStart + 1):(stimEnd + 1);
 base_win = 1:(stimStart - 1);
 
 %% Behavioral state classification: running vs stationary
@@ -233,18 +234,17 @@ fprintf('%d/%d cells responsive (%d red, %d green)\n', nKeep, nCells, sum(red_ce
 
 % Subset trial data and significance results to responsive cells only
 data_dfof_trial_keep = data_dfof_trial(:, :, keep_single);
+data_trial_keep = data_trial(:, :, keep_single);
 h_keep               = h_resp(keep_single, :, :, :);
 
 % Per-size responsiveness mask: nKeep x nSize
-% True if cell is significant in at least one direction x contrast at that size
-resp_by_size = squeeze(any(any(h_keep, 2), 3));  % nKeep x nSize
+resp_by_size = squeeze(any(any(h_keep, 2), 3));
 fprintf('Cells responsive by size:\n');
 for iSize = 1:nSize
     fprintf('  %g deg: %d cells\n', sizes(iSize), sum(resp_by_size(:, iSize)));
 end
 
 %% Preferred direction per cell
-
 
 data_resp = zeros(nKeep, nDir, nCon, nSize);
 for iDir = 1:nDir
@@ -259,11 +259,10 @@ for iDir = 1:nDir
     end
 end
 
-
 resp_dir_avg     = squeeze(mean(mean(data_resp, 4), 3));
 [~, prefDir_idx] = max(resp_dir_avg, [], 2);
 
-%% Trial-averaged timecourses at preferred direction, split by behavioral state
+%% Trial-averaged MAD of timecourses at preferred direction, split by behavioral state
 
 stat_inds = find(~RIx);
 loc_inds  = find(RIx);
@@ -274,11 +273,18 @@ tc_trial_MAD_stat       = nan(nOn + nOff, nKeep, nCon, nSize);
 tc_trial_MAD_loc        = nan(nOn + nOff, nKeep, nCon, nSize);
 tc_trial_MAD_largePupil = nan(nOn + nOff, nKeep, nCon, nSize);
 tc_trial_MAD_smallPupil = nan(nOn + nOff, nKeep, nCon, nSize);
-
 conBySize_MAD_stat       = zeros(nKeep, nCon, nSize);
 conBySize_MAD_loc        = zeros(nKeep, nCon, nSize);
 conBySize_MAD_largePupil = zeros(nKeep, nCon, nSize);
 conBySize_MAD_smallPupil = zeros(nKeep, nCon, nSize);
+
+% Example cell plot setup
+iCon_plot    = 3;
+iSize_plot   = 3;
+t_frames     = (1:(nOn+nOff)) - nOff/2 - 1;
+ex_cells     = randperm(nKeep, min(10, nKeep));
+ex_plot_count = 0;
+figure('Position', [100 100 1400 900]);
 
 for iCell = 1:nKeep
     pref_dir_val = dirs(prefDir_idx(iCell));
@@ -286,37 +292,97 @@ for iCell = 1:nKeep
     for iCon = 1:nCon
         ind_con = find(tCon == cons(iCon));
         for iSize = 1:nSize
-            ind_size  = find(tSize == sizes(iSize));
-            ind_stim  = intersect(intersect(ind_dir, ind_con), ind_size);
-
+            ind_size = find(tSize == sizes(iSize));
+            ind_stim = intersect(intersect(ind_dir, ind_con), ind_size);
             ind_s  = intersect(ind_stim, stat_inds);
             ind_l  = intersect(ind_stim, loc_inds);
             ind_lp = intersect(ind_stim, ind_large);
             ind_sp = intersect(ind_stim, ind_small);
-
+%trying with F instead of dfof
             if ~isempty(ind_s)
-                tc_trial_MAD_stat(:, iCell, iCon, iSize)       = nanmean(data_dfof_trial_keep(:, ind_s, iCell), 2);
-                conBySize_MAD_stat(iCell, iCon, iSize)          = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_s, iCell), 1), 2);
+                d = data_trial_keep(:, ind_s, iCell);
+                mad_tc = nanmedian(abs(d - nanmedian(d, 2)), 2);
+                amp = nanmean(nanmean(d(resp_win, :), 1), 2);
+                if amp > 0
+                    tc_trial_MAD_stat(:, iCell, iCon, iSize) = mad_tc / amp;
+                    conBySize_MAD_stat(iCell, iCon, iSize)   = nanmean(mad_tc(resp_win)) / amp;
+                else
+                    tc_trial_MAD_stat(:, iCell, iCon, iSize) = NaN;
+                    conBySize_MAD_stat(iCell, iCon, iSize)   = NaN;
+                end
             end
-            if ~isempty(ind_l)
-                tc_trial_MAD_loc(:, iCell, iCon, iSize)         = nanmean(data_dfof_trial_keep(:, ind_l, iCell), 2);
-                conBySize_MAD_loc(iCell, iCon, iSize)           = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_l, iCell), 1), 2);
-            end
-            if ~isempty(ind_lp)
-                tc_trial_MAD_largePupil(:, iCell, iCon, iSize)  = nanmean(data_dfof_trial_keep(:, ind_lp, iCell), 2);
-                conBySize_MAD_largePupil(iCell, iCon, iSize)     = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_lp, iCell), 1), 2);
-            end
-            if ~isempty(ind_sp)
-                tc_trial_MAD_smallPupil(:, iCell, iCon, iSize)  = nanmean(data_dfof_trial_keep(:, ind_sp, iCell), 2);
-                conBySize_MAD_smallPupil(iCell, iCon, iSize)     = nanmean(nanmean(data_dfof_trial_keep(resp_win, ind_sp, iCell), 1), 2);
-            end
+
+            % if ~isempty(ind_s)
+            %     d = data_dfof_trial_keep(:, ind_s, iCell);
+            %     mad_tc = nanmean(abs(d - nanmedian(d, 2)), 2);
+            %     tc_trial_MAD_stat(:, iCell, iCon, iSize) = mad_tc;
+            %     conBySize_MAD_stat(iCell, iCon, iSize)   = nanmean(mad_tc(resp_win));
+            % end
+            % if ~isempty(ind_l)
+            %     d = data_dfof_trial_keep(:, ind_l, iCell);
+            %     mad_tc = nanmean(abs(d - nanmedian(d, 2)), 2);
+            %     tc_trial_MAD_loc(:, iCell, iCon, iSize) = mad_tc;
+            %     conBySize_MAD_loc(iCell, iCon, iSize)   = nanmean(mad_tc(resp_win));
+            % end
+            % if ~isempty(ind_lp)
+            %     d = data_dfof_trial_keep(:, ind_lp, iCell);
+            %     mad_tc = nanmean(abs(d - nanmedian(d, 2)), 2);
+            %     tc_trial_MAD_largePupil(:, iCell, iCon, iSize) = mad_tc;
+            %     conBySize_MAD_largePupil(iCell, iCon, iSize)   = nanmean(mad_tc(resp_win));
+            % end
+            % if ~isempty(ind_sp)
+            %     d = data_dfof_trial_keep(:, ind_sp, iCell);
+            %     mad_tc = nanmean(abs(d - nanmedian(d, 2)), 2);
+            %     tc_trial_MAD_smallPupil(:, iCell, iCon, iSize) = mad_tc;
+            %     conBySize_MAD_smallPupil(iCell, iCon, iSize)   = nanmean(mad_tc(resp_win));
+            % end
+
+            % Example cell plot: individual stationary trials + median
+            
+if ismember(iCell, ex_cells) && iCon == iCon_plot && iSize == iSize_plot && ~isempty(ind_s)
+    ex_plot_count = ex_plot_count + 1;
+    d = data_dfof_trial_keep(:, ind_s, iCell);
+    mad_tc = nanmedian(abs(d - nanmedian(d, 2)), 2);
+    amp = nanmean(nanmean(d(resp_win, :), 1), 2);
+    if amp > 0
+        mad_tc_norm = mad_tc / amp;
+    else
+        mad_tc_norm = nan(size(mad_tc));
+    end
+
+    subplot(2, 5, ex_plot_count)
+    yyaxis left
+    hold on
+    for iTr = 1:size(d, 2)
+        plot(t_frames, d(:, iTr), 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5,'Marker', 'none')
+    end
+    xline(0, 'b--'); xline(nOn, 'b:')
+    yline(0, 'k:')
+    ylabel('\DeltaF/F')
+    set(gca, 'YColor', 'k')
+
+    yyaxis right
+    plot(t_frames, mad_tc_norm, 'k', 'LineWidth', 0.5,'Marker', 'none')
+    ylabel('MAD / amp')
+    set(gca, 'YColor', 'r')
+
+    if red_cells(iCell), ctype = 'HTP+'; else, ctype = 'HTP-'; end
+    title(sprintf('cell %d (%s)', keep_single(iCell), ctype))
+    xlabel('frame')
+    set(gca, 'TickDir', 'out', 'Box', 'off')
+end
         end
     end
 end
-figure;plot(mean(tc_trial_MAD_stat(:,:,3,3),2));title('grand mean across cells, con 3 size 3, keepSingle')
+
+sgtitle(sprintf('Example cells  stationary, con %g, size %g deg', cons(iCon_plot), sizes(iSize_plot)))
+
+figure; plot(mean(tc_trial_MAD_stat(:,:,3,3), 2, 'omitnan'));
+title('grand mean across cells, con 3 size 3, keepSingle')
+saveas(gcf, fullfile(fnout, 'exampleCellTrialVariability.pdf'));
 %% Save
 
-save(fullfile(fnout, 'singleday_extraction.mat'), ...
+save(fullfile(fnout, 'singleday_extraction_MAD.mat'), ...
     'tc_trial_MAD_stat', 'tc_trial_MAD_loc', ...
     'tc_trial_MAD_largePupil', 'tc_trial_MAD_smallPupil', ...
     'conBySize_MAD_stat', 'conBySize_MAD_loc', ...
@@ -328,6 +394,7 @@ save(fullfile(fnout, 'singleday_extraction.mat'), ...
     'nOn', 'nOff', 'resp_win', 'base_win', 'tCon', 'tDir', 'tOri', 'tSize');
 
 fprintf('Saved to %s\n', fullfile(fnout, 'singleday_extraction.mat'));
+
 %% Optional retinotopy alignment
 
 if isfield(expt(day_id), 'ret_run') && ~isempty(expt(day_id).ret_run)
@@ -361,5 +428,5 @@ if doRetino
         'ret_npSub_tc_keep', 'ret_distance_keep', 'resp_by_stim_keep', 'ret_dfof_trial_keep', ...
         'trialIndSourceUsed');
 
-    fprintf('Retinotopy alignment saved to %s\n', fullfile(fnout, 'retino_aligned.mat'));
+    fprintf('Retinotopy alignment saved to %s\n', fullfile(fnout, 'retino_aligned_MAD.mat'));
 end

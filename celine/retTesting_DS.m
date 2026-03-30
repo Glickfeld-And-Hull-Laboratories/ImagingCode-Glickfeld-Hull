@@ -17,3 +17,23 @@ expt(1).contrastxori_runs = {'003'};
 expt(1).contrastxori_time = {'1518'};
 expt(1).wheelColor = 'orange';
 expt(1).exptType = 'retTesting';
+
+%% i1428 
+expt(2).mouse = 'i1428';
+expt(2).date = '260325';
+expt(2).img_loc  = {'V1';'L2/3'};
+expt(2).obj = '16x';
+expt(2).zoom = 2;
+expt(2).frame_rate = 15;
+expt(2).multiday_timesincedrug_hours = '0';
+expt(2).multiday_matchdays = [];
+expt(2).indicator = {'GCaMP8S'};
+expt(2).drug = 'none';
+expt(2).greenChannelLabel = 'any';
+expt(2).redChannelLabel = 'none';
+expt(2).redChannelTag = {};
+expt(2).redChannelRun = '';
+expt(2).contrastxori_runs = {'002'};
+expt(2).contrastxori_time = {'1127'};
+expt(2).wheelColor = 'orange';
+expt(2).exptType = 'retTesting';
