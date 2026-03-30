@@ -1,0 +1,3 @@
+moderngl>=5.8
+imgui-bundle>=1.92
+numpy>=2.0
