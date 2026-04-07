@@ -130,52 +130,60 @@ sess_title = strjoin(arrayfun(@num2str, day_ids, 'UniformOutput', false), '_');
 fnout      = fullfile(rc.analysis, 'pooled_dfof_and_MAD', ['sess' sess_title], d_str);
 mkdir(fnout);
 
-%% Plot: one figure per contrast
-% Rows: [df/F ; MAD], Columns: sizes
-% HTP+ (green), HTP- (blue), mean +/- SEM shading
+%% Plot: contrasts overlaid, separate figures for HTP+ and HTP-
+% Rows: [df/F ; MAD], Columns: sizes, contrasts as light-to-dark blue
 
-t_frames = (1:(nOn+nOff)) - nOff/2;
-clrs     = [0.2 0.65 0.2; 0.15 0.45 0.85];  % green = HTP+, blue = HTP-
-masks    = {HTP_cells, ~HTP_cells};
-lbls     = {'HTP+', 'HTP-'};
-metricTC = {tc_dfof_all, tc_MAD_all};
-rowYLbl  = {'\DeltaF/F', 'MAD (\DeltaF/F)'};
+t_frames  = (1:(nOn+nOff)) - nOff/2;
+con_clrs  = [0.75 0.88 1; 0.2 0.5 0.85; 0.05 0.15 0.5];
+rowYLbl   = {'\DeltaF/F', 'MAD (\DeltaF/F)'};
+metricTC  = {tc_dfof_all, tc_MAD_all};
+type_masks = {HTP_cells, ~HTP_cells};
+type_lbls  = {'HTP+', 'HTP-'};
+type_fnames = {'HTPplus', 'HTPminus'};
 
-for iCon = 1:nCon
+allAxH = gobjects(2, nSize, 2);  % (row, size, type)
+
+for iType = 1:2
+    mask = type_masks{iType};
     figure('Position', [50 50 200*nSize 420]);
     axH = gobjects(2, nSize);
-    for iRow = 1:2   % row 1 = df/F, row 2 = MAD
+
+    for iRow = 1:2
         for iSize = 1:nSize
             axH(iRow, iSize) = subplot(2, nSize, (iRow-1)*nSize + iSize);
             hold on
-            for iType = 1:2
-                tc = metricTC{iRow}(:, masks{iType}, iCon, iSize);
+            for iCon = 1:nCon
+                tc = metricTC{iRow}(:, mask, iCon, iSize);
                 m  = mean(tc, 2, 'omitnan');
                 se = std(tc, 0, 2, 'omitnan') ./ sqrt(sum(~isnan(tc(1,:))));
                 fill([t_frames fliplr(t_frames)], [(m+se)' fliplr((m-se)')], ...
-                    clrs(iType,:), 'FaceAlpha', 0.15, 'EdgeColor', 'none');
-                plot(t_frames, m, 'Color', clrs(iType,:), 'LineWidth', 1.2, ...
-                    'DisplayName', lbls{iType});
+                    con_clrs(iCon,:), 'FaceAlpha', 0.15, 'EdgeColor', 'none');
+                plot(t_frames, m, 'Color', con_clrs(iCon,:), 'LineWidth', 1.2, ...
+                    'DisplayName', sprintf('%g%%', cons(iCon)*100));
             end
-            xline(0,   'k--', 'LineWidth', 0.5, 'HandleVisibility', 'off');
-            xline(nOn, 'k:',  'LineWidth', 0.5, 'HandleVisibility', 'off');
+            yl = ylim;
+            plot([0 nOn], [yl(1) yl(1)], 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
             set(gca, 'TickDir', 'out', 'Box', 'off');
             xlabel('Frame');
-            if iSize == 1
-                ylabel(rowYLbl{iRow});
-            end
-            if iRow == 1
-                title(sprintf('%g deg', sizes(iSize)));
-            end
-
+            if iSize == 1, ylabel(rowYLbl{iRow}); end
+            if iRow == 1,  title(sprintf('%g deg', sizes(iSize))); end
         end
     end
-    % Shared y limits per row
-    for iRow = 1:1
-        yl = cell2mat(arrayfun(@(ax) ax.YLim, axH(iRow,:), 'UniformOutput', false)');
-        set(axH(iRow,:), 'YLim', [min(yl(:,1)) max(yl(:,2))]);
-    end
-    sgtitle(sprintf('Contrast %g%% � stationary | green: HTP+, blue: HTP-', cons(iCon)*100));
-    saveas(gcf, fullfile(fnout, sprintf('timecourse_dfof_MAD_con%g.pdf', cons(iCon)*100)));
+
+    sgtitle(sprintf('%s cells, stationary | contrasts overlaid', type_lbls{iType}));
+    allAxH(:, :, iType) = axH;
+    figh(iType) = gcf; %#ok<AGROW>
+end
+
+% Shared y limits per row across both figures
+for iRow = 1:2
+    axRow = squeeze(allAxH(iRow, :, :));  % nSize x 2
+    yl = cell2mat(arrayfun(@(ax) ax.YLim, axRow(:), 'UniformOutput', false));
+    ylShared = [min(yl(:,1)) max(yl(:,2))];
+    set(axRow(:), 'YLim', ylShared);
+end
+
+for iType = 1:2
+    saveas(figh(iType), fullfile(fnout, sprintf('timecourse_dfof_MAD_%s_contrastOverlay.pdf', type_fnames{iType})));
 end
 fprintf('Plots saved to %s\n', fnout);
