@@ -30,7 +30,7 @@ analysis_root = [isilon_home 'ACh\Analysis\2p_analysis'];
 rc = behavConstsDART;
 if person == "TH"
     ds = 'DART_expt_info';
-    code_cd = [isilon_home 'jerry\repositories\ImagingCode-Glickfeld-Hull\jerry'];
+    code_cd = [isilon_home 'jerry\Repositories\ImagingCode-Glickfeld-Hull\jerry'];
 elseif person == "CC"
     ds = 'DART_V1_atropine_Celine';
     code_cd = [isilon_home 'celine\Repositories\ImagingCode-Glickfeld-Hull\celine'];
