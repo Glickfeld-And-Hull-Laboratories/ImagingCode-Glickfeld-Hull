@@ -621,10 +621,27 @@ if doRetino
         resp_by_stim_keep{id}   = resp_by_stim_matched{id}(:, :, keep_cells);
         ret_dfof_trial_keep{id} = ret_dfof_trial_matched{id}(:, keep_cells, :);
     end
+    % Convert goodfit indices from matched set  keep_cells subset
+    goodfit_both = intersect(goodfit_ind_matched{1},goodfit_ind_matched{2});
+    goodfit_ind_keep = find(ismember(keep_cells, goodfit_both));
+
+    % Subset per-cell fit results to keep_cells
+    for id = 1:nd
+        r2_vec_keep{id}       = r2_vec_matched{id}(keep_cells);
+        fitAzimDeg_keep{id}   = fitAzimDeg_matched{id}(keep_cells);
+        fitElevDeg_keep{id}   = fitElevDeg_matched{id}(keep_cells);
+        prefAzimDeg_keep{id}  = prefAzimDeg_matched{id}(keep_cells);
+        prefElevDeg_keep{id}  = prefElevDeg_matched{id}(keep_cells);
+        lbub_fits_keep{id}    = lbub_fits_matched{id}(keep_cells, :);
+    end
+
     save(fullfile(fn_multi, 'retino_aligned.mat'), ...
         'ret_npSub_tc_matched', 'ret_distance_matched', 'resp_by_stim_matched', 'ret_dfof_trial_matched', ...
-        'ret_npSub_tc_keep', 'ret_distance_keep', 'resp_by_stim_keep', 'ret_dfof_trial_keep', 'trialIndSourceUsed');
-    fprintf('Retinotopy alignment saved to %s\n', fn_multi);
+        'ret_npSub_tc_keep', 'ret_distance_keep', 'resp_by_stim_keep', 'ret_dfof_trial_keep', 'trialIndSourceUsed', ...
+        'goodfit_ind_matched', 'goodfit_ind_keep', ...
+        'r2_vec_matched', 'r2_vec_keep', 'lbub_fits_matched', 'lbub_fits_keep', ...
+        'fitAzimDeg_matched', 'fitAzimDeg_keep', 'fitElevDeg_matched', 'fitElevDeg_keep', ...
+        'prefAzimDeg_matched', 'prefAzimDeg_keep', 'prefElevDeg_matched', 'prefElevDeg_keep');
 else
     fprintf('Skipping retinotopy alignment\n');
 end

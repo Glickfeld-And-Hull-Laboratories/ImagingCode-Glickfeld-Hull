@@ -24,6 +24,7 @@ targetCon = instructions.targetCon;
 nCon = length(targetCon);
 targetSize=instructions.targetSize;
 nSize = length(targetSize); 
+retDistThresh = 30; % degrees - RF distance threshold; cells must be < this on both days
 
 % Determine which session was used as reference for cell matching
 x = instructions.refDay;
@@ -82,6 +83,14 @@ if isfield(instructions, 'load_retino') && instructions.load_retino
     ret_dfof_trial_keep_concat = cell(1, nd);
 end
 
+% Retinotopy matched data (from retinotopy_for_matched_data output)
+goodfit_concat = cell(1, nd);
+ret_distance_retino_concat = cell(1, nd);
+for id = 1:nd
+    goodfit_concat{id} = [];
+    ret_distance_retino_concat{id} = [];
+end
+
 drug = cell(1, nSess);
 
 % Main concatenation loop
@@ -107,6 +116,25 @@ for iSess = 1:nSess
     load(fullfile(fn_multi, 'cell_analysis.mat'));
     load(fullfile(fn_multi, 'HT_pyr_relationship.mat'));
     nKeep = size(tc_trial_avrg_stat{post}, 2);
+    
+    % Load retinotopy matched data (output of retinotopy_for_matched_data)
+    retino_matched_file = fullfile(fn_multi, [mouse '_ret_matched.mat']);
+    if exist(retino_matched_file, 'file')
+        load(retino_matched_file, 'goodfit_ind_matched', 'ret_distance_matched');
+        for id = 1:nd
+            gf_this = false(1, nKeep);
+            gf_this(goodfit_ind_matched{id}) = true;
+            goodfit_concat{id} = [goodfit_concat{id}, gf_this];
+            ret_distance_retino_concat{id} = [ret_distance_retino_concat{id}, ret_distance_matched{id}];
+        end
+        %clear goodfit_ind_matched ret_distance_matched
+    else
+        warning('Retinotopy matched file not found for session %d: %s', iSess, retino_matched_file);
+        for id = 1:nd
+            goodfit_concat{id} = [goodfit_concat{id}, false(1, nKeep)];
+            ret_distance_retino_concat{id} = [ret_distance_retino_concat{id}, nan(1, nKeep)];
+        end
+    end
     
     inputStructure = input;
     clear input
@@ -197,6 +225,17 @@ red_ind_concat = find(red_concat);
 green_ind_concat = find(green_concat);
 cons = targetCon;
 nKeep_total = sum(nKeep_concat);
+
+% Retinotopy-filtered cell selection
+goodfit_both = goodfit_concat{1} & goodfit_concat{2};
+closeRF_both = ret_distance_retino_concat{1} < retDistThresh & ...
+               ret_distance_retino_concat{2} < retDistThresh;
+retino_cells  = find(goodfit_both & closeRF_both);
+retino_red    = intersect(retino_cells, red_ind_concat);
+retino_green  = intersect(retino_cells, green_ind_concat);
+fprintf('Retinotopy filter (thresh=%.0f deg): %d goodfit both days, %d within thresh both days\n', ...
+    retDistThresh, sum(goodfit_both), length(retino_cells));
+fprintf('  HTP+: %d, HTP-: %d\n', length(retino_red), length(retino_green));
 
 % Summary of concatenated retinotopy data
 if isfield(instructions, 'load_retino') && instructions.load_retino
@@ -782,3 +821,31 @@ end
 
 %% single cell scatter SSIx and DartIx
 
+
+%% Retinotopically-matched cells - stationary timecourses and size tuning
+close all
+
+plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
+    retino_red, retino_green, 'DayOrder', matchDrx, ...
+    'UseDashedLines', [false, true], ...
+    'Colors1', {'k', 'b'}, ...
+    'Colors2', {'k', 'b'}, ...
+    'Titles', {['HTP+ retino (n=' num2str(length(retino_red)) ')'], ...
+               ['HTP- retino (n=' num2str(length(retino_green)) ')']}, ...
+    'StimStart', 31);
+
+figs = findobj('Type', 'figure');
+sizeTitles = length(figs):-1:1;
+for i = 1:length(figs)
+    figure(figs(i));
+    saveas(gcf, sprintf('retino_stationary_timecourse_size_%d.pdf', sizeTitles(i)));
+end
+
+plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+    retino_red, retino_green, targetCon, targetSize, 'DayOrder', matchDrx, ...
+    'UseDashedLines', [false, true], ...
+    'Titles', {['HTP+ retino (n=' num2str(length(retino_red)) ')'], ...
+               ['HTP- retino (n=' num2str(length(retino_green)) ')']}, ...
+    'YLabel', 'dF/F');
+sgtitle(['Stationary - retino dist < ' num2str(retDistThresh) ' deg'])
+saveas(gcf, 'retino_stationary_size_response.pdf');

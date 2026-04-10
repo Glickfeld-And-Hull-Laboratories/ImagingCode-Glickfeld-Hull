@@ -6,9 +6,9 @@
 clear all; clc; close all;
 
 %% Parameters  ret run
-mouse = 'i2236'
-date = '260401'
-time = '1110'
+mouse = 'i2237'
+date = '260408'
+time = '1103'
 RetImgFolder = '003' 
 frame_rate = 15
 
@@ -416,9 +416,8 @@ for iType = 1:2
     type_nongood_ind = type_resp_ind(~ismember(type_resp_ind, type_good_ind));
     n_nongood_ex = min(3, length(type_nongood_ind));
     if n_good_ex + n_nongood_ex == 0, continue; end
-    % ex_type = [type_good_ind(randperm(length(type_good_ind), n_good_ex)), ...
-    %            type_nongood_ind(randperm(length(type_nongood_ind), n_nongood_ex))']
-    ex_type =   [103    88   102    90    67    41    98    78    44    96    34    63    89   105 87    26     1    11]
+    ex_type = [type_good_ind(randperm(length(type_good_ind), n_good_ex)), ...
+               type_nongood_ind(randperm(length(type_nongood_ind), n_nongood_ex))']
     n_ex_type = length(ex_type);
 
     figure('Name', sprintf('%s example RFs', type_lbls{iType}), 'Position', [50 50 600 900]);
