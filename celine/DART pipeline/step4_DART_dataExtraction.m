@@ -599,15 +599,17 @@ save(fullfile(fn_multi, 'HT_pyr_relationship.mat'), 'conditionMeans', 'sigCorr',
     'trialResp', 'subTrialResp');
 fprintf('Correlation analysis saved to HT_pyr_relationship.mat\n');
 
-% Optional retinotopy alignment
+%% Optional retinotopy alignment
 if ~exist('doRetino', 'var')
     doRetino = strcmpi(input('Complete retinotopy alignment? (y/n): ', 's'), 'y');
 end
 
 if doRetino
-    [ret_npSub_tc_matched, ret_distance_matched, resp_by_stim_matched, ret_dfof_trial_matched, trialIndSourceUsed] = ...
-        retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, ...
-            instructions, inputStructure, match_ind, false);
+    [ret_npSub_tc_matched, ret_distance_matched, resp_by_stim_matched, ret_dfof_trial_matched, trialIndSourceUsed, ...
+ lbub_fits_matched, goodfit_ind_matched, r2_vec_matched, fitAzimDeg_matched, fitElevDeg_matched, ...
+ prefAzimDeg_matched, prefElevDeg_matched, Azs_matched, Els_matched] = ...
+    retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, ...
+        instructions, inputStructure, match_ind, false, fn_multi);
 
     ret_npSub_tc_keep   = cell(1, nd);
     ret_distance_keep   = cell(1, nd);

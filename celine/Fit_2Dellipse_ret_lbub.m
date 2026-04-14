@@ -122,11 +122,11 @@ if PLOTIT_FIT == 1
 
     MAX = max(data(:));
     dF  = num2str(MAX*100);
-    if h_all(1,iCell); sig_str = ' **'; else; sig_str = []; end
+    %if h_all(1,iCell); sig_str = ' **'; else; sig_str = []; end
 
     h = subplot(8,8, start);
     imagesc(s.data); colormap('gray'); axis image off;
-    title([num2str(iCell) sig_str], 'FontSize', 7);
+    title([num2str(iCell)], 'FontSize', 7);
 
     h = subplot(8,8, start+1);
     imagesc(s.k2_plot_oversamp); colormap('gray'); axis image off;

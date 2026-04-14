@@ -299,18 +299,14 @@ for iCell = 1:nKeep
             ind_lp = intersect(ind_stim, ind_large);
             ind_sp = intersect(ind_stim, ind_small);
 %trying with F instead of dfof
-            if ~isempty(ind_s)
-                d = data_trial_keep(:, ind_s, iCell);
-                mad_tc = nanmedian(abs(d - nanmedian(d, 2)), 2);
-                amp = nanmean(nanmean(d(resp_win, :), 1), 2);
-                if amp > 0
-                    tc_trial_MAD_stat(:, iCell, iCon, iSize) = mad_tc / amp;
-                    conBySize_MAD_stat(iCell, iCon, iSize)   = nanmean(mad_tc(resp_win)) / amp;
-                else
-                    tc_trial_MAD_stat(:, iCell, iCon, iSize) = NaN;
-                    conBySize_MAD_stat(iCell, iCon, iSize)   = NaN;
-                end
-            end
+if ~isempty(ind_s)
+    d = data_trial_keep(:, ind_s, iCell);  % nFrames x nTrials
+    dev = abs(d - nanmedian(d, 2));        % deviation per frame per trial
+    mad_tc_norm = nanmedian(dev ./ d, 2);  % normalize per trial, then median across trials
+    mad_tc_norm(nanmedian(d, 2) <= 0) = NaN;
+    tc_trial_MAD_stat(:, iCell, iCon, iSize) = mad_tc_norm;
+    conBySize_MAD_stat(iCell, iCon, iSize)   = nanmean(mad_tc_norm(resp_win));
+end
 
             % if ~isempty(ind_s)
             %     d = data_dfof_trial_keep(:, ind_s, iCell);

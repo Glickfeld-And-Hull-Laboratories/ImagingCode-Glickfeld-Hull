@@ -6,14 +6,14 @@
 clear all; clc; close all;
 
 %% Parameters  ret run
-mouse        = 'i1428';
-date         = '260325';
-time         = '1057';
-RetImgFolder = '001';
-frame_rate   = 15;
+mouse = 'i2236'
+date = '260401'
+time = '1110'
+RetImgFolder = '003' 
+frame_rate = 15
 
 % Reference run (provides FOV, masks, and responsive cell list)
-refRun  = '002';
+refRun  = '005';
 refDate = date;   % change if reference is from a different date
 
 if computer == 'GLNXA64'
@@ -22,7 +22,7 @@ else
     isilonName = 'Z:';
 end
 base       = fullfile(isilonName, '/home/ACh/Data/2p_data/');
-fnOut_base = fullfile(isilonName, '/home/ACh/Analysis/2p_analysis/retTesting');
+fnOut_base = fullfile(isilonName, '/home/ACh/Analysis/2p_analysis/SST_YM90K');
 
 run_str = ['runs-' RetImgFolder];
 ref_str = ['runs-' refRun];
@@ -402,7 +402,54 @@ for i = 1:n_ex
     if mod(i,3) == 1, ylabel('El (deg)'); end
 end
 colormap parula
+% Example RF maps split by cell type (HTP+ = red, HTP- = green)
+HTP_cells   = logical(mask_label);  % true = red interneuron
+type_masks  = {HTP_cells, ~HTP_cells};
+type_lbls   = {'HTP+', 'HTP-'};
+type_clrs   = {[0.85 0.2 0.2], [0.2 0.65 0.2]};
 
+
+for iType = 1:2
+    type_resp_ind = resp_ind(type_masks{iType}(resp_ind));
+    type_good_ind = goodfit_ind(type_masks{iType}(goodfit_ind));
+    n_good_ex = min(15, length(type_good_ind));
+    type_nongood_ind = type_resp_ind(~ismember(type_resp_ind, type_good_ind));
+    n_nongood_ex = min(3, length(type_nongood_ind));
+    if n_good_ex + n_nongood_ex == 0, continue; end
+    % ex_type = [type_good_ind(randperm(length(type_good_ind), n_good_ex)), ...
+    %            type_nongood_ind(randperm(length(type_nongood_ind), n_nongood_ex))']
+    ex_type =   [103    88   102    90    67    41    98    78    44    96    34    63    89   105 87    26     1    11]
+    n_ex_type = length(ex_type);
+
+    figure('Name', sprintf('%s example RFs', type_lbls{iType}), 'Position', [50 50 600 900]);
+    for i = 1:n_ex_type
+        subplot(6, 3, i)
+        imagesc(Azs, Els, resp_by_stim(:,:,ex_type(i)))
+        set(gca, 'YDir', 'normal', 'TickDir', 'out'); box off
+        hold on
+        if ~isempty(Fit_struct(ex_type(i)).True)
+            x_fit_i  = Fit_struct(ex_type(i)).True.s_.x;
+            A_i = x_fit_i(1); sig_az_i = x_fit_i(2); sig_el_i = x_fit_i(3);
+            Az0_i = x_fit_i(4); El0_i = x_fit_i(5); xi_i = x_fit_i(6);
+            az_rot_i =  (AzAz00 - Az0_i).*cos(xi_i) + (ElEl00 - El0_i).*sin(xi_i);
+            el_rot_i = -(AzAz00 - Az0_i).*sin(xi_i) + (ElEl00 - El0_i).*cos(xi_i);
+            fit_surf_i = A_i.*exp(-(az_rot_i.^2./(2*sig_az_i^2) + el_rot_i.^2./(2*sig_el_i^2)));
+            contour(Az_vec00, El_vec00, fit_surf_i, 3, 'w')
+            plot(Az0_i, El0_i, 'w+', 'MarkerSize', 10, 'LineWidth', 2)
+            r2_str = sprintf(' R=%.2f', r2_vec(ex_type(i)));
+        else
+            r2_str = ' no fit';
+        end
+        is_good = ismember(ex_type(i), type_good_ind);
+        title(sprintf('Cell %d%s%s', ex_type(i), repmat('*',1,is_good), r2_str), ...
+            'Color', type_clrs{iType})
+        if i > 15, xlabel('Az (deg)'); end
+        if mod(i,3) == 1, ylabel('El (deg)'); end
+    end
+    colormap parula
+    sgtitle(sprintf('%s cells (n=%d responsive, %d goodfit)', ...
+        type_lbls{iType}, length(type_resp_ind), length(type_good_ind)))
+end
 % Extract fit-based preferred location from lbub_fits (col 4=Az0, col 5=El0, dim3=4 is true fit)
 fitAzimDeg = lbub_fits(:, 4, 4)';  % 1 x nCells
 fitElevDeg = lbub_fits(:, 5, 4)';
@@ -411,14 +458,14 @@ fitElevDeg = lbub_fits(:, 5, 4)';
 rf_dist = sqrt((fitAzimDeg(goodfit_ind) - prefAzimDeg(goodfit_ind)).^2 + ...
                (fitElevDeg(goodfit_ind) - prefElevDeg(goodfit_ind)).^2);
 
-figure;
-histogram(rf_dist, 'BinWidth', 2, 'FaceColor', [0.3 0.5 0.8], 'EdgeColor', 'none')
-xlabel('Distance between fit center and weighted average (deg)')
-ylabel('# cells')
-title(sprintf('RF center method comparison (n=%d goodfit cells)', length(goodfit_ind)))
-set(gca, 'TickDir', 'out'); box off; grid off
-xline(median(rf_dist, 'omitnan'), 'k--', sprintf('median=%.1f', median(rf_dist, 'omitnan')), ...
-    'LineWidth', 1.5, 'LabelVerticalAlignment', 'bottom')
+% figure;
+% histogram(rf_dist, 'BinWidth', 2, 'FaceColor', [0.3 0.5 0.8], 'EdgeColor', 'none')
+% xlabel('Distance between fit center and weighted average (deg)')
+% ylabel('# cells')
+% title(sprintf('RF center method comparison (n=%d goodfit cells)', length(goodfit_ind)))
+% set(gca, 'TickDir', 'out'); box off; grid off
+% xline(median(rf_dist, 'omitnan'), 'k--', sprintf('median=%.1f', median(rf_dist, 'omitnan')), ...
+%     'LineWidth', 1.5, 'LabelVerticalAlignment', 'bottom')
 
 
 save(fullfile(fnOut, [date '_' mouse '_' run_str '_lbub_fits.mat']), ...
