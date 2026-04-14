@@ -302,11 +302,11 @@ h_ori = zeros(nOri,nCells);
 p_ori = zeros(nOri,nCells);
 for iOri = 1:nOri
     ind = find(tOri==Oris(iOri));
-    resp_cell_ori{iOri} = squeeze(mean(data_dfof(resp_win,ind,:),1));
-    base_cell_ori{iOri} = squeeze(mean(data_dfof(base_win,ind,:),1));
+    resp_cell_ori{iOri} = squeeze(nanmean(data_dfof(resp_win,ind,:),1));
+    base_cell_ori{iOri} = squeeze(nanmean(data_dfof(base_win,ind,:),1));
     [h_ori(iOri,:) p_ori(iOri,:)] = ttest(resp_cell_ori{iOri},base_cell_ori{iOri},'tail','right','alpha',0.05./(nOri-1));
-    data_dfof_ori(:,iOri,1) = squeeze(mean(mean(data_dfof(resp_win,ind,:),1),2));
-    data_dfof_ori(:,iOri,2) = squeeze(std(mean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
+    data_dfof_ori(:,iOri,1) = squeeze(nanmean(nanmean(data_dfof(resp_win,ind,:),1),2));
+    data_dfof_ori(:,iOri,2) = squeeze(std(nanmean(data_dfof(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
 end
 
 h_all_ori = sum(h_ori,1);
@@ -315,7 +315,7 @@ start=1;
 n = 1;
 figure;
 movegui('center')
-for iCell = 1:nCells
+for iCell = 1:25
     if start>25
         print(fullfile(fnout, datemouse, datemouserun, [datemouserun '_cellTuningOri' num2str(n) '.pdf']),'-dpdf','-bestfit')
         figure;movegui('center');
