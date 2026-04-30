@@ -1,7 +1,7 @@
 function [ret_npSub_tc_matched, ret_distance_matched, resp_by_stim_matched, ret_dfof_trial_matched, ...
           trialIndSourceUsed, lbub_fits_matched, goodfit_ind_matched, r2_vec_matched, ...
           fitAzimDeg_matched, fitElevDeg_matched, prefAzimDeg_matched, prefElevDeg_matched, ...
-          Azs_matched, Els_matched] = ...
+          Azs_matched, Els_matched, distMap_matched, dist_vec_matched] = ...
     retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, instructions, inputStructure, match_ind, validation_choice, fnOut)
 
 ret_npSub_tc_matched   = cell(1,nd);
@@ -17,6 +17,8 @@ prefAzimDeg_matched    = cell(1,nd);
 prefElevDeg_matched    = cell(1,nd);
 Azs_matched            = cell(1,nd);
 Els_matched            = cell(1,nd);
+distMap_matched        = cell(1,nd);
+dist_vec_matched       = cell(1,nd);
 
 if computer == 'GLNXA64'
     isilonName = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_staff';
@@ -66,7 +68,7 @@ for id = 1:nd
 
     % Register ret data to reference FOV
     referenceFOV   = fov_avg{id};
-    referenceMasks = masks{id};        % 2D label matrix
+    referenceMasks = masks{id};
     nCells         = max(referenceMasks(:));
 
     fprintf('Day %d: registering to reference FOV...\n', id)
@@ -88,7 +90,7 @@ for id = 1:nd
     data_tc       = stackGetTimeCourses(data_reg, referenceMasks);
     data_tc_down  = stackGetTimeCourses(data_reg_down, referenceMasks);
 
-    mask_np    = imCellNeuropil(referenceMasks, 3, 5);  % generates 3D neuropil masks from 2D label matrix
+    mask_np    = imCellNeuropil(referenceMasks, 3, 5);
     np_tc      = zeros(sz(3), nCells);
     np_tc_down = zeros(floor(sz(3)/down), nCells);
     for i = 1:nCells
@@ -295,6 +297,19 @@ for id = 1:nd
         end
     end
 
+    % RF distance map via plotRFdistanceMap
+    % For day 1, remap mask so pixel values index into matched cell space
+    if id == 1
+        mask_plot = zeros(size(referenceMasks));
+        for c = 1:nMatch
+            mask_plot(referenceMasks == match_ind(c)) = c;
+        end
+    else
+        mask_plot = referenceMasks;
+    end
+    [distMap_matched{id}, dist_vec_matched{id}] = plotRFdistanceMap(...
+        lbub_fits(:,:,4), goodfit_ind, mask_plot, finalAzim, finalElev);
+
     ret_npSub_tc_matched{id}   = npSub_tc_match;
     ret_distance_matched{id}   = ret_distance;
     resp_by_stim_matched{id}   = resp_by_stim;
@@ -314,7 +329,7 @@ save(fullfile(fnOut, [mouse '_ret_matched.mat']), ...
     'ret_npSub_tc_matched', 'ret_distance_matched', 'resp_by_stim_matched', 'ret_dfof_trial_matched', ...
     'trialIndSourceUsed', 'lbub_fits_matched', 'goodfit_ind_matched', 'r2_vec_matched', ...
     'fitAzimDeg_matched', 'fitElevDeg_matched', 'prefAzimDeg_matched', 'prefElevDeg_matched', ...
-    'Azs_matched', 'Els_matched', '-v7.3');
+    'Azs_matched', 'Els_matched', 'distMap_matched', 'dist_vec_matched', '-v7.3');
 fprintf('Saved to %s\n', fnOut)
 
 end

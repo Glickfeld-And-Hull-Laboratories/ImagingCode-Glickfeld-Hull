@@ -6,14 +6,14 @@
 clear all; clc; close all;
 
 %% Parameters  ret run
-mouse = 'i2237'
-date = '260408'
-time = '1103'
+mouse = 'i2239'
+date = '260428'
+time = '1147'
 RetImgFolder = '003' 
 frame_rate = 15
 
 % Reference run (provides FOV, masks, and responsive cell list)
-refRun  = '005';
+refRun  = '004';
 refDate = date;   % change if reference is from a different date
 
 if computer == 'GLNXA64'
@@ -22,7 +22,7 @@ else
     isilonName = 'Z:';
 end
 base       = fullfile(isilonName, '/home/ACh/Data/2p_data/');
-fnOut_base = fullfile(isilonName, '/home/ACh/Analysis/2p_analysis/SST_YM90K');
+fnOut_base = fullfile(isilonName, '/home/ACh/Analysis/2p_analysis/VIP_YM90K');
 
 run_str = ['runs-' RetImgFolder];
 ref_str = ['runs-' refRun];
@@ -84,6 +84,48 @@ for i = 1:length(bounds)
 end
 title(sprintf('Registered FOV  %d imported masks', nCells))
 set(gca, 'TickDir', 'out', 'XTick', [], 'YTick', []); box off
+
+%% Pixel-level retinotopy heatmap (quickRet style)
+Az_pix  = celleqel2mat_padded(retino_input.tGratingAzimuthDeg);
+El_pix  = celleqel2mat_padded(retino_input.tGratingElevationDeg);
+Azs_pix = unique(Az_pix);
+Els_pix = unique(El_pix);
+if min(Els_pix) < 0, Els_pix = fliplr(Els_pix); end
+nStim_pix = length(Azs_pix) * length(Els_pix);
+
+pix_dfof_avg = zeros(sz(1), sz(2), nStim_pix);
+idx = 1;
+for i_el = 1:length(Els_pix)
+    for i_az = 1:length(Azs_pix)
+        these = find(El_pix == Els_pix(i_el) & Az_pix == Azs_pix(i_az));
+        imgs  = zeros(sz(1), sz(2), length(these));
+        for k = 1:length(these)
+            on = stimOns(these(k));
+            if ~isnan(on) && (on - nOff/2 >= 1) && (on + nOn - 1 <= sz(3))
+                baseF = mean(data_reg(:,:, on-nOff/2 : on-1), 3);
+                stimF = mean(data_reg(:,:, on : on+nOn-1), 3);
+                imgs(:,:,k) = (double(stimF) - double(baseF)) ./ double(baseF);
+            end
+        end
+        pix_dfof_avg(:,:,idx) = mean(imgs, 3);
+        idx = idx + 1;
+    end
+end
+
+pixThresh = 0.2 * max(pix_dfof_avg(:));
+img_avg_resp_pix = zeros(1, nStim_pix);
+for i = 1:nStim_pix
+    img = pix_dfof_avg(:,:,i);
+    img_avg_resp_pix(i) = mean(img(img > pixThresh));
+end
+
+respMatrix = fliplr(rot90(reshape(img_avg_resp_pix, length(Els_pix), length(Azs_pix)), 3));
+figure('Name', 'Pixel heatmap');
+imagesc(Azs_pix, flip(Els_pix), respMatrix);
+set(gca, 'YDir', 'normal', 'TickDir', 'out'); box off; grid off
+xlabel('Azimuth (deg)'); ylabel('Elevation (deg)');
+colorbar
+title('Pixel-avg dF/F heatmap')
 
 %% Extract timecourses with neuropil subtraction
 fprintf('Extracting timecourses...\n')
@@ -234,7 +276,7 @@ for count_shuf = 0:Nshuf
             b    = reshape(a', length(Azs), length(Els));
             data = b';
             if count_shuf == 0
-                PLOTIT_FIT  = 1;
+                PLOTIT_FIT  = 0;
                 SAVEALLDATA = 1;
                 Fit_2Dellipse_ret_lbub
                 eval(['Fit_struct(iCell).True.s_ = s;']);
@@ -248,8 +290,6 @@ for count_shuf = 0:Nshuf
     end
     if count_shuf == 0
         Im_mat_true = Im_mat_USE;  % save true (non-shuffled) responses for R2
-        set(gcf, 'Position', [0 0 800 1000]);
-        print(fullfile(fnOut, [date '_' mouse '_' run_str '_RFfits' num2str(ifig) '.pdf']), '-dpdf')
     end
 end
 fprintf('Shuffling done\n')
@@ -268,6 +308,9 @@ for iCell = 1:nCells
         fit_true_vec(iCell,:) = tmp;
     end
 end
+
+all_fit_ind = find(~isnan(fit_true_vec(:,4)));
+[opt_Az, opt_El] = findOptimalStimLocation(fit_true_vec, all_fit_ind);
 
 fit_shuf_vec = NaN(nCells, 10, Nshuf);
 for count_shuf = 1:Nshuf

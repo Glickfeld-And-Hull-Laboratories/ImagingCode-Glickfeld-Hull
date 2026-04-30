@@ -168,8 +168,18 @@ end
 
 input = input_temp;
 save(fullfile(fn_multi,'input.mat'),'input')
-clear input
 
+% % --- Framerate mismatch correction (run only when one day was recorded at 15.5 Hz) ---
+% fn_backup = fullfile(fnout, expDate, runFolder, 'original_before_hz_correction');
+% [fov_avg, fov_norm, fov_red, corrmap, dfmax, masks, maskNP, cellTCs_all, input] = ...
+%     correct_framerate_mismatch(fov_avg, fov_norm, fov_red, corrmap, dfmax, masks, maskNP, ...
+%     cellTCs_all, input, 1, 17, fn_backup);  % <-- change day index and n_crop_lines as needed
+% 
+% orig = load(fullfile(fn_backup, 'originals_before_framerate_correction.mat'));
+% corr_data.fov_avg = fov_avg; corr_data.masks = masks;
+% corr_data.cellTCs_all = cellTCs_all; corr_data.input = input;
+% validate_framerate_correction(orig, corr_data, 1, 17);
+% %clear input
 %% Make correlation image and normalized FOV for manual alignment
 
 % Create correlation maps: pixel brightness = correlation with neighboring pixels

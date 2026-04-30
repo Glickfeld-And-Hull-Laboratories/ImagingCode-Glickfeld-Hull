@@ -19,10 +19,10 @@ doRed=0;
 % frame_rate = expt(expt_num).frame_rate; 
 % RedImgFolder = expt(expt_num).redChannelRun;
 
-mouse = 'i2236'
-date = '260331'
-time = '1332'
-RetImgFolder = '002' 
+mouse = 'i2239'
+date = '260427'
+time = '1139'
+RetImgFolder = '004' 
 frame_rate = 15
 
 

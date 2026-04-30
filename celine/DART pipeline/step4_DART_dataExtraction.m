@@ -599,17 +599,18 @@ save(fullfile(fn_multi, 'HT_pyr_relationship.mat'), 'conditionMeans', 'sigCorr',
     'trialResp', 'subTrialResp');
 fprintf('Correlation analysis saved to HT_pyr_relationship.mat\n');
 
-%% Optional retinotopy alignment
+
+   %% Optional retinotopy alignment
 if ~exist('doRetino', 'var')
     doRetino = strcmpi(input('Complete retinotopy alignment? (y/n): ', 's'), 'y');
 end
 
 if doRetino
     [ret_npSub_tc_matched, ret_distance_matched, resp_by_stim_matched, ret_dfof_trial_matched, trialIndSourceUsed, ...
- lbub_fits_matched, goodfit_ind_matched, r2_vec_matched, fitAzimDeg_matched, fitElevDeg_matched, ...
- prefAzimDeg_matched, prefElevDeg_matched, Azs_matched, Els_matched] = ...
-    retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, ...
-        instructions, inputStructure, match_ind, false, fn_multi);
+     lbub_fits_matched, goodfit_ind_matched, r2_vec_matched, fitAzimDeg_matched, fitElevDeg_matched, ...
+     prefAzimDeg_matched, prefElevDeg_matched, Azs_matched, Els_matched, distMap_matched, dist_vec_matched] = ...
+        retinotopy_for_matched_data(nd, allDays, expt, mouse, fov_avg, masks, fitGeoTAf, ...
+            instructions, inputStructure, match_ind, false, fn_multi);
 
     ret_npSub_tc_keep   = cell(1, nd);
     ret_distance_keep   = cell(1, nd);
@@ -621,7 +622,7 @@ if doRetino
         resp_by_stim_keep{id}   = resp_by_stim_matched{id}(:, :, keep_cells);
         ret_dfof_trial_keep{id} = ret_dfof_trial_matched{id}(:, keep_cells, :);
     end
-    % Convert goodfit indices from matched set  keep_cells subset
+    % Convert goodfit indices from matched set to keep_cells subset
     goodfit_both = intersect(goodfit_ind_matched{1},goodfit_ind_matched{2});
     goodfit_ind_keep = find(ismember(keep_cells, goodfit_both));
 
@@ -632,7 +633,7 @@ if doRetino
         fitElevDeg_keep{id}   = fitElevDeg_matched{id}(keep_cells);
         prefAzimDeg_keep{id}  = prefAzimDeg_matched{id}(keep_cells);
         prefElevDeg_keep{id}  = prefElevDeg_matched{id}(keep_cells);
-        lbub_fits_keep{id}    = lbub_fits_matched{id}(keep_cells, :);
+        lbub_fits_keep{id}    = lbub_fits_matched{id}(keep_cells, :, :);
     end
 
     save(fullfile(fn_multi, 'retino_aligned.mat'), ...
@@ -641,9 +642,54 @@ if doRetino
         'goodfit_ind_matched', 'goodfit_ind_keep', ...
         'r2_vec_matched', 'r2_vec_keep', 'lbub_fits_matched', 'lbub_fits_keep', ...
         'fitAzimDeg_matched', 'fitAzimDeg_keep', 'fitElevDeg_matched', 'fitElevDeg_keep', ...
-        'prefAzimDeg_matched', 'prefAzimDeg_keep', 'prefElevDeg_matched', 'prefElevDeg_keep');
+        'prefAzimDeg_matched', 'prefAzimDeg_keep', 'prefElevDeg_matched', 'prefElevDeg_keep', ...
+        'distMap_matched', 'dist_vec_matched');
+
+    % Visual space figure: 4 panels (day x HTP group)
+    % lbub_fits_matched{id}: [nMatch x 10 x 5], dim 3 slice 4 = true fit values
+    %   col 4 = Az center, col 5 = El center, col 7 = Elhicut_50, col 8 = Azhicut_50
+    stimAz    = arrayfun(@(id) double(inputStructure(id).gratingAzimuthDeg), 1:nd);
+    stimEl    = arrayfun(@(id) double(inputStructure(id).gratingElevationDeg), 1:nd);
+    theta     = linspace(0, 2*pi, 100);
+    htpGroups = {find(red_cells_keep), find(green_cells_keep)};
+    htpLabels = {'HTP+', 'HTP-'};
+    dayColors = {'b', 'k'};
+    dayLabels = {'Day 1', 'Day 2'};
+
+    figure;
+    for id = 1:nd
+        lbub = lbub_fits_matched{id};
+        col  = dayColors{id};
+        for ig = 1:2
+            subplot(nd, 2, (id-1)*2 + ig); hold on;
+            plot(stimAz(id), stimEl(id), 'x', 'Color', col, 'MarkerSize', 14, 'LineWidth', 2);
+            cellInd = htpGroups{ig};
+            for i = 1:length(cellInd)
+                mc    = keep_cells(cellInd(i));
+                Az0   = lbub(mc, 4, 4);
+                El0   = lbub(mc, 5, 4);
+                sigAz = lbub(mc, 8, 4);
+                sigEl = lbub(mc, 7, 4);
+                if any(isnan([Az0 El0 sigAz sigEl])), continue; end
+                xe = Az0 + sigAz * cos(theta);
+                ye = El0 + sigEl * sin(theta);
+                if ismember(mc, goodfit_ind_matched{id})
+                    plot(xe, ye, col, 'LineWidth', 0.5);
+                else
+                    plot(xe, ye, col, 'LineWidth', 0.5, 'LineStyle', '--');
+                end
+            end
+            xlim([-50 50]); ylim([-50 50]);
+            xlabel('Azimuth (deg)')
+            ylabel('Elevation (deg)')
+            title(sprintf('%s  %s', dayLabels{id}, htpLabels{ig}))
+            axis square
+            set(gca, 'TickDir', 'out', 'box', 'off')
+        end
+    end
 else
     fprintf('Skipping retinotopy alignment\n');
 end
+
 
 fprintf('\n=== ANALYSIS COMPLETE ===\n');
