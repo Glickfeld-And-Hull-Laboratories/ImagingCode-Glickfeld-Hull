@@ -25,7 +25,7 @@ targetCon = instructions.targetCon;
 nCon = length(targetCon);
 targetSize = instructions.targetSize;
 nSize = length(targetSize);
-retDistThresh = 15; % degrees - RF distance threshold; cells must be < this on both days
+retDistThresh = 7.5; % degrees - RF distance threshold; cells must be < this on both days
 
 % Determine which session was used as reference for cell matching
 x = instructions.refDay;
@@ -235,10 +235,10 @@ nKeep_total      = sum(nKeep_concat);
 % goodfit_concat is in keep-cell space; since goodfit_ind_keep is already
 % the day-1 & day-2 intersection, both days are identical  AND for safety
 goodfit_both = goodfit_concat{1} & goodfit_concat{2};
-% closeRF_both = ret_distance_retino_concat{1} < retDistThresh & ...
-%                ret_distance_retino_concat{2} < retDistThresh;
-stableRF = abs(ret_distance_retino_concat{1} - ret_distance_retino_concat{2})<5;
-retino_cells  = find(goodfit_both & stableRF);
+closeRF_both = ret_distance_retino_concat{1} < retDistThresh & ...
+               ret_distance_retino_concat{2} < retDistThresh;
+%stableRF = abs(ret_distance_retino_concat{1} - ret_distance_retino_concat{2})<5;
+retino_cells  = find(goodfit_both & closeRF_both);
 retino_red    = intersect(retino_cells, red_ind_concat);
 retino_green  = intersect(retino_cells, green_ind_concat);
 fprintf('Retinotopy filter (thresh=%.0f deg): %d goodfit both days, %d within thresh both days\n', ...
@@ -249,7 +249,7 @@ fprintf('  HTP+: %d, HTP-: %d\n', length(retino_red), length(retino_green));
 goodfit_red   = intersect(find(goodfit_both), red_ind_concat);
 goodfit_green = intersect(find(goodfit_both), green_ind_concat);
 
-countLabels = {'Matched cells', 'Keep cells', 'Keep Goodfit (both days)', 'Retino stable'};
+countLabels = {'Matched cells', 'Keep cells', 'Keep Goodfit (both days)', 'Retino'};
 counts_all   = [sum(nMatched_concat),     nKeep_total,              sum(goodfit_both),      length(retino_cells)];
 counts_red   = [sum(nMatched_red_concat), length(red_ind_concat),   length(goodfit_red),    length(retino_red)];
 counts_green = [sum(nMatched_grn_concat), length(green_ind_concat), length(goodfit_green),  length(retino_green)];
@@ -287,7 +287,7 @@ for iSess = 1:nSess
     exp_idx = [exp_idx, iSess * ones(1, nKeep_concat(iSess))];
 end
 
-%%  Cell selection - find cells with running and stationary data for both days
+%  Cell selection - find cells with running and stationary data for both days
 haveRunning = cell(1, nd);
 haveStat    = cell(1, nd);
 for id = 1:nd
@@ -714,5 +714,23 @@ plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
     'UseDashedLines', [false, true], ...
     'Titles', {'HTP+', 'HTP-'}, ...
     'YLabel', 'dF/F');
-sgtitle(['Stationary - delta ret < 5 deg'])
+sgtitle(['Stationary - ret distance < ' num2str(retDistThresh)])
 saveas(gcf, 'retino_stationary_size_response.pdf');
+
+retDistTable = array2table(nan(nSess, 3), 'VariableNames', {'Pre', 'Post','delta'}, 'RowNames', mouseNames);
+for iMouse = 1:nSess
+    idx = sessInds{iMouse};
+    retDistTable.Pre(iMouse)  = mean(ret_distance_retino_concat{pre}(idx),  'omitnan');
+    retDistTable.Post(iMouse) = mean(ret_distance_retino_concat{post}(idx), 'omitnan');
+    retDistTable.delta(iMouse) = mean(ret_distance_retino_concat{post}(idx)-ret_distance_retino_concat{pre}(idx), 'omitnan');
+end
+disp(retDistTable)
+writetable(retDistTable, fullfile(fnout, 'retDistance_byMouse.csv'), 'WriteRowNames', true);
+
+retinoCellTable = array2table(nan(nSess, 2), 'VariableNames', {'HTP_pos', 'HTP_neg'}, 'RowNames', mouseNames);
+for iMouse = 1:nSess
+    retinoCellTable.HTP_pos(iMouse) = length(intersect(retino_red,   sessInds{iMouse}));
+    retinoCellTable.HTP_neg(iMouse) = length(intersect(retino_green, sessInds{iMouse}));
+end
+disp(retinoCellTable)
+writetable(retinoCellTable, fullfile(fnout, 'retinoCells_byMouse.csv'), 'WriteRowNames', true);

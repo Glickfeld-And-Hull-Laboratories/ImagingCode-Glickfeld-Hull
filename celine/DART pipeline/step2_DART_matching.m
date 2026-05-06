@@ -168,6 +168,7 @@ end
 
 input = input_temp;
 save(fullfile(fn_multi,'input.mat'),'input')
+clear input
 
 % % --- Framerate mismatch correction (run only when one day was recorded at 15.5 Hz) ---
 % fn_backup = fullfile(fnout, expDate, runFolder, 'original_before_hz_correction');

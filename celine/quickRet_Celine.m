@@ -1,10 +1,10 @@
 
 close all
 
-date = '260430';
-mouse = 'i2239';
-ImgFolder = '002';
-time = '1136';
+date = '260505';
+mouse = 'i2240';
+ImgFolder = '004';
+time = '1236';
 doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
@@ -149,13 +149,13 @@ expt_input = concatenateDataBlocks(temp);
 
        print(fullfile(fnout,['retinotopy.pdf']),'-dpdf');
 
-      pixThreshold = 0.2*max(data_dfof_avg_all(:));
+      pixThreshold = 0.35*max(data_dfof_avg_all(:));
     start = 1;
     for i = 1:length(Els)
         for j = 1:length(Azs)
             img = data_dfof_avg_all(:,:,start);
-           % respMatrix(i,j) = mean(img(img(:)>pixThreshold));
-            respMatrix(i,j) = median(img(img(:)>pixThreshold));
+            respMatrix(i,j) = mean(img(img(:)>pixThreshold));
+            
             start = start+1;
         end
     end
