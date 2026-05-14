@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
 ds = 'CrossOriRandDirType2_ExptList';
-iexp = 11; 
+iexp = 20; 
 eval(ds)
 
 frame_rate = params.frameRate;
@@ -74,6 +74,7 @@ toc
 if exist(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_reg_shifts.mat']))
     [outs, data_reg] = stackRegister_MA(data,[],[],out);
+    nep = 9;
 else
     totframes = size(data,3);
     nep = 9;
@@ -117,9 +118,12 @@ print(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_st
 clear data out
 [cStimOn cStimOff] = photoFrameFinder_Sanworks(info.frame);
 nTrials = length(cStimOn);
+if length(cStimOn)>length(cStimOff)
+    nTrials = length(cStimOff);
+    cStimOn = cStimOn(1:nTrials);
+end
 if size(input.cStimOneOn,2)>length(cStimOn)
-    cStimOn = celleqel2mat_padded(input.cStimOneOn);
-    nTrials = length(cStimOn);
+   input = trialChopper(input,1:length(cStimOn));
 end
 sz = size(data_reg);
 
@@ -144,7 +148,11 @@ maskTF_all = celleqel2mat_padded(input.tMaskOneGratingTemporalFreqCPS);
 TFs = unique(stimTF_all);
 nTF = length(TFs);
 
-nStim = nStimDir*nTF;
+if nTF>1
+    nStim = nStimDir*nTF;
+else
+    nStim  = nStimDir*2;
+end
 data_dfof = nan(sz(1),sz(2),nStim);
 ind_grating = find(tPlaid==0);
 start = 1;
@@ -155,6 +163,11 @@ for id = 1:nStimDir
         ind_use = intersect(ind_tf,intersect(ind_dir,ind_grating));
         data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_use),3);
         start = start+1;
+        if nTF == 1
+            ind_use = intersect(find(tPlaid),ind_dir);
+            data_dfof(:,:,start) = nanmean(data_resp_dfof(:,:,ind_use),3);
+            start = start+1;
+        end
     end
 end
 
