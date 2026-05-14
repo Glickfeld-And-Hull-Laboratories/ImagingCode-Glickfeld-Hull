@@ -1,3 +1,4 @@
+ 
 clear all; clear global;  close all
 clc
 prompt = 'Enter name of instructions file: '; % enter instr filename without .m
