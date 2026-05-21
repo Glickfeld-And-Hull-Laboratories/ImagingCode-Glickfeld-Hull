@@ -19,9 +19,9 @@ doRed=0;
 % frame_rate = expt(expt_num).frame_rate; 
 % RedImgFolder = expt(expt_num).redChannelRun;
 
-mouse = 'i2240'
-date = '260505'
-time = '1245'
+mouse = 'i2243'
+date = '260518'
+time = '1147'
 RetImgFolder = '005' 
 frame_rate = 15
 
@@ -1255,3 +1255,18 @@ set(gca,'color',0*[1 1 1]);
 set(gcf, 'Position', [100,300,1200,400])
 print(fullfile(isilonName, '/home/ACh/Analysis/2P_analysis', mouse, date, RetImgFolder, [date '_' mouse '_' run_str '_retMap.pdf']), '-dpdf')
 
+%% Optimal stimulus position (goodfit cells only)
+rfAz = fit_true_vec(goodfit_ind, 4);
+rfEl = fit_true_vec(goodfit_ind, 5);
+p = [mean(rfAz); mean(rfEl)];
+for iter = 1:200
+    d = max(sqrt((rfAz - p(1)).^2 + (rfEl - p(2)).^2), 1e-10);
+    w = 1 ./ d;
+    p_new = [sum(w .* rfAz); sum(w .* rfEl)] / sum(w);
+    if norm(p_new - p) < 1e-8, break; end
+    p = p_new;
+end
+opt_Az = p(1);  opt_El = p(2);
+dist_from_opt = sqrt((rfAz - opt_Az).^2 + (rfEl - opt_El).^2);
+fprintf('Optimal position (n=%d goodfit): Az=%.2f deg, El=%.2f deg\n', length(goodfit_ind), opt_Az, opt_El)
+fprintf('RF dist from optimal: mean=%.2f deg, median=%.2f deg\n', mean(dist_from_opt), median(dist_from_opt))

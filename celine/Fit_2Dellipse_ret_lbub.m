@@ -24,13 +24,13 @@ m = @(pars,sftf) Gauss2D_ellipseMA(pars,sftf);
 clear x y
 [m2,n2] = size(grid2.AzAz);
 
-x = [grid2.AzAz(:) grid2.ElEl(:)];
+x = [grid2.ElEl(:) grid2.AzAz(:)];
 uvar.Az = unique(x(:,1));
 uvar.El = unique(x(:,2));
 xNperfreq = size(grid2.AzAz00,1);
 yNperfreq = size(grid2.AzAz00,2);
-xyhigh = [reshape(grid2.AzAz00, xNperfreq*yNperfreq, 1), ...
-          reshape(grid2.ElEl00, xNperfreq*yNperfreq, 1)];
+xyhigh = [reshape(grid2.ElEl00, xNperfreq*yNperfreq, 1), ...
+          reshape(grid2.AzAz00, xNperfreq*yNperfreq, 1)];
 
 x_plot = x;
 y = s.data(:);

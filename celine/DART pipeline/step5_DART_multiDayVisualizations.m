@@ -231,13 +231,34 @@ green_ind_concat = find(green_concat);
 cons             = targetCon;
 nKeep_total      = sum(nKeep_concat);
 
+% Optional: restrict cells to those responsive to a specific stimulus size
+% Set instructions.sizeFilter to a size value (in deg) present in targetSize, e.g.:
+%   instructions.sizeFilter = 50;  % only keep cells responsive to the 50 deg stimulus
+% Leave unset or empty to use all responsive cells.
+if isfield(instructions, 'sizeFilter') && ~isempty(instructions.sizeFilter)
+    sizeFilterIdx = find(targetSize == instructions.sizeFilter);
+    if isempty(sizeFilterIdx)
+        warning('sizeFilter value %.1f not found in targetSize. Skipping size filter.', instructions.sizeFilter);
+    else
+        respToFilterSize = logical( ...
+            sum(sum(h_concat{pre}(:,:,:,sizeFilterIdx),  2), 3) | ...
+            sum(sum(h_concat{post}(:,:,:,sizeFilterIdx), 2), 3));
+        sizeFilter_cells = find(respToFilterSize);
+        red_ind_concat   = intersect(red_ind_concat,   sizeFilter_cells);
+        green_ind_concat = intersect(green_ind_concat, sizeFilter_cells);
+        fprintf('Size filter (%.1f deg): %d/%d cells retained (%d HTP+, %d HTP-)\n', ...
+            instructions.sizeFilter, length(sizeFilter_cells), nKeep_total, ...
+            length(red_ind_concat), length(green_ind_concat));
+    end
+end
+
 % Retinotopy-filtered cell selection
 % goodfit_concat is in keep-cell space; since goodfit_ind_keep is already
 % the day-1 & day-2 intersection, both days are identical  AND for safety
 goodfit_both = goodfit_concat{1} & goodfit_concat{2};
 closeRF_both = ret_distance_retino_concat{1} < retDistThresh & ...
                ret_distance_retino_concat{2} < retDistThresh;
-%stableRF = abs(ret_distance_retino_concat{1} - ret_distance_retino_concat{2})<5;
+%UNstableRF = abs(ret_distance_retino_concat{1} - ret_distance_retino_concat{2})>2.5;
 retino_cells  = find(goodfit_both & closeRF_both);
 retino_red    = intersect(retino_cells, red_ind_concat);
 retino_green  = intersect(retino_cells, green_ind_concat);
@@ -363,7 +384,7 @@ for i = 1:length(figs)
     saveas(gcf, sprintf('stationary_neural_timecourse_size_%d.pdf', sizeTitles(i)));
 end
 
-%%
+%% size and contrast tuning plots
 plotContrastResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
     red_ind_concat, green_ind_concat, targetCon, targetSize, 'DayOrder', matchDrx, ...
     'UseDashedLines', [false, true], ...
@@ -734,3 +755,35 @@ for iMouse = 1:nSess
 end
 disp(retinoCellTable)
 writetable(retinoCellTable, fullfile(fnout, 'retinoCells_byMouse.csv'), 'WriteRowNames', true);
+
+%%
+retino_running       = intersect(runningCells, retino_cells);
+retino_running_red   = intersect(retino_running, red_ind_concat);
+retino_running_green = intersect(retino_running, green_ind_concat);
+
+fprintf('Retino + running: %d total, %d HTP+, %d HTP-\n', ...
+    length(retino_running), length(retino_running_red), length(retino_running_green));
+
+plotSizeResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
+    retino_running_red, retino_running_green, targetCon, targetSize, 'DayOrder', matchDrx, ...
+    'UseDashedLines', [false, true], ...
+    'Titles', {'HTP+', 'HTP-'}, ...
+    'YLabel', 'dF/F');
+sgtitle(['Running - ret distance < ' num2str(retDistThresh)])
+saveas(gcf, 'retino_running_size_response.pdf');
+
+close all
+
+plotNeuralTimecourse(tc_trial_avrg_loc_concat, tc_trial_avrg_loc_concat, ...
+    retino_running_red, retino_running_green, 'DayOrder', matchDrx, ...
+    'UseDashedLines', [false, true], ...
+    'Colors1', {'k', 'b'}, ...
+    'Colors2', {'k', 'b'},  ...
+    'StimStart', 31);
+
+figs = findobj('Type', 'figure');
+sizeTitles = length(figs):-1:1;
+for i = 1:length(figs)
+    figure(figs(i));
+    saveas(gcf, sprintf('retino_loc_timecourse_size_%d.pdf', sizeTitles(i)));
+end

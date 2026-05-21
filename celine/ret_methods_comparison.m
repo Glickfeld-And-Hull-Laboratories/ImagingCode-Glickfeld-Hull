@@ -13,10 +13,10 @@
 clear all; clc; close all;
 
 %% Parameters  ret run
-mouse = 'i2239'
-date = '260430'
-time = '1136'
-RetImgFolder = '002'    % imaging run folder for the retinotopy data
+mouse = 'i2243'
+date = '260520'
+time = '1156'
+RetImgFolder = '003'    % imaging run folder for the retinotopy data
 frame_rate = 15         % acquisition frame rate (Hz); used implicitly via nOn/nOff
 
 % Reference run (provides FOV, masks, and responsive cell list)
@@ -25,7 +25,7 @@ frame_rate = 15         % acquisition frame rate (Hz); used implicitly via nOn/n
 refRun  = '004';
 refDate = date;   % change if reference is from a different date
 
-% File path setup — adjust isilonName for your OS and server mount point
+% File path setup  adjust isilonName for your OS and server mount point
 if computer == 'GLNXA64'
     isilonName = '/home/cc735@dhe.duke.edu/GlickfeldLabShare/All_staff';
 else
@@ -66,7 +66,7 @@ nOff = retino_input.nScansOff;  % frames of blank surrounding each trial
 %% Find stimulus onsets via photodiode
 % photoFrameFinder_Sanworks detects photodiode TTL pulses from the Sanworks system
 % Replace with your own onset-detection method if using a different DAQ
-% Output: stimOns — vector of frame indices (1-based) when each trial begins
+% Output: stimOns  vector of frame indices (1-based) when each trial begins
 fprintf('Finding stimulus onsets via photodiode...\n')
 [stimOns, ~] = photoFrameFinder_Sanworks(info.frame);
 ntrials = length(stimOns);
@@ -116,7 +116,7 @@ title(sprintf('Registered FOV  %d imported masks', nCells))
 set(gca, 'TickDir', 'out', 'XTick', [], 'YTick', []); box off
 
 %% Pixel-level retinotopy heatmap (quickRet style)
-% This is a diagnostic — computes dF/F per stimulus position at the pixel level
+% This is a diagnostic  computes dF/F per stimulus position at the pixel level
 % (no cell segmentation). Useful for confirming retinotopic signal before cell analysis.
 % celleqel2mat_padded unpacks cell arrays of varying-length trial vectors into a matrix;
 % replace with cell2mat or your equivalent if stimulus log format differs
@@ -231,7 +231,7 @@ Els = unique(El);
 if min(Els) < 0, Els = fliplr(Els); end
 
 % Build Stims matrix listing every (El, Az) combination in the same order
-% used when stacking resp_by_stim below — must stay consistent
+% used when stacking resp_by_stim below  must stay consistent
 nStim = length(Azs) * length(Els);
 Stims = zeros(nStim, 2);
 idx = 1;
@@ -278,7 +278,7 @@ fprintf('%d/%d cells have NaN preferred position (all responses <= 0)\n', ...
 
 %% Build Ind_struct (trial indices per stimulus, needed for fitting)
 % Ind_struct(iStim).all_trials lists which trial numbers correspond to each
-% Az/El combination — used during the shuffle fitting loop below
+% Az/El combination  used during the shuffle fitting loop below
 Ind_struct = [];
 for iStim = 1:nStim
     indE = find(El == Stims(iStim,1));
@@ -292,11 +292,11 @@ end
 %   A = amplitude, Az0/El0 = center, sigma = width, xi = rotation angle
 %
 % Shuffling (Nshuf iterations) randomly resamples trials within each stimulus
-% condition to build a null distribution for each fit parameter — used below
+% condition to build a null distribution for each fit parameter  used below
 % to assess whether the fit is significantly better than chance.
 %
 % Fit_2Dellipse_ret_lbub and Fit_2Dellipse_ret_CC are external scripts that
-% read: data, grid2, PLOTIT_FIT, SAVEALLDATA — and write: s (fit result struct)
+% read: data, grid2, PLOTIT_FIT, SAVEALLDATA  and write: s (fit result struct)
 fprintf('Begin fitting retinotopy data...\n')
 
 resp_dFoverF = squeeze(mean(tc_dfof(stimFrames, :, :), 1));  % nCells x ntrials
@@ -423,7 +423,7 @@ end
 lbub_diff = lbub_fits(:,:,2) - lbub_fits(:,:,1);   % CI width per parameter
 
 % Criterion: CI width for Az center (col 4) and El center (col 5) must each
-% be less than 2 stimulus steps — tighten for stricter RF localization
+% be less than 2 stimulus steps  tighten for stricter RF localization
 goodfit_ind = [];
 for iCell = 1:nCells
     if lbub_diff(iCell,4) < retino_input.gratingAzimuthStepDeg*2 && ...
@@ -447,9 +447,9 @@ clear goodfit_ind2
 fprintf('%d good-fit cells (final, lbub)\n', length(goodfit_ind))
 
 %% R-squared goodness-of-fit (alternative to lbub)
-% Method 2: compute R² between fitted 2D Gaussian surface and actual response map.
+% Method 2: compute R between fitted 2D Gaussian surface and actual response map.
 % More interpretable than lbub; adjust r2_threshold to be more/less permissive.
-% R² is computed on the full response map (all Az x El positions).
+% R is computed on the full response map (all Az x El positions).
 r2_threshold = 0.65;
 r2_vec = nan(1, nCells);
 for iCell = 1:nCells
@@ -658,7 +658,7 @@ title('Cell counts by criterion')
 %% Compare RF centers from fits to selected stim location
 % plotRFdistanceMap visualizes how well the chosen stimulus position covered each cell's RF
 % Inputs: true fit parameters, goodfit indices, cell masks, and the reference run's Az/El
-plotRFdistanceMap(lbub_fits(:,:,4), goodfit_ind, mask_cell, double(ref_input.gratingAzimuthDeg), double(ref_input.gratingElevationDeg));
+[distMap, dist_vec] = plotRFdistanceMap(lbub_fits(:,:,4), goodfit_ind, mask_cell, double(ref_input.gratingAzimuthDeg), double(ref_input.gratingElevationDeg));
 
 %% Save all figures
 figHandles = findall(0, 'Type', 'figure');
@@ -674,7 +674,18 @@ for i = 1:length(figHandles)
 end
 fprintf('Saved %d figures\n', length(figHandles))
 
-%% Optimal stimulus position
-% Recomputes optimal Az/El for future experiment targeting based on population RF centers
-all_fit_ind = find(~isnan(fit_true_vec(:,4)));
-[opt_Az, opt_El] = findOptimalStimLocation(fit_true_vec, all_fit_ind);
+%% Optimal stimulus position (goodfit cells only)
+rfAz = fit_true_vec(goodfit_ind, 4);
+rfEl = fit_true_vec(goodfit_ind, 5);
+p = [mean(rfAz); mean(rfEl)];
+for iter = 1:200
+    d = max(sqrt((rfAz - p(1)).^2 + (rfEl - p(2)).^2), 1e-10);
+    w = 1 ./ d;
+    p_new = [sum(w .* rfAz); sum(w .* rfEl)] / sum(w);
+    if norm(p_new - p) < 1e-8, break; end
+    p = p_new;
+end
+opt_Az = p(1);  opt_El = p(2);
+dist_from_opt = sqrt((rfAz - opt_Az).^2 + (rfEl - opt_El).^2);
+fprintf('Optimal position (n=%d goodfit): Az=%.2f deg, El=%.2f deg\n', length(goodfit_ind), opt_Az, opt_El)
+fprintf('RF dist from optimal: mean=%.2f deg, median=%.2f deg\n', mean(dist_from_opt), median(dist_from_opt))

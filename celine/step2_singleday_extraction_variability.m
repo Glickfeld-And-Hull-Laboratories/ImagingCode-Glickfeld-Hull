@@ -244,8 +244,8 @@ for iSize = 1:nSize
     fprintf('  %g deg: %d cells\n', sizes(iSize), sum(resp_by_size(:, iSize)));
 end
 %% Alternatively, find the population-level MAD for all pyr cells
-green_idx_all = find(~mask_label);  % HTP- among ALL cells, not just responsive ones
-
+stat_inds = find(~RIx);
+green_idx_all = find(~mask_label);
 pop_MAD_stat       = nan(nOn + nOff, nCon, nSize);
 pop_conBySize_stat = nan(nCon, nSize);
 
@@ -253,17 +253,21 @@ for iCon = 1:nCon
     ind_con = find(tCon == cons(iCon));
     for iSize = 1:nSize
         ind_size = find(tSize == sizes(iSize));
-        ind_stim = intersect(ind_con, ind_size);
-        ind_s    = intersect(ind_stim, stat_inds);
-
-        if ~isempty(ind_s) && ~isempty(green_idx_all)
-            pop_tc = mean(data_trial(:, ind_s, green_idx_all), 3);
-            dev    = abs(pop_tc - nanmedian(pop_tc, 2));
-            mad_tc = nanmedian(dev ./ pop_tc, 2);
-            mad_tc(nanmedian(pop_tc, 2) <= 0) = NaN;
-            pop_MAD_stat(:, iCon, iSize)      = mad_tc;
-            pop_conBySize_stat(iCon, iSize)   = nanmean(mad_tc(resp_win));
+        mad_by_dir = nan(nOn + nOff, nDir);
+        for iDir = 1:nDir
+            ind_dir  = find(tDir == dirs(iDir));
+            ind_stim = intersect(intersect(ind_con, ind_size), ind_dir);
+            ind_s    = intersect(ind_stim, stat_inds);
+            if ~isempty(ind_s) && ~isempty(green_idx_all)
+                pop_tc = mean(data_trial(:, ind_s, green_idx_all), 3);
+                dev    = abs(pop_tc - nanmedian(pop_tc, 2));
+                mad_tc = nanmedian(dev ./ pop_tc, 2);
+                mad_tc(nanmedian(pop_tc, 2) <= 0) = NaN;
+                mad_by_dir(:, iDir) = mad_tc;
+            end
         end
+        pop_MAD_stat(:, iCon, iSize)    = nanmean(mad_by_dir, 2);
+        pop_conBySize_stat(iCon, iSize) = nanmean(pop_MAD_stat(resp_win, iCon, iSize));
     end
 end
 
@@ -345,7 +349,7 @@ for iCol = 1:2
     end
 end
 
-sgtitle('Population MAD and dF/F — HTP- cells, stationary');
+sgtitle('Population MAD and dF/F � HTP- cells, stationary');
 %% Preferred direction per cell
 
 data_resp = zeros(nKeep, nDir, nCon, nSize);

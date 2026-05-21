@@ -17,6 +17,8 @@
 % expt(1).contrastxori_time = {'1036'};
 % expt(1).wheelColor = 'orange';
 % expt(1).exptType = 'VIP_YM90K';
+% expt(1).ret_run = '003'; 
+% expt(1).ret_time = '1015';
 %% <-- Enter descriptive title (optional but helps with clarity)
 expt(1).mouse = ''; % <-- enter mouse ID number
 expt(1).date = ''; % <-- enter date in the form yymmdd
@@ -35,7 +37,9 @@ expt(1).redChannelRun = ''; % <-- if using a red indicator and there is a red sn
 expt(1).contrastxori_runs = {'004'}; % <-- enter the 2p data folder for the run with visual stimuli to be analyzed.
 expt(1).contrastxori_time = {'1036'}; % <-- enter the timestamp for the mWorks file associated with the run lsited above.
 expt(1).wheelColor = 'orange';  % <-- must be one of the colors used to differentiate running wheels in wheelSpeedCalc.m. Typically "orange".
-expt(1).exptType = ''; % <-- if you use different folders for different projects, enter that folder name here
+expt(1).exptType = ''; % <-- if you use different folders for different projects, enter that folder name here.
+expt(1).ret_run = ''; %<-- enter the folder number for the retinotopy run you want to align with your contrastXori run.
+expt(1).ret_time = ''; %<-- enter the timestamp for the mWorks file associated with the run lsited above.
 %% Copy the above and make a new entry for each new experiment, ie each time you collect data.
 % Change the expt id number for each new entry (expt(2), expt(3), etc).
 % Most DART experiments will have at least two entries, one for the control
