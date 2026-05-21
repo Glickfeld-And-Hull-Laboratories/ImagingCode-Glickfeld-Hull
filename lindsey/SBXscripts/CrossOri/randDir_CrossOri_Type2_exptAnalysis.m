@@ -4,7 +4,7 @@ ds = 'CrossOriRandDirType2_ExptList';
 eval(ds)
 nexp = length(expt);
 
-iexp = 2;
+iexp = 12;
 
 frame_rate = 15;
 
@@ -18,7 +18,6 @@ nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
 
 LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
-%LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\David';
 
 fprintf([mouse ' ' date '\n'])
 
@@ -28,6 +27,7 @@ load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_
 load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 
 %%
+LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey';
 if doRedChannel == 0
     red_cells = [];
 end
@@ -61,71 +61,115 @@ mTFs = unique(tMTF);
 nMTF = length(mTFs);
 Cons = unique(tCon);
 nCon = length(Cons);
+mDirs = Dirs + double(input.maskOneGratingDirectionDeg);
 
-trial_ind = cell(nDir,nTF,nMTF,nCon);
-
-
-for iDir = 1:nDir
-    ind_dir = find(tDir == Dirs(iDir));
-    for iTF = 1:nTF
-        ind_tf = find(tTF == TFs(iTF));
-        for iMTF = 1:nMTF
-            ind_mtf = find(tMTF == mTFs(iMTF));
-            for iCon = 1:nCon
-                ind_con = find(tCon == Cons(iCon));
-                trial_ind{iDir,iTF,iMTF,iCon} = intersect(intersect(intersect(ind_dir,ind_tf),ind_mtf),ind_con);
-            end
-        end
-    end
-end
-
-grating_ind = cell(nDir,nTF);
-plaid_ind = cell(nDir,nTF,nMTF);
-mDirs = circshift(1:nDir,-4);
-for iDir = 1:nDir
-    for iTF = 1:nTF
-        for iMTF = 1:nMTF
-            grating_ind{iDir,iTF} = [grating_ind{iDir,iTF} trial_ind{iDir,iTF,iMTF,1}];
-            plaid_ind{iDir,iTF,iMTF} = trial_ind{iDir,iTF,iMTF,2};
-        end
-    end
-end
-
-resp_cell = cell(nDir,nTF,nMTF,nCon);
-base_cell = cell(nDir,nTF,nMTF,nCon);
-trialsperstim = zeros(nDir,nTF,nMTF,nCon);
-h_resp =zeros(nCells,nDir,nTF);
-p_resp =zeros(nCells,nDir,nTF);
-resp_win = prewin_frames+5:prewin_frames+nFramesOn;
-base_win = prewin_frames:prewin_frames;
-avg_resp_dir = zeros(nCells, nStimDir,nTF,nMTF,nCon, 2);
-nStim = nStimDir;
-for iDir = 1:nDir
-    for iTF = 1:nTF
-        for iMTF = 1:nMTF
-            for iCon = 1:nCon
-                if iCon == 1 && iMTF == 1
-                    trialsperstim(iDir,iTF,iMTF,iCon) = length(grating_ind{iDir,iTF});
-                    resp_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(resp_win,:,grating_ind{iDir,iTF}),1));
-                    base_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(base_win,:,grating_ind{iDir,iTF}),1));
-                    [h_resp(:,iDir,iTF), p_resp(:,iDir,iTF)] = ttest2(resp_cell{iDir,iTF,iMTF,iCon},base_cell{iDir,iTF,iMTF,iCon},'dim',2,'tail','right','alpha', 0.05./(nDir*nTF));
-                elseif iCon == 1 && iMTF == 2
-                    trialsperstim(iDir,iTF,iMTF,iCon) = 0;
-                    resp_cell{iDir,iTF,iMTF,iCon} = nan(size(resp_cell{iDir,iTF,1,iCon}));
-                    base_cell{iDir,iTF,iMTF,iCon} = nan(size(resp_cell{iDir,iTF,1,iCon}));
-                elseif iCon == 2
-                    trialsperstim(iDir,iTF,iMTF,iCon) = length(plaid_ind{iDir,iTF,iMTF});
-                    resp_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(resp_win,:,plaid_ind{iDir,iTF,iMTF}),1));
-                    base_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(base_win,:,plaid_ind{iDir,iTF,iMTF}),1));
+if nTF>1
+    trial_ind = cell(nDir,nTF,nMTF,nCon);
+    for iDir = 1:nDir
+        ind_dir = find(tDir == Dirs(iDir));
+        for iTF = 1:nTF
+            ind_tf = find(tTF == TFs(iTF));
+            for iMTF = 1:nMTF
+                ind_mtf = find(tMTF == mTFs(iMTF));
+                for iCon = 1:nCon
+                    ind_con = find(tCon == Cons(iCon));
+                    trial_ind{iDir,iTF,iMTF,iCon} = intersect(intersect(intersect(ind_dir,ind_tf),ind_mtf),ind_con);
                 end
-                avg_resp_dir(:,iDir,iTF,iMTF,iCon,1) = mean(resp_cell{iDir,iTF,iMTF,iCon},2);
-                avg_resp_dir(:,iDir,iTF,iMTF,iCon,2) = std(resp_cell{iDir,iTF,iMTF,iCon},[],2)./sqrt(size(resp_cell{iDir,iTF,iMTF,iCon},2));
             end
         end
     end
+    
+    grating_ind = cell(nDir,nTF);
+    plaid_ind = cell(nDir,nTF,nMTF);
+    
+    for iDir = 1:nDir
+        for iTF = 1:nTF
+            for iMTF = 1:nMTF
+                grating_ind{iDir,iTF} = [grating_ind{iDir,iTF} trial_ind{iDir,iTF,iMTF,1}];
+                plaid_ind{iDir,iTF,iMTF} = trial_ind{iDir,iTF,iMTF,2};
+            end
+        end
+    end
+    
+    resp_cell = cell(nDir,nTF,nMTF,nCon);
+    base_cell = cell(nDir,nTF,nMTF,nCon);
+    trialsperstim = zeros(nDir,nTF,nMTF,nCon);
+    h_resp =zeros(nCells,nDir,nTF);
+    p_resp =zeros(nCells,nDir,nTF);
+    resp_win = prewin_frames+5:prewin_frames+nFramesOn;
+    base_win = prewin_frames:prewin_frames;
+    avg_resp_dir = zeros(nCells, nDir,nTF,nMTF,nCon, 2);
+    nStim = nStimDir;
+    for iDir = 1:nDir
+        for iTF = 1:nTF
+            for iMTF = 1:nMTF
+                for iCon = 1:nCon
+                    if iCon == 1 && iMTF == 1
+                        trialsperstim(iDir,iTF,iMTF,iCon) = length(grating_ind{iDir,iTF});
+                        resp_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(resp_win,:,grating_ind{iDir,iTF}),1));
+                        base_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(base_win,:,grating_ind{iDir,iTF}),1));
+                        [h_resp(:,iDir,iTF), p_resp(:,iDir,iTF)] = ttest2(resp_cell{iDir,iTF,iMTF,iCon},base_cell{iDir,iTF,iMTF,iCon},'dim',2,'tail','right','alpha', 0.05./(nDir*nTF));
+                    elseif iCon == 1 && iMTF == 2
+                        trialsperstim(iDir,iTF,iMTF,iCon) = 0;
+                        resp_cell{iDir,iTF,iMTF,iCon} = nan(size(resp_cell{iDir,iTF,1,iCon}));
+                        base_cell{iDir,iTF,iMTF,iCon} = nan(size(resp_cell{iDir,iTF,1,iCon}));
+                    elseif iCon == 2
+                        trialsperstim(iDir,iTF,iMTF,iCon) = length(plaid_ind{iDir,iTF,iMTF});
+                        resp_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(resp_win,:,plaid_ind{iDir,iTF,iMTF}),1));
+                        base_cell{iDir,iTF,iMTF,iCon} = squeeze(mean(data_dfof_tc(base_win,:,plaid_ind{iDir,iTF,iMTF}),1));
+                    end
+                    avg_resp_dir(:,iDir,iTF,iMTF,iCon,1) = mean(resp_cell{iDir,iTF,iMTF,iCon},2);
+                    avg_resp_dir(:,iDir,iTF,iMTF,iCon,2) = std(resp_cell{iDir,iTF,iMTF,iCon},[],2)./sqrt(size(resp_cell{iDir,iTF,iMTF,iCon},2));
+                end
+            end
+        end
+    end
+    
+    resp_ind = find(sum(sum(h_resp,2),3));
+else
+    trial_ind = cell(nDir,nCon);
+    ind_tf = intersect(find(tTF == TFs(1)),find(tMTF == mTFs(1)));
+    for iDir = 1:nDir
+        ind_dir = find(tDir == Dirs(iDir));
+        for iCon = 1:nCon
+            ind_con = find(tCon == Cons(iCon));
+            trial_ind{iDir,iCon} = intersect(intersect(ind_dir,ind_tf),ind_con);
+        end
+    end
+    
+    grating_ind = cell(1,nDir);
+    plaid_ind = cell(1,nDir);
+    for iDir = 1:nDir
+        grating_ind{1,iDir} = [grating_ind{1,iDir} trial_ind{iDir,1}];
+        plaid_ind{1,iDir} = trial_ind{iDir,2};
+    end
+    
+    resp_cell = cell(nDir,nCon);
+    base_cell = cell(nDir,nCon);
+    trialsperstim = zeros(nDir,nCon);
+    h_resp =zeros(nCells,nDir);
+    p_resp =zeros(nCells,nDir);
+    resp_win = prewin_frames+5:prewin_frames+nFramesOn;
+    base_win = prewin_frames:prewin_frames;
+    avg_resp_dir = zeros(nCells, nDir,nCon, 2);
+    for iDir = 1:nDir
+        for iCon = 1:nCon
+            if iCon == 1
+                trialsperstim(iDir,iCon) = length(grating_ind{1,iDir});
+                resp_cell{iDir,iCon} = squeeze(mean(data_dfof_tc(resp_win,:,grating_ind{1,iDir}),1));
+                base_cell{iDir,iCon} = squeeze(mean(data_dfof_tc(base_win,:,grating_ind{1,iDir}),1));
+                [h_resp(:,iDir), p_resp(:,iDir)] = ttest2(resp_cell{iDir,iCon},base_cell{iDir,iCon},'dim',2,'tail','right','alpha', 0.05./(nDir));
+            elseif iCon == 2
+                trialsperstim(iDir,iCon) = length(plaid_ind{1,iDir});
+                resp_cell{iDir,iCon} = squeeze(mean(data_dfof_tc(resp_win,:,plaid_ind{1,iDir}),1));
+                base_cell{iDir,iCon} = squeeze(mean(data_dfof_tc(base_win,:,plaid_ind{1,iDir}),1));
+            end
+            avg_resp_dir(:,iDir,iCon,1) = mean(resp_cell{iDir,iCon},2);
+            avg_resp_dir(:,iDir,iCon,2) = std(resp_cell{iDir,iCon},[],2)./sqrt(size(resp_cell{iDir,iCon},2));
+        end
+    end
+    resp_ind = find(sum(h_resp,2));
 end
-
-resp_ind = find(sum(sum(h_resp,2),3));
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'resp_cell', 'data_dfof_tc', 'resp_ind', 'frame_rate', 'h_resp', 'avg_resp_dir');
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'plaid_ind','grating_ind','trial_ind');
@@ -219,97 +263,3 @@ sgtitle([date ' ' mouse])
 print(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_ZcZp.pdf']),'-dpdf', '-fillpage')       
 
 save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dirAnalysis.mat']), 'b_dir','k1_dir','R1_dir','R2_dir','u1_dir','sse_dir','R_square_dir','y_dir_fit','DSI','dsi_grating_ind','dsi_plaid_ind','TF_pref','TFI','Zp','Zc');
-
-%%
-[ioc_ang ioc_sp av_ang av_sp] = iocVectorCalc(deg2rad(0),1,deg2rad(maskDiff),4);
-
-u1_g = zeros(1,nCells);
-u1_p = zeros(1,nCells);
-grating_ind = [];
-plaid_ind = [];
-for iTF = 1:nTF
-    u1_g(find(TF_pref==iTF)) = u1_dir(find(TF_pref==iTF),iTF,1,1);
-    grating_ind = [grating_ind; intersect(resp_ind,dsi_grating_ind{iTF})];
-    if iTF == 1
-        u1_p = u1_dir(:,iTF,2,2);
-        plaid_ind = intersect(resp_ind,dsi_plaid_ind{iTF});
-    end
-end
-
-prefDiff = u1_g-u1_p;
-indUse = intersect(grating_ind,plaid_ind);
-
-figure(1); 
-subplot(2,2,1)
-scatter(rad2deg(u1_g(indUse)),rad2deg(u1_p(indUse)))
-refline(1)
-refline(1,-maskDiff)
-refline(1,-rad2deg(ioc_ang))
-refline(1,-rad2deg(av_ang))
-xlabel('Pref dir- Grating')
-ylabel('Pref dir- Plaid')
-xlim([0 360])
-ylim([0 360])
-axis square
-title(['Plaid angle: ' num2str(maskDiff)])
-legend('data','slow comp','fast comp','IOC','VA','Location','northeastoutside')
-
-scale = 20;
-subplot(2,2,2)
-polarhistogram(prefDiff(indUse),32);
-hold on
-polarplot([0;0]*pi/180,[0;1]*scale)
-polarplot([maskDiff;maskDiff]*pi/180,[0;1]*scale)
-polarplot([rad2deg(ioc_ang);rad2deg(ioc_ang)]*pi/180,[0;1]*scale)
-polarplot([rad2deg(av_ang);rad2deg(av_ang)]*pi/180,[0;1]*scale)
-
-
-diff_thresh = 7.5;
-prefDiff_deg = rad2deg(prefDiff);
-ind_fast = intersect(indUse, intersect(find(prefDiff_deg>-diff_thresh), find(prefDiff_deg<diff_thresh)));
-ind_slow = intersect(indUse,  intersect(find(prefDiff_deg>(maskDiff-diff_thresh)), find(prefDiff_deg<(maskDiff+diff_thresh))));
-ind_ioc = intersect(indUse,  intersect(find(prefDiff_deg>(rad2deg(ioc_ang)-diff_thresh)), find(prefDiff_deg<(rad2deg(ioc_ang)+diff_thresh))));
-ind_av = intersect(indUse,  intersect(find(prefDiff_deg>(rad2deg(av_ang)-diff_thresh)), find(prefDiff_deg<(rad2deg(av_ang)+diff_thresh))));
-ind_fast_av = intersect(ind_fast,ind_av);
-ind_fast = setdiff(ind_fast, ind_fast_av);
-ind_av = setdiff(ind_av, ind_fast_av);
-
-[prefResp prefDir] = max(avg_resp_dir(:,:,1,1,1),[],2);
-nCells = size(avg_resp_dir,1);
-avg_resp_dir_all_shift = zeros(size(avg_resp_dir(:,:,:,:,1)));
-for i = 1:nCells
-    avg_resp_dir_all_shift(i,:,:,:,1) = circshift(avg_resp_dir(i,:,:,:,1),1-prefDir(i),2);
-end
-avg_resp_dir_all_shift_circ = cat(2,avg_resp_dir_all_shift, avg_resp_dir_all_shift(:,1,:,:,1));
-figure(2);
-subplot(2,2,1)
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_fast,:,1,1),1))
-hold on
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_fast,:,2,1),1))
-title(['Fast comp- n =' num2str(length(ind_fast))])
-rlim([0 0.2])
-subplot(2,2,2)
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_slow,:,1,1),1))
-hold on
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_slow,:,2,1),1))
-title(['Slow comp- n =' num2str(length(ind_slow))])
-rlim([0 0.2])
-subplot(2,2,3)
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_ioc,:,1,1),1))
-hold on
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_ioc,:,2,1),1))
-title(['IOC- n =' num2str(length(ind_ioc))])
-rlim([0 0.2])
-subplot(2,2,4)
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_av,:,1,1),1))
-hold on
-polarplot([dirs dirs(1)], mean(avg_resp_dir_all_shift_circ(ind_av,:,2,1),1))
-title(['VA- n =' num2str(length(ind_av))])
-rlim([0 0.2])
-sgtitle([num2str(maskDiff) ' deg'])
-print(fullfile(fnout,['crossOriRandDir_Type2_' num2str(maskDiff) 'deg_TuningCurves.pdf']), '-fillpage', '-dpdf')
-
-figure(3)
-subplot(1,2,1)
-piechart([length(ind_fast) length(ind_slow) length(ind_ioc) length(ind_av) length(ind_fast_av)],{'Fast','Slow','IOC','VA','Fast+AV'})
-title([num2str(maskDiff) ' deg'])
