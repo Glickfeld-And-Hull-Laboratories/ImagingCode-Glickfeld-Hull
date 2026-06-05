@@ -4,11 +4,12 @@
 %   - optimal stimulus position (Az/El that minimizes mean population RF distance)
 %   - mean/median RF distance from that optimal position
 
-clear all
+clearvars -except instr sessNum
 if ~exist('instr', 'var')
     instr = input('Enter name of instructions file: ', 's');
 end
 run(instr);
+if exist('sessNum', 'var'), instructions.session = num2str(sessNum); end
 ds = instructions.ds;
 run(ds);
 rc = behavConstsDART;
@@ -33,6 +34,7 @@ end
 fprintf('Sessions: %s\n', num2str(allDays));
 clear instr
 
+load(fullfile(fn_multi, 'timecourses.mat'))          % match_ind lives here
 load(fullfile(fn_multi, 'multiday_alignment.mat'))  % fov_avg, masks, fitGeoTAf, match_ind
 load(fullfile(fn_multi, 'input.mat'))
 inputStructure = input; clear input
@@ -82,3 +84,28 @@ for id = 1:nd
     fprintf('  RF dist from optimal stim: mean = %.2f deg,  median = %.2f deg\n', mean(dist_opt), median(dist_opt))
 end
 fprintf('\n')
+
+save(fullfile(fn_multi, 'retino_aligned.mat'), ...
+    'ret_npSub_tc_matched', 'ret_distance_matched', 'resp_by_stim_matched', 'ret_dfof_trial_matched', ...
+    'trialIndSourceUsed', 'goodfit_ind_matched', 'r2_vec_matched', 'lbub_fits_matched', ...
+    'fitAzimDeg_matched', 'fitElevDeg_matched', 'prefAzimDeg_matched', 'prefElevDeg_matched', ...
+    'Azs_matched', 'Els_matched', 'distMap_matched', 'dist_vec_matched');
+fprintf('Saved retino_aligned.mat to %s\n', fn_multi);
+
+load(fullfile(fn_multi, 'cell_analysis.mat'), 'keep_cells');
+
+ret_distance_keep = cell(1, nd);
+for id = 1:nd
+    ret_distance_keep{id} = ret_distance_matched{id}(:, keep_cells);
+end
+
+goodfit_both     = intersect(goodfit_ind_matched{1}, goodfit_ind_matched{2});
+goodfit_ind_keep = find(ismember(keep_cells, goodfit_both));
+
+save(fullfile(fn_multi, 'retino_aligned.mat'), ...
+    'ret_npSub_tc_matched', 'ret_distance_matched', 'resp_by_stim_matched', 'ret_dfof_trial_matched', ...
+    'trialIndSourceUsed', 'goodfit_ind_matched', 'goodfit_ind_keep', 'r2_vec_matched', 'lbub_fits_matched', ...
+    'fitAzimDeg_matched', 'fitElevDeg_matched', 'prefAzimDeg_matched', 'prefElevDeg_matched', ...
+    'Azs_matched', 'Els_matched', 'distMap_matched', 'dist_vec_matched', ...
+    'ret_distance_keep');
+fprintf('Saved retino_aligned.mat to %s\n', fn_multi);

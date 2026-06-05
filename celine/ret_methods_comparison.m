@@ -13,16 +13,16 @@
 clear all; clc; close all;
 
 %% Parameters  ret run
-mouse = 'i2243'
-date = '260520'
-time = '1156'
-RetImgFolder = '003'    % imaging run folder for the retinotopy data
+mouse = 'i2244'
+date = '260528'
+time = '1056'
+RetImgFolder = '004'    % imaging run folder for the retinotopy data
 frame_rate = 15         % acquisition frame rate (Hz); used implicitly via nOn/nOff
 
 % Reference run (provides FOV, masks, and responsive cell list)
 % The reference run is typically a longer/higher-quality imaging session
 % whose ROIs, neuropil masks, and responsive cell list are reused here
-refRun  = '004';
+refRun  = '005';
 refDate = date;   % change if reference is from a different date
 
 % File path setup  adjust isilonName for your OS and server mount point
@@ -346,17 +346,14 @@ for count_shuf = 0:Nshuf
         if max(a,[],2) > 0
             b    = reshape(a', length(Azs), length(Els));
             data = b';
-            if count_shuf == 0
-                PLOTIT_FIT  = 0;
-                SAVEALLDATA = 1;   % save full fit output on the true data pass
-                Fit_2Dellipse_ret_lbub
-                eval(['Fit_struct(iCell).True.s_ = s;']);
-            else
-                PLOTIT_FIT  = 0;
-                SAVEALLDATA = 0;   % only save essential fields for shuffle iterations
-                Fit_2Dellipse_ret_CC
-                eval(['Fit_struct(iCell).Shuf(count_shuf).s_ = s;']);
-            end
+        PLOTIT_FIT  = 0;
+        SAVEALLDATA = (count_shuf == 0);
+        Fit_2Dellipse_ret_lbub
+        if count_shuf == 0
+            Fit_struct(iCell).True.s_ = s;
+        else
+            Fit_struct(iCell).Shuf(count_shuf).s_ = s;
+        end
         end
     end
     if count_shuf == 0
@@ -382,9 +379,9 @@ for iCell = 1:nCells
         fit_true_vec(iCell,:) = tmp;
     end
 end
-
-all_fit_ind = find(~isnan(fit_true_vec(:,4)));
-[opt_Az, opt_El] = findOptimalStimLocation(fit_true_vec, all_fit_ind);
+% 
+% all_fit_ind = find(~isnan(fit_true_vec(:,4)));
+% [opt_Az, opt_El] = findOptimalStimLocation(fit_true_vec, all_fit_ind);
 
 % Collect shuffle fit parameters into a [nCells x nPars x Nshuf] array
 fit_shuf_vec = NaN(nCells, 10, Nshuf);

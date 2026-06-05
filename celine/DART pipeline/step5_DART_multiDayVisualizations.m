@@ -756,7 +756,7 @@ end
 disp(retinoCellTable)
 writetable(retinoCellTable, fullfile(fnout, 'retinoCells_byMouse.csv'), 'WriteRowNames', true);
 
-%%
+%% Retinotopically-matched cells - running timecourses and size tuning
 retino_running       = intersect(runningCells, retino_cells);
 retino_running_red   = intersect(retino_running, red_ind_concat);
 retino_running_green = intersect(retino_running, green_ind_concat);
@@ -786,4 +786,36 @@ sizeTitles = length(figs):-1:1;
 for i = 1:length(figs)
     figure(figs(i));
     saveas(gcf, sprintf('retino_loc_timecourse_size_%d.pdf', sizeTitles(i)));
+end
+
+plotSizeResponse(pref_responses_loc_concat, pref_responses_loc_concat, ...
+    retino_red, retino_green, targetCon, targetSize, 'DayOrder', matchDrx, ...
+    'UseDashedLines', [false, true], ...
+    'Titles', {'HTP+', 'HTP-'}, ...
+    'YLabel', 'dF/F');
+sgtitle(['Stationary - ret distance < ' num2str(retDistThresh)])
+saveas(gcf, 'retino_running_size_response.pdf');
+
+%% Size tuning across retinotopic distance thresholds
+retDistThresholds = [5, 7.5, 10, 15, 20];
+
+for iThresh = 1:length(retDistThresholds)
+    thresh = retDistThresholds(iThresh);
+    
+    closeRF_this  = ret_distance_retino_concat{1} < thresh & ...
+                    ret_distance_retino_concat{2} < thresh;
+    retino_this       = find(goodfit_both & closeRF_this);
+    retino_red_this   = intersect(retino_this, red_ind_concat);
+    retino_green_this = intersect(retino_this, green_ind_concat);
+    
+    fprintf('Thresh %.0f deg: %d total, %d HTP+, %d HTP-\n', ...
+        thresh, length(retino_this), length(retino_red_this), length(retino_green_this));
+    
+    plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
+        retino_red_this, retino_green_this, targetCon, targetSize, 'DayOrder', matchDrx, ...
+        'UseDashedLines', [false, true], ...
+        'Titles', {'HTP+', 'HTP-'}, ...
+        'YLabel', 'dF/F');
+    sgtitle(['Stationary - ret distance < ' num2str(thresh) ' deg']);
+    saveas(gcf, fullfile(fnout, sprintf('retino_stat_size_response_thresh%ddeg.pdf', thresh)));
 end

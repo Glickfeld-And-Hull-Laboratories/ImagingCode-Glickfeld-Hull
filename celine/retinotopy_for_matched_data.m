@@ -136,6 +136,8 @@ for id = 1:nd
     % Stimulus info
     Az  = celleqel2mat_padded(ret_inputStructure.tGratingAzimuthDeg);
     El  = celleqel2mat_padded(ret_inputStructure.tGratingElevationDeg);
+
+
     Azs = unique(Az);
     Els = unique(El);
     if min(Els) < 0, Els = fliplr(Els); end
@@ -201,11 +203,12 @@ for id = 1:nd
             if max(a,[],2) > 0
                 b    = reshape(a', length(Azs), length(Els));
                 data = b';
+                PLOTIT_FIT  = 0;
+                SAVEALLDATA = (count_shuf == 0);
+                Fit_2Dellipse_ret_lbub
                 if count_shuf == 0
-                    Fit_2Dellipse_ret_lbub
                     Fit_struct(iCell).True.s_ = s;
                 else
-                    Fit_2Dellipse_ret_CC
                     Fit_struct(iCell).Shuf(count_shuf).s_ = s;
                 end
             end
