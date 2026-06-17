@@ -6,13 +6,13 @@
 clear all; clc; close all;
 
 %% Parameters
-mouse = 'i2244'
-date = '260604'
-time = '1241'
-RetImgFolder = '005'
+mouse = 'i2245'
+date = '260615'
+time = '1135'
+RetImgFolder = '007'
 frame_rate = 15
 
-refRun  = '006';
+refRun  = '008';
 refDate = date;
 
 if computer == 'GLNXA64'
@@ -316,14 +316,30 @@ actual_Az = double(ref_input.gratingAzimuthDeg);
 actual_El = double(ref_input.gratingElevationDeg);
 
 [distMap_actual, dist_vec_actual] = plotRFdistanceMap( ...
-    lbub_fits(:,:,4), goodfit_ind, mask_cell, actual_Az, actual_El);
+    lbub_fits(:,:,4), goodfit_ind, mask_cell, actual_Az, actual_El, ...
+    'savePath', fullfile(fnOut, [date '_' mouse '_' run_str '_RFdist_actual.pdf']));
 title(sprintf('Actual stim position (Az=%.1f, El=%.1f)\nmedian dist=%.2f deg (n=%d goodfit)', ...
     actual_Az, actual_El, median(dist_vec_actual, 'omitnan'), length(goodfit_ind)))
 
 [distMap_opt, dist_vec_opt] = plotRFdistanceMap( ...
-    lbub_fits(:,:,4), goodfit_ind, mask_cell, opt_Az_all, opt_El_all);
+    lbub_fits(:,:,4), goodfit_ind, mask_cell, opt_Az_all, opt_El_all, ...
+    'savePath', fullfile(fnOut, [date '_' mouse '_' run_str '_RFdist_optimal.pdf']));
 title(sprintf('Optimal position (Az=%.1f, El=%.1f)\nmedian dist=%.2f deg (n=%d goodfit)', ...
     opt_Az_all, opt_El_all, median(dist_vec_opt, 'omitnan'), length(goodfit_ind)))
+
+%% Save optimal position note
+fid = fopen(fullfile(fnOut, [date '_' mouse '_' run_str '_optimal_position.txt']), 'w');
+fprintf(fid, 'Optimal stimulus position\n');
+fprintf(fid, 'Mouse: %s  Date: %s  Run: %s\n\n', mouse, date, run_str);
+fprintf(fid, 'All good-fit cells (n=%d):\n  Az = %.2f deg\n  El = %.2f deg\n\n', ...
+    length(goodfit_ind), opt_Az_all, opt_El_all);
+fprintf(fid, 'Labeled good-fit cells (n=%d):\n  Az = %.2f deg\n  El = %.2f deg\n\n', ...
+    length(goodfit_labeled_ind), opt_Az_lab, opt_El_lab);
+fprintf(fid, 'Actual stim position:\n  Az = %.2f deg\n  El = %.2f deg\n\n', actual_Az, actual_El);
+fprintf(fid, 'Median RF distance from actual: %.2f deg\n', median(dist_vec_actual, 'omitnan'));
+fprintf(fid, 'Median RF distance from optimal: %.2f deg\n', median(dist_vec_opt, 'omitnan'));
+fclose(fid);
+fprintf('Saved optimal position note to %s\n', fnOut)
 
 %% Save
 save(fullfile(fnOut, [date '_' mouse '_' run_str '_lbub_fits.mat']), ...

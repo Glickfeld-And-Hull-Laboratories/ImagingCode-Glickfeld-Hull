@@ -1,8 +1,7 @@
 % Single-day trial extraction and response analysis.
 % Loads step1 outputs (neuropil-subtracted timecourses, masks, input struct),
-% segments data into trials, identifies visually responsive cells, and computes
-% trial-averaged Median abs devation timecourses at each cell's preferred direction for every
-% contrast x size combination.
+% segments data into trials, and computes population-level MAD and dF/F
+% timecourses for HTP- and HTP+ cells separately across contrast x size x direction.
 
 clear all
 close all
@@ -43,7 +42,6 @@ load(fullfile(fnout, 'mask_cell.mat'))
 load(fullfile(fnout, 'input.mat'))
 load(fullfile(fnout, 'regOuts&Img.mat'))
 
-
 % Rename to avoid conflict with MATLAB's built-in input()
 inputStructure = input;
 clear input
@@ -76,7 +74,7 @@ else
     fprintf('Could not determine timing source automatically.\n');
     timingSource = input('Enter timing source to use (PD = photodiode, MW = mWorks counter, cS = native cStimOn): ', 's');
     inputStructure.stimTimingSource = timingSource;
-    input = inputStructure; %#ok<NASGU>
+    input = inputStructure;
     save(fullfile(fnout, 'input.mat'), 'input');
     clear input
     fprintf('Timing source saved to input.mat\n');
@@ -137,7 +135,6 @@ end
 
 data_f          = mean(data_trial(1:(nOff/2), :, :), 1);
 data_dfof_trial = bsxfun(@rdivide, bsxfun(@minus, data_trial, data_f), data_f);
-%clear data_trial data_f
 
 %% Analysis windows
 
@@ -204,304 +201,113 @@ else
     PIx_small = ~RIx;
 end
 
-%% Responsive cells: significant response in at least one stimulus condition
+%% Population-level MAD and dF/F: HTP- and HTP+ cells, stationary trials, per con x size x dir
+% MAD is baseline-normalized (percent change from baseline), matching Terlau et al. 2026.
+% _tc  = full timecourse (nFrames x nCon x nSize x nDir)
+% _resp = mean over response window (nCon x nSize x nDir)
 
-h_resp = zeros(nCells, nDir, nCon, nSize);
-for iDir = 1:nDir
-    ind_dir = find(tDir == dirs(iDir));
-    for iCon = 1:nCon
-        ind_con = find(tCon == cons(iCon));
-        for iSize = 1:nSize
-            ind_size = find(tSize == sizes(iSize));
-            ind      = intersect(intersect(ind_dir, ind_con), ind_size);
-            if length(ind) >= 3
-                [h_resp(:, iDir, iCon, iSize), ~] = ttest( ...
-                    nanmean(data_dfof_trial(resp_win, ind, :), 1), ...
-                    nanmean(data_dfof_trial(base_win, ind, :), 1), ...
-                    'dim', 2, 'tail', 'right', ...
-                    'alpha', 0.05 / (nDir * nCon * nSize - 1));
-            end
-        end
-    end
-end
-
-% Keep any cell that passes significance in at least one condition
-resp_cells = squeeze(any(any(any(h_resp, 2), 3), 4));
-keep_single = find(resp_cells);
-nKeep      = length(keep_single);
-red_cells  = logical(mask_label(keep_single));
-fprintf('%d/%d cells responsive (%d red, %d green)\n', nKeep, nCells, sum(red_cells), sum(~red_cells));
-
-% Subset trial data and significance results to responsive cells only
-data_dfof_trial_keep = data_dfof_trial(:, :, keep_single);
-data_trial_keep = data_trial(:, :, keep_single);
-h_keep               = h_resp(keep_single, :, :, :);
-
-% Per-size responsiveness mask: nKeep x nSize
-resp_by_size = squeeze(any(any(h_keep, 2), 3));
-fprintf('Cells responsive by size:\n');
-for iSize = 1:nSize
-    fprintf('  %g deg: %d cells\n', sizes(iSize), sum(resp_by_size(:, iSize)));
-end
-%% Alternatively, find the population-level MAD for all pyr cells
-stat_inds = find(~RIx);
+stat_inds     = find(~RIx);
 green_idx_all = find(~mask_label);
-pop_MAD_stat       = nan(nOn + nOff, nCon, nSize);
-pop_conBySize_stat = nan(nCon, nSize);
+red_idx_all   = find(mask_label);
+
+pop_MAD_tc_HTPminus   = nan(nOn + nOff, nCon, nSize, nDir);
+pop_MAD_resp_HTPminus = nan(nCon, nSize, nDir);
+pop_MAD_tc_HTPplus    = nan(nOn + nOff, nCon, nSize, nDir);
+pop_MAD_resp_HTPplus  = nan(nCon, nSize, nDir);
+
+pop_dfof_tc_HTPminus   = nan(nOn + nOff, nCon, nSize, nDir);
+pop_dfof_resp_HTPminus = nan(nCon, nSize, nDir);
+pop_dfof_tc_HTPplus    = nan(nOn + nOff, nCon, nSize, nDir);
+pop_dfof_resp_HTPplus  = nan(nCon, nSize, nDir);
 
 for iCon = 1:nCon
     ind_con = find(tCon == cons(iCon));
     for iSize = 1:nSize
         ind_size = find(tSize == sizes(iSize));
-        mad_by_dir = nan(nOn + nOff, nDir);
         for iDir = 1:nDir
-            ind_dir  = find(tDir == dirs(iDir));
-            ind_stim = intersect(intersect(ind_con, ind_size), ind_dir);
-            ind_s    = intersect(ind_stim, stat_inds);
-            if ~isempty(ind_s) && ~isempty(green_idx_all)
-                pop_tc = mean(data_trial(:, ind_s, green_idx_all), 3);
-                dev    = abs(pop_tc - nanmedian(pop_tc, 2));
-                mad_tc = nanmedian(dev ./ pop_tc, 2);
-                mad_tc(nanmedian(pop_tc, 2) <= 0) = NaN;
-                mad_by_dir(:, iDir) = mad_tc;
+            ind_dir = find(tDir == dirs(iDir));
+            ind_s   = intersect(intersect(intersect(ind_con, ind_size), ind_dir), stat_inds);
+            if ~isempty(ind_s)
+                if ~isempty(green_idx_all)
+                    pop_tc = mean(data_trial(:, ind_s, green_idx_all), 3);
+                    dev    = abs(pop_tc - nanmedian(pop_tc, 2));
+                    mad_tc = nanmedian(dev ./ pop_tc, 2);
+                    mad_tc(nanmedian(pop_tc, 2) <= 0) = NaN;
+                    baseline_mad = nanmean(mad_tc(base_win));
+                    mad_tc = (mad_tc - baseline_mad) / baseline_mad;
+                    pop_MAD_tc_HTPminus(:, iCon, iSize, iDir)   = mad_tc;
+                    pop_MAD_resp_HTPminus(iCon, iSize, iDir)     = nanmean(mad_tc(resp_win));
+
+                    dfof_tc = mean(mean(data_dfof_trial(:, ind_s, green_idx_all), 3), 2);
+                    pop_dfof_tc_HTPminus(:, iCon, iSize, iDir)   = dfof_tc;
+                    pop_dfof_resp_HTPminus(iCon, iSize, iDir)     = nanmean(dfof_tc(resp_win));
+                end
+                if ~isempty(red_idx_all)
+                    pop_tc = mean(data_trial(:, ind_s, red_idx_all), 3);
+                    dev    = abs(pop_tc - nanmedian(pop_tc, 2));
+                    mad_tc = nanmedian(dev ./ pop_tc, 2);
+                    mad_tc(nanmedian(pop_tc, 2) <= 0) = NaN;
+                    baseline_mad = nanmean(mad_tc(base_win));
+                    mad_tc = (mad_tc - baseline_mad) / baseline_mad;
+                    pop_MAD_tc_HTPplus(:, iCon, iSize, iDir)     = mad_tc;
+                    pop_MAD_resp_HTPplus(iCon, iSize, iDir)       = nanmean(mad_tc(resp_win));
+
+                    dfof_tc = mean(mean(data_dfof_trial(:, ind_s, red_idx_all), 3), 2);
+                    pop_dfof_tc_HTPplus(:, iCon, iSize, iDir)     = dfof_tc;
+                    pop_dfof_resp_HTPplus(iCon, iSize, iDir)       = nanmean(dfof_tc(resp_win));
+                end
             end
         end
-        pop_MAD_stat(:, iCon, iSize)    = nanmean(mad_by_dir, 2);
-        pop_conBySize_stat(iCon, iSize) = nanmean(pop_MAD_stat(resp_win, iCon, iSize));
     end
 end
 
-% Population MAD: average F across HTP- cells first, then MAD across trials
-% green_idx = find(~red_cells);  % indices into keep_single
-% 
-% pop_MAD_stat       = nan(nOn + nOff, nCon, nSize);
-% pop_conBySize_stat = nan(nCon, nSize);
-% 
-% for iCon = 1:nCon
-%     ind_con = find(tCon == cons(iCon));
-%     for iSize = 1:nSize
-%         ind_size = find(tSize == sizes(iSize));
-%         ind_stim = intersect(ind_con, ind_size);
-%         ind_s    = intersect(ind_stim, stat_inds);
-% 
-%         if ~isempty(ind_s) && ~isempty(green_idx)
-%             % Average F across HTP- cells: nFrames x nTrials
-%             pop_tc = mean(data_trial_keep(:, ind_s, green_idx), 3);
-%             dev    = abs(pop_tc - nanmedian(pop_tc, 2));
-%             mad_tc = nanmedian(dev ./ pop_tc, 2);
-%             mad_tc(nanmedian(pop_tc, 2) <= 0) = NaN;
-%             pop_MAD_stat(:, iCon, iSize)       = mad_tc;
-%             pop_conBySize_stat(iCon, iSize)    = nanmean(mad_tc(resp_win));
-%         end
-%     end
-% end
+%% Figure: direction-averaged MAD and dF/F, nSize rows x 2 cols, contrast as darkness
 
-%% Calculate population mean dF/F and plot
-% Population mean dF/F across HTP- cells
-pop_dfof_stat = nan(nOn + nOff, nCon, nSize);
-for iCon = 1:nCon
-    ind_con = find(tCon == cons(iCon));
+t_frames   = (1:(nOn+nOff)) - nOff/2 - 1;
+graylevels = linspace(0.75, 0, nCon);
+ylbls      = {'MAD (frac. change)', '\DeltaF/F'};
+type_vars  = {{pop_MAD_tc_HTPminus, pop_dfof_tc_HTPminus}, ...
+              {pop_MAD_tc_HTPplus,  pop_dfof_tc_HTPplus}};
+type_lbls  = {'HTP-', 'HTP+'};
+
+for iType = 1:2
+    metrics = type_vars{iType};
+    figure('Position', [50 50 500 200*nSize]);
+    axH = gobjects(nSize, 2);
     for iSize = 1:nSize
-        ind_size = find(tSize == sizes(iSize));
-        ind_s    = intersect(intersect(ind_con, ind_size), stat_inds);
-        if ~isempty(ind_s)
-            pop_dfof_stat(:, iCon, iSize) = mean(mean(data_dfof_trial(:, ind_s, green_idx_all), 3), 2);
+        for iCol = 1:2
+            axH(iSize, iCol) = subplot(nSize, 2, (iSize-1)*2 + iCol);
+            hold on
+            for iCon = 1:nCon
+                tc = nanmean(metrics{iCol}(:, iCon, iSize, :), 4);
+                plot(t_frames, tc, 'Color', graylevels(iCon)*[1 1 1], 'LineWidth', 1.2, ...
+                    'DisplayName', sprintf('%g%%', cons(iCon)*100));
+            end
+            yl = ylim;
+            plot([0 nOn], [yl(1) yl(1)], 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
+            set(gca, 'TickDir', 'out', 'Box', 'off');
+            xlabel('Frame'); ylabel(ylbls{iCol});
+            if iSize == 1, title(ylbls{iCol}); end
+            if iCol == 1, text(-nOff/2, mean(yl), sprintf('%g deg', sizes(iSize)), ...
+                'Rotation', 90, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom'); end
         end
     end
-end
-
-
-% Figure: nSize rows x 2 cols (MAD | dF/F), contrast as darkness
-t_frames  = (1:(nOn+nOff)) - nOff/2 - 1;
-graylevels = linspace(0.75, 0, nCon);  % light to dark
-metrics   = {pop_MAD_stat, pop_dfof_stat};
-ylbls     = {'MAD (F)', '\DeltaF/F'};
-
-figure('Position', [50 50 500 200*nSize]);
-axH = gobjects(nSize, 2);
-for iSize = 1:nSize
     for iCol = 1:2
-        axH(iSize, iCol) = subplot(nSize, 2, (iSize-1)*2 + iCol);
-        hold on
-        for iCon = 1:nCon
-            tc = metrics{iCol}(:, iCon, iSize);
-            plot(t_frames, tc, 'Color', graylevels(iCon)*[1 1 1], 'LineWidth', 1.2, ...
-                'DisplayName', sprintf('%g%%', cons(iCon)*100));
-        end
-        yl = ylim;
-        plot([0 nOn], [yl(1) yl(1)], 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
-        set(gca, 'TickDir', 'out', 'Box', 'off');
-        xlabel('Frame');
-        ylabel(ylbls{iCol});
-        if iSize == 1, title(ylbls{iCol}); end
-        if iCol == 1, text(-nOff/2, mean(yl), sprintf('%g deg', sizes(iSize)), ...
-            'Rotation', 90, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom'); end
-    end
-end
-
-% Shared y limits per column
-for iCol = 1:2
-    yl = cell2mat(arrayfun(@(ax) ax.YLim, axH(:,iCol), 'UniformOutput', false));
-    ylShared = [min(yl(:,1)) max(yl(:,2))];
-    set(axH(:,iCol), 'YLim', ylShared);
-    for iSize = 1:nSize
-        plot(axH(iSize,iCol), [0 nOn], [ylShared(1) ylShared(1)], 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
-    end
-end
-
-sgtitle('Population MAD and dF/F � HTP- cells, stationary');
-%% Preferred direction per cell
-
-data_resp = zeros(nKeep, nDir, nCon, nSize);
-for iDir = 1:nDir
-    ind_dir = find(tDir == dirs(iDir));
-    for iCon = 1:nCon
-        ind_con = find(tCon == cons(iCon));
+        yl = cell2mat(arrayfun(@(ax) ax.YLim, axH(:,iCol), 'UniformOutput', false));
+        ylShared = [min(yl(:,1)) max(yl(:,2))];
+        set(axH(:,iCol), 'YLim', ylShared);
         for iSize = 1:nSize
-            ind_size = find(tSize == sizes(iSize));
-            ind      = intersect(intersect(ind_dir, ind_con), ind_size);
-            data_resp(:, iDir, iCon, iSize) = squeeze(nanmean(nanmean(data_dfof_trial_keep(resp_win, ind, :), 1), 2));
+            plot(axH(iSize,iCol), [0 nOn], [ylShared(1) ylShared(1)], 'k-', 'LineWidth', 2, 'HandleVisibility', 'off');
         end
     end
+    sgtitle(sprintf('Population MAD and dF/F – %s cells, stationary', type_lbls{iType}));
 end
 
-resp_dir_avg     = squeeze(mean(mean(data_resp, 4), 3));
-[~, prefDir_idx] = max(resp_dir_avg, [], 2);
-
-%% Trial-averaged MAD of timecourses at preferred direction, split by behavioral state
-
-stat_inds = find(~RIx);
-loc_inds  = find(RIx);
-ind_large = find(PIx_large);
-ind_small = find(PIx_small);
-
-tc_trial_MAD_stat       = nan(nOn + nOff, nKeep, nCon, nSize);
-tc_trial_MAD_loc        = nan(nOn + nOff, nKeep, nCon, nSize);
-tc_trial_MAD_largePupil = nan(nOn + nOff, nKeep, nCon, nSize);
-tc_trial_MAD_smallPupil = nan(nOn + nOff, nKeep, nCon, nSize);
-conBySize_MAD_stat       = zeros(nKeep, nCon, nSize);
-conBySize_MAD_loc        = zeros(nKeep, nCon, nSize);
-conBySize_MAD_largePupil = zeros(nKeep, nCon, nSize);
-conBySize_MAD_smallPupil = zeros(nKeep, nCon, nSize);
-
-% Example cell plot setup
-iCon_plot    = 3;
-iSize_plot   = 3;
-t_frames     = (1:(nOn+nOff)) - nOff/2 - 1;
-ex_cells     = randperm(nKeep, min(10, nKeep));
-ex_plot_count = 0;
-figure('Position', [100 100 1400 900]);
-
-for iCell = 1:nKeep
-    pref_dir_val = dirs(prefDir_idx(iCell));
-    ind_dir      = find(tDir == pref_dir_val);
-    for iCon = 1:nCon
-        ind_con = find(tCon == cons(iCon));
-        for iSize = 1:nSize
-            ind_size = find(tSize == sizes(iSize));
-            ind_stim = intersect(intersect(ind_dir, ind_con), ind_size);
-            ind_s  = intersect(ind_stim, stat_inds);
-            ind_l  = intersect(ind_stim, loc_inds);
-            ind_lp = intersect(ind_stim, ind_large);
-            ind_sp = intersect(ind_stim, ind_small);
-%trying with F instead of dfof
-if ~isempty(ind_s)
-    d = data_trial_keep(:, ind_s, iCell);  % nFrames x nTrials
-    dev = abs(d - nanmedian(d, 2));        % deviation per frame per trial
-    mad_tc_norm = nanmedian(dev ./ d, 2);  % normalize per trial, then median across trials
-    mad_tc_norm(nanmedian(d, 2) <= 0) = NaN;
-    tc_trial_MAD_stat(:, iCell, iCon, iSize) = mad_tc_norm;
-    conBySize_MAD_stat(iCell, iCon, iSize)   = nanmean(mad_tc_norm(resp_win));
-end
-            
-if ismember(iCell, ex_cells) && iCon == iCon_plot && iSize == iSize_plot && ~isempty(ind_s)
-    ex_plot_count = ex_plot_count + 1;
-    d = data_dfof_trial_keep(:, ind_s, iCell);
-    mad_tc = nanmedian(abs(d - nanmedian(d, 2)), 2);
-    amp = nanmean(nanmean(d(resp_win, :), 1), 2);
-    if amp > 0
-        mad_tc_norm = mad_tc / amp;
-    else
-        mad_tc_norm = nan(size(mad_tc));
-    end
-
-    subplot(2, 5, ex_plot_count)
-    yyaxis left
-    hold on
-    for iTr = 1:size(d, 2)
-        plot(t_frames, d(:, iTr), 'Color', [0.6 0.6 0.6], 'LineWidth', 0.5,'Marker', 'none')
-    end
-    xline(0, 'b--'); xline(nOn, 'b:')
-    yline(0, 'k:')
-    ylabel('\DeltaF/F')
-    set(gca, 'YColor', 'k')
-
-    yyaxis right
-    plot(t_frames, mad_tc_norm, 'k', 'LineWidth', 0.5,'Marker', 'none')
-    ylabel('MAD / amp')
-    set(gca, 'YColor', 'r')
-
-    if red_cells(iCell), ctype = 'HTP+'; else, ctype = 'HTP-'; end
-    title(sprintf('cell %d (%s)', keep_single(iCell), ctype))
-    xlabel('frame')
-    set(gca, 'TickDir', 'out', 'Box', 'off')
-end
-        end
-    end
-end
-
-sgtitle(sprintf('Example cells  stationary, con %g, size %g deg', cons(iCon_plot), sizes(iSize_plot)))
-
-figure; plot(mean(tc_trial_MAD_stat(:,:,3,3), 2, 'omitnan'));
-title('grand mean across cells, con 3 size 3, keepSingle')
-saveas(gcf, fullfile(fnout, 'exampleCellTrialVariability.pdf'));
 %% Save
 
 save(fullfile(fnout, 'singleday_extraction_MAD.mat'), ...
-    'tc_trial_MAD_stat', 'tc_trial_MAD_loc', ...
-    'tc_trial_MAD_largePupil', 'tc_trial_MAD_smallPupil', ...
-    'conBySize_MAD_stat', 'conBySize_MAD_loc', ...
-    'conBySize_MAD_largePupil', 'conBySize_MAD_smallPupil', ...
-    'data_dfof_trial_keep', 'keep_single', 'red_cells', 'prefDir_idx', ...
-    'RIx', 'PIx_large', 'PIx_small', 'wheel_tc', 'wheel_trial_avg', ...
-    'h_keep', 'resp_by_size', ...
-    'cons', 'sizes', 'dirs', 'oris', ...
-    'nOn', 'nOff', 'resp_win', 'base_win', 'tCon', 'tDir', 'tOri', 'tSize');
+    'pop_MAD_tc_HTPminus',   'pop_MAD_resp_HTPminus',   'pop_dfof_tc_HTPminus',  'pop_dfof_resp_HTPminus', ...
+    'pop_MAD_tc_HTPplus',    'pop_MAD_resp_HTPplus',     'pop_dfof_tc_HTPplus',   'pop_dfof_resp_HTPplus', ...
+    'cons', 'sizes', 'dirs', 'nOn', 'nOff', 'resp_win');
 
-fprintf('Saved to %s\n', fullfile(fnout, 'singleday_extraction.mat'));
-
-%% Optional retinotopy alignment
-
-if isfield(expt(day_id), 'ret_run') && ~isempty(expt(day_id).ret_run)
-    if ~exist('doRetino', 'var')
-        response = input('Complete retinotopy alignment? (y/n): ', 's');
-        doRetino = strcmpi(response, 'y') || strcmpi(response, 'yes');
-    end
-else
-    doRetino = false;
-    fprintf('No ret_run defined for this session - skipping retinotopy alignment\n');
-end
-
-if doRetino
-    referenceFOV = data_avg;
-
-    if ~exist('validation_choice', 'var')
-        validation_choice = strcmpi(input('Plot validation traces for random cells? (y/n): ', 's'), 'y');
-    end
-
-    [ret_npSub_tc, ret_distance, resp_by_stim, ret_dfof_trial, trialIndSourceUsed] = ...
-        retinotopy_for_singleday(day_id, expt, mouse, inputStructure, ...
-            referenceFOV, mask_cell, timingSource, rc, validation_choice);
-
-    ret_npSub_tc_keep   = ret_npSub_tc(:, keep_single);
-    ret_distance_keep   = ret_distance(keep_single);
-    resp_by_stim_keep   = resp_by_stim(:, :, keep_single);
-    ret_dfof_trial_keep = ret_dfof_trial(:, keep_single, :);
-
-    save(fullfile(fnout, 'retino_aligned.mat'), ...
-        'ret_npSub_tc', 'ret_distance', 'resp_by_stim', 'ret_dfof_trial', ...
-        'ret_npSub_tc_keep', 'ret_distance_keep', 'resp_by_stim_keep', 'ret_dfof_trial_keep', ...
-        'trialIndSourceUsed');
-
-    fprintf('Retinotopy alignment saved to %s\n', fullfile(fnout, 'retino_aligned_MAD.mat'));
-end
+fprintf('Saved to %s\n', fullfile(fnout, 'singleday_extraction_MAD.mat'));

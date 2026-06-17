@@ -1,5 +1,5 @@
 %% Instruction sheet
-instructions.sess_list=[85 89 92]; %the sessions to concatenate and analyze
+instructions.sess_list=[85 89 92 95]; %the sessions to concatenate and analyze
 instructions.runOnset_sess_list = []; %skipping sessions that didn't have any running onsets
 instructions.ds='DART_V1_YM90K_Celine';
 instructions.experimentFolder = 'VIP_YM90K';

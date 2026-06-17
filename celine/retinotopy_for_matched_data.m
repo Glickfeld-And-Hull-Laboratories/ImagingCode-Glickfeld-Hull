@@ -312,7 +312,8 @@ for id = 1:nd
     end
     [distMap_matched{id}, dist_vec_matched{id}] = plotRFdistanceMap(...
         lbub_fits(:,:,4), goodfit_ind, mask_plot, finalAzim, finalElev);
-
+    saveas(gcf, fullfile(fnOut, sprintf('RFdistanceMap_day%d.png', id)));
+    
     ret_npSub_tc_matched{id}   = npSub_tc_match;
     ret_distance_matched{id}   = ret_distance;
     resp_by_stim_matched{id}   = resp_by_stim;

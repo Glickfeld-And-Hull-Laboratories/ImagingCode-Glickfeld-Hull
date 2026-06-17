@@ -1,8 +1,8 @@
 %% Instruction sheet
-instructions.sess_list=[84 87 91 94]; %the sessions to concatenate and analyze
+instructions.sess_list=[64 66 68 70 72 74 77]; %the sessions to concatenate and analyze
 instructions.runOnset_sess_list = []; %skipping sessions that didn't have any running onsets
 instructions.ds='DART_V1_YM90K_Celine';
-instructions.experimentFolder = 'VIP_YM90K';
+instructions.experimentFolder = 'SST_YM90K';
 instructions.refDay='2';
 instructions.load_retino = true;
 instructions.stillTimeList = [5]; % seconds of stillness required before run onset
@@ -10,6 +10,5 @@ instructions.targetCon = [.25 .5 1]; %the contrasts to analyze, in case not all 
 instructions.targetSize = [7.5 15.0 30.0000 60.0 120.000]; %the sizes to analyze, in case not all datasets have the same set of sizes
 instructions.sizeFilter = [] %set this to select for cells responsive to a partiular size
 instructions.frame_rate = 15;
-%% Notes
-% VIP mice expressing nuclear-excluded HTP but there was no infusions
-% between days
+%% notes 
+% YM90K-PEG infusions on mice expressing ddHTP in SST cells

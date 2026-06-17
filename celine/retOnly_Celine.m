@@ -19,10 +19,10 @@ doRed=0;
 % frame_rate = expt(expt_num).frame_rate; 
 % RedImgFolder = expt(expt_num).redChannelRun;
 
-mouse = 'i2244'
-date = '260527'
-time = '1117'
-RetImgFolder = '007' 
+mouse = 'i2246'
+date = '260616'
+time = '1531'
+RetImgFolder = '004' 
 frame_rate = 15
 
 
@@ -64,7 +64,7 @@ for irun = 1:nrun
     cd(CD);
     imgMatFile = [RetImgFolder(irun,:) '_000_000.mat'];
     %imgMatFile = ['001_000_' ImgFolder(irun,:) '.mat']; % for bad file name
-    load(imgMatFile);
+%    load(imgMatFile);
     
     % load behavior/experimental data
     %%for mice with IDs that begin in a letter
@@ -75,8 +75,8 @@ fName = [isilonName, '/Behavior/Data/data-' mouse '-' date '-' time '.mat'];
     load(fName);
     
     % read in frames with sbxread
-    nframes = info.config.frames;
-
+%    nframes = info.config.frames;
+nframes = 21600
     fprintf(['/nReading run ' num2str(irun) ' - ' num2str(nframes) ' frames /n'])
     tic
     data_temp = sbxread([RetImgFolder(irun,:) '_000_000'],0,nframes);
@@ -518,8 +518,8 @@ if doRed
     else
         load(imgMatFile);
     
-        fprintf(['Reading red run ' '- ' num2str(info.config.frames) ' frames /r/n'])
-        data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);
+        fprintf(['Reading red run ' '- ' num2str(nframes) ' frames /r/n'])
+        data_temp = sbxread(imgMatFile(1,1:11),0,nframes);
         if size(data_temp,1) == 2
             data_rg = squeeze(data_temp(1,:,:,:));
             data_rr = squeeze(data_temp(2,:,:,:));

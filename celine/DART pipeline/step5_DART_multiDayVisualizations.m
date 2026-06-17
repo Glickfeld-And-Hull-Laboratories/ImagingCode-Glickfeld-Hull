@@ -252,14 +252,14 @@ if isfield(instructions, 'sizeFilter') && ~isempty(instructions.sizeFilter)
     end
 end
 
-% Retinotopy-filtered cell selection
+%% Retinotopy-filtered cell selection
 % goodfit_concat is in keep-cell space; since goodfit_ind_keep is already
 % the day-1 & day-2 intersection, both days are identical  AND for safety
 goodfit_both = goodfit_concat{1} & goodfit_concat{2};
 closeRF_both = ret_distance_retino_concat{1} < retDistThresh & ...
                ret_distance_retino_concat{2} < retDistThresh;
-%UNstableRF = abs(ret_distance_retino_concat{1} - ret_distance_retino_concat{2})>2.5;
-retino_cells  = find(goodfit_both & closeRF_both);
+stableRF = abs(ret_distance_retino_concat{post} - ret_distance_retino_concat{pre})<retDistThresh;
+retino_cells  = find(goodfit_both & stableRF);
 retino_red    = intersect(retino_cells, red_ind_concat);
 retino_green  = intersect(retino_cells, green_ind_concat);
 fprintf('Retinotopy filter (thresh=%.0f deg): %d goodfit both days, %d within thresh both days\n', ...
@@ -716,19 +716,19 @@ end
 %% Retinotopically-matched cells - stationary timecourses and size tuning
 close all
 
-plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
-    retino_red, retino_green, 'DayOrder', matchDrx, ...
-    'UseDashedLines', [false, true], ...
-    'Colors1', {'k', 'b'}, ...
-    'Colors2', {'k', 'b'},  ...
-    'StimStart', 31);
+% plotNeuralTimecourse(tc_trial_avrg_stat_concat, tc_trial_avrg_stat_concat, ...
+%     retino_red, retino_green, 'DayOrder', matchDrx, ...
+%     'UseDashedLines', [false, true], ...
+%     'Colors1', {'k', 'b'}, ...
+%     'Colors2', {'k', 'b'},  ...
+%     'StimStart', 31);
 
-figs = findobj('Type', 'figure');
-sizeTitles = length(figs):-1:1;
-for i = 1:length(figs)
-    figure(figs(i));
-    saveas(gcf, sprintf('retino_stationary_timecourse_size_%d.pdf', sizeTitles(i)));
-end
+% figs = findobj('Type', 'figure');
+% sizeTitles = length(figs):-1:1;
+% for i = 1:length(figs)
+%     figure(figs(i));
+%     saveas(gcf, sprintf('retino_stationary_timecourse_size_%d.pdf', sizeTitles(i)));
+% end
 
 plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
     retino_red, retino_green, targetCon, targetSize, 'DayOrder', matchDrx, ...
@@ -736,7 +736,7 @@ plotSizeResponse(pref_responses_stat_concat, pref_responses_stat_concat, ...
     'Titles', {'HTP+', 'HTP-'}, ...
     'YLabel', 'dF/F');
 sgtitle(['Stationary - ret distance < ' num2str(retDistThresh)])
-saveas(gcf, 'retino_stationary_size_response.pdf');
+saveas(gcf, 'deltaRet_stationary_size_response.pdf');
 
 retDistTable = array2table(nan(nSess, 3), 'VariableNames', {'Pre', 'Post','delta'}, 'RowNames', mouseNames);
 for iMouse = 1:nSess
