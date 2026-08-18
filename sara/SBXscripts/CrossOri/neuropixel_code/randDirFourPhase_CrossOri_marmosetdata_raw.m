@@ -5,12 +5,12 @@ svName = 'randDirFourPhase_CrossOri';
 bnsz = 10; %spike binsize = 10 ms
 
 doPlot=1;
-doGratPlot=0;
+doGratPlot=1;
 
-expts = strvcat('g01b', 'g06b', 'g12b', 'g17b'); %Four acute penetrations in V1, 1 marmoset
+expts = strvcat('g01b', 'g06b', 'g12b', 'g17b','tss2','tss4','tss6','tss7','elf1'); %Four acute penetrations in V1, 1 marmoset
 nexp = length(expts);
 
-iexp = 3;
+iexp = 7;
 
     fprintf([expts(iexp,:) '\n'])
 
@@ -28,31 +28,29 @@ iexp = 3;
 
     resp_cell = resp(:,:,:,:,:,21:120);
     base_cell = resp(:,:,:,:,:,1:20);
-    avg_resp_dir(:,:,:,:,1) = mean(sum(resp_cell,6)/100,5); % Average across time and trial
-    avg_resp_dir(:,:,:,:,2) = std(sum(resp_cell,6)/100,0,5)/nTrials; % SEM for each stim condition
+
+    avg_resp_dir(:,:,:,:,1) = mean(sum(resp_cell,6),5); % Average across time and trial
+    avg_resp_dir(:,:,:,:,2) = std(sum(resp_cell,6),0,5)/sqrt(nTrials); % SEM for each stim condition
     resp_dir_tc = mean(resp,5); % Average across trial, to look at time 
     resp_dir_tr = mean(resp,6); % Average across time, to look at trial 
 
 
     % Find cells that are significantly responsive to 1 stimulus
-    resp_cell_trials(:,:,:,:,:,1) = sum(resp_cell,6)/100; % convert to one spike rate per trial (in Hz)
-    base_cell_trials(:,:,:,:,:,1) = (sum(resp_cell,6)*5)/100; % multiply by 5 to convert to Hz
+    resp_cell_trials = sum(resp_cell,6) * 2;   % Hz per trial
+    base_cell_trials = sum(base_cell,6) * 5; % Hz per trial
+
+
+    mean_base_all = mean(base_cell_trials, [2 3 4 5], 'omitnan'); % mean across all stim conditions
+    avg_resp_dir(:,:,:,:,1) = avg_resp_dir(:,:,:,:,1) - mean_base_all;
+
     
     for id = 1:nDirs
-        [h_resp(:,id,1,1), p_resp(:,id,1,1)] = ttest2(squeeze(resp_cell_trials(:,id,1,1,:)),squeeze(base_cell_trials(:,id,1,1,:)),'dim',2,'tail','right','alpha', 0.05./nStim);
-        for ip = 1:nPhas
-            [h_resp(:,id,ip,2), p_resp(:,id,ip,2)] = ttest2(squeeze(resp_cell_trials(:,id,ip,2,:)),squeeze(base_cell_trials(:,id,ip,2,:)),'dim',2,'tail','right','alpha', 0.05./nStim);
-        end
+         resp_tmp = squeeze(resp_cell_trials(:,id,1,1,:));  % [nCells x nTrials]
+         base_tmp = squeeze(base_cell_trials(:,id,1,1,:));
+        [h_resp(:,id,1,1), p_resp(:,id,1,1)] = ttest(resp_tmp,base_tmp,'dim', 2,'tail', 'right', 'alpha', (0.05 / nDirs));
     end
     resp_ind_dir = find(sum(h_resp(:,:,1,1),2)); %sig responsive to gratings
     
-
-    % figure; %trying to figure out if i have stim on + stim off or just stim on
-    %     for ic = 1:36
-    %         subplot(6,6,ic)
-    %         plot(0:119,squeeze(resp_dir_tc(ic,1,1,1,:)))
-    %     end
-
 
     % Run ANOVA across stim direction
     grat_resp = squeeze(resp_dir_tr(:,:,1,1,:)); % Make matrix nCells x nDir x nTrials
@@ -76,7 +74,7 @@ iexp = 3;
 
 
     % Do all fits at once
-    [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phaseModStruct] = bigFits(avg_resp_dir);
+    [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phaseModStruct] = bigFits(avg_resp_dir,2); %2 for marmoset data
 
     % Get direction selectivity
         DSI         = DSIstruct.DSI;
@@ -88,7 +86,7 @@ iexp = 3;
         ang_ori     = DSIstruct.gOSI_prefDir;
     
     % Get direction tuning curve fit
-        dir_b_hat_all           = gratingFitStruct.b;
+        dir_b_hat_all       = gratingFitStruct.b;
         k1_hat_all          = gratingFitStruct.k1;
         R1_hat_all          = gratingFitStruct.R1;
         R2_hat_all          = gratingFitStruct.R2;
@@ -103,6 +101,7 @@ iexp = 3;
         Zc = ZpZcStruct.Zc;
         Rp = ZpZcStruct.Rp;
         Rc = ZpZcStruct.Rc;
+
     % Get PCI fit, get amplitude and baseline
         PCI             = phaseModStruct.PCI;
         yfit_all        = phaseModStruct.yfit;
@@ -149,13 +148,16 @@ iexp = 3;
 
 
 %% set inclusion criteria
-resp_ind    = intersect(intersect(resp_ind_dir,p_dir),find(DSI>0.5));
-ind         = resp_ind;
+resp_ind    = intersect(resp_ind_dir,find(DSI>0.5));
 
+max_grat_resp = max(avg_resp_dir(:,:,1,1,1), [], 2);
+grat_ind = find(max_grat_resp>1);
+
+ind = intersect(grat_ind, resp_ind);
 
 if doPlot == 1
 %% Plot population ZpZc
-plotZpZc4PhasePopulation(ZpZcStruct,resp_ind,30)
+plotZpZc4PhasePopulation(ZpZcStruct,ind,30)
     movegui('center')
     sgtitle('Pattern direction selective cells at four phases')
 print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZpZc.pdf']),'-dpdf', '-fillpage') 
@@ -164,7 +166,7 @@ print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' 
 %% Plot grating tuning curves by cell
 
 
-ind=resp_ind;
+% ind=resp_ind;
 
 if doGratPlot == 1
 
@@ -268,12 +270,12 @@ figure;
 start = 1;
 n = 1;
 
-[avg_resp_grat avg_resp_plddir] = getAlignedGratPlaidTuning(avg_resp_dir);
+[avg_resp_grat, avg_resp_plddir] = getAlignedGratPlaidTuning(avg_resp_dir,'whole-cell');
 
 x=[-150:30:180];
 x_rad = deg2rad(x);
-for iCell =1:length(ind)
-    ic = ind(iCell);
+for iCell =1:nCells
+    ic = iCell;
     subplot(5,4,start)
         for im = 1:nPhas
             polarplot([x_rad x_rad(1)], [avg_resp_plddir(ic,:,im) avg_resp_plddir(ic,1,im)])
@@ -384,10 +386,4 @@ x=[-150:30:180];
     end
    
 
-
-
-
-else 
 end
-
-

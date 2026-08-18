@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
 ds = 'CrossOriRandDirFourPhase_ExptList_SG';
-iexp = 122;  
+iexp = 130;  
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
@@ -91,6 +91,7 @@ nep = floor(size(data,3)./regIntv);
 [n n2] = subplotn(nep);
 figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):500+((i-1)*regIntv)),3)); title([num2str(1+((i-1)*regIntv)) '-' num2str(500+((i-1)*regIntv))]); colormap gray; clim([0 3000]); end
 movegui('center')
+
 %% Register data
 data_avg = mean(data(:,:,85001:85500),3);
 if doPhaseAfterDir || doDirAfterPass

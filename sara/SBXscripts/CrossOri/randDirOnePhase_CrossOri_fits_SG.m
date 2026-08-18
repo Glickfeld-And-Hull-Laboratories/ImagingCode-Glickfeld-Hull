@@ -47,12 +47,13 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-iexp = 120; 
+iexp = 130; 
 max_dist = 10;
 
 frame_rate = 15;
 seed = rng;
 
+doIndTrialPlots = 0;
 %%
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
@@ -69,9 +70,9 @@ LGbase = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\lindsey
 fprintf([mouse ' ' date '\n'])
 
 %% Pref direction analysis
-load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
-load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(LGbase, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat'])) %LGbase
+load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat'])) %LGbase
+load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat'])) %LGbase
 load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_pupil.mat']))
 
 %%
@@ -371,12 +372,14 @@ for iCell =1:nCells
     end
 end     
 close all
-stop
+
+
 
 %% look at df/f across individual trials with comparison to statistical tests (ttest for grating, anova for plaid)
 
-% c = linspace(0,round(max(centroid_dist)),round(max(centroid_dist)));
+if doIndTrialPlots == 1
 
+% c = linspace(0,round(max(centroid_dist)),round(max(centroid_dist)));
 
 figure;
 start=1;
@@ -414,6 +417,8 @@ for iCell = 1:nCells
 end
     close all
    
+else 
+end
 
 %% Bootstrap one phase --> four phase
 
@@ -509,7 +514,6 @@ for iCell = 1:nCells
 end
 
 save(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], ['centroid_dist_max_' num2str(max_dist)], [date '_' mouse '_' run_str '_ZpZc_pairwiseDist.mat']), 'ind', 'Zp', 'Zc', 'ZpZcPWdist', 'plaid_corr');
-
 
 stop
 %% Bootstrap trials

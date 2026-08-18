@@ -6,7 +6,7 @@ rc = behavConstsAV;
 frame_rate = 15;
 nexp = size(expt,2);
 %%
-for iexp = 122
+for iexp = 130
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
 area = expt(iexp).img_loc{1};
@@ -26,9 +26,9 @@ end
 
 %% load data
 
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_mask_cell.mat']))
+load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']))
 load(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']))
 
@@ -39,7 +39,7 @@ calib = 1/26.6; %mm per pixel
 nrun = length(ImgFolder);
 data = [];
 for irun =  1:nrun
-    CD = [LG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
+    CD = [SG_base '\Data\2P_images\' mouse '\' date '\' ImgFolder{irun}];
     cd(CD);
     fn = [ImgFolder{irun} '_000_000_eye.mat'];
 
@@ -85,7 +85,7 @@ close all
 data = data(rect(2):rect(2)+rect(4),rect(1):rect(1)+rect(3),:);
 
 %%
-rad_range = [1 20];
+rad_range = [3 15];
 warning off;
 A = cell(size(data,3),1);
 B = cell(size(data,3),1);
@@ -206,6 +206,7 @@ sgtitle('Pupil detected')
 print(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_Pupil.pdf']),'-dpdf','-fillpage');
         
 
+
 %%
     
     %align eyetracking to 
@@ -261,12 +262,12 @@ print(fullfile(SG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run
         end
             
     end
-    rad_mat_calib = bsxfun(@times, rad_mat_start, calib);
+    rad_mat_calib = bsxfun(@times, rad_mat_start, calib); % convert from pixels to mm
     centroid_mat_calib = bsxfun(@times,centroid_mat_start,calib);
     t = mean(centroid_mat_calib(prewin_frames+1:end,:,:),1);
     rad_base = mean(rad_mat_calib(1:prewin_frames,:),1);
     rad_stim = mean(rad_mat_calib(prewin_frames+1:end,:),1);
-    centroid_base = squeeze(mean(centroid_mat_calib(1:prewin_frames,:,:),1))./0.025;
+    centroid_base = squeeze(mean(centroid_mat_calib(1:prewin_frames,:,:),1))./0.025; % convert from mm to visual degrees
     centroid_stim = squeeze(mean(centroid_mat_calib(prewin_frames+1:end,:,:),1))./0.025;
 
     figure; subplot(2,1,1)

@@ -1,3 +1,8 @@
+%% THIS IS THE CORRECT VERSION OF THIS SUMMARY SCRIPT, as of 5/19/2026 -SG
+% Somewhere there is a similary named script that does not work
+
+%%
+
 clc; clear all; close all;
 ds = 'CrossOriSingleStimRandDirAdapt_ExptList';
 eval(ds)
@@ -131,7 +136,8 @@ for i = 1:length(ind_orth_Zc)
     hold on
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift_all(ind_orth_Zc(i),:,1,2,1),1) mean(avg_resp_dir_shift_all(ind_orth_Zc(i),1,1,2,1),1)])
 end
-suptitle('Zc cells - Gratings')
+subtitle('Zc cells - Gratings')
+
 figure;
 for i = 1:length(ind_orth_Zc)
     subplot(n,n2,i)
@@ -139,7 +145,7 @@ for i = 1:length(ind_orth_Zc)
     hold on
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift_all(ind_orth_Zc(i),:,2,2,1),1) mean(avg_resp_dir_shift_all(ind_orth_Zc(i),1,2,2,1),1)])
 end
-suptitle('Zc cells - Plaids')
+subtitle('Zc cells - Plaids')
 
 figure;
 [n n2] = subplotn(length(ind_orth_Zp));
@@ -149,7 +155,7 @@ for i = 1:length(ind_orth_Zp)
     hold on
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift_all(ind_orth_Zp(i),:,1,2,1),1) mean(avg_resp_dir_shift_all(ind_orth_Zp(i),1,1,2,1),1)])
 end
-suptitle('Zp cells - Gratings')
+subtitle('Zp cells - Gratings')
 print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_exZpGratings.pdf'),'-dpdf','-bestfit')
 figure;
 for i = 1:length(ind_orth_Zp)
@@ -158,7 +164,7 @@ for i = 1:length(ind_orth_Zp)
     hold on
     polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_shift_all(ind_orth_Zp(i),:,2,2,1),1) mean(avg_resp_dir_shift_all(ind_orth_Zp(i),1,2,2,1),1)])
 end
-suptitle('Zp cells - Plaids')
+subtitle('Zp cells - Plaids')
 print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_exZpPlaids.pdf'),'-dpdf','-bestfit')
 
 avg_resp_dir_align_all = avg_resp_dir_shift_all;
@@ -227,7 +233,7 @@ figure;
         xlabel('Zp- control')
         ylabel('Zp- adapt'); 
         % title(['p = ' num2str(chop(p,2))])
-        suptitle(['Pref: 60 & 300- n = ' num2str(length(ind_use))])
+        subtitle(['Pref: 60 & 300- n = ' num2str(length(ind_use))])
     print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_ZcZpEffects.pdf'),'-dpdf','-bestfit')
 
 ind_use = intersect(resp_ind_dir_use, orth_ind);
@@ -261,7 +267,7 @@ figure;
         xlabel('Zp- control')
         ylabel('Zp- adapt')
         title(['p = ' num2str(chop(p,2))])
-        suptitle(['Pref: 60, 90 120, 240, 270, 300- n = ' num2str(length(ind_use))])
+        subtitle(['Pref: 60, 90 120, 240, 270, 300- n = ' num2str(length(ind_use))])
     print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_ZcZpEffects_allOrth.pdf'),'-dpdf','-bestfit')
 
 figure;
@@ -301,16 +307,16 @@ figure;
         hold on
         polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,2,1),1)])
         title(num2str(length(ind_use)))
-        suptitle({'Left: 0, 30, 150, 180, 210, 330; Right: 60, 90, 120, 240, 270, 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
+        subtitle({'Left: 0, 30, 150, 180, 210, 330; Right: 60, 90, 120, 240, 270, 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
     print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_adaptVortho.pdf'),'-dpdf','-bestfit')
 
 figure;
     subplot(3,2,1)
         % ind_use = intersect(resp_ind_dir_use,  [find(maxDir_all==1); find(maxDir_all==7)]);
         ind_use = intersect(resp_ind_dir_use,  [find(maxDir_all==1)]);
-        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,1,1,1),1) mean(avg_resp_dir_align_all(ind_use,1,1,1,1),1)])
+        polarplot(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,1,1,1),1) mean(avg_resp_dir_align_all(ind_use,1,1,1,1),1)])
         hold on
-        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,1,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,1,2,1),1)])
+        polarplot(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,1,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,1,2,1),1)])
         title(num2str(length(ind_use)))
         ind_use = intersect(Zc_use,intersect(resp_ind_dir_use, [find(maxDir_all==1); find(maxDir_all==7)]));
     subplot(3,2,3)
@@ -339,11 +345,11 @@ figure;
         title(num2str(length(ind_use)))
         ind_use = intersect(Zp_use,intersect(resp_ind_dir_use, [find(maxDir_all==11); find(maxDir_all==3)]));
     subplot(3,2,6)
-        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,1,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,1,1),1)])
+        polarplot(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,1,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,1,1),1)])
         hold on
-        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,2,1),1)])
+        polarplot(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use,:,2,2,1),1) mean(avg_resp_dir_align_all(ind_use,1,2,2,1),1)])
         title(num2str(length(ind_use)))
-        suptitle({'Left: 0 ; Right: 60 & 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
+        subtitle({'Left: 0 ; Right: 60 & 300;' 'Top: Grating; Middle: Zc; Bottom: Zp'})
   print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_0v60.pdf'),'-dpdf','-bestfit')
 
 
@@ -354,9 +360,9 @@ figure;
 ind_use = intersect(Zp_use,intersect(resp_ind_dir_use, [find(maxDir_all==11); find(maxDir_all==3)]));
 for ic = 1:length(ind_use)
     subplot(5,4,ic)
-        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use(ic),:,1,1,1),1) mean(avg_resp_dir_align_all(ind_use(ic),1,1,1,1),1)])
+        polarplot(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use(ic),:,1,1,1),1) mean(avg_resp_dir_align_all(ind_use(ic),1,1,1,1),1)])
         hold on
-        polar(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use(ic),:,1,2,1),1) mean(avg_resp_dir_align_all(ind_use(ic),1,1,2,1),1)])
+        polarplot(deg2rad([testDirs testDirs(1)]), [mean(avg_resp_dir_align_all(ind_use(ic),:,1,2,1),1) mean(avg_resp_dir_align_all(ind_use(ic),1,1,2,1),1)])
 end
 
 print(fullfile(outDir, 'Analysis\2P\CrossOri\RandDirAdaptSummary', 'randDirAdapt_Polar_0and60PDS.pdf'),'-dpdf','-bestfit')

@@ -1694,7 +1694,7 @@ expt(120).saveLoc = 'lindsey';
 %% i1415 250515, PM (162000 frames) 
 expt(121).mouse = 'i1415';
 expt(121).date = '250515';
-expt(121).img_loc  = {'V1'};
+expt(121).img_loc  = {'PM'};
 expt(121).z = -200;
 expt(121).img_strct  = {'cells'};
 expt(121).driver = {'SLC'};
@@ -1708,7 +1708,7 @@ expt(121).saveLoc = 'lindsey';
 %% i1415 250529, PM (162000 frames) 
 expt(122).mouse = 'i1415';
 expt(122).date = '250529';
-expt(122).img_loc  = {'V1'};
+expt(122).img_loc  = {'PM'};
 expt(122).z = -200;
 expt(122).img_strct  = {'cells'};
 expt(122).driver = {'SLC'};
@@ -1718,3 +1718,144 @@ expt(122).coTime = {'1440'};
 expt(122).SF = 0.05;
 expt(122).TF = 2;
 expt(122).saveLoc = 'lindsey';
+
+%% i1414 250601, PM (162000 frames) 
+expt(123).mouse = 'i1414';
+expt(123).date = '250601';
+expt(123).img_loc  = {'PM'};
+expt(123).z = -200;
+expt(123).img_strct  = {'cells'};
+expt(123).driver = {'SLC'};
+expt(123).indicator = {'tg';'GCaMP8m'};
+expt(123).coFolder = {'002'};
+expt(123).coTime = {'1209'};
+expt(123).SF = 0.05;
+expt(123).TF = 2;
+expt(123).saveLoc = 'lindsey';
+
+%% i1415 250602, PM (162000 frames) 
+expt(124).mouse = 'i1415';
+expt(124).date = '250602';
+expt(124).img_loc  = {'PM'};
+expt(124).z = -200;
+expt(124).img_strct  = {'cells'};
+expt(124).driver = {'SLC'};
+expt(124).indicator = {'tg';'GCaMP8m'};
+expt(124).coFolder = {'002'};
+expt(124).coTime = {'1353'};
+expt(124).SF = 0.05;
+expt(124).TF = 2;
+expt(124).saveLoc = 'lindsey';
+
+%% i1429 260731, PM (162000 frames) 
+expt(125).mouse = 'i1429';
+expt(125).date = '260731';
+expt(125).img_loc  = {'PM'};
+expt(125).z = -200;
+expt(125).img_strct  = {'cells'};
+expt(125).driver = {'SLC'};
+expt(125).indicator = {'tg';'GCaMP8m'};
+expt(125).coFolder = {'002'};
+expt(125).coTime = {'1022'};
+expt(125).SF = 0.05;
+expt(125).TF = 2;
+expt(125).saveLoc = 'sara';
+
+%% i1429 260804, PM (162000 frames) -- ONE PHASE
+expt(126).mouse = 'i1429';
+expt(126).date = '260804';
+expt(126).img_loc  = {'PM'};
+expt(126).z = -200;
+expt(126).img_strct  = {'cells'};
+expt(126).driver = {'SLC'};
+expt(126).indicator = {'tg';'GCaMP8m'};
+expt(126).coFolder = {'002'};
+expt(126).coTime = {'1326'};
+expt(126).SF = 0.05;
+expt(126).TF = 2;
+expt(126).saveLoc = 'sara';
+
+%% i1428 260810, PM (162000 frames)
+expt(127).mouse = 'i1428';
+expt(127).date = '260810';
+expt(127).img_loc  = {'PM'};
+expt(127).z = -200;
+expt(127).img_strct  = {'cells'};
+expt(127).driver = {'SLC'};
+expt(127).indicator = {'tg';'GCaMP8m'};
+expt(127).coFolder = {'002'};
+expt(127).coTime = {'1253'};
+expt(127).SF = 0.05;
+expt(127).TF = 2;
+expt(127).saveLoc = 'sara';
+
+%% i1428 260811, PM (162000 frames) -- ONE PHASE
+expt(128).mouse = 'i1428';
+expt(128).date = '260811';
+expt(128).img_loc  = {'PM'};
+expt(128).z = -200;
+expt(128).img_strct  = {'cells'};
+expt(128).driver = {'SLC'};
+expt(128).indicator = {'tg';'GCaMP8m'};
+expt(128).coFolder = {'002'};
+expt(128).coTime = {'1300'};
+expt(128).SF = 0.05;
+expt(128).TF = 2;
+expt(128).saveLoc = 'sara';
+
+%% i1431 260813, PM (162000 frames) 
+expt(129).mouse = 'i1431';
+expt(129).date = '260813';
+expt(129).img_loc  = {'PM'};
+expt(129).z = -200;
+expt(129).img_strct  = {'cells'};
+expt(129).driver = {'SLC'};
+expt(129).indicator = {'tg';'GCaMP8m'};
+expt(129).coFolder = {'002'};
+expt(129).coTime = {'1304'};
+expt(129).SF = 0.05;
+expt(129).TF = 2;
+expt(129).saveLoc = 'sara';
+
+%% i1431 260814, PM (162000 frames) -- ONE PHASE
+expt(130).mouse = 'i1431';
+expt(130).date = '260814';
+expt(130).img_loc  = {'PM'};
+expt(130).z = -200;
+expt(130).img_strct  = {'cells'};
+expt(130).driver = {'SLC'};
+expt(130).indicator = {'tg';'GCaMP8m'};
+expt(130).coFolder = {'002'};
+expt(130).coTime = {'1231'};
+expt(130).SF = 0.05;
+expt(130).TF = 2;
+expt(130).saveLoc = 'sara';
+
+%% i1432 260817, PM (162000 frames)
+expt(131).mouse = 'i1432';
+expt(131).date = '260817';
+expt(131).img_loc  = {'PM'};
+expt(131).z = -200;
+expt(131).img_strct  = {'cells'};
+expt(131).driver = {'SLC'};
+expt(131).indicator = {'tg';'GCaMP8m'};
+expt(131).coFolder = {'002'};
+expt(131).coTime = {'1329'};
+expt(131).SF = 0.05;
+expt(131).TF = 2;
+expt(131).saveLoc = 'sara';
+
+%% i1433 260818, PM (162000 frames)
+expt(132).mouse = 'i1433';
+expt(132).date = '260818';
+expt(132).img_loc  = {'PM'};
+expt(132).z = -200;
+expt(132).img_strct  = {'cells'};
+expt(132).driver = {'SLC'};
+expt(132).indicator = {'tg';'GCaMP8m'};
+expt(132).coFolder = {'002'};
+expt(132).coTime = {'1212'};
+expt(132).SF = 0.05;
+expt(132).TF = 2;
+expt(132).saveLoc = 'sara';
+

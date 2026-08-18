@@ -7,12 +7,12 @@ doPlot = 1;
 ds = ['CrossOriRandDirFourPhase_ExptList_SG'];
 svName = 'randPhase';
 eval(ds)
-driver = 'SCN';
-img_area = {'V1';'L2/3'}; %LM
-inj_area = ['V1'];
+driver = 'SLC';
+img_area = {'PM';'L2/3'}; %LM
+inj_area = ['PM'];
 img_layer = 'L2/3';
 
-max_dist = 5;
+max_dist = 10;
 
 rc = behavConstsAV;
 frame_rate = 15;
@@ -32,12 +32,13 @@ mouse_list = [];
 totCells = zeros(nexp,1);
 
 % V1 L2/3 - 5 24 46 47 79
-% V1 L4 - 62 66 
+% V1 L4 - 62 66 111 112 117 118 119 120
 % LM L2/3 - 38 49 50 86
 % AL L2/3 - 76 82 83 84
+% PM L2/3 - 126 128 130 
 
 start=1;
-for iexp = [38 49 50 86]
+for iexp = [126 128 130]
     mouse = expt(iexp).mouse;
     mouse_list = strvcat(mouse_list, mouse);
     date = expt(iexp).date;

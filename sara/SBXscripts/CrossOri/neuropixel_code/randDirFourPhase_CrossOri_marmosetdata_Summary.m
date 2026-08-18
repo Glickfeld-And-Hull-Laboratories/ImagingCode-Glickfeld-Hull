@@ -4,7 +4,7 @@ summaryDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase\summaries'])
 outDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase']);
 svName = 'randDirFourPhase_CrossOri';
 
-expts = strvcat('g01b', 'g06b','g12b','g17b'); %Four acute penetrations in V1, 1 marmoset
+expts = strvcat('g01b', 'g06b','g12b','g17b','tss2','tss4','tss6','tss7','elf1'); %Four acute penetrations in V1, 1 marmoset
 %expts = strvcat('g01', 'g06', 'g12', 'g17'); %Four acute penetrations in V1, 1 marmoset
 nexp = length(expts);
 
@@ -38,10 +38,13 @@ g_osi_all = [];
 ang_dir_all = [];
 ang_ori_all = [];
 
+avg_resp_dir_all = [];
+
 
 start=1;
 for iexp=1:nexp
 
+    fprintf([expts(iexp,:) '\n'])
     load(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_fitsSG.mat']))
 
     plaid_corr_all = [plaid_corr_all; plaid_corr'];
@@ -83,10 +86,44 @@ for iexp=1:nexp
     dir_Rsq_all = [dir_Rsq_all; dir_R_square_all];
     dir_sse_all = [dir_sse_all; dir_sse_all];
 
+    avg_resp_dir_all = [avg_resp_dir_all; avg_resp_dir];
+
+
 start=start+1;
+
 end
 
-    save(fullfile(summaryDir,[svName '_Summary_V1_MAR.mat']), 'ang_dir_all', 'ang_ori_all', 'g_dsi_all', 'g_osi_all', 'sig_dir','sig_stim','plaid_corr_all','ZpZcPWdist_all','k1_all','dir_Rsq_all','dir_sse_all','totCells','Zp_all','Zc_all','b_all','amp_all','Rsq_all','yfit_all_all','sse_all_all', 'DSI_all','expts')
+    save(fullfile(summaryDir,[svName '_Summary_V1_MAR.mat']), 'avg_resp_dir_all', 'ang_dir_all', 'ang_ori_all', 'g_dsi_all', 'g_osi_all', 'sig_dir','sig_stim','plaid_corr_all','ZpZcPWdist_all','k1_all','dir_Rsq_all','dir_sse_all','totCells','Zp_all','Zc_all','b_all','amp_all','Rsq_all','yfit_all_all','sse_all_all', 'DSI_all','expts')
+
+
+
+
+    %% testing
+
+FRs = [clustinfo.fr];
+nspikes = [clustinfo.n_spikes];
+depths = [clustinfo.depth];
+chs = [clustinfo.ch];
+
+    figure;
+
+    subplot 221
+        scatter(depths(resp_ind_dir),DSI(resp_ind_dir))
+        xlim([0 4000])
+    subplot 222
+        scatter(depths(resp_ind_dir),k1_hat_all(resp_ind_dir))
+        xlim([0 4000])
+    subplot 223
+        scatter(depths,FRs); hold on
+        scatter(depths(resp_ind_dir),FRs(resp_ind_dir))
+        xlim([0 4000])
+    subplot 224
+        scatter(depths,FRs'.*k1_hat_all); hold on
+        scatter(depths(resp_ind_dir),FRs(resp_ind_dir)'.*k1_hat_all(resp_ind_dir))
+        xlim([0 4000])
+
+
+
 
 %%
 

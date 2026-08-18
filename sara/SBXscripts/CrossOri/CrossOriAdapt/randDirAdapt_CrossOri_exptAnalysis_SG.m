@@ -7,7 +7,7 @@ eval(ds)
 nexp = size(expt,2);
 
 frame_rate = 15;
-for iexp  = 5
+for iexp  = 1:nexp
 %%
 mouse = expt(iexp).mouse;
 date = expt(iexp).date;
@@ -16,16 +16,17 @@ ImgFolder = expt(iexp).coFolder;
 time = expt(iexp).coTime;
 nrun = length(ImgFolder);
 run_str = catRunName(cell2mat(ImgFolder), nrun);
+loc = expt(iexp).saveLoc;
 
-LG_base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
+base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\';
 %LG_base = '\\CRASH.dhe.duke.edu\data\home\lindsey';
 
 fprintf([mouse ' ' date '\n'])
 
 %% Test stim analysis
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
-load(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
+load(fullfile(base, loc, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_TCs.mat']))
+load(fullfile(base, loc,'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_dataStim.mat']))
+load(fullfile(base, loc,'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_input.mat']))
 
 %%
 % if doRedChannel == 0
@@ -130,10 +131,15 @@ for iCell = 1:nCells
     p_anova_plaid(iCell) = anova1(all_resp_plaid(iCell,:), all_plaid, 'off');
 end
 
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'data_dfof_dir_tc_avg_singadapt', 'resp_cell_singadapt','base_cell_singadapt','data_dfof_dir_tc_avg_noadapt', 'resp_cell_noadapt','base_cell_noadapt', 'data_dfof_tc', 'avg_resp_dir', 'h_resp','resp_ind', 'tt', 'frame_rate');
-save(fullfile(LG_base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'base_win', 'trialsperstim_singadapt','trialsperstim_noadapt','trialInd_singadapt','trialInd_noadapt');
+save(fullfile(base, 'sara\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_respData.mat']), 'data_dfof_dir_tc_avg_singadapt', 'resp_cell_singadapt','base_cell_singadapt','data_dfof_dir_tc_avg_noadapt', 'resp_cell_noadapt','base_cell_noadapt', 'data_dfof_tc', 'avg_resp_dir', 'h_resp','resp_ind', 'tt', 'frame_rate');
+save(fullfile(base, 'sara\Analysis\2P', [date '_' mouse], [date '_' mouse '_' run_str], [date '_' mouse '_' run_str '_stimData.mat']), 'prewin_frames', 'postwin_frames', 'resp_win', 'base_win', 'trialsperstim_singadapt','trialsperstim_noadapt','trialInd_singadapt','trialInd_noadapt');
 
 end
+
+stop
+
+
+
 %%
 maskDiff_all = celleqel2mat_padded(input.tMaskTwoGratingDirectionDeg) - celleqel2mat_padded(input.tStimTwoGratingDirectionDeg);
 maskDiffs = unique(maskDiff_all);
