@@ -1,15 +1,14 @@
 clear all; clear global;  close all
 clc
 
-ds = 'DART_V1_YM90K_Celine'; %dataset info
+ds = 'DART_V1_YM90K_Celine'; % a struct where fields store experiment metadata 
+% for each mouse, enter manually: mouse, date, imaging session, drug condition etc. 
 dataStructLabels = {'contrastxori'};
 rc = behavConstsDART; %directories
 eval(ds);
-doGreenOnly = true;
-doCorrImg = true;  
 doMWCmPD = true; % generate the MW counter - photodiode counter plot or not
 
-day_id = 22;
+day_id = 28;
 
 %% load data for day
 
@@ -376,7 +375,6 @@ rgb = zeros(sz(1),sz(2),3);
 
 %% extract timecourses
 
-
 data_tc = stackGetTimeCourses(data_g_reg, mask_cell);
 nCells = size(data_tc,2);
 data_tc_down = stackGetTimeCourses(stackGroupProject(data_g_reg,5), mask_cell);
@@ -500,7 +498,7 @@ for iSize = 1:nSize
         ind = intersect(ind_size,ind_dir); %for every size and then every direction, find trials with that dir/size combination
         data_resp(:,iSize,iDir,1) = squeeze(mean(mean(data_dfof_trial(resp_win,ind,:),1),2));
         data_resp(:,iSize,iDir,2) = squeeze(std(mean(data_dfof_trial(resp_win,ind,:),1),[],2)./sqrt(length(ind)));
-        [h(:,iSize,iDir), p(:,iSize,iDir)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.05./(nSize.*3-1));
+        [h(:,iSize,iDir), p(:,iSize,iDir)] = ttest(mean(data_dfof_trial(resp_win,ind,:),1), mean(data_dfof_trial(base_win,ind,:),1),'dim',2,'tail','right','alpha',0.01./(nDir*nCon*nSize-1));
     end
 end
 %%
@@ -619,7 +617,7 @@ for itrial = 1:nTrials
         startFrame = stimOffs(itrial-1);
     end
     iOn_pd = stimOns(itrial);
-    nOff_pd = iOn_pd - startFrame; 
+    nOff_pd = iOn_pd - startFrame;
     nOn_pd = stimOffs(itrial) - stimOns(itrial);
     thisTrialNFrames = nOn_pd+nOff_pd;
     AllTrialsNFrames(itrial) = thisTrialNFrames;

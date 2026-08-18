@@ -1,5 +1,4 @@
-data_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lan\Data\2P_images\mat_inter\';
-pupil_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lan\Analysis\2P\';
+data_pn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Analysis\2P\Lan';
 mouse = strvcat('i1380','i1381','i1386','i1374','i1387','i1375');
 area = 'V1';
 date = strvcat('230330','230404','230406','230411','230418','230425');
@@ -20,8 +19,8 @@ nexp = length(mouse);
 
 
 min_resp = 0.02;
-doEyeDist = 0;
-min_dist = 4;
+doEyeDist = 1;
+min_dist = 3;
 
 R1_avg_resp_all = [];
 R2_avg_resp_all = [];
@@ -34,12 +33,13 @@ max_val_nat_all = [];
 max_snr_sf_all = [];
 max_snr_nat_all = [];
 h_stim_all = [];
+mouse_ind_all = [];
 ntrialperstim = zeros(nexp,14);
 
 for iexp = 1:nexp
     fprintf([mouse(iexp,:) ' ' date(iexp,:) '\n'])
     load(fullfile(data_pn,[area '_' mouse(iexp,:) '_' date(iexp,:) '_cellpose'],'trace_trial_stim.mat'))
-    %load(fullfile(pupil_pn,[date(iexp,:) '_' mouse(iexp,:)],[date(iexp,:) '_' mouse(iexp,:) '_runs-002-004'],[date(iexp,:) '_' mouse(iexp,:) '_pupil.mat']))
+    load(fullfile(data_pn,'pupil',[date(iexp,:) '_' mouse(iexp,:) '_pupil.mat']))
    
     if doEyeDist
         ind_dist = find(centroid.dist<=min_dist);
@@ -114,10 +114,13 @@ for iexp = 1:nexp
     max_snr_sf_all = [max_snr_sf_all max_snr_sf];
     max_snr_nat_all = [max_snr_nat_all max_snr_nat];
     h_stim_all = [h_stim_all h_stim];
+    mouse_ind_all = [mouse_ind_all iexp*ones(size(pref_sf))];
 end
 
 %% 241123 analysis
-outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2024';
+%outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2024';
+%251014 analysis- added eye tracking threshold
+outpn = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_Staff\home\lindsey\Grants\Adaptation R01\AdaptationR01_Dec2025';
 nCells = size(R1_avg_resp_all,2);
 R1_avg_resp_all_nan = R1_avg_resp_all;
 R1_avg_resp_all_nan(find(h_stim_all==0)) = nan;
@@ -170,7 +173,7 @@ ylabel('R1 dF/F')
 [h p] = ttest2(R1_resp_sf(ind_sub_sf),R1_resp_nat(ind_sub_nat));
 title(['p = ' num2str(p)])
 sgtitle('All cells resp to 0.16 OR any nat image')
-print(fullfile(outpn,'NatImgVGratingAdapt_RespEither.pdf'),'-dpdf')
+print(fullfile(outpn,'NatImgVGratingAdapt_RespEither_eye.pdf'),'-dpdf')
 
 figure;
 subplot(2,2,1)
@@ -207,7 +210,45 @@ ylabel('R1 dF/F')
 title(['p = ' num2str(p)])
 sgtitle('All cells resp to 0.16 AND any nat image')
 
-print(fullfile(outpn,'NatImgVGratingAdapt_RespBoth.pdf'),'-dpdf')
+print(fullfile(outpn,'NatImgVGratingAdapt_RespBoth_eye.pdf'),'-dpdf')
+
+%% 
+A = [ones(size(norm_resp_sf)) 2*ones(size(norm_resp_sf))];
+B = [1:size(norm_resp_sf,2) 1:size(norm_resp_sf,2)];
+C = [mouse_ind_all mouse_ind_all];
+Y = [norm_resp_sf norm_resp_nat];
+%nesting = [0 0 0; 1 0 1; 1 0 0];
+nesting = [0 0; 1 0];
+[p, table, stats] = anovan(Y, {A,B,C},...
+    'model', 2,...
+    'random',3,...
+    'nested',nesting,...
+    'varnames',{'Image','Cell','Subj'});
+
+nesting = [0 0; 1 0];
+[p, table, stats] = anovan(Y, {A,C},...
+    'nested',nesting,...
+    'varnames',{'Image','Subj'});
+
+A = [ones(size(norm_resp_sf(ind_match))) 2*ones(size(norm_resp_sf(ind_match)))];
+C = [mouse_ind_all(ind_match) mouse_ind_all(ind_match)];
+Y = [norm_resp_sf(ind_match) norm_resp_nat(ind_match)];
+nesting = [0 0; 1 0];
+[p, table, stats] = anovan(Y, {A,C},...
+    'nested',nesting,...
+    'varnames',{'Image','Subj'});
+
+figure;
+for iexp = 1:nexp
+    subplot(2,3,iexp)
+    ind_match = intersect(find(mouse_ind_all==iexp),intersect(ind_sf,ind_nat));
+    ind_match_n = length(ind_match)
+    errorbar([1 2], [mean(norm_resp_sf(ind_match),2,'omitnan') mean(norm_resp_nat(ind_match),2,'omitnan')],[std(norm_resp_sf(ind_match),[],2,'omitnan')./sqrt(ind_match_n) std(norm_resp_nat(ind_match),[],2,'omitnan')./sqrt(ind_match_n)])
+    ylim([0 1])
+    xlim([0 3])
+    ylabel('Norm dF/F')
+end
+
 %% 
 Adapt_avg_resp_grating_mean = cell(1,nsf+1);
 Adapt_avg_resp_natimg_mean = cell(1,nsf+1);

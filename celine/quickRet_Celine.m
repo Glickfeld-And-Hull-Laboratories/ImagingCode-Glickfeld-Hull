@@ -1,11 +1,11 @@
 
 close all
 
-date = '250818';
-mouse = 'i2214';
-ImgFolder = '003';
+date = '260617';
+mouse = 'i2246';
+ImgFolder = '006';
 time = '1225';
-doReg = 0;
+doReg = 1;
 nrun = size(ImgFolder,1);
 rc = behavConstsAV;
 subnum = mouse;
@@ -23,7 +23,18 @@ for irun = 1:nrun
     cd(CD)
     imgMatFile = [ImgFolder(irun,:) '_000_000.mat'];
     load(imgMatFile);
+    if isfield(info,'frame')
+        fprintf('Photodiode data collected \n')
+        [stimOnFr stimOffFr] = photoFrameFinder_Sanworks(info.frame);
+        if length(stimOnFr)>0
+            fprintf([num2str(length(stimOnFr)) ' stim presented \n'])
+        else
+            fprintf('WARNING- NO STIM PRESENTED!!!! \n')
+        end
 
+    else
+        fprintf('WARNING- NO PHOTODIODE DATA!!!!! \n')
+    end
     nframes = info.config.frames;
    
     data_temp = sbxread([ImgFolder(irun,:) '_000_000'],0,nframes);
@@ -73,14 +84,18 @@ expt_input = concatenateDataBlocks(temp);
     
     if doReg
     data_avg = mean(data(:,:,1000:1500),3);
-    [out data_reg] = stackRegister(data,data_avg);
+    [out data_reg] = stackRegGPU(data,data_avg);
     data = data_reg;
     clear data_reg
     end
     
     sz = size(data);
     data = data(:,:,1:(nOn+nOff)*ntrials);
-    if size(data,3) < 100000
+
+    fnout = fullfile('Z:\home\ACh\Analysis\2p_analysis',mouse,date,ImgFolder(irun,:));
+    mkdir(fnout);
+
+    if size(data,3) < 20000
        
         Az = celleqel2mat_padded(expt_input.tGratingAzimuthDeg);
         El = celleqel2mat_padded(expt_input.tGratingElevationDeg);
@@ -121,40 +136,30 @@ expt_input = concatenateDataBlocks(temp);
         %data_dfof_avg_all = squeeze(mean(imfilter(data_dfof_avg(:,:,nOff:75,:),myfilter),3));
          data_dfof_avg_all = imgaussfilt(squeeze(mean(data_dfof_avg(:,:,nOff:nOff+nOn,:),3)),1.5);
         
-%         img_avg_resp = zeros(1,nStim);
+         img_avg_resp = zeros(1,nStim);
         figure; 
         for i = 1:nStim
             subplot(length(Els),length(Azs),i); 
             imagesc(data_dfof_avg_all(:,:,i)); 
             colormap(gray)
             title(num2str(Stims(i,:)))
-%             img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
-            %clim([0 max(data_dfof_avg_all(:))./2])
+            img_avg_resp(i) = mean(mean(mean(data_dfof_avg_all(:,:,i),3),2),1);
+            clim([0 max(data_dfof_avg_all(:))./2])
         end
-        fnout = fullfile('Z:\home\ACh\Analysis\2p_analysis',mouse,date,ImgFolder(irun,:));
-        mkdir(fnout);
+
        print(fullfile(fnout,['retinotopy.pdf']),'-dpdf');
 
-        pixThreshold = 0.2*max(data_dfof_avg_all(:));
-        img_avg_resp = zeros(1,nStim);
-        for i = 1:nStim 
-            img = data_dfof_avg_all(:,:,i);
-            img_thresh = zeros(size(img));
-            img_thresh(img>pixThreshold) = img(img>pixThreshold);
-            img_avg_resp(i) = mean(img(img(:)>pixThreshold));
+      pixThreshold = 0.35*max(data_dfof_avg_all(:));
+    start = 1;
+    for i = 1:length(Els)
+        for j = 1:length(Azs)
+            img = data_dfof_avg_all(:,:,start);
+            respMatrix(i,j) = mean(img(img(:)>pixThreshold));
+            
+            start = start+1;
         end
-        figure
-        heatmap = imagesc(fliplr(rot90(reshape(img_avg_resp,length(Els),length(Azs)),3)));
-        heatmap.Parent.YTick = 1:length(Els);
-        heatmap.Parent.YTickLabel = strread(num2str(Els),'%s');    
-        heatmap.Parent.XTick = 1:length(Azs);
-        heatmap.Parent.XTickLabel = strread(num2str(Azs),'%s');
-        xlabel('Azimuth');
-        ylabel('Elevation');
-        colorbar
-%         caxis([0 pixThreshold/.4])
-%         caxis([-0.1 0.1])
-    
+    end
+
     else
         data_tc = squeeze(mean(mean(data,1),2));
         data_tr = reshape(data_tc,[nOn+nOff, ntrials]);
@@ -175,17 +180,19 @@ expt_input = concatenateDataBlocks(temp);
                 respMap(i, j) = mean(data_dfof(find(ind)));
             end
         end
-        figure;
-        ax=gca;
-        imagesc(respMap);
-        ax.XTickLabel = Azs;
-        ax.YTickLabel = Els;
-        title('Total image average dF/F response map')
-        xlabel('Azimuth (deg)')
-        ylabel('Elevation (deg)')
-
+       respMatrix = respMap;
     end
     
+figure;
+ax = gca;
+imagesc(respMatrix);
+ax.XTickLabel = Azs;
+ax.YTickLabel = Els;
+xlabel('Azimuth (deg)');
+ylabel('Elevation (deg)');
+colorbar
+print(fullfile(fnout,['heatmap.pdf']),'-dpdf');
+
     figure; imagesc(mean(data,3));
     axis off
     title([mouse ' ' date])

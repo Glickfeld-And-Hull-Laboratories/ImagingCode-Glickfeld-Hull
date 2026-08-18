@@ -1,0 +1,11 @@
+%% Instruction sheet
+instructions.sess_list= [4]; %the sessions to concatenate and analyze
+instructions.ds='DREADD_V1_datasheet';
+instructions.experimentFolder = 'VIP_DRDDGi';
+instructions.refDay='2';
+instructions.targetCon = [.125 .25 .5 1]; %the contrasts to analyze, in case not all datasets have the same set of contrasts
+instructions.targetSize = [20.0000  1000.0000]; %the sizes to analyze, in case not all datasets have the same set of sizes
+instructions.frame_rate = 15;
+%% Notes
+% 18 is for VIP PEG experiment i2211 (4mM YM-PEG, 4mM Blank-DART, 0.4mM
+% Alx-DART)

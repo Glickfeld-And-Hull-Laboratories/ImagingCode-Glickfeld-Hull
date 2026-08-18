@@ -73,6 +73,7 @@ function [redImage, greenImage, compositeImage] = processChannelImages(mouse, da
     imagesc(data_r_reg_avg);
     title([' ' depth ' red at ' redWavelength]);
     colormap gray;
+    %caxis([200 1000])
     set(gca, 'TickDir', 'out');
     grid off;
     box off;

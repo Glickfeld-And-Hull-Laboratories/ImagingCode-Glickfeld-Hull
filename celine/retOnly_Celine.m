@@ -7,17 +7,23 @@
 %% get path names
 clear all;clc;close all;
 
-netSupp_expt
+%netSupp_expt
  
 expt_num = 25;
-doRed=1;
+doRed=0;
 
-mouse = expt(expt_num).mouse
-date = expt(expt_num).date;
-time = expt(expt_num).retTime;
-RetImgFolder = expt(expt_num).retRun;
-frame_rate = expt(expt_num).frame_rate; 
-RedImgFolder = expt(expt_num).redChannelRun;
+% mouse = expt(expt_num).mouse
+% date = expt(expt_num).date;
+% time = expt(expt_num).retTime;
+% RetImgFolder = expt(expt_num).retRun;
+% frame_rate = expt(expt_num).frame_rate; 
+% RedImgFolder = expt(expt_num).redChannelRun;
+
+mouse = 'i2246'
+date = '260616'
+time = '1531'
+RetImgFolder = '004' 
+frame_rate = 15
 
 
 doFromRef = 0;
@@ -58,7 +64,7 @@ for irun = 1:nrun
     cd(CD);
     imgMatFile = [RetImgFolder(irun,:) '_000_000.mat'];
     %imgMatFile = ['001_000_' ImgFolder(irun,:) '.mat']; % for bad file name
-    load(imgMatFile);
+%    load(imgMatFile);
     
     % load behavior/experimental data
     %%for mice with IDs that begin in a letter
@@ -69,8 +75,8 @@ fName = [isilonName, '/Behavior/Data/data-' mouse '-' date '-' time '.mat'];
     load(fName);
     
     % read in frames with sbxread
-    nframes = info.config.frames;
-
+%    nframes = info.config.frames;
+nframes = 21600
     fprintf(['/nReading run ' num2str(irun) ' - ' num2str(nframes) ' frames /n'])
     tic
     data_temp = sbxread([RetImgFolder(irun,:) '_000_000'],0,nframes);
@@ -110,7 +116,7 @@ clear data_temp
 clear temp
 
 %% Choose register interval
-regIntv = 3500;
+regIntv = 500;
 nep = floor(size(data,3)./regIntv);
 fprintf(['/nSplitting into ' num2str(nep) ' epochs of length ' num2str(regIntv) ' frames./n'])
 
@@ -512,8 +518,8 @@ if doRed
     else
         load(imgMatFile);
     
-        fprintf(['Reading red run ' '- ' num2str(info.config.frames) ' frames /r/n'])
-        data_temp = sbxread(imgMatFile(1,1:11),0,info.config.frames);
+        fprintf(['Reading red run ' '- ' num2str(nframes) ' frames /r/n'])
+        data_temp = sbxread(imgMatFile(1,1:11),0,nframes);
         if size(data_temp,1) == 2
             data_rg = squeeze(data_temp(1,:,:,:));
             data_rr = squeeze(data_temp(2,:,:,:));
@@ -1065,7 +1071,7 @@ for count_shuf = 0:Nshuf
             if count_shuf == 0
                 PLOTIT_FIT = 1;
                 SAVEALLDATA = 1;
-                Fit_2Dellipse_ret_CC % modified due to error from file saving in script, saves to kevin analysis folder
+                Fit_2Dellipse_ret_lbub % modified due to error from file saving in script, saves to kevin analysis folder
                 eval(['Fit_struct(iCell).True.s_',' = s;']);
             else
                 SAVEALLDATA = 0;
@@ -1249,3 +1255,18 @@ set(gca,'color',0*[1 1 1]);
 set(gcf, 'Position', [100,300,1200,400])
 print(fullfile(isilonName, '/home/ACh/Analysis/2P_analysis', mouse, date, RetImgFolder, [date '_' mouse '_' run_str '_retMap.pdf']), '-dpdf')
 
+%% Optimal stimulus position (goodfit cells only)
+rfAz = fit_true_vec(goodfit_ind, 4);
+rfEl = fit_true_vec(goodfit_ind, 5);
+p = [mean(rfAz); mean(rfEl)];
+for iter = 1:200
+    d = max(sqrt((rfAz - p(1)).^2 + (rfEl - p(2)).^2), 1e-10);
+    w = 1 ./ d;
+    p_new = [sum(w .* rfAz); sum(w .* rfEl)] / sum(w);
+    if norm(p_new - p) < 1e-8, break; end
+    p = p_new;
+end
+opt_Az = p(1);  opt_El = p(2);
+dist_from_opt = sqrt((rfAz - opt_Az).^2 + (rfEl - opt_El).^2);
+fprintf('Optimal position (n=%d goodfit): Az=%.2f deg, El=%.2f deg\n', length(goodfit_ind), opt_Az, opt_El)
+fprintf('RF dist from optimal: mean=%.2f deg, median=%.2f deg\n', mean(dist_from_opt), median(dist_from_opt))

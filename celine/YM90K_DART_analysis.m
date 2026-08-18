@@ -5,7 +5,7 @@ clc
 
 % ENTER DATASET NAME
 load('ds_YM90K_DART.mat');
-% ds_name='YM90K_DART';
+ds_name='YM90K_DART';
 nSess=length(ds_YM90K_DART);
 
 % setting key variables and output folder
@@ -4056,3 +4056,15 @@ if remove_outliers
 else
     print('-dpdf', '-bestfit', 'normDiff_vs_contrast_no_outlier_removal.pdf');
 end
+%%
+mean_pref_resp = mean(mean(pref_responses_stat_concat{pre},2),3);
+mean_norm_diff = squeeze(mean(norm_diff(1,:,:),2));
+norm_diff_lowConFF=norm_diff(1,1,:);
+
+
+mean_norm_diff_V1 = mean_norm_diff;
+mean_pref_resp_V1 = mean_pref_resp;
+noiseCorr_concat_V1 = noiseCorr_OG_concat{pre}(1,:);
+norm_diff_lowConFF_V1=norm_diff_lowConFF;
+red_ind_V1=red_ind_concat;
+save("V1_noiseCorrCompare.mat",'mean_norm_diff_V1','mean_pref_resp_V1','noiseCorr_concat_V1','red_ind_V1','norm_diff_lowConFF')
