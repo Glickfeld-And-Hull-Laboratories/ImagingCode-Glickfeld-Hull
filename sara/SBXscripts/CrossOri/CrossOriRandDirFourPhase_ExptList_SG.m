@@ -1859,3 +1859,102 @@ expt(132).SF = 0.05;
 expt(132).TF = 2;
 expt(132).saveLoc = 'sara';
 
+
+%% i1433 260819, PM (162000 frames) -- ONE PHASE
+expt(133).mouse = 'i1433';
+expt(133).date = '260819';
+expt(133).img_loc  = {'PM'};
+expt(133).z = -200;
+expt(133).img_strct  = {'cells'};
+expt(133).driver = {'SLC'};
+expt(133).indicator = {'tg';'GCaMP8m'};
+expt(133).coFolder = {'002'};
+expt(133).coTime = {'1309'};
+expt(133).SF = 0.05;
+expt(133).TF = 2;
+expt(133).saveLoc = 'sara';
+
+%% i1426 260820, PM (162000 frames)
+expt(134).mouse = 'i1426';
+expt(134).date = '260820';
+expt(134).img_loc  = {'PM'};
+expt(134).z = -200;
+expt(134).img_strct  = {'cells'};
+expt(134).driver = {'SLC'};
+expt(134).indicator = {'tg';'GCaMP8m'};
+expt(134).coFolder = {'002'};
+expt(134).coTime = {'1255'};
+expt(134).SF = 0.05;
+expt(134).TF = 2;
+expt(134).saveLoc = 'sara';
+
+%% i1426 260824, PM (162000 frames) -- ONE PHASE
+expt(135).mouse = 'i1426';
+expt(135).date = '260824';
+expt(135).img_loc  = {'PM'};
+expt(135).z = -200;
+expt(135).img_strct  = {'cells'};
+expt(135).driver = {'SLC'};
+expt(135).indicator = {'tg';'GCaMP8m'};
+expt(135).coFolder = {'002'};
+expt(135).coTime = {'1137'};
+expt(135).SF = 0.05;
+expt(135).TF = 2;
+expt(135).saveLoc = 'sara';
+
+%% i1429 260825, PM (162000 frames)
+expt(136).mouse = 'i1429';
+expt(136).date = '260825';
+expt(136).img_loc  = {'PM'};
+expt(136).z = -200;
+expt(136).img_strct  = {'cells'};
+expt(136).driver = {'SLC'};
+expt(136).indicator = {'tg';'GCaMP8m'};
+expt(136).coFolder = {'002'};
+expt(136).coTime = {'1026'};
+expt(136).SF = 0.05;
+expt(136).TF = 2;
+expt(136).saveLoc = 'sara';
+
+%% i1428 260825, PM (162000 frames)
+expt(137).mouse = 'i1428';
+expt(137).date = '260825';
+expt(137).img_loc  = {'PM'};
+expt(137).z = -200;
+expt(137).img_strct  = {'cells'};
+expt(137).driver = {'SLC'};
+expt(137).indicator = {'tg';'GCaMP8m'};
+expt(137).coFolder = {'002'};
+expt(137).coTime = {'1351'};
+expt(137).SF = 0.05;
+expt(137).TF = 2;
+expt(137).saveLoc = 'sara';
+
+%% i1429 260826, PM (162000 frames) -- ONE PHASE
+expt(138).mouse = 'i1429';
+expt(138).date = '260826';
+expt(138).img_loc  = {'PM'};
+expt(138).z = -200;
+expt(138).img_strct  = {'cells'};
+expt(138).driver = {'SLC'};
+expt(138).indicator = {'tg';'GCaMP8m'};
+expt(138).coFolder = {'002'};
+expt(138).coTime = {'1056'};
+expt(138).SF = 0.05;
+expt(138).TF = 2;
+expt(138).saveLoc = 'sara';
+
+%% i1428 260826, PM (162000 frames) -- ONE PHASE
+expt(139).mouse = 'i1428';
+expt(139).date = '260826';
+expt(139).img_loc  = {'PM'};
+expt(139).z = -200;
+expt(139).img_strct  = {'cells'};
+expt(139).driver = {'SLC'};
+expt(139).indicator = {'tg';'GCaMP8m'};
+expt(139).coFolder = {'002'};
+expt(139).coTime = {'1420'};
+expt(139).SF = 0.05;
+expt(139).TF = 2;
+expt(139).saveLoc = 'sara';
+
