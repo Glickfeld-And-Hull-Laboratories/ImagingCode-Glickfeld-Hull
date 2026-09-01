@@ -1958,3 +1958,18 @@ expt(139).SF = 0.05;
 expt(139).TF = 2;
 expt(139).saveLoc = 'sara';
 
+%% i1433 260827, PM (162000 frames) 
+expt(140).mouse = 'i1433';
+expt(140).date = '260827';
+expt(140).img_loc  = {'PM'};
+expt(140).z = -200;
+expt(140).img_strct  = {'cells'};
+expt(140).driver = {'SLC'};
+expt(140).indicator = {'tg';'GCaMP8m'};
+expt(140).coFolder = {'002'};
+expt(140).coTime = {'1032'};
+expt(140).SF = 0.05;
+expt(140).TF = 2;
+expt(140).saveLoc = 'sara';
+
+

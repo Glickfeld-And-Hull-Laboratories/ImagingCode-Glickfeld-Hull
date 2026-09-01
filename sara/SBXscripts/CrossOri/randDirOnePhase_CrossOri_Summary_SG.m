@@ -35,10 +35,10 @@ totCells = zeros(nexp,1);
 % V1 L4 - 62 66 111 112 117 118 119 120
 % LM L2/3 - 38 49 50 86
 % AL L2/3 - 76 82 83 84
-% PM L2/3 - 126 128 130 
+% PM L2/3 - 135 138 139 
 
 start=1;
-for iexp = [126 128 130]
+for iexp = [135 138 139]
     mouse = expt(iexp).mouse;
     mouse_list = strvcat(mouse_list, mouse);
     date = expt(iexp).date;
@@ -82,9 +82,9 @@ base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 summaryDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary', 'summaries');
 outDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary');
 svName = 'randPhase';
-driver = strvcat('SLC','SLC','SLC'); 
+driver = strvcat('SLC','SLC','SLC','SLC'); 
 area = 'all_areas';
-area_list = strvcat('V1', 'LM', 'AL');
+area_list = strvcat('V1', 'LM', 'AL', 'PM');
 narea = length(area_list);
 nCells = [];
 
@@ -164,7 +164,7 @@ outDir = fullfile(base, 'Analysis', '2P', 'CrossOri', 'RandDirRandPhaseSummary')
 svName = 'randPhase';
 driver = strvcat('SLC'); %Scn
 area = 'all_areas';
-area_list = strvcat('AL');
+area_list = strvcat('PM');
 img_layer = 'L23';
 narea = length(area_list);
 nCells = [];
@@ -175,6 +175,8 @@ for iA = 1
     fprintf([area_list(iA,:) '\n'])
     load(fullfile(summaryDir, ([svName '_Summary_' area_list(iA,:)  '_' driver(iA,:) '.mat'])))
     resp_ind = intersect(intersect(sig_stim,sig_dir),find(DSI_all>0.5));
+    %resp_ind = intersect(sig_stim,find(DSI_all>0.5));
+
     if exist('red_cells_all','var')
         resp_ind = setdiff(resp_ind, red_cells_all);
     end
