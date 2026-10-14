@@ -1972,4 +1972,20 @@ expt(140).SF = 0.05;
 expt(140).TF = 2;
 expt(140).saveLoc = 'sara';
 
+%% i1433 260904, PM (162000 frames) -- ONE PHASE
+expt(141).mouse = 'i1433';
+expt(141).date = '260904';
+expt(141).img_loc  = {'PM'};
+expt(141).z = -200;
+expt(141).img_strct  = {'cells'};
+expt(141).driver = {'SLC'};
+expt(141).indicator = {'tg';'GCaMP8m'};
+expt(141).coFolder = {'002'};
+expt(141).coTime = {'1312'};
+expt(141).SF = 0.05;
+expt(141).TF = 2;
+expt(141).saveLoc = 'sara';
+
+
+
 

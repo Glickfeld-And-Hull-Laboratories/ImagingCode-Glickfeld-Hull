@@ -9,7 +9,7 @@ seed = rng;
 
 max_dist = 10;
 
-for iexp = [129] %63 64 107 109
+for iexp = [140] %63 64 107 109
 
 %%
 mouse = expt(iexp).mouse;
@@ -692,7 +692,7 @@ for iCell = 1:nCells
     end        
 end
   close all
- end
+
   %%
   
 %   stop

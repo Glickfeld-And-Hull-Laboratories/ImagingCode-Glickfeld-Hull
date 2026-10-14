@@ -10,7 +10,7 @@ function [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phase
         data_type = 'whole_cell';
     end
 
-    DSIstruct           = getDSIstruct(avg_resp_dir);
+    DSIstruct           = getDSIstruct_new(avg_resp_dir);
     ZpZcStruct          = getZpZcStruct(avg_resp_dir, data_type);
     plaid_corr          = getPlaidTuningCorrelations(avg_resp_dir);
     gratingFitStruct    = getGratingTuningCurveFit(avg_resp_dir);

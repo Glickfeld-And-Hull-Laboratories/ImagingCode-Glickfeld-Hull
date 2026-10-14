@@ -1,7 +1,7 @@
 clc; clear all; close all;
 doRedChannel = 0;
 ds = 'CrossOriRandDirFourPhase_ExptList_SG';
-iexp = 130;  
+iexp = 141;  
 doPhaseAfterDir = 0;
 doDirAfterPass = 0;
 eval(ds)
@@ -93,7 +93,7 @@ figure; for i = 1:nep; subplot(n,n2,i); imagesc(mean(data(:,:,1+((i-1)*regIntv):
 movegui('center')
 
 %% Register data
-data_avg = mean(data(:,:,85001:85500),3);
+data_avg = mean(data(:,:,80001:80500),3);
 if doPhaseAfterDir || doDirAfterPass
     load(fullfile(base, 'Analysis\2P', [date '_' mouse], [date '_' mouse '_' ref_str], [date '_' mouse '_' ref_str '_reg_shifts.mat']))
     [out, data_reg] = stackRegister(data,data_avg);

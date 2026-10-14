@@ -47,7 +47,7 @@ rc = behavConstsAV;
 eval(ds)
 nexp = length(expt);
 
-iexp = 130; 
+iexp = 139; 
 max_dist = 10;
 
 frame_rate = 15;

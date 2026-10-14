@@ -4,21 +4,26 @@ base = '\\duhs-user-nc1.dhe.duke.edu\dusom_glickfeldlab\All_staff\home\sara';
 svName = 'randDirFourPhase_CrossOri';
 bnsz = 10; %spike binsize = 10 ms
 
-doPlot=1;
-doGratPlot=1;
+doPlot                  = 1;
+doGratPlot              = 1;
+doBaselineSubtraction   = 1;
+doPeakResponse          = 1;
 
-expts = strvcat('g01b', 'g06b', 'g12b', 'g17b','tss2','tss4','tss6','tss7','elf1'); %Four acute penetrations in V1, 1 marmoset
+expts = strvcat('g01', 'g06b', 'g12b', 'g17b','tss2','tss4','tss6','tss7','elf1','elf3'); %Four acute penetrations in V1, 1 marmoset
 nexp = length(expts);
+% iexp = 1;
+% expt = expts(iexp,:);
 
-iexp = 7;
+%'g01', 'g06', 'g12', 'g17','tss2','tss4','tss6','tss7','elf1','elf3'
+expt = 'g01';
 
-    fprintf([expts(iexp,:) '\n'])
+    fprintf([expt '\n'])
 
     % Load data from experiment. Each experiment file contains one
     % variable, resp, that is nCells by nDir by nPhase by Grating/Plaid by
     % nTrials by Time (in 10 ms bins). For example, 310x12x4x2x13x120.
     % Grating type only has the first phase filled in.
-    load(fullfile(base, 'Data\fromNicholas\CrossOri_randDirFourPhase_V1_marmoset', ([expts(iexp,:) '.mat'])))
+    load(fullfile(base, 'Data\fromNicholas\CrossOri_randDirFourPhase_V1_marmoset', ([expt '.mat'])))
     
     nCells = size(resp,1);
     nDirs = size(resp,2);
@@ -26,22 +31,83 @@ iexp = 7;
     nTrials = size(resp,5);
     nStim = (size(resp,3)+1)*size(resp,2);
 
-    resp_cell = resp(:,:,:,:,:,21:120);
+
+    % resp_cell = resp(:,:,:,:,:,6:105);
+    % base_cell = resp(:,:,:,:,:,1:5);
+    resp_cell = resp(:,:,:,:,:,21:end);
     base_cell = resp(:,:,:,:,:,1:20);
 
-    avg_resp_dir(:,:,:,:,1) = mean(sum(resp_cell,6),5); % Average across time and trial
-    avg_resp_dir(:,:,:,:,2) = std(sum(resp_cell,6),0,5)/sqrt(nTrials); % SEM for each stim condition
+    if doPeakResponse
+        nT2 = 2*nTrials;
+        nBinsCyc = 50;   % 500 ms per cycle at 10 ms bins
+        binWidth = 0.01;   % seconds per bin
+
+        % Split into 2 cycles and stack along the trial dimension (dim 5)
+        % -> nCells x nDirs x nPhas x 2 x (2*nTrials) x 50
+        cyc1 = resp_cell(:,:,:,:,:,1:nBinsCyc);
+        cyc2 = resp_cell(:,:,:,:,:,nBinsCyc+1:2*nBinsCyc);
+        resp_cyc = cat(5, cyc1, cyc2);
+        
+        % Outputs
+        peak     = nan(nCells, nDirs, nPhas, 2);   % mean dc + f1
+        f1_all   = nan(nCells, nDirs, nPhas, 2);
+        dc_all   = nan(nCells, nDirs, nPhas, 2);
+        peak_trl = nan(nCells, nDirs, nPhas, 2, nT2);  % per-trial peak (for error/stats)
+        
+        for iC = 1:nCells
+          for iD = 1:nDirs
+            for iP = 1:nPhas
+              for iS = 1:2   % 1 = grating, 2 = plaid
+                % nT2 x 50 matrix of single-cycle data
+                data = squeeze(resp_cyc(iC,iD,iP,iS,:,:));
+        
+               % NaN-drop and peak_trl assignment
+                valid = ~any(isnan(data),2);
+                if ~any(valid), continue; end
+                idx  = find(valid);            % positions in the 2*nTrials stack
+                data = data(valid,:) / binWidth;
+                
+                [f1, f1s, dc, dcs] = compf1werr(data);
+                
+                f1_all(iC,iD,iP,iS) = f1;
+                dc_all(iC,iD,iP,iS) = real(dc);
+                peak(iC,iD,iP,iS)   = real(dc) + f1;
+                peak_trl(iC,iD,iP,iS,idx) = reshape(real(dcs(:)) + f1s(:), [1 1 1 1 numel(idx)]);
+                peak_trl_f1(iC,iD,iP,iS,idx) = reshape(f1s(:), [1 1 1 1 numel(idx)]);
+              end
+            end
+          end
+        end
+
+        avg_resp_dir_f1dc(:,:,:,:,1) = mean(peak_trl,5, 'omitnan'); % Average across time and trial
+        avg_resp_dir_f1dc(:,:,:,:,2) = std(peak_trl,0,5, 'omitnan')/sqrt(nT2); % SEM for each stim condition
+        avg_resp_dir_f1(:,:,:,:,1) = mean(peak_trl_f1,5, 'omitnan'); % Average across time and trial
+        avg_resp_dir = avg_resp_dir_f1dc;
+    else
+
+        avg_resp_dir(:,:,:,:,1) = mean(sum(resp_cell,6),5); % Average across time and trial
+        avg_resp_dir(:,:,:,:,2) = std(sum(resp_cell,6),0,5)/sqrt(nTrials); % SEM for each stim condition
+    end
+
     resp_dir_tc = mean(resp,5); % Average across trial, to look at time 
     resp_dir_tr = mean(resp,6); % Average across time, to look at trial 
 
+    if doPeakResponse
+        % per-trial peak (dc + f1, Hz), averaged over the 2 cycles of each trial
+        resp_cell_trials = mean(cat(6, peak_trl(:,:,:,:,1:nTrials), peak_trl(:,:,:,:,nTrials+1:end)), 6, 'omitnan');
+        % -> nCells x nDirs x nPhas x 2 x nTrials, same shape as before
+    else
+        resp_cell_trials = sum(resp_cell,6) * 1;   % mean Hz per trial
+    end
 
-    % Find cells that are significantly responsive to 1 stimulus
-    resp_cell_trials = sum(resp_cell,6) * 2;   % Hz per trial
+    % Baseline stays a mean rate. Spontaneous activity has no 2 Hz modulation, and 0.2 s is less than one cycle, so an f1 fit isn't meaningful
     base_cell_trials = sum(base_cell,6) * 5; % Hz per trial
 
-
     mean_base_all = mean(base_cell_trials, [2 3 4 5], 'omitnan'); % mean across all stim conditions
-    avg_resp_dir(:,:,:,:,1) = avg_resp_dir(:,:,:,:,1) - mean_base_all;
+    if doBaselineSubtraction
+        avg_resp_dir(:,:,:,:,1) = avg_resp_dir(:,:,:,:,1) - mean_base_all;
+    end
+
 
     
     for id = 1:nDirs
@@ -73,9 +139,11 @@ iexp = 7;
     p_dir = find(p_anova_dir<0.05);
 
 
-    % Do all fits at once
-    [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phaseModStruct] = bigFits(avg_resp_dir,2); %2 for marmoset data
 
+    % Do all fits at once
+    [DSIstruct, ZpZcStruct, plaid_corr, gratingFitStruct, ZpZcPWdist, phaseModStruct] = bigFits(avg_resp_dir,1); % 2nd input for marmoset data 
+
+    DSIstruct = getDSIstruct_new(avg_resp_dir);
     % Get direction selectivity
         DSI         = DSIstruct.DSI;
         DSI_ind     = DSIstruct.DS_ind;
@@ -141,10 +209,10 @@ iexp = 7;
 %     end
 % 
 
-    if ~exist(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)]))
-        mkdir(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)]))
+    if ~exist(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expt]))
+        mkdir(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expt]))
     end
-    save(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_fitsSG.mat']), 'g_dsi', 'g_osi', 'ang_dir', 'ang_ori', 'resp_ind_dir','nCells','nTrials','nDirs','avg_resp_dir','p_dir','DSI','plaid_corr','Rp','Rc','Zp','Zc','ZpZcPWdist','yfit_all','amp_hat_all','b_hat_all','sse_all','R_square_all','dir_yfit_all','k1_hat_all','dir_sse_all','dir_R_square_all');
+    save(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expt], [svName '_marmosetV1_' expt '_fitsSG.mat']),'avg_resp_dir_f1dc', 'g_dsi', 'g_osi', 'ang_dir', 'ang_ori', 'resp_ind_dir','nCells','nTrials','nDirs','avg_resp_dir','p_dir','DSI','plaid_corr','Rp','Rc','Zp','Zc','ZpZcPWdist','yfit_all','amp_hat_all','b_hat_all','sse_all','R_square_all','dir_yfit_all','k1_hat_all','dir_sse_all','dir_R_square_all');
 
 
 %% set inclusion criteria
@@ -153,14 +221,14 @@ resp_ind    = intersect(resp_ind_dir,find(DSI>0.5));
 max_grat_resp = max(avg_resp_dir(:,:,1,1,1), [], 2);
 grat_ind = find(max_grat_resp>1);
 
-ind = intersect(grat_ind, resp_ind);
+ind = intersect(grat_ind, resp_ind_dir);
 
 if doPlot == 1
 %% Plot population ZpZc
 plotZpZc4PhasePopulation(ZpZcStruct,ind,30)
     movegui('center')
     sgtitle('Pattern direction selective cells at four phases')
-print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_ZpZc.pdf']),'-dpdf', '-fillpage') 
+print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expt], [svName '_marmosetV1_' expt '_ZpZc.pdf']),'-dpdf', '-fillpage') 
 
 
 %% Plot grating tuning curves by cell
@@ -266,43 +334,198 @@ close all
 
 %% Plot polar plots by cell
 
-figure;
 start = 1;
 n = 1;
 
 [avg_resp_grat, avg_resp_plddir] = getAlignedGratPlaidTuning(avg_resp_dir,'whole-cell');
 
-x=[-150:30:180];
+% ind_Nicholas = [19, 27, 30, 37, 40, 41, 56, 67, 83, 84, 88, 89, 92, 93,95, 98, 99, 100, 102, 103,107, 111, 114, 121, 122, 124, 128, 129, 130, 134, 135, 137, 140, 141, 143, 147, 148, 149, 153, 154, 155, 158, 159, 160, 163, 165, 169, 170, 171, 172, 174, 175, 176, 177, 179, 181, 182, 187, 188, 189, 192, 202, 213, 214, 215, 220, 224, 227];
+
+pdfDir = fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)]);
+if ~exist(pdfDir, 'dir'); mkdir(pdfDir); end
+
+pdfFile = fullfile(pdfDir, ['randDirFourPhase_CrossOri_marmosetV1_' expts(iexp,:) '_PolarPlots.pdf']);
+if isfile(pdfFile); delete(pdfFile); end
+
+pageSize = [0 0 8.5 11];      % letter, inches (use [0 0 11 8.5] for landscape)
+nRows = 5; nCols = 4; perPage = nRows*nCols;
+
+x = -150:30:180;
 x_rad = deg2rad(x);
-for iCell =1:nCells
+start = 1;
+fig = [];
+
+for iCell = 1:nCells
     ic = iCell;
-    subplot(5,4,start)
-        for im = 1:nPhas
-            polarplot([x_rad x_rad(1)], [avg_resp_plddir(ic,:,im) avg_resp_plddir(ic,1,im)])
-            hold on
-        end
-        polarplot([x_rad x_rad(1)], [avg_resp_grat(ic,:) avg_resp_grat(ic,1)],'k', 'LineWidth',2) 
-        idx = ic==ind;
-        if any(idx)
-            subtitle(['cell ' num2str(ic)],'fontweight','bold')
-        else
-            subtitle(['cell ' num2str(ic)])
-        end
-    start = start+1;    
-    if start>20
-        sgtitle(['expt ' num2str(expts(iexp,:)) ' - Polar plots'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_' num2str(n) '.pdf']), '-dpdf','-fillpage')
-        figure;
-        movegui('center')
+
+    % New page: create a figure that fills the paper
+    if start == 1
+        fig = figure('Units','inches','Position',pageSize, ...
+                     'PaperUnits','inches','PaperSize',pageSize(3:4), ...
+                     'PaperPosition',pageSize,'Color','w');
+    end
+
+    % Tight subplot layout (subplot's own spacing wastes a lot of room)
+    row = ceil(start/nCols);
+    col = mod(start-1, nCols) + 1;
+    mL = 0.03; mR = 0.03; mB = 0.03; mT = 0.05;   % page margins (normalized)
+    gap = 0.01;
+    w = (1 - mL - mR - gap*(nCols-1)) / nCols;
+    h = (1 - mT - mB - gap*(nRows-1)) / nRows;
+    scale = 0.6;   % 0.8 = 20% smaller; adjust to taste
+    % Cell (slot) position on the page
+    cellPos = [mL + (col-1)*(w+gap), 1 - mT - row*h - (row-1)*gap, w, h];
+    % Shrink the axes about the slot center
+    pos = [cellPos(1) + cellPos(3)*(1-scale)/2, ...
+           cellPos(2) + cellPos(4)*(1-scale)/2, ...
+           cellPos(3)*scale, cellPos(4)*scale];
+
+    pax = polaraxes('Parent',fig,'Position',pos);
+    pax.TitleFontWeight = 'normal';
+
+    hold(pax,'on')
+    for im = 1:nPhas
+        polarplot(pax,[x_rad x_rad(1)], [avg_resp_plddir(ic,:,im) avg_resp_plddir(ic,1,im)])
+    end
+    polarplot(pax,[x_rad x_rad(1)], [avg_resp_grat(ic,:) avg_resp_grat(ic,1)],'k','LineWidth',2)
+
+    isSel = any(ic == ind);
+    if isSel
+        title(pax, ['cell ' num2str(ic)], 'FontWeight','bold','FontSize',9)
+       
+    else
+        title(pax, ['cell ' num2str(ic)], 'FontSize',9)
+    end
+    % isSelN = any(ic == ind_Nicholas);
+    % if isSelN
+    %      % Black box around the whole subplot cell
+    %     annotation(fig,'rectangle',[pos(1)-gap/2, pos(2)-gap/2, pos(3)+gap, pos(4)+gap], ...
+    %                'Color','k','LineWidth',1.5)
+    % end
+
+    start = start + 1;
+
+    % Page full, or last cell: export and close
+    if start > perPage || iCell == nCells
+        exportgraphics(fig, pdfFile, 'ContentType','vector','Append',true);
+        close(fig)
         start = 1;
-        n = n+1;
     end
-    if iCell == nCells
-        sgtitle(['expt ' num2str(expts(iexp,:)) ' - Polar plots'])
-        print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_PolarPlots_' num2str(n) '.pdf']), '-dpdf','-fillpage')
-    end
-end     
+end
 close all
+
+
+
+figure;
+    subplot 221
+            histogram(base_cell_trials(30,:,1,1,:),30); hold on
+            histogram(resp_cell_trials(30,:,1,1,:),30)
+            subtitle('cell 30')
+    subplot 222
+            histogram(base_cell_trials(37,:,1,1,:),30); hold on
+            histogram(resp_cell_trials(37,:,1,1,:),30)
+            subtitle('cell 37')
+    subplot 223
+            histogram(base_cell_trials(34,:,1,1,:),30); hold on
+            histogram(resp_cell_trials(34,:,1,1,:),30)
+            subtitle('cell 34')
+    subplot 224
+            histogram(base_cell_trials(40,:,1,1,:),30); hold on
+            histogram(resp_cell_trials(40,:,1,1,:),30)
+            subtitle('cell 40')
+
+%% Plot tuning curves by cell (Cartesian)
+
+start = 1;
+n = 1;
+
+[avg_resp_grat, avg_resp_plddir] = getAlignedGratPlaidTuning(avg_resp_dir,'whole-cell');
+
+% ind_Nicholas = [19, 27, 30, 37, 40, 41, 56, 67, 83, 84, 88, 89, 92, 93,95, 98, 99, 100, 102, 103,107, 111, 114, 121, 122, 124, 128, 129, 130, 134, 135, 137, 140, 141, 143, 147, 148, 149, 153, 154, 155, 158, 159, 160, 163, 165, 169, 170, 171, 172, 174, 175, 176, 177, 179, 181, 182, 187, 188, 189, 192, 202, 213, 214, 215, 220, 224, 227];
+
+pdfDir = fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)]);
+if ~exist(pdfDir, 'dir'); mkdir(pdfDir); end
+
+pdfFile = fullfile(pdfDir, ['randDirFourPhase_CrossOri_marmosetV1_' expts(iexp,:) '_TuningPlots.pdf']);
+if isfile(pdfFile); delete(pdfFile); end
+
+pageSize = [0 0 8.5 11];      % letter, inches (use [0 0 11 8.5] for landscape)
+nRows = 5; nCols = 4; perPage = nRows*nCols;
+
+x = -150:30:180;              % direction (deg)
+start = 1;
+fig = [];
+
+for iCell = 1:nCells
+    ic = iCell;
+
+    % New page: create a figure that fills the paper
+    if start == 1
+        fig = figure('Units','inches','Position',pageSize, ...
+                     'PaperUnits','inches','PaperSize',pageSize(3:4), ...
+                     'PaperPosition',pageSize,'Color','w');
+    end
+
+    % Tight subplot layout
+    row = ceil(start/nCols);
+    col = mod(start-1, nCols) + 1;
+    mL = 0.05; mR = 0.03; mB = 0.05; mT = 0.05;   % page margins (normalized)
+    gap = 0.03;                                    % a bit larger for tick labels
+    w = (1 - mL - mR - gap*(nCols-1)) / nCols;
+    h = (1 - mT - mB - gap*(nRows-1)) / nRows;
+    scale = 0.7;   % shrink axes about slot center; adjust to taste
+    cellPos = [mL + (col-1)*(w+gap), 1 - mT - row*h - (row-1)*gap, w, h];
+    pos = [cellPos(1) + cellPos(3)*(1-scale)/2, ...
+           cellPos(2) + cellPos(4)*(1-scale)/2, ...
+           cellPos(3)*scale, cellPos(4)*scale];
+
+    ax = axes('Parent',fig,'Position',pos);
+    ax.TitleFontWeight = 'normal';
+    ax.FontSize = 7;
+    ax.Box = 'off';
+
+    hold(ax,'on')
+    for im = 1:nPhas
+        plot(ax, x, squeeze(avg_resp_plddir(ic,:,im)))
+    end
+    plot(ax, x, avg_resp_grat(ic,:), 'k', 'LineWidth', 2)
+
+    xlim(ax, [x(1) x(end)])
+    xticks(ax, -150:90:180)
+    if row == nRows
+        xlabel(ax, 'Direction (deg)', 'FontSize', 7)
+    end
+    if col == 1
+        ylabel(ax, 'Response', 'FontSize', 7)
+    end
+
+    isSel = any(ic == ind);
+    if isSel
+        title(ax, ['cell ' num2str(ic)], 'FontWeight','bold','FontSize',9)
+    else
+        title(ax, ['cell ' num2str(ic)], 'FontSize',9)
+    end
+
+    % isSelN = any(ic == ind_Nicholas);
+    % if isSelN
+    %     % Black box around the whole subplot cell
+    %     annotation(fig,'rectangle', ...
+    %                [cellPos(1)+gap/4, cellPos(2)-gap/4, cellPos(3)-gap/2, cellPos(4)+gap/4], ...
+    %                'Color','k','LineWidth',1.5)
+    % end
+
+    start = start + 1;
+
+    % Page full, or last cell: export and close
+    if start > perPage || iCell == nCells
+        exportgraphics(fig, pdfFile, 'ContentType','vector','Append',true);
+        close(fig)
+        start = 1;
+    end
+end
+close all
+
+
 
 %% Plot Zp Zc classifications by cell
 
@@ -362,9 +585,9 @@ x=[-150:30:180];
             DirIdx = iCell==p_dir;
             IndIdx = iCell==ind;
             if any(IndIdx)
-                subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell)) ' anova ✓'],'fontweight','bold')
+                subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell)) ' anova '],'fontweight','bold')
             elseif any(DirIdx)
-                subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell)) ' anova ✓'])
+                subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell)) ' anova '])
             else
                 subtitle([num2str(iCell) ' - gDSI=' num2str(gDSIvals(iCell))])
             end

@@ -4,7 +4,7 @@ summaryDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase\summaries'])
 outDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase']);
 svName = 'randDirFourPhase_CrossOri';
 
-expts = strvcat('g01b', 'g06b','g12b','g17b','tss2','tss4','tss6','tss7','elf1'); %Four acute penetrations in V1, 1 marmoset
+expts = strvcat('g01', 'g06','g12','g17','tss2','tss4','tss6','tss7','elf1','elf3'); %Four acute penetrations in V1, 1 marmoset
 %expts = strvcat('g01', 'g06', 'g12', 'g17'); %Four acute penetrations in V1, 1 marmoset
 nexp = length(expts);
 
