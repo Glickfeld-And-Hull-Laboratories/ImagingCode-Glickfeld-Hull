@@ -4,7 +4,7 @@ summaryDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase\summaries'])
 outDir = ([base '\Analysis\Neuropixel\CrossOri\randDirFourPhase']);
 svName = 'randDirFourPhase_CrossOri';
 
-expts = strvcat('g01', 'g06','g12','g17','tss2','tss4','tss6','tss7','elf1','elf3'); %Four acute penetrations in V1, 1 marmoset
+expts = {'g01', 'g06','g12','g17','tss2','tss4','tss6','tss7','elf1','elf3'}; %Four acute penetrations in V1, 1 marmoset
 %expts = strvcat('g01', 'g06', 'g12', 'g17'); %Four acute penetrations in V1, 1 marmoset
 nexp = length(expts);
 
@@ -44,8 +44,8 @@ avg_resp_dir_all = [];
 start=1;
 for iexp=1:nexp
 
-    fprintf([expts(iexp,:) '\n'])
-    load(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_fitsSG.mat']))
+    fprintf([expts{iexp} '\n'])
+    load(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts{iexp}], [svName '_marmosetV1_' expts{iexp} '_fitsSG.mat']))
 
     plaid_corr_all = [plaid_corr_all; plaid_corr'];
 

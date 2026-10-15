@@ -15,7 +15,7 @@ nexp = length(expts);
 % expt = expts(iexp,:);
 
 %'g01', 'g06', 'g12', 'g17','tss2','tss4','tss6','tss7','elf1','elf3'
-expt = 'g01';
+expt = 'g12';
 
     fprintf([expt '\n'])
 
@@ -607,6 +607,132 @@ x=[-150:30:180];
             print(fullfile(base, 'Analysis\Neuropixel\marmosetFromNicholas', ['marmosetV1_' expts(iexp,:)], [svName '_marmosetV1_' expts(iexp,:) '_GratingTuningCurve_' num2str(n) '.pdf']), '-dpdf','-fillpage')
         end
     end
+
+
    
+%% plot not included cells
+%%%%%%%%%%%%%%%%%%%%%%%%
+
+ind_DS = intersect(find(DSI>0.25),find(g_dsi>0.2));
+    [DSIstruct_new] = getDSIstruct_new(avg_resp_dir);
+    gratResp        = DSIstruct_new.resp;
+    maxGratResp     = max(gratResp,[],2);
+    minGratResp     = min(gratResp,[],2);
+ind_peakFRmin   = find(maxGratResp>1);
+ind_rangeFRmin  = find(maxGratResp > (abs(minGratResp)*2));
+% ind_FR = intersect(ind_peakFRmin,ind_rangeFRmin);
+ind_FR = ind_peakFRmin;
+
+
+
+% get pref dir
+gratResps           = squeeze(avg_resp_dir(:,:,1,1,1));
+[maxDir, indDir]    = max(gratResps,[],2);
+dirs                = 0:30:330;
+
+% get aligned tuning curves
+[avg_resp_grat, avg_resp_plaid, sem_resp_grat, sem_resp_plaid] = getAlignedGratPlaidTuning(avg_resp_dir);
+[avg_resp_grat_f1dc, avg_resp_plaid_f1dc, ~, ~] = getAlignedGratPlaidTuning(avg_resp_dir_f1dc,'','avgonly');
+
+x       = [-150:30:180];
+x_rad   = deg2rad(x);
+
+% for PCI fit
+PCI = (Zp-Zc);
+phase = [0 90 180 270];
+phase_range = 0:1:359;
+
+% get colors
+colors  = getColors;
+
+
+% Print STA time point choices
+pdfDir = fullfile(base, 'Analysis', 'Neuropixel','marmosetFromNicholas', ['marmosetV1_' expt]);
+
+pdfFile = fullfile(pdfDir, [expt '-allCells_withTuning.pdf']);
+if isfile(pdfFile); delete(pdfFile); end
+
+for ic = 1:nCells
+    iCell = ic;
+
+    figure();
+    sgtitle(sprintf('cell %d', iCell), 'FontSize', 10); 
+
+    subplot(3,5,1)
+        plot(x, avg_resp_grat_f1dc(iCell,:),'k')
+        subtitle('grating tuning','FontSize', 6)
+        xlabel('direction','FontSize', 6)
+        ylabel('Hz (f1+dc)','FontSize', 6)
+        subtitle('F1+DC')
+        set(gca,'FontSize',5,'TickDir','out'); box off
+    subplot(3,5,2)
+        plot(x, avg_resp_grat(iCell,:),'k')
+        subtitle('grating tuning','FontSize', 6)
+        xlabel('direction','FontSize', 6)
+        ylabel('Hz (f1+dc, bl sub)','FontSize', 6)
+        subtitle('F1+DC, baseline subtracted')
+        set(gca,'FontSize',5,'TickDir','out'); box off
+    subplot(3,5,3)
+        data = avg_resp_grat(iCell,:);
+        [minVal, ~] = min(data);
+            if minVal < 0
+                resp = data-minVal;
+            else
+                resp = data;
+            end
+        plot(x, resp, 'k')
+        subtitle(['gDSI=' num2str(round(g_dsi(iCell),2)) ', DSI=' num2str(round(DSI(iCell),2))],'FontSize', 6)
+        xlabel('direction','FontSize', 6)
+        ylabel('Hz (used only for DSI)','FontSize', 6)
+        set(gca,'FontSize',5,'TickDir','out'); box off
+    subplot(3,5,4)
+        for im = 1:4
+            polarplot([x_rad x_rad(1)], [avg_resp_plaid_f1dc(iCell,:,im) avg_resp_plaid_f1dc(iCell,1,im)],'Color', colors(im,:))
+            hold on
+        end
+        polarplot([x_rad x_rad(1)], [avg_resp_grat_f1dc(iCell,:) avg_resp_grat_f1dc(iCell,1)],'k', 'LineWidth',2) 
+        set(gca,'FontSize',5)
+    subplot(3,5,5)
+        for im = 1:4
+            scatter(Zc(im,iCell), Zp(im,iCell),8,colors(im,:),'filled')
+            hold on
+        end
+        ylabel('Zp'); ylim([-4 8]);
+        xlabel('Zc'); xlim([-4 8]);
+        plotZcZpBorders; axis square; set(gca,'TickDir','out')
+    subplot(3,5,10)
+        scatter(phase,PCI(:,iCell),8,'filled'); hold on
+        [b_hat_all(iCell,1), amp_hat_all(iCell,1), per_hat_all(iCell,1),pha_hat_all(iCell,1),sse_all(iCell,1),R_square_all(iCell,1)] = sinefit_PCI(deg2rad(phase),PCI(:,iCell));
+        yfit_all(iCell,:,1) = b_hat_all(iCell,1)+amp_hat_all(iCell,1).*(sin(2*pi*deg2rad(phase_range)./per_hat_all(iCell,1) + 2.*pi/pha_hat_all(iCell,1)));
+        plot(phase_range, yfit_all(iCell,:,1),'k:');
+        ylabel('Zp-Zc'); xlabel('Mask phase'); ylim([-7 7])
+        xlim([0 360]); xticks([0 180 360]); set(gca,'TickDir','out')
+        text(0.05,0.9,sprintf('R^2 = %.2f',R_square_all(iCell,1)),'Units','normalized','FontSize',5) 
+
+    subplot(3,5,6)
+        axis off
+            txtOpts = {'Units','normalized','Color','k','FontSize',5,'HorizontalAlignment','left','VerticalAlignment','top'};
+            txtOptsBold = {'Units','normalized','Color','k','FontSize',5,'FontWeight','bold','HorizontalAlignment','left','VerticalAlignment','top'};
+            if ismember(ic,resp_ind_dir)
+                text(0.02, 0.98, 'pass Vis Resp criteria', txtOptsBold{:});
+            else
+                text(0.02, 0.98, 'pass Vis Resp criteria', txtOpts{:});
+            end
+            if ismember(ic,ind_DS)
+                text(0.02, 0.68, 'pass DS criteria - gDSI>0.2, DSI>0.25', txtOptsBold{:});
+            else
+                text(0.02, 0.68, 'pass DS criteria - gDSI>0.2, DSI>0.25', txtOpts{:});
+            end
+            if ismember(ic,ind_FR)
+                text(0.02, 0.38, 'pass FR criteria - peak grating FR > 1Hz', txtOptsBold{:});
+            else
+                text(0.02, 0.38, 'pass FR criteria - peak grating FR > 1Hz', txtOpts{:});
+            end
+
+    % Append current figure as a new page in the PDF
+    exportgraphics(gcf, pdfFile,'ContentType', 'vector','Append', true);
+    close(gcf)
+end
+
 
 end
